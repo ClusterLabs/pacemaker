@@ -643,6 +643,13 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
         crm_trace("Done with node %s",
                   crm_element_value(xml_obj, PCMK_XA_UNAME));
     }
+    
+    /* If the request is from fenced and the node name is not set, 
+     * the local node will be set.
+     */
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_for_fenced)) {
+        pe__create_fake_local_node(scheduler);
+    }
 
     return TRUE;
 }

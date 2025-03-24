@@ -888,3 +888,15 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
 
     return NULL;
 }
+
+void
+pe__create_fake_local_node(pcmk_scheduler_t * scheduler){
+    if ((scheduler->priv->local_node_name != NULL)
+        && (pcmk_find_node(scheduler,
+                           scheduler->priv->local_node_name) == NULL)) {
+        crm_info("Creating a fake local node for %s",
+                  scheduler->priv->local_node_name);
+        pe_create_node(scheduler->priv->local_node_name,
+        scheduler->priv->local_node_name, NULL, 0, scheduler);
+    }
+}

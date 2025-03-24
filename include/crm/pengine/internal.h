@@ -374,6 +374,8 @@ bool pe__native_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
 
 xmlNode *pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name);
 
+void pe__create_fake_local_node(pcmk_scheduler_t * scheduler);
+
 const char *pe__clone_child_id(const pcmk_resource_t *rsc);
 
 int pe__sum_node_health_scores(const pcmk_node_t *node, int base_health);

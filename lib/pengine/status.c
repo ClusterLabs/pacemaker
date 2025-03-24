@@ -160,14 +160,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                   scheduler->priv->blocked_resources);
     }
 
-    if ((scheduler->priv->local_node_name != NULL)
-        && (pcmk_find_node(scheduler,
-                           scheduler->priv->local_node_name) == NULL)) {
-        crm_info("Creating a fake local node for %s",
-                 scheduler->priv->local_node_name);
-        pe_create_node(scheduler->priv->local_node_name,
-                       scheduler->priv->local_node_name, NULL, 0, scheduler);
-    }
+    pe__create_fake_local_node(scheduler);
 
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);
     return TRUE;

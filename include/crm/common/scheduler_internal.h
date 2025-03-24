@@ -154,6 +154,13 @@ enum pcmk__scheduler_flags {
      * applying node-specific location criteria, assignment, etc.)
      */
     pcmk__sched_validate_only           = (1ULL << 27),
+    /* To maintain compatibility with fenced behavior in 2.1.9, 
+     * when the node name is unknown, the local node name will be set 
+     * for location calculations in fenced.
+     * This will cause stonith device registration to be performed 
+     * when fenced receives the cib.
+     */
+    pcmk__sched_for_fenced           = (1ULL << 28),
 };
 
 // Implementation of pcmk__scheduler_private_t

@@ -248,7 +248,7 @@ fenced_scheduler_run(xmlNode *cib)
 
     scheduler->input = cib;
     pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_location_only|pcmk__sched_no_counts);
+                              pcmk__sched_location_only|pcmk__sched_no_counts|pcmk__sched_for_fenced);
     pcmk__schedule_actions(scheduler);
     g_list_foreach(scheduler->priv->resources, register_if_fencing_device,
                    NULL);
