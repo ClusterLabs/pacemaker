@@ -100,6 +100,46 @@ pcmk__is_user_in_group(const char *user, const char *group)
 }
 
 int
+pcmk__lookup_user(const char *name, uid_t *uid, gid_t *gid)
+{
+    struct passwd *pwentry = NULL;
+
+    CRM_CHECK(name != NULL, return EINVAL);
+
+    // getpwnam() is not thread-safe, but Pacemaker is single-threaded
+    errno = 0;
+    pwentry = getpwnam(name);
+    if (pwentry == NULL) {
+        /* Either an error occurred or no passwd entry was found.
+         *
+         * The value of errno is implementation-dependent if no passwd entry is
+         * found. The POSIX specification does not consider it an error.
+         * POSIX.1-2008 specifies that errno shall not be changed in this case,
+         * while POSIX.1-2001 does not specify the value of errno in this case.
+         * The man page on Linux notes that a variety of values have been
+         * observed in practice. So an implementation may set errno to an
+         * arbitrary value, despite the POSIX specification.
+         *
+         * However, if pwentry == NULL and errno == 0, then we know that no
+         * matching entry was found and there was no error. So we default to
+         * ENOENT as our return code.
+         */
+        return ((errno != 0)? errno : ENOENT);
+    }
+
+    if (uid != NULL) {
+        *uid = pwentry->pw_uid;
+    }
+    if (gid != NULL) {
+        *gid = pwentry->pw_gid;
+    }
+    crm_trace("User %s has uid=%lld gid=%lld", name,
+              (long long) pwentry->pw_uid, (long long) pwentry->pw_gid);
+
+    return pcmk_rc_ok;
+}
+
+int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 {
     int rc = pcmk_ok;
@@ -148,10 +188,10 @@ pcmk__daemon_user(uid_t *uid, gid_t *gid)
     static bool found = false;
 
     if (!found) {
-        int rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
+        int rc = pcmk__lookup_user(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
 
-        if (rc != pcmk_ok) {
-            return pcmk_legacy2rc(rc);
+        if (rc != pcmk_rc_ok) {
+            return rc;
         }
         found = true;
     }

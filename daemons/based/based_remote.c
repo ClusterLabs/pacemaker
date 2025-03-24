@@ -151,16 +151,18 @@ static int
 check_group_membership(const char *usr, const char *grp)
 {
     int index = 0;
-    struct passwd *pwd = NULL;
+    gid_t gid = 0;
     struct group *group = NULL;
+    int rc = pcmk_rc_ok;
 
-    pwd = getpwnam(usr);
-    if (pwd == NULL) {
-        crm_notice("Rejecting remote client: '%s' is not a valid user", usr);
+    rc = pcmk__lookup_user(usr, NULL, &gid);
+    if (rc != pcmk_rc_ok) {
+        crm_notice("Rejecting remote client: could not find user '%s': %s",
+                   usr, pcmk_rc_str(rc));
         return FALSE;
     }
 
-    group = getgrgid(pwd->pw_gid);
+    group = getgrgid(gid);
     if (group != NULL && pcmk__str_eq(grp, group->gr_name, pcmk__str_none)) {
         return TRUE;
     }
