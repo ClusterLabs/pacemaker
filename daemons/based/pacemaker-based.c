@@ -74,52 +74,50 @@ cib_enable_writes(int nsig)
 static int
 setup_stand_alone(GError **error)
 {
-    int rc = 0;
-    struct passwd *pwentry = NULL;
+    uid_t uid = 0;
+    gid_t gid = 0;
+    int rc = pcmk_rc_ok;
 
     preserve_status = TRUE;
     cib_writes_enabled = FALSE;
 
-    errno = 0;
-    pwentry = getpwnam(CRM_DAEMON_USER);
-    if (pwentry == NULL) {
+    rc = pcmk__daemon_user(&uid, &gid);
+    if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
-        if (errno != 0) {
-            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                        "Error getting password DB entry for %s: %s",
-                        CRM_DAEMON_USER, strerror(errno));
-            return errno;
-        }
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Password DB entry for '%s' not found", CRM_DAEMON_USER);
-        return ENXIO;
+                    "Error getting password DB entry for '%s': %s",
+                    CRM_DAEMON_USER, pcmk_rc_str(rc));
+        return rc;
     }
 
-    rc = setgid(pwentry->pw_gid);
+    rc = setgid(gid);
     if (rc < 0) {
+        rc = errno;
         exit_code = CRM_EX_FATAL;
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not set group to %d: %s",
-                    pwentry->pw_gid, strerror(errno));
-        return errno;
+                    "Could not set group to %lld: %s", (long long) gid,
+                    pcmk_rc_str(rc));
+        return rc;
     }
 
-    rc = initgroups(CRM_DAEMON_USER, pwentry->pw_gid);
+    rc = initgroups(CRM_DAEMON_USER, gid);
     if (rc < 0) {
+        rc = errno;
         exit_code = CRM_EX_FATAL;
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not setup groups for user %d: %s",
-                    pwentry->pw_uid, strerror(errno));
-        return errno;
+                    "Could not set up groups for user %lld: %s",
+                    (long long) uid, pcmk_rc_str(rc));
+        return rc;
     }
 
-    rc = setuid(pwentry->pw_uid);
+    rc = setuid(uid);
     if (rc < 0) {
+        rc = errno;
         exit_code = CRM_EX_FATAL;
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not set user to %d: %s",
-                    pwentry->pw_uid, strerror(errno));
-        return errno;
+                    "Could not set user to %lld: %s", (long long) uid,
+                    pcmk_rc_str(rc));
+        return rc;
     }
     return pcmk_rc_ok;
 }

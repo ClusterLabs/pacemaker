@@ -444,17 +444,18 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 static int
 cib_file_write_live(xmlNode *cib_root, char *path)
 {
-    uid_t uid = geteuid();
-    struct passwd *daemon_pwent;
+    uid_t euid = geteuid();
+    uid_t daemon_uid = 0;
+    gid_t daemon_gid = 0;
     char *sep = strrchr(path, '/');
     const char *cib_dirname, *cib_filename;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     /* Get the desired uid/gid */
-    errno = 0;
-    daemon_pwent = getpwnam(CRM_DAEMON_USER);
-    if (daemon_pwent == NULL) {
-        crm_perror(LOG_ERR, "Could not find %s user", CRM_DAEMON_USER);
+    rc = pcmk__daemon_user(&daemon_uid, &daemon_gid);
+    if (rc != pcmk_rc_ok) {
+        crm_perror(LOG_ERR, "Could not find user '" CRM_DAEMON_USER "': %s",
+                   pcmk_rc_str(rc));
         return -1;
     }
 
@@ -462,9 +463,11 @@ cib_file_write_live(xmlNode *cib_root, char *path)
      * if we're daemon, anything we create will be OK;
      * otherwise, block access so we don't create wrong owner
      */
-    if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
-        crm_perror(LOG_ERR, "Must be root or %s to modify live CIB",
-                   CRM_DAEMON_USER);
+    if ((euid != 0) && (euid != daemon_uid)) {
+        crm_perror(LOG_ERR,
+                   "Must be root or " CRM_DAEMON_USER " to modify live CIB");
+
+        // @TODO Should this return -1 instead?
         return 0;
     }
 
@@ -485,9 +488,9 @@ cib_file_write_live(xmlNode *cib_root, char *path)
     }
 
     /* if we're root, we want to update the file ownership */
-    if (uid == 0) {
-        cib_file_owner = daemon_pwent->pw_uid;
-        cib_file_group = daemon_pwent->pw_gid;
+    if (euid == 0) {
+        cib_file_owner = daemon_uid;
+        cib_file_group = daemon_gid;
         cib_do_chown = TRUE;
     }
 
@@ -498,7 +501,7 @@ cib_file_write_live(xmlNode *cib_root, char *path)
     }
 
     /* turn off file ownership changes, for other callers */
-    if (uid == 0) {
+    if (euid == 0) {
         cib_do_chown = FALSE;
     }
 

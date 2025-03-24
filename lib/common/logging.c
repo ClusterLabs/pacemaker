@@ -225,7 +225,7 @@ chown_logfile(const char *filename, int logfd)
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
     struct stat st;
-    int rc;
+    int rc = pcmk_rc_ok;
 
     // Get the log file's current ownership and permissions
     if (fstat(logfd, &st) < 0) {
@@ -234,9 +234,8 @@ chown_logfile(const char *filename, int logfd)
 
     // Any other errors don't prevent file from being used as log
 
-    rc = pcmk_daemon_user(&pcmk_uid, &pcmk_gid);
-    if (rc != pcmk_ok) {
-        rc = pcmk_legacy2rc(rc);
+    rc = pcmk__daemon_user(&pcmk_uid, &pcmk_gid);
+    if (rc != pcmk_rc_ok) {
         crm_warn("Not changing '%s' ownership because user information "
                  "unavailable: %s", filename, pcmk_rc_str(rc));
         return pcmk_rc_ok;

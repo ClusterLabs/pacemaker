@@ -355,7 +355,7 @@ pacemakerd_read_config(void)
 
     if(local_handle){
         gid_t gid = 0;
-        if (pcmk_daemon_user(NULL, &gid) < 0) {
+        if (pcmk__daemon_user(NULL, &gid) != pcmk_rc_ok) {
             crm_warn("Could not authorize group with Corosync " QB_XS
                      " No group found for user %s", CRM_DAEMON_USER);
 
