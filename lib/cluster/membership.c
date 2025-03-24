@@ -984,7 +984,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
     }
 
     if (node == NULL) {
-        char *uniqueid = crm_generate_uuid();
+        char *uniqueid = pcmk__generate_uuid();
 
         node = pcmk__assert_alloc(1, sizeof(pcmk__node_status_t));
 
@@ -1464,7 +1464,7 @@ cluster_node_cib_cache_refresh_helper(xmlNode *xml_node, void *user_data)
     node = find_cib_cluster_node(id, uname);
 
     if (node == NULL) {
-        char *uniqueid = crm_generate_uuid();
+        char *uniqueid = pcmk__generate_uuid();
 
         node = pcmk__assert_alloc(1, sizeof(pcmk__node_status_t));
 
