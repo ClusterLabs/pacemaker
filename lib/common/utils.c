@@ -282,115 +282,6 @@ done:
     return rc;
 }
 
-/*!
- * \internal
- * \brief Return the integer equivalent of a portion of a string
- *
- * \param[in]  text      Pointer to beginning of string portion
- * \param[out] end_text  This will point to next character after integer
- */
-static int
-version_helper(const char *text, const char **end_text)
-{
-    int atoi_result = -1;
-
-    pcmk__assert(end_text != NULL);
-
-    errno = 0;
-
-    if (text != NULL && text[0] != 0) {
-        /* seemingly sacrificing const-correctness -- because while strtol
-           doesn't modify the input, it doesn't want to artificially taint the
-           "end_text" pointer-to-pointer-to-first-char-in-string with constness
-           in case the input wasn't actually constant -- by semantic definition
-           not a single character will get modified so it shall be perfectly
-           safe to make compiler happy with dropping "const" qualifier here */
-        atoi_result = (int) strtol(text, (char **) end_text, 10);
-
-        if (errno == EINVAL) {
-            crm_err("Conversion of '%s' %c failed", text, text[0]);
-            atoi_result = -1;
-        }
-    }
-    return atoi_result;
-}
-
-/*
- * version1 < version2 : -1
- * version1 = version2 :  0
- * version1 > version2 :  1
- */
-int
-compare_version(const char *version1, const char *version2)
-{
-    int rc = 0;
-    int lpc = 0;
-    const char *ver1_iter, *ver2_iter;
-
-    if (version1 == NULL && version2 == NULL) {
-        return 0;
-    } else if (version1 == NULL) {
-        return -1;
-    } else if (version2 == NULL) {
-        return 1;
-    }
-
-    ver1_iter = version1;
-    ver2_iter = version2;
-
-    while (1) {
-        int digit1 = 0;
-        int digit2 = 0;
-
-        lpc++;
-
-        if (ver1_iter == ver2_iter) {
-            break;
-        }
-
-        if (ver1_iter != NULL) {
-            digit1 = version_helper(ver1_iter, &ver1_iter);
-        }
-
-        if (ver2_iter != NULL) {
-            digit2 = version_helper(ver2_iter, &ver2_iter);
-        }
-
-        if (digit1 < digit2) {
-            rc = -1;
-            break;
-
-        } else if (digit1 > digit2) {
-            rc = 1;
-            break;
-        }
-
-        if (ver1_iter != NULL && *ver1_iter == '.') {
-            ver1_iter++;
-        }
-        if (ver1_iter != NULL && *ver1_iter == '\0') {
-            ver1_iter = NULL;
-        }
-
-        if (ver2_iter != NULL && *ver2_iter == '.') {
-            ver2_iter++;
-        }
-        if (ver2_iter != NULL && *ver2_iter == 0) {
-            ver2_iter = NULL;
-        }
-    }
-
-    if (rc == 0) {
-        crm_trace("%s == %s (%d)", version1, version2, lpc);
-    } else if (rc < 0) {
-        crm_trace("%s < %s (%d)", version1, version2, lpc);
-    } else if (rc > 0) {
-        crm_trace("%s > %s (%d)", version1, version2, lpc);
-    }
-
-    return rc;
-}
-
 /* @FIXME uuid.h is an optional header per configure.ac, and we include it
  * conditionally above. But uuid_generate() and uuid_unparse() depend on it, on
  * many or perhaps all systems with libuuid. So it's not clear how it would ever
@@ -644,6 +535,103 @@ pcmk_daemon_user(uid_t *uid, gid_t *gid)
             *gid = daemon_gid;
         }
     }
+    return rc;
+}
+
+static int
+version_helper(const char *text, const char **end_text)
+{
+    int atoi_result = -1;
+
+    pcmk__assert(end_text != NULL);
+
+    errno = 0;
+
+    if (text != NULL && text[0] != 0) {
+        /* seemingly sacrificing const-correctness -- because while strtol
+           doesn't modify the input, it doesn't want to artificially taint the
+           "end_text" pointer-to-pointer-to-first-char-in-string with constness
+           in case the input wasn't actually constant -- by semantic definition
+           not a single character will get modified so it shall be perfectly
+           safe to make compiler happy with dropping "const" qualifier here */
+        atoi_result = (int) strtol(text, (char **) end_text, 10);
+
+        if (errno == EINVAL) {
+            crm_err("Conversion of '%s' %c failed", text, text[0]);
+            atoi_result = -1;
+        }
+    }
+    return atoi_result;
+}
+
+int
+compare_version(const char *version1, const char *version2)
+{
+    int rc = 0;
+    int lpc = 0;
+    const char *ver1_iter, *ver2_iter;
+
+    if (version1 == NULL && version2 == NULL) {
+        return 0;
+    } else if (version1 == NULL) {
+        return -1;
+    } else if (version2 == NULL) {
+        return 1;
+    }
+
+    ver1_iter = version1;
+    ver2_iter = version2;
+
+    while (1) {
+        int digit1 = 0;
+        int digit2 = 0;
+
+        lpc++;
+
+        if (ver1_iter == ver2_iter) {
+            break;
+        }
+
+        if (ver1_iter != NULL) {
+            digit1 = version_helper(ver1_iter, &ver1_iter);
+        }
+
+        if (ver2_iter != NULL) {
+            digit2 = version_helper(ver2_iter, &ver2_iter);
+        }
+
+        if (digit1 < digit2) {
+            rc = -1;
+            break;
+
+        } else if (digit1 > digit2) {
+            rc = 1;
+            break;
+        }
+
+        if (ver1_iter != NULL && *ver1_iter == '.') {
+            ver1_iter++;
+        }
+        if (ver1_iter != NULL && *ver1_iter == '\0') {
+            ver1_iter = NULL;
+        }
+
+        if (ver2_iter != NULL && *ver2_iter == '.') {
+            ver2_iter++;
+        }
+        if (ver2_iter != NULL && *ver2_iter == 0) {
+            ver2_iter = NULL;
+        }
+    }
+
+    if (rc == 0) {
+        crm_trace("%s == %s (%d)", version1, version2, lpc);
+    } else if (rc < 0) {
+        crm_trace("%s < %s (%d)", version1, version2, lpc);
+    } else if (rc > 0) {
+        crm_trace("%s > %s (%d)", version1, version2, lpc);
+    }
+
     return rc;
 }
 
