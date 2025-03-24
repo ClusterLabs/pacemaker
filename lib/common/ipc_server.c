@@ -180,7 +180,7 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         }
     }
 
-    client->id = crm_generate_uuid();
+    client->id = pcmk__generate_uuid();
     if (key == NULL) {
         key = client->id;
     }
