@@ -175,6 +175,115 @@ pcmk__daemon_user(uid_t *uid, gid_t *gid)
 
 /*!
  * \internal
+ * \brief Compare two version strings to determine which one is higher
+ *
+ * A valid version string is of the form specified by the regex
+ * <tt>[0-9]+(\.[0-9]+)*</tt>.
+ *
+ * Leading whitespace and trailing garbage are allowed and ignored. Anything
+ * that doesn't match the regex above is considered garbage.
+ *
+ * For each string, we get all segments until the first invalid character. A
+ * segment is a series of digits, and segments are delimited by a single dot.
+ * The two strings are compared segment by segment, until either we find a
+ * difference or we've processed all segments in both strings.
+ *
+ * If one string runs out of segments to compare before the other string does,
+ * we treat it as if it has enough padding \c "0" segments to finish the
+ * comparisons.
+ *
+ * Segments are compared by calling \c strtoll() to parse them to long long
+ * integers and then performing standard integer comparison.
+ *
+ * \param[in] version1  First version to compare
+ * \param[in] version2  Second version to compare
+ *
+ * \retval -1  if \p version1 evaluates to a lower version than \p version2
+ * \retval  1  if \p version1 evaluates to a higher version than \p version2
+ * \retval  0  if \p version1 and \p version2 evaluate to an equal version
+ *
+ * \note Each version segment's parsed value must fit into a <tt>long long</tt>.
+ */
+int
+pcmk__compare_versions(const char *version1, const char *version2)
+{
+    int rc = 0;
+    gchar *match1 = NULL;
+    gchar *match2 = NULL;
+    gchar **segments1 = NULL;
+    gchar **segments2 = NULL;
+    GRegex *regex = NULL;
+
+    if (pcmk__str_eq(version1, version2, pcmk__str_none)) {
+        goto done;
+    }
+
+    // Ignore leading whitespace and trailing garbage
+    regex = g_regex_new("^\\s*(\\d+(?:\\.\\d+)*)", 0, 0, NULL);
+
+    if (!pcmk__str_empty(version1)) {
+        GMatchInfo *match_info = NULL;
+
+        if (g_regex_match(regex, version1, 0, &match_info)) {
+            match1 = g_match_info_fetch(match_info, 1);
+        }
+        g_match_info_unref(match_info);
+    }
+    if (!pcmk__str_empty(version2)) {
+        GMatchInfo *match_info = NULL;
+
+        if (g_regex_match(regex, version2, 0, &match_info)) {
+            match2 = g_match_info_fetch(match_info, 1);
+        }
+        g_match_info_unref(match_info);
+    }
+
+    segments1 = g_strsplit(pcmk__s(match1, ""), ".", 0);
+    segments2 = g_strsplit(pcmk__s(match2, ""), ".", 0);
+
+    for (gchar **segment1 = segments1, **segment2 = segments2;
+         (*segment1 != NULL) || (*segment2 != NULL); ) {
+
+        long long value1 = 0;
+        long long value2 = 0;
+
+        if (*segment1 != NULL) {
+            // Make Coverity happy by casting to void
+            (void) pcmk__scan_ll(*segment1, &value1, 0);
+            segment1++;
+        }
+        if (*segment2 != NULL) {
+            (void) pcmk__scan_ll(*segment2, &value2, 0);
+            segment2++;
+        }
+
+        if (value1 < value2) {
+            crm_trace("%s < %s", version1, version2);
+            rc = -1;
+            goto done;
+        }
+        if (value1 > value2) {
+            crm_trace("%s > %s", version1, version2);
+            rc = 1;
+            goto done;
+        }
+    }
+
+    crm_trace("%s == %s", version1, version2);
+
+done:
+    g_free(match1);
+    g_free(match2);
+    g_strfreev(segments1);
+    g_strfreev(segments2);
+    if (regex != NULL) {
+        g_regex_unref(regex);
+    }
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Return the integer equivalent of a portion of a string
  *
  * \param[in]  text      Pointer to beginning of string portion
