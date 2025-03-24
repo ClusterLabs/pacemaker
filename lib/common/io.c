@@ -245,19 +245,19 @@ pcmk__chown_series_sequence(const char *directory, const char *series,
 static bool
 pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
 {
-    struct passwd *sys_user = NULL;
+    uid_t daemon_uid = 0;
+    int rc = pcmk__daemon_user(&daemon_uid, NULL);
 
-    errno = 0;
-    sys_user = getpwnam(CRM_DAEMON_USER);
-    if (sys_user == NULL) {
-        crm_notice("Could not find user %s: %s",
-                   CRM_DAEMON_USER, pcmk_rc_str(errno));
+    if (rc != pcmk_rc_ok) {
+        crm_notice("Could not find user " CRM_DAEMON_USER ": %s",
+                   pcmk_rc_str(rc));
         return FALSE;
     }
-    if (target_stat->st_uid != sys_user->pw_uid) {
-        crm_notice("%s is not owned by user %s " QB_XS " uid %d != %d",
-                   target_name, CRM_DAEMON_USER, sys_user->pw_uid,
-                   target_stat->st_uid);
+    if (target_stat->st_uid != daemon_uid) {
+        crm_notice("%s is not owned by user " CRM_DAEMON_USER " "
+                   QB_XS " uid %lld != %lld",
+                   target_name, (long long) daemon_uid,
+                   (long long) target_stat->st_uid);
         return FALSE;
     }
     if ((target_stat->st_mode & (S_IRUSR | S_IWUSR)) == 0) {
@@ -273,20 +273,20 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
 static bool
 pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
 {
-    struct group *sys_grp = NULL;
+    gid_t daemon_gid = 0;
+    int rc = pcmk__daemon_user(NULL, &daemon_gid);
 
-    errno = 0;
-    sys_grp = getgrnam(CRM_DAEMON_GROUP);
-    if (sys_grp == NULL) {
-        crm_notice("Could not find group %s: %s",
-                   CRM_DAEMON_GROUP, pcmk_rc_str(errno));
+    if (rc != pcmk_rc_ok) {
+        crm_notice("Could not find group '" CRM_DAEMON_GROUP "': %s",
+                   pcmk_rc_str(rc));
         return FALSE;
     }
 
-    if (target_stat->st_gid != sys_grp->gr_gid) {
-        crm_notice("%s is not owned by group %s " QB_XS " uid %d != %d",
-                   target_name, CRM_DAEMON_GROUP,
-                   sys_grp->gr_gid, target_stat->st_gid);
+    if (target_stat->st_gid != daemon_gid) {
+        crm_notice("%s is not owned by group '" CRM_DAEMON_GROUP "' "
+                   QB_XS " gid %lld != %lld",
+                   target_name, (long long) daemon_gid,
+                   (long long) target_stat->st_gid);
         return FALSE;
     }
 

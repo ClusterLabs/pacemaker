@@ -241,6 +241,7 @@ pcmk__flag_text(uint64_t flag_group, uint64_t flags)
 
 // miscellaneous utilities (from utils.c)
 
+int pcmk__daemon_user(uid_t *uid, gid_t *gid);
 char *pcmk__generate_uuid(void);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);

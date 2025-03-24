@@ -132,6 +132,40 @@ crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 }
 
 /*!
+ * \internal
+ * \brief Get user and group IDs of Pacemaker daemon user
+ *
+ * \param[out] uid  Where to store daemon user ID (can be \c NULL)
+ * \param[out] gid  Where to store daemon group ID (can be \c NULL)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__daemon_user(uid_t *uid, gid_t *gid)
+{
+    static uid_t daemon_uid = 0;
+    static gid_t daemon_gid = 0;
+    static bool found = false;
+
+    if (!found) {
+        int rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
+
+        if (rc != pcmk_ok) {
+            return pcmk_legacy2rc(rc);
+        }
+        found = true;
+    }
+
+    if (uid != NULL) {
+        *uid = daemon_uid;
+    }
+    if (gid != NULL) {
+        *gid = daemon_gid;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Get user and group IDs of pacemaker daemon user
  *
  * \param[out] uid  If non-NULL, where to store daemon user ID

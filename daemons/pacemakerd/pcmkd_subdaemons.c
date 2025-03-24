@@ -459,9 +459,14 @@ start_child(pcmkd_child_t * child)
         use_valgrind = false;
     }
 
-    if (!as_root && (pcmk_daemon_user(&uid, &gid) < 0)) {
-        crm_err("User %s not found for subdaemon %s", user, name);
-        return EACCES;
+    if (!as_root) {
+        int rc = pcmk__daemon_user(&uid, &gid);
+
+        if (rc != pcmk_rc_ok) {
+            crm_err("User %s not found for subdaemon %s: %s", user, name,
+                    pcmk_rc_str(rc));
+            return rc;
+        }
     }
 
     child->pid = fork();
@@ -568,7 +573,7 @@ child_liveness(pcmkd_child_t *child)
     const gid_t *ref_gid;
     const char *name = pcmk__server_name(child->server);
     const char *ipc_name = pcmk__server_ipc_name(child->server);
-    int rc = pcmk_rc_ipc_unresponsive;
+    int rc = pcmk_rc_ok;
     pid_t ipc_pid = 0;
 
     if (pcmk__is_set(child->flags, child_as_root)) {
@@ -579,8 +584,7 @@ child_liveness(pcmkd_child_t *child)
         ref_uid = &cl_uid;
         ref_gid = &cl_gid;
 
-        rc = pcmk_daemon_user(&cl_uid, &cl_gid);
-        rc = pcmk_legacy2rc(rc);
+        rc = pcmk__daemon_user(&cl_uid, &cl_gid);
         if (rc != pcmk_rc_ok) {
             crm_err("Could not find user and group IDs for user "
                     CRM_DAEMON_USER ": %s " QB_XS " rc=%d",
