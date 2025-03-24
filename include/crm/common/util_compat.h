@@ -62,6 +62,9 @@ pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
 //! \deprecated Do not use
 char *crm_md5sum(const char *buffer);
 
+//! \deprecated Do not use
+char *crm_generate_uuid(void);
+
 #ifdef __cplusplus
 }
 #endif
