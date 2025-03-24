@@ -482,69 +482,71 @@ start_child(pcmk_child_t * child)
                  valgrind_s);
 
         return pcmk_rc_ok;
+    }
+
+    // Child
+
+    // Start a new session
+    (void) setsid();
+
+    // Set up the two alternate argument arrays
+    opts_vgrind[0] = pcmk__str_copy(PCMK__VALGRIND_EXEC);
+    if (use_callgrind) {
+        opts_vgrind[1] = pcmk__str_copy("--tool=callgrind");
+        opts_vgrind[2] = pcmk__str_copy("--callgrind-out-file="
+                                        CRM_STATE_DIR "/callgrind.out.%p");
+        opts_vgrind[3] = subdaemon_path(child);
+        opts_vgrind[4] = NULL;
+    } else {
+        opts_vgrind[1] = subdaemon_path(child);
+        opts_vgrind[2] = NULL;
+        opts_vgrind[3] = NULL;
+        opts_vgrind[4] = NULL;
+    }
+    opts_default[0] = subdaemon_path(child);
+
+    if (gid != 0) {
+        // Drop root group access if not needed
+        if (!need_root_group && (setgid(gid) < 0)) {
+            crm_warn("Could not set subdaemon %s group to %lld: %s", name,
+                     (long long) gid, strerror(errno));
+        }
+
+        /* Initialize supplementary groups to those where the user is a member,
+         * plus haclient (so we can access IPC)
+         */
+        if (initgroups(child->uid, gid) < 0) {
+            crm_err("Cannot initialize system groups for subdaemon %s: %s "
+                    QB_XS " errno=%d",
+                    name, strerror(errno), errno);
+        }
+    }
+
+    if ((uid != 0) && (setuid(uid) < 0)) {
+        crm_warn("Could not set subdaemon %s user to %s: %s "
+                 QB_XS " uid=%lld errno=%d",
+                 name, strerror(errno), child->uid, (long long) uid, errno);
+    }
+
+    pcmk__close_fds_in_child(true);
+
+    pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
+    pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
+    pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
+
+    if (use_valgrind) {
+        (void) execvp(PCMK__VALGRIND_EXEC, opts_vgrind);
 
     } else {
-        /* Start a new session */
-        (void)setsid();
+        char *path = subdaemon_path(child);
 
-        /* Setup the two alternate arg arrays */
-        opts_vgrind[0] = pcmk__str_copy(PCMK__VALGRIND_EXEC);
-        if (use_callgrind) {
-            opts_vgrind[1] = pcmk__str_copy("--tool=callgrind");
-            opts_vgrind[2] = pcmk__str_copy("--callgrind-out-file="
-                                            CRM_STATE_DIR "/callgrind.out.%p");
-            opts_vgrind[3] = subdaemon_path(child);
-            opts_vgrind[4] = NULL;
-        } else {
-            opts_vgrind[1] = subdaemon_path(child);
-            opts_vgrind[2] = NULL;
-            opts_vgrind[3] = NULL;
-            opts_vgrind[4] = NULL;
-        }
-        opts_default[0] = subdaemon_path(child);
-
-        if(gid) {
-            // Drop root group access if not needed
-            if (!need_root_group && (setgid(gid) < 0)) {
-                crm_warn("Could not set subdaemon %s group to %lu: %s",
-                         name, (unsigned long) gid, strerror(errno));
-            }
-
-            /* Initialize supplementary groups to only those always granted to
-             * the user, plus haclient (so we can access IPC).
-             */
-            if (initgroups(child->uid, gid) < 0) {
-                crm_err("Cannot initialize system groups for subdaemon %s: %s "
-                        QB_XS " errno=%d",
-                        name, pcmk_rc_str(errno), errno);
-            }
-        }
-
-        if (uid && setuid(uid) < 0) {
-            crm_warn("Could not set subdaemon %s user to %s: %s "
-                     QB_XS " uid=%lu errno=%d",
-                     name, strerror(errno), child->uid, (unsigned long) uid,
-                     errno);
-        }
-
-        pcmk__close_fds_in_child(true);
-
-        pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
-        pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
-        pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
-
-        if (use_valgrind) {
-            (void)execvp(PCMK__VALGRIND_EXEC, opts_vgrind);
-        } else {
-            char *path = subdaemon_path(child);
-
-            (void) execvp(path, opts_default);
-            free(path);
-        }
-        crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
-        crm_exit(CRM_EX_FATAL);
+        (void) execvp(path, opts_default);
+        free(path);
     }
-    return pcmk_rc_ok;          /* never reached */
+
+    crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
+    crm_exit(CRM_EX_FATAL);
+    return pcmk_rc_ok;  // Never reached
 }
 
 /*!
