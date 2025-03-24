@@ -327,20 +327,46 @@ pcmk__daemonize(const char *name, const char *pidfile)
     pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 }
 
+/* @FIXME uuid.h is an optional header per configure.ac, and we include it
+ * conditionally above. But uuid_generate() and uuid_unparse() depend on it, on
+ * many or perhaps all systems with libuuid. So it's not clear how it would ever
+ * be optional in practice.
+ *
+ * Note that these functions are not POSIX, although there is probably no good
+ * portable alternative.
+ *
+ * We do list libuuid as a build dependency in INSTALL.md already.
+ */
+
 #ifdef HAVE_UUID_UUID_H
-#  include <uuid/uuid.h>
-#endif
+#include <uuid/uuid.h>
+#endif  // HAVE_UUID_UUID_H
+
+/*!
+ * \internal
+ * \brief Generate a 37-byte (36 bytes plus null terminator) UUID string
+ *
+ * \return Newly allocated UUID string
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__generate_uuid(void)
+{
+    uuid_t uuid;
+
+    // uuid_unparse() converts a UUID to a 37-byte string (including null byte)
+    char *buffer = pcmk__assert_alloc(37, sizeof(char));
+
+    uuid_generate(uuid);
+    uuid_unparse(uuid, buffer);
+    return buffer;
+}
 
 char *
 crm_generate_uuid(void)
 {
-    unsigned char uuid[16];
-    char *buffer = malloc(37);  /* Including NUL byte */
-
-    pcmk__mem_assert(buffer);
-    uuid_generate(uuid);
-    uuid_unparse(uuid, buffer);
-    return buffer;
+    return pcmk__generate_uuid();
 }
 
 /*!

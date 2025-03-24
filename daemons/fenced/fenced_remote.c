@@ -1191,7 +1191,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     if (peer && dev) {
         op->id = pcmk__xe_get_copy(dev, PCMK__XA_ST_REMOTE_OP);
     } else {
-        op->id = crm_generate_uuid();
+        op->id = pcmk__generate_uuid();
     }
 
     g_hash_table_replace(stonith_remote_op_list, op->id, op);

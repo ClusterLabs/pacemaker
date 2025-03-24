@@ -63,7 +63,7 @@ do_te_control(long long action,
     }
 
     if (controld_globals.te_uuid == NULL) {
-        controld_globals.te_uuid = crm_generate_uuid();
+        controld_globals.te_uuid = pcmk__generate_uuid();
         crm_info("Registering TE UUID: %s", controld_globals.te_uuid);
     }
 

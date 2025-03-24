@@ -91,7 +91,7 @@ handle_disconnect(void)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
-        char *uuid_str = crm_generate_uuid();
+        char *uuid_str = pcmk__generate_uuid();
 
         crm_crit("Lost connection to the scheduler "
                  QB_XS " CIB will be saved to " PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2",
