@@ -40,7 +40,10 @@ typedef struct pcmk_child_s {
     enum pcmk_ipc_server server;
     pid_t pid;
     int respawn_count;
-    const char *uid;
+
+    //! Child runs as \c root if \c true, or as \c CRM_DAEMON_USER if \c false
+    bool as_root;
+
     int check_count;
     uint32_t flags;
 } pcmk_child_t;
@@ -53,30 +56,12 @@ typedef struct pcmk_child_s {
 #define PCMK_CHILD_CONTROLD  5
 
 static pcmk_child_t pcmk_children[] = {
-    {
-        pcmk_ipc_based, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn | child_needs_cluster
-    },
-    {
-        pcmk_ipc_fenced, 0, 0, NULL,
-        0, child_respawn | child_needs_cluster
-    },
-    {
-        pcmk_ipc_execd, 0, 0, NULL,
-        0, child_respawn
-    },
-    {
-        pcmk_ipc_attrd, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn | child_needs_cluster
-    },
-    {
-        pcmk_ipc_schedulerd, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn
-    },
-    {
-        pcmk_ipc_controld, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn | child_needs_cluster
-    },
+    { pcmk_ipc_based, 0, 0, false, 0, child_respawn|child_needs_cluster },
+    { pcmk_ipc_fenced, 0, 0, true, 0, child_respawn|child_needs_cluster },
+    { pcmk_ipc_execd, 0, 0, true, 0, child_respawn },
+    { pcmk_ipc_attrd, 0, 0, false, 0, child_respawn|child_needs_cluster },
+    { pcmk_ipc_schedulerd, 0, 0, false, 0, child_respawn },
+    { pcmk_ipc_controld, 0, 0, false, 0, child_respawn|child_needs_cluster },
 };
 
 static char *opts_default[] = { NULL, NULL };
@@ -422,8 +407,10 @@ pcmk_shutdown_worker(gpointer user_data)
 static int
 start_child(pcmk_child_t * child)
 {
+    const char *user = (child->as_root? "root" : CRM_DAEMON_USER);
     uid_t uid = 0;
     gid_t gid = 0;
+
     gboolean use_valgrind = FALSE;
     gboolean use_callgrind = FALSE;
     const char *name = pcmk__server_name(child->server);
@@ -456,9 +443,8 @@ start_child(pcmk_child_t * child)
         use_valgrind = FALSE;
     }
 
-    if ((child->uid != NULL) && (crm_user_lookup(child->uid, &uid, &gid) < 0)) {
-        crm_err("Invalid user (%s) for subdaemon %s: not found",
-                child->uid, name);
+    if (!child->as_root && (pcmk_daemon_user(&uid, &gid) < 0)) {
+        crm_err("User " CRM_DAEMON_USER " not found for subdaemon %s", name);
         return EACCES;
     }
 
@@ -477,9 +463,8 @@ start_child(pcmk_child_t * child)
 
         crm_info("Forked process %lld using user %lld (%s) and group %lld "
                  "for subdaemon %s%s",
-                 (long long) child->pid, (long long) uid,
-                 pcmk__s(child->uid, "root"), (long long) gid, name,
-                 valgrind_s);
+                 (long long) child->pid, (long long) uid, user, (long long) gid,
+                 name, valgrind_s);
 
         return pcmk_rc_ok;
     }
@@ -513,9 +498,11 @@ start_child(pcmk_child_t * child)
         }
 
         /* Initialize supplementary groups to those where the user is a member,
-         * plus haclient (so we can access IPC)
+         * plus haclient (so we can access IPC).
+         *
+         * @TODO initgroups() is not portable (not part of any standard).
          */
-        if (initgroups(child->uid, gid) < 0) {
+        if (initgroups(user, gid) < 0) {
             crm_err("Cannot initialize system groups for subdaemon %s: %s "
                     QB_XS " errno=%d",
                     name, strerror(errno), errno);
@@ -525,7 +512,7 @@ start_child(pcmk_child_t * child)
     if ((uid != 0) && (setuid(uid) < 0)) {
         crm_warn("Could not set subdaemon %s user to %s: %s "
                  QB_XS " uid=%lld errno=%d",
-                 name, strerror(errno), child->uid, (long long) uid, errno);
+                 name, strerror(errno), user, (long long) uid, errno);
     }
 
     pcmk__close_fds_in_child(true);
@@ -581,7 +568,7 @@ child_liveness(pcmk_child_t *child)
     int legacy_rc = pcmk_ok;
     pid_t ipc_pid = 0;
 
-    if (child->uid == NULL) {
+    if (child->as_root) {
         ref_uid = &root_uid;
         ref_gid = &root_gid;
     } else {
