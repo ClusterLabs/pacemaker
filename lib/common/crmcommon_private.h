@@ -20,6 +20,7 @@
 
 #include <glib.h>           // G_GNUC_INTERNAL, G_GNUC_PRINTF, gchar, etc.
 #include <libxml/tree.h>    // xmlNode, xmlAttr
+#include <libxml/xmlstring.h>           // xmlChar
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
@@ -29,7 +30,6 @@
 #include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/results.h>         // crm_exit_t
 #include <crm/common/rules.h>           // pcmk_rule_input_t
-#include <crm/common/xml.h>             // pcmkXmlStr
 #include <crm/common/xml_internal.h>    // enum xml_private_flags
 
 #ifdef __cplusplus
@@ -44,25 +44,49 @@ extern "C" {
 #define G_GNUC_INTERNAL
 #endif
 
-/* When deleting portions of an XML tree, we keep a record so we can know later
- * (e.g. when checking differences) that something was deleted.
+/*!
+ * \internal
+ * \brief Information about an XML node that was deleted
+ *
+ * When change tracking is enabled and we delete an XML node using
+ * \c pcmk__xml_free(), we free it and add its path and position to a list in
+ * its document's private data. This allows us to display changes, generate
+ * patchsets, etc.
+ *
+ * Note that this does not happen when deleting an XML attribute using
+ * \c pcmk__xa_remove(). In that case:
+ * * If \c force is \c true, we remove the attribute without any tracking.
+ * * If \c force is \c false, we mark the attribute as deleted but leave it in
+ *   place until we commit changes.
  */
 typedef struct pcmk__deleted_xml_s {
-    gchar *path;
-    int position;
+    gchar *path;        //!< XPath expression identifying the deleted node
+    int position;       //!< Position of the deleted node among its siblings
 } pcmk__deleted_xml_t;
 
+/*!
+ * \internal
+ * \brief Private data for an XML node
+ */
 typedef struct xml_node_private_s {
-        uint32_t check;
-        uint32_t flags;
+    uint32_t check;         //!< Magic number for checking integrity
+    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
 } xml_node_private_t;
 
+/*!
+ * \internal
+ * \brief Private data for an XML document
+ */
 typedef struct xml_doc_private_s {
-        uint32_t check;
-        uint32_t flags;
-        char *user;
-        GList *acls;
-        GList *deleted_objs; // List of pcmk__deleted_xml_t
+    uint32_t check;         //!< Magic number for checking integrity
+    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
+    char *acl_user;         //!< User affected by \c acls (for logging)
+
+    //! ACLs to check requested changes against (list of \c xml_acl_t)
+    GList *acls;
+
+    //! XML nodes marked as deleted (list of \c pcmk__deleted_xml_t)
+    GList *deleted_objs;
 } xml_doc_private_t;
 
 // XML private data magic numbers
@@ -107,9 +131,6 @@ void pcmk__xml_free_node(xmlNode *xml);
 
 G_GNUC_INTERNAL
 xmlDoc *pcmk__xml_new_doc(void);
-
-G_GNUC_INTERNAL
-bool pcmk__tracking_xml_changes(xmlNode *xml, bool lazy);
 
 G_GNUC_INTERNAL
 int pcmk__xml_position(const xmlNode *xml,

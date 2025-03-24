@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,8 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <dirent.h>
+
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -386,7 +388,7 @@ find_resource_xml(xmlNode *cib_node, const char *resource)
 {
     const char *node = crm_element_value(cib_node, PCMK_XA_UNAME);
     char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
-    xmlNode *match = get_xpath_object(xpath, cib_node, LOG_TRACE);
+    xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath, LOG_TRACE);
 
     free(xpath);
     return match;

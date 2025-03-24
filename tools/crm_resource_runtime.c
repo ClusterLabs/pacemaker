@@ -12,10 +12,9 @@
 #include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <limits.h>
-#include <stdbool.h>                        // bool, true, false
 
 #include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>                    // xmlNode
 #include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 #include <crm/common/ipc_attrd_internal.h>
@@ -291,7 +290,7 @@ get_cib_rsc(xmlNode *cib_xml, const pcmk_resource_t *rsc)
     char *xpath = crm_strdup_printf("%s//*[@" PCMK_XA_ID "='%s']",
                                     pcmk_cib_xpath_for(PCMK_XE_RESOURCES),
                                     pcmk__xe_id(rsc->priv->xml));
-    xmlNode *rsc_xml = get_xpath_object(xpath, cib_xml, LOG_ERR);
+    xmlNode *rsc_xml = pcmk__xpath_find_one(cib_xml->doc, xpath, LOG_ERR);
 
     free(xpath);
     return rsc_xml;

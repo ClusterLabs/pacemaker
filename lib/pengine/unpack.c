@@ -14,6 +14,7 @@
 #include <time.h>
 
 #include <glib.h>
+#include <libxml/tree.h>                // xmlNode
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
@@ -2967,8 +2968,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
         g_string_append_c(xpath, ']');
     }
 
-    xml = get_xpath_object((const char *) xpath->str, scheduler->input,
-                           LOG_DEBUG);
+    xml = pcmk__xpath_find_one(scheduler->input->doc, xpath->str, LOG_DEBUG);
     g_string_free(xpath, TRUE);
 
     if (xml && target_rc >= 0) {
@@ -2999,8 +2999,7 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc_id, "']",
                    NULL);
 
-    xml = get_xpath_object((const char *) xpath->str, scheduler->input,
-                           LOG_DEBUG);
+    xml = pcmk__xpath_find_one(scheduler->input->doc, xpath->str, LOG_DEBUG);
 
     g_string_free(xpath, TRUE);
     return xml;

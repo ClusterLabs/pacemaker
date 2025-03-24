@@ -323,7 +323,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
 
-        if ((scratch != NULL) && !xml_tracking_changes(scratch)) {
+        if (!pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_tracking)) {
             crm_trace("Inferring changes after %s op", op);
             xml_track_changes(scratch, user, *current_cib,
                               cib_acl_enabled(*current_cib, user));

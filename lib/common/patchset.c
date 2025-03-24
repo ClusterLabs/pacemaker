@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <stdarg.h>
 #include <bzlib.h>
 
-#include <libxml/tree.h>
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/cib_internal.h>
@@ -192,7 +192,8 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     };
 
     pcmk__assert(target != NULL);
-    if (!xml_document_dirty(target)) {
+
+    if (!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
         return NULL;
     }
 
@@ -254,9 +255,11 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     }
 
     xml_acl_disable(target);
-    if (!xml_document_dirty(target)) {
+    if ((target == NULL)
+        || !pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
+
         crm_trace("No change %d", format);
-        return NULL; /* No change */
+        return NULL;
     }
 
     if (config_changed == NULL) {
@@ -296,7 +299,7 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
     /* We should always call xml_accept_changes() before calculating a digest.
      * Otherwise, with an on-tracking dirty target, we could get a wrong digest.
      */
-    CRM_LOG_ASSERT(!xml_document_dirty(target));
+    CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
 
     digest = pcmk__digest_xml(target, true);
 
@@ -455,7 +458,7 @@ first_matching_xml_child(const xmlNode *parent, const char *name,
 
 /*!
  * \internal
- * \brief Simplified, more efficient alternative to get_xpath_object()
+ * \brief Simplified, more efficient alternative to pcmk__xpath_find_one()
  *
  * \param[in] top              Root of XML to search
  * \param[in] key              Search xpath
@@ -646,7 +649,9 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 rc = ENOMSG;
                 continue;
             }
-            pcmk__xe_remove_matching_attrs(match, NULL, NULL); // Remove all
+
+            // Remove all attributes
+            pcmk__xe_remove_matching_attrs(match, false, NULL, NULL);
 
             for (xmlAttrPtr pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
                  pIter = pIter->next) {

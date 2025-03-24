@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -321,7 +321,8 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
     }
 
     // Remove all CRM_meta_* attributes and certain other attributes
-    pcmk__xe_remove_matching_attrs(param_set, should_filter_for_digest, NULL);
+    pcmk__xe_remove_matching_attrs(param_set, false, should_filter_for_digest,
+                                   NULL);
 
     // Add timeout back for recurring operation digests
     if (timeout != NULL) {

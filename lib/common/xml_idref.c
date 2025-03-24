@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/crm.h>
-#include <crm/common/xml.h>     // get_xpath_object(), PCMK_XA_ID_REF
+#include <crm/common/xml.h>     // PCMK_XA_ID_REF
 
 /*!
  * \internal
@@ -102,7 +102,7 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
     }
 
     xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
-    result = get_xpath_object(xpath, search, LOG_DEBUG);
+    result = pcmk__xpath_find_one(search->doc, xpath, LOG_DEBUG);
     if (result == NULL) {
         // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "

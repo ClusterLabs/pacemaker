@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -126,7 +126,7 @@ annotate_with_siblings(xmlNode *xml_modify)
     for (i_node = xml_modify; i_node != NULL; i_node = i_node->next) {
         switch (i_node->type) {
             case XML_ELEMENT_NODE:
-                pcmk__set_xml_doc_flag(i_node, pcmk__xf_tracking);
+                pcmk__xml_doc_set_flags(i_node->doc, pcmk__xf_tracking);
 
                 if (!pcmk__check_acl(i_node, NULL, pcmk__xf_acl_read)) {
                     ns = NS_DENIED;

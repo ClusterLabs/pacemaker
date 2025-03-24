@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,8 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <regex.h>
+
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -511,8 +513,9 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 static char *
 delegate_from_xml(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" PCMK__XA_ST_DELEGATE, xml,
-                                      LOG_NEVER);
+    xmlNode *match = pcmk__xpath_find_one(xml->doc,
+                                          "//*[@" PCMK__XA_ST_DELEGATE "]",
+                                          LOG_NEVER);
 
     if (match == NULL) {
         return crm_element_value_copy(xml, PCMK__XA_SRC);
@@ -1110,7 +1113,9 @@ int
 fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_ERR);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_TARGET "]",
+                                        LOG_ERR);
 
     CRM_CHECK(dev != NULL, return EPROTO);
 
@@ -1149,8 +1154,9 @@ void *
 create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request,
-                                    LOG_NEVER);
+    xmlNode *dev = pcmk__xpath_find_one(request->doc,
+                                        "//*[@" PCMK__XA_ST_TARGET "]",
+                                        LOG_NEVER);
     int rc = pcmk_rc_ok;
     const char *operation = NULL;
 
@@ -2336,14 +2342,18 @@ process_remote_stonith_query(xmlNode *msg)
     remote_fencing_op_t *op = NULL;
     peer_device_info_t *peer = NULL;
     uint32_t replies_expected;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_REMOTE_OP "]",
+                                        LOG_ERR);
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
     id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return -EPROTO);
 
-    dev = get_xpath_object("//@" PCMK__XA_ST_AVAILABLE_DEVICES, msg, LOG_ERR);
+    dev = pcmk__xpath_find_one(msg->doc,
+                               "//*[@" PCMK__XA_ST_AVAILABLE_DEVICES "]",
+                               LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
     crm_element_value_int(dev, PCMK__XA_ST_AVAILABLE_DEVICES, &ndevices);
 
@@ -2434,7 +2444,9 @@ fenced_process_fencing_reply(xmlNode *msg)
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_REMOTE_OP "]",
+                                        LOG_ERR);
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(dev != NULL, return);

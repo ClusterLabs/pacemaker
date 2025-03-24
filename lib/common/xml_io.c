@@ -18,6 +18,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xmlIO.h>               // xmlOutputBuffer*
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -120,7 +121,7 @@ pcmk__xml_read(const char *filename)
         char *input = decompress_file(filename);
 
         if (input != NULL) {
-            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+            output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
                                     XML_PARSE_NOBLANKS);
             free(input);
         }
@@ -182,7 +183,7 @@ pcmk__xml_parse(const char *input)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+    output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
                             XML_PARSE_NOBLANKS);
     if (output != NULL) {
         pcmk__xml_new_private_data((xmlNode *) output);

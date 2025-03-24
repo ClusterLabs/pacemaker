@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,10 +10,13 @@
 #include <crm_internal.h>
 
 #include <ctype.h>
-#include <libxml/HTMLtree.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include <libxml/HTMLtree.h>
+#include <libxml/tree.h>                    // xmlNode
+#include <libxml/xmlstring.h>               // xmlChar
 
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
@@ -113,7 +116,7 @@ html_init(pcmk__output_t *out) {
     priv->parent_q = g_queue_new();
 
     priv->root = pcmk__xe_create(NULL, "html");
-    xmlCreateIntSubset(priv->root->doc, (pcmkXmlStr) "html", NULL, NULL);
+    xmlCreateIntSubset(priv->root->doc, (const xmlChar *) "html", NULL, NULL);
 
     crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
     g_queue_push_tail(priv->parent_q, priv->root);
