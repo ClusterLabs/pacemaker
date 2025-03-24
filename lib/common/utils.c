@@ -202,6 +202,122 @@ version_helper(const char *text, const char **end_text)
     return atoi_result;
 }
 
+/*!
+ * \internal
+ * \brief Parse a version segment from an input and advance the input pointer
+ *
+ * \param[in,out] version_segment  Pointer to a version string segment
+ *
+ * \return Nonnegative integer value parsed from \p *version_segment on success,
+ *         or 0 on failure
+ *
+ * \note Upon return, \p *version_segment points to the (possibly invalid) next
+ *       segment on success, or to the terminating null byte on failure.
+ */
+static long
+parse_version_segment(const char **version_segment)
+{
+    char *endptr = NULL;
+    long rc = 0;
+
+    if (pcmk__str_empty(*version_segment)) {
+        return 0;
+    }
+
+    /* '+', '-', and whitespace are invalid in version strings. strtol() won't
+     * complain, so catch them here. If the first character is not a digit,
+     * advance to end of string.
+     */
+    if (!isdigit(**version_segment)) {
+        *version_segment += strlen(*version_segment);
+        return 0;
+    }
+
+    /* Negative return code or unparsable input should be impossible, since we
+     * checked with isdigit() first. If it happens somehow, advance to end of
+     * string.
+     */
+    rc = strtol(*version_segment, &endptr, 10);
+    CRM_CHECK((rc >= 0) && (endptr != *version_segment),
+              *version_segment = endptr + strlen(endptr); return 0);
+
+    // Skip one dot immediately after a series of digits
+    if (*endptr == '.') {
+        endptr++;
+    }
+
+    // Advance to next version segment
+    *version_segment = endptr;
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Compare two version strings to determine which one is higher
+ *
+ * A valid version string is of the form specified by the regex
+ * <tt>[0-9]+(\.[0-9]+)*</tt>.
+ *
+ * Leading whitespace is allowed and ignored. The two strings are compared
+ * segment by segment, until either the terminating null byte or an invalid
+ * character has been reached in both strings. A segment is a series of digits
+ * followed by a single dot or by the terminating null byte.
+ *
+ * After the terminating null byte or an invalid character is reached in one
+ * string, parsing of that string stops. All further comparisons are as if that
+ * string has an infinite number of trailing \c "0." segments. This continues
+ * until the terminating null byte or an invalid character is reached in the
+ * other string.
+ *
+ * Segments are compared by calling \c strtol() to parse them to long integers,
+ * and then performing standard integer comparison.
+ *
+ * \param[in] version1  First version to compare
+ * \param[in] version2  Second version to compare
+ *
+ * \retval -1  if \p version1 evaluates to a lower version than \p version2
+ * \retval  1  if \p version1 evaluates to a higher version than \p version2
+ * \retval  0  if \p version1 and \p version2 evaluate to an equal version
+ */
+int
+pcmk__compare_versions(const char *version1, const char *version2)
+{
+    if (version1 == version2) {
+        return 0;
+    }
+    if (pcmk__str_empty(version1) && pcmk__str_empty(version2)) {
+        return 0;
+    }
+    if (pcmk__str_empty(version1)) {
+        return -1;
+    }
+    if (pcmk__str_empty(version2)) {
+        return 1;
+    }
+
+    // Skip leading whitespace
+    for (; isspace(*version1); version1++);
+    for (; isspace(*version2); version2++);
+
+    for (const char *v1 = version1, *v2 = version2;
+         ((*v1 != '\0') || (*v2 != '\0')); ) {
+
+        long digit1 = parse_version_segment(&v1);
+        long digit2 = parse_version_segment(&v2);
+
+        if (digit1 < digit2) {
+            crm_trace("%s < %s", version1, version2);
+            return -1;
+        }
+        if (digit1 > digit2) {
+            crm_trace("%s > %s", version1, version2);
+            return 1;
+        }
+    }
+    crm_trace("%s == %s", version1, version2);
+    return 0;
+}
+
 /*
  * version1 < version2 : -1
  * version1 = version2 :  0

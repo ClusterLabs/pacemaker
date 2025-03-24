@@ -2189,7 +2189,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     CRM_CHECK(op->rsc_id != NULL, return);
 
     // Remap new status codes for older DCs
-    if (compare_version(controld_globals.dc_version, "3.2.0") < 0) {
+    if (pcmk__compare_versions(controld_globals.dc_version, "3.2.0") < 0) {
         switch (op->op_status) {
             case PCMK_EXEC_NOT_CONNECTED:
                 lrmd__set_result(op, PCMK_OCF_CONNECTION_DIED,

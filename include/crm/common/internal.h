@@ -248,6 +248,7 @@ pcmk__flag_text(uint64_t flag_group, uint64_t flags)
 
 // miscellaneous utilities (from utils.c)
 
+int pcmk__compare_versions(const char *version1, const char *version2);
 int pcmk__daemon_user(uid_t *uid, gid_t *gid);
 void pcmk__daemonize(const char *name, const char *pidfile);
 char *pcmk__generate_uuid(void);

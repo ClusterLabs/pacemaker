@@ -154,7 +154,8 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     pcmk__xe_set(node_state, PCMK_XA_UNAME, node->name);
 
     if ((flags & node_update_cluster) && node->state) {
-        if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+        if (pcmk__compare_versions(controld_globals.dc_version,
+                                   "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
             pcmk__xe_set_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
 
@@ -167,7 +168,8 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
 
     if (!pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         if (flags & node_update_peer) {
-            if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+            if (pcmk__compare_versions(controld_globals.dc_version,
+                                       "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
                 pcmk__xe_set_ll(node_state, PCMK_XA_CRMD, node->when_online);
 

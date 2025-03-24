@@ -602,7 +602,8 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
     } else {
         // A peer vote requires a comparison to determine which node is better
         int age_result = compare_age(vote.age);
-        int version_result = compare_version(vote.version, CRM_FEATURE_SET);
+        int version_result = pcmk__compare_versions(vote.version,
+                                                    CRM_FEATURE_SET);
 
         if (version_result < 0) {
             reason = "Version";

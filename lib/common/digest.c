@@ -387,7 +387,7 @@ char *
 calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
                                gboolean do_filter, const char *version)
 {
-    if ((version == NULL) || (compare_version("3.0.5", version) > 0)) {
+    if ((version == NULL) || (pcmk__compare_versions("3.0.5", version) > 0)) {
         xmlNode *sorted = NULL;
         char *digest = NULL;
 

@@ -189,7 +189,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
 {
     const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
-    bool old_version = (compare_version(op_version, "3.16.0") < 0);
+    bool old_version = (pcmk__compare_versions(op_version, "3.16.0") < 0);
 
     if (xml_op == NULL) {
         secure_list = " passwd password user ";
