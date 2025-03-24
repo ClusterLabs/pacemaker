@@ -46,7 +46,6 @@ int compare_version(const char *version1, const char *version2);
 
 void pcmk_common_cleanup(void);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
-int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 
 #ifdef __cplusplus
 }

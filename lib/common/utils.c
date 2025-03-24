@@ -162,39 +162,6 @@ pcmk__daemon_user(uid_t *uid, gid_t *gid)
 }
 
 /*!
- * \brief Get user and group IDs of pacemaker daemon user
- *
- * \param[out] uid  If non-NULL, where to store daemon user ID
- * \param[out] gid  If non-NULL, where to store daemon group ID
- *
- * \return pcmk_ok on success, -errno otherwise
- */
-int
-pcmk_daemon_user(uid_t *uid, gid_t *gid)
-{
-    static uid_t daemon_uid;
-    static gid_t daemon_gid;
-    static bool found = false;
-    int rc = pcmk_ok;
-
-    if (!found) {
-        rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
-        if (rc == pcmk_ok) {
-            found = true;
-        }
-    }
-    if (found) {
-        if (uid) {
-            *uid = daemon_uid;
-        }
-        if (gid) {
-            *gid = daemon_gid;
-        }
-    }
-    return rc;
-}
-
-/*!
  * \internal
  * \brief Return the integer equivalent of a portion of a string
  *
@@ -554,6 +521,31 @@ char *
 crm_generate_uuid(void)
 {
     return pcmk__generate_uuid();
+}
+
+int
+pcmk_daemon_user(uid_t *uid, gid_t *gid)
+{
+    static uid_t daemon_uid;
+    static gid_t daemon_gid;
+    static bool found = false;
+    int rc = pcmk_ok;
+
+    if (!found) {
+        rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
+        if (rc == pcmk_ok) {
+            found = true;
+        }
+    }
+    if (found) {
+        if (uid) {
+            *uid = daemon_uid;
+        }
+        if (gid) {
+            *gid = daemon_gid;
+        }
+    }
+    return rc;
 }
 
 // LCOV_EXCL_STOP
