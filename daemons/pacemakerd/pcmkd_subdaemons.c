@@ -40,13 +40,13 @@ enum child_daemon_flags {
     child_as_root               = 1 << 5,
 };
 
-typedef struct pcmk_child_s {
+typedef struct {
     enum pcmk_ipc_server server;
     uint32_t flags;
     pid_t pid;
     int respawn_count;
     int check_count;
-} pcmk_child_t;
+} pcmkd_child_t;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 1000    /* 1s */
 #define PCMK_PROCESS_CHECK_RETRIES  5
@@ -55,7 +55,7 @@ typedef struct pcmk_child_s {
 /* Index into the array below */
 #define PCMK_CHILD_CONTROLD  5
 
-static pcmk_child_t pcmk_children[] = {
+static pcmkd_child_t pcmk_children[] = {
     { pcmk_ipc_based, child_respawn|child_needs_cluster },
     { pcmk_ipc_fenced, child_respawn|child_needs_cluster|child_as_root },
     { pcmk_ipc_execd, child_respawn|child_as_root },
@@ -92,16 +92,16 @@ GMainLoop *mainloop = NULL;
 
 static bool fatal_error = false;
 
-static int child_liveness(pcmk_child_t *child);
+static int child_liveness(pcmkd_child_t *child);
 static gboolean escalate_shutdown(gpointer data);
-static int start_child(pcmk_child_t * child);
+static int start_child(pcmkd_child_t *child);
 static void pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode);
-static void pcmk_process_exit(pcmk_child_t * child);
+static void pcmk_process_exit(pcmkd_child_t *child);
 static gboolean pcmk_shutdown_worker(gpointer user_data);
-static void stop_child(pcmk_child_t *child, int signal);
+static void stop_child(pcmkd_child_t *child, int signal);
 
 static void
-for_each_child(void (*fn)(pcmk_child_t *child))
+for_each_child(void (*fn)(pcmkd_child_t *child))
 {
     for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
         fn(&pcmk_children[i]);
@@ -118,7 +118,7 @@ for_each_child(void (*fn)(pcmk_child_t *child))
  * \note It is the caller's responsibility to free() the return value
  */
 static inline char *
-subdaemon_path(pcmk_child_t *subdaemon)
+subdaemon_path(pcmkd_child_t *subdaemon)
 {
     return pcmk__assert_asprintf(CRM_DAEMON_DIR "/%s",
                                  pcmk__server_name(subdaemon->server));
@@ -139,7 +139,7 @@ check_next_subdaemon(gpointer user_data)
 {
     static int next_child = 0;
 
-    pcmk_child_t *child = &(pcmk_children[next_child]);
+    pcmkd_child_t *child = &(pcmk_children[next_child]);
     const char *name = pcmk__server_name(child->server);
     const long long pid = PCMK__SPECIAL_PID_AS_0(child->pid);
     int rc = child_liveness(child);
@@ -228,7 +228,7 @@ check_next_subdaemon(gpointer user_data)
 static gboolean
 escalate_shutdown(gpointer data)
 {
-    pcmk_child_t *child = data;
+    pcmkd_child_t *child = data;
 
     if (child->pid == PCMK__SPECIAL_PID) {
         pcmk_process_exit(child);
@@ -246,7 +246,7 @@ escalate_shutdown(gpointer data)
 static void
 pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
 {
-    pcmk_child_t *child = mainloop_child_userdata(p);
+    pcmkd_child_t *child = mainloop_child_userdata(p);
     const char *name = mainloop_child_name(p);
 
     if (signo) {
@@ -300,7 +300,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 }
 
 static void
-pcmk_process_exit(pcmk_child_t * child)
+pcmk_process_exit(pcmkd_child_t * child)
 {
     const char *name = pcmk__server_name(child->server);
     child->pid = 0;
@@ -351,7 +351,7 @@ pcmk_shutdown_worker(gpointer user_data)
     }
 
     for (; phase >= 0; phase--) {
-        pcmk_child_t *child = &(pcmk_children[phase]);
+        pcmkd_child_t *child = &(pcmk_children[phase]);
         const char *name = pcmk__server_name(child->server);
         time_t now = 0;
 
@@ -419,7 +419,7 @@ pcmk_shutdown_worker(gpointer user_data)
         room for races */
  // \return Standard Pacemaker return code
 static int
-start_child(pcmk_child_t * child)
+start_child(pcmkd_child_t * child)
 {
     const bool as_root = pcmk__is_set(child->flags, child_as_root);
     const char *user = as_root? "root" : CRM_DAEMON_USER;
@@ -558,7 +558,7 @@ start_child(pcmk_child_t * child)
  *       a different authentic holder of the IPC end-point).
  */
 static int
-child_liveness(pcmk_child_t *child)
+child_liveness(pcmkd_child_t *child)
 {
     uid_t cl_uid = 0;
     gid_t cl_gid = 0;
@@ -660,7 +660,7 @@ child_liveness(pcmk_child_t *child)
 }
 
 static void
-reset_respawn_count(pcmk_child_t *child)
+reset_respawn_count(pcmkd_child_t *child)
 {
     /* Restore pristine state */
     child->respawn_count = 0;
@@ -669,7 +669,7 @@ reset_respawn_count(pcmk_child_t *child)
 #define WAIT_TRIES 4  /* together with interleaved sleeps, worst case ~ 1s */
 
 static int
-child_up_but_no_ipc(pcmk_child_t *child)
+child_up_but_no_ipc(pcmkd_child_t *child)
 {
     const char *ipc_name = pcmk__server_ipc_name(child->server);
 
@@ -687,7 +687,7 @@ child_up_but_no_ipc(pcmk_child_t *child)
 }
 
 static int
-child_alive(pcmk_child_t *child)
+child_alive(pcmkd_child_t *child)
 {
     const char *name = pcmk__server_name(child->server);
 
@@ -726,7 +726,7 @@ child_alive(pcmk_child_t *child)
 }
 
 static int
-find_and_track_child(pcmk_child_t *child, int rounds, bool *wait_in_progress)
+find_and_track_child(pcmkd_child_t *child, int rounds, bool *wait_in_progress)
 {
     int rc = pcmk_rc_ok;
     const char *name = pcmk__server_name(child->server);
@@ -829,7 +829,7 @@ find_and_track_existing_processes(void)
 }
 
 static void
-start_subdaemon(pcmk_child_t *child)
+start_subdaemon(pcmkd_child_t *child)
 {
     if (child->pid != 0) {
         /* We are already tracking this process */
@@ -873,7 +873,7 @@ pcmk_shutdown(int nsig)
 }
 
 static void
-restart_subdaemon(pcmk_child_t *child)
+restart_subdaemon(pcmkd_child_t *child)
 {
     if (!pcmk__is_set(child->flags, child_needs_retry) || child->pid != 0) {
         return;
@@ -894,7 +894,7 @@ restart_cluster_subdaemons(void)
 }
 
 static void
-stop_child(pcmk_child_t *child, int signal)
+stop_child(pcmkd_child_t *child, int signal)
 {
     const char *name = pcmk__server_name(child->server);
 
