@@ -666,7 +666,7 @@ cib_file_new(const char *cib_location)
         return NULL;
     }
 
-    private->id = crm_generate_uuid();
+    private->id = pcmk__generate_uuid();
     private->filename = filename;
 
     cib->variant = cib_file;
