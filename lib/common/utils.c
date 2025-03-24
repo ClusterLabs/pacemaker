@@ -309,12 +309,6 @@ pcmk__generate_uuid(void)
     return buffer;
 }
 
-char *
-crm_generate_uuid(void)
-{
-    return pcmk__generate_uuid();
-}
-
 /*!
  * \internal
  * \brief Sleep for given milliseconds
@@ -468,6 +462,12 @@ crm_is_daemon_name(const char *name)
                             "stonith-ng",
                             "stonithd",
                             NULL);
+}
+
+char *
+crm_generate_uuid(void)
+{
+    return pcmk__generate_uuid();
 }
 
 // LCOV_EXCL_STOP
