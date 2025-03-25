@@ -30,6 +30,7 @@
 #include <crm/services.h>
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/nvpair.h>          // hash2smartfield(), xml2list()
 #include <crm/common/ipc_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/common/tls_internal.h>

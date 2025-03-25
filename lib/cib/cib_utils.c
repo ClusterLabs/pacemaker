@@ -19,7 +19,9 @@
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
+#include <crm/common/acl.h>             // pcmk_acl_required(), etc.
 #include <crm/common/cib_internal.h>
+#include <crm/common/nvpair.h>          // pcmk_unpack_nvpair_blocks()
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 

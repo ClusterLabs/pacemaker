@@ -14,6 +14,7 @@
 #include <glib.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // pcmk_parse_score()
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 

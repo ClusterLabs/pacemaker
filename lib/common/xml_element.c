@@ -22,6 +22,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/results.h>         // pcmk_rc_ok, etc.
+#include <crm/common/scores.h>          // pcmk_parse_score()
 #include <crm/common/xml.h>
 #include "crmcommon_private.h"
 
@@ -1551,6 +1552,7 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 
 #include <glib.h>                       // gboolean, GSList
 
+#include <crm/common/nvpair.h>          // pcmk_free_nvpairs()
 #include <crm/common/nvpair_compat.h>   // pcmk_xml_attrs2nvpairs(), etc.
 #include <crm/common/xml_compat.h>      // crm_xml_sanitize_id()
 #include <crm/common/xml_element_compat.h>

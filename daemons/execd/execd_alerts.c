@@ -18,6 +18,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/alerts_internal.h>
+#include <crm/common/nvpair.h>          // xml2list()
 #include <crm/common/xml.h>
 
 #include "pacemaker-execd.h"

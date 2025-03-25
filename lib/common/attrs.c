@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 
+#include <crm/common/nvpair.h>              // crm_meta_name()
 #include <crm/common/xml.h>
 #include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>

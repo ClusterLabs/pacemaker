@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
 #include <stdio.h>      // snprintf(), NULL
 #include <string.h>     // strcpy(), strdup()
 #include <sys/types.h>  // size_t
+
+#include <crm/common/scores.h>  // pcmk_parse_score(), etc.
 
 int pcmk__score_red = 0;
 int pcmk__score_green = 0;

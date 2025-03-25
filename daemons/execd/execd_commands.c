@@ -29,6 +29,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_internal.h>
+#include <crm/common/nvpair.h>          // hash2smartfield()
 #include <crm/common/xml.h>
 
 #include "pacemaker-execd.h"

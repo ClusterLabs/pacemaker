@@ -17,6 +17,7 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_rsc_info_t, etc.
 #include <crm/services.h>
+#include <crm/common/nvpair.h>  // crm_meta_name()
 #include <crm/common/xml.h>
 #include <crm/lrmd_internal.h>
 

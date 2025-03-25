@@ -20,6 +20,7 @@
 #include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/lists_internal.h>
+#include <crm/common/nvpair.h>              // crm_meta_name(), etc.
 #include <crm/services_internal.h>
 
 #include <crm_resource.h>

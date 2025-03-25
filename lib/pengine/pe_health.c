@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/scores.h>      // pcmk_parse_score(), etc.
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"

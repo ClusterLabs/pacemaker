@@ -21,6 +21,7 @@
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
+#include <crm/common/acl.h>             // xml_acl_disable()
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.

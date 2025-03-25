@@ -9,8 +9,10 @@
 
 #include <crm_internal.h>
 #include <crm/cib/internal.h>
+#include <crm/common/nvpair.h>      // crm_meta_value()
 #include <crm/common/output.h>
 #include <crm/common/results.h>
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/scheduler.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>

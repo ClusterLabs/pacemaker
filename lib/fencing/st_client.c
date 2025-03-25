@@ -24,6 +24,7 @@
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
+#include <crm/common/nvpair.h>      // hash2field()
 #include <crm/common/xml.h>
 
 #include <crm/common/mainloop.h>

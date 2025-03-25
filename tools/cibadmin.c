@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <stdio.h>
 #include <crm/crm.h>
+#include <crm/common/acl.h>                 // pcmk_acl_required()
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>

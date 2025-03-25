@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 
 #include <crm/common/scheduler.h>           // pcmk_scheduler_t
 #include <crm/common/scheduler_internal.h>  // pcmk_scheduler_t private data
+#include <crm/common/scores.h>              // pcmk_parse_score(), etc.
 
 /*!
  * \internal

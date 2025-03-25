@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // pcmk_str_is_infinity(), etc.
 #include <crm/common/xml.h>
 
 void

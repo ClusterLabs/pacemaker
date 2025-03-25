@@ -30,6 +30,7 @@
 #include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/nvpair.h>          // hash2field(), xml2list()
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>

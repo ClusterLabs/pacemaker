@@ -13,6 +13,7 @@
 #include <stdint.h>                 // uint32_t
 
 #include <crm/common/output.h>
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/pengine/status.h>
 #include <crm/pengine/complex.h>
 #include <crm/pengine/internal.h>

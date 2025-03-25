@@ -17,6 +17,7 @@
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/lrmd_internal.h>
+#include <crm/common/nvpair.h>              // crm_meta_value()
 #include <crm/common/scheduler_internal.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"

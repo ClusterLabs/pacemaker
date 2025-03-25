@@ -19,6 +19,7 @@
 #include <crm/crm.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/scores.h>          // pcmk_parse_score(), etc.
 #include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"

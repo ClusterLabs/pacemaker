@@ -13,6 +13,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/lrmd.h>               // lrmd_event_data_t, lrmd_free_event()
+#include <crm/common/nvpair.h>      // crm_meta_value()
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 

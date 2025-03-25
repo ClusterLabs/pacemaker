@@ -14,6 +14,7 @@
 
 #include <crm/crm.h>
 #include <crm/common/rules_internal.h>
+#include <crm/common/scores.h>          // pcmk_parse_score(), etc.
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 

@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/common/nvpair.h>              // pcmk_unpack_nvpair_blocks()
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>

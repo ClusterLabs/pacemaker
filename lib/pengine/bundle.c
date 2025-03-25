@@ -15,6 +15,8 @@
 
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
+#include <crm/common/nvpair.h>          // crm_create_nvpair_xml()
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>

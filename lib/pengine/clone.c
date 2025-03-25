@@ -15,6 +15,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
+#include <crm/common/scores.h>              // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>

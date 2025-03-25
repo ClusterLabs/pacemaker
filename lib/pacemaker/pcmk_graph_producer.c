@@ -12,6 +12,7 @@
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/common/nvpair.h>      // hash2field(), etc.
 #include <crm/common/xml.h>
 
 #include <glib.h>

@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/lrmd.h>
+#include <crm/common/nvpair.h>          // pcmk_unpack_nvpair_blocks(), etc.
 #include <crm/common/xml.h>
 #include <crm/common/alerts_internal.h>
 #include <crm/common/cib_internal.h>

@@ -13,6 +13,7 @@
 
 #include <qb/qbdefs.h>              // QB_ABS()
 
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 
 #include <pacemaker-internal.h>

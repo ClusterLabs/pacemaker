@@ -23,6 +23,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
+#include <crm/common/nvpair.h>          // crm_create_nvpair_xml()
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml_internal.h>

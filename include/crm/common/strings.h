@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_COMMON_STRINGS__H
 #define PCMK__CRM_COMMON_STRINGS__H
 
-#include <glib.h>                    // gboolean, guint, G_GNUC_PRINTF
+#include <glib.h>                    // guint
 
 #ifdef __cplusplus
 extern "C" {

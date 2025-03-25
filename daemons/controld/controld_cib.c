@@ -12,6 +12,7 @@
 #include <unistd.h>  /* sleep */
 
 #include <crm/common/alerts_internal.h>
+#include <crm/common/nvpair.h>          // crm_meta_value()
 #include <crm/common/xml.h>
 #include <crm/crm.h>
 #include <crm/lrmd_internal.h>

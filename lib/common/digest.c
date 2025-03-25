@@ -20,6 +20,7 @@
 #include <gnutls/gnutls.h>      // gnutls_strerror()
 
 #include <crm/crm.h>
+#include <crm/common/nvpair.h>  // crm_meta_name()
 #include <crm/common/xml.h>
 #include "crmcommon_private.h"
 

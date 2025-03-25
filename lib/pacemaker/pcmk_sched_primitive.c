@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <stdint.h>                 // uint8_t, uint32_t
 
+#include <crm/common/nvpair.h>      // crm_meta_name()
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 

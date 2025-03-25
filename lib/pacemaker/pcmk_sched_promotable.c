@@ -11,6 +11,7 @@
 
 #include <stdbool.h>                // bool, true, false
 
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 

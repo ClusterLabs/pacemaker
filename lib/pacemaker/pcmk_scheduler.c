@@ -12,6 +12,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
+#include <crm/common/scores.h>              // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/scheduler_internal.h>

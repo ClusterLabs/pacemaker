@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>

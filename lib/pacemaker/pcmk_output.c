@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
+#include <crm/common/scores.h>      // pcmk_readable_score()
 #include <crm/common/xml.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>   // stonith__*

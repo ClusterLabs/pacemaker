@@ -13,6 +13,8 @@
 #include <stdbool.h>
 
 #include <crm/crm.h>
+#include <crm/common/nvpair.h>      // pcmk_unpack_nvpair_blocks()
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/pengine/internal.h>
 

@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/nvpair.h>      // crm_meta_name()
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 

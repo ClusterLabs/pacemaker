@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>

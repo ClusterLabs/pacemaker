@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/nvpair.h>      // pcmk_free_nvpairs(), etc.
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 
 #include <crm/pengine/internal.h>

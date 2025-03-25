@@ -14,6 +14,7 @@
 #include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // pcmk_parse_score()
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/pengine/internal.h>

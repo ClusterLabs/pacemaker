@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/nvpair.h>              // crm_create_nvpair_xml()
 #include <crm/common/xml.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>

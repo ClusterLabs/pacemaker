@@ -21,6 +21,7 @@
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
+#include <crm/common/acl.h>             // pcmk_acl_required(), etc.
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"

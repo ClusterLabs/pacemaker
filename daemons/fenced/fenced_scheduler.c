@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <glib.h>
 
+#include <crm/common/scores.h>      // pcmk_readable_score()
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 

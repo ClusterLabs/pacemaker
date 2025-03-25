@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 

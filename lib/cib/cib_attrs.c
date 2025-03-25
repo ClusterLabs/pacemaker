@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 
+#include <crm/common/nvpair.h>          // crm_create_nvpair_xml()
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/output_internal.h>

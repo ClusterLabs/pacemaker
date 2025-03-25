@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #include <crm/services.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/nvpair.h>              // crm_meta_name()
 
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>

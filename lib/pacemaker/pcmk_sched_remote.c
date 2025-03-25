@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 #include <crm/cib.h>
+#include <crm/common/nvpair.h>          // hash2metafield()
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 
