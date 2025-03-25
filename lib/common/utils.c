@@ -20,6 +20,7 @@
 #include <pwd.h>
 #include <time.h>
 #include <libgen.h>
+#include <regex.h>                      // regex_t, etc.
 #include <signal.h>
 #include <grp.h>
 
@@ -204,73 +205,24 @@ version_helper(const char *text, const char **end_text)
 
 /*!
  * \internal
- * \brief Parse a version segment from an input and advance the input pointer
- *
- * \param[in,out] version_segment  Pointer to a version string segment
- *
- * \return Nonnegative integer value parsed from \p *version_segment on success,
- *         or 0 on failure
- *
- * \note Upon return, \p *version_segment points to the (possibly invalid) next
- *       segment on success, or to the terminating null byte on failure.
- */
-static long
-parse_version_segment(const char **version_segment)
-{
-    char *endptr = NULL;
-    long rc = 0;
-
-    if (pcmk__str_empty(*version_segment)) {
-        return 0;
-    }
-
-    /* '+', '-', and whitespace are invalid in version strings. strtol() won't
-     * complain, so catch them here. If the first character is not a digit,
-     * advance to end of string.
-     */
-    if (!isdigit(**version_segment)) {
-        *version_segment += strlen(*version_segment);
-        return 0;
-    }
-
-    /* Negative return code or unparsable input should be impossible, since we
-     * checked with isdigit() first. If it happens somehow, advance to end of
-     * string.
-     */
-    rc = strtol(*version_segment, &endptr, 10);
-    CRM_CHECK((rc >= 0) && (endptr != *version_segment),
-              *version_segment = endptr + strlen(endptr); return 0);
-
-    // Skip one dot immediately after a series of digits
-    if (*endptr == '.') {
-        endptr++;
-    }
-
-    // Advance to next version segment
-    *version_segment = endptr;
-    return rc;
-}
-
-/*!
- * \internal
  * \brief Compare two version strings to determine which one is higher
  *
  * A valid version string is of the form specified by the regex
  * <tt>[0-9]+(\.[0-9]+)*</tt>.
  *
- * Leading whitespace is allowed and ignored. The two strings are compared
- * segment by segment, until either the terminating null byte or an invalid
- * character has been reached in both strings. A segment is a series of digits
- * followed by a single dot or by the terminating null byte.
+ * Leading whitespace and trailing garbage are allowed and ignored.
  *
- * After the terminating null byte or an invalid character is reached in one
- * string, parsing of that string stops. All further comparisons are as if that
- * string has an infinite number of trailing \c "0." segments. This continues
- * until the terminating null byte or an invalid character is reached in the
- * other string.
+ * For each string, we get all segments until the first invalid character. A
+ * segment is a series of digits, and segments are delimited by a single dot.
+ * The two strings are compared segment by segment, until either we find a
+ * difference or we've processed all segments in both strings.
  *
- * Segments are compared by calling \c strtol() to parse them to long integers,
- * and then performing standard integer comparison.
+ * If one string runs out of segments to compare before the other string does,
+ * we treat it as if it has enough padding \c "0" segments to finish the
+ * comparisons.
+ *
+ * Segments are compared by calling \c strtoll() to parse them to long long
+ * integers and then performing standard integer comparison.
  *
  * \param[in] version1  First version to compare
  * \param[in] version2  Second version to compare
@@ -278,44 +230,77 @@ parse_version_segment(const char **version_segment)
  * \retval -1  if \p version1 evaluates to a lower version than \p version2
  * \retval  1  if \p version1 evaluates to a higher version than \p version2
  * \retval  0  if \p version1 and \p version2 evaluate to an equal version
+ *
+ * \note Each version segment's parsed value must fit into a <tt>long long</tt>.
  */
 int
 pcmk__compare_versions(const char *version1, const char *version2)
 {
+    regex_t regex;
+    regmatch_t pmatch1[1];
+    regmatch_t pmatch2[1];
+    regoff_t off1 = 0;
+    regoff_t off2 = 0;
+
+    bool has_match1 = false;
+    bool has_match2 = false;
+    int rc = 0;
+
     if (version1 == version2) {
         return 0;
     }
-    if (pcmk__str_empty(version1) && pcmk__str_empty(version2)) {
-        return 0;
+
+    // Parse each version string as digit segments delimited by dots
+    pcmk__assert(regcomp(&regex, "^[[:digit:]]+\\.?", REG_EXTENDED) == 0);
+
+    if (version1 != NULL) {
+        // Skip leading whitespace
+        for (; isspace(*version1); version1++);
+        has_match1 = (regexec(&regex, version1, 1, pmatch1, 0) == 0);
     }
-    if (pcmk__str_empty(version1)) {
-        return -1;
-    }
-    if (pcmk__str_empty(version2)) {
-        return 1;
+    if (version2 != NULL) {
+        for (; isspace(*version2); version2++);
+        has_match2 = (regexec(&regex, version2, 1, pmatch2, 0) == 0);
     }
 
-    // Skip leading whitespace
-    for (; isspace(*version1); version1++);
-    for (; isspace(*version2); version2++);
+    while (has_match1 || has_match2) {
+        long long value1 = 0;
+        long long value2 = 0;
 
-    for (const char *v1 = version1, *v2 = version2;
-         ((*v1 != '\0') || (*v2 != '\0')); ) {
+        if (has_match1) {
+            value1 = strtoll(version1 + off1 + pmatch1[0].rm_so, NULL, 10);
+        }
+        if (has_match2) {
+            value2 = strtoll(version2 + off2 + pmatch2[0].rm_so, NULL, 10);
+        }
 
-        long digit1 = parse_version_segment(&v1);
-        long digit2 = parse_version_segment(&v2);
-
-        if (digit1 < digit2) {
+        if (value1 < value2) {
             crm_trace("%s < %s", version1, version2);
-            return -1;
+            rc = -1;
+            goto done;
         }
-        if (digit1 > digit2) {
+        if (value1 > value2) {
             crm_trace("%s > %s", version1, version2);
-            return 1;
+            rc = 1;
+            goto done;
+        }
+
+        // Compare next segments
+        if (has_match1) {
+            off1 += pmatch1[0].rm_eo;
+            has_match1 = (regexec(&regex, version1 + off1, 1, pmatch1, 0) == 0);
+        }
+        if (has_match2) {
+            off2 += pmatch2[0].rm_eo;
+            has_match2 = (regexec(&regex, version2 + off2, 1, pmatch2, 0) == 0);
         }
     }
+
     crm_trace("%s == %s", version1, version2);
-    return 0;
+
+done:
+    regfree(&regex);
+    return rc;
 }
 
 /*

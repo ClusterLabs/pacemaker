@@ -43,9 +43,9 @@ empty_params(void **state)
     assert_compare_version(NULL, "1.0.1", -1);
     assert_compare_version("", "1.0.1", -1);
 
-    // @FIXME NULL/empty should be equal to an invalid version
-    assert_compare_version(NULL, "abc", -1);    // Should be 0
-    assert_compare_version("", "abc", -1);      // Should be 0
+    // NULL or empty is treated as equal to an invalid version
+    assert_compare_version(NULL, "abc", 0);
+    assert_compare_version("", "abc", 0);
 }
 
 static void
