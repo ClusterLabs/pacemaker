@@ -731,15 +731,17 @@ pcmk__xml_free_node(xmlNode *xml)
  * \param[in]     position  Position of \p node among its siblings for change
  *                          tracking (negative to calculate automatically if
  *                          needed)
+ *
+ * \return Standard Pacemaker return code
  */
-static void
+static int
 free_xml_with_position(xmlNode *node, int position)
 {
     xmlDoc *doc = NULL;
     xml_node_private_t *nodepriv = NULL;
 
     if (node == NULL) {
-        return;
+        return pcmk_rc_ok;
     }
     doc = node->doc;
     nodepriv = node->_private;
@@ -749,19 +751,23 @@ free_xml_with_position(xmlNode *node, int position)
          * free the root element without write permission.
          */
         pcmk__xml_free_doc(doc);
-        return;
+        return pcmk_rc_ok;
     }
 
     if (!pcmk__check_acl(node, NULL, pcmk__xf_acl_write)) {
-        GString *xpath = NULL;
+        pcmk__if_tracing(
+            {
+                GString *xpath = pcmk__element_xpath(node);
 
-        pcmk__if_tracing({}, return);
-        xpath = pcmk__element_xpath(node);
-        qb_log_from_external_source(__func__, __FILE__,
-                                    "Cannot remove %s %x", LOG_TRACE,
-                                    __LINE__, 0, xpath->str, nodepriv->flags);
-        g_string_free(xpath, TRUE);
-        return;
+                qb_log_from_external_source(__func__, __FILE__,
+                                            "Cannot remove %s %x", LOG_TRACE,
+                                            __LINE__, 0, xpath->str,
+                                            nodepriv->flags);
+                g_string_free(xpath, TRUE);
+            },
+            {}
+        );
+        return EACCES;
     }
 
     if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
@@ -796,6 +802,7 @@ free_xml_with_position(xmlNode *node, int position)
         }
     }
     pcmk__xml_free_node(node);
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -1292,31 +1299,44 @@ xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
 
 /*!
  * \internal
- * \brief Add an XML child element to a node, marked as deleted
+ * \brief Add a deleted object record for an old XML child if ACLs allow
  *
- * When calculating XML changes, we need to know when a child element has been
- * deleted. Add the child back to the new XML, so that we can check the removal
- * against ACLs, and mark it as deleted for later removal after differences have
- * been calculated.
+ * This is intended to be called for a child of an old XML element that is not
+ * present as a child of a new XML element.
  *
- * \param[in,out] old_child    Child element from original XML
- * \param[in,out] new_parent   New XML to add marked copy to
+ * Add a temporary copy of the old child to the new XML. Then check whether ACLs
+ * would have allowed the deletion of that element. If so, add a deleted object
+ * record for it to the new XML's document, and set the \c pcmk__xf_skip flag on
+ * the old child.
+ *
+ * The temporary copy is removed before returning. The new XML and all of its
+ * ancestors will have the \c pcmk__xf_dirty flag set because of the creation,
+ * however.
+ *
+ * \param[in,out] old_child   Child of old XML
+ * \param[in,out] new_parent  New XML that does not contain \p old_child
  */
 static void
 mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
 {
+    int pos = pcmk__xml_position(old_child, pcmk__xf_skip);
+
     // Re-create the child element so we can check ACLs
     xmlNode *candidate = pcmk__xml_copy(new_parent, old_child);
 
     // Clear flags on new child and its children
     pcmk__xml_tree_foreach(candidate, pcmk__xml_reset_node_flags, NULL);
 
-    // Check whether ACLs allow the deletion
+    // free_xml_with_position() will check whether ACLs allow the deletion
     pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
 
-    // Remove the child again (which will track it in document's deleted_objs)
-    free_xml_with_position(candidate,
-                           pcmk__xml_position(old_child, pcmk__xf_skip));
+    /* Try to remove the child again (which will track it in document's
+     * deleted_objs on success)
+     */
+    if (free_xml_with_position(candidate, pos) != pcmk_rc_ok) {
+        // ACLs denied deletion in free_xml_with_position. Free candidate here.
+        pcmk__xml_free_node(candidate);
+    }
 
     pcmk__set_xml_flags((xml_node_private_t *) old_child->_private,
                         pcmk__xf_skip);
