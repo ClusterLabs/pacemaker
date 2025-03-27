@@ -560,8 +560,8 @@ invalid_msg(xmlNode *msg)
                    !pcmk__xe_is(msg, PCMK__XE_LRMD_IPC_PROXY);
 
     if (invalid) {
-        crm_info("Ignoring invalid IPC message: to '%s' not " CRM_SYSTEM_LRMD,
-                 pcmk__s(to, ""));
+        pcmk__info("Ignoring invalid IPC message: to '%s' not " CRM_SYSTEM_LRMD,
+                   pcmk__s(to, ""));
         crm_log_xml_info(msg, "[Invalid]");
     }
 

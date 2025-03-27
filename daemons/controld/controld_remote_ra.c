@@ -231,7 +231,7 @@ remote_node_up(const char *node_name)
     lrm_state_t *connection_rsc = NULL;
 
     CRM_CHECK(node_name != NULL, return);
-    crm_info("Announcing Pacemaker Remote node %s", node_name);
+    pcmk__info("Announcing Pacemaker Remote node %s", node_name);
 
     call_opt = crmd_cib_smart_opt();
 
@@ -517,7 +517,7 @@ connection_takeover_timeout_cb(gpointer data)
     lrm_state_t *lrm_state = NULL;
     remote_ra_cmd_t *cmd = data;
 
-    crm_info("takeover event timed out for node %s", cmd->rsc_id);
+    pcmk__info("takeover event timed out for node %s", cmd->rsc_id);
     cmd->takeover_timeout_id = 0;
 
     lrm_state = controld_get_executor_state(cmd->rsc_id, false);
@@ -536,8 +536,8 @@ monitor_timeout_cb(gpointer data)
 
     lrm_state = controld_get_executor_state(cmd->rsc_id, false);
 
-    crm_info("Timed out waiting for remote poke response from %s%s",
-             cmd->rsc_id, (lrm_state? "" : " (no LRM state)"));
+    pcmk__info("Timed out waiting for remote poke response from %s%s",
+               cmd->rsc_id, ((lrm_state != NULL)? "" : " (no LRM state)"));
     cmd->monitor_timeout_id = 0;
     pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
                      "Remote executor did not respond");
@@ -1283,7 +1283,7 @@ remote_ra_fail(const char *node_name)
     if (lrm_state && lrm_state_is_connected(lrm_state)) {
         remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
 
-        crm_info("Failing monitors on Pacemaker Remote node %s", node_name);
+        pcmk__info("Failing monitors on Pacemaker Remote node %s", node_name);
         ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
         ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
     }

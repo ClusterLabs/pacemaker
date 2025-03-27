@@ -462,8 +462,8 @@ lrmd_tls_dispatch(gpointer userdata)
     }
 
     if (rc != pcmk_rc_ok && rc != ETIME) {
-        crm_info("Lost %s executor connection while reading data",
-                 (native->remote_nodename? native->remote_nodename : "local"));
+        pcmk__info("Lost %s executor connection while reading data",
+                   pcmk__s(native->remote_nodename, "local"));
         lrmd_tls_disconnect(lrmd);
         return -1;
     }
@@ -583,11 +583,11 @@ lrmd_ipc_connection_destroy(gpointer userdata)
 
     switch (native->type) {
         case pcmk__client_ipc:
-            crm_info("Disconnected from local executor");
+            pcmk__info("Disconnected from local executor");
             break;
         case pcmk__client_tls:
-            crm_info("Disconnected from remote executor on %s",
-                     native->remote_nodename);
+            pcmk__info("Disconnected from remote executor on %s",
+                       native->remote_nodename);
             break;
         default:
             pcmk__err("Unsupported executor connection type %d (bug?)",
@@ -612,7 +612,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    crm_info("TLS connection destroyed");
+    pcmk__info("TLS connection destroyed");
 
     if (native->remote->tls_session) {
         gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
@@ -717,10 +717,10 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             *reply = NULL;
         } else if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             /* got a notify while waiting for reply, trigger the notify to be processed later */
-            crm_info("queueing notify");
+            pcmk__info("queueing notify");
             native->pending_notify = g_list_append(native->pending_notify, *reply);
             if (native->process_notify) {
-                crm_info("notify trigger set.");
+                pcmk__info("notify trigger set");
                 mainloop_set_trigger(native->process_notify);
             }
             *reply = NULL;
@@ -1121,7 +1121,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
         .destroy = lrmd_ipc_connection_destroy
     };
 
-    crm_info("Connecting to executor");
+    pcmk__info("Connecting to executor");
 
     if (fd) {
         /* No mainloop */
@@ -1396,8 +1396,8 @@ tls_handshake_succeeded(lrmd_t *lrmd)
      */
     pcmk__tls_check_cert_expiration(native->remote->tls_session);
 
-    crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
-             native->server, native->port);
+    pcmk__info("TLS connection to Pacemaker Remote server %s:%d succeeded",
+               native->server, native->port);
     rc = add_tls_to_mainloop(lrmd, true);
 
     /* If add_tls_to_mainloop failed, report that right now.  Otherwise, we have
@@ -1526,9 +1526,9 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 
     if (rc != pcmk_rc_ok) {
         lrmd_tls_connection_destroy(lrmd);
-        crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                 QB_XS " rc=%d",
-                 native->server, native->port, pcmk_rc_str(rc), rc);
+        pcmk__info("Could not connect to Pacemaker Remote at %s:%d: %s "
+                   QB_XS " rc=%d",
+                   native->server, native->port, pcmk_rc_str(rc), rc);
         report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
         return;
     }
@@ -1552,9 +1552,9 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 
         rc = lrmd__init_remote_key(&psk_key);
         if (rc != pcmk_rc_ok) {
-            crm_info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                     QB_XS " rc=%d",
-                     native->server, native->port, pcmk_rc_str(rc), rc);
+            pcmk__info("Could not connect to Pacemaker Remote at %s:%d: %s "
+                       QB_XS " rc=%d",
+                       native->server, native->port, pcmk_rc_str(rc), rc);
             lrmd_tls_connection_destroy(lrmd);
             report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
             return;
@@ -1669,8 +1669,9 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         return EKEYREJECTED;
     }
 
-    crm_info("Client TLS connection established with Pacemaker Remote server %s:%d", native->server,
-             native->port);
+    pcmk__info("Client TLS connection established with Pacemaker Remote server "
+               "%s:%d",
+               native->server, native->port);
 
     if (fd) {
         *fd = native->sock;

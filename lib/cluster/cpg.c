@@ -594,10 +594,10 @@ node_left(const char *cpg_group_name, int event_counter,
     }
 
     if (rival == NULL) {
-        crm_info("Group %s event %d: %s (node %u pid %u) left%s",
-                 cpg_group_name, event_counter, peer_name(peer),
-                 cpg_peer->nodeid, cpg_peer->pid,
-                 cpgreason2str(cpg_peer->reason));
+        pcmk__info("Group %s event %d: %s (node %u pid %u) left%s",
+                   cpg_group_name, event_counter, peer_name(peer),
+                   cpg_peer->nodeid, cpg_peer->pid,
+                   cpgreason2str(cpg_peer->reason));
         if (peer != NULL) {
             crm_update_peer_proc(__func__, peer, crm_proc_cpg,
                                  PCMK_VALUE_OFFLINE);
@@ -666,9 +666,9 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
     sorted = NULL;
 
     for (int i = 0; i < joined_list_entries; i++) {
-        crm_info("Group %s event %d: node %u pid %u joined%s",
-                 group_name->value, counter, joined_list[i].nodeid,
-                 joined_list[i].pid, cpgreason2str(joined_list[i].reason));
+        pcmk__info("Group %s event %d: node %u pid %u joined%s",
+                   group_name->value, counter, joined_list[i].nodeid,
+                   joined_list[i].pid, cpgreason2str(joined_list[i].reason));
     }
 
     for (int i = 0; i < member_list_entries; i++) {
@@ -683,7 +683,7 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
                        group_name->value, counter, member_list[i].pid);
             continue;
         }
-        crm_info("Group %s event %d: %s (node %u pid %u) is member",
+        pcmk__info("Group %s event %d: %s (node %u pid %u) is member",
                  group_name->value, counter, peer_name(peer),
                  member_list[i].nodeid, member_list[i].pid);
 
@@ -895,7 +895,7 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
         cluster->priv->cpg_handle = 0;
 
     } else {
-        crm_info("No CPG connection");
+        pcmk__info("No CPG connection");
     }
 }
 

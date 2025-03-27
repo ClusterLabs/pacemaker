@@ -102,11 +102,11 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
         a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
         if (dampen > 0) {
             a->timer = attrd_add_timer(attr, a->timeout_ms, a);
-            crm_info("Update attribute %s delay to %dms (%s)",
-                     attr, dampen, dvalue);
+            pcmk__info("Update attribute %s delay to %dms (%s)",
+                       attr, dampen, dvalue);
         } else {
             a->timer = NULL;
-            crm_info("Update attribute %s to remove delay", attr);
+            pcmk__info("Update attribute %s to remove delay", attr);
         }
 
         /* If dampening changed, do an immediate write-out,

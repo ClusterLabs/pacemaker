@@ -156,9 +156,9 @@ score_from_attr(const char *constraint_id, const char *attr_name,
                                  PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
     score_s = pcmk__node_attr(node, attr_name, target, pcmk__rsc_node_current);
     if (pcmk__str_empty(score_s)) {
-        crm_info("Ignoring location %s for %s on %s "
-                 "because it has no node attribute %s",
-                 constraint_id, rsc->id, pcmk__node_name(node), attr_name);
+        pcmk__info("Ignoring location %s for %s on %s because it has no node "
+                   "attribute %s",
+                   constraint_id, rsc->id, pcmk__node_name(node), attr_name);
         return ENXIO;
     }
 
@@ -329,9 +329,9 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         pcmk__location_t *location = NULL;
 
         if (match == NULL) {
-            crm_info("Ignoring location constraint %s "
-                     "because '%s' is not a known node",
-                     pcmk__s(id, "without ID"), node);
+            pcmk__info("Ignoring location constraint %s because '%s' is not a "
+                       "known node",
+                       pcmk__s(id, "without ID"), node);
             return;
         }
 

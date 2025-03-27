@@ -291,8 +291,9 @@ update_remaining_timeout(stonith_action_t * action)
     int diff = time(NULL) - action->initial_start_time;
 
     if (action->tries >= action->max_retries) {
-        crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
-                 action->agent, action->action, action->max_retries);
+        pcmk__info("Attempted to execute agent %s (%s) the maximum number of "
+                   "times (%d) allowed",
+                   action->agent, action->action, action->max_retries);
         action->remaining_timeout = 0;
     } else if ((action->result.execution_status != PCMK_EXEC_TIMEOUT)
                && (diff < (action->timeout * 0.7))) {
@@ -628,10 +629,10 @@ internal_stonith_action_execute(stonith_action_t * action)
         action->initial_start_time = time(NULL);
     } else {
         // Later attempt after earlier failure
-        crm_info("Attempt %d to execute '%s' action of agent %s "
-                 "(%ds timeout remaining)",
-                 action->tries, action->action, action->agent,
-                 action->remaining_timeout);
+        pcmk__info("Attempt %d to execute '%s' action of agent %s (%ds timeout "
+                   "remaining)",
+                   action->tries, action->action, action->agent,
+                   action->remaining_timeout);
         is_retry = 1;
     }
 

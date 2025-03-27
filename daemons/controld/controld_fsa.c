@@ -530,8 +530,8 @@ check_join_counts(fsa_data_t *msg_data)
         controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
 
     } else if (controld_globals.membership_id != controld_globals.peer_seq) {
-        crm_info("New join needed because membership changed (%llu -> %llu)",
-                 controld_globals.membership_id, controld_globals.peer_seq);
+        pcmk__info("New join needed because membership changed (%llu -> %llu)",
+                   controld_globals.membership_id, controld_globals.peer_seq);
         controld_fsa_prepend(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else {
@@ -624,7 +624,8 @@ do_state_transition(enum crmd_fsa_state cur_state,
             controld_purge_fencing_cleanup();
 
             if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-                crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
+                pcmk__info("(Re)Issuing shutdown request now" " that we have a "
+                           "new DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
             CRM_LOG_ASSERT(controld_globals.dc_name != NULL);
@@ -660,8 +661,9 @@ do_state_transition(enum crmd_fsa_state cur_state,
             controld_reset_counter_election_timer();
             CRM_LOG_ASSERT(AM_I_DC);
             if (cause == C_TIMER_POPPED) {
-                crm_info("Progressed to state %s after %s",
-                         fsa_state2string(next_state), fsa_cause2string(cause));
+                pcmk__info("Progressed to state %s after %s",
+                           fsa_state2string(next_state),
+                           fsa_cause2string(cause));
             }
             check_join_counts(msg_data);
             break;
@@ -675,7 +677,8 @@ do_state_transition(enum crmd_fsa_state cur_state,
         case S_IDLE:
             CRM_LOG_ASSERT(AM_I_DC);
             if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-                crm_info("(Re)Issuing shutdown request now" " that we are the DC");
+                pcmk__info("(Re)Issuing shutdown request now" " that we are "
+                           "the DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
             controld_start_recheck_timer();

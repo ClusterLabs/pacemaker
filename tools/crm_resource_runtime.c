@@ -2136,8 +2136,8 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
             break;
         }
 
-        crm_info("Waiting up to %lld seconds for cluster actions to complete",
-                 (long long) time_diff);
+        pcmk__info("Waiting up to %lld seconds for cluster actions to complete",
+                   (long long) time_diff);
 
         if (rc == pcmk_rc_ok) { /* this avoids sleep on first loop iteration */
             sleep(WAIT_SLEEP_S);
@@ -2527,9 +2527,9 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
         }
 
         cur_is_dest = true;
-        crm_info("%s is already %s on %s, reinforcing placement with location "
-                 "constraint",
-                 rsc_id, active_s, pcmk__node_name(dest));
+        pcmk__info("%s is already %s on %s, reinforcing placement with "
+                   "location constraint",
+                   rsc_id, active_s, pcmk__node_name(dest));
     }
 
     /* @TODO The constraint changes in the following commands should done

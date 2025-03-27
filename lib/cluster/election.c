@@ -50,7 +50,7 @@ election_timer_cb(gpointer user_data)
 {
     pcmk_cluster_t *cluster = user_data;
 
-    crm_info("Declaring local node as winner after election timed out");
+    pcmk__info("Declaring local node as winner after election timed out");
     election_complete(cluster);
     return FALSE;
 }
@@ -386,7 +386,7 @@ election_check(pcmk_cluster_t *cluster)
 
         }
 
-        crm_info("Election won by local node");
+        pcmk__info("Election won by local node");
         election_complete(cluster);
         return TRUE;
 
@@ -464,8 +464,9 @@ parse_election_message(const xmlNode *message, struct vote *vote)
         }
 
     } else if (!pcmk__str_eq(vote->op, CRM_OP_NOVOTE, pcmk__str_none)) {
-        crm_info("Cannot process election message from %s "
-                 "because %s is not a known election op", vote->from, vote->op);
+        pcmk__info("Cannot process election message from %s because %s is not "
+                   "a known election op",
+                   vote->from, vote->op);
         return FALSE;
     }
 
@@ -473,8 +474,9 @@ parse_election_message(const xmlNode *message, struct vote *vote)
      * the question is how we managed to get here.
      */
     if (pcmk__peer_cache == NULL) {
-        crm_info("Cannot count election %s from %s "
-                 "because no peer information available", vote->op, vote->from);
+        pcmk__info("Cannot count election %s from %s becasue no peer "
+                   "information available",
+                   vote->op, vote->from);
         return FALSE;
     }
     return TRUE;
@@ -708,10 +710,10 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
                 loss_time += 11;
                 loss_time[8] = '\0';
             }
-            crm_info("Ignoring election round %d (started by node ID %s) pass "
-                     "vs %s because we lost less than %ds ago at %s",
-                     vote.election_id, vote.election_owner, vote.from,
-                     LOSS_DAMPEN, (loss_time? loss_time : "unknown"));
+            pcmk__info("Ignoring election round %d (started by node ID %s) "
+                       "pass vs %s because we lost less than %ds ago at %s",
+                       vote.election_id, vote.election_owner, vote.from,
+                       LOSS_DAMPEN, pcmk__s(loss_time, "unknown"));
         }
     }
 

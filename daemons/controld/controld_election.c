@@ -197,7 +197,7 @@ do_dc_takeover(long long action, enum crmd_fsa_cause cause,
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     const bool have_watchdog = (pcmk__locate_sbd() != 0);
 
-    crm_info("Taking over DC status for this partition");
+    pcmk__info("Taking over DC status for this partition");
     controld_set_fsa_input_flags(R_THE_DC);
     controld_execute_fencing_cleanup();
 
@@ -244,7 +244,7 @@ do_dc_release(long long action, enum crmd_fsa_cause cause,
         controld_expect_sched_reply(NULL);
 
     } else if (pcmk__is_set(action, A_DC_RELEASED)) {
-        crm_info("DC role released");
+        pcmk__info("DC role released");
 
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;

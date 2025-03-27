@@ -222,10 +222,10 @@ device_is_dirty(gpointer key, gpointer value, gpointer user_data)
 static void
 cib_devices_update(void)
 {
-    crm_info("Updating devices to version %s.%s.%s",
-             pcmk__xe_get(local_cib, PCMK_XA_ADMIN_EPOCH),
-             pcmk__xe_get(local_cib, PCMK_XA_EPOCH),
-             pcmk__xe_get(local_cib, PCMK_XA_NUM_UPDATES));
+    pcmk__info("Updating devices to version %s.%s.%s",
+               pcmk__xe_get(local_cib, PCMK_XA_ADMIN_EPOCH),
+               pcmk__xe_get(local_cib, PCMK_XA_EPOCH),
+               pcmk__xe_get(local_cib, PCMK_XA_NUM_UPDATES));
 
     fenced_foreach_device(mark_dirty_if_cib_registered, NULL);
 
@@ -314,7 +314,7 @@ update_cib_stonith_devices(const xmlNode *patchset)
     }
 
     if (reason != NULL) {
-        crm_info("Updating device list from CIB: %s", reason);
+        pcmk__info("Updating device list from CIB: %s", reason);
         cib_devices_update();
         free(reason);
     } else {
@@ -423,9 +423,9 @@ update_fencing_topology(const char *event, xmlNode *msg)
                 /* We have only path and ID, which is not enough info to remove
                  * a specific entry. Re-initialize the whole topology.
                  */
-                crm_info("Re-initializing fencing topology after %s operation "
-                         "%d.%d.%d for %s",
-                         op, add[0], add[1], add[2], xpath);
+                pcmk__info("Re-initializing fencing topology after %s "
+                           "operation %d.%d.%d for %s",
+                           op, add[0], add[1], add[2], xpath);
                 fencing_topology_init();
                 return;
             }
@@ -448,9 +448,9 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
         if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
             // Change to the topology in general
-            crm_info("Re-initializing fencing topology after top-level "
-                     "%s operation %d.%d.%d for %s",
-                     op, add[0], add[1], add[2], xpath);
+            pcmk__info("Re-initializing fencing topology after top-level %s "
+                       "operation %d.%d.%d for %s",
+                       op, add[0], add[1], add[2], xpath);
             fencing_topology_init();
             return;
         }
@@ -462,9 +462,9 @@ update_fencing_topology(const char *event, xmlNode *msg)
                                 NULL)) {
 
             // Topology was created or entire configuration section was deleted
-            crm_info("Re-initializing fencing topology after top-level "
-                     "%s operation %d.%d.%d for %s",
-                     op, add[0], add[1], add[2], xpath);
+            pcmk__info("Re-initializing fencing topology after top-level %s "
+                       "operation %d.%d.%d for %s",
+                       op, add[0], add[1], add[2], xpath);
             fencing_topology_init();
             return;
         }
@@ -560,7 +560,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 static void
 init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    crm_info("Updating device list from CIB");
+    pcmk__info("Updating device list from CIB");
     have_cib_devices = TRUE;
     local_cib = pcmk__xml_copy(NULL, output);
 
@@ -576,7 +576,7 @@ static void
 cib_connection_destroy(gpointer user_data)
 {
     if (stonith_shutdown_flag) {
-        crm_info("Connection to the CIB manager closed");
+        pcmk__info("Connection to the CIB manager closed");
         return;
     } else {
         pcmk__crit("Lost connection to the CIB manager, shutting down");
@@ -637,5 +637,5 @@ setup_cib(void)
     cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL,
                                      "init_cib_cache_cb", init_cib_cache_cb);
     cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
-    crm_info("Watching for fencing topology changes");
+    pcmk__info("Watching for fencing topology changes");
 }

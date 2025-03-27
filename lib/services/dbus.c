@@ -502,7 +502,7 @@ pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
     }
 
     if (dbus_pending_call_get_completed(pending)) {
-        crm_info("DBus %s message completed too soon", method);
+        pcmk__info("DBus %s message completed too soon", method);
         /* Calling done() directly in this case instead of setting notify below
          * breaks things
          */

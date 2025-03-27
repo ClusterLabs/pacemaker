@@ -1612,7 +1612,7 @@ main(int argc, char **argv)
             break;
     }
 
-    crm_info("Starting %s", crm_system_name);
+    pcmk__info("Starting %s", crm_system_name);
 
     if (options.exec_mode == mon_exec_one_shot) {
         // Needs cib but not scheduler
@@ -1684,7 +1684,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
 
-    crm_info("Exiting %s", crm_system_name);
+    pcmk__info("Exiting %s", crm_system_name);
 
     return clean_up(CRM_EX_OK);
 }

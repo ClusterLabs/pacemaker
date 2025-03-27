@@ -149,7 +149,8 @@ pcmk__procfs_pid_of(const char *name)
             && pcmk__str_eq(entry_name, name, pcmk__str_casei)
             && (pcmk__pid_active(pid, NULL) == pcmk_rc_ok)) {
 
-            crm_info("Found %s active as process %lld", name, (long long) pid);
+            pcmk__info("Found %s active as process %lld", name,
+                       (long long) pid);
             break;
         }
         pid = 0;
@@ -177,7 +178,8 @@ pcmk__procfs_num_cores(void)
     /* Parse /proc/stat instead of /proc/cpuinfo because it's smaller */
     stream = fopen("/proc/stat", "r");
     if (stream == NULL) {
-        crm_info("Could not open /proc/stat: %s", strerror(errno));
+        pcmk__info("Could not open /proc/stat: %s", strerror(errno));
+
     } else {
         char buffer[2048];
 

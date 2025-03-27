@@ -246,8 +246,8 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
         dh_bits = dh_max_bits;
     }
 
-    crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
-             dh_bits);
+    pcmk__info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
+               dh_bits);
     rc = gnutls_dh_params_generate2(*dh_params, dh_bits);
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;

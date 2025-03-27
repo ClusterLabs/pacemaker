@@ -687,7 +687,8 @@ crm_log_filter(struct qb_log_callsite *cs)
                 token = pcmk__assert_asprintf("%.*s", (int) (next - offset),
                                               offset);
                 tag = g_quark_from_string(token);
-                crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);
+                pcmk__info("Created GQuark %u from token '%s' in '%s'", tag,
+                           token, trace_tags);
 
                 free(token);
 
@@ -1042,11 +1043,11 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
                       user);
 
         } else if (chdir(CRM_CORE_DIR) < 0) {
-            crm_info("Cannot change active directory to " CRM_CORE_DIR ": %s",
-                     strerror(errno));
+            pcmk__info("Cannot change active directory to " CRM_CORE_DIR ": %s",
+                       strerror(errno));
 
         } else {
-            crm_info("Changed active directory to " CRM_CORE_DIR);
+            pcmk__info("Changed active directory to " CRM_CORE_DIR);
         }
 
         /* Original meanings from signal(7)
