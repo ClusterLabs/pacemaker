@@ -404,7 +404,7 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO + args->verbosity, TRUE,
                  (args->verbosity > 0), argc, argv, FALSE);
 
-    crm_notice("Starting Pacemaker fencer");
+    pcmk__notice("Starting Pacemaker fencer");
 
     if (ipc_already_running()) {
         exit_code = CRM_EX_OK;
@@ -447,7 +447,8 @@ main(int argc, char **argv)
 
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker fencer successfully started and accepting connections");
+    pcmk__notice("Pacemaker fencer successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
 done:

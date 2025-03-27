@@ -94,16 +94,16 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
     const char *graph_input = NULL;
 
     if (!AM_I_DC) {
-        crm_notice("Not invoking the TE because we are not the DC");
+        pcmk__notice("Not invoking the TE because we are not the DC");
         return;
     }
 
     if (pcmk__is_set(action, A_TE_INVOKE)
         && (controld_globals.fsa_state != S_TRANSITION_ENGINE)) {
 
-        crm_notice("No need to invoke the TE (%s) while in state %s",
-                   fsa_action2string(action),
-                   fsa_state2string(controld_globals.fsa_state));
+        pcmk__notice("No need to invoke the TE (%s) while in state %s",
+                     fsa_action2string(action),
+                     fsa_state2string(controld_globals.fsa_state));
         return;
     }
 

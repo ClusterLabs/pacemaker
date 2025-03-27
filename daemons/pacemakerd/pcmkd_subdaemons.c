@@ -164,8 +164,8 @@ check_next_subdaemon(gpointer user_data)
 
         case pcmk_rc_ipc_pid_only: // Child was previously OK
             if (pcmk__is_set(child->flags, child_shutting_down)) {
-                crm_notice("Subdaemon %s[%lld] has stopped accepting IPC "
-                           "connections during shutdown", name, pid);
+                pcmk__notice("Subdaemon %s[%lld] has stopped accepting IPC "
+                             "connections during shutdown", name, pid);
 
             } else if (++(child->check_count) >= PCMK_PROCESS_CHECK_RETRIES) {
                 // cts-lab looks for this message
@@ -180,10 +180,10 @@ check_next_subdaemon(gpointer user_data)
                 }
 
             } else {
-                crm_notice("Subdaemon %s[%lld] is unresponsive to IPC "
-                           "after %d attempt%s (will recheck later)",
-                           name, pid, child->check_count,
-                           pcmk__plural_s(child->check_count));
+                pcmk__notice("Subdaemon %s[%lld] is unresponsive to IPC after "
+                             "%d attempt%s (will recheck later)",
+                             name, pid, child->check_count,
+                             pcmk__plural_s(child->check_count));
                 if (pcmk__is_set(child->flags, child_respawn)) {
                     /* as long as the respawn-limit isn't reached
                        and we haven't run out of connect retries
@@ -218,7 +218,7 @@ check_next_subdaemon(gpointer user_data)
                 pcmk__err("Subdaemon %s[%lld] terminated", name, pid);
             } else {
                 /* orderly shutdown */
-                crm_notice("Subdaemon %s[%lld] terminated", name, pid);
+                pcmk__notice("Subdaemon %s[%lld] terminated", name, pid);
             }
             pcmk_process_exit(child);
             break;
@@ -338,12 +338,12 @@ pcmk_process_exit(pcmkd_child_t * child)
 
     } else if (pcmk__is_set(child->flags, child_needs_cluster)
                && !pcmkd_cluster_connected()) {
-        crm_notice("Not respawning subdaemon %s until cluster returns", name);
+        pcmk__notice("Not respawning subdaemon %s until cluster returns", name);
         child->flags |= child_needs_retry;
 
     } else {
         // cts-lab looks for this message
-        crm_notice("Respawning subdaemon %s after unexpected exit", name);
+        pcmk__notice("Respawning subdaemon %s after unexpected exit", name);
         start_child(child);
     }
 }
@@ -355,7 +355,7 @@ pcmk_shutdown_worker(gpointer user_data)
     static time_t next_log = 0;
 
     if (phase == PCMK__NELEM(pcmk_children) - 1) {
-        crm_notice("Shutting down Pacemaker");
+        pcmk__notice("Shutting down Pacemaker");
         pacemakerd_state = PCMK__VALUE_SHUTTING_DOWN;
     }
 
@@ -392,26 +392,26 @@ pcmk_shutdown_worker(gpointer user_data)
 
         } else if (now >= next_log) {
             next_log = now + 30;
-            crm_notice("Still waiting for subdaemon %s to terminate "
-                       QB_XS " pid=%lld", name, (long long) child->pid);
+            pcmk__notice("Still waiting for subdaemon %s to terminate "
+                         QB_XS " pid=%lld", name, (long long) child->pid);
         }
 
         return G_SOURCE_CONTINUE;
     }
 
-    crm_notice("Shutdown complete");
+    pcmk__notice("Shutdown complete");
     pacemakerd_state = PCMK__VALUE_SHUTDOWN_COMPLETE;
     if (!fatal_error && running_with_sbd &&
         pcmk__get_sbd_sync_resource_startup() &&
         !shutdown_complete_state_reported_client_closed) {
-        crm_notice("Waiting for SBD to pick up shutdown-complete-state.");
+        pcmk__notice("Waiting for SBD to pick up shutdown-complete-state");
         return G_SOURCE_CONTINUE;
     }
 
     g_main_loop_quit(mainloop);
 
     if (fatal_error) {
-        crm_notice("Shutting down and staying down after fatal error");
+        pcmk__notice("Shutting down and staying down after fatal error");
 #if SUPPORT_COROSYNC
         pcmkd_shutdown_corosync();
 #endif
@@ -689,9 +689,9 @@ child_alive(pcmkd_child_t *child)
              * out.  Instead, switch to IPC liveness monitoring which is not
              * very suitable for heavy system load.
              */
-            crm_notice("Cannot track pre-existing process for %s IPC on this "
-                       "platform but assuming it is stable and using liveness "
-                       "monitoring", name);
+            pcmk__notice("Cannot track pre-existing process for %s IPC on this "
+                         "platform but assuming it is stable and using "
+                         "liveness monitoring", name);
             pcmk__warn("The process for %s IPC cannot be terminated, so "
                        "shutdown will be delayed by %d s to allow time for it "
                        "to terminate on its own",
@@ -705,8 +705,8 @@ child_alive(pcmkd_child_t *child)
         }
     }
 
-    crm_notice("Tracking existing %s process (pid=%lld)",
-               name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
+    pcmk__notice("Tracking existing %s process (pid=%lld)", name,
+                 (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
     child->respawn_count = -1;  /* 0~keep watching */
     child->flags |= child_active_before_startup;
     return pcmk_rc_ok;
@@ -866,8 +866,8 @@ restart_subdaemon(pcmkd_child_t *child)
         return;
     }
 
-    crm_notice("Respawning cluster-based subdaemon %s",
-               pcmk__server_name(child->server));
+    pcmk__notice("Respawning cluster-based subdaemon %s",
+                 pcmk__server_name(child->server));
 
     if (start_child(child)) {
         child->flags &= ~child_needs_retry;
@@ -906,10 +906,11 @@ stop_child(pcmkd_child_t *child, int signal)
 
     errno = 0;
     if (kill(child->pid, signal) == 0) {
-        crm_notice("Stopping subdaemon %s "
-                   QB_XS " via signal %d to process %lld",
-                   name, signal, (long long) child->pid);
+        pcmk__notice("Stopping subdaemon %s "
+                     QB_XS " via signal %d to process %lld",
+                     name, signal, (long long) child->pid);
         child->flags |= child_shutting_down;
+
     } else {
         pcmk__err("Could not stop subdaemon %s[%lld] with signal %d: %s",
                   name, (long long) child->pid, signal, strerror(errno));

@@ -254,8 +254,8 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
             return;
         }
 
-        crm_notice("Alerting client %s for reached %s sync point",
-                   wl->client_id, sync_point_str(wl->sync_point));
+        pcmk__notice("Alerting client %s for reached %s sync point",
+                     wl->client_id, sync_point_str(wl->sync_point));
 
         client = pcmk__find_client_by_id(wl->client_id);
         if (client == NULL) {

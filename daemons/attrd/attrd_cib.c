@@ -94,8 +94,8 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         if (client_name == NULL) {
             client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTID);
         }
-        crm_notice("Updating all attributes after %s event triggered by %s",
-                   event, pcmk__s(client_name, "unidentified client"));
+        pcmk__notice("Updating all attributes after %s event triggered by %s",
+                     event, pcmk__s(client_name, "unidentified client"));
 
         attrd_write_attributes(attrd_write_all);
     }
@@ -591,9 +591,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
         // Defer write if this is a cluster node that's never been seen
         if (node_xml_id == NULL) {
             attrd_set_attr_flags(a, attrd_attr_node_unknown);
-            crm_notice("Cannot write %s[%s]='%s' to CIB because node's XML ID "
-                       "is unknown (will retry if learned)",
-                       a->id, v->nodename, v->current);
+            pcmk__notice("Cannot write %s[%s]='%s' to CIB because node's XML "
+                         "ID is unknown (will retry if learned)",
+                         a->id, v->nodename, v->current);
             continue;
         }
 

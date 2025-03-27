@@ -129,8 +129,8 @@ cib_notify_send(const xmlNode *xml)
         rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-            crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
-                       pcmk_rc_str(rc), rc);
+            pcmk__notice("Could not notify clients: %s " QB_XS " rc=%d",
+                         pcmk_rc_str(rc), rc);
             break;
         }
 

@@ -133,8 +133,8 @@ main(int argc, char **argv)
     pcmk__add_logfiles(log_files, out);
 
     crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker node attribute manager%s",
-               stand_alone ? " in standalone mode" : "");
+    pcmk__notice("Starting Pacemaker node attribute manager%s",
+                 (stand_alone ? " in standalone mode" : ""));
 
     if (ipc_already_running()) {
         attrd_exit_status = CRM_EX_OK;
@@ -187,7 +187,8 @@ main(int argc, char **argv)
     attrd_send_protocol(NULL);
 
     attrd_ipc_init();
-    crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
+    pcmk__notice("Pacemaker node attribute manager successfully started and "
+                 "accepting connections");
     attrd_run_mainloop();
 
   done:

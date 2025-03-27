@@ -206,7 +206,8 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                  * panic on that answer
                  */
                 if (rc == -ENODEV) {
-                    crm_notice("Cluster does not have watchdog fencing device");
+                    pcmk__notice("Cluster does not have watchdog fencing "
+                                 "device");
                 } else {
                     pcmk__warn("Could not check for watchdog fencing device: %s",
                                pcmk_strerror(rc));
@@ -1986,14 +1987,14 @@ stonith__api_connect_retry(stonith_t *stonith_api, const char *name,
             return rc;
         }
         if (attempt < max_attempts) {
-            crm_notice("Fencer connection attempt %d of %d failed "
-                       "(retrying in 2s): %s " QB_XS " rc=%d",
-                       attempt, max_attempts, pcmk_rc_str(rc), rc);
+            pcmk__notice("Fencer connection attempt %d of %d failed "
+                         "(retrying in 2s): %s " QB_XS " rc=%d",
+                         attempt, max_attempts, pcmk_rc_str(rc), rc);
             sleep(2);
         }
     }
-    crm_notice("Could not connect to fencer: %s " QB_XS " rc=%d",
-               pcmk_rc_str(rc), rc);
+    pcmk__notice("Could not connect to fencer: %s " QB_XS " rc=%d",
+                 pcmk_rc_str(rc), rc);
     return rc;
 }
 

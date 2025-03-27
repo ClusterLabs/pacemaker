@@ -1278,8 +1278,9 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                                                   scheduler);
                 if (data->rc == pcmk__digest_mismatch) {
                     optional = FALSE;
-                    crm_notice("Unfencing node %s because the definition of "
-                               "%s changed", pcmk__node_name(node), match->id);
+                    pcmk__notice("Unfencing node %s because the definition of "
+                                 "%s changed",
+                                 pcmk__node_name(node), match->id);
                     if (!pcmk__is_daemon && (scheduler->priv->out != NULL)) {
                         pcmk__output_t *out = scheduler->priv->out;
 

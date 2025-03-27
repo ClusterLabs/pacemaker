@@ -221,10 +221,10 @@ init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
         return;
     }
 
-    crm_notice("Waiting for pending %s with " PCMK_XA_ID " '%s' "
-               "to join the process group (timeout=%us)",
-               pcmk__s(node->name, "node"), node->xml_id,
-               controld_globals.node_pending_timeout);
+    pcmk__notice("Waiting for pending %s with " PCMK_XA_ID " '%s' to join the "
+                 "process group (timeout=%us)",
+                 pcmk__s(node->name, "node"), node->xml_id,
+                 controld_globals.node_pending_timeout);
 
     key = pcmk__str_copy(node->xml_id);
     node_pending_timer = pcmk__assert_alloc(1, sizeof(struct abort_timer_s));

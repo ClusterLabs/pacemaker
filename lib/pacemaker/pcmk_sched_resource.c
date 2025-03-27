@@ -127,10 +127,10 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
             trigger_unfencing(rsc, node, "Device definition changed", NULL,
                               rsc->priv->scheduler);
             if (active_on_node) {
-                crm_notice("Forcing restart of %s on %s "
-                           "because %s changed from '%s' to '%s'",
-                           rsc->id, pcmk__node_name(node), attr_list[i],
-                           pcmk__s(old_value, ""), pcmk__s(value, ""));
+                pcmk__notice("Forcing restart of %s on %s because %s changed "
+                             "from '%s' to '%s'",
+                             rsc->id, pcmk__node_name(node), attr_list[i],
+                             pcmk__s(old_value, ""), pcmk__s(value, ""));
             }
         }
     }

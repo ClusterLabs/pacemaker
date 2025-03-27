@@ -199,16 +199,16 @@ remove_core_file_limit(void)
 
     // Get current limits
     if (getrlimit(RLIMIT_CORE, &cores) < 0) {
-        crm_notice("Unable to check system core file limits "
-                   "(consider ensuring the size is unlimited): %s",
-                   strerror(errno));
+        pcmk__notice("Unable to check system core file limits (consider "
+                     "ensuring the size is unlimited): %s",
+                     strerror(errno));
         return;
     }
 
     // Check whether core dumps are disabled
     if (cores.rlim_max == 0) {
         if (geteuid() != 0) { // Yes, and there's nothing we can do about it
-            crm_notice("Core dumps are disabled (consider enabling them)");
+            pcmk__notice("Core dumps are disabled (consider enabling them)");
             return;
         }
         cores.rlim_max = RLIM_INFINITY; // Yes, but we're root, so enable them
@@ -218,9 +218,9 @@ remove_core_file_limit(void)
     if (cores.rlim_cur != cores.rlim_max) {
         cores.rlim_cur = cores.rlim_max;
         if (setrlimit(RLIMIT_CORE, &cores) < 0) {
-            crm_notice("Unable to raise system limit on core file size "
-                       "(consider doing so manually): %s",
-                       strerror(errno));
+            pcmk__notice("Unable to raise system limit on core file size "
+                         "(consider doing so manually): %s",
+                         strerror(errno));
             return;
         }
     }
@@ -424,8 +424,8 @@ main(int argc, char **argv)
         }
     }
 
-    crm_notice("Starting Pacemaker %s " QB_XS " build=%s features:%s",
-               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+    pcmk__notice("Starting Pacemaker " PACEMAKER_VERSION " "
+                 QB_XS " build=" BUILD_VERSION " features:" CRM_FEATURES);
     mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
@@ -459,7 +459,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, pcmk_shutdown);
 
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
-        crm_notice("Waiting for startup-trigger from SBD.");
+        pcmk__notice("Waiting for startup-trigger from SBD");
         pacemakerd_state = PCMK__VALUE_WAIT_FOR_PING;
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
@@ -472,7 +472,8 @@ main(int argc, char **argv)
         init_children_processes(NULL);
     }
 
-    crm_notice("Pacemaker daemon successfully started and accepting connections");
+    pcmk__notice("Pacemaker daemon successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
     pacemakerd_ipc_cleanup();
 

@@ -481,15 +481,16 @@ process_ping_reply(xmlNode *reply)
                 num_updates_s = pcmk__xe_get(remote_cib, PCMK_XA_NUM_UPDATES);
             }
 
-            crm_notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s %p",
-                       pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
-                       pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-                       pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                       ping_digest, host,
-                       pcmk__s(admin_epoch_s, "_"),
-                       pcmk__s(epoch_s, "_"),
-                       pcmk__s(num_updates_s, "_"),
-                       digest, remote_cib);
+            pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s "
+                         "%p",
+                         pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
+                         pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
+                         pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
+                         ping_digest, host,
+                         pcmk__s(admin_epoch_s, "_"),
+                         pcmk__s(epoch_s, "_"),
+                         pcmk__s(num_updates_s, "_"),
+                         digest, remote_cib);
 
             if(remote_cib && remote_cib->children) {
                 // Additional debug
@@ -1226,8 +1227,8 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 static gboolean
 cib_force_exit(gpointer data)
 {
-    crm_notice("Exiting immediately after %s without shutdown acknowledgment",
-               pcmk__readable_interval(EXIT_ESCALATION_MS));
+    pcmk__notice("Exiting immediately after %s without shutdown acknowledgment",
+                 pcmk__readable_interval(EXIT_ESCALATION_MS));
     terminate_cib(CRM_EX_ERROR);
     return FALSE;
 }

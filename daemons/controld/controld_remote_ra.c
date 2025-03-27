@@ -651,8 +651,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
 
         } else {
-            crm_notice("Unmanaged Pacemaker Remote node %s disconnected",
-                       lrm_state->node_name);
+            pcmk__notice("Unmanaged Pacemaker Remote node %s disconnected",
+                         lrm_state->node_name);
             /* Do roughly what a 'stop' on the remote-resource would do */
             handle_remote_ra_stop(lrm_state, NULL);
             remote_node_down(lrm_state->node_name, false);

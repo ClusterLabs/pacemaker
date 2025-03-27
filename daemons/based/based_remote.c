@@ -91,7 +91,7 @@ init_remote_listener(int port, bool encrypted)
     if (encrypted) {
         bool use_cert = pcmk__x509_enabled();
 
-        crm_notice("Starting TLS listener on port %d", port);
+        pcmk__notice("Starting TLS listener on port %d", port);
 
         rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_ANON);
         if (rc != pcmk_rc_ok) {
@@ -156,8 +156,8 @@ is_daemon_group_member(const char *usr)
 
     rc = pcmk__lookup_user(usr, NULL, &gid);
     if (rc != pcmk_rc_ok) {
-        crm_notice("Rejecting remote client: could not find user '%s': %s",
-                   usr, pcmk_rc_str(rc));
+        pcmk__notice("Rejecting remote client: could not find user '%s': %s",
+                     usr, pcmk_rc_str(rc));
         return false;
     }
 
@@ -185,8 +185,8 @@ is_daemon_group_member(const char *usr)
         }
     }
 
-    crm_notice("Rejecting remote client: User %s is not a member of "
-               "group " CRM_DAEMON_GROUP, usr);
+    pcmk__notice("Rejecting remote client: User %s is not a member of group "
+                 CRM_DAEMON_GROUP, usr);
     return false;
 }
 
@@ -492,9 +492,9 @@ cib_remote_msg(gpointer data)
             client->user = pcmk__str_copy(user);
         }
 
-        crm_notice("Remote connection accepted for authenticated user %s "
-                   QB_XS " client %s",
-                   pcmk__s(user, ""), client_name);
+        pcmk__notice("Remote connection accepted for authenticated user %s "
+                     QB_XS " client %s",
+                     pcmk__s(user, ""), client_name);
 
         /* send ACK */
         reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
@@ -615,8 +615,8 @@ authenticate_user(const char *user, const char *passwd)
     // Check user credentials
     rc = pam_authenticate(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        crm_notice("Access for remote user %s denied: %s",
-                   user, pam_strerror(pam_h, rc));
+        pcmk__notice("Access for remote user %s denied: %s", user,
+                     pam_strerror(pam_h, rc));
         goto bail;
     }
 
@@ -649,8 +649,8 @@ authenticate_user(const char *user, const char *passwd)
     // Check user account restrictions (expiration, etc.)
     rc = pam_acct_mgmt(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        crm_notice("Access for remote user %s denied: %s",
-                   user, pam_strerror(pam_h, rc));
+        pcmk__notice("Access for remote user %s denied: %s", user,
+                     pam_strerror(pam_h, rc));
         goto bail;
     }
     pass = true;

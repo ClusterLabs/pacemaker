@@ -2278,7 +2278,7 @@ lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
         }
     }
     if (rc == 0) {
-        crm_notice("No agents found for class %s", class);
+        pcmk__notice("No agents found for class %s", class);
         rc = -EPROTONOSUPPORT;
     }
     return rc;

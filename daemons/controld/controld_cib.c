@@ -85,9 +85,9 @@ do_cib_updated(const char *event, xmlNode * msg)
         if (client_name == NULL) {
             client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTID);
         }
-        crm_notice("Populating nodes and starting an election after %s event "
-                   "triggered by %s",
-                   event, pcmk__s(client_name, "(unidentified client)"));
+        pcmk__notice("Populating nodes and starting an election after %s event "
+                     "triggered by %s",
+                     event, pcmk__s(client_name, "(unidentified client)"));
 
         populate_cib_nodes(controld_node_update_quick|controld_node_update_all,
                            __func__);
