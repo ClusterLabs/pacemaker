@@ -25,7 +25,6 @@
 
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
-#include <crm/common/logging.h>         // LOG_NEVER
 #include <crm/common/mainloop.h>        // mainloop_io_t
 #include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/results.h>         // crm_exit_t
@@ -102,13 +101,13 @@ typedef struct xml_doc_private_s {
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
-            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            PCMK__LOG_NEVER, "XML", "XML node", (xml_priv)->flags,          \
             (flags_to_set), #flags_to_set);                                 \
     } while (0)
 
 #define pcmk__clear_xml_flags(xml_priv, flags_to_clear) do {                \
         (xml_priv)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
-            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            PCMK__LOG_NEVER, "XML", "XML node", (xml_priv)->flags,          \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
 

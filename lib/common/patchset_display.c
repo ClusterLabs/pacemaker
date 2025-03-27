@@ -243,7 +243,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
     uint8_t log_level = pcmk__output_get_log_level(out);
     int format = 1;
 
-    if (log_level == LOG_NEVER) {
+    if (log_level == PCMK__LOG_NEVER) {
         return pcmk_rc_no_output;
     }
 

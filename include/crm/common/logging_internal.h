@@ -41,6 +41,18 @@ extern "C" {
 #define PCMK__LOG_STDOUT 254
 #endif  // PCMK__LOG_STDOUT
 
+#ifndef PCMK__LOG_NEVER
+/*!
+ * \internal
+ * \brief Request not to print or log message anywhere
+ *
+ * \note This value must stay the same as \c LOG_NEVER until the latter is
+ *       dropped. Be mindful of public API functions that may pass arbitrary
+ *       integer log levels as well.
+ */
+#define PCMK__LOG_NEVER 255
+#endif  // PCMK__LOG_NEVER
+
 /*!
  * \internal
  * \brief Log a message at \c LOG_EMERG level
@@ -241,7 +253,8 @@ extern bool pcmk__config_has_warning;
  * \param[in] level  Priority at which to log the messages
  * \param[in] xml    XML to log
  *
- * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT or
+ *       \c PCMK__LOG_NEVER.
  */
 #define pcmk__log_xml_changes(level, xml) do {                              \
         uint8_t _level = pcmk__clip_log_level(level);                       \
@@ -249,7 +262,7 @@ extern bool pcmk__config_has_warning;
                                                                             \
         switch (_level) {                                                   \
             case PCMK__LOG_STDOUT:                                          \
-            case LOG_NEVER:                                                 \
+            case PCMK__LOG_NEVER:                                           \
                 break;                                                      \
             default:                                                        \
                 if (xml_cs == NULL) {                                       \
@@ -272,7 +285,8 @@ extern bool pcmk__config_has_warning;
  * \param[in] level     Priority at which to log the messages
  * \param[in] patchset  XML patchset to log
  *
- * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT or
+ *       \c PCMK__LOG_NEVER.
  */
 #define pcmk__log_xml_patchset(level, patchset) do {                        \
         uint8_t _level = pcmk__clip_log_level(level);                       \
@@ -280,7 +294,7 @@ extern bool pcmk__config_has_warning;
                                                                             \
         switch (_level) {                                                   \
             case PCMK__LOG_STDOUT:                                          \
-            case LOG_NEVER:                                                 \
+            case PCMK__LOG_NEVER:                                           \
                 break;                                                      \
             default:                                                        \
                 if (xml_cs == NULL) {                                       \

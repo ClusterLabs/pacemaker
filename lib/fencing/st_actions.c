@@ -463,7 +463,7 @@ stonith__find_xe_with_result(xmlNode *xml)
 {
     xmlNode *match = pcmk__xpath_find_one(xml->doc,
                                           "//*[@" PCMK__XA_RC_CODE "]",
-                                          LOG_NEVER);
+                                          PCMK__LOG_NEVER);
 
     if (match == NULL) {
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
