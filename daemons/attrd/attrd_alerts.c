@@ -52,8 +52,8 @@ attrd_lrmd_connect(void)
                 break;
             }
 
-            crm_debug("Could not connect to executor, %d tries remaining",
-                      (max_attempts - fails));
+            pcmk__debug("Could not connect to executor, %d tries remaining",
+                        (max_attempts - fails));
             /* @TODO We don't want to block here with sleep, but we should wait
              * some time between connection attempts. We could possibly add a
              * timer with a callback, but then we'd likely need an alert queue.
@@ -84,7 +84,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     xmlNode *crmalerts = NULL;
 
     if (rc == -ENXIO) {
-        crm_debug("Local CIB has no alerts section");
+        pcmk__debug("Local CIB has no alerts section");
         return;
     } else if (rc != pcmk_ok) {
         pcmk__notice("Could not query local CIB: %s", pcmk_strerror(rc));

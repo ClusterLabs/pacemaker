@@ -56,11 +56,11 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
 
     if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
         || (pcmk__score_green != 0)) {
-        crm_debug("Values of node health scores: "
-                  PCMK_VALUE_RED "=%d "
-                  PCMK_VALUE_YELLOW "=%d "
-                  PCMK_VALUE_GREEN "=%d",
-                  pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
+        pcmk__debug("Values of node health scores: "
+                    PCMK_VALUE_RED "=%d "
+                    PCMK_VALUE_YELLOW "=%d "
+                    PCMK_VALUE_GREEN "=%d",
+                    pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }
 

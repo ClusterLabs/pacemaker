@@ -648,7 +648,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
         if (!pcmk__result_ok(&request.result)) {
             pcmk__warn("%s", log_msg);
         } else {
-            crm_debug("%s", log_msg);
+            pcmk__debug("%s", log_msg);
         }
 
         free(log_msg);

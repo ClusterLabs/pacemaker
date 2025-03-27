@@ -161,7 +161,7 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__log_transition_summary(scheduler, filename);
 
     if (series_wrap == 0) {
-        crm_debug("Not saving input to disk (disabled by configuration)");
+        pcmk__debug("Not saving input to disk (disabled by configuration)");
 
     } else if (is_repoke) {
         pcmk__info("Input has not changed since last time, not saving to disk");
@@ -265,7 +265,7 @@ schedulerd_handle_request(pcmk__request_t *request)
     if (!pcmk__result_ok(&request->result)) {
         pcmk__warn("%s", log_msg);
     } else {
-        crm_debug("%s", log_msg);
+        pcmk__debug("%s", log_msg);
     }
 
     free(log_msg);

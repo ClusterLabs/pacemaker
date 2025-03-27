@@ -1455,9 +1455,9 @@ pcmk__order_after_each(pcmk_action_t *after, GList *list)
         pcmk_action_t *before = (pcmk_action_t *) iter->data;
         const char *before_desc = before->task? before->task : before->uuid;
 
-        crm_debug("Ordering %s on %s before %s on %s",
-                  before_desc, pcmk__node_name(before->node),
-                  after_desc, pcmk__node_name(after->node));
+        pcmk__debug("Ordering %s on %s before %s on %s", before_desc,
+                    pcmk__node_name(before->node), after_desc,
+                    pcmk__node_name(after->node));
         order_actions(before, after, pcmk__ar_ordered);
     }
 }

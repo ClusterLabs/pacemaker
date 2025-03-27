@@ -65,7 +65,7 @@ post_cache_update(int instance)
     xmlNode *no_op = NULL;
 
     controld_globals.peer_seq = instance;
-    crm_debug("Updated cache after membership event %d.", instance);
+    pcmk__debug("Updated cache after membership event %d", instance);
 
     g_hash_table_foreach(pcmk__peer_cache, reap_dead_nodes, NULL);
     controld_set_fsa_input_flags(R_MEMBERSHIP);
@@ -467,7 +467,7 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         pcmk__xe_set_int(update, PCMK_XA_HAVE_QUORUM, quorum);
         pcmk__xe_set(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
 
-        crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
+        pcmk__debug("Updating quorum status to %s", pcmk__btoa(quorum));
         controld_update_cib(PCMK_XE_CIB, update, cib_none,
                             cib_quorum_update_complete);
         pcmk__xml_free(update);

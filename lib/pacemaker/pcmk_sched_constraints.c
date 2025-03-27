@@ -90,7 +90,7 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
             if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {
                 /* We found an instance of a clone instead */
                 match = uber_parent(match);
-                crm_debug("Found %s for %s", match->id, id);
+                pcmk__debug("Found %s for %s", match->id, id);
             }
             return match;
         }

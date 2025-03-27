@@ -366,7 +366,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
         if (child->pid == 0) {
             /* cleanup */
-            crm_debug("Subdaemon %s confirmed stopped", name);
+            pcmk__debug("Subdaemon %s confirmed stopped", name);
             child->pid = 0;
             continue;
         }
@@ -894,8 +894,8 @@ stop_child(pcmkd_child_t *child, int signal)
        - elsewhere: how "init" task is designated; in particular, in systemd
          arrangement of socket-based activation, this is pretty real */
     if (child->pid == PCMK__SPECIAL_PID) {
-        crm_debug("Nothing to do to stop subdaemon %s[%lld]",
-                  name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
+        pcmk__debug("Nothing to do to stop subdaemon %s[%lld]", name,
+                    (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
         return;
     }
 

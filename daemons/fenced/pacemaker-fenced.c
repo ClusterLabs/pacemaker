@@ -341,8 +341,8 @@ ipc_already_running(void)
 
     rc = pcmk__connect_generic_ipc(old_instance);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing stonith-ng instance found: %s",
-                  pcmk_rc_str(rc));
+        pcmk__debug("No existing stonith-ng instance found: %s",
+                    pcmk_rc_str(rc));
         crm_ipc_destroy(old_instance);
         return false;
     }

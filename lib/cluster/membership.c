@@ -1012,8 +1012,8 @@ pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
     if ((xml_id == NULL) && (node->xml_id == NULL)) {
         xml_id = pcmk__cluster_get_xml_id(node);
         if (xml_id == NULL) {
-            crm_debug("Cannot obtain an XML ID for node %s[%u] at this time",
-                      node->name, id);
+            pcmk__debug("Cannot obtain an XML ID for node %s[%u] at this time",
+                        node->name, id);
         } else {
             pcmk__info("Node %s[%u] has XML ID %s", node->name, id, xml_id);
         }
@@ -1046,7 +1046,7 @@ update_peer_uname(pcmk__node_status_t *node, const char *uname)
               return);
 
     if (pcmk__str_eq(uname, node->name, pcmk__str_casei)) {
-        crm_debug("Node name '%s' did not change", uname);
+        pcmk__debug("Node name '%s' did not change", uname);
         return;
     }
 
@@ -1447,11 +1447,9 @@ find_cib_cluster_node(const char *id, const char *uname)
     }
 
     if (node == NULL) {
-        crm_debug("Couldn't find node%s%s%s%s",
-                   id? " " : "",
-                   id? id : "",
-                   uname? " with name " : "",
-                   uname? uname : "");
+        pcmk__debug("Couldn't find node%s%s%s%s", ((id != NULL)? " " : ""),
+                    pcmk__s(id, ""), ((uname != NULL)? " with name " : ""),
+                    pcmk__s(uname, ""));
     }
 
     return node;

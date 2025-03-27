@@ -162,8 +162,8 @@ send_plaintext(int sock, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_debug("Sending plaintext message of %zu bytes to socket %d",
-              unsent_len, sock);
+    pcmk__debug("Sending plaintext message of %zu bytes to socket %d",
+                unsent_len, sock);
     while (true) {
         ssize_t write_rc = write(sock, unsent, unsent_len);
 
@@ -465,8 +465,8 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         } else if (read_rc == GNUTLS_E_AGAIN) {
             rc = EAGAIN;
         } else if (read_rc < 0) {
-            crm_debug("TLS receive failed: %s (%zd)",
-                      gnutls_strerror((int) read_rc), read_rc);
+            pcmk__debug("TLS receive failed: %s (%zd)",
+                        gnutls_strerror((int) read_rc), read_rc);
             rc = EIO;
         }
     } else if (remote->tcp_socket >= 0) {
@@ -490,8 +490,8 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
                   read_rc, remote->buffer_offset);
 
     } else if (read_rc == 0) {
-        crm_debug("End of remote data encountered after %zu bytes",
-                  remote->buffer_offset);
+        pcmk__debug("End of remote data encountered after %zu bytes",
+                    remote->buffer_offset);
         return ENOTCONN;
 
     } else if ((rc == EINTR) || (rc == EAGAIN) || (rc == EWOULDBLOCK)) {
@@ -499,8 +499,8 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
                   pcmk_rc_str(rc), rc);
 
     } else {
-        crm_debug("Error receiving remote data after %zu bytes: %s (%d)",
-                  remote->buffer_offset, pcmk_rc_str(rc), rc);
+        pcmk__debug("Error receiving remote data after %zu bytes: %s (%d)",
+                    remote->buffer_offset, pcmk_rc_str(rc), rc);
         return ENOTCONN;
     }
 
@@ -555,8 +555,9 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
             return rc;
 
         } else if (rc != pcmk_rc_ok) {
-            crm_debug("Wait for remote data aborted (will retry): %s "
-                      QB_XS " rc=%d", pcmk_rc_str(rc), rc);
+            pcmk__debug("Wait for remote data aborted (will retry): %s "
+                        QB_XS " rc=%d",
+                        pcmk_rc_str(rc), rc);
 
         } else {
             rc = pcmk__read_available_remote_data(remote);
@@ -565,8 +566,8 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
             } else if (rc == EAGAIN) {
                 crm_trace("Waiting for more remote data");
             } else {
-                crm_debug("Could not receive remote data: %s " QB_XS " rc=%d",
-                          pcmk_rc_str(rc), rc);
+                pcmk__debug("Could not receive remote data: %s " QB_XS " rc=%d",
+                            pcmk_rc_str(rc), rc);
             }
         }
 
@@ -626,8 +627,8 @@ check_connect_finished(gpointer userdata)
         if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
             return TRUE; // There is time left, so reschedule timer
         }
-        crm_debug("Timed out while waiting for socket %d connection success",
-                  cb_data->sock);
+        pcmk__debug("Timed out while waiting for socket %d connection success",
+                    cb_data->sock);
         rc = ETIMEDOUT;
 
     // select() returned number of file descriptors that are ready
@@ -854,7 +855,7 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
         if (rp->ai_canonname) {
             server = res->ai_canonname;
         }
-        crm_debug("Got canonical name %s for %s", server, host);
+        pcmk__debug("Got canonical name %s for %s", server, host);
 
         sock = socket(rp->ai_family, SOCK_STREAM, IPPROTO_TCP);
         if (sock == -1) {

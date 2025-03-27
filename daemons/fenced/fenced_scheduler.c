@@ -209,7 +209,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         }
     }
 
-    crm_debug("Reloading configuration of fencing device %s", rsc->id);
+    pcmk__debug("Reloading configuration of fencing device %s", rsc->id);
 
     agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
 

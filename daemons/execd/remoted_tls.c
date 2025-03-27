@@ -345,8 +345,8 @@ lrmd_init_remote_tls_server(void)
 
     CRM_CHECK(ssock == -1, return ssock);
 
-    crm_debug("Starting TLS listener on %s port %d",
-              (bind_name? bind_name : "all addresses on"), port);
+    pcmk__debug("Starting TLS listener on %s port %d",
+                pcmk__s(bind_name, "all addresses on"), port);
 
     rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
     if (rc != pcmk_rc_ok) {
@@ -405,8 +405,8 @@ lrmd_init_remote_tls_server(void)
     if (ssock >= 0) {
         mainloop_add_fd("pacemaker-remote-server", G_PRIORITY_DEFAULT, ssock,
                         NULL, &remote_listen_fd_callbacks);
-        crm_debug("Started TLS listener on %s port %d",
-                  (bind_name? bind_name : "all addresses on"), port);
+        pcmk__debug("Started TLS listener on %s port %d",
+                    pcmk__s(bind_name, "all addresses on"), port);
     }
     freeaddrinfo(res);
     return ssock;

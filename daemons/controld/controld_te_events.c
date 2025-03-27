@@ -196,8 +196,9 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     if (rc == target_rc) {
         return FALSE;
     } else if (pcmk__str_eq(origin, "build_active_RAs", pcmk__str_casei)) {
-        crm_debug("No update for %s (rc=%d) on %s: Old failure from lrm status refresh",
-                  id, rc, on_uname);
+        pcmk__debug("No update for %s (rc=%d) on %s: Old failure from lrm "
+                    "status refresh",
+                    id, rc, on_uname);
         return FALSE;
     }
 
@@ -414,10 +415,10 @@ match_down_event(const char *target)
     free(xpath);
 
     if (match != NULL) {
-        crm_debug("Shutdown action %d (%s) found for node %s", match->id,
-                  pcmk__xe_get(match->xml, PCMK__XA_OPERATION_KEY), target);
+        pcmk__debug("Shutdown action %d (%s) found for node %s", match->id,
+                    pcmk__xe_get(match->xml, PCMK__XA_OPERATION_KEY), target);
     } else {
-        crm_debug("No reason to expect node %s to be down", target);
+        pcmk__debug("No reason to expect node %s to be down", target);
     }
     return match;
 }
@@ -475,8 +476,9 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (transition_num == -1) {
         // E.g. crm_resource --fail
         if (record_outside_event(action_num) != pcmk_rc_ok) {
-            crm_debug("Outside event with transition key '%s' has already been "
-                      "processed", magic);
+            pcmk__debug("Outside event with transition key '%s' has already "
+                        "been processed",
+                        magic);
             goto bail;
         }
         desc = "initiated outside of the cluster";

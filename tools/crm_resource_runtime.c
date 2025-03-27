@@ -448,8 +448,9 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         switch (rc) {
             case pcmk_rc_ok:
                 found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
-                crm_debug("Found a match for " PCMK_XA_NAME "='%s': "
-                          PCMK_XA_ID "='%s'", attr_name, found_attr_id);
+                pcmk__debug("Found a match for " PCMK_XA_NAME "='%s': "
+                            PCMK_XA_ID "='%s'",
+                            attr_name, found_attr_id);
                 rsc_attr_id = found_attr_id;
                 break;
 
@@ -547,15 +548,15 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-                crm_debug("Checking %s %d", cons->id, cons->score);
+                pcmk__debug("Checking %s %d", cons->id, cons->score);
 
                 if (pcmk__is_set(cons->dependent->flags, pcmk__rsc_detect_loop)
                     || (cons->score <= 0)) {
                     continue;
                 }
 
-                crm_debug("Setting %s=%s for dependent resource %s",
-                          attr_name, attr_value, cons->dependent->id);
+                pcmk__debug("Setting %s=%s for dependent resource %s",
+                            attr_name, attr_value, cons->dependent->id);
                 update_attribute(cons->dependent, cons->dependent->id, NULL,
                                  attr_set_type, NULL, attr_name, attr_value,
                                  recursive, cib, cib_xml_orig, force, results);
@@ -927,8 +928,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
         pcmk_resource_t *rsc = NULL;
 
-        crm_debug("Erasing failures of %s on %s",
-                  failed_id, pcmk__node_name(node));
+        pcmk__debug("Erasing failures of %s on %s", failed_id,
+                    pcmk__node_name(node));
 
         rsc = pe_find_resource(scheduler->priv->resources, failed_id);
         if (rsc == NULL) {

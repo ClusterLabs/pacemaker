@@ -879,14 +879,14 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
     ipc_name = pcmk__s(crm_ipc_name(ipc), "Pacemaker");
     rc = pcmk__connect_generic_ipc(ipc);
     if (rc != pcmk_rc_ok) {
-        crm_debug("Connection to %s failed: %s", ipc_name, pcmk_rc_str(rc));
+        pcmk__debug("Connection to %s failed: %s", ipc_name, pcmk_rc_str(rc));
         return rc;
     }
 
     rc = pcmk__ipc_fd(ipc, &fd);
     if (rc != pcmk_rc_ok) {
-        crm_debug("Could not obtain file descriptor for %s IPC: %s",
-                  ipc_name, pcmk_rc_str(rc));
+        pcmk__debug("Could not obtain file descriptor for %s IPC: %s", ipc_name,
+                    pcmk_rc_str(rc));
         crm_ipc_close(ipc);
         return rc;
     }
@@ -1069,10 +1069,11 @@ child_kill_helper(mainloop_child_t *child)
 {
     int rc;
     if (child->flags & mainloop_leave_pid_group) {
-        crm_debug("Kill pid %d only. leave group intact.", child->pid);
+        pcmk__debug("Kill pid %lld only. leave group intact",
+                    (long long) child->pid);
         rc = kill(child->pid, SIGKILL);
     } else {
-        crm_debug("Kill pid %d's group", child->pid);
+        pcmk__debug("Kill pid %lld's group", (long long) child->pid);
         rc = kill(-child->pid, SIGKILL);
     }
 
@@ -1105,7 +1106,8 @@ child_timeout_callback(gpointer p)
     }
 
     child->timeout = TRUE;
-    crm_debug("%s process (PID %d) timed out", child->desc, (int)child->pid);
+    pcmk__debug("%s process (PID %lld) timed out", child->desc,
+                (long long) child->pid);
 
     child->timerid = pcmk__create_timer(5000, child_timeout_callback, child);
     return FALSE;

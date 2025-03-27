@@ -47,8 +47,8 @@ handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
         return;
     }
 
-    crm_debug("Processed %s reply from client %s", op,
-              pcmk__client_name(client));
+    pcmk__debug("Processed %s reply from client %s", op,
+                pcmk__client_name(client));
 }
 
 /*!
@@ -103,7 +103,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
     if (data == NULL) {
-        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
@@ -136,7 +136,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
     if (msg == NULL) {
-        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }

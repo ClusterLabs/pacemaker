@@ -47,8 +47,8 @@ update_fencing_max_attempts(const char *value)
     CRM_CHECK((rc == pcmk_rc_ok) && (score > 0), return);
 
     if (fencing_max_attempts != score) {
-        crm_debug("Maximum fencing attempts per transition is now %d (was %lu)",
-                  score, fencing_max_attempts);
+        pcmk__debug("Maximum fencing attempts per transition is now %d "
+                    "(was %lu)", score, fencing_max_attempts);
     }
     fencing_max_attempts = score;
 }
@@ -247,7 +247,8 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
                                                  cib_can_create);
     pcmk__xml_free(node_state);
 
-    crm_debug("Updating node state for %s after fencing (call %d)", target, rc);
+    pcmk__debug("Updating node state for %s after fencing (call %d)", target,
+                rc);
     fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
 
     // Delete node's resource history from CIB
@@ -1044,7 +1045,7 @@ static void
 fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 {
     controld_cleanup_fencing_history_sync(st, false);
-    crm_debug("Fencing history synced - cancel all timers");
+    pcmk__debug("Fencing history synced - cancel all timers");
 }
 
 static gboolean

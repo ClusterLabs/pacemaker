@@ -503,11 +503,11 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 
         if (other->state == st_duplicate) {
             other->state = op->state;
-            crm_debug("Performing duplicate notification for %s@%s: %s "
-                      QB_XS " id=%.8s",
-                      other->client_name, other->originator,
-                      pcmk_exec_status_str(op->result.execution_status),
-                      other->id);
+            pcmk__debug("Performing duplicate notification for %s@%s: %s "
+                        QB_XS " id=%.8s",
+                        other->client_name, other->originator,
+                        pcmk_exec_status_str(op->result.execution_status),
+                        other->id);
             pcmk__copy_result(&op->result, &other->result);
             finalize_op(other, data, true);
 
@@ -712,9 +712,9 @@ remote_op_timeout_one(gpointer userdata)
 static void
 finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
 {
-    crm_debug("Action '%s' targeting %s for client %s timed out "
-              QB_XS " id=%.8s",
-              op->action, op->target, op->client_name, op->id);
+    pcmk__debug("Action '%s' targeting %s for client %s timed out "
+                QB_XS " id=%.8s",
+                op->action, op->target, op->client_name, op->id);
 
     if (op->phase == st_phase_on) {
         /* A remapped reboot operation timed out in the "on" phase, but the
@@ -746,9 +746,9 @@ remote_op_timeout(gpointer userdata)
     op->op_timer_total = 0;
 
     if (op->state == st_done) {
-        crm_debug("Action '%s' targeting %s for client %s already completed "
-                  QB_XS " id=%.8s",
-                  op->action, op->target, op->client_name, op->id);
+        pcmk__debug("Action '%s' targeting %s for client %s already completed "
+                    QB_XS " id=%.8s",
+                    op->action, op->target, op->client_name, op->id);
     } else {
         finalize_timed_out_op(userdata, "Fencing did not complete within a "
                                         "total timeout based on the "
@@ -766,21 +766,25 @@ remote_op_query_timeout(gpointer data)
     op->query_timer = 0;
 
     if (op->state == st_done) {
-        crm_debug("Operation %.8s targeting %s already completed",
-                  op->id, op->target);
+        pcmk__debug("Operation %.8s targeting %s already completed", op->id,
+                    op->target);
+
     } else if (op->state == st_exec) {
-        crm_debug("Operation %.8s targeting %s already in progress",
-                  op->id, op->target);
+        pcmk__debug("Operation %.8s targeting %s already in progress", op->id,
+                    op->target);
+
     } else if (op->query_results) {
         // Query succeeded, so attempt the actual fencing
-        crm_debug("Query %.8s targeting %s complete (state=%s)",
-                  op->id, op->target, stonith__op_state_text(op->state));
+        pcmk__debug("Query %.8s targeting %s complete (state=%s)",
+                    op->id, op->target, stonith__op_state_text(op->state));
         request_peer_fencing(op, NULL);
+
     } else {
-        crm_debug("Query %.8s targeting %s timed out (state=%s)",
-                  op->id, op->target, stonith__op_state_text(op->state));
-        finalize_timed_out_op(op, "No capable peers replied to device query "
-                                  "within timeout");
+        pcmk__debug("Query %.8s targeting %s timed out (state=%s)",
+                    op->id, op->target, stonith__op_state_text(op->state));
+        finalize_timed_out_op(op,
+                              "No capable peers replied to device query within "
+                              "timeout");
     }
 
     return G_SOURCE_REMOVE;
@@ -1183,8 +1187,8 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
         op = g_hash_table_lookup(stonith_remote_op_list, op_id);
         if (op) {
-            crm_debug("Reusing existing remote fencing op %.8s for %s",
-                      op_id, ((client == NULL)? "unknown client" : client));
+            pcmk__debug("Reusing existing remote fencing op %.8s for %s", op_id,
+                        pcmk__s(client, "unknown client"));
             return op;
         }
     }
@@ -1857,8 +1861,9 @@ check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
                                               op);
         return TRUE;
     } else {
-        crm_debug("Skipping fallback to watchdog-fencing as %s is "
-                 "not in host-list", op->target);
+        pcmk__debug("Skipping fallback to watchdog-fencing as %s is not in "
+                    "host-list",
+                    op->target);
     }
     return FALSE;
 }
@@ -2378,8 +2383,8 @@ process_remote_stonith_query(xmlNode *msg)
 
     op = g_hash_table_lookup(stonith_remote_op_list, id);
     if (op == NULL) {
-        crm_debug("Received query reply for unknown or expired operation %s",
-                  id);
+        pcmk__debug("Received query reply for unknown or expired operation %s",
+                    id);
         return -EOPNOTSUPP;
     }
 

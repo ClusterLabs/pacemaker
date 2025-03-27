@@ -318,9 +318,9 @@ unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
         }
 
         entry->flags = flags;
-        crm_debug("Alert %s receives events: attributes:%s%s%s%s",
-                  entry->id, which_attrs, (fencing? " fencing" : ""),
-                  (node? " nodes" : ""), (resource? " resources" : ""));
+        pcmk__debug("Alert %s receives events: attributes:%s%s%s%s", entry->id,
+                    which_attrs, (fencing? " fencing" : ""),
+                    (node? " nodes" : ""), (resource? " resources" : ""));
     }
 }
 
@@ -386,7 +386,7 @@ pcmk__unpack_alerts(const xmlNode *alerts)
 
         if (unpack_alert(alert, entry, &max_timeout) != pcmk_rc_ok) {
             // Don't allow recipients to override if entire alert is disabled
-            crm_debug("Alert %s is disabled", entry->id);
+            pcmk__debug("Alert %s is disabled", entry->id);
             pcmk__free_alert(entry);
             continue;
         }
@@ -396,10 +396,10 @@ pcmk__unpack_alerts(const xmlNode *alerts)
                 pcmk__str_copy(PCMK__ALERT_DEFAULT_TSTAMP_FORMAT);
         }
 
-        crm_debug("Alert %s: path=%s timeout=%s tstamp-format='%s'",
-                  entry->id, entry->path,
-                  pcmk__readable_interval(entry->timeout),
-                  entry->tstamp_format);
+        pcmk__debug("Alert %s: path=%s timeout=%s tstamp-format='%s'",
+                    entry->id, entry->path,
+                    pcmk__readable_interval(entry->timeout),
+                    entry->tstamp_format);
 
         for (recipient = pcmk__xe_first_child(alert, PCMK_XE_RECIPIENT, NULL,
                                               NULL);
@@ -407,6 +407,7 @@ pcmk__unpack_alerts(const xmlNode *alerts)
              recipient = pcmk__xe_next(recipient, PCMK_XE_RECIPIENT)) {
 
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
+            guint n_envvars = 0;
 
             recipients++;
             recipient_entry->recipient = pcmk__xe_get_copy(recipient,
@@ -414,17 +415,20 @@ pcmk__unpack_alerts(const xmlNode *alerts)
 
             if (unpack_alert(recipient, recipient_entry,
                              &max_timeout) != pcmk_rc_ok) {
-                crm_debug("Alert %s: recipient %s is disabled",
-                          entry->id, recipient_entry->id);
+                pcmk__debug("Alert %s: recipient %s is disabled", entry->id,
+                            recipient_entry->id);
                 pcmk__free_alert(recipient_entry);
                 continue;
             }
             alert_list = g_list_prepend(alert_list, recipient_entry);
-            crm_debug("Alert %s has recipient %s with value %s and %d envvars",
-                      entry->id, pcmk__xe_id(recipient),
-                      recipient_entry->recipient,
-                      (recipient_entry->envvars?
-                       g_hash_table_size(recipient_entry->envvars) : 0));
+
+            if (recipient_entry->envvars != NULL) {
+                n_envvars = g_hash_table_size(recipient_entry->envvars);
+            }
+            pcmk__debug("Alert %s has recipient %s with value %s and %d "
+                        "envvars",
+                        entry->id, pcmk__xe_id(recipient),
+                        recipient_entry->recipient, n_envvars);
         }
 
         if (recipients == 0) {

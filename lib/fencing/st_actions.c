@@ -140,8 +140,8 @@ make_args(const char *agent, const char *action, const char *target,
         free(buffer);
 
         if (value) {
-            crm_debug("Substituting '%s' for fence action %s targeting %s",
-                      value, action, pcmk__s(target, "no node"));
+            pcmk__debug("Substituting '%s' for fence action %s targeting %s",
+                        value, action, pcmk__s(target, "no node"));
             action = value;
         }
     }
@@ -184,8 +184,8 @@ make_args(const char *agent, const char *action, const char *target,
                 if (alias == NULL) {
                     alias = target;
                 }
-                crm_debug("Passing %s='%s' with fence action %s targeting %s",
-                          param, alias, action, pcmk__s(target, "no node"));
+                pcmk__debug("Passing %s='%s' with fence action %s targeting %s",
+                            param, alias, action, pcmk__s(target, "no node"));
                 pcmk__insert_dup(arg_list, param, alias);
             }
         }
@@ -259,10 +259,11 @@ stonith__action_create(const char *agent, const char *action_name,
 {
     stonith_action_t *action = pcmk__assert_alloc(1, sizeof(stonith_action_t));
 
+    pcmk__debug("Preparing '%s' action targeting %s using agent %s",
+                action_name, pcmk__s(target, "no node"), agent);
+
     action->args = make_args(agent, action_name, target, device_args, port_map,
                              default_host_arg);
-    crm_debug("Preparing '%s' action targeting %s using agent %s",
-              action_name, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
     action->action = strdup(action_name);
     action->timeout = action->remaining_timeout = timeout_sec;

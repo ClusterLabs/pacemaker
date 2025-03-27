@@ -437,13 +437,13 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             status = regexec(&regex, r->id, nregs, pmatch, 0);
 
             if (!invert && (status == 0)) {
-                crm_debug("'%s' matched '%s' for %s", r->id, value, id);
+                pcmk__debug("'%s' matched '%s' for %s", r->id, value, id);
                 unpack_rsc_location(xml_obj, r, NULL, NULL, r->id, nregs,
                                     pmatch);
 
             } else if (invert && (status != 0)) {
-                crm_debug("'%s' is an inverted match of '%s' for %s",
-                          r->id, value, id);
+                pcmk__debug("'%s' is an inverted match of '%s' for %s", r->id,
+                            value, id);
                 unpack_rsc_location(xml_obj, r, NULL, NULL, NULL, 0, NULL);
 
             } else {

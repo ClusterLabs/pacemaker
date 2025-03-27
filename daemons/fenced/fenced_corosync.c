@@ -44,7 +44,7 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
         return;
     }
 
-    crm_debug("Processed %s reply from peer %s", op, remote_peer);
+    pcmk__debug("Processed %s reply from peer %s", op, remote_peer);
 }
 
 static void
@@ -113,8 +113,8 @@ fenced_peer_change_cb(enum pcmk__node_update type, pcmk__node_status_t *node,
         pcmk__xe_set(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         pcmk__xe_set(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
 
-        crm_debug("Broadcasting our uname because of node %" PRIu32,
-                  node->cluster_layer_id);
+        pcmk__debug("Broadcasting our uname because of node %" PRIu32,
+                    node->cluster_layer_id);
         pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, query);
 
         pcmk__xml_free(query);

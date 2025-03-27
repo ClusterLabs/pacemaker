@@ -141,7 +141,7 @@ init_remote_listener(int port, bool encrypted)
     }
 
     mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, *ssock, ssock, &remote_listen_fd_callbacks);
-    crm_debug("Started listener on port %d", port);
+    pcmk__debug("Started listener on port %d", port);
 
     return *ssock;
 }
@@ -436,7 +436,8 @@ cib_remote_msg(gpointer data)
             return -1;
         }
 
-        crm_debug("Completed TLS handshake with remote client %s", client_name);
+        pcmk__debug("Completed TLS handshake with remote client %s",
+                    client_name);
         pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
         if (client->remote->auth_timeout) {
             g_source_remove(client->remote->auth_timeout);

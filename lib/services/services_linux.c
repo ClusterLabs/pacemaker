@@ -552,7 +552,7 @@ recurring_action_timer(gpointer data)
 {
     svc_action_t *op = data;
 
-    crm_debug("Scheduling another invocation of %s", op->id);
+    pcmk__debug("Scheduling another invocation of %s", op->id);
 
     /* Clean out the old result */
     free(op->stdout_data);
@@ -731,7 +731,7 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     close_op_input(op);
 
     if (signo == 0) {
-        crm_debug("%s[%d] exited with status %d", op->id, op->pid, exitcode);
+        pcmk__debug("%s[%d] exited with status %d", op->id, op->pid, exitcode);
         services__set_result(op, exitcode, PCMK_EXEC_DONE, NULL);
         log_op_output(op);
         parse_exit_reason_from_stderr(op);
