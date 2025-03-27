@@ -99,8 +99,8 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
             }
         }
 
-        crm_notice("We can fence %s without quorum because they're in our membership",
-                   pcmk__node_name(node));
+        pcmk__notice("We can fence %s without quorum because they're in our "
+                     "membership", pcmk__node_name(node));
         return true;
     }
 

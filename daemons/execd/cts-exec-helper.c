@@ -238,7 +238,7 @@ connection_events(lrmd_event_data_t * event)
     } else {
         sleep(1);
         try_connect();
-        crm_notice("Executor client connection failed");
+        pcmk__notice("Executor client connection failed");
     }
 }
 

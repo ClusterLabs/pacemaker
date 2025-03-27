@@ -161,8 +161,9 @@ crmd_exit(crm_exit_t exit_code)
         return exit_code;
 
     } else if(in_progress) {
-        crm_notice("Error during shutdown process, exiting now with status %d (%s)",
-                   exit_code, crm_exit_str(exit_code));
+        pcmk__notice("Error during shutdown process, exiting now with status "
+                     "%d (%s)",
+                     exit_code, crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
         crmd_fast_exit(exit_code);
     }
@@ -198,8 +199,8 @@ crmd_exit(crm_exit_t exit_code)
      * to report on - allowing real errors stand out
      */
     if (exit_code != CRM_EX_OK) {
-        crm_notice("Forcing immediate exit with status %d (%s)",
-                   exit_code, crm_exit_str(exit_code));
+        pcmk__notice("Forcing immediate exit with status %d (%s)", exit_code,
+                     crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
         crmd_fast_exit(exit_code);
     }
@@ -516,8 +517,8 @@ do_started(long long action, enum crmd_fsa_cause cause,
         register_fsa_error(I_ERROR, msg_data);
 
     } else {
-        crm_notice("Pacemaker controller successfully started and accepting "
-                   "connections");
+        pcmk__notice("Pacemaker controller successfully started and accepting "
+                     "connections");
     }
     controld_set_fsa_input_flags(R_ST_REQUIRED);
     controld_timer_fencer_connect(GINT_TO_POINTER(TRUE));

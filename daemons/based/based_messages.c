@@ -232,7 +232,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             xmlNode *up = pcmk__xe_create(NULL, __func__);
 
             rc = pcmk_ok;
-            crm_notice("Upgrade request from %s verified", host);
+            pcmk__notice("Upgrade request from %s verified", host);
 
             pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
             pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
@@ -320,9 +320,10 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
                                  &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
         sync_in_progress++;
-        crm_notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
-                   diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates);
+        pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
+                     "progress)",
+                     diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
+                     diff_add_admin_epoch, diff_add_epoch, diff_add_updates);
         return -pcmk_err_diff_resync;
     }
 

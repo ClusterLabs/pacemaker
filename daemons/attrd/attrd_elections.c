@@ -115,14 +115,14 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
         if ((election_state(attrd_cluster) == election_won)
             && !pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
                              pcmk__str_casei)) {
-            crm_notice("Detected another attribute writer (%s), starting new "
-                       "election",
-                       peer->name);
+            pcmk__notice("Detected another attribute writer (%s), starting new "
+                         "election",
+                         peer->name);
             election_vote(attrd_cluster);
 
         } else if (!pcmk__str_eq(peer->name, peer_writer, pcmk__str_casei)) {
-            crm_notice("Recorded new attribute writer: %s (was %s)",
-                       peer->name, pcmk__s(peer_writer, "unset"));
+            pcmk__notice("Recorded new attribute writer: %s (was %s)",
+                         peer->name, pcmk__s(peer_writer, "unset"));
             pcmk__str_update(&peer_writer, peer->name);
         }
     }
@@ -132,8 +132,8 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
 void
 attrd_declare_winner(void)
 {
-    crm_notice("Recorded local node as attribute writer (was %s)",
-               (peer_writer? peer_writer : "unset"));
+    pcmk__notice("Recorded local node as attribute writer (was %s)",
+                 pcmk__s(peer_writer, "unset"));
     pcmk__str_update(&peer_writer, attrd_cluster->priv->node_name);
 }
 
@@ -146,7 +146,7 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
 
         free(peer_writer);
         peer_writer = NULL;
-        crm_notice("Lost attribute writer %s", peer->name);
+        pcmk__notice("Lost attribute writer %s", peer->name);
 
         /* Clear any election dampening in effect. Otherwise, if the lost writer
          * had just won, the election could fizzle out with no new writer.

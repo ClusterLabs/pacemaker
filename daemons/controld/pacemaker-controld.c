@@ -121,7 +121,7 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_CONTROLD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker controller");
+    pcmk__notice("Starting Pacemaker controller");
 
     old_instance = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
     if (old_instance == NULL) {

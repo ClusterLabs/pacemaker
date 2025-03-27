@@ -129,7 +129,7 @@ st_callback(stonith_t * st, stonith_event_t * e)
     }
 
     desc = stonith__event_description(e);
-    crm_notice("%s", desc);
+    pcmk__notice("%s", desc);
     free(desc);
 
     if (expected_notifications) {
@@ -140,10 +140,9 @@ st_callback(stonith_t * st, stonith_event_t * e)
 static void
 st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
-    crm_notice("Call %d exited %d: %s (%s)",
-               data->call_id, stonith__exit_status(data),
-               stonith__execution_status(data),
-               pcmk__s(stonith__exit_reason(data), "unspecified reason"));
+    pcmk__notice("Call %d exited %d: %s (%s)", data->call_id,
+                 stonith__exit_status(data), stonith__execution_status(data),
+                 pcmk__s(stonith__exit_reason(data), "unspecified reason"));
 }
 
 #define single_test(cmd, str, num_notifications, expected_rc) \

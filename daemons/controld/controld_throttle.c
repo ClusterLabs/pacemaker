@@ -77,11 +77,11 @@ throttle_check_thresholds(float load, const char *desc,
                           const float thresholds[4])
 {
     if (load > thresholds[3]) {
-        crm_notice("Extreme %s detected: %f", desc, load);
+        pcmk__notice("Extreme %s detected: %f", desc, load);
         return throttle_extreme;
 
     } else if (load > thresholds[2]) {
-        crm_notice("High %s detected: %f", desc, load);
+        pcmk__notice("High %s detected: %f", desc, load);
         return throttle_high;
 
     } else if (load > thresholds[1]) {

@@ -168,9 +168,10 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *fencing)
         }
 
         if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
-            crm_notice("Stop of failed resource %s is implicit %s %s is fenced",
-                       rsc->id, (order_implicit? "after" : "because"),
-                       pcmk__node_name(target));
+            pcmk__notice("Stop of failed resource %s is implicit %s %s is "
+                         "fenced",
+                         rsc->id, (order_implicit? "after" : "because"),
+                         pcmk__node_name(target));
         } else {
             crm_info("%s is implicit %s %s is fenced",
                      action->uuid, (order_implicit? "after" : "because"),

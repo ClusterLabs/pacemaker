@@ -488,10 +488,10 @@ pcmk__primitive_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     } else if ((rsc->priv->next_role > rsc->priv->orig_role)
                && !pcmk__is_set(scheduler->flags, pcmk__sched_quorate)
                && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
-        crm_notice("Resource %s cannot be elevated from %s to %s due to "
-                   PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
-                   rsc->id, pcmk_role_text(rsc->priv->orig_role),
-                   pcmk_role_text(rsc->priv->next_role));
+        pcmk__notice("Resource %s cannot be elevated from %s to %s due to "
+                     PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE,
+                     rsc->id, pcmk_role_text(rsc->priv->orig_role),
+                     pcmk_role_text(rsc->priv->next_role));
         pe__set_next_role(rsc, rsc->priv->orig_role,
                           PCMK_OPT_NO_QUORUM_POLICY "=" PCMK_VALUE_FREEZE);
     }
@@ -757,18 +757,18 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
 
         if (num_all_active > 2) {
             // The resource is migrating *and* multiply active!
-            crm_notice("Forcing recovery of %s because it is migrating "
-                       "from %s to %s and possibly active elsewhere",
-                       rsc->id,
-                       pcmk__node_name(rsc->priv->partial_migration_source),
-                       pcmk__node_name(migration_target));
+            pcmk__notice("Forcing recovery of %s because it is migrating "
+                         "from %s to %s and possibly active elsewhere",
+                         rsc->id,
+                         pcmk__node_name(rsc->priv->partial_migration_source),
+                         pcmk__node_name(migration_target));
         } else {
             // The migration source or target isn't available
-            crm_notice("Forcing recovery of %s because it can no longer "
-                       "migrate from %s to %s",
-                       rsc->id,
-                       pcmk__node_name(rsc->priv->partial_migration_source),
-                       pcmk__node_name(migration_target));
+            pcmk__notice("Forcing recovery of %s because it can no longer "
+                         "migrate from %s to %s",
+                         rsc->id,
+                         pcmk__node_name(rsc->priv->partial_migration_source),
+                         pcmk__node_name(migration_target));
         }
         need_stop = true;
         rsc->priv->partial_migration_source = NULL;
@@ -796,9 +796,9 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
                         "%s resource %s might be active on %u nodes (%s)",
                         pcmk__s(class, "Untyped"), rsc->id, num_all_active,
                         pcmk__multiply_active_text(rsc));
-        crm_notice("For more information, see \"What are multiply active "
-                   "resources?\" at "
-                   "https://projects.clusterlabs.org/w/clusterlabs/faq/");
+        pcmk__notice("For more information, see \"What are multiply active "
+                     "resources?\" at "
+                     "https://projects.clusterlabs.org/w/clusterlabs/faq/");
 
         switch (rsc->priv->multiply_active_policy) {
             case pcmk__multiply_active_restart:
@@ -1513,8 +1513,8 @@ pcmk__schedule_cleanup(pcmk_resource_t *rsc, const pcmk_node_t *node,
         return;
     }
 
-    crm_notice("Scheduling clean-up of %s on %s",
-               rsc->id, pcmk__node_name(node));
+    pcmk__notice("Scheduling clean-up of %s on %s", rsc->id,
+                 pcmk__node_name(node));
     delete_action(rsc, node, optional);
 
     // stop -> clean-up -> start
