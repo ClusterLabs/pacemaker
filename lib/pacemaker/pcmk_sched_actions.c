@@ -1954,7 +1954,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
 
             xpath = pcmk__assert_asprintf(XPATH_NODE_HISTORY, node->priv->name);
             history = pcmk__xpath_find_one(scheduler->input->doc, xpath,
-                                           LOG_NEVER);
+                                           PCMK__LOG_NEVER);
             free(xpath);
 
             process_node_history(node, history);

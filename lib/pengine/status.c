@@ -38,7 +38,7 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
     // @COMPAT Drop this function when support for the syntax is dropped
     xmlNode *deprecated = pcmk__xpath_find_one(scheduler->input->doc,
                                                XPATH_DEPRECATED_RULES,
-                                               LOG_NEVER);
+                                               PCMK__LOG_NEVER);
 
     if (deprecated != NULL) {
         pcmk__warn_once(pcmk__wo_op_attr_expr,
@@ -106,12 +106,12 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     scheduler->priv->op_defaults =
         pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_OP_DEFAULTS,
-                             LOG_NEVER);
+                             PCMK__LOG_NEVER);
     check_for_deprecated_rules(scheduler);
 
     scheduler->priv->rsc_defaults =
         pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_RSC_DEFAULTS,
-                             LOG_NEVER);
+                             PCMK__LOG_NEVER);
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
                                    "//" PCMK_XE_CRM_CONFIG, LOG_TRACE);
@@ -141,7 +141,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
     pcmk__validate_fencing_topology(section);
 
     section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_TAGS,
-                                   LOG_NEVER);
+                                   PCMK__LOG_NEVER);
     unpack_tags(section, scheduler);
 
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {

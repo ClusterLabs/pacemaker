@@ -521,7 +521,7 @@ delegate_from_xml(xmlNode *xml)
 {
     xmlNode *match = pcmk__xpath_find_one(xml->doc,
                                           "//*[@" PCMK__XA_ST_DELEGATE "]",
-                                          LOG_NEVER);
+                                          PCMK__LOG_NEVER);
 
     if (match == NULL) {
         return pcmk__xe_get_copy(xml, PCMK__XA_SRC);
@@ -1163,7 +1163,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = pcmk__xpath_find_one(request->doc,
                                         "//*[@" PCMK__XA_ST_TARGET "]",
-                                        LOG_NEVER);
+                                        PCMK__LOG_NEVER);
     int rc = pcmk_rc_ok;
     const char *operation = NULL;
 

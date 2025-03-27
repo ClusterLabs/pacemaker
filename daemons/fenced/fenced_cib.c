@@ -61,7 +61,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
-    match = pcmk__xpath_find_one(local_cib->doc, xpath->str, LOG_NEVER);
+    match = pcmk__xpath_find_one(local_cib->doc, xpath->str, PCMK__LOG_NEVER);
 
     g_string_free(xpath, TRUE);
     return (match != NULL);
@@ -178,7 +178,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     // @TODO An XPath search can't handle multiple instances or rules
     stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
                                                 XPATH_WATCHDOG_TIMEOUT,
-                                                LOG_NEVER);
+                                                PCMK__LOG_NEVER);
     if (stonith_watchdog_xml) {
         value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
     }

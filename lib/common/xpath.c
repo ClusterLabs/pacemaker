@@ -222,7 +222,7 @@ pcmk__xpath_find_one(xmlDoc *doc, const char *path, uint8_t level)
         goto done;
     }
 
-    if (level >= LOG_NEVER) {
+    if (level >= PCMK__LOG_NEVER) {
         // For no matches or multiple matches, the rest is just logging
         goto done;
     }
@@ -545,14 +545,14 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     max = pcmk__xpath_num_results(xpathObj);
 
     if (max == 0) {
-        if (error_level < LOG_NEVER) {
+        if (error_level < PCMK__LOG_NEVER) {
             do_crm_log(error_level, "No match for %s in %s",
                        xpath, pcmk__s(nodePath, "unknown path"));
             crm_log_xml_explicit(xml_obj, "Unexpected Input");
         }
 
     } else if (max > 1) {
-        if (error_level < LOG_NEVER) {
+        if (error_level < PCMK__LOG_NEVER) {
             int lpc = 0;
 
             do_crm_log(error_level, "Too many matches for %s in %s",

@@ -1140,7 +1140,7 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
     const char *next = NULL;
     const char *offset = NULL;
 
-    if (level == LOG_NEVER) {
+    if (level == PCMK__LOG_NEVER) {
         return;
     }
 
