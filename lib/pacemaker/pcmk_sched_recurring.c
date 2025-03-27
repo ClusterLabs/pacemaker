@@ -507,8 +507,9 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
-        crm_notice("Ignoring %s (recurring monitors for " PCMK_ROLE_STOPPED
-                   " role are not supported for anonymous clones)", op->id);
+        pcmk__notice("Ignoring %s (recurring monitors for " PCMK_ROLE_STOPPED
+                     " role are not supported for anonymous clones)",
+                     op->id);
         return; // @TODO add support
     }
 
@@ -566,10 +567,11 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         if (pcmk__is_set(stopped_mon->flags, pcmk__action_runnable)
             && !pcmk__is_set(stopped_mon->flags, pcmk__action_optional)) {
-            crm_notice("Start recurring %s-interval %s for "
-                       PCMK_ROLE_STOPPED " %s on %s",
-                       pcmk__readable_interval(op->interval_ms),
-                       stopped_mon->task, rsc->id, pcmk__node_name(stop_node));
+            pcmk__notice("Start recurring %s-interval %s for "
+                         PCMK_ROLE_STOPPED " %s on %s",
+                         pcmk__readable_interval(op->interval_ms),
+                         stopped_mon->task, rsc->id,
+                         pcmk__node_name(stop_node));
         }
     }
 }

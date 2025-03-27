@@ -89,7 +89,7 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
     }
 
     // cts-lab looks for this message
-    crm_notice("Connecting to %s cluster layer", cluster_layer_s);
+    pcmk__notice("Connecting to %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
@@ -259,9 +259,9 @@ pcmk__cluster_node_name(uint32_t nodeid)
     if (nodeid == 0) {
         struct utsname hostinfo;
 
-        crm_notice("Could not get local node name from %s cluster layer, "
-                   "defaulting to local hostname",
-                   cluster_layer_s);
+        pcmk__notice("Could not get local node name from %s cluster layer, "
+                     "defaulting to local hostname",
+                     cluster_layer_s);
 
         if (uname(&hostinfo) < 0) {
             // @TODO Maybe let the caller decide what to do
@@ -271,9 +271,9 @@ pcmk__cluster_node_name(uint32_t nodeid)
         return pcmk__str_copy(hostinfo.nodename);
     }
 
-    crm_notice("Could not obtain a node name for node with "
-               PCMK_XA_ID "=" PRIu32,
-               nodeid);
+    pcmk__notice("Could not obtain a node name for node with "
+                 PCMK_XA_ID "=" PRIu32,
+                 nodeid);
     return NULL;
 }
 
@@ -405,9 +405,9 @@ pcmk_get_cluster_layer(void)
 #endif  // SUPPORT_COROSYNC
 
         if (cluster_layer == pcmk_cluster_layer_invalid) {
-            crm_notice("This installation does not support the '%s' cluster "
-                       "infrastructure: terminating",
-                       cluster);
+            pcmk__notice("This installation does not support the '%s' cluster "
+                         "infrastructure: terminating",
+                         cluster);
             crm_exit(CRM_EX_FATAL);
         }
         crm_info("Assuming an active '%s' cluster", cluster);
@@ -422,7 +422,7 @@ pcmk_get_cluster_layer(void)
 #endif  // SUPPORT_COROSYNC
 
         if (cluster_layer == pcmk_cluster_layer_unknown) {
-            crm_notice("Could not determine the current cluster layer");
+            pcmk__notice("Could not determine the current cluster layer");
         } else {
             crm_info("Detected an active '%s' cluster",
                      pcmk_cluster_layer_text(cluster_layer));

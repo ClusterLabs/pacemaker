@@ -203,8 +203,9 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
         rc = cib_file_read_and_verify(filename, sigfile, &root);
         if (rc == pcmk_ok) {
-            crm_notice("Loaded CIB from last valid backup %s (with digest %s)",
-                       filename, sigfile);
+            pcmk__notice("Loaded CIB from last valid backup %s (with digest "
+                         "%s)",
+                         filename, sigfile);
         } else {
             pcmk__warn("Not using next most recent CIB backup from %s (with "
                        "digest %s): %s",

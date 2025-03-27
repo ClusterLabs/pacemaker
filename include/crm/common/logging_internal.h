@@ -56,6 +56,15 @@ extern "C" {
  */
 #define pcmk__warn(fmt, args...) qb_log(LOG_WARNING, fmt, ##args)
 
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_NOTICE level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__notice(fmt, args...) qb_log(LOG_NOTICE, fmt, ##args)
+
 /* Some warnings are too noisy when logged every time a given function is called
  * (for example, using a deprecated feature). As an alternative, we allow
  * warnings to be logged once per invocation of the calling program. Each of

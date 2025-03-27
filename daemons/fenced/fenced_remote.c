@@ -559,14 +559,12 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
 
     if (op->notify_sent) {
         // Most likely, this is a timed-out action that eventually completed
-        crm_notice("Operation '%s'%s%s by %s for %s@%s%s: "
-                   "Result arrived too late " QB_XS " id=%.8s",
-                   op->action, (op->target? " targeting " : ""),
-                   (op->target? op->target : ""),
-                   (op->delegate? op->delegate : "unknown node"),
-                   op->client_name, op->originator,
-                   (op_merged? " (merged)" : ""),
-                   op->id);
+        pcmk__notice("Operation '%s'%s%s by %s for %s@%s%s: Result arrive too "
+                     "late " QB_XS " id=%.8s",
+                     op->action, (op->target? " targeting " : ""),
+                     pcmk__s(op->target, ""),
+                     pcmk__s(op->delegate, "unknown node"), op->client_name,
+                     op->originator, (op_merged? " (merged)" : ""), op->id);
         return;
     }
 
@@ -662,9 +660,9 @@ remote_op_watchdog_done(gpointer userdata)
 
     op->op_timer_one = 0;
 
-    crm_notice("Self-fencing (%s) by %s for %s assumed complete "
-               QB_XS " id=%.8s",
-               op->action, op->target, op->client_name, op->id);
+    pcmk__notice("Self-fencing (%s) by %s for %s assumed complete "
+                 QB_XS " id=%.8s",
+                 op->action, op->target, op->client_name, op->id);
     op->state = st_done;
     pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     finalize_op(op, NULL, false);
@@ -678,8 +676,9 @@ remote_op_timeout_one(gpointer userdata)
 
     op->op_timer_one = 0;
 
-    crm_notice("Peer's '%s' action targeting %s for client %s timed out " QB_XS
-               " id=%.8s", op->action, op->target, op->client_name, op->id);
+    pcmk__notice("Peer's '%s' action targeting %s for client %s timed out "
+                 QB_XS " id=%.8s",
+                 op->action, op->target, op->client_name, op->id);
     pcmk__set_result(&op->result, CRM_EX_ERROR, PCMK_EXEC_TIMEOUT,
                      "Peer did not return fence result within timeout");
 
@@ -877,7 +876,8 @@ topology_matches(const stonith_topology_t *tp, const char *node)
              * is received, then the topology will be unable to be used.
              */
             if (node_has_attr(node, tp->target_attribute, tp->target_value)) {
-                crm_notice("Matched %s with %s by attribute", node, tp->target);
+                pcmk__notice("Matched %s with %s by attribute", node,
+                             tp->target);
                 return TRUE;
             }
             break;
@@ -893,7 +893,8 @@ topology_matches(const stonith_topology_t *tp, const char *node)
 
                 regfree(&r_patt);
                 if (status == 0) {
-                    crm_notice("Matched %s with %s by name", node, tp->target);
+                    pcmk__notice("Matched %s with %s by name", node,
+                                 tp->target);
                     return TRUE;
                 }
             }
@@ -1051,10 +1052,10 @@ merge_duplicates(remote_fencing_op_t *op)
                               pcmk__node_search_cluster_member);
 
         if (!fencing_peer_active(node)) {
-            crm_notice("Failing action '%s' targeting %s originating from "
-                       "client %s@%s: Originator is dead " QB_XS " id=%.8s",
-                       other->action, other->target, other->client_name,
-                       other->originator, other->id);
+            pcmk__notice("Failing action '%s' targeting %s originating from "
+                         "client %s@%s: Originator is dead " QB_XS " id=%.8s",
+                         other->action, other->target, other->client_name,
+                         other->originator, other->id);
             crm_trace("%.8s not duplicate of %.8s: originator dead",
                       op->id, other->id);
             other->state = st_failed;
@@ -1078,12 +1079,12 @@ merge_duplicates(remote_fencing_op_t *op)
             crm_trace("Best guess as to timeout used for %.8s: %ds",
                       other->id, other->total_timeout);
         }
-        crm_notice("Merging fencing action '%s' targeting %s originating from "
-                   "client %s with identical request from %s@%s "
-                   QB_XS " original=%.8s duplicate=%.8s total_timeout=%ds",
-                   op->action, op->target, op->client_name,
-                   other->client_name, other->originator,
-                   op->id, other->id, other->total_timeout);
+        pcmk__notice("Merging fencing action '%s' targeting %s originating "
+                     "from client %s with identical request from %s@%s "
+                     QB_XS " original=%.8s duplicate=%.8s total_timeout=%ds",
+                     op->action, op->target, op->client_name,
+                     other->client_name, other->originator,
+                     op->id, other->id, other->total_timeout);
         report_timeout_period(op, other->total_timeout);
         op->state = st_duplicate;
     }
@@ -1123,9 +1124,9 @@ fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
 
     CRM_CHECK(dev != NULL, return EPROTO);
 
-    crm_notice("Received manual confirmation that %s has been fenced",
-               pcmk__s(pcmk__xe_get(dev, PCMK__XA_ST_TARGET),
-                       "unknown target"));
+    pcmk__notice("Received manual confirmation that %s has been fenced",
+                 pcmk__s(pcmk__xe_get(dev, PCMK__XA_ST_TARGET),
+                         "unknown target"));
     op = initiate_remote_stonith_op(client, msg, TRUE);
     if (op == NULL) {
         return EPROTO;
@@ -1342,10 +1343,10 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
             return op;
 
         default:
-            crm_notice("Requesting peer fencing (%s) targeting %s "
-                       QB_XS " id=%.8s state=%s base_timeout=%ds",
-                       op->action, op->target, op->id,
-                       stonith_op_state_str(op->state), op->base_timeout);
+            pcmk__notice("Requesting peer fencing (%s) targeting %s "
+                         QB_XS " id=%.8s state=%s base_timeout=%ds",
+                         op->action, op->target, op->id,
+                         stonith_op_state_str(op->state), op->base_timeout);
     }
 
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
@@ -1498,8 +1499,8 @@ stonith_choose_peer(remote_fencing_op_t * op)
                  op->target);
         /* check_watchdog_fencing_and_wait will log additional info */
     } else {
-        crm_notice("Couldn't find anyone to fence (%s) %s using %s",
-                   op->action, op->target, (device? device : "any device"));
+        pcmk__notice("Couldn't find anyone to fence (%s) %s using %s",
+                     op->action, op->target, pcmk__s(device, "any device"));
     }
     return NULL;
 }
@@ -1837,10 +1838,10 @@ check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
     if (node_does_watchdog_fencing(op->target)) {
         guint timeout_ms = QB_MIN(stonith_watchdog_timeout_ms, UINT_MAX);
 
-        crm_notice("Waiting %s for %s to self-fence (%s) for "
-                   "client %s " QB_XS " id=%.8s",
-                   pcmk__readable_interval(timeout_ms), op->target, op->action,
-                   op->client_name, op->id);
+        pcmk__notice("Waiting %s for %s to self-fence (%s) for client %s "
+                     QB_XS " id=%.8s",
+                     pcmk__readable_interval(timeout_ms), op->target,
+                     op->action, op->client_name, op->id);
 
         if (op->op_timer_one) {
             g_source_remove(op->op_timer_one);
@@ -1965,19 +1966,19 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         if (device) {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR *
                            get_device_timeout(op, peer, device, true);
-            crm_notice("Requesting that %s perform '%s' action targeting %s "
-                       "using %s " QB_XS " for client %s (%ds)",
-                       peer->host, op->action, op->target, device,
-                       op->client_name, timeout_one);
+            pcmk__notice("Requesting that %s perform '%s' action targeting %s "
+                         "using %s " QB_XS " for client %s (%ds)",
+                         peer->host, op->action, op->target, device,
+                         op->client_name, timeout_one);
             pcmk__xe_set(remote_op, PCMK__XA_ST_DEVICE_ID, device);
 
         } else {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
-            crm_notice("Requesting that %s perform '%s' action targeting %s "
-                       QB_XS " for client %s (%ds, %s)",
-                       peer->host, op->action, op->target, op->client_name,
-                       timeout_one,
-                       pcmk__readable_interval(stonith_watchdog_timeout_ms));
+            pcmk__notice("Requesting that %s perform '%s' action targeting %s "
+                         QB_XS " for client %s (%ds, %s)",
+                         peer->host, op->action, op->target, op->client_name,
+                         timeout_one,
+                         pcmk__readable_interval(stonith_watchdog_timeout_ms));
         }
 
         op->state = st_exec;
@@ -2545,17 +2546,14 @@ fenced_process_fencing_reply(xmlNode *msg)
                        op->target);
             pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
-            crm_notice("Action '%s' targeting %s%s%s on behalf of %s@%s: "
-                       "%s%s%s%s",
-                       op->action, op->target,
-                       ((device == NULL)? "" : " using "),
-                       ((device == NULL)? "" : device),
-                       op->client_name,
-                       op->originator,
-                       pcmk_exec_status_str(op->result.execution_status),
-                       (reason == NULL)? "" : " (",
-                       (reason == NULL)? "" : reason,
-                       (reason == NULL)? "" : ")");
+            pcmk__notice("Action '%s' targeting %s%s%s on behalf of %s@%s: "
+                         "%s%s%s%s",
+                         op->action, op->target,
+                         ((device == NULL)? "" : " using "),
+                         pcmk__s(device, ""), op->client_name, op->originator,
+                         pcmk_exec_status_str(op->result.execution_status),
+                         ((reason != NULL)? " (" : ""), pcmk__s(reason, ""),
+                         ((reason != NULL)? ")" : ""));
         }
 
         if (pcmk__result_ok(&op->result)) {
@@ -2623,8 +2621,9 @@ stonith_check_fence_tolerance(int tolerance, const char *target, const char *act
             continue;
         }
 
-        crm_notice("Target %s was fenced (%s) less than %ds ago by %s on behalf of %s",
-                   target, action, tolerance, rop->delegate, rop->originator);
+        pcmk__notice("Target %s was fenced (%s) less than %ds ago by %s on "
+                     "behalf of %s",
+                     target, action, tolerance, rop->delegate, rop->originator);
         return TRUE;
     }
     return FALSE;

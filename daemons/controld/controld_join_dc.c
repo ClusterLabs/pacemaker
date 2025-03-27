@@ -666,16 +666,16 @@ do_dc_join_finalize(long long action,
         // Ask for the agreed best CIB
         sync_from = pcmk__str_copy(max_generation_from);
     }
-    crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB %s.%s.%s "
-               "with schema %s and feature set %s from %s)",
-               current_join_id, count_finalizable,
-               pcmk__plural_s(count_finalizable),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_ADMIN_EPOCH),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_EPOCH),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_NUM_UPDATES),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_VALIDATE_WITH),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_CRM_FEATURE_SET),
-               sync_from);
+    pcmk__notice("Finalizing join-%d for %d node%s (sync'ing CIB %s.%s.%s with "
+                 "schema %s and feature set %s from %s)",
+                 current_join_id, count_finalizable,
+                 pcmk__plural_s(count_finalizable),
+                 pcmk__xe_get(max_generation_xml, PCMK_XA_ADMIN_EPOCH),
+                 pcmk__xe_get(max_generation_xml, PCMK_XA_EPOCH),
+                 pcmk__xe_get(max_generation_xml, PCMK_XA_NUM_UPDATES),
+                 pcmk__xe_get(max_generation_xml, PCMK_XA_VALIDATE_WITH),
+                 pcmk__xe_get(max_generation_xml, PCMK_XA_CRM_FEATURE_SET),
+                 sync_from);
     crmd_join_phase_log(LOG_DEBUG);
 
     rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,

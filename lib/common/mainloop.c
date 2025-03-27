@@ -251,9 +251,9 @@ crm_signal_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
     crm_signal_t *sig = (crm_signal_t *) source;
 
     if(sig->signal != SIGCHLD) {
-        crm_notice("Caught '%s' signal " QB_XS " %d (%s handler)",
-                   strsignal(sig->signal), sig->signal,
-                   (sig->handler? "invoking" : "no"));
+        pcmk__notice("Caught '%s' signal " QB_XS " %d (%s handler)",
+                     strsignal(sig->signal), sig->signal,
+                     ((sig->handler != NULL)? "invoking" : "no"));
     }
 
     sig->trigger.trigger = FALSE;
@@ -1132,8 +1132,8 @@ child_waitpid(mainloop_child_t *child, int flags)
          */
         signo = SIGCHLD;
         exitcode = 1;
-        crm_notice("Wait for child process %d (%s) interrupted: %s",
-                   child->pid, child->desc, pcmk_rc_str(errno));
+        pcmk__notice("Wait for child process %d (%s) interrupted: %s",
+                     child->pid, child->desc, pcmk_rc_str(errno));
 
     } else if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);

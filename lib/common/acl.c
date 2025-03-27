@@ -653,10 +653,12 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
             return;
 
         } else {
-            crm_notice("ACLs would disallow creation of %s<%s> with "
-                       PCMK_XA_ID "=\"%s\"",
-                       ((xml == xmlDocGetRootElement(xml->doc))? "root element " : ""),
-                       xml->name, display_id(xml));
+            const bool is_root = (xml == xmlDocGetRootElement(xml->doc));
+
+            pcmk__notice("ACLs would disallow creation of %s<%s> with "
+                         PCMK_XA_ID "=\"%s\"",
+                         (is_root? "root element " : ""), xml->name,
+                         display_id(xml));
         }
     }
 

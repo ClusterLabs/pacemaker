@@ -419,8 +419,9 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         guint nremaining = g_hash_table_size(lrm_state->active_ops);
 
         if (removed || nremaining) {
-            crm_notice("Stopped %u recurring operation%s at %s (%u remaining)",
-                       removed, pcmk__plural_s(removed), when, nremaining);
+            pcmk__notice("Stopped %u recurring operation%s at %s (%u "
+                         "remaining)",
+                         removed, pcmk__plural_s(removed), when, nremaining);
         }
     }
 
@@ -480,9 +481,11 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
             g_hash_table_iter_init(&hIter, lrm_state->active_ops);
             while (g_hash_table_iter_next(&hIter, (gpointer*)&key, (gpointer*)&pending)) {
                 if (pcmk__str_eq(entry->id, pending->rsc_id, pcmk__str_none)) {
-                    crm_notice("%sction %s (%s) incomplete at %s",
-                               pending->interval_ms == 0 ? "A" : "Recurring a",
-                               key, pending->op_key, when);
+                    const bool recurring = (pending->interval_ms != 0);
+
+                    pcmk__notice("%s %s (%s) incomplete at %s",
+                                 (recurring? "Recurring action" : "Action"),
+                                 key, pending->op_key, when);
                 }
             }
         }
@@ -1220,7 +1223,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, xmlNode *msg, const char *from_sys,
                   const char *from_host, const char *user_name,
                   gboolean is_remote_node, bool reprobe_all_nodes)
 {
-    crm_notice("Forcing the status of all resources to be redetected");
+    pcmk__notice("Forcing the status of all resources to be redetected");
     force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node,
                   reprobe_all_nodes);
 
@@ -1964,11 +1967,11 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     nack_reason = should_nack_action(operation);
     if (nack_reason != NULL) {
-        crm_notice("Not requesting local execution of %s operation for %s on %s"
-                   " in state %s: %s",
-                   pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
-                   lrm_state->node_name,
-                   fsa_state2string(controld_globals.fsa_state), nack_reason);
+        pcmk__notice("Not requesting local execution of %s operation for %s on "
+                     "%s in state %s: %s",
+                     pcmk__readable_action(op->op_type, op->interval_ms),
+                     rsc->id, lrm_state->node_name,
+                     fsa_state2string(controld_globals.fsa_state), nack_reason);
 
         lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
                          nack_reason);
@@ -1978,10 +1981,10 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         return;
     }
 
-    crm_notice("Requesting local execution of %s operation for %s on %s "
-               QB_XS " transition %s",
-               pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
-               lrm_state->node_name, pcmk__s(transition, ""));
+    pcmk__notice("Requesting local execution of %s operation for %s on %s "
+                 QB_XS " transition %s",
+                 pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
+                 lrm_state->node_name, pcmk__s(transition, ""));
 
     controld_record_pending_op(lrm_state->node_name, rsc, op);
 
@@ -2287,9 +2290,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                  * refreshed, cleaned, or removed while this operation was
                  * in flight).
                  */
-                crm_notice("Not recording %s result in CIB because "
-                           "resource information was removed since it was initiated",
-                           op_key);
+                pcmk__notice("Not recording %s result in CIB because resource "
+                             "information was removed since it was initiated",
+                             op_key);
             } else {
                 /* This shouldn't be possible; the executor didn't consider the
                  * resource deleted, but we couldn't find resource or node

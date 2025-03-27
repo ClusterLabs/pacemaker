@@ -253,22 +253,22 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
     int rc = pcmk__daemon_user(&daemon_uid, NULL);
 
     if (rc != pcmk_rc_ok) {
-        crm_notice("Could not find user '" CRM_DAEMON_USER "': %s",
-                   pcmk_rc_str(rc));
+        pcmk__notice("Could not find user '" CRM_DAEMON_USER "': %s",
+                     pcmk_rc_str(rc));
         return FALSE;
     }
     if (target_stat->st_uid != daemon_uid) {
-        crm_notice("%s is not owned by user '" CRM_DAEMON_USER "' "
-                   QB_XS " uid %lld != %lld",
-                   target_name, (long long) daemon_uid,
-                   (long long) target_stat->st_uid);
+        pcmk__notice("%s is not owned by user '" CRM_DAEMON_USER "' "
+                     QB_XS " uid %lld != %lld",
+                     target_name, (long long) daemon_uid,
+                     (long long) target_stat->st_uid);
         return FALSE;
     }
     if ((target_stat->st_mode & (S_IRUSR | S_IWUSR)) == 0) {
-        crm_notice("%s is not readable and writable by user %s "
-                   QB_XS " st_mode=0%lo",
-                   target_name, CRM_DAEMON_USER,
-                   (unsigned long) target_stat->st_mode);
+        pcmk__notice("%s is not readable and writable by user %s "
+                     QB_XS " st_mode=0%lo",
+                     target_name, CRM_DAEMON_USER,
+                     (unsigned long) target_stat->st_mode);
         return FALSE;
     }
     return TRUE;
@@ -281,24 +281,24 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
     int rc = pcmk__daemon_user(NULL, &daemon_gid);
 
     if (rc != pcmk_rc_ok) {
-        crm_notice("Could not find group '" CRM_DAEMON_GROUP "': %s",
-                   pcmk_rc_str(rc));
+        pcmk__notice("Could not find group '" CRM_DAEMON_GROUP "': %s",
+                     pcmk_rc_str(rc));
         return FALSE;
     }
 
     if (target_stat->st_gid != daemon_gid) {
-        crm_notice("%s is not owned by group '" CRM_DAEMON_GROUP "' "
-                   QB_XS " gid %lld != %lld",
-                   target_name, (long long) daemon_gid,
-                   (long long) target_stat->st_gid);
+        pcmk__notice("%s is not owned by group '" CRM_DAEMON_GROUP "' "
+                     QB_XS " gid %lld != %lld",
+                     target_name, (long long) daemon_gid,
+                     (long long) target_stat->st_gid);
         return FALSE;
     }
 
     if ((target_stat->st_mode & (S_IRGRP | S_IWGRP)) == 0) {
-        crm_notice("%s is not readable and writable by group %s "
-                   QB_XS " st_mode=0%lo",
-                   target_name, CRM_DAEMON_GROUP,
-                   (unsigned long) target_stat->st_mode);
+        pcmk__notice("%s is not readable and writable by group %s "
+                     QB_XS " st_mode=0%lo",
+                     target_name, CRM_DAEMON_GROUP,
+                     (unsigned long) target_stat->st_mode);
         return FALSE;
     }
     return TRUE;
@@ -336,7 +336,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
 
         s_res = stat(full_file, &buf);
         if (s_res < 0) {
-            crm_notice("%s not found: %s", target, pcmk_rc_str(errno));
+            pcmk__notice("%s not found: %s", target, pcmk_rc_str(errno));
             free(full_file);
             full_file = NULL;
             target = NULL;

@@ -76,14 +76,14 @@ handle_ping_request(pcmk__request_t *request)
         if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_SHUTDOWN_COMPLETE,
                          pcmk__str_none)) {
             if (pcmk__get_sbd_sync_resource_startup()) {
-                crm_notice("Shutdown-complete-state passed to SBD.");
+                pcmk__notice("Shutdown-complete-state passed to SBD");
             }
 
             shutdown_complete_state_reported_to = request->ipc_client->pid;
 
         } else if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_WAIT_FOR_PING,
                                 pcmk__str_none)) {
-            crm_notice("Received startup-trigger from SBD.");
+            pcmk__notice("Received startup-trigger from SBD");
             pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
             mainloop_set_trigger(startup_trigger);
         }
@@ -113,9 +113,9 @@ handle_shutdown_request(pcmk__request_t *request)
     shutdown = pcmk__xe_create(NULL, PCMK__XE_SHUTDOWN);
 
     if (allowed) {
-        crm_notice("Shutting down in response to IPC request %s from %s",
-                   pcmk__xe_get(msg, PCMK_XA_REFERENCE),
-                   pcmk__xe_get(msg, PCMK_XA_ORIGIN));
+        pcmk__notice("Shutting down in response to IPC request %s from %s",
+                     pcmk__xe_get(msg, PCMK_XA_REFERENCE),
+                     pcmk__xe_get(msg, PCMK_XA_ORIGIN));
         pcmk__xe_set_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_OK);
     } else {
         pcmk__warn("Ignoring shutdown request from unprivileged client %s",

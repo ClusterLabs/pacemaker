@@ -125,10 +125,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
         if (!pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
             if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
-                crm_notice("Not fencing guest node %s "
-                           "(otherwise would because %s): "
-                           "its guest resource %s is unmanaged",
-                           pcmk__node_name(node), reason, rsc->id);
+                pcmk__notice("Not fencing guest node %s (otherwise would "
+                             "because %s): its guest resource %s is unmanaged",
+                             pcmk__node_name(node), reason, rsc->id);
             } else {
                 pcmk__sched_warn(scheduler,
                                  "Guest node %s will be fenced "
@@ -157,9 +156,9 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
         pcmk_resource_t *rsc = node->priv->remote;
 
         if ((rsc != NULL) && !pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
-            crm_notice("Not fencing remote node %s "
-                       "(otherwise would because %s): connection is unmanaged",
-                       pcmk__node_name(node), reason);
+            pcmk__notice("Not fencing remote node %s (otherwise would because "
+                         "%s): connection is unmanaged",
+                         pcmk__node_name(node), reason);
         } else if (!pcmk__is_set(node->priv->flags, pcmk__node_remote_reset)) {
             pcmk__set_node_flags(node, pcmk__node_remote_reset);
             pcmk__sched_warn(scheduler, "Remote node %s %s: %s",
@@ -321,8 +320,9 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                 || pcmk__is_set(scheduler->flags, pcmk__sched_quorate)) {
                 scheduler->no_quorum_policy = pcmk_no_quorum_fence;
             } else {
-                crm_notice("Resetting " PCMK_OPT_NO_QUORUM_POLICY
-                           " to 'stop': cluster has never had quorum");
+                pcmk__notice("Resetting " PCMK_OPT_NO_QUORUM_POLICY " to "
+                             "'" PCMK_VALUE_STOP "': cluster has never had "
+                             "quorum");
                 scheduler->no_quorum_policy = pcmk_no_quorum_stop;
             }
         } else {
@@ -349,10 +349,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                       "Demote promotable resources and stop other resources");
             break;
         case pcmk_no_quorum_fence:
-            crm_notice("On loss of quorum: Fence all remaining nodes");
+            pcmk__notice("On loss of quorum: Fence all remaining nodes");
             break;
         case pcmk_no_quorum_ignore:
-            crm_notice("On loss of quorum: Ignore");
+            pcmk__notice("On loss of quorum: Ignore");
             break;
     }
 
@@ -1216,8 +1216,9 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
 
     this_node = pe_find_node_any(scheduler->nodes, id, uname);
     if (this_node == NULL) {
-        crm_notice("Ignoring recorded state for removed node with name %s and "
-                   PCMK_XA_ID " %s", pcmk__s(uname, "unknown"), id);
+        pcmk__notice("Ignoring recorded state for removed node with name %s "
+                     "and " PCMK_XA_ID " %s",
+                     pcmk__s(uname, "unknown"), id);
         return;
     }
 
@@ -2132,9 +2133,10 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                      * numbers available.
                      */
                     if (rsc->priv->active_nodes != NULL) {
-                        crm_notice("Active (now-)anonymous clone %s has "
-                                   "multiple (orphan) instance histories on %s",
-                                   parent->id, pcmk__node_name(node));
+                        pcmk__notice("Active (now-)anonymous clone %s has "
+                                     "multiple (orphan) instance histories on "
+                                     "%s",
+                                     parent->id, pcmk__node_name(node));
                         skip_inactive = TRUE;
                         rsc = NULL;
                     } else {
@@ -2514,13 +2516,14 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     if (known_active) {
         if (pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
             if (pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
-                crm_notice("Removed resource %s is active on %s and will be "
-                           "stopped when possible",
-                           rsc->id, pcmk__node_name(node));
+                pcmk__notice("Removed resource %s is active on %s and will be "
+                             "stopped when possible",
+                             rsc->id, pcmk__node_name(node));
             } else {
-                crm_notice("Removed resource %s must be stopped manually on %s "
-                           "because " PCMK_OPT_STOP_ORPHAN_RESOURCES
-                           " is set to false", rsc->id, pcmk__node_name(node));
+                pcmk__notice("Removed resource %s must be stopped manually on "
+                             "%s because " PCMK_OPT_STOP_ORPHAN_RESOURCES " is "
+                             "set to false",
+                             rsc->id, pcmk__node_name(node));
             }
         }
 
@@ -3588,7 +3591,7 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
     }
 
     // Ban the resource from all nodes
-    crm_notice("%s will not be started under current conditions", rsc->id);
+    pcmk__notice("%s will not be started under current conditions", rsc->id);
     if (rsc->priv->allowed_nodes != NULL) {
         g_hash_table_destroy(rsc->priv->allowed_nodes);
     }
@@ -3678,10 +3681,10 @@ unpack_rsc_op_failure(struct action_history *history,
             /* A failed (not just unexpected) probe result could mean the user
              * didn't know resources will be probed even where they can't run.
              */
-            crm_notice("If it is not possible for %s to run on %s, see "
-                       "the " PCMK_XA_RESOURCE_DISCOVERY " option for location "
-                       "constraints",
-                       history->rsc->id, pcmk__node_name(history->node));
+            pcmk__notice("If it is not possible for %s to run on %s, see the "
+                         PCMK_XA_RESOURCE_DISCOVERY " option for location "
+                         "constraints",
+                         history->rsc->id, pcmk__node_name(history->node));
         }
 
         record_failed_op(history);
@@ -4514,10 +4517,10 @@ process_expired_result(struct action_history *history, int orig_exit_status)
     }
 
     if (history->interval_ms == 0) {
-        crm_notice("Ignoring resource history entry %s for %s of %s on %s: "
-                   "Expired failure",
-                   history->id, history->task, history->rsc->id,
-                   pcmk__node_name(history->node));
+        pcmk__notice("Ignoring resource history entry %s for %s of %s on %s: "
+                     "Expired failure",
+                     history->id, history->task, history->rsc->id,
+                     pcmk__node_name(history->node));
         return pcmk_rc_ok;
     }
 
@@ -4532,10 +4535,11 @@ process_expired_result(struct action_history *history, int orig_exit_status)
          *       scheduler regression test doesn't, but that may not be a
          *       realistic scenario in production).
          */
-        crm_notice("Rescheduling %s-interval %s of %s on %s "
-                   "after failure expired",
-                   pcmk__readable_interval(history->interval_ms), history->task,
-                   history->rsc->id, pcmk__node_name(history->node));
+        pcmk__notice("Rescheduling %s-interval %s of %s on %s after failure "
+                     "expired",
+                     pcmk__readable_interval(history->interval_ms),
+                     history->task, history->rsc->id,
+                     pcmk__node_name(history->node));
         pcmk__xe_set(history->xml, PCMK__XA_OP_RESTART_DIGEST,
                      "calculated-failure-timeout");
         return pcmk_rc_ok;
@@ -4564,9 +4568,9 @@ mask_probe_failure(struct action_history *history, int orig_exit_status,
         ban_rsc = uber_parent(history->rsc);
     }
 
-    crm_notice("Treating probe result '%s' for %s on %s as 'not running'",
-               crm_exit_str(orig_exit_status), history->rsc->id,
-               pcmk__node_name(history->node));
+    pcmk__notice("Treating probe result '%s' for %s on %s as 'not running'",
+                 crm_exit_str(orig_exit_status), history->rsc->id,
+                 pcmk__node_name(history->node));
     update_resource_state(history, history->expected_exit_status, last_failure,
                           on_fail);
     pcmk__xe_set(history->xml, PCMK_XA_UNAME, history->node->priv->name);

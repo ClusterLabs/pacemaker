@@ -938,10 +938,12 @@ action_complete(svc_action_t * action)
             int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
 
             if (time_left >= 0) {
-                crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout "
-                           "(first pending notification=%s timeout=%ds)",
-                           cmd->rsc_id, cmd->action, cmd->result.exit_status,
-                           pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
+                pcmk__notice("Giving up on %s %s (rc=%d): monitor pending "
+                             "timeout (first pending notification=%s "
+                             "timeout=%ds)",
+                             cmd->rsc_id, cmd->action, cmd->result.exit_status,
+                             pcmk__trim(ctime(&cmd->epoch_rcchange)),
+                             cmd->timeout_orig);
                 pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                                  PCMK_EXEC_TIMEOUT,
                                  "Investigate reason for timeout, and adjust "
@@ -977,13 +979,13 @@ action_complete(svc_action_t * action)
                      cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
         } else {
-            crm_notice("%s %s failed: %s: Re-scheduling (remaining "
-                       "timeout %s) " QB_XS
-                       " exitstatus=%d elapsed=%dms start_delay=%dms)",
-                       cmd->rsc_id, cmd->action,
-                       crm_exit_str(cmd->result.exit_status),
-                       pcmk__readable_interval(timeout_left),
-                       cmd->result.exit_status, time_sum, delay);
+            pcmk__notice("%s %s failed: %s: Re-scheduling (remaining timeout "
+                         "%s) "
+                         QB_XS " exitstatus=%d elapsed=%dms start_delay=%dms)",
+                         cmd->rsc_id, cmd->action,
+                         crm_exit_str(cmd->result.exit_status),
+                         pcmk__readable_interval(timeout_left),
+                         cmd->result.exit_status, time_sum, delay);
         }
 
         cmd_reset(cmd);
@@ -996,10 +998,10 @@ action_complete(svc_action_t * action)
         return;
 
     } else {
-        crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
-                   cmd->rsc_id,
-                   (cmd->real_action? cmd->real_action : cmd->action),
-                   cmd->result.exit_status, time_sum, timeout_left);
+        pcmk__notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, "
+                     "remaining=%dms)",
+                     cmd->rsc_id, pcmk__s(cmd->real_action, cmd->action),
+                     cmd->result.exit_status, time_sum, timeout_left);
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_TIMEOUT,
                          "Investigate reason for timeout, and adjust "
@@ -1581,7 +1583,7 @@ process_lrmd_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
         pcmk__str_eq(rsc->class, dup->class, pcmk__str_casei) &&
         pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) && pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
-        crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
+        pcmk__notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
         free_rsc(rsc);
         return rc;
     }

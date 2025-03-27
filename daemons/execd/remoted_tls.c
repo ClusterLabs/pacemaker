@@ -63,7 +63,7 @@ remoted__read_handshake_data(pcmk__client_t *client)
     client->remote->auth_timeout = 0;
 
     pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
-    crm_notice("Remote client connection accepted");
+    pcmk__notice("Remote client connection accepted");
 
     /* Now that the handshake is done, see if any client TLS certificate is
      * close to its expiration date and log if so.  If a TLS certificate is not
@@ -159,8 +159,8 @@ lrmd_remote_client_destroy(gpointer user_data)
         return;
     }
 
-    crm_notice("Cleaning up after remote client %s disconnected",
-               pcmk__client_name(client));
+    pcmk__notice("Cleaning up after remote client %s disconnected",
+                 pcmk__client_name(client));
 
     ipc_proxy_remove_provider(client);
 
@@ -248,7 +248,7 @@ lrmd_remote_listen(gpointer data)
 static void
 tls_server_dropped(gpointer user_data)
 {
-    crm_notice("TLS server session ended");
+    pcmk__notice("TLS server session ended");
     return;
 }
 

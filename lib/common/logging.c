@@ -393,11 +393,11 @@ pcmk__add_logfile(const char *filename)
         setenv_logfile(filename);
 
     } else if (default_fd >= 0) {
-        crm_notice("Switching logging to %s", filename);
+        pcmk__notice("Switching logging to %s", filename);
         disable_logfile(default_fd);
     }
 
-    crm_notice("Additional logging available in %s", filename);
+    pcmk__notice("Additional logging available in %s", filename);
     enable_logfile(fd);
     have_logfile = true;
     return pcmk_rc_ok;
@@ -464,7 +464,7 @@ crm_control_blackbox(int nsig, bool enable)
             qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
         }
 
-        crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
+        pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
 
         /* Save to disk on abnormal termination */
         crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
@@ -539,14 +539,18 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
 
             snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
             if (nsig == SIGTRAP) {
-                crm_notice("Blackbox dump requested, please see %s for contents", buffer);
+                pcmk__notice("Blackbox dump requested, please see %s for "
+                             "contents",
+                             buffer);
 
             } else if (cs) {
                 syslog(LOG_NOTICE,
                        "Problem detected at %s:%d (%s), please see %s for additional details",
                        cs->function, cs->lineno, cs->filename, buffer);
             } else {
-                crm_notice("Problem detected, please see %s for additional details", buffer);
+                pcmk__notice("Problem detected, please see %s for additional "
+                             "details",
+                             buffer);
             }
 
             last = now;
@@ -1121,7 +1125,7 @@ crm_log_args(int argc, char **argv)
     }
     logged = true;
     arg_string = g_strjoinv(" ", argv);
-    crm_notice("Invoked: %s", arg_string);
+    pcmk__notice("Invoked: %s", arg_string);
     g_free(arg_string);
 }
 

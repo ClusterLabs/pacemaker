@@ -462,8 +462,8 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
         }
     }
 
-    crm_notice("Versions did not change in patch %d.%d.%d",
-               target[0], target[1], target[2]);
+    pcmk__notice("Versions did not change in patch %d.%d.%d",
+                 target[0], target[1], target[2]);
     return pcmk_rc_old_data;
 }
 

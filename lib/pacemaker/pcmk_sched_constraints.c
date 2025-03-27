@@ -120,7 +120,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     if (g_hash_table_lookup_extended(scheduler->priv->templates, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
-            crm_notice("No resource is derived from template '%s'", id);
+            pcmk__notice("No resource is derived from template '%s'", id);
             return false;
         }
         return true;
@@ -130,7 +130,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     if (g_hash_table_lookup_extended(scheduler->priv->tags, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
-            crm_notice("No resource is tagged with '%s'", id);
+            pcmk__notice("No resource is tagged with '%s'", id);
             return false;
         }
         return true;

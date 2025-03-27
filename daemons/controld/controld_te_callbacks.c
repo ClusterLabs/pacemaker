@@ -498,10 +498,10 @@ action_timer_callback(gpointer data)
     via_node = pcmk__xe_get(action->xml, PCMK__XA_ROUTER_NODE);
 
     if (controld_globals.transition_graph->complete) {
-        crm_notice("Node %s did not send %s result (via %s) within %dms "
-                   "(ignoring because transition not in progress)",
-                   (on_node? on_node : ""), (task? task : "unknown action"),
-                   (via_node? via_node : "controller"), action->timeout);
+        pcmk__notice("Node %s did not send %s result (via %s) within %dms "
+                     "(ignoring because transition not in progress)",
+                     pcmk__s(on_node, ""), pcmk__s(task, "unknown action"),
+                     pcmk__s(via_node, "controller"), action->timeout);
     } else {
         /* fail the action */
 

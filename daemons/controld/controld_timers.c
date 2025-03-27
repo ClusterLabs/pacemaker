@@ -186,7 +186,8 @@ crm_timer_popped(gpointer data)
     }
 
     if ((timer == election_timer) && (election_timer->counter > 5)) {
-        crm_notice("We appear to be in an election loop, something may be wrong");
+        pcmk__notice("We appear to be in an election loop, something may be "
+                     "wrong");
         crm_write_blackbox(0, NULL);
         election_timer->counter = 0;
     }
@@ -477,7 +478,7 @@ controld_shutdown_start_countdown(guint default_period_ms)
         shutdown_escalation_timer->period_ms = default_period_ms;
     }
 
-    crm_notice("Initiating controller shutdown sequence " QB_XS " limit=%ums",
+    pcmk__notice("Initiating controller shutdown sequence " QB_XS " limit=%ums",
                shutdown_escalation_timer->period_ms);
     controld_start_timer(shutdown_escalation_timer);
 }

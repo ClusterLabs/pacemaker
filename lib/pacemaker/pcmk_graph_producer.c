@@ -959,14 +959,13 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
                    pcmk__s(filename, ""));
 
     } else {
-        crm_notice("Calculated transition %d%s%s",
-                   transition_id,
-                   (filename == NULL)? "" : ", saving inputs in ",
-                   (filename == NULL)? "" : filename);
+        pcmk__notice("Calculated transition %d%s%s", transition_id,
+                     ((filename != NULL)? ", saving inputs in " : ""),
+                     pcmk__s(filename, ""));
     }
     if (pcmk__config_has_error) {
-        crm_notice("Configuration errors found during scheduler processing,"
-                   "  please run \"crm_verify -L\" to identify issues");
+        pcmk__notice("Configuration errors found during scheduler processing, "
+                     "please run \"crm_verify -L\" to identify issues");
     }
 }
 

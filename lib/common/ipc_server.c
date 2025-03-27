@@ -143,8 +143,8 @@ pcmk__drop_all_clients(qb_ipcs_service_t *service)
         c = qb_ipcs_connection_next_get(service, last);
 
         /* There really shouldn't be anyone connected at this point */
-        crm_notice("Disconnecting client %p, pid=%d...",
-                   last, pcmk__client_pid(last));
+        pcmk__notice("Disconnecting client %p, pid=%d...", last,
+                     pcmk__client_pid(last));
         qb_ipcs_disconnect(last);
         qb_ipcs_connection_unref(last);
     }
@@ -736,10 +736,10 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
             if (qb_rc < 0) {
                 rc = (int) -qb_rc;
             }
-            crm_notice("Response %" PRId32 " to pid %u failed: %s "
-                       QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
-                       header->qb.id, c->pid, pcmk_rc_str(rc),
-                       header->qb.size, qb_rc, c->ipcs);
+            pcmk__notice("Response %" PRId32 " to pid %u failed: %s "
+                         QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
+                         header->qb.id, c->pid, pcmk_rc_str(rc),
+                         header->qb.size, qb_rc, c->ipcs);
 
         } else {
             crm_trace("Response %" PRId32 " sent, %zd bytes to %p[%u]",
@@ -780,8 +780,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
         rc = pcmk__ipc_send_iov(c, iov, flags);
     } else {
         pcmk_free_ipc_event(iov);
-        crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
-                   c->pid, pcmk_rc_str(rc), rc);
+        pcmk__notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
+                     c->pid, pcmk_rc_str(rc), rc);
     }
     return rc;
 }

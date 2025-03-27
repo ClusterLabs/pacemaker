@@ -1792,7 +1792,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     /* look up where we expected it to be? */
     desc = pcmk_rc_str(pcmk_rc_ok);
     if ((status == PCMK_EXEC_DONE) && (target_rc == rc)) {
-        crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
+        pcmk__notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_OCF_NOT_RUNNING) {
             notify = FALSE;
         }
@@ -1941,14 +1941,16 @@ crm_diff_update(const char *event, xmlNode * msg)
         switch (rc) {
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
-                crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__notice("[%s] Patch aborted: %s (%d)", event,
+                             pcmk_strerror(rc), rc);
                 pcmk__xml_free(current_cib); current_cib = NULL;
                 break;
             case pcmk_ok:
                 cib_updated = TRUE;
                 break;
             default:
-                crm_notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
+                             rc);
                 pcmk__xml_free(current_cib); current_cib = NULL;
         }
     }

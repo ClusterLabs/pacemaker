@@ -170,8 +170,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
             if (ocf1_1) {
                 controld_set_ra_flags(md, key, ra_supports_reload_agent);
             } else {
-                crm_notice("reload-agent action will not be used with %s "
-                           "because it does not support OCF 1.1 or later", key);
+                pcmk__notice("reload-agent action will not be used with %s "
+                             "because it does not support OCF 1.1 or later",
+                             key);
             }
 
         } else if (!ocf1_1 && pcmk__str_eq(action_name, PCMK_ACTION_RELOAD,

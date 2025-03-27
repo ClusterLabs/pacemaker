@@ -227,7 +227,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
             if (!appeared && controld_is_local_node(node->name)) {
                 /* Did we get evicted? */
-                crm_notice("Our peer connection failed");
+                pcmk__notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
 
             } else if (pcmk__str_eq(node->name, controld_globals.dc_name,
@@ -241,8 +241,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                  * DC's expected state to down. This avoids fencing upon
                  * deletion of its transient attributes.
                  */
-                crm_notice("Our peer on the DC (%s) is dead",
-                           controld_globals.dc_name);
+                pcmk__notice("Our peer on the DC (%s) is dead",
+                             controld_globals.dc_name);
 
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
                 controld_delete_node_state(node->name, controld_section_attrs,
@@ -303,8 +303,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     crm_info("%s of peer %s is in progress " QB_XS " action=%d",
                              task, node->name, down->id);
                 } else {
-                    crm_notice("%s of peer %s is complete " QB_XS " action=%d",
-                               task, node->name, down->id);
+                    pcmk__notice("%s of peer %s is complete "
+                                 QB_XS " action=%d",
+                                 task, node->name, down->id);
                     pcmk__update_graph(controld_globals.transition_graph, down);
                     trigger_graph();
                 }

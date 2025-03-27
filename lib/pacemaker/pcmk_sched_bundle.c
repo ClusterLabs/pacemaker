@@ -578,9 +578,9 @@ pcmk__bundle_apply_coloc_score(pcmk_resource_t *dependent,
 
         if (colocation->score >= PCMK_SCORE_INFINITY) {
             // Failure, and it's fatal
-            crm_notice("%s cannot run because there is no compatible "
-                       "instance of %s to colocate with",
-                       dependent->id, primary->id);
+            pcmk__notice("%s cannot run because there is no compatible "
+                         "instance of %s to colocate with",
+                         dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true, true);
 
         } else { // Failure, but we can ignore it

@@ -136,7 +136,7 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_SCHEDULERD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker scheduler");
+    pcmk__notice("Starting Pacemaker scheduler");
 
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
         pcmk__err("Terminating due to bad permissions on "
@@ -167,7 +167,8 @@ main(int argc, char **argv)
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker scheduler successfully started and accepting connections");
+    pcmk__notice("Pacemaker scheduler successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
 done:

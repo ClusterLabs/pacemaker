@@ -850,8 +850,8 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
                 if (!pcmk__is_set(instance->flags, pcmk__rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
-                crm_notice("%s%s is running on %s which is no longer allowed",
-                           unmanaged, instance->id, pcmk__node_name(current));
+                pcmk__notice("%s%s is running on %s which is no longer allowed",
+                             unmanaged, instance->id, pcmk__node_name(current));
             }
         }
 

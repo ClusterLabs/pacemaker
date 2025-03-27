@@ -117,8 +117,8 @@ cib_notify_send(const xmlNode *xml)
         pcmk__foreach_ipc_client(cib_notify_send_one, &update);
 
     } else {
-        crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
-                   pcmk_rc_str(rc), rc);
+        pcmk__notice("Could not notify clients: %s " QB_XS " rc=%d",
+                     pcmk_rc_str(rc), rc);
     }
     pcmk_free_ipc_event(iov);
 }

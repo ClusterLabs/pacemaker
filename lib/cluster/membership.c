@@ -493,13 +493,13 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
                                           should_forget_cluster_node, &search);
     if (matches > 0) {
         if (criterion != NULL) {
-            crm_notice("Removed %u inactive node%s with %s from the membership "
-                       "cache",
-                       matches, pcmk__plural_s(matches), criterion);
+            pcmk__notice("Removed %u inactive node%s with %s from the "
+                         "membership cache",
+                         matches, pcmk__plural_s(matches), criterion);
         } else {
-            crm_notice("Removed all (%u) inactive cluster nodes from the "
-                       "membership cache",
-                       matches);
+            pcmk__notice("Removed all (%u) inactive cluster nodes from the "
+                         "membership cache",
+                         matches);
         }
 
     } else {
@@ -760,10 +760,10 @@ search_cluster_member_cache(unsigned int id, const char *uname,
 
     } else if ((uname != NULL) && (by_id->name != NULL)) {
         if (pcmk__str_eq(uname, by_id->name, pcmk__str_casei)) {
-            crm_notice("Node '%s' has changed its cluster layer ID "
-                       "from %" PRIu32 " to %" PRIu32,
-                       by_id->name, by_name->cluster_layer_id,
-                       by_id->cluster_layer_id);
+            pcmk__notice("Node '%s' has changed its cluster layer ID "
+                         "from %" PRIu32 " to %" PRIu32,
+                         by_id->name, by_name->cluster_layer_id,
+                         by_id->cluster_layer_id);
             g_hash_table_foreach_remove(pcmk__peer_cache, hash_find_by_data,
                                         by_name);
 
@@ -1293,10 +1293,10 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
         }
 
         node->state = strdup(state);
-        crm_notice("Node %s state is now %s " QB_XS
-                   " nodeid=%" PRIu32 " previous=%s source=%s",
-                   node->name, state, node->cluster_layer_id,
-                   pcmk__s(last, "unknown"), source);
+        pcmk__notice("Node %s state is now %s "
+                     QB_XS " nodeid=%" PRIu32 " previous=%s source=%s",
+                     node->name, state, node->cluster_layer_id,
+                     pcmk__s(last, "unknown"), source);
         if (peer_status_callback != NULL) {
             peer_status_callback(pcmk__node_update_state, node, last);
         }
@@ -1309,9 +1309,9 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
              * refresh_remote_nodes().
              */
             if(iter) {
-                crm_notice("Purged 1 peer with cluster layer ID %" PRIu32
-                           "and/or name=%s from the membership cache",
-                           node->cluster_layer_id, node->name);
+                pcmk__notice("Purged 1 peer with cluster layer ID %" PRIu32
+                             "and/or name=%s from the membership cache",
+                             node->cluster_layer_id, node->name);
                 g_hash_table_iter_remove(iter);
 
             } else {

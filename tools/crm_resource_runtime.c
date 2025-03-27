@@ -1277,7 +1277,7 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
                  rsc_id, pcmk__node_name(node));
         return pcmk_rc_ok;
     }
-    crm_notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
+    pcmk__notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
     return send_lrm_rsc_op(controld_api, true, rsc, rsc_id, node);
 }
 
@@ -2045,7 +2045,7 @@ actions_are_pending(const GList *actions)
         const pcmk_action_t *a = (const pcmk_action_t *) action->data;
 
         if (action_is_pending(a)) {
-            crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
+            pcmk__notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
             return true;
         }
     }

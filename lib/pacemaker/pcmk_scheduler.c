@@ -554,8 +554,8 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
 
     crm_trace("Scheduling fencing and shutdowns as needed");
     if (!have_managed) {
-        crm_notice("No fencing will be done until there are resources "
-                   "to manage");
+        pcmk__notice("No fencing will be done until there are resources to "
+                     "manage");
     }
 
     // Check each node for whether it needs fencing or shutdown
@@ -611,9 +611,9 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
                               "and test fencing to correct this)");
 
         } else if (!pcmk__is_set(scheduler->flags, pcmk__sched_quorate)) {
-            crm_notice("Unclean nodes will not be fenced until quorum is "
-                       "attained or " PCMK_OPT_NO_QUORUM_POLICY " is set to "
-                       PCMK_VALUE_IGNORE);
+            pcmk__notice("Unclean nodes will not be fenced until quorum is "
+                         "attained or " PCMK_OPT_NO_QUORUM_POLICY " is set to "
+                         PCMK_VALUE_IGNORE);
         }
     }
 

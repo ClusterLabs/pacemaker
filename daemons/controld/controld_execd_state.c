@@ -527,8 +527,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {
         char *now_s = NULL;
 
-        crm_notice("%s requested shutdown of its remote connection",
-                   lrm_state->node_name);
+        pcmk__notice("%s requested shutdown of its remote connection",
+                     lrm_state->node_name);
 
         if (!remote_ra_is_in_maintenance(lrm_state)) {
             now_s = pcmk__ttoa(time(NULL));
@@ -544,8 +544,9 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         } else {
             remote_proxy_nack_shutdown(lrmd);
 
-            crm_notice("Remote resource for %s is not managed so no ordered shutdown happening",
-                    lrm_state->node_name);
+            pcmk__notice("Remote resource for %s is not managed so no ordered "
+                         "shutdown happening",
+                         lrm_state->node_name);
         }
         return;
 

@@ -842,7 +842,7 @@ create_ping_reply(const xmlNode *msg)
     // Add controller state
     value = fsa_state2string(controld_globals.fsa_state);
     pcmk__xe_set(ping, PCMK__XA_CRMD_STATE, value);
-    crm_notice("Current ping state: %s", value); // CTS needs this
+    pcmk__notice("Current ping state: %s", value); // CTS needs this
 
     // Add controller health
     // @TODO maybe do some checks to determine meaningful status
@@ -1191,7 +1191,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                           "node %s/%u",
                           name, id);
             } else {
-                crm_notice("Instructing peers to remove references to node %s/%u", name, id);
+                pcmk__notice("Instructing peers to remove references to node "
+                             "%s/%u",
+                             name, id);
             }
             pcmk__xml_free(msg);
 

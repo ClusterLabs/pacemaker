@@ -137,7 +137,8 @@ pcmk__procfs_pid_of(const char *name)
 
     dp = opendir("/proc");
     if (dp == NULL) {
-        crm_notice("Can not read /proc directory to track existing components");
+        pcmk__notice("Can not read /proc directory to track existing "
+                     "components");
         return 0;
     }
 

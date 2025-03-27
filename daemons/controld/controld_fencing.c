@@ -377,7 +377,9 @@ execute_stonith_cleanup(void)
             pcmk__get_node(0, target, NULL, pcmk__node_search_cluster_member);
         const char *uuid = pcmk__cluster_get_xml_id(target_node);
 
-        crm_notice("Marking %s, target of a previous stonith action, as clean", target);
+        pcmk__notice("Marking %s, target of a previous stonith action, as "
+                     "clean",
+                     target);
         update_node_state_after_fencing(target, uuid);
         free(target);
     }
@@ -429,8 +431,8 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
                 pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 last_action = action->xml;
                 pcmk__update_graph(graph, action);
-                crm_notice("Failing action %d (%s): fencer terminated",
-                           action->id, pcmk__xe_id(action->xml));
+                pcmk__notice("Failing action %d (%s): fencer terminated",
+                             action->id, pcmk__xe_id(action->xml));
             }
         }
     }
@@ -522,8 +524,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     if (pcmk__str_eq(PCMK_ACTION_ON, event->action, pcmk__str_none)) {
         // Unfencing doesn't need special handling, just a log message
         if (succeeded) {
-            crm_notice("%s was unfenced by %s at the request of %s@%s",
-                       event->target, executioner, client, event->origin);
+            pcmk__notice("%s was unfenced by %s at the request of %s@%s",
+                         event->target, executioner, client, event->origin);
         } else {
             pcmk__err("Unfencing of %s by %s failed (%s%s%s) with exit status "
                       "%d",
@@ -567,15 +569,13 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         }
     }
 
-    crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s@%s: "
-               "%s%s%s%s " QB_XS " event=%s",
-               event->target, (succeeded? "" : " not"),
-               event->action, executioner, client, event->origin,
-               (succeeded? "OK" : pcmk_exec_status_str(exec_status)),
-               ((reason == NULL)? "" : " ("),
-               ((reason == NULL)? "" : reason),
-               ((reason == NULL)? "" : ")"),
-               event->id);
+    pcmk__notice("Peer %s was%s terminated (%s) by %s on behalf of %s@%s: "
+                 "%s%s%s%s " QB_XS " event=%s",
+                 event->target, (succeeded? "" : " not"), event->action,
+                 executioner, client, event->origin,
+                 (succeeded? "OK" : pcmk_exec_status_str(exec_status)),
+                 ((reason != NULL)? " (" : ""), pcmk__s(reason, ""),
+                 ((reason != NULL)? ")" : ""), event->id);
 
     if (succeeded) {
         const uint32_t flags = pcmk__node_search_any
@@ -619,10 +619,10 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
             // Assume the target was our DC if we don't currently have one
 
             if (controld_globals.dc_name != NULL) {
-                crm_notice("Fencing target %s was our DC", event->target);
+                pcmk__notice("Fencing target %s was our DC", event->target);
             } else {
-                crm_notice("Fencing target %s may have been our DC",
-                           event->target);
+                pcmk__notice("Fencing target %s may have been our DC",
+                             event->target);
             }
 
             /* Given the CIB resyncing that occurs around elections,
@@ -698,8 +698,9 @@ controld_timer_fencer_connect(gpointer user_data)
         if (rc != pcmk_ok) {
             if (pcmk__is_set(controld_globals.fsa_input_register,
                              R_ST_REQUIRED)) {
-                crm_notice("Fencer connection failed (will retry): %s "
-                           QB_XS " rc=%d", pcmk_strerror(rc), rc);
+                pcmk__notice("Fencer connection failed (will retry): %s "
+                             QB_XS " rc=%d",
+                             pcmk_strerror(rc), rc);
 
                 if (!mainloop_timer_running(controld_fencer_connect_timer)) {
                     mainloop_timer_start(controld_fencer_connect_timer);
@@ -726,7 +727,7 @@ controld_timer_fencer_connect(gpointer user_data)
                                     PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
                                     tengine_stonith_history_synced);
         te_trigger_stonith_history_sync(TRUE);
-        crm_notice("Fencer successfully connected");
+        pcmk__notice("Fencer successfully connected");
     }
 
     return G_SOURCE_REMOVE;
@@ -800,9 +801,9 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         if (reason == NULL) {
            reason = pcmk_exec_status_str(stonith__execution_status(data));
         }
-        crm_notice("Result of fence operation %d: %d (%s) " QB_XS " key=%s",
-                   data->call_id, stonith__exit_status(data), reason,
-                   (const char *) data->userdata);
+        pcmk__notice("Result of fence operation %d: %d (%s) " QB_XS " key=%s",
+                     data->call_id, stonith__exit_status(data), reason,
+                     (const char *) data->userdata);
         return;
     }
 
@@ -909,8 +910,9 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                        data->call_id, target, reason);
             abort_action = pcmk__graph_wait;
         } else {
-            crm_notice("Fence operation %d for %s failed: %s "
-                       "(aborting transition)", data->call_id, target, reason);
+            pcmk__notice("Fence operation %d for %s failed: %s (aborting "
+                         "transition)",
+                         data->call_id, target, reason);
         }
 
         /* Increment the fail count now, so abort_for_stonith_failure() can
@@ -981,11 +983,11 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     priority_delay = crm_meta_value(action->params,
                                     PCMK_OPT_PRIORITY_FENCING_DELAY);
 
-    crm_notice("Requesting fencing (%s) targeting node %s "
-               QB_XS " action=%s timeout=%i%s%s",
-               type, target, id, stonith_timeout,
-               priority_delay ? " priority_delay=" : "",
-               priority_delay ? priority_delay : "");
+    pcmk__notice("Requesting fencing (%s) targeting node %s "
+                 QB_XS " action=%s timeout=%i%s%s",
+                 type, target, id, stonith_timeout,
+                 ((priority_delay != NULL)? " priority_delay=" : ""),
+                 pcmk__s(priority_delay, ""));
 
     /* Passing NULL means block until we can connect... */
     controld_timer_fencer_connect(NULL);

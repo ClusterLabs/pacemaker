@@ -324,7 +324,8 @@ lrmd_shutdown(int nsig)
      */
     if (ipc_proxy) {
         if (shutting_down) {
-            crm_notice("Waiting for cluster to stop resources before exiting");
+            pcmk__notice("Waiting for cluster to stop resources before "
+                         "exiting");
             return;
         }
 
@@ -514,7 +515,7 @@ main(int argc, char **argv, char **envp)
 
     start_time = time(NULL);
 
-    crm_notice("Starting Pacemaker " EXECD_TYPE " executor");
+    pcmk__notice("Starting Pacemaker " EXECD_TYPE " executor");
 
     /* The presence of this variable allegedly controls whether child
      * processes like httpd will try and use Systemd's sd_notify
@@ -554,8 +555,9 @@ main(int argc, char **argv, char **envp)
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker " EXECD_TYPE " executor successfully started and accepting connections");
-    crm_notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
+    pcmk__notice("Pacemaker " EXECD_TYPE " executor successfully started and "
+                 "accepting connections");
+    pcmk__notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
     g_main_loop_run(mainloop);
 
     /* should never get here */

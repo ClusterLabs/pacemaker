@@ -592,10 +592,10 @@ stonith_device_execute(stonith_device_t * device)
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_REBOOT, pcmk__str_none)
         && !pcmk__is_set(device->flags, st_device_supports_reboot)) {
 
-        crm_notice("Remapping 'reboot' action%s%s using %s to 'off' "
-                   "because agent '%s' does not support reboot",
-                   ((cmd->target == NULL)? "" : " targeting "),
-                   pcmk__s(cmd->target, ""), device->id, device->agent);
+        pcmk__notice("Remapping 'reboot' action%s%s using %s to 'off' because "
+                     "agent '%s' does not support reboot",
+                     ((cmd->target == NULL)? "" : " targeting "),
+                     pcmk__s(cmd->target, ""), device->id, device->agent);
         action_str = PCMK_ACTION_OFF;
     }
 
@@ -719,13 +719,11 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 
     if (cmd->start_delay > 0) {
-        crm_notice("Delaying '%s' action%s%s using %s for %ds " QB_XS
-                   " timeout=%ds requested_delay=%ds base=%ds max=%ds",
-                   cmd->action,
-                   (cmd->target == NULL)? "" : " targeting ",
-                   pcmk__s(cmd->target, ""),
-                   device->id, cmd->start_delay, cmd->timeout,
-                   requested_delay, delay_base, delay_max);
+        pcmk__notice("Delaying '%s' action%s%s using %s for %ds "
+                     QB_XS " timeout=%ds requested_delay=%ds base=%ds max=%ds",
+                     cmd->action, (cmd->target == NULL)? "" : " targeting ",
+                     pcmk__s(cmd->target, ""), device->id, cmd->start_delay,
+                     cmd->timeout, requested_delay, delay_base, delay_max);
         cmd->delay_id =
             pcmk__create_timer(cmd->start_delay * 1000, start_delay_helper, cmd);
     }
@@ -1262,7 +1260,8 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
          * explicitly specify PCMK_VALUE_DYNAMIC_LIST
          */
         if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
-            crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
+            pcmk__notice("Switching to pcmk_host_check='status' for %s",
+                         dev->id);
             pcmk__insert_dup(dev->params, PCMK_STONITH_HOST_CHECK,
                              PCMK_VALUE_STATUS);
         }
@@ -1431,8 +1430,8 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
         g_hash_table_replace(device_list, device->id, device);
 
         ndevices = g_hash_table_size(device_list);
-        crm_notice("Added '%s' to device list (%d active device%s)",
-                   device->id, ndevices, pcmk__plural_s(ndevices));
+        pcmk__notice("Added '%s' to device list (%d active device%s)",
+                     device->id, ndevices, pcmk__plural_s(ndevices));
     }
 
     if (from_cib) {
@@ -2164,10 +2163,11 @@ can_fence_host_with_device(stonith_device_t *dev,
                                                     search->per_device_timeout);
 
             if (device_timeout > search->per_device_timeout) {
-                crm_notice("Since the pcmk_list_timeout (%ds) parameter of %s "
-                           "is larger than " PCMK_OPT_STONITH_TIMEOUT
-                           " (%ds), timeout may occur",
-                           device_timeout, dev_id, search->per_device_timeout);
+                pcmk__notice("Since the pcmk_list_timeout (%ds) parameter of "
+                             "%s is larger than " PCMK_OPT_STONITH_TIMEOUT " "
+                             "(%ds), timeout may occur",
+                             device_timeout, dev_id,
+                             search->per_device_timeout);
             }
 
             crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
@@ -2189,10 +2189,10 @@ can_fence_host_with_device(stonith_device_t *dev,
         int device_timeout = get_action_timeout(dev, check_type, search->per_device_timeout);
 
         if (device_timeout > search->per_device_timeout) {
-            crm_notice("Since the pcmk_status_timeout (%ds) parameter of %s is "
-                       "larger than " PCMK_OPT_STONITH_TIMEOUT " (%ds), "
-                       "timeout may occur",
-                       device_timeout, dev_id, search->per_device_timeout);
+            pcmk__notice("Since the pcmk_status_timeout (%ds) parameter of %s "
+                         "is larger than " PCMK_OPT_STONITH_TIMEOUT " (%ds), "
+                         "timeout may occur",
+                         device_timeout, dev_id, search->per_device_timeout);
         }
 
         crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
@@ -2715,12 +2715,12 @@ reply_to_duplicates(async_command_t *cmd, const pcmk__action_result_t *result,
             continue;
         }
 
-        crm_notice("Merging fencing action '%s'%s%s originating from "
-                   "client %s with identical fencing request from client %s",
-                   cmd_other->action,
-                   (cmd_other->target == NULL)? "" : " targeting ",
-                   pcmk__s(cmd_other->target, ""), cmd_other->client_name,
-                   cmd->client_name);
+        pcmk__notice("Merging fencing action '%s'%s%s originating from client "
+                     "%s with identical fencing request from client %s",
+                     cmd_other->action,
+                     (cmd_other->target == NULL)? "" : " targeting ",
+                     pcmk__s(cmd_other->target, ""), cmd_other->client_name,
+                     cmd->client_name);
 
         // Stop tracking the duplicate, send its result, and cancel it
         cmd_list = g_list_remove_link(cmd_list, iter);
@@ -3052,8 +3052,8 @@ check_alternate_host(const char *target)
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
             if (fencing_peer_active(entry)
                 && !pcmk__str_eq(entry->name, target, pcmk__str_casei)) {
-                crm_notice("Forwarding self-fencing request to %s",
-                           entry->name);
+                pcmk__notice("Forwarding self-fencing request to %s",
+                             entry->name);
                 return entry->name;
             }
         }
@@ -3274,12 +3274,12 @@ handle_relay_request(pcmk__request_t *request)
                                         "//*[@" PCMK__XA_ST_TARGET "]",
                                         LOG_TRACE);
 
-    crm_notice("Received forwarded fencing request from "
-               "%s %s to fence (%s) peer %s",
-               pcmk__request_origin_type(request),
-               pcmk__request_origin(request),
-               pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ACTION),
-               pcmk__xe_get(dev, PCMK__XA_ST_TARGET));
+    pcmk__notice("Received forwarded fencing request from %s %s to fence (%s) "
+                 "peer %s",
+                 pcmk__request_origin_type(request),
+                 pcmk__request_origin(request),
+                 pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ACTION),
+                 pcmk__xe_get(dev, PCMK__XA_ST_TARGET));
 
     if (initiate_remote_stonith_op(NULL, request->xml, FALSE) == NULL) {
         fenced_set_protocol_error(&request->result);
@@ -3325,9 +3325,9 @@ handle_fence_request(pcmk__request_t *request)
         if (request->ipc_client != NULL) {
             int tolerance = 0;
 
-            crm_notice("Client %s wants to fence (%s) %s using %s",
-                       pcmk__request_origin(request), action,
-                       target, (device? device : "any device"));
+            pcmk__notice("Client %s wants to fence (%s) %s using %s",
+                         pcmk__request_origin(request), action,
+                         target, pcmk__s(device, "any device"));
             pcmk__xe_get_int(dev, PCMK__XA_ST_TOLERANCE, &tolerance);
             if (stonith_check_fence_tolerance(tolerance, target, action)) {
                 pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE,
@@ -3338,9 +3338,9 @@ handle_fence_request(pcmk__request_t *request)
             alternate_host = check_alternate_host(target);
 
         } else {
-            crm_notice("Peer %s wants to fence (%s) '%s' with device '%s'",
-                       request->peer, action, target,
-                       (device == NULL)? "(any)" : device);
+            pcmk__notice("Peer %s wants to fence (%s) '%s' with device '%s'",
+                         request->peer, action, target,
+                         pcmk__s(device, "(any)"));
         }
 
         if (alternate_host != NULL) {

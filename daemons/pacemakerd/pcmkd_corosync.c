@@ -82,7 +82,7 @@ cluster_reconnect_cb(gpointer data)
     if (cluster_connect_cfg()) {
         mainloop_timer_del(reconnect_timer);
         reconnect_timer = NULL;
-        crm_notice("Cluster reconnect succeeded");
+        pcmk__notice("Cluster reconnect succeeded");
         pacemakerd_read_config();
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;

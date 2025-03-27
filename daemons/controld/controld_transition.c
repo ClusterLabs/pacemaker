@@ -101,9 +101,9 @@ do_te_invoke(long long action,
     if (!AM_I_DC
         || ((controld_globals.fsa_state != S_TRANSITION_ENGINE)
             && pcmk__is_set(action, A_TE_INVOKE))) {
-        crm_notice("No need to invoke the TE (%s) in state %s",
-                   fsa_action2string(action),
-                   fsa_state2string(controld_globals.fsa_state));
+        pcmk__notice("No need to invoke the TE (%s) in state %s",
+                     fsa_action2string(action),
+                     fsa_state2string(controld_globals.fsa_state));
         return;
     }
 

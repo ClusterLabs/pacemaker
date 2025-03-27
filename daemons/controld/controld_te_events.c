@@ -141,11 +141,11 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 pcmk__update_graph(graph, action);
 
                 if (pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
-                    crm_notice("Action %d (%s) was pending on %s (offline)",
-                               action->id,
-                               pcmk__xe_get(action->xml,
-                                            PCMK__XA_OPERATION_KEY),
-                               down_node);
+                    pcmk__notice("Action %d (%s) was pending on %s (offline)",
+                                 action->id,
+                                 pcmk__xe_get(action->xml,
+                                              PCMK__XA_OPERATION_KEY),
+                                 down_node);
                 } else {
                     crm_info("Action %d (%s) is scheduled for %s (offline)",
                              action->id,
@@ -581,11 +581,12 @@ process_graph_event(xmlNode *event, const char *event_node)
 
     } else if (desc && update_failcount(event, event_node, rc, target_rc,
                                         (transition_num == -1), FALSE)) {
-        crm_notice("Transition %d action %d (%s on %s): expected '%s' but got '%s' "
-                   QB_XS " target-rc=%d rc=%d call-id=%d event='%s'",
-                   transition_num, action_num, id, uname,
-                   crm_exit_str(target_rc), crm_exit_str(rc),
-                   target_rc, rc, callid, desc);
+        pcmk__notice("Transition %d action %d (%s on %s): expected '%s' but "
+                     "got '%s' "
+                     QB_XS " target-rc=%d rc=%d call-id=%d event='%s'",
+                     transition_num, action_num, id, uname,
+                     crm_exit_str(target_rc), crm_exit_str(rc),
+                     target_rc, rc, callid, desc);
 
     } else if (desc) {
         crm_info("Transition %d action %d (%s on %s): %s "
@@ -602,11 +603,11 @@ process_graph_event(xmlNode *event, const char *event_node)
     } else {
         update_failcount(event, event_node, rc, target_rc,
                          (transition_num == -1), ignore_failures);
-        crm_notice("Transition %d action %d (%s on %s): expected '%s' but got '%s' "
-                   QB_XS " target-rc=%d rc=%d call-id=%d",
-                   transition_num, action_num, id, uname,
-                   crm_exit_str(target_rc), crm_exit_str(rc),
-                   target_rc, rc, callid);
+        pcmk__notice("Transition %d action %d (%s on %s): expected '%s' but "
+                     "got '%s' " QB_XS " target-rc=%d rc=%d call-id=%d",
+                     transition_num, action_num, id, uname,
+                     crm_exit_str(target_rc), crm_exit_str(rc),
+                     target_rc, rc, callid);
     }
 
   bail:

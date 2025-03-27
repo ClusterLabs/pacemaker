@@ -261,18 +261,24 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
          * kept in sync.
          */
         v = g_hash_table_lookup(a->values, attrd_cluster->priv->node_name);
-        crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
-                   attr, host, readable_value(v), value, peer->name);
+        pcmk__notice("%s[%s]: local value '%s' takes priority over '%s' from "
+                     "%s",
+                     attr, host, readable_value(v), value, peer->name);
         attrd_broadcast_value(a, v);
 
     } else if (changed) {
-        crm_notice("Setting %s[%s]%s%s: %s -> %s "
-                   QB_XS " from %s with %s write delay and node XML ID %s",
-                   attr, host, a->set_type ? " in " : "",
-                   pcmk__s(a->set_type, ""), readable_value(v),
-                   pcmk__s(value, "(unset)"), peer->name,
-                   (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms),
-                   pcmk__s(node_xml_id, "unknown"));
+        const char *timeout_s = "no";
+
+        if (a->timeout_ms != 0) {
+            timeout_s = pcmk__readable_interval(a->timeout_ms);
+        }
+
+        pcmk__notice("Setting %s[%s]%s%s: %s -> %s "
+                     QB_XS " from %s with %s write delay and node XML ID %s",
+                     attr, host, ((a->set_type != NULL)? " in " : ""),
+                     pcmk__s(a->set_type, ""), readable_value(v),
+                     pcmk__s(value, "(unset)"), peer->name, timeout_s,
+                     pcmk__s(node_xml_id, "unknown"));
         pcmk__str_update(&v->current, value);
         attrd_set_attr_flags(a, attrd_attr_changed);
 
@@ -528,9 +534,9 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     GHashTableIter aIter;
 
     CRM_CHECK(host != NULL, return);
-    crm_notice("Removing all %s attributes for node %s "
-               QB_XS " %s reaping node from cache",
-               host, source, (uncache? "and" : "without"));
+    pcmk__notice("Removing all %s attributes for node %s "
+                 QB_XS " %s reaping node from cache",
+                 host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {

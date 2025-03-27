@@ -225,8 +225,8 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
 
     if (rc != pcmk_ok) {
         if (rc != -ENXIO) {
-            crm_notice("Searching conflicting nodes for %s failed: %s (%d)",
-                       new_node_uuid, pcmk_strerror(rc), rc);
+            pcmk__notice("Searching conflicting nodes for %s failed: %s (%d)",
+                         new_node_uuid, pcmk_strerror(rc), rc);
         }
         return;
 
@@ -271,8 +271,9 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             int delete_call_id = 0;
             xmlNode *node_state_xml = NULL;
 
-            crm_notice("Deleting unknown node %s/%s which has conflicting uname with %s",
-                       node_uuid, node_uname, new_node_uuid);
+            pcmk__notice("Deleting unknown node %s/%s which has conflicting "
+                         "uname with %s",
+                         node_uuid, node_uname, new_node_uuid);
 
             delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_NODES,
                                                     node_xml, cib_none);
