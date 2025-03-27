@@ -105,7 +105,7 @@ lrmd_remote_client_msg(gpointer data)
 
         default:
             /* Error */
-            crm_info("Error polling remote client: %s", pcmk_rc_str(rc));
+            pcmk__info("Error polling remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
@@ -120,7 +120,7 @@ lrmd_remote_client_msg(gpointer data)
 
         default:
             /* Error */
-            crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+            pcmk__info("Error reading from remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
@@ -236,8 +236,8 @@ lrmd_remote_listen(gpointer data)
     new_client->remote->auth_timeout = pcmk__create_timer(LRMD_REMOTE_AUTH_TIMEOUT,
                                                           lrmd_auth_timeout_cb,
                                                           new_client);
-    crm_info("Remote client pending authentication "
-             QB_XS " %p id: %s", new_client, new_client->id);
+    pcmk__info("Remote client pending authentication " QB_XS " %p id: %s",
+               new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("pacemaker-remote-client", G_PRIORITY_DEFAULT, csock,

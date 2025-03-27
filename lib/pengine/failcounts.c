@@ -319,8 +319,9 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
         int rc = pcmk__scan_ll(value, &last_ll, 0LL);
 
         if (rc != pcmk_rc_ok) {
-            crm_info("Ignoring invalid value '%s' for %s: %s",
-                     (const char *) value, (const char *) key, pcmk_rc_str(rc));
+            pcmk__info("Ignoring invalid value '%s' for %s: %s",
+                       (const char *) value, (const char *) key,
+                       pcmk_rc_str(rc));
             return;
         }
         fc_data->last_failure = (time_t) QB_MAX(fc_data->last_failure, last_ll);

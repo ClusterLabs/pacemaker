@@ -147,7 +147,8 @@ pcmk__procfs_pid_of(const char *name)
             && pcmk__str_eq(entry_name, name, pcmk__str_casei)
             && (pcmk__pid_active(pid, NULL) == pcmk_rc_ok)) {
 
-            crm_info("Found %s active as process %lld", name, (long long) pid);
+            pcmk__info("Found %s active as process %lld", name,
+                       (long long) pid);
             break;
         }
         pid = 0;

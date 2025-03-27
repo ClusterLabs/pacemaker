@@ -147,17 +147,18 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                                               PCMK__XA_OPERATION_KEY),
                                  down_node);
                 } else {
-                    crm_info("Action %d (%s) is scheduled for %s (offline)",
-                             action->id,
-                             pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY),
-                             down_node);
+                    pcmk__info("Action %d (%s) is scheduled for %s (offline)",
+                               action->id,
+                               pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY),
+                               down_node);
                 }
             }
         }
     }
 
     if (last_action != NULL) {
-        crm_info("Node %s shutdown resulted in un-runnable actions", down_node);
+        pcmk__info("Node %s shutdown resulted in un-runnable actions",
+                   down_node);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Node failure", last_action);
         return TRUE;
@@ -244,9 +245,10 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
             opts |= pcmk__node_attr_remote;
         }
 
-        crm_info("Updating %s for %s on %s after failed %s: rc=%d (update=%s, time=%s)",
-                 (ignore_failures? "last failure" : "failcount"),
-                 rsc_id, on_uname, task, rc, value, now);
+        pcmk__info("Updating %s for %s on %s after failed %s: rc=%d "
+                   "(update=%s, time=%s)",
+                   (ignore_failures? "last failure" : "failcount"),
+                   rsc_id, on_uname, task, rc, value, now);
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
@@ -364,8 +366,8 @@ confirm_cancel_action(const char *id, const char *node_id)
     stop_te_timer(cancel);
     te_action_confirmed(cancel, controld_globals.transition_graph);
 
-    crm_info("Cancellation of %s on %s confirmed (action %d)",
-             op_key, node_name, cancel->id);
+    pcmk__info("Cancellation of %s on %s confirmed (action %d)", op_key,
+               node_name, cancel->id);
     return TRUE;
 }
 
@@ -575,9 +577,8 @@ process_graph_event(xmlNode *event, const char *event_node)
 
     if (status == PCMK_EXEC_INVALID) {
         // We couldn't attempt the action
-        crm_info("Transition %d action %d (%s on %s): %s",
-                 transition_num, action_num, id, uname,
-                 pcmk_exec_status_str(status));
+        pcmk__info("Transition %d action %d (%s on %s): %s", transition_num,
+                   action_num, id, uname, pcmk_exec_status_str(status));
 
     } else if (desc && update_failcount(event, event_node, rc, target_rc,
                                         (transition_num == -1), FALSE)) {
@@ -589,16 +590,16 @@ process_graph_event(xmlNode *event, const char *event_node)
                      target_rc, rc, callid, desc);
 
     } else if (desc) {
-        crm_info("Transition %d action %d (%s on %s): %s "
-                 QB_XS " rc=%d target-rc=%d call-id=%d",
-                 transition_num, action_num, id, uname,
-                 desc, rc, target_rc, callid);
+        pcmk__info("Transition %d action %d (%s on %s): %s "
+                   QB_XS " rc=%d target-rc=%d call-id=%d",
+                   transition_num, action_num, id, uname,
+                   desc, rc, target_rc, callid);
 
     } else if (rc == target_rc) {
-        crm_info("Transition %d action %d (%s on %s) confirmed: %s "
-                 QB_XS " rc=%d call-id=%d",
-                 transition_num, action_num, id, uname,
-                 crm_exit_str(rc), rc, callid);
+        pcmk__info("Transition %d action %d (%s on %s) confirmed: %s "
+                   QB_XS " rc=%d call-id=%d",
+                   transition_num, action_num, id, uname, crm_exit_str(rc),
+                   rc, callid);
 
     } else {
         update_failcount(event, event_node, rc, target_rc,

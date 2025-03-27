@@ -48,7 +48,7 @@ do_ha_control(long long action,
 
     if (action & A_HA_DISCONNECT) {
         pcmk_cluster_disconnect(controld_globals.cluster);
-        crm_info("Disconnected from the cluster");
+        pcmk__info("Disconnected from the cluster");
 
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);
     }
@@ -86,7 +86,7 @@ do_ha_control(long long action,
 
         populate_cib_nodes(node_update_none, __func__);
         controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
-        crm_info("Connected to the cluster");
+        pcmk__info("Connected to the cluster");
     }
 
     if (action & ~(A_HA_CONNECT | A_HA_DISCONNECT)) {
@@ -117,8 +117,8 @@ do_shutdown_req(long long action,
 
     controld_set_fsa_input_flags(R_SHUTDOWN);
     //controld_set_fsa_input_flags(R_STAYDOWN);
-    crm_info("Sending shutdown request to all peers (DC is %s)",
-             pcmk__s(controld_globals.dc_name, "not set"));
+    pcmk__info("Sending shutdown request to all peers (DC is %s)",
+               pcmk__s(controld_globals.dc_name, "not set"));
     msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
@@ -215,10 +215,10 @@ crmd_exit(crm_exit_t exit_code)
          iter = iter->next) {
         fsa_data_t *fsa_data = (fsa_data_t *) iter->data;
 
-        crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
-                 fsa_input2string(fsa_data->fsa_input),
-                 fsa_state2string(controld_globals.fsa_state),
-                 fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
+        pcmk__info("Dropping %s: [ state=%s cause=%s origin=%s ]",
+                   fsa_input2string(fsa_data->fsa_input),
+                   fsa_state2string(controld_globals.fsa_state),
+                   fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
         delete_fsa_input(fsa_data);
     }
 
@@ -463,35 +463,38 @@ do_started(long long action,
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_MEMBERSHIP)) {
-        crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
+        pcmk__info("Delaying start, no membership data (%.16llx)",
+                   R_MEMBERSHIP);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_LRM_CONNECTED)) {
-        crm_info("Delaying start, not connected to executor (%.16llx)", R_LRM_CONNECTED);
+        pcmk__info("Delaying start, not connected to executor (%.16llx)",
+                   R_LRM_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_CIB_CONNECTED)) {
-        crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
+        pcmk__info("Delaying start, CIB not connected (%.16llx)",
+                   R_CIB_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_READ_CONFIG)) {
-        crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
+        pcmk__info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_PEER_DATA)) {
-        crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
+        pcmk__info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
         crmd_fsa_stall(TRUE);
         return;
     }

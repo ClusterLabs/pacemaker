@@ -580,8 +580,8 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
 
     // Calculate seconds remaining until next interval
     result = ((result <= 0)? 0 : interval_sec) - result;
-    crm_info("Calculated a start delay of %llds for operation '%s'",
-             result, pcmk__s(pcmk__xe_id(xml_obj), "(unspecified)"));
+    pcmk__info("Calculated a start delay of %llds for operation '%s'", result,
+               pcmk__s(pcmk__xe_id(xml_obj), "(unspecified)"));
 
     if (start_delay != NULL) {
         *start_delay = result * 1000; // milliseconds

@@ -72,8 +72,8 @@ static int32_t
 st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     if (stonith_shutdown_flag) {
-        crm_info("Ignoring new client [%d] during shutdown",
-                 pcmk__client_pid(c));
+        pcmk__info("Ignoring new client [%d] during shutdown",
+                   pcmk__client_pid(c));
         return -ECONNREFUSED;
     }
 
@@ -96,7 +96,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     int rc = pcmk_rc_ok;
 
     if (c == NULL) {
-        crm_info("Invalid client: %p", qbc);
+        pcmk__info("Invalid client: %p", qbc);
         return 0;
     }
 
@@ -420,7 +420,7 @@ node_does_watchdog_fencing(const char *node)
 void
 stonith_shutdown(int nsig)
 {
-    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
+    pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
     stonith_shutdown_flag = TRUE;
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);

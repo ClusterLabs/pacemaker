@@ -158,8 +158,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         if (now == NULL) {
             now = pcmk__time_hr_now(&epoch);
         }
-        crm_info("Sending %s alert via %s to %s",
-                 kind_s, entry->id, entry->recipient);
+        pcmk__info("Sending %s alert via %s to %s", kind_s, entry->id,
+                   entry->recipient);
 
         /* Make a copy of the parameters, because each alert will be unique */
         for (head = params; head != NULL; head = head->next) {

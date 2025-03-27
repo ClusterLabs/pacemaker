@@ -443,9 +443,9 @@ should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
         return FALSE;
     }
 
-    crm_info("Removing node with name %s and cluster layer ID %" PRIu32
-             " from membership cache",
-             pcmk__s(node->name, "(unknown)"), node->cluster_layer_id);
+    pcmk__info("Removing node with name %s and cluster layer ID %" PRIu32
+               " from membership cache",
+               pcmk__s(node->name, "(unknown)"), node->cluster_layer_id);
     return TRUE;
 }
 
@@ -503,9 +503,10 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
         }
 
     } else {
-        crm_info("No inactive cluster nodes%s%s to remove from the membership "
-                 "cache",
-                 ((criterion != NULL)? " with " : ""), pcmk__s(criterion, ""));
+        pcmk__info("No inactive cluster nodes%s%s to remove from the "
+                   "membership cache",
+                   ((criterion != NULL)? " with " : ""),
+                   pcmk__s(criterion, ""));
     }
 
     free(search.name);
@@ -790,7 +791,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
          */
         dump_peer_hash(LOG_DEBUG, __func__);
 
-        crm_info("Merging %p into %p", by_name, by_id);
+        pcmk__info("Merging %p into %p", by_name, by_id);
         g_hash_table_foreach_remove(pcmk__peer_cache, hash_find_by_data,
                                     by_name);
     }
@@ -991,15 +992,14 @@ pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
 
         node = pcmk__assert_alloc(1, sizeof(pcmk__node_status_t));
 
-        crm_info("Created entry %s/%p for node %s/%u (%d total)",
-                 uniqueid, node, uname, id,
-                 1 + g_hash_table_size(pcmk__peer_cache));
+        pcmk__info("Created entry %s/%p for node %s/%u (%d total)", uniqueid,
+                   node, uname, id, (1 + g_hash_table_size(pcmk__peer_cache)));
         g_hash_table_replace(pcmk__peer_cache, uniqueid, node);
     }
 
     if ((id > 0) && (uname != NULL)
         && ((node->cluster_layer_id == 0) || (node->name == NULL))) {
-        crm_info("Node %u is now known as %s", id, uname);
+        pcmk__info("Node %u is now known as %s", id, uname);
     }
 
     if ((id > 0) && (node->cluster_layer_id == 0)) {
@@ -1016,7 +1016,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
             crm_debug("Cannot obtain an XML ID for node %s[%u] at this time",
                       node->name, id);
         } else {
-            crm_info("Node %s[%u] has XML ID %s", node->name, id, xml_id);
+            pcmk__info("Node %s[%u] has XML ID %s", node->name, id, xml_id);
         }
     }
 
@@ -1158,12 +1158,13 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
 
     if (changed) {
         if (status == NULL && flag <= crm_proc_none) {
-            crm_info("%s: Node %s[%" PRIu32 "] - all processes are now offline",
-                     source, node->name, node->cluster_layer_id);
+            pcmk__info("%s: Node %s[%" PRIu32 "] - all processes are now "
+                       "offline",
+                       source, node->name, node->cluster_layer_id);
         } else {
-            crm_info("%s: Node %s[%" PRIu32 "] - %s is now %s",
-                     source, node->name, node->cluster_layer_id,
-                     proc2text(flag), status);
+            pcmk__info("%s: Node %s[%" PRIu32 "] - %s is now %s", source,
+                       node->name, node->cluster_layer_id, proc2text(flag),
+                       status);
         }
 
         if (pcmk__is_set(node->processes, crm_get_cluster_proc())) {
@@ -1236,8 +1237,9 @@ pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
     }
 
     if (changed) {
-        crm_info("%s: Node %s[%" PRIu32 "] - expected state is now %s (was %s)",
-                 source, node->name, node->cluster_layer_id, expected, last);
+        pcmk__info("%s: Node %s[%" PRIu32 "] - expected state is now %s (was "
+                   "%s)",
+                   source, node->name, node->cluster_layer_id, expected, last);
         free(last);
     } else {
         crm_trace("%s: Node %s[%" PRIu32 "] - expected state is unchanged (%s)",
@@ -1375,8 +1377,8 @@ pcmk__reap_unseen_nodes(uint64_t membership)
                                        membership, &iter);
 
             } else {
-                crm_info("State of node %s[%" PRIu32 "] is still unknown",
-                         node->name, node->cluster_layer_id);
+                pcmk__info("State of node %s[%" PRIu32 "] is still unknown",
+                           node->name, node->cluster_layer_id);
             }
         }
     }

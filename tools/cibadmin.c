@@ -107,7 +107,7 @@ report_schema_unchanged(void)
 {
     const char *err = pcmk_rc_str(pcmk_rc_schema_unchanged);
 
-    crm_info("Upgrade unnecessary: %s\n", err);
+    pcmk__info("Upgrade unnecessary: %s\n", err);
     printf("Upgrade unnecessary: %s\n", err);
     exit_code = CRM_EX_OK;
 }

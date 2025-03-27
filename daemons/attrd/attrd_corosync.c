@@ -130,7 +130,7 @@ static void
 attrd_cpg_destroy(gpointer unused)
 {
     if (attrd_shutting_down(false)) {
-        crm_info("Disconnected from Corosync process group");
+        pcmk__info("Disconnected from Corosync process group");
 
     } else {
         pcmk__crit("Lost connection to Corosync process group, shutting down");
@@ -459,8 +459,8 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
     if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
-        crm_info("Ignoring invalid request to clear failures for %s",
-                 pcmk__s(rsc, "all resources"));
+        pcmk__info("Ignoring invalid request to clear failures for %s",
+                   pcmk__s(rsc, "all resources"));
         return;
     }
 
@@ -493,8 +493,8 @@ void
 attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
                          xmlNode *xml)
 {
-    crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
-             peer->name);
+    pcmk__info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
+               peer->name);
 
     if (peer_won) {
         /* Initialize the "seen" flag for all attributes to cleared, so we can

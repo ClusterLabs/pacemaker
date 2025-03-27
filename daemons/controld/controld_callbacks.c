@@ -151,9 +151,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
     switch (type) {
         case pcmk__node_update_name:
             /* If we've never seen the node, then it also won't be in the status section */
-            crm_info("%s node %s is now %s",
-                     (is_remote? "Remote" : "Cluster"),
-                     node->name, state_text(node->state));
+            pcmk__info("%s node %s is now %s",
+                       (is_remote? "Remote" : "Cluster"), node->name,
+                       state_text(node->state));
             return;
 
         case pcmk__node_update_state:
@@ -163,9 +163,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             CRM_CHECK(!pcmk__str_eq(data, node->state, pcmk__str_casei),
                       return);
 
-            crm_info("%s node %s is now %s (was %s)",
-                     (is_remote? "Remote" : "Cluster"),
-                     node->name, state_text(node->state), state_text(data));
+            pcmk__info("%s node %s is now %s (was %s)",
+                       (is_remote? "Remote" : "Cluster"), node->name,
+                       state_text(node->state), state_text(data));
 
             if (pcmk__str_eq(PCMK_VALUE_MEMBER, node->state, pcmk__str_none)) {
                 appeared = TRUE;
@@ -192,10 +192,10 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     dc_s = PCMK_VALUE_TRUE;
                 }
 
-                crm_info("Node %s is %s a peer " QB_XS
-                         " DC=%s old=%#07x new=%#07x",
-                         node->name, (appeared? "now" : "no longer"),
-                         pcmk__s(dc_s, "<none>"), old, node->processes);
+                pcmk__info("Node %s is %s a peer " QB_XS
+                           " DC=%s old=%#07x new=%#07x",
+                           node->name, (appeared? "now" : "no longer"),
+                           pcmk__s(dc_s, "<none>"), old, node->processes);
             }
 
             if (!pcmk__is_set((node->processes ^ old),
@@ -300,8 +300,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     check_join_state(controld_globals.fsa_state, __func__);
                 }
                 if (alive >= 0) {
-                    crm_info("%s of peer %s is in progress " QB_XS " action=%d",
-                             task, node->name, down->id);
+                    pcmk__info("%s of peer %s is in progress "
+                               QB_XS " action=%d",
+                               task, node->name, down->id);
                 } else {
                     pcmk__notice("%s of peer %s is complete "
                                  QB_XS " action=%d",
@@ -327,8 +328,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         } else if (appeared == FALSE) {
             if ((controld_globals.transition_graph == NULL)
                 || (controld_globals.transition_graph->id <= 0)) {
-                crm_info("Stonith/shutdown of node %s is unknown to the "
-                         "current DC", node->name);
+                pcmk__info("Stonith/shutdown of node %s is unknown to the "
+                           "current DC",
+                           node->name);
             } else {
                 pcmk__warn("Stonith/shutdown of node %s was not expected",
                            node->name);

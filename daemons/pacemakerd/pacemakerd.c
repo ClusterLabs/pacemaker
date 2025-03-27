@@ -125,7 +125,7 @@ static GOptionEntry entries[] = {
 static void
 pcmk_ignore(int nsig)
 {
-    crm_info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
+    pcmk__info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
 }
 
 static void

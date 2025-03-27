@@ -47,7 +47,7 @@ do_te_control(long long action,
         }
 
         controld_clear_fsa_input_flags(R_TE_CONNECTED);
-        crm_info("Transitioner is now inactive");
+        pcmk__info("Transitioner is now inactive");
     }
 
     if ((action & A_TE_START) == 0) {
@@ -59,13 +59,14 @@ do_te_control(long long action,
         return;
 
     } else if ((action & A_TE_START) && cur_state == S_STOPPING) {
-        crm_info("Ignoring request to start the transitioner while shutting down");
+        pcmk__info("Ignoring request to start the transitioner while shutting "
+                   "down");
         return;
     }
 
     if (controld_globals.te_uuid == NULL) {
         controld_globals.te_uuid = pcmk__generate_uuid();
-        crm_info("Registering TE UUID: %s", controld_globals.te_uuid);
+        pcmk__info("Registering TE UUID: %s", controld_globals.te_uuid);
     }
 
     if (cib_conn == NULL) {
@@ -137,7 +138,7 @@ do_te_invoke(long long action,
         }
 
         if (!controld_globals.transition_graph->complete) {
-            crm_info("Another transition is already active");
+            pcmk__info("Another transition is already active");
             abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Transition Active", NULL);
             return;
@@ -146,9 +147,9 @@ do_te_invoke(long long action,
         if ((controld_globals.fsa_pe_ref == NULL)
             || !pcmk__str_eq(controld_globals.fsa_pe_ref, ref,
                              pcmk__str_none)) {
-            crm_info("Transition is redundant: %s expected but %s received",
-                     pcmk__s(controld_globals.fsa_pe_ref, "no reference"),
-                     pcmk__s(ref, "no reference"));
+            pcmk__info("Transition is redundant: %s expected but %s received",
+                       pcmk__s(controld_globals.fsa_pe_ref, "no reference"),
+                       pcmk__s(ref, "no reference"));
             abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Transition Redundant", NULL);
         }
@@ -169,8 +170,8 @@ do_te_invoke(long long action,
         CRM_CHECK(controld_globals.transition_graph != NULL,
                   controld_globals.transition_graph = create_blank_graph();
                   return);
-        crm_info("Processing graph %d (ref=%s) derived from %s",
-                 controld_globals.transition_graph->id, ref, graph_input);
+        pcmk__info("Processing graph %d (ref=%s) derived from %s",
+                   controld_globals.transition_graph->id, ref, graph_input);
 
         te_reset_job_counts();
 

@@ -43,7 +43,7 @@ handle_cib_disconnect(gpointer user_data)
         controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
     } else { // Expected
-        crm_info("Disconnected from the CIB manager");
+        pcmk__info("Disconnected from the CIB manager");
     }
 }
 
@@ -138,8 +138,8 @@ do_cib_control(long long action,
         if ((cib_conn->state != cib_disconnected)
             && (pending_rsc_update != 0)) {
 
-            crm_info("Waiting for resource update %d to complete",
-                     pending_rsc_update);
+            pcmk__info("Waiting for resource update %d to complete",
+                       pending_rsc_update);
             crmd_fsa_stall(FALSE);
             return;
         }
@@ -167,7 +167,8 @@ do_cib_control(long long action,
     }
 
     if (rc != pcmk_ok) {
-        crm_info("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
+        pcmk__info("Could not connect to the CIB manager: %s",
+                   pcmk_strerror(rc));
 
     } else if (cib_conn->cmds->set_connection_dnotify(cib_conn,
                                                       dnotify_fn) != pcmk_ok) {
@@ -242,8 +243,8 @@ crmd_cib_smart_opt(void)
 
     if ((controld_globals.fsa_state == S_ELECTION)
         || (controld_globals.fsa_state == S_PENDING)) {
-        crm_info("Sending update to local CIB in state: %s",
-                 fsa_state2string(controld_globals.fsa_state));
+        pcmk__info("Sending update to local CIB in state: %s",
+                   fsa_state2string(controld_globals.fsa_state));
         cib__set_call_options(call_opt, "update", cib_none);
     }
     return call_opt;
@@ -372,8 +373,8 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
     fsa_register_cib_callback(cib_rc, desc, cib_delete_callback);
-    crm_info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s",
-             desc, cib_rc, xpath);
+    pcmk__info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s", desc, cib_rc,
+               xpath);
 
     // CIB library handles freeing desc
     free(xpath);
@@ -443,8 +444,8 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
         free(desc);
 
     } else {
-        crm_info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s",
-                 desc, rc, xpath);
+        pcmk__info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s", desc, rc,
+                   xpath);
         fsa_register_cib_callback(rc, desc, cib_delete_callback);
         // CIB library handles freeing desc
     }

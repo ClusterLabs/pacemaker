@@ -393,8 +393,8 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         && (rsc->priv->assigned_node != NULL)) {
 
         // @TODO Should this be more like pcmk__unassign_resource()?
-        crm_info("Unassigning %s from %s",
-                 rsc->id, pcmk__node_name(rsc->priv->assigned_node));
+        pcmk__info("Unassigning %s from %s", rsc->id,
+                   pcmk__node_name(rsc->priv->assigned_node));
         pcmk__free_node_copy(rsc->priv->assigned_node);
         rsc->priv->assigned_node = NULL;
     }

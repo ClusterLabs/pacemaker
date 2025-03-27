@@ -227,7 +227,7 @@ controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
-                crm_info("Connection to controller was terminated");
+                pcmk__info("Connection to controller was terminated");
             }
 
             *ec = exit_code;

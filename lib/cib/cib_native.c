@@ -302,7 +302,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     native->ipc = mainloop_get_ipc_client(native->source);
 
     if (rc != pcmk_ok || native->ipc == NULL || !crm_ipc_connected(native->ipc)) {
-        crm_info("Could not connect to CIB manager for %s", name);
+        pcmk__info("Could not connect to CIB manager for %s", name);
         rc = -ENOTCONN;
     }
 
@@ -321,9 +321,9 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
             crm_log_xml_trace(reply, "reg-reply");
 
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-                crm_info("Reply to CIB registration message has unknown type "
-                         "'%s'",
-                         msg_type);
+                pcmk__info("Reply to CIB registration message has unknown type "
+                           "'%s'",
+                           msg_type);
                 rc = -EPROTO;
 
             } else {
@@ -341,12 +341,12 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        crm_info("Successfully connected to CIB manager for %s", name);
+        pcmk__info("Successfully connected to CIB manager for %s", name);
         return pcmk_ok;
     }
 
-    crm_info("Connection to CIB manager for %s failed: %s",
-             name, pcmk_strerror(rc));
+    pcmk__info("Connection to CIB manager for %s failed: %s", name,
+               pcmk_strerror(rc));
     cib_native_signoff(cib);
     return rc;
 }

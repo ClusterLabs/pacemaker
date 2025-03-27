@@ -74,9 +74,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = pcmk__xe_get(reply, PCMK__XA_T);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, PCMK__VALUE_ATTRD, pcmk__str_none)) {
-        crm_info("Unrecognizable message from attribute manager: "
-                 "message type '%s' not '" PCMK__VALUE_ATTRD "'",
-                 pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from attribute manager: message "
+                   "type '%s' not '" PCMK__VALUE_ATTRD "'",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -95,8 +95,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         set_pairs_data(&reply_data, reply);
 
     } else {
-        crm_info("Unrecognizable message from attribute manager: "
-                 "message subtype '%s' unknown", pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from attribute manager: message "
+                   "subtype '%s' unknown",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }

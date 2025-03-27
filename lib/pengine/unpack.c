@@ -145,10 +145,10 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
         }
 
     } else if (is_dangling_guest_node(node)) {
-        crm_info("Cleaning up dangling connection for guest node %s: "
-                 "fencing was already done because %s, "
-                 "and guest resource no longer exists",
-                 pcmk__node_name(node), reason);
+        pcmk__info("Cleaning up dangling connection for guest node %s: fencing "
+                   "was already done because %s, and guest resource no longer "
+                   "exists",
+                   pcmk__node_name(node), reason);
         pcmk__set_rsc_flags(node->priv->remote,
                             pcmk__rsc_failed|pcmk__rsc_stop_if_failed);
 
@@ -236,14 +236,14 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
                     pcmk__sched_probe_resources);
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_probe_resources)) {
-        crm_info("Startup probes: disabled (dangerous)");
+        pcmk__info("Startup probes: disabled (dangerous)");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
     if (pcmk__is_true(value)) {
-        crm_info("Watchdog-based self-fencing will be performed via SBD if "
-                 "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
-                 " is nonzero");
+        pcmk__info("Watchdog-based self-fencing will be performed via SBD if "
+                   "fencing is required and "
+                   PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " is nonzero");
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_fencing);
     }
 
@@ -1012,10 +1012,10 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
     if (pcmk__is_true(granted)) {
         pcmk__set_ticket_flags(ticket, pcmk__ticket_granted);
-        crm_info("We have ticket '%s'", ticket->id);
+        pcmk__info("We have ticket '%s'", ticket->id);
     } else {
         pcmk__clear_ticket_flags(ticket, pcmk__ticket_granted);
-        crm_info("We do not have ticket '%s'", ticket->id);
+        pcmk__info("We do not have ticket '%s'", ticket->id);
     }
 
     last_granted = g_hash_table_lookup(ticket->state, PCMK_XA_LAST_GRANTED);
@@ -1036,7 +1036,7 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     if (pcmk__is_true(standby)) {
         pcmk__set_ticket_flags(ticket, pcmk__ticket_standby);
         if (pcmk__is_set(ticket->flags, pcmk__ticket_granted)) {
-            crm_info("Granted ticket '%s' is in standby-mode", ticket->id);
+            pcmk__info("Granted ticket '%s' is in standby-mode", ticket->id);
         }
     } else {
         pcmk__clear_ticket_flags(ticket, pcmk__ticket_standby);
@@ -1084,20 +1084,20 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     add_node_attrs(attrs, this_node, TRUE, scheduler);
 
     if (pe__shutdown_requested(this_node)) {
-        crm_info("%s is shutting down", pcmk__node_name(this_node));
+        pcmk__info("%s is shutting down", pcmk__node_name(this_node));
         this_node->details->shutdown = TRUE;
     }
 
     if (pcmk__is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_STANDBY, NULL,
                                       pcmk__rsc_node_current))) {
-        crm_info("%s is in standby mode", pcmk__node_name(this_node));
+        pcmk__info("%s is in standby mode", pcmk__node_name(this_node));
         pcmk__set_node_flags(this_node, pcmk__node_standby);
     }
 
     if (pcmk__is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE,
                                       NULL, pcmk__rsc_node_current))
         || ((rsc != NULL) && !pcmk__is_set(rsc->flags, pcmk__rsc_managed))) {
-        crm_info("%s is in maintenance mode", pcmk__node_name(this_node));
+        pcmk__info("%s is in maintenance mode", pcmk__node_name(this_node));
         this_node->details->maintenance = TRUE;
     }
 
@@ -1124,8 +1124,8 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
              * nodes, because they are "fenced" by recovering their containing
              * resource.
              */
-            crm_info("%s has resource discovery disabled",
-                     pcmk__node_name(this_node));
+            pcmk__info("%s has resource discovery disabled",
+                       pcmk__node_name(this_node));
             pcmk__clear_node_flags(this_node, pcmk__node_probes_allowed);
         }
     }
@@ -1152,13 +1152,13 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
 
     if (pcmk__is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_STANDBY, NULL,
                                       pcmk__rsc_node_current))) {
-        crm_info("%s is in standby mode", pcmk__node_name(node));
+        pcmk__info("%s is in standby mode", pcmk__node_name(node));
         pcmk__set_node_flags(node, pcmk__node_standby);
     }
 
     if (pcmk__is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
                                       pcmk__rsc_node_current))) {
-        crm_info("%s is in maintenance mode", pcmk__node_name(node));
+        pcmk__info("%s is in maintenance mode", pcmk__node_name(node));
         node->details->maintenance = TRUE;
     }
 
@@ -1610,9 +1610,9 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
     } else {
         /* mark it unclean */
         pe_fence_node(scheduler, this_node, "peer is unexpectedly down", FALSE);
-        crm_info("Node %s member@%lld online@%lld join=%s expected=%s",
-                 pcmk__node_name(this_node), when_member, when_online,
-                 pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"));
+        pcmk__info("Node %s member@%lld online@%lld join=%s expected=%s",
+                   pcmk__node_name(this_node), when_member, when_online,
+                   pcmk__s(join, "<null>"), pcmk__s(exp_state, "<null>"));
     }
     return online;
 }
@@ -1705,7 +1705,8 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
     } else if (termination_requested) {
         if ((when_member <= 0) && (when_online <= 0)
             && pcmk__str_eq(join, CRMD_JOINSTATE_DOWN, pcmk__str_none)) {
-            crm_info("%s was fenced as requested", pcmk__node_name(this_node));
+            pcmk__info("%s was fenced as requested",
+                       pcmk__node_name(this_node));
             return false;
         }
         pe_fence_node(scheduler, this_node, "fencing was requested", false);
@@ -1719,8 +1720,8 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
                           FALSE);
 
         } else if ((when_member > 0) || (when_online > 0)) {
-            crm_info("- %s is not ready to run resources",
-                     pcmk__node_name(this_node));
+            pcmk__info("- %s is not ready to run resources",
+                       pcmk__node_name(this_node));
             pcmk__set_node_flags(this_node, pcmk__node_standby);
             this_node->details->pending = TRUE;
 
@@ -1741,12 +1742,12 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
         /* Everything is running at this point, now check join state */
 
     } else if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_none)) {
-        crm_info("%s is active", pcmk__node_name(this_node));
+        pcmk__info("%s is active", pcmk__node_name(this_node));
 
     } else if (pcmk__str_any_of(join, CRMD_JOINSTATE_PENDING,
                                 CRMD_JOINSTATE_DOWN, NULL)) {
-        crm_info("%s is not ready to run resources",
-                 pcmk__node_name(this_node));
+        pcmk__info("%s is not ready to run resources",
+                   pcmk__node_name(this_node));
         pcmk__set_node_flags(this_node, pcmk__node_standby);
         this_node->details->pending = TRUE;
 
@@ -1883,19 +1884,19 @@ determine_online_status(const xmlNode *node_state, pcmk_node_t *this_node,
         crm_trace("%s is offline", pcmk__node_name(this_node));
 
     } else if (this_node->details->shutdown) {
-        crm_info("%s is shutting down", pcmk__node_name(this_node));
+        pcmk__info("%s is shutting down", pcmk__node_name(this_node));
 
     } else if (this_node->details->pending) {
-        crm_info("%s is pending", pcmk__node_name(this_node));
+        pcmk__info("%s is pending", pcmk__node_name(this_node));
 
     } else if (pcmk__is_set(this_node->priv->flags, pcmk__node_standby)) {
-        crm_info("%s is in standby", pcmk__node_name(this_node));
+        pcmk__info("%s is in standby", pcmk__node_name(this_node));
 
     } else if (this_node->details->maintenance) {
-        crm_info("%s is in maintenance", pcmk__node_name(this_node));
+        pcmk__info("%s is in maintenance", pcmk__node_name(this_node));
 
     } else {
-        crm_info("%s is online", pcmk__node_name(this_node));
+        pcmk__info("%s is online", pcmk__node_name(this_node));
     }
 }
 
@@ -4023,10 +4024,10 @@ remap_operation(struct action_history *history,
             if (history->execution_status == PCMK_EXEC_DONE) {
                 char *last_change_s = last_change_str(history->xml);
 
-                crm_info("Treating unknown exit status %d from %s of %s "
-                         "on %s at %s as failure",
-                         history->exit_status, task, history->rsc->id,
-                         pcmk__node_name(history->node), last_change_s);
+                pcmk__info("Treating unknown exit status %d from %s of %s on "
+                           "%s at %s as failure",
+                           history->exit_status, task, history->rsc->id,
+                           pcmk__node_name(history->node), last_change_s);
                 remap_because(history, &why, PCMK_EXEC_ERROR,
                               "unknown exit status");
                 free(last_change_s);
@@ -4132,8 +4133,9 @@ should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
         if (remote_node && !pcmk__is_set(remote_node->priv->flags,
                                          pcmk__node_remote_fenced)) {
             if (is_last_failure) {
-                crm_info("Waiting to clear monitor failure for remote node %s"
-                         " until fencing has occurred", rsc->id);
+                pcmk__info("Waiting to clear monitor failure for remote node %s"
+                           " until fencing has occurred",
+                           rsc->id);
             }
             return TRUE;
         }
@@ -4273,9 +4275,9 @@ check_operation_expiry(struct action_history *history)
              * this point, that's always true (it won't be reliable until
              * after unpack_node_history() is done).
              */
-            crm_info("Clearing %s failure will wait until any scheduled "
-                     "fencing of %s completes",
-                     history->task, history->rsc->id);
+            pcmk__info("Clearing %s failure will wait until any scheduled "
+                       "fencing of %s completes",
+                       history->task, history->rsc->id);
             order_after_remote_fencing(clear_op, history->rsc, scheduler);
         }
     }

@@ -426,8 +426,9 @@ ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & ipc_client)) {
         const char *proxy_id = ipc_client->userdata;
         if (pcmk__str_eq(proxy_id, ipc_proxy->id, pcmk__str_casei)) {
-            crm_info("ipc proxy connection for client %s pid %d destroyed because cluster node disconnected.",
-                ipc_client->id, ipc_client->pid);
+            pcmk__info("IPC proxy connection for client %s pid %d destroyed "
+                       "because cluster node disconnected",
+                       ipc_client->id, ipc_client->pid);
             /* we can't remove during the iteration, so copy items
              * to a list we can destroy later */
             remove_these = g_list_append(remove_these, ipc_client);

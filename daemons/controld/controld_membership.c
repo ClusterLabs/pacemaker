@@ -134,8 +134,8 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     xmlNode *node_state;
 
     if (!node->state) {
-        crm_info("Node update for %s cancelled: no state, not seen yet",
-                 node->name);
+        pcmk__info("Node update for %s cancelled: no state, not seen yet",
+                   node->name);
        return NULL;
     }
 
@@ -149,7 +149,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     if ((id == NULL)
         || (pcmk__xe_set(node_state, PCMK_XA_ID, id) != pcmk_rc_ok)) {
 
-        crm_info("Node update for %s cancelled: no ID", node->name);
+        pcmk__info("Node update for %s cancelled: no ID", node->name);
         pcmk__xml_free(node_state);
         return NULL;
     }

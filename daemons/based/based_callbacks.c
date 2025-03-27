@@ -51,8 +51,8 @@ static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     if (cib_shutdown_flag) {
-        crm_info("Ignoring new IPC client [%d] during shutdown",
-                 pcmk__client_pid(c));
+        pcmk__info("Ignoring new IPC client [%d] during shutdown",
+                   pcmk__client_pid(c));
         return -ECONNREFUSED;
     }
 
@@ -616,7 +616,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         }
 
     } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        crm_info("Detected legacy %s global update from %s", op, originator);
+        pcmk__info("Detected legacy %s global update from %s", op, originator);
         send_sync_request(NULL);
         return FALSE;
 
@@ -1257,12 +1257,13 @@ initiate_exit(void)
 
     active = pcmk__cluster_num_active_nodes();
     if (active < 2) { // This is the last active node
-        crm_info("Exiting without sending shutdown request (no active peers)");
+        pcmk__info("Exiting without sending shutdown request (no active "
+                   "peers)");
         terminate_cib(CRM_EX_OK);
         return;
     }
 
-    crm_info("Sending shutdown request to %d peers", active);
+    pcmk__info("Sending shutdown request to %d peers", active);
 
     leaving = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
     pcmk__xe_set(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
@@ -1325,18 +1326,18 @@ cib_shutdown(int nsig)
 
         crm_debug("Disconnecting %d remote clients", pcmk__ipc_client_count());
         pcmk__foreach_ipc_client(disconnect_remote_client, NULL);
-        crm_info("Disconnected %d clients", disconnects);
+        pcmk__info("Disconnected %d clients", disconnects);
     }
 
     qb_ipcs_stats_get(ipcs_rw, &srv_stats, QB_FALSE);
 
     if (pcmk__ipc_client_count() == 0) {
-        crm_info("All clients disconnected (%d)", srv_stats.active_connections);
+        pcmk__info("All clients disconnected (%d)", srv_stats.active_connections);
         initiate_exit();
 
     } else {
-        crm_info("Waiting on %d clients to disconnect (%d)",
-                 pcmk__ipc_client_count(), srv_stats.active_connections);
+        pcmk__info("Waiting on %d clients to disconnect (%d)",
+                   pcmk__ipc_client_count(), srv_stats.active_connections);
     }
 }
 

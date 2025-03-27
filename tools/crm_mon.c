@@ -1602,7 +1602,7 @@ main(int argc, char **argv)
         free(content);
     }
 
-    crm_info("Starting %s", crm_system_name);
+    pcmk__info("Starting %s", crm_system_name);
 
     cib__set_output(cib, out);
 
@@ -1675,7 +1675,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
 
-    crm_info("Exiting %s", crm_system_name);
+    pcmk__info("Exiting %s", crm_system_name);
 
     return clean_up(CRM_EX_OK);
 }

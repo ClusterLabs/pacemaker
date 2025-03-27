@@ -210,9 +210,9 @@ pcmk__add_word(GString **list, size_t init_size, const char *word)
  * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.
  *
  * if (a == 1) {
- *     crm_info("singular message"):
+ *     pcmk__info("singular message"):
  * } else {
- *     crm_info("plural message");
+ *     pcmk__info("plural message");
  * }
  *
  * though even that's not sufficient for all languages besides English (if we
@@ -221,12 +221,12 @@ pcmk__add_word(GString **list, size_t init_size, const char *word)
  */
 
 /* Example:
- * crm_info("Found %d %s", nentries,
- *          pcmk__plural_alt(nentries, "entry", "entries"));
+ * pcmk__info("Found %d %s", nentries,
+ *            pcmk__plural_alt(nentries, "entry", "entries"));
  */
 #define pcmk__plural_alt(i, s1, s2) (((i) == 1)? (s1) : (s2))
 
-// Example: crm_info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
+// Example: pcmk__info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
 #define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
 
 static inline int

@@ -147,8 +147,8 @@ send_tls(gnutls_session_t session, struct iovec *iov)
 
         } else if (gnutls_rc < 0) {
             // Caller can log as error if necessary
-            crm_info("TLS connection terminated: %s " QB_XS " rc=%zd",
-                     gnutls_strerror((int) gnutls_rc), gnutls_rc);
+            pcmk__info("TLS connection terminated: %s " QB_XS " rc=%zd",
+                       gnutls_strerror((int) gnutls_rc), gnutls_rc);
             return ECONNABORTED;
 
         } else if (gnutls_rc < unsent_len) {
@@ -189,8 +189,8 @@ send_plaintext(int sock, struct iovec *iov)
             }
 
             // Caller can log as error if necessary
-            crm_info("Could not send message: %s " QB_XS " rc=%d socket=%d",
-                     pcmk_rc_str(rc), rc, sock);
+            pcmk__info("Could not send message: %s " QB_XS " rc=%d socket=%d",
+                       pcmk_rc_str(rc), rc, sock);
             return rc;
 
         } else if (write_rc < unsent_len) {
@@ -871,7 +871,7 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
 
         memset(buffer, 0, PCMK__NELEM(buffer));
         pcmk__sockaddr2str(addr, buffer);
-        crm_info("Attempting remote connection to %s:%d", buffer, port);
+        pcmk__info("Attempting remote connection to %s:%d", buffer, port);
 
         if (callback) {
             if (connect_socket_retry(sock, rp->ai_addr, rp->ai_addrlen, timeout,
@@ -961,7 +961,7 @@ pcmk__accept_remote_connection(int ssock, int *csock)
         return rc;
     }
     pcmk__sockaddr2str(&addr, addr_str);
-    crm_info("Accepted new remote client connection from %s", addr_str);
+    pcmk__info("Accepted new remote client connection from %s", addr_str);
 
     rc = pcmk__set_nonblocking(*csock);
     if (rc != pcmk_rc_ok) {

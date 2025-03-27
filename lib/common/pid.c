@@ -37,8 +37,8 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         }
         rc = errno;
         if (last_asked_pid != pid) {
-            crm_info("Cannot examine PID %lld: %s",
-                     (long long) pid, pcmk_rc_str(rc));
+            pcmk__info("Cannot examine PID %lld: %s", (long long) pid,
+                       pcmk_rc_str(rc));
             last_asked_pid = pid;
         }
         return rc; /* errno != ESRCH */
@@ -59,9 +59,9 @@ pcmk__pid_active(pid_t pid, const char *daemon)
             }
             if (last_asked_pid != pid) {
                 if (rc == EACCES) {
-                    crm_info("Could not get executable for PID %lld: %s "
-                             QB_XS " rc=%d",
-                             (long long) pid, pcmk_rc_str(rc), rc);
+                    pcmk__info("Could not get executable for PID %lld: %s "
+                               QB_XS " rc=%d",
+                               (long long) pid, pcmk_rc_str(rc), rc);
                 } else {
                     pcmk__err("Could not get executable for PID %lld: %s "
                               QB_XS " rc=%d",

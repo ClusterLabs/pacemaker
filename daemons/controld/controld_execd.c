@@ -184,7 +184,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         entry->rsc.provider = pcmk__str_copy(rsc->provider);
 
     } else if (entry == NULL) {
-        crm_info("Resource %s no longer exists, not updating cache", op->rsc_id);
+        pcmk__info("Resource %s no longer exists, not updating cache",
+                   op->rsc_id);
         return;
     }
 
@@ -320,7 +321,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
     rc = controld_connect_local_executor(lrm_state);
     if (rc == pcmk_rc_ok) {
         controld_set_fsa_input_flags(R_LRM_CONNECTED);
-        crm_info("Connection to the local executor established");
+        pcmk__info("Connection to the local executor established");
         return;
     }
 
@@ -471,7 +472,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 
         counter++;
         if (log_level == LOG_ERR) {
-            crm_info("Found %s active at %s", entry->id, when);
+            pcmk__info("Found %s active at %s", entry->id, when);
         } else {
             crm_trace("Found %s active at %s", entry->id, when);
         }
@@ -672,9 +673,9 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
     const char *from_sys = pcmk__xe_get(input->msg, PCMK__XA_CRM_SYS_FROM);
     const char *from_host = pcmk__xe_get(input->msg, PCMK__XA_SRC);
 
-    crm_info("Notifying %s on %s that %s was%s deleted",
-             from_sys, (from_host? from_host : "localhost"), rsc_id,
-             ((rc == pcmk_ok)? "" : " not"));
+    pcmk__info("Notifying %s on %s that %s was%s deleted", from_sys,
+               pcmk__s(from_host, "localhost"), rsc_id,
+               ((rc == pcmk_ok)? "" : " not"));
     op = construct_op(lrm_state, input->xml, rsc_id, PCMK_ACTION_DELETE);
     controld_rc2event(op, pcmk_legacy2rc(rc));
     controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
@@ -702,8 +703,8 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
     active_op_t *pending = value;
 
     if (pcmk__str_eq(rsc, pending->rsc_id, pcmk__str_none)) {
-        crm_info("Removing op %s:%d for deleted resource %s",
-                 pending->op_key, pending->call_id, rsc);
+        pcmk__info("Removing op %s:%d for deleted resource %s", pending->op_key,
+                   pending->call_id, rsc);
         return TRUE;
     }
     return FALSE;
@@ -822,7 +823,7 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
         controld_set_active_op_flags(pending, active_op_cancelled);
 
     } else {
-        crm_info("No pending op found for %s", key);
+        pcmk__info("No pending op found for %s", key);
         free(local_key);
         return FALSE;
     }
@@ -974,8 +975,8 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
 {
     int rc = pcmk_ok;
 
-    crm_info("Removing resource %s from executor for %s%s%s",
-             id, sys, (user? " as " : ""), (user? user : ""));
+    pcmk__info("Removing resource %s from executor for %s%s%s", id, sys,
+               ((user != NULL)? " as " : ""), pcmk__s(user, ""));
 
     if (rsc && unregister) {
         rc = lrm_state_unregister_rsc(lrm_state, id, 0);
@@ -984,7 +985,7 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
     if (rc == pcmk_ok) {
         crm_trace("Resource %s deleted from executor", id);
     } else if (rc == -EINPROGRESS) {
-        crm_info("Deletion of resource '%s' from executor is pending", id);
+        pcmk__info("Deletion of resource '%s' from executor is pending", id);
         if (request) {
             struct pending_deletion_op_s *op = NULL;
             char *ref = pcmk__xe_get_copy(request->msg, PCMK_XA_REFERENCE);
@@ -1046,7 +1047,7 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     GHashTableIter gIter;
     rsc_history_t *entry = NULL;
 
-    crm_info("Clearing resource history on node %s", lrm_state->node_name);
+    pcmk__info("Clearing resource history on node %s", lrm_state->node_name);
     g_hash_table_iter_init(&gIter, lrm_state->resource_history);
     while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
         /* only unregister the resource during a reprobe if it is not a remote connection
@@ -1110,14 +1111,16 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
 
     if ((xml_rsc == NULL) || (pcmk__xe_id(xml_rsc) == NULL)) {
         /* @TODO Should we do something else, like direct ack? */
-        crm_info("Can't fake %s failure (%d) on %s without resource configuration",
-                 pcmk__xe_get(action, PCMK__XA_OPERATION_KEY), rc, target_node);
+        pcmk__info("Can't fake %s failure (%d) on %s without resource "
+                   "configuration",
+                   pcmk__xe_get(action, PCMK__XA_OPERATION_KEY), rc,
+                   target_node);
         return;
 
     } else if(operation == NULL) {
         /* This probably came from crm_resource -C, nothing to do */
-        crm_info("Can't fake %s failure (%d) on %s without operation",
-                 pcmk__xe_id(xml_rsc), rc, target_node);
+        pcmk__info("Can't fake %s failure (%d) on %s without operation",
+                   pcmk__xe_id(xml_rsc), rc, target_node);
         return;
     }
 
@@ -1130,8 +1133,8 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, const xmlNode *action,
         fake_op_status(lrm_state, op, op_status, rc, exit_reason);
     }
 
-    crm_info("Faking " PCMK__OP_FMT " result (%d) on %s",
-             op->rsc_id, op->op_type, op->interval_ms, op->rc, target_node);
+    pcmk__info("Faking " PCMK__OP_FMT " result (%d) on %s", op->rsc_id,
+               op->op_type, op->interval_ms, op->rc, target_node);
 
     // Process the result as if it came from the LRM
     process_lrm_event(lrm_state, op, NULL, action);
@@ -1199,7 +1202,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 
 
     if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_ok) {
-        crm_info("Failing resource %s...", rsc->id);
+        pcmk__info("Failing resource %s...", rsc->id);
         fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR,
                        "Simulated failure");
         process_lrm_event(lrm_state, op, NULL, xml);
@@ -1207,7 +1210,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
         lrmd_free_rsc_info(rsc);
 
     } else {
-        crm_info("Cannot find/create resource in order to fail it...");
+        pcmk__info("Cannot find/create resource in order to fail it...");
         crm_log_xml_warn(xml, "bad input");
         fake_op_status(lrm_state, op, PCMK_EXEC_ERROR, PCMK_OCF_UNKNOWN_ERROR,
                        "Cannot fail unknown resource");
@@ -1289,7 +1292,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
         char *op_id = make_stop_id(rsc->id, call);
 
         if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
-            crm_info("Nothing known about operation %d for %s", call, op_key);
+            pcmk__info("Nothing known about operation %d for %s", call, op_key);
         }
         controld_delete_action_history_by_key(rsc->id, lrm_state->node_name,
                                               op_key, call);
@@ -1558,11 +1561,11 @@ do_lrm_invoke(long long action,
                 struct metadata_cb_data *data = NULL;
 
                 data = new_metadata_cb_data(rsc, input->xml);
-                crm_info("Retrieving metadata for %s (%s%s%s:%s) asynchronously",
-                         rsc->id, rsc->standard,
-                         ((rsc->provider == NULL)? "" : ":"),
-                         ((rsc->provider == NULL)? "" : rsc->provider),
-                         rsc->type);
+                pcmk__info("Retrieving metadata for %s (%s%s%s:%s) "
+                           "asynchronously",
+                           rsc->id, rsc->standard,
+                           ((rsc->provider != NULL)? ":" : ""),
+                           pcmk__s(rsc->provider, ""), rsc->type);
                 (void) lrmd__metadata_async(rsc, metadata_complete,
                                             (void *) data);
             } else {
@@ -1827,8 +1830,8 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
     active_op_t *op = value;
 
     if (op->interval_ms != 0) {
-        crm_info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id,
-                 (const char *) key);
+        pcmk__info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id,
+                   (const char *) key);
         remove = !cancel_op(lrm_state, op->rsc_id, key, op->call_id, FALSE);
     }
 
@@ -2023,7 +2026,9 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
             && (op->start_delay > START_DELAY_THRESHOLD)) {
             int target_rc = PCMK_OCF_OK;
 
-            crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
+            pcmk__info("Faking confirmation of %s: execution postponed for "
+                       "over 5 minutes",
+                       op_id);
             decode_transition_key(op->user_data, NULL, NULL, NULL, &target_rc);
             lrmd__set_result(op, target_rc, PCMK_EXEC_DONE, NULL);
             controld_ack_event_directly(NULL, NULL, rsc, op, rsc->id);
@@ -2230,9 +2235,10 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         const char *type = pcmk__xe_get(xml, PCMK_XA_TYPE);
 
         if (standard && type) {
-            crm_info("%s agent information not cached, using %s%s%s:%s from action XML",
-                     op->rsc_id, standard,
-                     (provider? ":" : ""), (provider? provider : ""), type);
+            pcmk__info("%s agent information not cached, using %s%s%s:%s from "
+                       "action XML",
+                       op->rsc_id, standard, (provider? ":" : ""),
+                       pcmk__s(provider, ""), type);
             rsc = lrmd_new_rsc_info(op->rsc_id, standard, provider, type);
         } else {
             pcmk__err("Can't process %s result because %s agent information "
@@ -2401,7 +2407,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
     }
 
     if (op->rsc_deleted) {
-        crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
+        pcmk__info("Deletion of resource '%s' complete after %s", op->rsc_id,
+                   op_key);
         if (lrm_state) {
             delete_rsc_entry(lrm_state, NULL, op->rsc_id, NULL, pcmk_ok, NULL,
                              true);

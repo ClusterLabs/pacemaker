@@ -165,8 +165,9 @@ make_args(const char *agent, const char *action, const char *target,
             char *nodeid = pcmk__assert_asprintf("%" PRIu32, target_nodeid);
 
             // cts-fencing looks for this log message
-            crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
-                     nodeid, action, pcmk__s(target, "no node"));
+            pcmk__info("Passing '%s' as nodeid with fence action '%s' "
+                       "targeting %s",
+                       nodeid, action, pcmk__s(target, "no node"));
             g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
         }
 
@@ -303,8 +304,9 @@ update_remaining_timeout(stonith_action_t * action)
     int diff = time(NULL) - action->initial_start_time;
 
     if (action->tries >= action->max_retries) {
-        crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
-                 action->agent, action->action, action->max_retries);
+        pcmk__info("Attempted to execute agent %s (%s) the maximum number of "
+                   "times (%d) allowed",
+                   action->agent, action->action, action->max_retries);
         action->remaining_timeout = 0;
     } else if ((action->result.execution_status != PCMK_EXEC_TIMEOUT)
                && (diff < (action->timeout * 0.7))) {
@@ -640,10 +642,10 @@ internal_stonith_action_execute(stonith_action_t * action)
         action->initial_start_time = time(NULL);
     } else {
         // Later attempt after earlier failure
-        crm_info("Attempt %d to execute '%s' action of agent %s "
-                 "(%ds timeout remaining)",
-                 action->tries, action->action, action->agent,
-                 action->remaining_timeout);
+        pcmk__info("Attempt %d to execute '%s' action of agent %s (%ds timeout "
+                   "remaining)",
+                   action->tries, action->action, action->agent,
+                   action->remaining_timeout);
         is_retry = 1;
     }
 

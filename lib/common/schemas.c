@@ -1073,8 +1073,8 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
         return NULL;
     }
 
-    crm_info("Schema upgrade from %s to %s succeeded",
-             schema->name, upgraded_schema->name);
+    pcmk__info("Schema upgrade from %s to %s succeeded", schema->name,
+               upgraded_schema->name);
     return new_xml;
 }
 
@@ -1198,9 +1198,8 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
     if ((best_schema != NULL)
         && (best_schema->schema_index > original_schema->schema_index)) {
-        crm_info("%s the configuration schema to %s",
-                 (transform? "Transformed" : "Upgraded"),
-                 best_schema->name);
+        pcmk__info("%s the configuration schema to %s",
+                   (transform? "Transformed" : "Upgraded"), best_schema->name);
         pcmk__xe_set(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
     return rc;
@@ -1308,9 +1307,9 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
                                       original_schema->name, schema->name);
                 }
             } else if (to_logs) {
-                crm_info("Configuration with %s schema was internally "
-                         "upgraded to latest version %s",
-                         original_schema->name, schema->name);
+                pcmk__info("Configuration with %s schema was internally "
+                           "upgraded to latest version %s",
+                           original_schema->name, schema->name);
             }
         }
 

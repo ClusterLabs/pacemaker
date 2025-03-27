@@ -179,9 +179,9 @@ crm_timer_popped(gpointer data)
                   fsa_state2string(controld_globals.fsa_state),
                   fsa_input2string(timer->fsa_input), timer->period_ms);
     } else {
-        crm_info("%s just popped " QB_XS " input=%s time=%ums",
-                 get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                 timer->period_ms);
+        pcmk__info("%s just popped " QB_XS " input=%s time=%ums",
+                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                   timer->period_ms);
         timer->counter++;
     }
 
@@ -195,9 +195,9 @@ crm_timer_popped(gpointer data)
     controld_stop_timer(timer);  // Make timer _not_ go off again
 
     if (timer->fsa_input == I_INTEGRATED) {
-        crm_info("Welcomed: %d, Integrated: %d",
-                 crmd_join_phase_count(controld_join_welcomed),
-                 crmd_join_phase_count(controld_join_integrated));
+        pcmk__info("Welcomed: %d, Integrated: %d",
+                   crmd_join_phase_count(controld_join_welcomed),
+                   crmd_join_phase_count(controld_join_integrated));
         if (crmd_join_phase_count(controld_join_welcomed) == 0) {
             // If we don't even have ourselves, start again
             register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, NULL,

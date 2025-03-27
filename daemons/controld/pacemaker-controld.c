@@ -203,7 +203,7 @@ done:
     controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(controld_globals.mainloop);
     if (pcmk__is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
-        crm_info("Inhibiting automated respawn");
+        pcmk__info("Inhibiting automated respawn");
         exit_code = CRM_EX_FATAL;
     }
     crmd_fast_exit(exit_code);

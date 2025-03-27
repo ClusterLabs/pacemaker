@@ -90,24 +90,24 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     value = pcmk__xe_get(reply, PCMK__XA_T);
     if (pcmk__parse_server(value) != pcmk_ipc_schedulerd) {
-        crm_info("Unrecognizable message from schedulerd: "
-                  "unexpected message type '%s'",
-                  pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from schedulerd: unexpected message "
+                   "type '%s'",
+                    pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     value = pcmk__xe_get(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
-        crm_info("Unrecognizable message from schedulerd: "
-                 "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
-                 pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from schedulerd: message type '%s' "
+                   "not '" PCMK__VALUE_RESPONSE "'",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
-        crm_info("Unrecognizable message from schedulerd: no reference");
+        pcmk__info("Unrecognizable message from schedulerd: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -126,8 +126,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
                                                    PCMK__XA_CRM_TGRAPH_IN);
         reply_data.data.graph.tgraph = msg_data;
     } else {
-        crm_info("Unrecognizable message from schedulerd: "
-                  "unknown command '%s'", pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from schedulerd: unknown command "
+                   "'%s'",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }

@@ -161,7 +161,7 @@ main(int argc, char **argv)
                         "Could not connect to the CIB");
             goto done;
         }
-        crm_info("CIB connection active");
+        pcmk__info("CIB connection active");
     }
 
     if (attrd_cluster_connect() != pcmk_ok) {
@@ -170,7 +170,7 @@ main(int argc, char **argv)
                     "Could not connect to the cluster");
         goto done;
     }
-    crm_info("Cluster connection active");
+    pcmk__info("Cluster connection active");
 
     // Initialization that requires the cluster to be connected
     attrd_election_init();
@@ -193,7 +193,7 @@ main(int argc, char **argv)
 
   done:
     if (initialized) {
-        crm_info("Shutting down attribute manager");
+        pcmk__info("Shutting down attribute manager");
 
         attrd_ipc_fini();
         attrd_lrmd_disconnect();

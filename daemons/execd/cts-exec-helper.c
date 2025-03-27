@@ -182,7 +182,7 @@ test_exit(crm_exit_t exit_code)
              event->op_type ? event->op_type : "none",                  \
              crm_exit_str((crm_exit_t) event->rc),                      \
              pcmk_exec_status_str(event->op_status));                   \
-    crm_info("%s", event_buf_v0);
+    pcmk__info("%s", event_buf_v0);
 
 static void
 test_shutdown(int nsig)
@@ -236,7 +236,7 @@ connection_events(lrmd_event_data_t * event)
     }
 
     if (!rc) {
-        crm_info("Executor client connection established");
+        pcmk__info("Executor client connection established");
         start_test(NULL);
         return;
     } else {
@@ -611,7 +611,7 @@ main(int argc, char **argv)
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
-    crm_info("Starting");
+    pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 

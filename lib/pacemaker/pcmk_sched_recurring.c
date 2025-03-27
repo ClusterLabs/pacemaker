@@ -702,9 +702,9 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
               && (node != NULL) && (reason != NULL),
               return);
 
-    crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
-             pcmk__readable_interval(interval_ms), task, rsc->id,
-             pcmk__node_name(node), reason);
+    pcmk__info("Recurring %s-interval %s for %s will be stopped on %s: %s",
+               pcmk__readable_interval(interval_ms), task, rsc->id,
+               pcmk__node_name(node), reason);
     cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
     pcmk__insert_meta(cancel, PCMK__XA_CALL_ID, call_id);
 

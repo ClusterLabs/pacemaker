@@ -35,7 +35,7 @@ attrd_cib_destroy_cb(gpointer user_data)
     cib->cmds->signoff(cib);
 
     if (attrd_shutting_down(false)) {
-        crm_info("Disconnected from the CIB manager");
+        pcmk__info("Disconnected from the CIB manager");
 
     } else {
         // @TODO This should trigger a reconnect, not a shutdown
@@ -169,7 +169,7 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
     const char *node = pcmk__s((const char *) user_data, "a node");
 
     if (rc == pcmk_ok) {
-        crm_info("Cleared transient node attributes for %s from CIB", node);
+        pcmk__info("Cleared transient node attributes for %s from CIB", node);
     } else {
         pcmk__err("Unable to clear transient node attributes for %s from CIB: "
                   "%s",
@@ -256,7 +256,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
     attribute_t *a = g_hash_table_lookup(attributes, name);
 
     if(a == NULL) {
-        crm_info("Attribute %s no longer exists", name);
+        pcmk__info("Attribute %s no longer exists", name);
         return;
     }
 
@@ -291,8 +291,8 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
         if (rc == pcmk_ok) {
-            crm_info("* Wrote %s[%s]=%s",
-                     a->id, peer, pcmk__s(v->requested, "(unset)"));
+            pcmk__info("* Wrote %s[%s]=%s", a->id, peer,
+                       pcmk__s(v->requested, "(unset)"));
             pcmk__str_update(&(v->requested), NULL);
         } else {
             do_crm_log(level, "* Could not write %s[%s]=%s",
@@ -510,13 +510,14 @@ write_attribute(attribute_t *a, bool ignore_delay)
     if (should_write) {
         /* Defer the write if now's not a good time */
         if (a->update && (a->update < last_cib_op_done)) {
-            crm_info("Write out of '%s' continuing: update %d considered lost",
-                     a->id, a->update);
+            pcmk__info("Write out of '%s' continuing: update %d considered "
+                       "lost",
+                       a->id, a->update);
             a->update = 0; // Don't log this message again
 
         } else if (a->update) {
-            crm_info("Write out of '%s' delayed: update %d in progress",
-                     a->id, a->update);
+            pcmk__info("Write out of '%s' delayed: update %d in progress",
+                       a->id, a->update);
             goto done;
 
         } else if (mainloop_timer_running(a->timer)) {
@@ -524,7 +525,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                 mainloop_timer_stop(a->timer);
                 crm_debug("Overriding '%s' write delay", a->id);
             } else {
-                crm_info("Delaying write of '%s'", a->id);
+                pcmk__info("Delaying write of '%s'", a->id);
                 goto done;
             }
         }
@@ -627,9 +628,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     if (private_updates) {
-        crm_info("Processed %d private change%s for %s (set %s)",
-                 private_updates, pcmk__plural_s(private_updates),
-                 a->id, pcmk__s(a->set_id, "unspecified"));
+        pcmk__info("Processed %d private change%s for %s (set %s)",
+                   private_updates, pcmk__plural_s(private_updates),
+                   a->id, pcmk__s(a->set_id, "unspecified"));
     }
     if (cib_updates > 0) {
         char *id = pcmk__str_copy(a->id);
@@ -637,9 +638,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
         // Commit transaction
         a->update = the_cib->cmds->end_transaction(the_cib, true, cib_none);
 
-        crm_info("Sent CIB request %d with %d change%s for %s (set %s)",
-                 a->update, cib_updates, pcmk__plural_s(cib_updates),
-                 a->id, pcmk__s(a->set_id, "unspecified"));
+        pcmk__info("Sent CIB request %d with %d change%s for %s (set %s)",
+                   a->update, cib_updates, pcmk__plural_s(cib_updates),
+                   a->id, pcmk__s(a->set_id, "unspecified"));
 
         if (the_cib->cmds->register_callback_full(the_cib, a->update,
                                                   CIB_OP_TIMEOUT_S, FALSE, id,

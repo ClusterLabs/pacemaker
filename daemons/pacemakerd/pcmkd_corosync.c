@@ -37,9 +37,21 @@ static mainloop_timer_t *reconnect_timer = NULL;
 static void
 cfg_shutdown_callback(corosync_cfg_handle_t h, corosync_cfg_shutdown_flags_t flags)
 {
-    crm_info("Corosync wants to shut down: %s",
-             (flags == COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE) ? "immediate" :
-             (flags == COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS) ? "forced" : "optional");
+    const char *shutdown_s = NULL;
+
+    switch (flags) {
+        case COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE:
+            shutdown_s = "immediate";
+            break;
+        case COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS:
+            shutdown_s = "forced";
+            break;
+        default:
+            shutdown_s = "optional";
+            break;
+    }
+
+    pcmk__info("Corosync wants to shut down: %s", shutdown_s);
 
     /* Never allow corosync to shut down while we're running */
     corosync_cfg_replyto_shutdown(h, COROSYNC_CFG_SHUTDOWN_FLAG_NO);
@@ -87,8 +99,8 @@ cluster_reconnect_cb(gpointer data)
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
     } else {
-        crm_info("Cluster reconnect failed "
-                 "(connection will be reattempted once per second)");
+        pcmk__info("Cluster reconnect failed (connection will be reattempted "
+                   "once per second)");
     }
     /*
      * In theory this will continue forever. In practice the CIB connection from
@@ -214,7 +226,7 @@ pcmkd_shutdown_corosync(void)
         pcmk__warn("Unable to shut down Corosync: No connection");
         return;
     }
-    crm_info("Asking Corosync to shut down");
+    pcmk__info("Asking Corosync to shut down");
     rc = corosync_cfg_try_shutdown(cfg_handle,
                                     COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
     if (rc == CS_OK) {
@@ -281,8 +293,9 @@ pacemakerd_read_config(void)
         rc = pcmk__init_cmap(&local_handle);
         if (rc != CS_OK) {
             retries++;
-            crm_info("Could not connect to Corosync CMAP: %s (retrying in %ds) "
-                     QB_XS " rc=%d", cs_strerror(rc), retries, rc);
+            pcmk__info("Could not connect to Corosync CMAP: %s (retrying in "
+                       "%ds) " QB_XS " rc=%d",
+                       cs_strerror(rc), retries, rc);
             sleep(retries);
 
         } else {
@@ -331,7 +344,7 @@ pacemakerd_read_config(void)
         return FALSE;
     }
 
-    crm_info("Reading configuration for %s cluster layer", cluster_layer_s);
+    pcmk__info("Reading configuration for %s cluster layer", cluster_layer_s);
     pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, PCMK_VALUE_COROSYNC, true);
 
     // If debug logging is not configured, check whether corosync has it

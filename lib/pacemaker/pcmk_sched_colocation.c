@@ -1587,12 +1587,12 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
 
     if (!pcmk__str_eq(attr, CRM_ATTR_UNAME, pcmk__str_none)) {
         if (best_node == NULL) {
-            crm_info("No allowed node for %s matches node attribute %s=%s",
-                     rsc->id, attr, value);
+            pcmk__info("No allowed node for %s matches node attribute %s=%s",
+                       rsc->id, attr, value);
         } else {
-            crm_info("Allowed node %s for %s had best score (%d) "
-                     "of those matching node attribute %s=%s",
-                     best_node, rsc->id, best_score, attr, value);
+            pcmk__info("Allowed node %s for %s had best score (%d) of those "
+                       "matching node attribute %s=%s",
+                       best_node, rsc->id, best_score, attr, value);
         }
     }
 

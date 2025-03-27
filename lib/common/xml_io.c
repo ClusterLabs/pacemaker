@@ -624,7 +624,7 @@ pcmk__xml_write_temp_file(const xmlNode *xml, const char *desc,
     }
     path = pcmk__assert_asprintf("%s/%s", pcmk__get_tmpdir(), filename);
 
-    crm_info("Saving %s to %s", desc, path);
+    pcmk__info("Saving %s to %s", desc, path);
     pcmk__xml_write_file(xml, filename, false);
 
     free(path);
@@ -649,7 +649,7 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
         free(uuid);
     }
 
-    crm_info("Saving %s to %s", desc, filename);
+    pcmk__info("Saving %s to %s", desc, filename);
     pcmk__xml_write_file(xml, filename, false);
     free(f);
 }

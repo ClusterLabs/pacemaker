@@ -59,7 +59,7 @@ static crm_exit_t exit_code = CRM_EX_OK;
 static void
 cib_enable_writes(int nsig)
 {
-    crm_info("(Re)enabling disk writes");
+    pcmk__info("(Re)enabling disk writes");
     cib_writes_enabled = TRUE;
 }
 
@@ -342,7 +342,7 @@ static void
 cib_cs_destroy(gpointer user_data)
 {
     if (cib_shutdown_flag) {
-        crm_info("Corosync disconnection complete");
+        pcmk__info("Corosync disconnection complete");
     } else {
         pcmk__crit("Exiting immediately after losing connection to cluster "
                    "layer");
@@ -361,7 +361,7 @@ cib_peer_update_callback(enum pcmk__node_update type,
             if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 
-                crm_info("Exiting after no more peers or clients remain");
+                pcmk__info("Exiting after no more peers or clients remain");
                 terminate_cib(-1);
             }
             break;

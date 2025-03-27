@@ -154,7 +154,7 @@ handle_pecalc_request(pcmk__request_t *request)
         crm_debug("Not saving input to disk (disabled by configuration)");
 
     } else if (is_repoke) {
-        crm_info("Input has not changed since last time, not saving to disk");
+        pcmk__info("Input has not changed since last time, not saving to disk");
 
     } else {
         unlink(filename);
@@ -246,13 +246,14 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
                      pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
-        crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
+        pcmk__info("Ignoring IPC reply from %s", pcmk__client_name(c));
 
     } else if (!pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
-        crm_info("Ignoring invalid IPC message: to '%s' not "
-                 CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
+        pcmk__info("Ignoring invalid IPC message: to '%s' not "
+                  CRM_SYSTEM_PENGINE,
+                  pcmk__s(sys_to, ""));
 
     } else {
         char *log_msg = NULL;

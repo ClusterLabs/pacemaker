@@ -373,10 +373,10 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
                                "systemd unit %s not found", op->agent);
     }
 
-    crm_info("DBus request for %s of systemd unit %s%s%s failed: %s",
-             op->action, op->agent,
-             ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""),
-             error->message);
+    pcmk__info("DBus request for %s of systemd unit %s%s%s failed: %s",
+               op->action, op->agent,
+               ((op->rsc != NULL)? " for resource " : ""), pcmk__s(op->rsc, ""),
+               error->message);
 }
 
 /*!
@@ -409,11 +409,12 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                                  "systemd DBus method had unexpected reply");
-            crm_info("Could not load systemd unit %s for %s: "
-                     "DBus reply has unexpected type", op->agent, op->id);
+            pcmk__info("Could not load systemd unit %s for %s: DBus reply has "
+                       "unexpected type",
+                       op->agent, op->id);
         } else {
-            crm_info("Could not load systemd unit: "
-                     "DBus reply has unexpected type");
+            pcmk__info("Could not load systemd unit: DBus reply has unexpected "
+                       "type");
         }
 
     } else {
@@ -807,9 +808,9 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                                      __func__, __LINE__)) {
         const char *reason = "systemd D-Bus method had unexpected reply";
 
-        crm_info("DBus request for %s of %s succeeded but "
-                 "return type was unexpected",
-                 op->action, pcmk__s(op->rsc, "unknown resource"));
+        pcmk__info("DBus request for %s of %s succeeded but return type was "
+                   "unexpected",
+                   op->action, pcmk__s(op->rsc, "unknown resource"));
 
         if (!op->synchronous && start_stop) {
             /* The start or stop job is enqueued but is not complete. We need a
@@ -1336,8 +1337,8 @@ systemd_timeout_callback(gpointer p)
     svc_action_t * op = p;
 
     op->opaque->timerid = 0;
-    crm_info("%s action for systemd unit %s named '%s' timed out",
-             op->action, op->agent, op->rsc);
+    pcmk__info("%s action for systemd unit %s named '%s' timed out", op->action,
+               op->agent, op->rsc);
     services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
                             "%s action for systemd unit %s "
                             "did not complete in time", op->action, op->agent);

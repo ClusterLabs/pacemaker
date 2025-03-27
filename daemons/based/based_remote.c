@@ -67,7 +67,7 @@ static int cib_remote_msg(gpointer data);
 static void
 remote_connection_destroy(gpointer user_data)
 {
-    crm_info("No longer listening for remote connections");
+    pcmk__info("No longer listening for remote connections");
     return;
 }
 
@@ -311,9 +311,9 @@ cib_remote_listen(gpointer data)
     new_client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
                                                           remote_auth_timeout_cb,
                                                           new_client);
-    crm_info("%s connection from %s pending authentication for client %s",
-             ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"),
-             ipstr, new_client->id);
+    pcmk__info("%s connection from %s pending authentication for client %s",
+               ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"), ipstr,
+               new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
@@ -547,7 +547,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
             // Password requested
             break;
         case PAM_TEXT_INFO:
-            crm_info("PAM: %s", msg[0]->msg);
+            pcmk__info("PAM: %s", msg[0]->msg);
             data = NULL;
             break;
         case PAM_ERROR_MSG:

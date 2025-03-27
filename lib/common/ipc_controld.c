@@ -115,8 +115,8 @@ post_connect(pcmk_ipc_api_t *api)
     rc = pcmk__send_ipc_request(api, hello);
     pcmk__xml_free(hello);
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not send IPC hello to %s: %s " QB_XS " rc=%s",
-                 pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
+        pcmk__info("Could not send IPC hello to %s: %s " QB_XS " rc=%s",
+                   pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
     } else {
         crm_debug("Sent IPC hello to %s", pcmk_ipc_name(api, true));
     }
@@ -234,21 +234,22 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
                   "(bug unless sent by a controller <3.0.0)");
 
     } else if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
-        crm_info("Unrecognizable message from controller: "
-                 "invalid message type '%s'", pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from controller: invalid message "
+                   "type '%s'",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
-        crm_info("Unrecognizable message from controller: no reference");
+        pcmk__info("Unrecognizable message from controller: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     value = pcmk__xe_get(reply, PCMK__XA_CRM_TASK);
     if (pcmk__str_empty(value)) {
-        crm_info("Unrecognizable message from controller: no command name");
+        pcmk__info("Unrecognizable message from controller: no command name");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -278,8 +279,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         set_nodes_data(&reply_data, msg_data);
 
     } else {
-        crm_info("Unrecognizable message from controller: unknown command '%s'",
-                 value);
+        pcmk__info("Unrecognizable message from controller: unknown command "
+                   "'%s'",
+                   value);
         status = CRM_EX_PROTOCOL;
     }
 

@@ -1061,9 +1061,9 @@ crm_exit(crm_exit_t exit_status)
         exit_status = CRM_EX_ERROR;
     }
 
-    crm_info("Exiting %s " QB_XS " with status %d (%s: %s)",
-             pcmk__s(crm_system_name, "process"), exit_status,
-             crm_exit_name(exit_status), crm_exit_str(exit_status));
+    pcmk__info("Exiting %s " QB_XS " with status %d (%s: %s)",
+               pcmk__s(crm_system_name, "process"), exit_status,
+               crm_exit_name(exit_status), crm_exit_str(exit_status));
     pcmk_common_cleanup();
     exit(exit_status);
 }

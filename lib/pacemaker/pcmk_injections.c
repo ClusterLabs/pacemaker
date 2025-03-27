@@ -462,8 +462,8 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         return NULL;
     }
 
-    crm_info("Injecting new resource %s into node state '%s'",
-             lrm_name, pcmk__xe_id(cib_node));
+    pcmk__info("Injecting new resource %s into node state '%s'", lrm_name,
+               pcmk__xe_id(cib_node));
 
     lrm = pcmk__xe_first_child(cib_node, PCMK__XE_LRM, NULL, NULL);
     if (lrm == NULL) {

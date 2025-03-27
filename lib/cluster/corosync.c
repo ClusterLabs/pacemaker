@@ -58,7 +58,7 @@ pcmk__corosync_uuid(const pcmk__node_status_t *node)
         if (node->cluster_layer_id > 0) {
             return pcmk__assert_asprintf("%" PRIu32, node->cluster_layer_id);
         } else {
-            crm_info("Node %s is not yet known by Corosync", node->name);
+            pcmk__info("Node %s is not yet known by Corosync", node->name);
         }
     }
     return NULL;
@@ -209,7 +209,7 @@ bail:
     }
 
     if (name == NULL) {
-        crm_info("Unable to get node name for nodeid %u", nodeid);
+        pcmk__info("Unable to get node name for nodeid %u", nodeid);
     }
     return name;
 }
@@ -290,13 +290,14 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
         pcmk__cluster_set_quorum(false);
 
     } else {
-        crm_info("Quorum %s " QB_XS " membership=%" PRIu64 " members=%" PRIu32,
-                 (is_quorate? "retained" : "still lost"), ring_id,
-                 view_list_entries);
+        pcmk__info("Quorum %s " QB_XS " membership=%" PRIu64
+                   " members=%" PRIu32,
+                   (is_quorate? "retained" : "still lost"), ring_id,
+                   view_list_entries);
     }
 
     if (view_list_entries == 0 && init_phase) {
-        crm_info("Corosync membership is still forming, ignoring");
+        pcmk__info("Corosync membership is still forming, ignoring");
         return;
     }
 
@@ -320,7 +321,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
         if (node->name == NULL) {
             char *name = pcmk__corosync_name(0, id);
 
-            crm_info("Obtaining name for new node %u", id);
+            pcmk__info("Obtaining name for new node %u", id);
             node = pcmk__get_node(id, name, NULL,
                                   pcmk__node_search_cluster_member);
             free(name);
@@ -478,7 +479,7 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
         // Error message was logged by pcmk__cpg_connect()
         return rc;
     }
-    crm_info("Connection to %s established", cluster_layer_s);
+    pcmk__info("Connection to %s established", cluster_layer_s);
 
     cluster->priv->node_id = pcmk__cpg_local_nodeid(0);
     if (cluster->priv->node_id == 0) {
@@ -520,8 +521,8 @@ pcmk__corosync_is_active(void)
         return true;
     }
 
-    crm_info("Failed to initialize the cmap API: %s (%d)",
-             pcmk__cs_err_str(rc), rc);
+    pcmk__info("Failed to initialize the cmap API: %s (%d)",
+               pcmk__cs_err_str(rc), rc);
     return false;
 }
 
@@ -692,8 +693,8 @@ pcmk__corosync_cluster_name(void)
 
     rc = pcmk__init_cmap(&handle);
     if (rc != CS_OK) {
-        crm_info("Failed to initialize the cmap API: %s (%d)",
-                 cs_strerror(rc), rc);
+        pcmk__info("Failed to initialize the cmap API: %s (%d)",
+                   cs_strerror(rc), rc);
         return NULL;
     }
 
@@ -720,7 +721,8 @@ pcmk__corosync_cluster_name(void)
 
     rc = cmap_get_string(handle, "totem.cluster_name", &cluster_name);
     if (rc != CS_OK) {
-        crm_info("Cannot get totem.cluster_name: %s (%d)", cs_strerror(rc), rc);
+        pcmk__info("Cannot get totem.cluster_name: %s (%d)", cs_strerror(rc),
+                   rc);
 
     } else {
         crm_debug("cmap totem.cluster_name = '%s'", cluster_name);

@@ -43,7 +43,7 @@ attrd_start_election_if_needed(void)
         && (election_state(attrd_cluster) != election_in_progress)
         && !attrd_shutting_down(false)) {
 
-        crm_info("Starting an election to determine the writer");
+        pcmk__info("Starting an election to determine the writer");
         election_vote(attrd_cluster);
     }
 }
@@ -98,7 +98,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
             break;
 
         default:
-            crm_info("Ignoring election op from %s due to error", peer->name);
+            pcmk__info("Ignoring election op from %s due to error", peer->name);
             break;
     }
 }

@@ -550,7 +550,7 @@ crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 
     } else {
         rc = rc? -rc : -EINVAL;
-        crm_info("User %s lookup: %s", name, pcmk_strerror(rc));
+        pcmk__info("User %s lookup: %s", name, pcmk_strerror(rc));
     }
 
     free(buffer);

@@ -296,9 +296,9 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     const cib__operation_t *operation = NULL;
 
-    crm_info("Handling %s operation for %s as %s",
-             pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
-             pcmk__s(user_name, "default user"));
+    pcmk__info("Handling %s operation for %s as %s",
+               pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
+               pcmk__s(user_name, "default user"));
 
     if (output_data != NULL) {
         *output_data = NULL;
@@ -425,9 +425,10 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
         register_client(cib);
 
     } else {
-        crm_info("Connection to local file '%s' for %s (client %s) failed: %s",
-                 private->filename, pcmk__s(name, "client"), private->id,
-                 pcmk_strerror(rc));
+        pcmk__info("Connection to local file '%s' for %s (client %s) failed: "
+                   "%s",
+                   private->filename, pcmk__s(name, "client"), private->id,
+                   pcmk_strerror(rc));
     }
     return rc;
 }
@@ -558,7 +559,7 @@ cib_file_signoff(cib_t *cib)
         }
 
         if (rc == pcmk_ok) {
-            crm_info("Wrote CIB to %s", private->filename);
+            pcmk__info("Wrote CIB to %s", private->filename);
             cib_clear_file_flags(private, cib_file_flag_dirty);
         } else {
             pcmk__err("Could not write CIB to %s", private->filename);
@@ -871,7 +872,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
             }
         }
         pcmk__sync_directory(cib_dirname);
-        crm_info("Archived previous version as %s", backup_path);
+        pcmk__info("Archived previous version as %s", backup_path);
     }
 
     free(cib_path);
@@ -994,8 +995,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     /* Calculate CIB digest */
     digest = pcmk__digest_on_disk_cib(cib_root);
     pcmk__assert(digest != NULL);
-    crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
-             (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);
+    pcmk__info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
+               pcmk__s(admin_epoch, "0"), pcmk__s(epoch, "0"), digest);
 
     /* Write the CIB digest to a temporary file */
     fd = mkstemp(tmp_digest);
@@ -1023,8 +1024,8 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     crm_debug("Wrote digest %s to disk", digest);
 
     /* Verify that what we wrote is sane */
-    crm_info("Reading cluster configuration file %s (digest: %s)",
-             tmp_cib, tmp_digest);
+    pcmk__info("Reading cluster configuration file %s (digest: %s)", tmp_cib,
+               tmp_digest);
     rc = cib_file_read_and_verify(tmp_cib, tmp_digest, NULL);
     pcmk__assert(rc == 0);
 

@@ -209,7 +209,7 @@ do_dc_takeover(long long action,
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     pid_t watchdog = pcmk__locate_sbd();
 
-    crm_info("Taking over DC status for this partition");
+    pcmk__info("Taking over DC status for this partition");
     controld_set_fsa_input_flags(R_THE_DC);
     execute_stonith_cleanup();
 
@@ -258,7 +258,7 @@ do_dc_release(long long action,
         controld_expect_sched_reply(NULL);
 
     } else if (action & A_DC_RELEASED) {
-        crm_info("DC role released");
+        pcmk__info("DC role released");
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             pcmk__node_status_t *node = controld_get_local_node_status();
