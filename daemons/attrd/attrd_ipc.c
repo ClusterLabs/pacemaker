@@ -171,13 +171,14 @@ attrd_client_peer_remove(pcmk__request_t *request)
     }
 
     if (host) {
-        crm_info("Client %s is requesting all values for %s be removed",
-                 pcmk__client_name(request->ipc_client), host);
+        pcmk__info("Client %s is requesting all values for %s be removed",
+                   pcmk__client_name(request->ipc_client), host);
         attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
-        crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
-                 pcmk__client_name(request->ipc_client));
+        pcmk__info("Ignoring request by client %s to remove all peer values "
+                   "without specifying peer",
+                   pcmk__client_name(request->ipc_client));
     }
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -219,7 +220,7 @@ attrd_client_query(pcmk__request_t *request)
 void
 attrd_client_refresh(pcmk__request_t *request)
 {
-    crm_info("Updating all attributes");
+    pcmk__info("Updating all attributes");
 
     attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
     attrd_write_attributes(attrd_write_all|attrd_write_no_delay);
@@ -342,7 +343,7 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
 
         int_value = attrd_expand_value(*value, (v? v->current : NULL));
 
-        crm_info("Expanded %s=%s to %d", attr, *value, int_value);
+        pcmk__info("Expanded %s=%s to %d", attr, *value, int_value);
         pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
 
         /* Replacing the value frees the previous memory, so re-query it */
@@ -493,8 +494,8 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     crm_trace("New client connection %p", c);
     if (attrd_shutting_down()) {
-        crm_info("Ignoring new connection from pid %d during shutdown",
-                 pcmk__client_pid(c));
+        pcmk__info("Ignoring new connection from pid %d during shutdown",
+                   pcmk__client_pid(c));
         return -ECONNREFUSED;
     }
 

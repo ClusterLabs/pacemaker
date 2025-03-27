@@ -136,8 +136,8 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
 #else
 #error No standards supported for service alias (configure script bug)
 #endif
-            crm_info("Assuming resource class %s for agent %s for %s",
-                     default_standard, agent, rsc);
+            pcmk__info("Assuming resource class %s for agent %s for %s",
+                       default_standard, agent, rsc);
             expanded_class = pcmk__str_copy(default_standard);
         }
     }
@@ -181,32 +181,34 @@ required_argument_missing(uint32_t ra_caps, const char *name,
                           const char *agent, const char *action)
 {
     if (pcmk__str_empty(name)) {
-        crm_info("Cannot create operation without resource name (bug?)");
+        pcmk__info("Cannot create operation without resource name (bug?)");
         return true;
     }
 
     if (pcmk__str_empty(standard)) {
-        crm_info("Cannot create operation for %s without resource class (bug?)",
-                 name);
+        pcmk__info("Cannot create operation for %s without resource class "
+                   "(bug?)",
+                   name);
         return true;
     }
 
     if (pcmk__is_set(ra_caps, pcmk_ra_cap_provider)
         && pcmk__str_empty(provider)) {
-        crm_info("Cannot create operation for %s resource %s "
-                 "without provider (bug?)", standard, name);
+        pcmk__info("Cannot create operation for %s resource %s without "
+                   "provider (bug?)",
+                   standard, name);
         return true;
     }
 
     if (pcmk__str_empty(agent)) {
-        crm_info("Cannot create operation for %s without agent name (bug?)",
-                 name);
+        pcmk__info("Cannot create operation for %s without agent name (bug?)",
+                   name);
         return true;
     }
 
     if (pcmk__str_empty(action)) {
-        crm_info("Cannot create operation for %s without action name (bug?)",
-                 name);
+        pcmk__info("Cannot create operation for %s without action name (bug?)",
+                   name);
         return true;
     }
     return false;
@@ -314,13 +316,13 @@ services__create_resource_action(const char *name, const char *standard,
         rc = services__systemd_prepare(op);
 #endif
     } else {
-        crm_info("Unknown resource standard: %s", op->standard);
+        pcmk__info("Unknown resource standard: %s", op->standard);
         rc = ENOENT;
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_info("Cannot prepare %s operation for %s: %s",
-                 action, name, strerror(rc));
+        pcmk__info("Cannot prepare %s operation for %s: %s", action, name,
+                   strerror(rc));
         services__handle_exec_error(op, rc);
     }
     return op;
@@ -371,8 +373,8 @@ services_action_create_generic(const char *exec, const char *args[])
     for (int cur_arg = 1; args[cur_arg - 1] != NULL; cur_arg++) {
 
         if (cur_arg == PCMK__NELEM(op->opaque->args)) {
-            crm_info("Cannot prepare action for '%s': Too many arguments",
-                     exec);
+            pcmk__info("Cannot prepare action for '%s': Too many arguments",
+                       exec);
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
                                  PCMK_EXEC_ERROR_HARD, "Too many arguments");
             break;
@@ -479,7 +481,8 @@ services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
 {
     if (op->opaque->pending && (op->opaque->pending != pending)) {
         if (pending) {
-            crm_info("Lost pending %s DBus call (%p)", op->id, op->opaque->pending);
+            pcmk__info("Lost pending %s DBus call (%p)", op->id,
+                       op->opaque->pending);
         } else {
             crm_trace("Done with pending %s DBus call (%p)", op->id, op->opaque->pending);
         }
@@ -629,7 +632,7 @@ services_action_free(svc_action_t * op)
 gboolean
 cancel_recurring_action(svc_action_t * op)
 {
-    crm_info("Cancelling %s operation %s", op->standard, op->id);
+    pcmk__info("Cancelling %s operation %s", op->standard, op->id);
 
     if (recurring_actions) {
         g_hash_table_remove(recurring_actions, op->id);
@@ -679,8 +682,9 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
      * process goes away.
      */
     if (op->pid != 0) {
-        crm_info("Terminating in-flight op %s[%d] early because it was cancelled",
-                 id, op->pid);
+        pcmk__info("Terminating in-flight op %s[%d] early because it was "
+                   "cancelled",
+                   id, op->pid);
         cancelled = mainloop_child_kill(op->pid);
         if (cancelled == FALSE) {
             pcmk__err("Termination of %s[%d] failed", id, op->pid);
@@ -959,15 +963,15 @@ execute_metadata_action(svc_action_t *op)
     const char *class = op->standard;
 
     if (op->agent == NULL) {
-        crm_info("Meta-data requested without specifying agent");
+        pcmk__info("Meta-data requested without specifying agent");
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL, "Agent not specified");
         return EINVAL;
     }
 
     if (class == NULL) {
-        crm_info("Meta-data requested for agent %s without specifying class",
-                op->agent);
+        pcmk__info("Meta-data requested for agent %s without specifying class",
+                   op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL,
                              "Agent standard not specified");
@@ -979,8 +983,8 @@ execute_metadata_action(svc_action_t *op)
         class = resources_find_service_class(op->agent);
     }
     if (class == NULL) {
-        crm_info("Meta-data requested for %s, but could not determine class",
-                 op->agent);
+        pcmk__info("Meta-data requested for %s, but could not determine class",
+                   op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_HARD,
                              "Agent standard could not be determined");

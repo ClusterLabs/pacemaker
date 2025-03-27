@@ -223,9 +223,9 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
     if (handler == NULL) {
         handler = g_hash_table_lookup(handlers, ""); // Default handler
         if (handler == NULL) {
-            crm_info("Ignoring %s request from %s %s with no handler",
-                     request->op, pcmk__request_origin_type(request),
-                     pcmk__request_origin(request));
+            pcmk__info("Ignoring %s request from %s %s with no handler",
+                       request->op, pcmk__request_origin_type(request),
+                       pcmk__request_origin(request));
             return NULL;
         }
     }

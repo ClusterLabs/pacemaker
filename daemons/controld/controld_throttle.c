@@ -85,7 +85,7 @@ throttle_check_thresholds(float load, const char *desc,
         return throttle_high;
 
     } else if (load > thresholds[1]) {
-        crm_info("Moderate %s detected: %f", desc, load);
+        pcmk__info("Moderate %s detected: %f", desc, load);
         return throttle_med;
 
     } else if (load > thresholds[0]) {
@@ -184,8 +184,8 @@ throttle_send_command(enum throttle_state_e mode)
     static enum throttle_state_e last = -1;
 
     if(mode != last) {
-        crm_info("New throttle mode: %s load (was %s)",
-                 load2str(mode), load2str(last));
+        pcmk__info("New throttle mode: %s load (was %s)", load2str(mode),
+                   load2str(last));
         last = mode;
 
         xml = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,

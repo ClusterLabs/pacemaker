@@ -144,14 +144,14 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         no_wait = TRUE;
     }
 
-    crm_info("Handling controller request '%s' (%s on %s)%s%s",
-             id, task, on_node, (is_local? " locally" : ""),
-             (no_wait? " without waiting" : ""));
+    pcmk__info("Handling controller request '%s' (%s on %s)%s%s", id, task,
+               on_node, (is_local? " locally" : ""),
+               (no_wait? " without waiting" : ""));
 
     if (is_local
         && pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
         /* defer until everything else completes */
-        crm_info("Controller request '%s' is a local shutdown", id);
+        pcmk__info("Controller request '%s' is a local shutdown", id);
         graph->completion_action = pcmk__graph_shutdown;
         graph->abort_reason = "local shutdown";
         te_action_confirmed(action, graph);
@@ -444,7 +444,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         /* Just mark confirmed. Don't bump the job count only to immediately
          * decrement it.
          */
-        crm_info("Action %d confirmed - no wait", action->id);
+        pcmk__info("Action %d confirmed - no wait", action->id);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
         pcmk__update_graph(controld_globals.transition_graph, action);
         trigger_graph();

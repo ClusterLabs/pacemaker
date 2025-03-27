@@ -191,7 +191,7 @@ read_events(lrmd_event_data_t * event)
                           pcmk__s(event->op_type, "none"),
                           crm_exit_str((crm_exit_t) event->rc),
                           pcmk_exec_status_str(event->op_status)) >= 0);
-    crm_info("%s", buf);
+    pcmk__info("%s", buf);
 
     if (options.listen && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
         print_result("LISTEN EVENT SUCCESSFUL");
@@ -232,7 +232,7 @@ connection_events(lrmd_event_data_t * event)
     }
 
     if (!rc) {
-        crm_info("Executor client connection established");
+        pcmk__info("Executor client connection established");
         start_test(NULL);
         return;
     } else {
@@ -607,7 +607,7 @@ main(int argc, char **argv)
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
-    crm_info("Starting");
+    pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 

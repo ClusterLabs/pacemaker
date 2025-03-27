@@ -671,13 +671,12 @@ update_dc(xmlNode * msg)
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
-        crm_info("Set DC to %s (%s)",
-                 controld_globals.dc_name,
-                 pcmk__s(controld_globals.dc_version, "unknown version"));
+        pcmk__info("Set DC to %s (%s)", controld_globals.dc_name,
+                   pcmk__s(controld_globals.dc_version, "unknown version"));
         pcmk__update_peer_expected(dc_node, CRMD_JOINSTATE_MEMBER);
 
     } else if (last_dc != NULL) {
-        crm_info("Unset DC (was %s)", last_dc);
+        pcmk__info("Unset DC (was %s)", last_dc);
     }
 
     free(last_dc);

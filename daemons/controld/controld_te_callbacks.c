@@ -422,24 +422,27 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        crm_info("Received invalid transition request: subsystem '%s' not '"
-                 CRM_SYSTEM_TENGINE "'", pcmk__s(value, ""));
+        pcmk__info("Received invalid transition request: subsystem '%s' not '"
+                   CRM_SYSTEM_TENGINE "'",
+                   pcmk__s(value, ""));
         return;
     }
 
     // Only the lrm_invoke command is supported as a transition request
     value = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
     if (!pcmk__str_eq(value, CRM_OP_INVOKE_LRM, pcmk__str_none)) {
-        crm_info("Received invalid transition request: command '%s' not '"
-                 CRM_OP_INVOKE_LRM "'", pcmk__s(value, ""));
+        pcmk__info("Received invalid transition request: command '%s' not '"
+                   CRM_OP_INVOKE_LRM "'",
+                   pcmk__s(value, ""));
         return;
     }
 
     // Transition requests must be marked as coming from the executor
     value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(value, CRM_SYSTEM_LRMD, pcmk__str_none)) {
-        crm_info("Received invalid transition request: from '%s' not '"
-                 CRM_SYSTEM_LRMD "'", pcmk__s(value, ""));
+        pcmk__info("Received invalid transition request: from '%s' not '"
+                   CRM_SYSTEM_LRMD "'",
+                   pcmk__s(value, ""));
         return;
     }
 

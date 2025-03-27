@@ -250,7 +250,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid option: -e %s", optarg);
         retval = FALSE;
     } else {
-        crm_info("Got: '%s'='%s'", optarg, env);
+        pcmk__info("Got: '%s'='%s'", optarg, env);
 
         if (options.params != NULL) {
             options.params = pcmk__strkey_table(free, free);
@@ -296,7 +296,7 @@ add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data,
     int rc = 0;
     gboolean retval = TRUE;
 
-    crm_info("Scanning: -o %s", optarg);
+    pcmk__info("Scanning: -o %s", optarg);
 
     rc = pcmk__scan_nvpair(optarg, &name, &value);
 
@@ -304,7 +304,7 @@ add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data,
         g_set_error(error, PCMK__RC_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_rc_str(rc));
         retval = FALSE;
     } else {
-        crm_info("Got: '%s'='%s'", name, value);
+        pcmk__info("Got: '%s'='%s'", name, value);
 
         if (options.params == NULL) {
             options.params = pcmk__strkey_table(free, free);
@@ -702,7 +702,7 @@ main(int argc, char **argv)
             break;
     }
 
-    crm_info("Command returned: %s (%d)", pcmk_rc_str(rc), rc);
+    pcmk__info("Command returned: %s (%d)", pcmk_rc_str(rc), rc);
     exit_code = pcmk_rc2exitc(rc);
 
   done:

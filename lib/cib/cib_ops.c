@@ -352,7 +352,8 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
                 reason = "digest mismatch";
 
             } else {
-                crm_info("Digest matched on replace from %s: %s", peer, digest);
+                pcmk__info("Digest matched on replace from %s: %s", peer,
+                           digest);
             }
             free(digest_verify);
 
@@ -380,15 +381,17 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         }
 
         if (reason != NULL) {
-            crm_info("Replacement %d.%d.%d from %s not applied to %d.%d.%d:"
-                     " current %s is greater than the replacement",
-                     replace_admin_epoch, replace_epoch,
-                     replace_updates, peer, admin_epoch, epoch, updates, reason);
+            pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
+                       "current %s is greater than the replacement",
+                       replace_admin_epoch, replace_epoch,
+                       replace_updates, peer, admin_epoch, epoch, updates,
+                       reason);
             result = -pcmk_err_old_data;
         } else {
-            crm_info("Replaced %d.%d.%d with %d.%d.%d from %s",
-                     admin_epoch, epoch, updates,
-                     replace_admin_epoch, replace_epoch, replace_updates, peer);
+            pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
+                       admin_epoch, epoch, updates,
+                       replace_admin_epoch, replace_epoch, replace_updates,
+                       peer);
         }
 
         if (*result_cib != existing_cib) {

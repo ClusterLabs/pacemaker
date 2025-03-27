@@ -227,16 +227,16 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
 
     value = pcmk__xe_get(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
-        crm_info("Unrecognizable message from %s: "
-                 "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
-                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from %s: message type '%s' not "
+                   "'" PCMK__VALUE_RESPONSE "'",
+                   pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
-        crm_info("Unrecognizable message from %s: no reference",
-                 pcmk_ipc_name(api, true));
+        pcmk__info("Unrecognizable message from %s: no reference",
+                   pcmk_ipc_name(api, true));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -270,8 +270,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(op_status);
     } else {
-        crm_info("Unrecognizable message from %s: unknown command '%s'",
-                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from %s: unknown command '%s'",
+                   pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
