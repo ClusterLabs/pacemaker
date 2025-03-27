@@ -127,15 +127,15 @@ pcmk__cpg_local_nodeid(cpg_handle_t handle)
                                        (cpg_model_data_t *) &cpg_model_info,
                                        NULL));
         if (rc != CS_OK) {
-            crm_err("Could not connect to the CPG API: %s (%d)",
-                    cs_strerror(rc), rc);
+            pcmk__err("Could not connect to the CPG API: %s (%d)",
+                      cs_strerror(rc), rc);
             return 0;
         }
 
         rc = cpg_fd_get(local_handle, &fd);
         if (rc != CS_OK) {
-            crm_err("Could not obtain the CPG API connection: %s (%d)",
-                    cs_strerror(rc), rc);
+            pcmk__err("Could not obtain the CPG API connection: %s (%d)",
+                      cs_strerror(rc), rc);
             goto bail;
         }
 
@@ -143,15 +143,15 @@ pcmk__cpg_local_nodeid(cpg_handle_t handle)
         rv = crm_ipc_is_authentic_process(fd, (uid_t) 0, (gid_t) 0, &found_pid,
                                           &found_uid, &found_gid);
         if (rv == 0) {
-            crm_err("CPG provider is not authentic:"
-                    " process %lld (uid: %lld, gid: %lld)",
-                    (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                    (long long) found_uid, (long long) found_gid);
+            pcmk__err("CPG provider is not authentic: process %lld "
+                      "(uid: %lld, gid: %lld)",
+                      (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                      (long long) found_uid, (long long) found_gid);
             goto bail;
 
         } else if (rv < 0) {
-            crm_err("Could not verify authenticity of CPG provider: %s (%d)",
-                    strerror(-rv), -rv);
+            pcmk__err("Could not verify authenticity of CPG provider: %s (%d)",
+                      strerror(-rv), -rv);
             goto bail;
         }
     }
@@ -163,8 +163,8 @@ pcmk__cpg_local_nodeid(cpg_handle_t handle)
     }
 
     if (rc != CS_OK) {
-        crm_err("Could not get local node id from the CPG API: %s (%d)",
-                pcmk__cs_err_str(rc), rc);
+        pcmk__err("Could not get local node id from the CPG API: %s (%d)",
+                  pcmk__cs_err_str(rc), rc);
     }
 
 bail:
@@ -216,7 +216,7 @@ crm_cs_flush(gpointer data)
 
     queue_len = g_list_length(cs_message_queue);
     if (((queue_len % 1000) == 0) && (queue_len > 1)) {
-        crm_err("CPG queue has grown to %d", queue_len);
+        pcmk__err("CPG queue has grown to %d", queue_len);
 
     } else if (queue_len == CS_SEND_MAX) {
         crm_warn("CPG queue has grown to %d", queue_len);
@@ -276,14 +276,14 @@ pcmk_cpg_dispatch(gpointer user_data)
 
     rc = cpg_dispatch(cluster->priv->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
-        crm_err("Connection to the CPG API failed: %s (%d)",
-                pcmk__cs_err_str(rc), rc);
+        pcmk__err("Connection to the CPG API failed: %s (%d)",
+                  pcmk__cs_err_str(rc), rc);
         cpg_finalize(cluster->priv->cpg_handle);
         cluster->priv->cpg_handle = 0;
         return -1;
 
     } else if (cpg_evicted) {
-        crm_err("Evicted from CPG membership");
+        pcmk__err("Evicted from CPG membership");
         return -1;
     }
     return 0;
@@ -317,38 +317,36 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
     int32_t payload_size = msg->header.size - sizeof(pcmk__cpg_msg_t);
 
     if (payload_size < 1) {
-        crm_err("%sCPG message %d from %s invalid: "
-                "Claimed size of %d bytes is too small "
-                QB_XS " from %s[%u] to %s@%s",
-                (msg->is_compressed? "Compressed " : ""),
-                msg->id, ais_dest(&(msg->sender)),
-                (int) msg->header.size,
-                msg_type2text(msg->sender.type), msg->sender.pid,
-                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        pcmk__err("%sCPG message %d from %s invalid: Claimed size of %d bytes "
+                  "is too small " QB_XS " from %s[%u] to %s@%s",
+                  (msg->is_compressed? "Compressed " : ""),
+                  msg->id, ais_dest(&(msg->sender)),
+                  (int) msg->header.size,
+                  msg_type2text(msg->sender.type), msg->sender.pid,
+                  msg_type2text(msg->host.type), ais_dest(&(msg->host)));
         return false;
     }
 
     if (msg->header.error != CS_OK) {
-        crm_err("%sCPG message %d from %s invalid: "
-                "Sender indicated error %d "
-                QB_XS " from %s[%u] to %s@%s",
-                (msg->is_compressed? "Compressed " : ""),
-                msg->id, ais_dest(&(msg->sender)),
-                msg->header.error,
-                msg_type2text(msg->sender.type), msg->sender.pid,
-                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        pcmk__err("%sCPG message %d from %s invalid: Sender indicated error %d "
+                  QB_XS " from %s[%u] to %s@%s",
+                  (msg->is_compressed? "Compressed " : ""),
+                  msg->id, ais_dest(&(msg->sender)),
+                  msg->header.error,
+                  msg_type2text(msg->sender.type), msg->sender.pid,
+                  msg_type2text(msg->host.type), ais_dest(&(msg->host)));
         return false;
     }
 
     if (msg_data_len(msg) != payload_size) {
-        crm_err("%sCPG message %d from %s invalid: "
-                "Total size %d inconsistent with payload size %d "
-                QB_XS " from %s[%u] to %s@%s",
-                (msg->is_compressed? "Compressed " : ""),
-                msg->id, ais_dest(&(msg->sender)),
-                (int) msg->header.size, (int) msg_data_len(msg),
-                msg_type2text(msg->sender.type), msg->sender.pid,
-                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        pcmk__err("%sCPG message %d from %s invalid: Total size %d "
+                  "inconsistent with payload size %d "
+                  QB_XS " from %s[%u] to %s@%s",
+                  (msg->is_compressed? "Compressed " : ""),
+                  msg->id, ais_dest(&(msg->sender)),
+                  (int) msg->header.size, (int) msg_data_len(msg),
+                  msg_type2text(msg->sender.type), msg->sender.pid,
+                  msg_type2text(msg->host.type), ais_dest(&(msg->host)));
         return false;
     }
 
@@ -358,12 +356,11 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
          */
         (((msg->size > 1) && (msg->data[msg->size - 2] == '\0'))
          || (msg->data[msg->size - 1] != '\0'))) {
-        crm_err("CPG message %d from %s invalid: "
-                "Payload does not end at byte %" PRIu32 " "
-                QB_XS " from %s[%u] to %s@%s",
-                msg->id, ais_dest(&(msg->sender)), msg->size,
-                msg_type2text(msg->sender.type), msg->sender.pid,
-                msg_type2text(msg->host.type), ais_dest(&(msg->host)));
+        pcmk__err("CPG message %d from %s invalid: Payload does not end at "
+                  "byte %" PRIu32 " " QB_XS " from %s[%u] to %s@%s",
+                  msg->id, ais_dest(&(msg->sender)), msg->size,
+                  msg_type2text(msg->sender.type), msg->sender.pid,
+                  msg_type2text(msg->host.type), ais_dest(&(msg->host)));
         return false;
     }
 
@@ -725,7 +722,7 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
     }
 
     if (!found) {
-        crm_err("Local node was evicted from group %s", group_name->value);
+        pcmk__err("Local node was evicted from group %s", group_name->value);
         cpg_evicted = true;
     }
 
@@ -822,37 +819,37 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
 
     cs_repeat(rc, retries, 30, cpg_model_initialize(&handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
     if (rc != CS_OK) {
-        crm_err("Could not connect to the CPG API: %s (%d)",
-                cs_strerror(rc), rc);
+        pcmk__err("Could not connect to the CPG API: %s (%d)",
+                  cs_strerror(rc), rc);
         goto bail;
     }
 
     rc = cpg_fd_get(handle, &fd);
     if (rc != CS_OK) {
-        crm_err("Could not obtain the CPG API connection: %s (%d)",
-                cs_strerror(rc), rc);
+        pcmk__err("Could not obtain the CPG API connection: %s (%d)",
+                  cs_strerror(rc), rc);
         goto bail;
     }
 
     /* CPG provider run as root (in given user namespace, anyway)? */
     if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
-        crm_err("CPG provider is not authentic:"
-                " process %lld (uid: %lld, gid: %lld)",
-                (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) found_gid);
+        pcmk__err("CPG provider is not authentic: process %lld "
+                  "(uid: %lld, gid: %lld)",
+                  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                  (long long) found_uid, (long long) found_gid);
         rc = CS_ERR_ACCESS;
         goto bail;
     } else if (rv < 0) {
-        crm_err("Could not verify authenticity of CPG provider: %s (%d)",
-                strerror(-rv), -rv);
+        pcmk__err("Could not verify authenticity of CPG provider: %s (%d)",
+                  strerror(-rv), -rv);
         rc = CS_ERR_ACCESS;
         goto bail;
     }
 
     id = pcmk__cpg_local_nodeid(handle);
     if (id == 0) {
-        crm_err("Could not get local node id from the CPG API");
+        pcmk__err("Could not get local node id from the CPG API");
         goto bail;
 
     }
@@ -861,7 +858,7 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     retries = 0;
     cs_repeat(rc, retries, 30, cpg_join(handle, &cluster->priv->group));
     if (rc != CS_OK) {
-        crm_err("Could not join the CPG group '%s': %d", cpg_group_name, rc);
+        pcmk__err("Could not join the CPG group '%s': %d", cpg_group_name, rc);
         goto bail;
     }
 

@@ -313,7 +313,8 @@ handle_regexes(pcmk__request_t *request)
                             pcmk__client_name(request->ipc_client));
 
     } else if (rc == pcmk_rc_bad_nvpair) {
-        crm_err("Update request did not specify attribute or regular expression");
+        pcmk__err("Update request did not specify attribute or regular "
+                  "expression");
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                             "Client %s update request did not specify attribute or regular expression",
                             pcmk__client_name(request->ipc_client));

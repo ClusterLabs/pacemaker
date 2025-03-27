@@ -798,13 +798,13 @@ cib_process_request(xmlNode *request, gboolean privileged,
     rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         /* TODO: construct error reply? */
-        crm_err("Pre-processing of command failed: %s", pcmk_strerror(rc));
+        pcmk__err("Pre-processing of command failed: %s", pcmk_strerror(rc));
         return rc;
     }
 
     op_function = based_get_op_function(operation);
     if (op_function == NULL) {
-        crm_err("Operation %s not supported by CIB manager", op);
+        pcmk__err("Operation %s not supported by CIB manager", op);
         return -EOPNOTSUPP;
     }
 
@@ -851,8 +851,9 @@ cib_process_request(xmlNode *request, gboolean privileged,
 
     if (cib_status != pcmk_ok) {
         rc = cib_status;
-        crm_err("Ignoring request because cluster configuration is invalid "
-                "(please repair and restart): %s", pcmk_strerror(rc));
+        pcmk__err("Ignoring request because cluster configuration is invalid "
+                  "(please repair and restart): %s",
+                  pcmk_strerror(rc));
         op_reply = create_cib_reply(op, call_id, client_id, call_options, rc,
                                     the_cib);
 
@@ -911,7 +912,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
         }
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
-            crm_err("Unexpected NULL reply to message");
+            pcmk__err("Unexpected NULL reply to message");
             crm_log_xml_err(request, "null reply");
             needs_reply = FALSE;
             local_notify = FALSE;
@@ -1130,7 +1131,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
             rc = activateCibXml(result_cib, config_changed, op);
             if (rc != pcmk_ok) {
-                crm_err("Failed to activate new CIB: %s", pcmk_strerror(rc));
+                pcmk__err("Failed to activate new CIB: %s", pcmk_strerror(rc));
             }
         }
 
@@ -1243,8 +1244,8 @@ disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
 {
     pcmk__client_t *a_client = value;
 
-    crm_err("Can't disconnect client %s: Not implemented",
-            pcmk__client_name(a_client));
+    pcmk__err("Can't disconnect client %s: Not implemented",
+              pcmk__client_name(a_client));
 }
 
 static void

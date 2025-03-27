@@ -67,14 +67,14 @@ find_library_function(void **handle, const char *lib, const char *fn)
     if (*handle == NULL) {
         *handle = dlopen(lib, RTLD_LAZY);
         if ((*handle) == NULL) {
-            crm_err("Could not open %s: %s", lib, dlerror());
+            pcmk__err("Could not open %s: %s", lib, dlerror());
             return NULL;
         }
     }
 
     a_function = dlsym(*handle, fn);
     if (a_function == NULL) {
-        crm_err("Could not find %s in %s: %s", fn, lib, dlerror());
+        pcmk__err("Could not find %s in %s: %s", fn, lib, dlerror());
     }
 
     return a_function;

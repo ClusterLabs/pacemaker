@@ -94,9 +94,9 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
                 pcmk__remote_send_xml(client->remote, update->msg);
                 break;
             default:
-                crm_err("Unknown transport for client %s "
-                        QB_XS " flags=%#016" PRIx64,
-                        pcmk__client_name(client), client->flags);
+                pcmk__err("Unknown transport for client %s "
+                          QB_XS " flags=%#016" PRIx64,
+                          pcmk__client_name(client), client->flags);
         }
     }
 }

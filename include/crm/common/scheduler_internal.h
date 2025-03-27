@@ -240,7 +240,7 @@ extern uint32_t pcmk__warnings;
 #define pcmk__sched_err(scheduler, fmt...) do {                     \
         pcmk__set_scheduler_flags((scheduler),                      \
                                   pcmk__sched_processing_error);    \
-        crm_err(fmt);                                               \
+        pcmk__err(fmt);                                             \
     } while (0)
 
 /*!

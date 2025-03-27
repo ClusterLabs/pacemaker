@@ -120,9 +120,9 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
         rc = pcmk__attrd_api_purge(attrd_api, host, true);
     }
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not purge Pacemaker Remote node %s "
-                "in attribute manager%s: %s " QB_XS " rc=%d",
-                host, when(), pcmk_rc_str(rc), rc);
+        pcmk__err("Could not purge Pacemaker Remote node %s in attribute "
+                  "manager%s: %s " QB_XS " rc=%d",
+                  host, when(), pcmk_rc_str(rc), rc);
     }
 }
 
@@ -150,9 +150,10 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
         if (op != NULL) {
             interval_desc = pcmk__s(interval_spec, "nonrecurring");
         }
-        crm_err("Could not clear failure of %s %s for %s on %s node %s%s: %s "
-                QB_XS " rc=%d", interval_desc, pcmk__s(op, "operations"),
-                pcmk__s(rsc, "all resources"), node_type(is_remote_node), host,
-                when(), pcmk_rc_str(rc), rc);
+        pcmk__err("Could not clear failure of %s %s for %s on %s node %s%s: %s "
+                  QB_XS " rc=%d",
+                  interval_desc, pcmk__s(op, "operations"),
+                  pcmk__s(rsc, "all resources"), node_type(is_remote_node),
+                  host, when(), pcmk_rc_str(rc), rc);
     }
 }

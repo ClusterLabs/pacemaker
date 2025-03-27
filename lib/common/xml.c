@@ -1703,7 +1703,7 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
             ret = pcmk__assert_asprintf("%s/base", base);
             break;
         default:
-            crm_err("XML artefact family specified as %u not recognized", ns);
+            pcmk__err("XML artefact family specified as %u not recognized", ns);
     }
     return ret;
 }
@@ -1731,7 +1731,7 @@ find_artefact(enum pcmk__xml_artefact_ns ns, const char *path, const char *files
             }
             break;
         default:
-            crm_err("XML artefact family specified as %u not recognized", ns);
+            pcmk__err("XML artefact family specified as %u not recognized", ns);
     }
 
     return ret;

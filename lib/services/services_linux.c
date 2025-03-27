@@ -990,9 +990,9 @@ action_launch_child(svc_action_t *op)
                      "despite being unable to load CIB secrets (%s)",
                      op->rsc, pcmk_rc_str(rc));
         } else {
-            crm_err("Considering %s unconfigured "
-                    "because unable to load CIB secrets: %s",
-                    op->rsc, pcmk_rc_str(rc));
+            pcmk__err("Considering %s unconfigured because unable to load CIB "
+                      "secrets: %s",
+                      op->rsc, pcmk_rc_str(rc));
             exit_child(op, services__configuration_error(op, false),
                        "Unable to load CIB secrets");
         }
@@ -1006,9 +1006,9 @@ action_launch_child(svc_action_t *op)
 
         // If requested, set effective group
         if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
-            crm_err("Considering %s unauthorized because could not set "
-                    "child group to %d: %s",
-                    op->id, op->opaque->gid, strerror(errno));
+            pcmk__err("Considering %s unauthorized because could not set child "
+                      "group to %d: %s",
+                      op->id, op->opaque->gid, strerror(errno));
             exit_child(op, services__authorization_error(op),
                        "Could not set group for child process");
         }
@@ -1016,16 +1016,18 @@ action_launch_child(svc_action_t *op)
         // Erase supplementary group list
         // (We could do initgroups() if we kept a copy of the username)
         if (setgroups(0, NULL) < 0) {
-            crm_err("Considering %s unauthorized because could not "
-                    "clear supplementary groups: %s", op->id, strerror(errno));
+            pcmk__err("Considering %s unauthorized because could not clear "
+                      "supplementary groups: %s",
+                      op->id, strerror(errno));
             exit_child(op, services__authorization_error(op),
                        "Could not clear supplementary groups for child process");
         }
 
         // Set effective user
         if (setuid(op->opaque->uid) < 0) {
-            crm_err("Considering %s unauthorized because could not set user "
-                    "to %d: %s", op->id, op->opaque->uid, strerror(errno));
+            pcmk__err("Considering %s unauthorized because could not set user "
+                      "to %d: %s",
+                      op->id, op->opaque->uid, strerror(errno));
             exit_child(op, services__authorization_error(op),
                        "Could not set user for child process");
         }
@@ -1037,7 +1039,7 @@ action_launch_child(svc_action_t *op)
     // An earlier stat() should have avoided most possible errors
     rc = errno;
     services__handle_exec_error(op, rc);
-    crm_err("Unable to execute %s: %s", op->id, strerror(rc));
+    pcmk__err("Unable to execute %s: %s", op->id, strerror(rc));
     exit_child(op, op->rc, "Child process was unable to execute file");
 }
 

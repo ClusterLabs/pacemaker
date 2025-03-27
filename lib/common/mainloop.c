@@ -308,8 +308,8 @@ crm_signal_handler(int sig, sighandler_t dispatch)
     struct sigaction old;
 
     if (sigemptyset(&mask) < 0) {
-        crm_err("Could not set handler for signal %d: %s",
-                sig, pcmk_rc_str(errno));
+        pcmk__err("Could not set handler for signal %d: %s", sig,
+                  pcmk_rc_str(errno));
         return SIG_ERR;
     }
 
@@ -319,8 +319,8 @@ crm_signal_handler(int sig, sighandler_t dispatch)
     sa.sa_mask = mask;
 
     if (sigaction(sig, &sa, &old) < 0) {
-        crm_err("Could not set handler for signal %d: %s",
-                sig, pcmk_rc_str(errno));
+        pcmk__err("Could not set handler for signal %d: %s", sig,
+                  pcmk_rc_str(errno));
         return SIG_ERR;
     }
     return old.sa_handler;
@@ -364,7 +364,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
     }
 
     if (sig >= NSIG || sig < 0) {
-        crm_err("Signal %d is out of range", sig);
+        pcmk__err("Signal %d is out of range", sig);
         return FALSE;
 
     } else if (crm_signals[sig] != NULL && crm_signals[sig]->handler == dispatch) {
@@ -372,7 +372,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         return TRUE;
 
     } else if (crm_signals[sig] != NULL) {
-        crm_err("Different signal handler for %d is already installed", sig);
+        pcmk__err("Different signal handler for %d is already installed", sig);
         return FALSE;
     }
 
@@ -397,7 +397,7 @@ gboolean
 mainloop_destroy_signal(int sig)
 {
     if (sig >= NSIG || sig < 0) {
-        crm_err("Signal %d is out of range", sig);
+        pcmk__err("Signal %d is out of range", sig);
         return FALSE;
 
     } else if (crm_signal_handler(sig, NULL) == SIG_ERR) {
@@ -514,25 +514,25 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
 
     res = qb_array_index(gio_map, fd, (void **)&adaptor);
     if (res < 0) {
-        crm_err("Array lookup failed for fd=%d: %d", fd, res);
+        pcmk__err("Array lookup failed for fd=%d: %d", fd, res);
         return res;
     }
 
     crm_trace("Adding fd=%d to mainloop as adaptor %p", fd, adaptor);
 
     if (add && adaptor->source) {
-        crm_err("Adaptor for descriptor %d is still in-use", fd);
+        pcmk__err("Adaptor for descriptor %d is still in-use", fd);
         return -EEXIST;
     }
     if (!add && !adaptor->is_used) {
-        crm_err("Adaptor for descriptor %d is not in-use", fd);
+        pcmk__err("Adaptor for descriptor %d is not in-use", fd);
         return -ENOENT;
     }
 
     /* channel is created with ref_count = 1 */
     channel = g_io_channel_unix_new(fd);
     if (!channel) {
-        crm_err("No memory left to add fd=%d", fd);
+        pcmk__err("No memory left to add fd=%d", fd);
         return -ENOMEM;
     }
 
@@ -655,8 +655,8 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
     server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
 
     if (server == NULL) {
-        crm_err("Could not create %s IPC server: %s (%d)",
-                name, pcmk_rc_str(errno), errno);
+        pcmk__err("Could not create %s IPC server: %s (%d)", name,
+                  pcmk_rc_str(errno), errno);
         return NULL;
     }
 
@@ -670,7 +670,8 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
 
     rc = qb_ipcs_run(server);
     if (rc < 0) {
-        crm_err("Could not start %s IPC server: %s (%d)", name, pcmk_strerror(rc), rc);
+        pcmk__err("Could not start %s IPC server: %s (%d)", name,
+                  pcmk_strerror(rc), rc);
         return NULL; // qb_ipcs_run() destroys server on failure
     }
 
@@ -756,8 +757,8 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
     }
 
     if (client->ipc && !crm_ipc_connected(client->ipc)) {
-        crm_err("Connection to %s closed " QB_XS " client=%p condition=%d",
-                client->name, client, condition);
+        pcmk__err("Connection to %s closed " QB_XS " client=%p condition=%d",
+                  client->name, client, condition);
         rc = G_SOURCE_REMOVE;
 
     } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
@@ -793,7 +794,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
            G_IO_HUP     Hung up (the connection has been broken, usually for pipes and sockets).
            G_IO_NVAL    Invalid request. The file descriptor is not open.
          */
-        crm_err("Strange condition: %d", condition);
+        pcmk__err("Strange condition: %d", condition);
     }
 
     /* G_SOURCE_REMOVE results in mainloop_gio_destroy() being called
@@ -1146,8 +1147,7 @@ child_waitpid(mainloop_child_t *child, int flags)
 #ifdef WCOREDUMP // AIX, SunOS, maybe others
     } else if (WCOREDUMP(status)) {
         core = 1;
-        crm_err("Child process %d (%s) dumped core",
-                child->pid, child->desc);
+        pcmk__err("Child process %d (%s) dumped core", child->pid, child->desc);
 #endif
 
     } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this

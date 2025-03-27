@@ -1335,8 +1335,8 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
     } else if (pcmk__is_down_action(action_name)) {
         crm_trace("No %s action found for %s", action_name, instance->id);
     } else {
-        crm_err("No %s action found for %s to interleave (bug?)",
-                action_name, instance->id);
+        pcmk__err("No %s action found for %s to interleave (bug?)",
+                  action_name, instance->id);
     }
     return NULL;
 }

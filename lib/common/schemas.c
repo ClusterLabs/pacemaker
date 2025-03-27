@@ -586,7 +586,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
 
         ctx->rng = xmlRelaxNGParse(ctx->parser);
         CRM_CHECK(ctx->rng != NULL,
-                  crm_err("Could not find/parse %s", relaxng_file);
+                  pcmk__err("Could not find/parse %s", relaxng_file);
                   goto cleanup);
 
         ctx->valid = xmlRelaxNGNewValidCtxt(ctx->rng);
@@ -610,7 +610,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
         valid = false;
 
     } else if (rc < 0) {
-        crm_err("Internal libxml error during validation");
+        pcmk__err("Internal libxml error during validation");
     }
 
   cleanup:
@@ -771,7 +771,7 @@ validate_with(xmlNode *xml, pcmk__schema_t *schema,
             valid = validate_with_relaxng(xml->doc, error_handler, error_handler_context, file, cache);
             break;
         default:
-            crm_err("Unknown validator type: %d", schema->validator);
+            pcmk__err("Unknown validator type: %d", schema->validator);
             break;
     }
 
@@ -1051,7 +1051,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
         pcmk__xml_free(old_xml);
 
         if (new_xml == NULL) {
-            crm_err("XSL transform %s failed, aborting upgrade", transform);
+            pcmk__err("XSL transform %s failed, aborting upgrade", transform);
             return NULL;
         }
         input_xml = new_xml;
@@ -1064,9 +1064,9 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
     // Ensure result validates with its new schema
     if (!validate_with(new_xml, upgraded_schema, error_handler,
                        GUINT_TO_POINTER(LOG_ERR))) {
-        crm_err("Schema upgrade from %s to %s failed: "
-                "XSL transform pipeline produced an invalid configuration",
-                schema->name, upgraded_schema->name);
+        pcmk__err("Schema upgrade from %s to %s failed: XSL transform pipeline "
+                  "produced an invalid configuration",
+                  schema->name, upgraded_schema->name);
         crm_log_xml_debug(new_xml, "bad-transform-result");
         pcmk__xml_free(new_xml);
         return NULL;

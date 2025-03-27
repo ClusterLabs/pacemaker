@@ -114,8 +114,8 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     xml = pcmk__xml_parse(data);
 
     if (xml == NULL) {
-        crm_err("Bad message received from %s[%u]: '%.120s'",
-                from, nodeid, data);
+        pcmk__err("Bad message received from %s[%u]: '%.120s'", from, nodeid,
+                  data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
                                           pcmk__node_search_cluster_member),
@@ -427,7 +427,7 @@ attrd_cluster_connect(void)
     rc = pcmk_cluster_connect(attrd_cluster);
     rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
-        crm_err("Cluster connection failed");
+        pcmk__err("Cluster connection failed");
         return rc;
     }
     return pcmk_ok;

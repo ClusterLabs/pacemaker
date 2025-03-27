@@ -73,7 +73,7 @@ do_ha_control(long long action,
                 pcmk__str_copy(pcmk__cluster_get_xml_id(node));
 
             if (controld_globals.our_uuid == NULL) {
-                crm_err("Could not obtain local uuid");
+                pcmk__err("Could not obtain local uuid");
                 registered = FALSE;
             }
         }
@@ -90,8 +90,8 @@ do_ha_control(long long action,
     }
 
     if (action & ~(A_HA_CONNECT | A_HA_DISCONNECT)) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action),
-                __func__);
+        pcmk__err("Unexpected action %s in %s", fsa_action2string(action),
+                  __func__);
     }
 }
 
@@ -139,7 +139,7 @@ crmd_fast_exit(crm_exit_t exit_code)
     } else if ((exit_code == CRM_EX_OK)
                && pcmk__is_set(controld_globals.fsa_input_register,
                                R_IN_RECOVERY)) {
-        crm_err("Could not recover from internal error");
+        pcmk__err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
 
@@ -331,7 +331,7 @@ do_exit(long long action,
 
     if (pcmk__is_set(action, A_EXIT_1)) {
         exit_code = CRM_EX_ERROR;
-        crm_err("Exiting now due to errors");
+        pcmk__err("Exiting now due to errors");
     }
     verify_stopped(cur_state, LOG_ERR);
     crmd_exit(exit_code);
@@ -457,7 +457,7 @@ do_started(long long action,
     };
 
     if (cur_state != S_STARTING) {
-        crm_err("Start cancelled... %s", fsa_state2string(cur_state));
+        pcmk__err("Start cancelled... %s", fsa_state2string(cur_state));
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
@@ -498,7 +498,8 @@ do_started(long long action,
     crm_debug("Init server comms");
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
     if (ipcs == NULL) {
-        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        pcmk__err("Failed to create IPC server: shutting down and inhibiting "
+                  "respawn");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     } else {
         crm_notice("Pacemaker controller successfully started and accepting connections");
@@ -537,11 +538,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
+        pcmk__err("Local CIB query resulted in an error: %s",
+                  pcmk_strerror(rc));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
-            crm_err("The cluster is mis-configured - shutting down and staying down");
+            pcmk__err("The cluster is mis-configured - shutting down and "
+                      "staying down");
             controld_set_fsa_input_flags(R_STAYDOWN);
         }
         goto bail;
@@ -555,7 +558,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (!crmconfig) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
+        pcmk__err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         goto bail;
     }
@@ -678,7 +681,7 @@ crm_shutdown(int nsig)
     }
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-        crm_err("Escalating shutdown");
+        pcmk__err("Escalating shutdown");
         register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
         return;
     }

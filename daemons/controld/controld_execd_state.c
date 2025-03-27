@@ -109,7 +109,7 @@ lrm_state_create(const char *node_name)
     lrm_state_t *state = NULL;
 
     if (!node_name) {
-        crm_err("No node name given for lrm state object");
+        pcmk__err("No node name given for lrm state object");
         return NULL;
     }
 
@@ -465,10 +465,11 @@ static void
 remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     if (rc != pcmk_ok) {
-        crm_err("Query resulted in an error: %s", pcmk_strerror(rc));
+        pcmk__err("Query resulted in an error: %s", pcmk_strerror(rc));
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
-            crm_err("The cluster is mis-configured - shutting down and staying down");
+            pcmk__err("The cluster is mis-configured - shutting down and "
+                      "staying down");
         }
 
     } else {

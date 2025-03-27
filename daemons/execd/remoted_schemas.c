@@ -34,7 +34,7 @@ rm_files(const char *pathname, const struct stat *sbuf, int type, struct FTW *ft
 
     if (remove(pathname) != 0) {
         int rc = errno;
-        crm_err("Could not remove %s: %s", pathname, pcmk_rc_str(rc));
+        pcmk__err("Could not remove %s: %s", pathname, pcmk_rc_str(rc));
         return -1;
     }
 
@@ -55,21 +55,22 @@ clean_up_extra_schema_files(void)
             /* If the directory doesn't exist, try to make it first. */
             if (mkdir(remote_schema_dir, 0755) != 0) {
                 rc = errno;
-                crm_err("Could not create directory for schemas: %s",
-                        pcmk_rc_str(rc));
+                pcmk__err("Could not create directory for schemas: %s",
+                          pcmk_rc_str(rc));
             }
 
         } else {
             rc = errno;
-            crm_err("Could not create directory for schemas: %s",
-                    pcmk_rc_str(rc));
+            pcmk__err("Could not create directory for schemas: %s",
+                      pcmk_rc_str(rc));
         }
 
     } else if (!S_ISDIR(sb.st_mode)) {
         /* If something exists with the same name that's not a directory, that's
          * an error.
          */
-        crm_err("%s already exists but is not a directory", remote_schema_dir);
+        pcmk__err("%s already exists but is not a directory",
+                  remote_schema_dir);
 
     } else {
         /* It's a directory - clear it out so we can download potentially new
@@ -78,7 +79,8 @@ clean_up_extra_schema_files(void)
         rc = nftw(remote_schema_dir, rm_files, 10, FTW_DEPTH|FTW_MOUNT|FTW_PHYS);
 
         if (rc != 0) {
-            crm_err("Could not remove %s: %s", remote_schema_dir, pcmk_rc_str(rc));
+            pcmk__err("Could not remove %s: %s", remote_schema_dir,
+                      pcmk_rc_str(rc));
         }
     }
 }
@@ -145,7 +147,7 @@ get_schema_files(void)
     rc = cib->cmds->signon(cib, crm_system_name, cib_query);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to the CIB manager: %s", pcmk_rc_str(rc));
+        pcmk__err("Could not connect to the CIB manager: %s", pcmk_rc_str(rc));
         pcmk_common_cleanup();
         _exit(pcmk_rc2exitc(rc));
     }
@@ -153,7 +155,7 @@ get_schema_files(void)
     rc = cib->cmds->fetch_schemas(cib, &reply, pcmk__highest_schema_name(),
                                   cib_sync_call);
     if (rc != pcmk_ok) {
-        crm_err("Could not get schema files: %s", pcmk_strerror(rc));
+        pcmk__err("Could not get schema files: %s", pcmk_strerror(rc));
         rc = pcmk_legacy2rc(rc);
 
     } else if (reply->children != NULL) {
@@ -215,12 +217,13 @@ get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, i
 
     } else {
         if (signo == 0) {
-            crm_err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
+            pcmk__err("%s: process %lld exited %d", errmsg, (long long) pid,
+                      exitcode);
 
         } else {
-            crm_err("%s: process %d terminated with signal %d (%s)%s",
-                    errmsg, (int) pid, signo, strsignal(signo),
-                    (core? " and dumped core" : ""));
+            pcmk__err("%s: process %lld terminated with signal %d (%s)%s",
+                      errmsg, (long long) pid, signo, strsignal(signo),
+                      ((core != 0)? " and dumped core" : ""));
         }
 
         /* Clean up any incomplete schema data we might have been downloading

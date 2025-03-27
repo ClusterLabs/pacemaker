@@ -204,7 +204,7 @@ pcmk__write_series_sequence(const char *directory, const char *series,
         }
 
     } else {
-        crm_err("Cannot open series file %s for writing", series_file);
+        pcmk__err("Cannot open series file %s for writing", series_file);
     }
 
     if (file_strm != NULL) {
@@ -342,8 +342,8 @@ pcmk__daemon_can_write(const char *dir, const char *file)
             target = NULL;
 
         } else if (S_ISREG(buf.st_mode) == FALSE) {
-            crm_err("%s must be a regular file " QB_XS " st_mode=0%lo",
-                    target, (unsigned long) buf.st_mode);
+            pcmk__err("%s must be a regular file " QB_XS " st_mode=0%lo",
+                      target, (unsigned long) buf.st_mode);
             free(full_file);
             return false;
         }
@@ -354,12 +354,12 @@ pcmk__daemon_can_write(const char *dir, const char *file)
         target = dir;
         s_res = stat(dir, &buf);
         if (s_res < 0) {
-            crm_err("%s not found: %s", dir, pcmk_rc_str(errno));
+            pcmk__err("%s not found: %s", dir, pcmk_rc_str(errno));
             return false;
 
         } else if (S_ISDIR(buf.st_mode) == FALSE) {
-            crm_err("%s must be a directory " QB_XS " st_mode=0%lo",
-                    dir, (unsigned long) buf.st_mode);
+            pcmk__err("%s must be a directory " QB_XS " st_mode=0%lo",
+                      dir, (unsigned long) buf.st_mode);
             return false;
         }
     }
@@ -367,10 +367,10 @@ pcmk__daemon_can_write(const char *dir, const char *file)
     if (!pcmk__daemon_user_can_write(target, &buf)
         && !pcmk__daemon_group_can_write(target, &buf)) {
 
-        crm_err("%s must be owned and writable by either user %s or group %s "
-                QB_XS " st_mode=0%lo",
-                target, CRM_DAEMON_USER, CRM_DAEMON_GROUP,
-                (unsigned long) buf.st_mode);
+        pcmk__err("%s must be owned and writable by either user "
+                  CRM_DAEMON_USER " or group " CRM_DAEMON_GROUP " "
+                  QB_XS " st_mode=0%lo",
+                  target, (unsigned long) buf.st_mode);
         free(full_file);
         return false;
     }

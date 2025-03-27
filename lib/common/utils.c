@@ -290,8 +290,8 @@ pcmk__daemonize(const char *name, const char *pidfile)
     /* Check before we even try... */
     rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
     if ((rc != pcmk_rc_ok) && (rc != ENOENT)) {
-        crm_err("%s: already running [pid %lld in %s]",
-                name, (long long) pid, pidfile);
+        pcmk__err("%s: already running [pid %lld in %s]", name, (long long) pid,
+                  pidfile);
         printf("%s: already running [pid %lld in %s]\n",
                name, (long long) pid, pidfile);
         crm_exit(CRM_EX_ERROR);
@@ -309,8 +309,8 @@ pcmk__daemonize(const char *name, const char *pidfile)
 
     rc = pcmk__lock_pidfile(pidfile, name);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not lock '%s' for %s: %s " QB_XS " rc=%d",
-                pidfile, name, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not lock '%s' for %s: %s " QB_XS " rc=%d", pidfile,
+                  name, pcmk_rc_str(rc), rc);
         printf("Could not lock '%s' for %s: %s (%d)\n",
                pidfile, name, pcmk_rc_str(rc), rc);
         crm_exit(CRM_EX_ERROR);
@@ -601,7 +601,7 @@ version_helper(const char *text, const char **end_text)
         atoi_result = (int) strtol(text, (char **) end_text, 10);
 
         if (errno == EINVAL) {
-            crm_err("Conversion of '%s' %c failed", text, text[0]);
+            pcmk__err("Conversion of '%s' %c failed", text, text[0]);
             atoi_result = -1;
         }
     }

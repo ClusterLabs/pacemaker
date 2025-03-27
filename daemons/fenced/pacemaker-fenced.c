@@ -207,7 +207,7 @@ handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Invalid XML: '%.120s'", data);
+        pcmk__err("Invalid XML: '%.120s'", data);
         free(data);
         return;
     }
@@ -581,7 +581,7 @@ main(int argc, char **argv)
     old_instance = crm_ipc_new("stonith-ng", 0);
     if (old_instance == NULL) {
         /* crm_ipc_new() will have already logged an error message with
-         * crm_err()
+         * pcmk__err()
          */
         exit_code = CRM_EX_FATAL;
         goto done;

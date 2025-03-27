@@ -196,7 +196,7 @@ check_next_subdaemon(gpointer user_data)
             }
             if (pcmk__is_set(child->flags, child_respawn)) {
                 // cts-lab looks for this message
-                crm_err("Subdaemon %s[%lld] terminated", name, pid);
+                pcmk__err("Subdaemon %s[%lld] terminated", name, pid);
             } else {
                 /* orderly shutdown */
                 crm_notice("Subdaemon %s[%lld] terminated", name, pid);
@@ -225,8 +225,8 @@ escalate_shutdown(gpointer data)
 
     } else if (child->pid != 0) {
         /* Use SIGSEGV instead of SIGKILL to create a core so we can see what it was up to */
-        crm_err("Subdaemon %s not terminating in a timely manner, forcing",
-                pcmk__server_name(child->server));
+        pcmk__err("Subdaemon %s not terminating in a timely manner, forcing",
+                  pcmk__server_name(child->server));
         stop_child(child, SIGSEGV);
     }
     return FALSE;
@@ -279,8 +279,8 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 
             default:
                 // cts-lab looks for this message
-                crm_err("%s[%d] exited with status %d (%s)",
-                        name, pid, exitcode, crm_exit_str(exitcode));
+                pcmk__err("%s[%d] exited with status %d (%s)", name, pid,
+                          exitcode, crm_exit_str(exitcode));
                 break;
         }
     }
@@ -298,7 +298,7 @@ pcmk_process_exit(pcmkd_child_t * child)
 
     child->respawn_count += 1;
     if (child->respawn_count > MAX_RESPAWN) {
-        crm_err("Subdaemon %s exceeded maximum respawn count", name);
+        pcmk__err("Subdaemon %s exceeded maximum respawn count", name);
         child->flags &= ~child_respawn;
     }
 
@@ -447,8 +447,8 @@ start_child(pcmkd_child_t * child)
         int rc = pcmk__daemon_user(&uid, &gid);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("User " CRM_DAEMON_USER " not found for subdaemon %s: %s",
-                    name, pcmk_rc_str(rc));
+            pcmk__err("User " CRM_DAEMON_USER " not found for subdaemon %s: %s",
+                      name, pcmk_rc_str(rc));
             return rc;
         }
     }
@@ -508,9 +508,9 @@ start_child(pcmkd_child_t * child)
          * @TODO initgroups() is not portable (not part of any standard).
          */
         if (initgroups(user, gid) < 0) {
-            crm_err("Cannot initialize system groups for subdaemon %s: %s "
-                    QB_XS " errno=%d",
-                    name, strerror(errno), errno);
+            pcmk__err("Cannot initialize system groups for subdaemon %s: %s "
+                      QB_XS " errno=%d",
+                      name, strerror(errno), errno);
         }
     }
 
@@ -583,9 +583,9 @@ child_liveness(pcmkd_child_t *child)
 
         rc = pcmk__daemon_user(&cl_uid, &cl_gid);
         if (rc != pcmk_rc_ok) {
-            crm_err("Could not find user and group IDs for user "
-                    CRM_DAEMON_USER ": %s " QB_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
+            pcmk__err("Could not find user and group IDs for user "
+                      CRM_DAEMON_USER ": %s " QB_XS " rc=%d",
+                      pcmk_rc_str(rc), rc);
             return rc;
         }
     }
@@ -896,8 +896,8 @@ stop_child(pcmkd_child_t *child, int signal)
                    QB_XS " via signal %d to process %lld",
                    name, signal, (long long) child->pid);
     } else {
-        crm_err("Could not stop subdaemon %s[%lld] with signal %d: %s",
-                name, (long long) child->pid, signal, strerror(errno));
+        pcmk__err("Could not stop subdaemon %s[%lld] with signal %d: %s",
+                  name, (long long) child->pid, signal, strerror(errno));
     }
 
     return TRUE;

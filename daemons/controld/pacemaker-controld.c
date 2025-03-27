@@ -125,7 +125,9 @@ main(int argc, char **argv)
 
     old_instance = crm_ipc_new(CRM_SYSTEM_CRMD, 0);
     if (old_instance == NULL) {
-        /* crm_ipc_new will have already printed an error message with crm_err. */
+        /* crm_ipc_new() will have already logged an error message with
+         * pcmk__err()
+         */
         exit_code = CRM_EX_FATAL;
         goto done;
     }
@@ -147,7 +149,8 @@ main(int argc, char **argv)
 
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Terminating due to bad permissions on " PCMK_SCHEDULER_INPUT_DIR);
+        pcmk__err("Terminating due to bad permissions on "
+                  PCMK_SCHEDULER_INPUT_DIR);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Bad permissions on " PCMK_SCHEDULER_INPUT_DIR
                     " (see logs for details)");
@@ -155,7 +158,7 @@ main(int argc, char **argv)
 
     } else if (pcmk__daemon_can_write(CRM_CONFIG_DIR, NULL) == FALSE) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Terminating due to bad permissions on " CRM_CONFIG_DIR);
+        pcmk__err("Terminating due to bad permissions on " CRM_CONFIG_DIR);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Bad permissions on " CRM_CONFIG_DIR
                     " (see logs for details)");
@@ -191,8 +194,8 @@ done:
     pcmk__cluster_init_node_caches();
     state = s_crmd_fsa(C_STARTUP);
     if ((state != S_PENDING) && (state != S_STARTING)) {
-        crm_err("Controller startup failed " QB_XS " FSA state %s",
-                crm_system_name, fsa_state2string(state));
+        pcmk__err("Controller startup failed " QB_XS " FSA state %s",
+                  crm_system_name, fsa_state2string(state));
         crmd_fast_exit(CRM_EX_ERROR); // Does not return
     }
 

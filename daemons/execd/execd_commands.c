@@ -835,8 +835,9 @@ action_complete(svc_action_t * action)
 #endif
 
     if (!cmd) {
-        crm_err("Completed executor action (%s) does not match any known operations",
-                action->id);
+        pcmk__err("Completed executor action (%s) does not match any known "
+                  "operations",
+                  action->id);
         return;
     }
 
@@ -1116,8 +1117,8 @@ static void
 lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 {
     if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fence action result: "
-                "Invalid callback arguments (bug?)");
+        pcmk__err("Ignoring fence action result: Invalid callback arguments "
+                  "(bug?)");
     } else {
         stonith_action_complete((lrmd_cmd_t *) data->userdata,
                                 stonith__exit_status(data),
@@ -1515,8 +1516,10 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     if (pcmk__compare_versions(protocol_version,
                                LRMD_COMPATIBLE_PROTOCOL) < 0) {
-        crm_err("Cluster API version must be greater than or equal to %s, not %s",
-                LRMD_COMPATIBLE_PROTOCOL, protocol_version);
+
+        pcmk__err("Cluster API version must be greater than or equal to "
+                  LRMD_COMPATIBLE_PROTOCOL " , not %s",
+                  protocol_version);
         rc = -EPROTO;
     }
 
@@ -1971,8 +1974,8 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
-        crm_err("Unknown IPC request '%s' from client %s",
-                op, pcmk__client_name(client));
+        pcmk__err("Unknown IPC request '%s' from client %s", op,
+                  pcmk__client_name(client));
     }
 
     if (rc == -EACCES) {

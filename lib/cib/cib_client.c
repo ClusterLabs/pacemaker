@@ -350,8 +350,8 @@ cib_client_init_transaction(cib_t *cib)
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);
-        crm_err("Failed to initialize CIB transaction for client %s: %s",
-                client_id, pcmk_rc_str(rc));
+        pcmk__err("Failed to initialize CIB transaction for client %s: %s",
+                  client_id, pcmk_rc_str(rc));
     }
     return pcmk_rc2legacy(rc);
 }
@@ -373,8 +373,8 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
         if (cib->transaction == NULL) {
             rc = pcmk_rc_no_transaction;
 
-            crm_err("Failed to commit transaction for CIB client %s: %s",
-                    client_id, pcmk_rc_str(rc));
+            pcmk__err("Failed to commit transaction for CIB client %s: %s",
+                      client_id, pcmk_rc_str(rc));
             return pcmk_rc2legacy(rc);
         }
         rc = cib_internal_op(cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT, NULL, NULL,

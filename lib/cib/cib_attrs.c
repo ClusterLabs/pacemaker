@@ -43,7 +43,7 @@ new_output_object(const char *ty)
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(&out, ty, NULL, (char**)argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        crm_err("Can't out due to internal error: %s", pcmk_rc_str(rc));
+        pcmk__err("Can't out due to internal error: %s", pcmk_rc_str(rc));
         return NULL;
     }
 

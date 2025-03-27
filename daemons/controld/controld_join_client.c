@@ -159,8 +159,8 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
 
     query_call_id = 0;
     if(rc != pcmk_ok || output == NULL) {
-        crm_err("Could not retrieve version details for join-%s: %s (%d)",
-                join_id, pcmk_strerror(rc), rc);
+        pcmk__err("Could not retrieve version details for join-%s: %s (%d)",
+                  join_id, pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
 
     } else if (controld_globals.dc_name == NULL) {
@@ -281,8 +281,9 @@ do_cl_join_finalize_respond(long long action,
     pcmk__xe_get_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
 
     if (was_nack) {
-        crm_err("Shutting down because cluster join with leader %s failed "
-                QB_XS " join-%d NACK'd", welcome_from, join_id);
+        pcmk__err("Shutting down because cluster join with leader %s failed "
+                  QB_XS " join-%d NACK'd",
+                  welcome_from, join_id);
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
@@ -366,8 +367,8 @@ do_cl_join_finalize_respond(long long action,
         }
 
     } else {
-        crm_err("Could not confirm join-%d with %s: Local operation history "
-                "failed", join_id, controld_globals.dc_name);
+        pcmk__err("Could not confirm join-%d with %s: Local operation history "
+                  "failed", join_id, controld_globals.dc_name);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
     }
 }

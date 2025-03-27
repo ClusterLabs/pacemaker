@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -107,12 +107,13 @@ bool
 pcmk__valid_ipc_header(const pcmk__ipc_header_t *header)
 {
     if (header == NULL) {
-        crm_err("IPC message without header");
+        pcmk__err("IPC message without header");
         return false;
 
     } else if (header->version > PCMK__IPC_VERSION) {
-        crm_err("Filtering incompatible v%d IPC message (only versions <= %d supported)",
-                header->version, PCMK__IPC_VERSION);
+        pcmk__err("Filtering incompatible v%d IPC message (only versions <= %d "
+                  "supported)",
+                  header->version, PCMK__IPC_VERSION);
         return false;
     }
     return true;

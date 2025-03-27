@@ -320,9 +320,9 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             return graph_fns->cluster(graph, action);
 
         default:
-            crm_err("Unsupported graph action type <%s " PCMK_XA_ID "='%s'> "
-                    "(bug?)",
-                    action->xml->name, id);
+            pcmk__err("Unsupported graph action type <%s " PCMK_XA_ID "='%s'> "
+                      "(bug?)",
+                      action->xml->name, id);
             return EINVAL;
     }
 }
@@ -345,10 +345,10 @@ fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
         int rc = initiate_action(graph, action);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Failed initiating <%s " PCMK_XA_ID "=%d> in synapse %d: "
-                    "%s",
-                    action->xml->name, action->id, synapse->id,
-                    pcmk_rc_str(rc));
+            pcmk__err("Failed initiating <%s " PCMK_XA_ID "=%d> in synapse %d: "
+                      "%s",
+                      action->xml->name, action->id, synapse->id,
+                      pcmk_rc_str(rc));
             pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
             pcmk__set_graph_action_flags(action,
                                          pcmk__graph_action_confirmed
@@ -387,7 +387,8 @@ pseudo_action_dummy(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     if (action->id == fail) {
-        crm_err("Dummy event handler: pretending action %d failed", action->id);
+        pcmk__err("Dummy event handler: pretending action %d failed",
+                  action->id);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = PCMK_SCORE_INFINITY;
     } else {
@@ -472,7 +473,7 @@ pcmk__execute_graph(pcmk__graph_t *graph)
         } else if (should_fire_synapse(graph, synapse)) {
             graph->fired++;
             if (fire_synapse(graph, synapse) != pcmk_rc_ok) {
-                crm_err("Synapse %d failed to fire", synapse->id);
+                pcmk__err("Synapse %d failed to fire", synapse->id);
                 log_level = LOG_ERR;
                 graph->abort_priority = PCMK_SCORE_INFINITY;
                 graph->incomplete++;
@@ -543,8 +544,8 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     const char *value = pcmk__xe_id(xml_action);
 
     if (value == NULL) {
-        crm_err("Ignoring transition graph action without " PCMK_XA_ID
-                " (bug?)");
+        pcmk__err("Ignoring transition graph action without " PCMK_XA_ID
+                  " (bug?)");
         crm_log_xml_trace(xml_action, "invalid");
         return NULL;
     }
@@ -559,8 +560,9 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         action_type = pcmk__cluster_graph_action;
 
     } else {
-        crm_err("Ignoring transition graph action of unknown type '%s' (bug?)",
-                xml_action->name);
+        pcmk__err("Ignoring transition graph action of unknown type '%s' "
+                  "(bug?)",
+                  xml_action->name);
         crm_log_xml_trace(xml_action, "invalid");
         return NULL;
     }

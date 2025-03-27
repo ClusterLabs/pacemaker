@@ -37,7 +37,7 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 
     if ((node != NULL) && (node->name != NULL)) {
         if (controld_is_local_node(node->name)) {
-            crm_err("We're not part of the cluster anymore");
+            pcmk__err("We're not part of the cluster anymore");
             register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
         } else if (!AM_I_DC
@@ -100,12 +100,14 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
         crm_trace("Node update %d complete", call_id);
 
     } else if(call_id < pcmk_ok) {
-        crm_err("Node update failed: %s (%d)", pcmk_strerror(call_id), call_id);
+        pcmk__err("Node update failed: %s (%d)", pcmk_strerror(call_id),
+                  call_id);
         crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
     } else {
-        crm_err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
+        pcmk__err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc),
+                  rc);
         crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
@@ -296,12 +298,14 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     fsa_data_t *msg_data = NULL;
 
     if(call_id < pcmk_ok) {
-        crm_err("Node list update failed: %s (%d)", pcmk_strerror(call_id), call_id);
+        pcmk__err("Node list update failed: %s (%d)", pcmk_strerror(call_id),
+                  call_id);
         crm_log_xml_debug(msg, "update:failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
     } else if(rc < pcmk_ok) {
-        crm_err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
+        pcmk__err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc),
+                  rc);
         crm_log_xml_debug(msg, "update:failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
@@ -409,7 +413,8 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
         crm_trace("Quorum update %d complete", call_id);
 
     } else {
-        crm_err("Quorum update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
+        pcmk__err("Quorum update %d failed: %s (%d)", call_id,
+                  pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }

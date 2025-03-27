@@ -89,7 +89,7 @@ do_election_vote(long long action,
         case S_RELEASE_DC:
             break;
         default:
-            crm_err("Broken? Voting in state %s", fsa_state2string(cur_state));
+            pcmk__err("Broken? Voting in state %s", fsa_state2string(cur_state));
             break;
     }
 
@@ -138,7 +138,7 @@ do_election_count_vote(long long action,
 
     if (pcmk__peer_cache == NULL) {
         if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Internal error, no peer cache");
+            pcmk__err("Internal error, no peer cache");
         }
         return;
     }
@@ -272,7 +272,7 @@ do_dc_release(long long action,
         register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 
     } else {
-        crm_err("Unknown DC action %s", fsa_action2string(action));
+        pcmk__err("Unknown DC action %s", fsa_action2string(action));
     }
 
     crm_trace("Am I still the DC? %s", pcmk__btoa(AM_I_DC));

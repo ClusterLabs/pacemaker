@@ -110,7 +110,7 @@ init_remote_listener(int port, gboolean encrypted)
     ssock = pcmk__assert_alloc(1, sizeof(int));
     *ssock = socket(AF_INET, SOCK_STREAM, 0);
     if (*ssock == -1) {
-        crm_err("Listener socket creation failed: %s", pcmk_rc_str(errno));
+        pcmk__err("Listener socket creation failed: %s", pcmk_rc_str(errno));
         free(ssock);
         return -1;
     }
@@ -119,8 +119,8 @@ init_remote_listener(int port, gboolean encrypted)
     optval = 1;
     rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
-        crm_err("Local address reuse not allowed on listener socket: %s",
-                pcmk_rc_str(errno));
+        pcmk__err("Local address reuse not allowed on listener socket: %s",
+                  pcmk_rc_str(errno));
     }
 
     /* bind server socket */
@@ -129,13 +129,13 @@ init_remote_listener(int port, gboolean encrypted)
     saddr.sin_addr.s_addr = INADDR_ANY;
     saddr.sin_port = htons(port);
     if (bind(*ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-        crm_err("Cannot bind to listener socket: %s", pcmk_rc_str(errno));
+        pcmk__err("Cannot bind to listener socket: %s", pcmk_rc_str(errno));
         close(*ssock);
         free(ssock);
         return -2;
     }
     if (listen(*ssock, 10) == -1) {
-        crm_err("Cannot listen on socket: %s", pcmk_rc_str(errno));
+        pcmk__err("Cannot listen on socket: %s", pcmk_rc_str(errno));
         close(*ssock);
         free(ssock);
         return -3;
@@ -169,7 +169,7 @@ check_group_membership(const char *usr, const char *grp)
 
     group = getgrnam(grp);
     if (group == NULL) {
-        crm_err("Rejecting remote client: '%s' is not a valid group", grp);
+        pcmk__err("Rejecting remote client: '%s' is not a valid group", grp);
         return FALSE;
     }
 
@@ -242,7 +242,7 @@ remote_auth_timeout_cb(gpointer data)
     }
 
     mainloop_del_fd(client->remote->source);
-    crm_err("Remote client authentication timed out");
+    pcmk__err("Remote client authentication timed out");
 
     return FALSE;
 }
@@ -550,7 +550,7 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
             /* In theory we should show msg[0]->msg, but that might
              * contain the password, which we don't want in the logs
              */
-            crm_err("PAM reported an error");
+            pcmk__err("PAM reported an error");
             data = NULL;
             break;
         default:

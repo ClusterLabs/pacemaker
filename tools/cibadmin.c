@@ -767,8 +767,8 @@ main(int argc, char **argv)
         rc = pcmk_legacy2rc(rc);
         exit_code = pcmk_rc2exitc(rc);
 
-        crm_err("Init failed, could not perform requested operations: %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Init failed, could not perform requested operations: %s",
+                  pcmk_rc_str(rc));
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Init failed, could not perform requested operations: %s",
                     pcmk_rc_str(rc));
@@ -784,7 +784,7 @@ main(int argc, char **argv)
         report_schema_unchanged();
 
     } else if (rc != pcmk_rc_ok) {
-        crm_err("Call failed: %s", pcmk_rc_str(rc));
+        pcmk__err("Call failed: %s", pcmk_rc_str(rc));
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
 
@@ -891,7 +891,7 @@ do_init(void)
     the_cib = cib_new();
     rc = cib__signon_attempts(the_cib, cib_command, 5);
     if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
+        pcmk__err("Could not connect to the CIB: %s", pcmk_strerror(rc));
         fprintf(stderr, "Could not connect to the CIB: %s\n",
                 pcmk_strerror(rc));
     }

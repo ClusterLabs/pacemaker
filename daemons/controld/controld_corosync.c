@@ -44,7 +44,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Could not parse message content: %.100s", data);
+        pcmk__err("Could not parse message content: %.100s", data);
         free(data);
         return;
     }

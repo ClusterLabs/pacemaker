@@ -49,11 +49,12 @@ cib_rename(const char *old)
     new_fd = mkstemp(new);
 
     if ((new_fd < 0) || (rename(old, new) < 0)) {
-        crm_err("Couldn't archive unusable file %s (disabling disk writes and continuing)",
-                old);
+        pcmk__err("Couldn't archive unusable file %s (disabling disk writes "
+                  "and continuing)",
+                  old);
         cib_writes_enabled = FALSE;
     } else {
-        crm_err("Archived unusable file %s as %s", old, new);
+        pcmk__err("Archived unusable file %s as %s", old, new);
     }
 
     if (new_fd > 0) {
@@ -186,8 +187,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     if (root == NULL) {
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
         if (lpc < 0) {
-            crm_err("Could not check for CIB backups in %s: %s",
-                    cib_root, pcmk_rc_str(errno));
+            pcmk__err("Could not check for CIB backups in %s: %s", cib_root,
+                      pcmk_rc_str(errno));
         }
     }
 
@@ -226,7 +227,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
             || (strstr(use_valgrind, PCMK__SERVER_BASED) != NULL))) {
 
         cib_writes_enabled = FALSE;
-        crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
+        pcmk__err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
     status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
@@ -308,7 +309,7 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
         return pcmk_ok;
     }
 
-    crm_err("Ignoring invalid CIB");
+    pcmk__err("Ignoring invalid CIB");
     if (the_cib) {
         crm_warn("Reverting to last known CIB");
     } else {
@@ -332,12 +333,12 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
         crm_trace("Disk write [%d] succeeded", (int) pid);
 
     } else if (signo == 0) {
-        crm_err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
+        pcmk__err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
 
     } else {
-        crm_err("%s: process %d terminated with signal %d (%s)%s",
-                errmsg, (int) pid, signo, strsignal(signo),
-                (core? " and dumped core" : ""));
+        pcmk__err("%s: process %d terminated with signal %d (%s)%s",
+                  errmsg, (int) pid, signo, strsignal(signo),
+                  ((core != 0)? " and dumped core" : ""));
     }
 
     mainloop_trigger_complete(cib_writer);
@@ -368,7 +369,8 @@ write_cib_contents(gpointer p)
 
         pid = fork();
         if (pid < 0) {
-            crm_err("Disabling disk writes after fork failure: %s", pcmk_rc_str(errno));
+            pcmk__err("Disabling disk writes after fork failure: %s",
+                      pcmk_rc_str(errno));
             cib_writes_enabled = FALSE;
             return FALSE;
         }

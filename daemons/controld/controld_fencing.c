@@ -198,8 +198,8 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
                     void *user_data)
 {
     if (rc < pcmk_ok) {
-        crm_err("Fencing update %d for %s: failed - %s (%d)",
-                call_id, (char *)user_data, pcmk_strerror(rc), rc);
+        pcmk__err("Fencing update %d for %s: failed - %s (%d)",
+                  call_id, (char *)user_data, pcmk_strerror(rc), rc);
         crm_log_xml_warn(msg, "Failed update");
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_shutdown,
                          "CIB update failed", NULL);
@@ -449,7 +449,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
     te_cleanup_stonith_history_sync(st, FALSE);
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
-        crm_err("Lost fencer connection (will attempt to reconnect)");
+        pcmk__err("Lost fencer connection (will attempt to reconnect)");
         if (!mainloop_timer_running(controld_fencer_connect_timer)) {
             mainloop_timer_start(controld_fencer_connect_timer);
         }
@@ -495,7 +495,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     }
 
     if (event == NULL) {
-        crm_err("Notify data not found");
+        pcmk__err("Notify data not found");
         return;
     }
 
@@ -524,12 +524,12 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
             crm_notice("%s was unfenced by %s at the request of %s@%s",
                        event->target, executioner, client, event->origin);
         } else {
-            crm_err("Unfencing of %s by %s failed (%s%s%s) with exit status %d",
-                    event->target, executioner,
-                    pcmk_exec_status_str(exec_status),
-                    ((reason == NULL)? "" : ": "),
-                    ((reason == NULL)? "" : reason),
-                    stonith__event_exit_status(event));
+            pcmk__err("Unfencing of %s by %s failed (%s%s%s) with exit status "
+                      "%d",
+                      event->target, executioner,
+                      pcmk_exec_status_str(exec_status),
+                      ((reason == NULL)? "" : ": "),
+                      pcmk__s(reason, ""), stonith__event_exit_status(event));
         }
         return;
     }
@@ -664,7 +664,8 @@ controld_timer_fencer_connect(gpointer user_data)
     if (stonith_api == NULL) {
         stonith_api = stonith_api_new();
         if (stonith_api == NULL) {
-            crm_err("Could not connect to fencer: API memory allocation failed");
+            pcmk__err("Could not connect to fencer: API memory allocation "
+                      "failed");
             return G_SOURCE_REMOVE;
         }
     }
@@ -678,8 +679,9 @@ controld_timer_fencer_connect(gpointer user_data)
         // Blocking (retry failures now until successful)
         rc = stonith_api_connect_retry(stonith_api, crm_system_name, 30);
         if (rc != pcmk_ok) {
-            crm_err("Could not connect to fencer in 30 attempts: %s "
-                    QB_XS " rc=%d", pcmk_strerror(rc), rc);
+            pcmk__err("Could not connect to fencer in 30 attempts: %s "
+                      QB_XS " rc=%d",
+                      pcmk_strerror(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
@@ -785,9 +787,9 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     const char *target = NULL;
 
     if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fence operation %d result: "
-                "No transition key given (bug?)",
-                ((data == NULL)? -1 : data->call_id));
+        pcmk__err("Ignoring fence operation %d result: No transition key given "
+                  "(bug?)",
+                  ((data == NULL)? -1 : data->call_id));
         return;
     }
 
@@ -822,17 +824,16 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
 
     action = controld_get_action(stonith_id);
     if (action == NULL) {
-        crm_err("Ignoring fence operation %d result: "
-                "Action %d not found in transition graph (bug?) "
-                QB_XS " uuid=%s transition=%d",
-                data->call_id, stonith_id, uuid, transition_id);
+        pcmk__err("Ignoring fence operation %d result: Action %d not found in "
+                  "transition graph (bug?) " QB_XS " uuid=%s transition=%d",
+                  data->call_id, stonith_id, uuid, transition_id);
         goto bail;
     }
 
     target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
     if (target == NULL) {
-        crm_err("Ignoring fence operation %d result: No target given (bug?)",
-                data->call_id);
+        pcmk__err("Ignoring fence operation %d result: No target given (bug?)",
+                  data->call_id);
         goto bail;
     }
 

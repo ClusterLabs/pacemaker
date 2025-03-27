@@ -336,10 +336,10 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
     }
 
     // Otherwise give up
-    crm_err("Failed to connect to the executor the max allowed "
-            "%d time%s: %s", lrm_state->num_lrm_register_fails,
-            pcmk__plural_s(lrm_state->num_lrm_register_fails),
-            pcmk_rc_str(rc));
+    pcmk__err("Failed to connect to the executor the max allowed %d time%s: %s",
+              lrm_state->num_lrm_register_fails,
+              pcmk__plural_s(lrm_state->num_lrm_register_fails),
+              pcmk_rc_str(rc));
     register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 }
 
@@ -384,8 +384,8 @@ do_lrm_control(long long action,
     }
 
     if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action),
-                __func__);
+        pcmk__err("Unexpected action %s in %s", fsa_action2string(action),
+                  __func__);
     }
 }
 
@@ -488,8 +488,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     }
 
     if (counter) {
-        crm_err("%d resource%s active at %s",
-                counter, (counter == 1)? " was" : "s were", when);
+        pcmk__err("%d resource%s active at %s",
+                  counter, ((counter == 1)? " was" : "s were"), when);
     }
 
     return rc;
@@ -581,7 +581,7 @@ controld_query_executor_state(void)
     lrm_state_t *lrm_state = controld_get_executor_state(NULL, false);
 
     if (!lrm_state) {
-        crm_err("Could not get executor state for local node");
+        pcmk__err("Could not get executor state for local node");
         return NULL;
     }
 
@@ -944,9 +944,9 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
         if (rc != pcmk_ok) {
             fsa_data_t *msg_data = NULL;
 
-            crm_err("Could not register resource %s with the executor on %s: %s "
-                    QB_XS " rc=%d",
-                    id, lrm_state->node_name, pcmk_strerror(rc), rc);
+            pcmk__err("Could not register resource %s with the executor on %s: "
+                      "%s " QB_XS " rc=%d",
+                      id, lrm_state->node_name, pcmk_strerror(rc), rc);
 
             /* Register this as an internal error if this involves the local
              * executor. Otherwise, we're likely dealing with an unresponsive
@@ -1181,8 +1181,8 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
     op->interval_ms = 0;
 
     if (user_name && !pcmk__is_privileged(user_name)) {
-        crm_err("%s does not have permission to fail %s",
-                user_name, pcmk__xe_id(xml_rsc));
+        pcmk__err("%s does not have permission to fail %s", user_name,
+                  pcmk__xe_id(xml_rsc));
         fake_op_status(lrm_state, op, PCMK_EXEC_ERROR,
                        PCMK_OCF_INSUFFICIENT_PRIV,
                        "Unprivileged user cannot fail resources");
@@ -1409,8 +1409,9 @@ do_lrm_invoke(long long action,
 
     lrm_state = controld_get_executor_state(target_node, false);
     if ((lrm_state == NULL) && is_remote_node) {
-        crm_err("Failing action because local node has never had connection to remote node %s",
-                target_node);
+        pcmk__err("Failing action because local node has never had connection "
+                  "to remote node %s",
+                  target_node);
         synthesize_lrmd_failure(NULL, input->xml, PCMK_EXEC_NOT_CONNECTED,
                                 PCMK_OCF_UNKNOWN_ERROR,
                                 "Local node has no connection to remote");
@@ -1490,7 +1491,8 @@ do_lrm_invoke(long long action,
 
         } else if (rc == -EINVAL) {
             // Resource operation on malformed resource
-            crm_err("Invalid resource definition for %s", pcmk__xe_id(xml_rsc));
+            pcmk__err("Invalid resource definition for %s",
+                      pcmk__xe_id(xml_rsc));
             crm_log_xml_warn(input->msg, "invalid resource");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
                                     PCMK_OCF_NOT_CONFIGURED, // fatal error
@@ -1499,9 +1501,9 @@ do_lrm_invoke(long long action,
 
         } else if (rc < 0) {
             // Error communicating with the executor
-            crm_err("Could not register resource '%s' with executor: %s "
-                    QB_XS " rc=%d",
-                    pcmk__xe_id(xml_rsc), pcmk_strerror(rc), rc);
+            pcmk__err("Could not register resource '%s' with executor: %s "
+                      QB_XS " rc=%d",
+                      pcmk__xe_id(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
                                     PCMK_OCF_INVALID_PARAM, // hard error
@@ -1566,8 +1568,8 @@ do_lrm_invoke(long long action,
         lrmd_free_rsc_info(rsc);
 
     } else {
-        crm_err("Invalid execution request: unknown command '%s' (bug?)",
-                crm_op);
+        pcmk__err("Invalid execution request: unknown command '%s' (bug?)",
+                  crm_op);
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -1688,8 +1690,8 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     if (op->interval_ms != 0) {
         if (pcmk__strcase_any_of(operation, PCMK_ACTION_START, PCMK_ACTION_STOP,
                                  NULL)) {
-            crm_err("Start and Stop actions cannot have an interval: %u",
-                    op->interval_ms);
+            pcmk__err("Start and stop actions cannot have an interval: %u",
+                      op->interval_ms);
             op->interval_ms = 0;
         }
     }
@@ -1914,9 +1916,9 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     if (lrm_state == NULL) {
         // This shouldn't be possible, but provide a failsafe just in case
-        crm_err("Cannot execute %s of %s: No executor connection "
-                QB_XS " transition_key=%s",
-                operation, rsc->id, pcmk__s(transition, ""));
+        pcmk__err("Cannot execute %s of %s: No executor connection "
+                  QB_XS " transition_key=%s",
+                  operation, rsc->id, pcmk__s(transition, ""));
         synthesize_lrmd_failure(NULL, msg, PCMK_EXEC_INVALID,
                                 PCMK_OCF_UNKNOWN_ERROR,
                                 "No executor connection");
@@ -2026,17 +2028,19 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         op->params = NULL;
 
     } else if (lrm_state_is_local(lrm_state)) {
-        crm_err("Could not initiate %s action for resource %s locally: %s "
-                QB_XS " rc=%d", operation, rsc->id, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not initiate %s action for resource %s locally: %s "
+                  QB_XS " rc=%d",
+                  operation, rsc->id, pcmk_rc_str(rc), rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
                        PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
     } else {
-        crm_err("Could not initiate %s action for resource %s remotely on %s: "
-                "%s " QB_XS " rc=%d",
-                operation, rsc->id, lrm_state->node_name, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not initiate %s action for resource %s remotely on "
+                  "%s: %s " QB_XS " rc=%d",
+                  operation, rsc->id, lrm_state->node_name, pcmk_rc_str(rc),
+                  rc);
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
                        PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
@@ -2226,8 +2230,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                      (provider? ":" : ""), (provider? provider : ""), type);
             rsc = lrmd_new_rsc_info(op->rsc_id, standard, provider, type);
         } else {
-            crm_err("Can't process %s result because %s agent information not cached or in XML",
-                    op_key, op->rsc_id);
+            pcmk__err("Can't process %s result because %s agent information "
+                      "not cached or in XML",
+                      op_key, op->rsc_id);
         }
     }
 
@@ -2288,8 +2293,13 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                  * resource deleted, but we couldn't find resource or node
                  * information.
                  */
-                crm_err("Unable to record %s result in CIB: %s", op_key,
-                        (node_name? "No resource information" : "No node name"));
+                const char *missing = "node name";
+
+                if (node_name != NULL) {
+                    missing = "resource information";
+                }
+                pcmk__err("Unable to record %s result in CIB: No %s", op_key,
+                          missing);
             }
         }
 
@@ -2309,8 +2319,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         /* This recurring operation was cancelled and pending, but we don't
          * have a transition key. This should never happen.
          */
-        crm_err("Recurring operation %s was cancelled without transition information",
-                op_key);
+        pcmk__err("Recurring operation %s was cancelled without transition "
+                  "information",
+                  op_key);
 
     } else if (pcmk__is_set(pending->flags, active_op_remove)) {
         /* This recurring operation was cancelled (by us) and pending, and we

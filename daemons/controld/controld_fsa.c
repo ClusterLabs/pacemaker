@@ -454,9 +454,9 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
 
             /* Error checking and reporting */
         } else {
-            crm_err("Action %s not supported " QB_XS " %" PRIx64,
-                    fsa_action2string(controld_globals.fsa_actions),
-                    controld_globals.fsa_actions);
+            pcmk__err("Action %s not supported " QB_XS " %" PRIx64,
+                      fsa_action2string(controld_globals.fsa_actions),
+                      controld_globals.fsa_actions);
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,
                                    __func__);
         }
@@ -491,8 +491,8 @@ check_join_counts(fsa_data_t *msg_data)
 
     count = crmd_join_phase_count(controld_join_finalized);
     if (count > 0) {
-        crm_err("%d cluster node%s failed to confirm join",
-                count, pcmk__plural_s(count));
+        pcmk__err("%d cluster node%s failed to confirm join", count,
+                  pcmk__plural_s(count));
         crmd_join_phase_log(LOG_NOTICE);
         return;
     }
@@ -507,8 +507,9 @@ check_join_counts(fsa_data_t *msg_data)
         }
 
     } else if (count > npeers) {
-        crm_err("New election needed because more nodes confirmed join "
-                "than are in membership (%d > %u)", count, npeers);
+        pcmk__err("New election needed because more nodes confirmed join "
+                  "than are in membership (%d > %u)",
+                  count, npeers);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 
     } else if (controld_globals.membership_id != controld_globals.peer_seq) {
@@ -609,7 +610,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
             }
             CRM_LOG_ASSERT(controld_globals.dc_name != NULL);
             if (controld_globals.dc_name == NULL) {
-                crm_err("Reached S_NOT_DC without a DC" " being recorded");
+                pcmk__err("Reached S_NOT_DC without a DC" " being recorded");
             }
             break;
 

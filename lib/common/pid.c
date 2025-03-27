@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -63,9 +63,9 @@ pcmk__pid_active(pid_t pid, const char *daemon)
                              QB_XS " rc=%d",
                              (long long) pid, pcmk_rc_str(rc), rc);
                 } else {
-                    crm_err("Could not get executable for PID %lld: %s "
-                            QB_XS " rc=%d",
-                            (long long) pid, pcmk_rc_str(rc), rc);
+                    pcmk__err("Could not get executable for PID %lld: %s "
+                              QB_XS " rc=%d",
+                              (long long) pid, pcmk_rc_str(rc), rc);
                 }
                 last_asked_pid = pid;
             }

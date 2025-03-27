@@ -57,7 +57,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     if (op == NULL) {
-        crm_err("No operation specified");
+        pcmk__err("No operation specified");
         return -EINVAL;
     }
 
@@ -80,8 +80,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, cib->call_timeout * 1000, &op_reply);
 
     if (rc < 0) {
-        crm_err("Couldn't perform %s operation (timeout=%ds): %s (%d)", op,
-                cib->call_timeout, pcmk_strerror(rc), rc);
+        pcmk__err("Couldn't perform %s operation (timeout=%ds): %s (%d)", op,
+                  cib->call_timeout, pcmk_strerror(rc), rc);
         rc = -ECOMM;
         goto done;
     }
@@ -115,13 +115,13 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         }
 
     } else if (reply_id <= 0) {
-        crm_err("Received bad reply: No id set");
+        pcmk__err("Received bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
         rc = -ENOMSG;
         goto done;
 
     } else {
-        crm_err("Received bad reply: %d (wanted %d)", reply_id, cib->call_id);
+        pcmk__err("Received bad reply: %d (wanted %d)", reply_id, cib->call_id);
         crm_log_xml_err(op_reply, "Old reply");
         rc = -ENOMSG;
         goto done;
@@ -147,7 +147,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
             /* These indicate internal problems */
         case -EPROTO:
         case -ENOMSG:
-            crm_err("Call failed: %s", pcmk_strerror(rc));
+            pcmk__err("Call failed: %s", pcmk_strerror(rc));
             if (op_reply) {
                 crm_log_xml_err(op_reply, "Invalid reply");
             }
@@ -161,7 +161,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
   done:
     if (!crm_ipc_connected(native->ipc)) {
-        crm_err("The CIB manager disconnected");
+        pcmk__err("The CIB manager disconnected");
         cib->state = cib_disconnected;
     }
 
@@ -182,7 +182,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
     crm_trace("dispatching %p", userdata);
 
     if (cib == NULL) {
-        crm_err("No CIB!");
+        pcmk__err("No CIB!");
         return 0;
     }
 
@@ -205,7 +205,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
         g_list_foreach(cib->notify_list, cib_native_notify, msg);
 
     } else {
-        crm_err("Unknown message type: %s", type);
+        pcmk__err("Unknown message type: %s", type);
     }
 
     pcmk__xml_free(msg);
@@ -403,7 +403,7 @@ cib_native_set_connection_dnotify(cib_t *cib,
     cib_native_opaque_t *native = NULL;
 
     if (cib == NULL) {
-        crm_err("No CIB!");
+        pcmk__err("No CIB!");
         return FALSE;
     }
 

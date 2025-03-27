@@ -130,7 +130,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_RESOURCES);
     if (xpath_base == NULL) {
-        crm_err(PCMK_XE_RESOURCES " CIB element not known (bug?)");
+        pcmk__err(PCMK_XE_RESOURCES " CIB element not known (bug?)");
         return ENOMSG;
     }
 

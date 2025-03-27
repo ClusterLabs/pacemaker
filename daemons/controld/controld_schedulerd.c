@@ -69,8 +69,9 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
                                                id);
 
         if (pcmk__xml_write_file(output, filename, true) != pcmk_rc_ok) {
-            crm_err("Could not save Cluster Information Base to %s after scheduler crash",
-                    filename);
+            pcmk__err("Could not save Cluster Information Base to %s after "
+                      "scheduler crash",
+                      filename);
         } else {
             crm_notice("Saved Cluster Information Base to %s after scheduler crash",
                        filename);
@@ -130,7 +131,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
     msg_ref = reply->data.graph.reference;
 
     if (msg_ref == NULL) {
-        crm_err("%s - Ignoring calculation with no reference", CRM_OP_PECALC);
+        pcmk__err(CRM_OP_PECALC " - Ignoring calculation with no reference");
 
     } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
                             pcmk__str_none)) {
@@ -194,7 +195,7 @@ new_schedulerd_ipc_connection(void)
         rc = pcmk_new_ipc_api(&schedulerd_api, pcmk_ipc_schedulerd);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
+            pcmk__err("Error connecting to the scheduler: %s", pcmk_rc_str(rc));
             return false;
         }
     }
@@ -203,8 +204,8 @@ new_schedulerd_ipc_connection(void)
 
     rc = pcmk__connect_ipc(schedulerd_api, pcmk_ipc_dispatch_main, 3);
     if (rc != pcmk_rc_ok) {
-        crm_err("Error connecting to %s: %s",
-                pcmk_ipc_name(schedulerd_api, true), pcmk_rc_str(rc));
+        pcmk__err("Error connecting to %s: %s",
+                  pcmk_ipc_name(schedulerd_api, true), pcmk_rc_str(rc));
         return false;
     }
 
@@ -332,14 +333,14 @@ do_pe_invoke(long long action,
     cib_t *cib_conn = controld_globals.cib_conn;
 
     if (AM_I_DC == FALSE) {
-        crm_err("Not invoking scheduler because not DC: %s",
-                fsa_action2string(action));
+        pcmk__err("Not invoking scheduler because not DC: %s",
+                  fsa_action2string(action));
         return;
     }
 
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Cannot shut down gracefully without the scheduler");
+            pcmk__err("Cannot shut down gracefully without the scheduler");
             register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
         } else {
@@ -357,7 +358,8 @@ do_pe_invoke(long long action,
         return;
     }
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
-        crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
+        pcmk__err("Attempted to invoke scheduler without consistent Cluster "
+                  "Information Base!");
 
         /* start the join from scratch */
         register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
@@ -384,7 +386,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_CRM_CONFIG);
     if (xpath_base == NULL) {
-        crm_err(PCMK_XE_CRM_CONFIG " CIB element not known (bug?)");
+        pcmk__err(PCMK_XE_CRM_CONFIG " CIB element not known (bug?)");
         return;
     }
 
@@ -455,8 +457,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pid_t watchdog = pcmk__locate_sbd();
 
     if (rc != pcmk_ok) {
-        crm_err("Could not retrieve the Cluster Information Base: %s "
-                QB_XS " rc=%d call=%d", pcmk_strerror(rc), rc, call_id);
+        pcmk__err("Could not retrieve the Cluster Information Base: %s "
+                  QB_XS " rc=%d call=%d",
+                  pcmk_strerror(rc), rc, call_id);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
         return;
 
@@ -507,8 +510,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     rc = pcmk_schedulerd_api_graph(schedulerd_api, output, &ref);
     if (rc != pcmk_rc_ok) {
         free(ref);
-        crm_err("Could not contact the scheduler: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not contact the scheduler: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
     } else {
         pcmk__assert(ref != NULL);

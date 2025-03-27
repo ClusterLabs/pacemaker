@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,7 +139,8 @@ main(int argc, char **argv)
     crm_notice("Starting Pacemaker scheduler");
 
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
-        crm_err("Terminating due to bad permissions on " PCMK_SCHEDULER_INPUT_DIR);
+        pcmk__err("Terminating due to bad permissions on "
+                  PCMK_SCHEDULER_INPUT_DIR);
         exit_code = CRM_EX_FATAL;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "ERROR: Bad permissions on %s (see logs for details)",

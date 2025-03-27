@@ -69,7 +69,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     if (input == I_NULL && with_actions == A_NOTHING /* && data == NULL */ ) {
         /* no point doing anything */
-        crm_err("Cannot add entry to queue: no input and no action");
+        pcmk__err("Cannot add entry to queue: no input and no action");
         return;
     }
 
@@ -122,7 +122,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_IPC_MESSAGE:
             case C_HA_MESSAGE:
                 CRM_CHECK(((ha_msg_input_t *) data)->msg != NULL,
-                          crm_err("Bogus data from %s", raised_from));
+                          pcmk__err("Bogus data from %s", raised_from));
                 crm_trace("Copying %s data from %s as cluster message data",
                           fsa_cause2string(cause), raised_from);
                 fsa_data->data = copy_ha_msg_input(data);
@@ -162,7 +162,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     /* fsa_dump_queue(LOG_TRACE); */
 
     if (old_len == g_list_length(controld_globals.fsa_message_queue)) {
-        crm_err("Couldn't add message to the queue");
+        pcmk__err("Couldn't add message to the queue");
     }
 
     if (input != I_WAIT_FOR_EVENT) {
@@ -230,8 +230,9 @@ delete_fsa_input(fsa_data_t * fsa_data)
 
             case fsa_dt_none:
                 if (fsa_data->data != NULL) {
-                    crm_err("Don't know how to free %s data from %s",
-                            fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
+                    pcmk__err("Don't know how to free %s data from %s",
+                              fsa_cause2string(fsa_data->fsa_cause),
+                              fsa_data->origin);
                     crmd_exit(CRM_EX_SOFTWARE);
                 }
                 break;
@@ -261,10 +262,11 @@ fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char 
     void *ret_val = NULL;
 
     if (fsa_data == NULL) {
-        crm_err("%s: No FSA data available", caller);
+        pcmk__err("%s: No FSA data available", caller);
 
     } else if (fsa_data->data == NULL) {
-        crm_err("%s: No message data available. Origin: %s", caller, fsa_data->origin);
+        pcmk__err("%s: No message data available. Origin: %s", caller,
+                  fsa_data->origin);
 
     } else if (fsa_data->data_type != a_type) {
         pcmk__crit("%s: Message data was the wrong type! %d vs. requested=%d. "
@@ -982,8 +984,8 @@ verify_feature_set(xmlNode *msg)
         crm_trace("Local feature set (%s) is compatible with DC's (%s)",
                   CRM_FEATURE_SET, dc_version);
     } else {
-        crm_err("Local feature set (%s) is incompatible with DC's (%s)",
-                CRM_FEATURE_SET, dc_version);
+        pcmk__err("Local feature set (%s) is incompatible with DC's (%s)",
+                  CRM_FEATURE_SET, dc_version);
 
         // Nothing is likely to improve without administrator involvement
         controld_set_fsa_input_flags(R_STAYDOWN);
@@ -1005,16 +1007,16 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 
     if (pcmk__str_eq(host_from, controld_globals.dc_name, pcmk__str_casei)) {
         // Must be logic error -- DC confirming its own unrequested shutdown
-        crm_err("Shutting down controller immediately due to "
-                "unexpected shutdown confirmation");
+        pcmk__err("Shutting down controller immediately due to unexpected "
+                  "shutdown confirmation");
         return I_TERMINATE;
     }
 
     if (controld_globals.fsa_state != S_STOPPING) {
         // Shouldn't happen -- non-DC confirming unrequested shutdown
-        crm_err("Starting new DC election because %s is "
-                "confirming shutdown we did not request",
-                (host_from? host_from : "another node"));
+        pcmk__err("Starting new DC election because %s is confirming shutdown "
+                  "we did not request",
+                  pcmk__s(host_from, "another node"));
         return I_ELECTION;
     }
 
@@ -1042,8 +1044,9 @@ handle_shutdown_ack(xmlNode *stored_msg)
             crm_info("Shutting down controller after confirmation from %s",
                      host_from);
         } else {
-            crm_err("Shutting down controller after unexpected "
-                    "shutdown request from %s", host_from);
+            pcmk__err("Shutting down controller after unexpected "
+                      "shutdown request from %s",
+                      host_from);
             controld_set_fsa_input_flags(R_STAYDOWN);
         }
         return I_STOP;
@@ -1182,7 +1185,9 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                                     CRM_SYSTEM_CRMD, CRM_OP_RM_NODE_CACHE,
                                     NULL);
             if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
-                crm_err("Could not instruct peers to remove references to node %s/%u", name, id);
+                pcmk__err("Could not instruct peers to remove references to "
+                          "node %s/%u",
+                          name, id);
             } else {
                 crm_notice("Instructing peers to remove references to node %s/%u", name, id);
             }
@@ -1216,7 +1221,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         }
 
     } else {
-        crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");
+        pcmk__err("Unexpected request (%s) sent to %s", op,
+                  (AM_I_DC ? "the DC" : "non-DC node"));
         crm_log_xml_err(stored_msg, "Unexpected");
     }
 
@@ -1237,7 +1243,7 @@ handle_response(xmlNode *stored_msg)
         const char *msg_ref = pcmk__xe_get(stored_msg, PCMK_XA_REFERENCE);
 
         if (msg_ref == NULL) {
-            crm_err("%s - Ignoring calculation with no reference", op);
+            pcmk__err("%s - Ignoring calculation with no reference", op);
 
         } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
                                 pcmk__str_none)) {
@@ -1257,8 +1263,8 @@ handle_response(xmlNode *stored_msg)
     } else {
         const char *host_from = pcmk__xe_get(stored_msg, PCMK__XA_SRC);
 
-        crm_err("Unexpected response (op=%s, src=%s) sent to the %s",
-                op, host_from, AM_I_DC ? "DC" : "controller");
+        pcmk__err("Unexpected response (op=%s, src=%s) sent to the %s", op,
+                  host_from, (AM_I_DC ? "DC" : "controller"));
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -247,7 +247,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
             // Child remains as pacemaker-remoted
             return;
         case -1:
-            crm_err("fork failed: %s", pcmk_rc_str(errno));
+            pcmk__err("fork failed: %s", pcmk_rc_str(errno));
     }
 
     /* Parent becomes the reaper of zombie processes */

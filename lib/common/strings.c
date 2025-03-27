@@ -740,8 +740,8 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     free(uncompressed);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Compression of %d bytes failed: %s " QB_XS " rc=%d",
-                length, pcmk_rc_str(rc), rc);
+        pcmk__err("Compression of %d bytes failed: %s " QB_XS " rc=%d", length,
+                  pcmk_rc_str(rc), rc);
         free(compressed);
         return rc;
     }
@@ -1215,7 +1215,8 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
         regcomp_rc = regcomp(&r_patt, s2, reg_flags);
         if (regcomp_rc != 0) {
             rc = 1;
-            crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
+            pcmk__err("Bad regex '%s' for update: %s", s2,
+                      strerror(regcomp_rc));
         } else {
             rc = regexec(&r_patt, s1, 0, NULL, 0);
             regfree(&r_patt);

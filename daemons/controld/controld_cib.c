@@ -151,8 +151,8 @@ do_cib_control(long long action,
     }
 
     if (cur_state == S_STOPPING) {
-        crm_err("Ignoring request to connect to the CIB manager after "
-                "shutdown");
+        pcmk__err("Ignoring request to connect to the CIB manager after "
+                  "shutdown");
         return;
     }
 
@@ -171,12 +171,12 @@ do_cib_control(long long action,
 
     } else if (cib_conn->cmds->set_connection_dnotify(cib_conn,
                                                       dnotify_fn) != pcmk_ok) {
-        crm_err("Could not set dnotify callback");
+        pcmk__err("Could not set dnotify callback");
 
     } else if (cib_conn->cmds->add_notify_callback(cib_conn,
                                                    PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                    update_cb) != pcmk_ok) {
-        crm_err("Could not set CIB notification callback (update)");
+        pcmk__err("Could not set CIB notification callback (update)");
 
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
@@ -193,8 +193,9 @@ do_cib_control(long long action,
             crmd_fsa_stall(FALSE);
 
         } else {
-            crm_err("Could not complete CIB registration %d times... "
-                    "hard error", cib_retries);
+            pcmk__err("Could not complete CIB registration %d times... hard "
+                      "error",
+                      cib_retries);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         }
     }
@@ -408,7 +409,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     desc = pcmk__assert_asprintf("resource history for %s on %s", rsc_id, node);
     if (cib == NULL) {
-        crm_err("Unable to clear %s: no CIB connection", desc);
+        pcmk__err("Unable to clear %s: no CIB connection", desc);
         free(desc);
         return ENOTCONN;
     }
@@ -422,10 +423,10 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Could not delete resource status of %s on %s%s%s: %s "
-                QB_XS " rc=%d", rsc_id, node,
-                (user_name? " for user " : ""), (user_name? user_name : ""),
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not delete resource status of %s on %s%s%s: %s "
+                  QB_XS " rc=%d",
+                  rsc_id, node, ((user_name != NULL)? " for user " : ""),
+                  pcmk__s(user_name, ""), pcmk_rc_str(rc), rc);
         free(desc);
         free(xpath);
         return rc;
@@ -836,8 +837,8 @@ controld_update_cib(const char *section, xmlNode *data, int options,
 
     if (callback == NULL) {
         if (cib_rc < 0) {
-            crm_err("Failed to update CIB %s section: %s",
-                    section, pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
+            pcmk__err("Failed to update CIB %s section: %s", section,
+                      pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
         }
 
     } else {

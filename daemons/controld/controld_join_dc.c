@@ -369,7 +369,7 @@ do_dc_join_offer_one(long long action,
 
     join_to = pcmk__xe_get(welcome->msg, PCMK__XA_SRC);
     if (join_to == NULL) {
-        crm_err("Can't make join-%d offer to unknown node", current_join_id);
+        pcmk__err("Can't make join-%d offer to unknown node", current_join_id);
         return;
     }
     member = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster_member);
@@ -459,7 +459,7 @@ do_dc_join_filter_offer(long long action,
     pcmk__node_status_t *join_node = NULL;
 
     if (join_from == NULL) {
-        crm_err("Ignoring invalid join request without node name");
+        pcmk__err("Ignoring invalid join request without node name");
         return;
     }
     join_node = pcmk__get_node(0, join_from, NULL,
@@ -502,9 +502,9 @@ do_dc_join_filter_offer(long long action,
     }
 
     if (lookup_failed_sync_node(join_from, &value) == pcmk_rc_ok) {
-        crm_err("Rejecting join-%d request from node %s because we failed to "
-                "sync its CIB in join-%d " QB_XS " ref=%s",
-                join_id, join_from, value, ref);
+        pcmk__err("Rejecting join-%d request from node %s because we failed to "
+                  "sync its CIB in join-%d " QB_XS " ref=%s",
+                  join_id, join_from, value, ref);
         ack_nack_bool = FALSE;
 
     } else if (!pcmk__cluster_is_node_active(join_node)) {
@@ -518,23 +518,24 @@ do_dc_join_filter_offer(long long action,
             crm_debug("Rejecting join-%d request from inactive node %s "
                       QB_XS " ref=%s", join_id, join_from, ref);
         } else {
-            crm_err("Rejecting join-%d request from inactive node %s "
-                    QB_XS " ref=%s", join_id, join_from, ref);
+            pcmk__err("Rejecting join-%d request from inactive node %s "
+                      QB_XS " ref=%s",
+                      join_id, join_from, ref);
         }
         ack_nack_bool = FALSE;
 
     } else if (generation == NULL) {
-        crm_err("Rejecting invalid join-%d request from node %s "
-                "missing CIB generation " QB_XS " ref=%s",
-                join_id, join_from, ref);
+        pcmk__err("Rejecting invalid join-%d request from node %s missing CIB "
+                  "generation " QB_XS " ref=%s",
+                  join_id, join_from, ref);
         ack_nack_bool = FALSE;
 
     } else if ((join_version == NULL)
                || !feature_set_compatible(CRM_FEATURE_SET, join_version)) {
-        crm_err("Rejecting join-%d request from node %s because feature set %s"
-                " is incompatible with ours (%s) " QB_XS " ref=%s",
-                join_id, join_from, (join_version? join_version : "pre-3.1.0"),
-                CRM_FEATURE_SET, ref);
+        pcmk__err("Rejecting join-%d request from node %s because feature set "
+                  "%s is incompatible with ours (%s) " QB_XS " ref=%s",
+                  join_id, join_from, pcmk__s(join_version, "pre-3.1.0"),
+                  CRM_FEATURE_SET, ref);
         ack_nack_bool = FALSE;
 
     } else if (max_generation_xml == NULL) {
@@ -542,11 +543,12 @@ do_dc_join_filter_offer(long long action,
                                               PCMK_XA_VALIDATE_WITH);
 
         if (pcmk__get_schema(validation) == NULL) {
-            crm_err("Rejecting join-%d request from %s (with first CIB "
-                    "generation) due to %s schema version %s " QB_XS " ref=%s",
-                    join_id, join_from,
-                    ((validation == NULL)? "missing" : "unknown"),
-                    pcmk__s(validation, ""), ref);
+            pcmk__err("Rejecting join-%d request from %s (with first CIB "
+                      "generation) due to %s schema version %s "
+                      QB_XS " ref=%s",
+                      join_id, join_from,
+                      ((validation == NULL)? "missing" : "unknown"),
+                      pcmk__s(validation, ""), ref);
             ack_nack_bool = FALSE;
 
         } else {
@@ -563,12 +565,12 @@ do_dc_join_filter_offer(long long action,
                                               PCMK_XA_VALIDATE_WITH);
 
         if (pcmk__get_schema(validation) == NULL) {
-            crm_err("Rejecting join-%d request from %s (with better CIB "
-                    "generation than current best from %s) due to %s "
-                    "schema version %s " QB_XS " ref=%s",
-                    join_id, join_from, max_generation_from,
-                    ((validation == NULL)? "missing" : "unknown"),
-                    pcmk__s(validation, ""), ref);
+            pcmk__err("Rejecting join-%d request from %s (with better CIB "
+                      "generation than current best from %s) due to %s schema "
+                      "version %s " QB_XS " ref=%s",
+                      join_id, join_from, max_generation_from,
+                      ((validation == NULL)? "missing" : "unknown"),
+                      pcmk__s(validation, ""), ref);
             ack_nack_bool = FALSE;
 
         } else {
@@ -814,9 +816,9 @@ do_dc_join_ack(long long action,
     }
 
     if (join_id != current_join_id) {
-        crm_err("Rejecting join-%d confirmation from %s "
-                "because currently on join-%d",
-                join_id, join_from, current_join_id);
+        pcmk__err("Rejecting join-%d confirmation from %s because currently on "
+                  "join-%d",
+                  join_id, join_from, current_join_id);
         crm_update_peer_join(__func__, peer, controld_join_nack);
         goto done;
     }

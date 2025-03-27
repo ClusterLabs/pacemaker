@@ -1003,8 +1003,9 @@ set_instance_priority(gpointer data, gpointer user_data)
             break;
 
         default:
-            CRM_CHECK(FALSE, crm_err("Unknown resource role %d for %s",
-                                     next_role, instance->id));
+            CRM_CHECK(FALSE,
+                      pcmk__err("Unknown resource role %d for %s", next_role,
+                                instance->id));
     }
 
     // Add relevant location constraint scores for promoted role

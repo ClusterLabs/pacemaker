@@ -154,7 +154,7 @@ fsa_input2string(enum crmd_fsa_input input)
     }
 
     if (inputAsText == NULL) {
-        crm_err("Input %d is unknown", input);
+        pcmk__err("Input %d is unknown", input);
         inputAsText = "<UNKNOWN_INPUT>";
     }
 
@@ -215,7 +215,7 @@ fsa_state2string(enum crmd_fsa_state state)
     }
 
     if (stateAsText == NULL) {
-        crm_err("State %d is unknown", state);
+        pcmk__err("State %d is unknown", state);
         stateAsText = "<UNKNOWN_STATE>";
     }
 
@@ -258,7 +258,7 @@ fsa_cause2string(enum crmd_fsa_cause cause)
     }
 
     if (causeAsText == NULL) {
-        crm_err("Cause %d is unknown", cause);
+        pcmk__err("Cause %d is unknown", cause);
         causeAsText = "<UNKNOWN_CAUSE>";
     }
 
@@ -459,7 +459,7 @@ fsa_action2string(long long action)
     }
 
     if (actionAsText == NULL) {
-        crm_err("Action %.16llx is unknown", action);
+        pcmk__err("Action %.16llx is unknown", action);
         actionAsText = "<UNKNOWN_ACTION>";
     }
 
@@ -729,8 +729,8 @@ update_dc(xmlNode * msg)
 
         if (invalid) {
             if (AM_I_DC) {
-                crm_err("Not updating DC to %s (%s): we are also a DC",
-                        welcome_from, dc_version);
+                pcmk__err("Not updating DC to %s (%s): we are also a DC",
+                          welcome_from, dc_version);
             } else {
                 crm_warn("New DC %s is not %s",
                          welcome_from, controld_globals.dc_name);

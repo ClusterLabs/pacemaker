@@ -169,8 +169,9 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = pcmk__str_copy("#unprivileged");
-            crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
-                    uid_client);
+            pcmk__err("Unable to enforce ACLs for user ID %d, assuming "
+                      "unprivileged",
+                      uid_client);
         }
         client->ipcs = c;
         pcmk__set_client_flags(client, pcmk__client_ipc);
@@ -434,8 +435,8 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " QB_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
+            pcmk__err("Decompression failed: %s " QB_XS " rc=%d",
+                      pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
         }
@@ -556,8 +557,9 @@ crm_ipcs_flush_events(pcmk__client_t *c)
                 crm_warn("Client with process ID %u has a backlog of %u messages "
                          QB_XS " %p", c->pid, queue_len, c->ipcs);
             } else {
-                crm_err("Evicting client with process ID %u due to backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
+                pcmk__err("Evicting client with process ID %u due to backlog "
+                          "of %u messages " QB_XS " %p",
+                          c->pid, queue_len, c->ipcs);
                 c->queue_backlog = 0;
                 qb_ipcs_disconnect(c->ipcs);
                 return rc;
@@ -653,10 +655,10 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
             crm_log_xml_trace(message, "EMSGSIZE");
             biggest = QB_MAX(header->size_uncompressed, biggest);
 
-            crm_err("Could not compress %u-byte message into less than IPC "
-                    "limit of %u bytes; set PCMK_ipc_buffer to higher value "
-                    "(%u bytes suggested)",
-                    header->size_uncompressed, max_send_size, 4 * biggest);
+            pcmk__err("Could not compress %u-byte message into less than IPC "
+                      "limit of %u bytes; set PCMK_ipc_buffer to higher value "
+                      "(%u bytes suggested)",
+                      header->size_uncompressed, max_send_size, (4 * biggest));
 
             free(compressed);
             pcmk_free_ipc_event(iov);
@@ -879,7 +881,8 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
                                         QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
+        pcmk__err("Failed to create the CIB manager: exiting and inhibiting "
+                  "respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
         crm_exit(CRM_EX_FATAL);
     }
@@ -960,7 +963,7 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                                               QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create fencer: exiting and inhibiting respawn.");
+        pcmk__err("Failed to create fencer: exiting and inhibiting respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }
@@ -982,7 +985,7 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Couldn't start pacemakerd IPC server");
+        pcmk__err("Couldn't start pacemakerd IPC server");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
          * if we want to prevent pacemakerd from restarting them.

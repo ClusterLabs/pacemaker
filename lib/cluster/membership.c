@@ -390,8 +390,8 @@ pcmk__cluster_is_node_active(const pcmk__node_status_t *node)
             break;
     }
 
-    crm_err("Unhandled cluster layer: %s",
-            pcmk_cluster_layer_text(cluster_layer));
+    pcmk__err("Unhandled cluster layer: %s",
+              pcmk_cluster_layer_text(cluster_layer));
     return false;
 }
 
@@ -1038,9 +1038,10 @@ static void
 update_peer_uname(pcmk__node_status_t *node, const char *uname)
 {
     CRM_CHECK(uname != NULL,
-              crm_err("Bug: can't update node name without name"); return);
+              pcmk__err("Bug: can't update node name without name"); return);
     CRM_CHECK(node != NULL,
-              crm_err("Bug: can't update node name to %s without node", uname);
+              pcmk__err("Bug: can't update node name to %s without node",
+                        uname);
               return);
 
     if (pcmk__str_eq(uname, node->name, pcmk__str_casei)) {
@@ -1118,9 +1119,10 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
     uint32_t last = 0;
     gboolean changed = FALSE;
 
-    CRM_CHECK(node != NULL, crm_err("%s: Could not set %s to %s for NULL",
-                                    source, proc2text(flag), status);
-                            return NULL);
+    CRM_CHECK(node != NULL,
+              pcmk__err("%s: Could not set %s to %s for NULL", source,
+                        proc2text(flag), status);
+              return NULL);
 
     /* Pacemaker doesn't spawn processes on remote nodes */
     if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
@@ -1215,7 +1217,8 @@ pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
     char *last = NULL;
     gboolean changed = FALSE;
 
-    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'expected' to %s", source, expected);
+    CRM_CHECK(node != NULL,
+              pcmk__err("%s: Could not set 'expected' to %s", source, expected);
               return);
 
     /* Remote nodes don't participate in joins */
@@ -1263,8 +1266,9 @@ update_peer_state_iter(const char *source, pcmk__node_status_t *node,
     gboolean is_member;
 
     CRM_CHECK(node != NULL,
-              crm_err("Could not set state for unknown host to %s "
-                      QB_XS " source=%s", state, source);
+              pcmk__err("Could not set state for unknown host to %s "
+                        QB_XS " source=%s",
+                        state, source);
               return NULL);
 
     is_member = pcmk__str_eq(state, PCMK_VALUE_MEMBER, pcmk__str_none);

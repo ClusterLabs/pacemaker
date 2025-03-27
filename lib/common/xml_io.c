@@ -53,8 +53,8 @@ decompress_file(const char *filename)
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not prepare to read compressed %s: %s "
-                QB_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not prepare to read compressed %s: %s " QB_XS " rc=%d",
+                  filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -73,8 +73,8 @@ decompress_file(const char *filename)
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         rc = pcmk__bzlib2rc(rc);
-        crm_err("Could not read compressed %s: %s " QB_XS " rc=%d",
-                filename, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not read compressed %s: %s " QB_XS " rc=%d", filename,
+                  pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
     } else {

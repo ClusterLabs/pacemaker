@@ -216,7 +216,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
         qb_ipcs_disconnect(ipc_client->ipcs);
 
     } else {
-        crm_err("Unknown ipc proxy msg type %s" , msg_type);
+        pcmk__err("Unknown ipc proxy msg type %s" , msg_type);
     }
 
     if (rc != pcmk_rc_ok) {
@@ -260,9 +260,9 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
-    CRM_CHECK(client != NULL, crm_err("Invalid client");
+    CRM_CHECK(client != NULL, pcmk__err("Invalid client");
               pcmk__xml_free(request); return FALSE);
-    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
+    CRM_CHECK(client->id != NULL, pcmk__err("Invalid client: %p", client);
               pcmk__xml_free(request); return FALSE);
 
     /* This ensures that synced request/responses happen over the event channel
@@ -456,7 +456,8 @@ ipc_proxy_init(void)
     pcmk__serve_pacemakerd_ipc(&pacemakerd_ipcs, &pacemakerd_proxy_callbacks);
     crmd_ipcs = pcmk__serve_controld_ipc(&crmd_proxy_callbacks);
     if (crmd_ipcs == NULL) {
-        crm_err("Failed to create controller: exiting and inhibiting respawn");
+        pcmk__err("Failed to create controller: exiting and inhibiting "
+                  "respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
         crm_exit(CRM_EX_FATAL);
     }

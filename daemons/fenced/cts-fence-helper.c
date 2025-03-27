@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -100,8 +100,8 @@ mainloop_test_done(const char *origin, bool pass)
         result.execution_status = PCMK_EXEC_DONE;
         result.exit_status = CRM_EX_OK;
     } else {
-        crm_err("FAILURE - %s (%d: %s)", origin, result.exit_status,
-                pcmk_exec_status_str(result.execution_status));
+        pcmk__err("FAILURE - %s (%d: %s)", origin, result.exit_status,
+                  pcmk_exec_status_str(result.execution_status));
         crm_exit(CRM_EX_ERROR);
     }
 }
@@ -185,11 +185,14 @@ passive_test(void)
         dispatch_helper(500);  \
     } \
     if (rc != expected_rc) { \
-        crm_err("FAILURE - expected rc %d != %d(%s) for cmd - %s", expected_rc, rc, pcmk_strerror(rc), str); \
+        pcmk__err("FAILURE - expected rc %d != %d(%s) for cmd - %s",        \
+                  expected_rc, rc, pcmk_strerror(rc), str);                 \
         crm_exit(CRM_EX_ERROR); \
     } else if (expected_notifications) { \
-        crm_err("FAILURE - expected %d notifications, got only %d for cmd - %s", \
-            num_notifications, num_notifications - expected_notifications, str); \
+        pcmk__err("FAILURE - expected %d notifications, got only %d for "   \
+                  "cmd - %s",                                               \
+                  num_notifications,                                        \
+                  (num_notifications - expected_notifications), str);       \
         crm_exit(CRM_EX_ERROR); \
     } else { \
         if (verbose) {                   \
@@ -440,7 +443,7 @@ test_async_fence_pass(int check_event)
     rc = st->cmds->fence(st, 0, "true_1_node1", PCMK_ACTION_OFF,
                          MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
-        crm_err("fence failed with rc %d", rc);
+        pcmk__err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
     }
     register_callback_helper(rc);
@@ -460,9 +463,10 @@ test_async_fence_custom_timeout(int check_event)
         if (result.execution_status != PCMK_EXEC_TIMEOUT) {
             mainloop_test_done(__func__, false);
         } else if (diff < CUSTOM_TIMEOUT_ADDITION + MAINLOOP_DEFAULT_TIMEOUT) {
-            crm_err
-                ("Custom timeout test failed, callback expiration should be updated to %d, actual timeout was %d",
-                 CUSTOM_TIMEOUT_ADDITION + MAINLOOP_DEFAULT_TIMEOUT, diff);
+            pcmk__err("Custom timeout test failed, callback expiration should "
+                      "be updated to %d, actual timeout was %d",
+                      (CUSTOM_TIMEOUT_ADDITION + MAINLOOP_DEFAULT_TIMEOUT),
+                      diff);
             mainloop_test_done(__func__, false);
         } else {
             mainloop_test_done(__func__, true);
@@ -474,7 +478,7 @@ test_async_fence_custom_timeout(int check_event)
     rc = st->cmds->fence(st, 0, "custom_timeout_node1", PCMK_ACTION_OFF,
                          MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
-        crm_err("fence failed with rc %d", rc);
+        pcmk__err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
     }
     register_callback_helper(rc);
@@ -495,7 +499,7 @@ test_async_fence_timeout(int check_event)
     rc = st->cmds->fence(st, 0, "false_1_node2", PCMK_ACTION_OFF,
                          MAINLOOP_DEFAULT_TIMEOUT, 0);
     if (rc < 0) {
-        crm_err("fence failed with rc %d", rc);
+        pcmk__err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
     }
     register_callback_helper(rc);
@@ -514,7 +518,7 @@ test_async_monitor(int check_event)
 
     rc = st->cmds->monitor(st, 0, "false_1", MAINLOOP_DEFAULT_TIMEOUT);
     if (rc < 0) {
-        crm_err("monitor failed with rc %d", rc);
+        pcmk__err("monitor failed with rc %d", rc);
         mainloop_test_done(__func__, false);
     }
 
@@ -564,7 +568,7 @@ try_mainloop_connect(int check_event)
         mainloop_test_done(__func__, true);
         return;
     }
-    crm_err("API CONNECTION FAILURE");
+    pcmk__err("API CONNECTION FAILURE");
     mainloop_test_done(__func__, false);
 }
 

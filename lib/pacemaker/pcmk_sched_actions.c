@@ -137,7 +137,7 @@ action_uuid_for_ordering(const char *first_uuid,
         case pcmk__action_fence:
             break;
         default:
-            crm_err("Unknown action '%s' in ordering", first_task_str);
+            pcmk__err("Unknown action '%s' in ordering", first_task_str);
             break;
     }
 

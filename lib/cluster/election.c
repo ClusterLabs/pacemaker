@@ -285,7 +285,7 @@ election_vote(pcmk_cluster_t *cluster)
     CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
 
     if (cluster->priv->node_name == NULL) {
-        crm_err("Cannot start an election: Local node name unknown");
+        pcmk__err("Cannot start an election: Local node name unknown");
         return;
     }
 

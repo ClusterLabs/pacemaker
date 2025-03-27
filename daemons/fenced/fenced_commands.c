@@ -170,7 +170,7 @@ get_action_delay_base(const stonith_device_t *device, const char *action,
                 char *mapval = strchr(val, ':');
 
                 if (mapval == NULL || mapval[1] == 0) {
-                    crm_err("pcmk_delay_base: empty value in mapping", val);
+                    pcmk__err("pcmk_delay_base: empty value in mapping", val);
                     continue;
                 }
 
@@ -578,9 +578,9 @@ stonith_device_execute(stonith_device_t * device)
                      "despite being unable to load CIB secrets (%s)",
                      device->id, pcmk_rc_str(exec_rc));
         } else {
-            crm_err("Considering %s unconfigured "
-                    "because unable to load CIB secrets: %s",
-                     device->id, pcmk_rc_str(exec_rc));
+            pcmk__err("Considering %s unconfigured because unable to load CIB "
+                      "secrets: %s",
+                      device->id, pcmk_rc_str(exec_rc));
             report_internal_result(cmd, CRM_EX_ERROR, PCMK_EXEC_NO_SECRETS,
                                    "Failed to get CIB secrets");
             goto done;
@@ -908,7 +908,8 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
                                 NULL, &buffer, 10);
         stonith_api_delete(st);
         if (rc || !buffer) {
-            crm_err("Could not retrieve metadata for fencing agent %s", agent);
+            pcmk__err("Could not retrieve metadata for fencing agent %s",
+                      agent);
             return EAGAIN;
         }
         g_hash_table_replace(metadata_cache, pcmk__str_copy(agent), buffer);
@@ -1350,22 +1351,22 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
         pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
                      STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) do {
         if (stonith_watchdog_timeout_ms <= 0) {
-            crm_err("Ignoring watchdog fence device without "
-                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set.");
+            pcmk__err("Ignoring watchdog fence device without "
+                      PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set");
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else if (!pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
                                  STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
-            crm_err("Ignoring watchdog fence device with unknown "
-                    "agent '%s' unequal '" STONITH_WATCHDOG_AGENT "'.",
-                    device->agent?device->agent:"");
+            pcmk__err("Ignoring watchdog fence device with unknown agent '%s' "
+                      "unequal to '" STONITH_WATCHDOG_AGENT "'",
+                      pcmk__s(device->agent, ""));
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else if (!pcmk__str_eq(device->id, STONITH_WATCHDOG_ID,
                                  pcmk__str_none)) {
-            crm_err("Ignoring watchdog fence device "
-                    "named %s !='"STONITH_WATCHDOG_ID"'.",
-                    device->id?device->id:"");
+            pcmk__err("Ignoring watchdog fence device named "
+                      "'%s' != '" STONITH_WATCHDOG_ID "'",
+                      pcmk__s(device->id, ""));
             rv = -ENODEV;
             /* fall through to cleanup & return */
         } else {
@@ -2195,7 +2196,8 @@ can_fence_host_with_device(stonith_device_t *dev,
         /* we'll respond to this search request async in the cb */
         return;
     } else {
-        crm_err("Invalid value for " PCMK_STONITH_HOST_CHECK ": %s", check_type);
+        pcmk__err("Invalid value for " PCMK_STONITH_HOST_CHECK ": %s",
+                  check_type);
         check_type = "Invalid " PCMK_STONITH_HOST_CHECK;
     }
 
@@ -2880,7 +2882,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
     if (device_id != NULL) {
         device = g_hash_table_lookup(device_list, device_id);
         if (device == NULL) {
-            crm_err("Requested device '%s' is not available", device_id);
+            pcmk__err("Requested device '%s' is not available", device_id);
             pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                                 "Requested device '%s' not found", device_id);
             return;
@@ -3504,9 +3506,9 @@ handle_cache_request(pcmk__request_t *request)
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
-    crm_err("Unknown IPC request %s from %s %s",
-            request->op, pcmk__request_origin_type(request),
-            pcmk__request_origin(request));
+    pcmk__err("Unknown IPC request %s from %s %s", request->op,
+              pcmk__request_origin_type(request),
+              pcmk__request_origin(request));
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                         "Unknown IPC request type '%s' (bug?)", request->op);
     return fenced_construct_reply(request->xml, NULL, &request->result);
@@ -3595,9 +3597,9 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
         fenced_process_fencing_reply(request);
 
     } else {
-        crm_err("Ignoring unknown %s reply from %s %s",
-                pcmk__s(op, "untyped"), ((client == NULL)? "peer" : "client"),
-                ((client == NULL)? remote_peer : pcmk__client_name(client)));
+        pcmk__err("Ignoring unknown %s reply from %s %s",
+                  pcmk__s(op, "untyped"), ((client != NULL)? "client" : "peer"),
+                  ((client != NULL)? pcmk__client_name(client) : remote_peer));
         crm_log_xml_warn(request, "UnknownOp");
         free(op);
         return;

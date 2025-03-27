@@ -55,9 +55,9 @@ remove_unsupported_sync_points(pcmk__request_t *request)
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
-    crm_err("Unknown IPC request %s from %s %s",
-            request->op, pcmk__request_origin_type(request),
-            pcmk__request_origin(request));
+    pcmk__err("Unknown IPC request %s from %s %s", request->op,
+              pcmk__request_origin_type(request),
+              pcmk__request_origin(request));
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                         "Unknown request type '%s' (bug?)", request->op);
     return NULL;
@@ -276,7 +276,7 @@ attrd_handle_request(pcmk__request_t *request)
             pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
                                request->ipc_flags);
         } else {
-            crm_err("Not sending CPG reply to client");
+            pcmk__err("Not sending CPG reply to client");
         }
 
         pcmk__xml_free(reply);

@@ -396,7 +396,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
         free(comm);
 
         if (rc != 15) {
-            crm_err("Only %d of 15 fields found in %s", rc, loadfile);
+            pcmk__err("Only %d of 15 fields found in %s", rc, loadfile);
             fclose(stream);
             return false;
 

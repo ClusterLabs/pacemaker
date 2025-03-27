@@ -181,7 +181,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__xml_free(cmd);
 
     if (rc == FALSE) {
-        crm_err("Action %d failed: send", action->id);
+        pcmk__err("Action %d failed: send", action->id);
         return ECOMM;
 
     } else if (no_wait) {
@@ -189,8 +189,10 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     } else {
         if (action->timeout <= 0) {
-            crm_err("Action %d: %s on %s had an invalid timeout (%dms).  Using %ums instead",
-                    action->id, task, on_node, action->timeout, graph->network_delay);
+            pcmk__err("Action %d: %s on %s had an invalid timeout (%dms). "
+                      "Using %ums instead",
+                      action->id, task, on_node, action->timeout,
+                      graph->network_delay);
             action->timeout = (int) graph->network_delay;
         }
         te_start_action_timer(graph, action);
@@ -438,7 +440,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__set_graph_action_flags(action, pcmk__graph_action_executed);
 
     if (rc == FALSE) {
-        crm_err("Action %d failed: send", action->id);
+        pcmk__err("Action %d failed: send", action->id);
         return ECOMM;
 
     } else if (no_wait) {
@@ -455,8 +457,10 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                   action->id, task, task_uuid, on_node, action->timeout);
     } else {
         if (action->timeout <= 0) {
-            crm_err("Action %d: %s %s on %s had an invalid timeout (%dms).  Using %ums instead",
-                    action->id, task, task_uuid, on_node, action->timeout, graph->network_delay);
+            pcmk__err("Action %d: %s %s on %s had an invalid timeout (%dms). "
+                      "Using %ums instead",
+                      action->id, task, task_uuid, on_node, action->timeout,
+                      graph->network_delay);
             action->timeout = (int) graph->network_delay;
         }
         te_update_job_count(action, 1);
@@ -741,7 +745,8 @@ notify_crmd(pcmk__graph_t *graph)
                 event = I_STOP;
 
             } else {
-                crm_err("We didn't ask to be shut down, yet the scheduler is telling us to");
+                pcmk__err("We didn't ask to be shut down, yet the scheduler is "
+                          "telling us to");
                 event = I_TERMINATE;
             }
     }

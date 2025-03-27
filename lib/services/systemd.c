@@ -120,7 +120,7 @@ systemd_call_simple_method(const char *method)
     msg = systemd_new_method(method);
 
     if (msg == NULL) {
-        crm_err("Could not create message to send %s to systemd", method);
+        pcmk__err("Could not create message to send %s to systemd", method);
         return NULL;
     }
 
@@ -129,13 +129,13 @@ systemd_call_simple_method(const char *method)
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Could not send %s to systemd: %s (%s)",
-                method, error.message, error.name);
+        pcmk__err("Could not send %s to systemd: %s (%s)", method,
+                  error.message, error.name);
         dbus_error_free(&error);
         return NULL;
 
     } else if (reply == NULL) {
-        crm_err("Could not send %s to systemd: no reply received", method);
+        pcmk__err("Could not send %s to systemd: no reply received", method);
         return NULL;
     }
 
@@ -169,8 +169,9 @@ subscribe_to_signals(void)
     dbus_bus_add_match(systemd_proxy, match_rule, &error);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Could not listen for systemd DBus signals: %s " QB_XS " (%s)",
-                error.message, error.name);
+        pcmk__err("Could not listen for systemd DBus signals: %s "
+                  QB_XS " (%s)",
+                  error.message, error.name);
         dbus_error_free(&error);
         return ECOMM;
     }
@@ -616,13 +617,15 @@ systemd_unit_listall(void)
         return NULL;
     }
     if (!dbus_message_iter_init(reply, &args)) {
-        crm_err("Could not list systemd unit files: systemd reply has no arguments");
+        pcmk__err("Could not list systemd unit files: systemd reply has no "
+                  "arguments");
         dbus_message_unref(reply);
         return NULL;
     }
     if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY,
                               __func__, __LINE__)) {
-        crm_err("Could not list systemd unit files: systemd reply has invalid arguments");
+        pcmk__err("Could not list systemd unit files: systemd reply has "
+                  "invalid arguments");
         dbus_message_unref(reply);
         return NULL;
     }
@@ -890,8 +893,8 @@ job_removed_filter(DBusConnection *connection, DBusMessage *message,
                                DBUS_TYPE_STRING, &unit_name,
                                DBUS_TYPE_STRING, &result,
                                DBUS_TYPE_INVALID)) {
-        crm_err("Could not interpret systemd DBus signal: %s " QB_XS " (%s)",
-                error.message, error.name);
+        pcmk__err("Could not interpret systemd DBus signal: %s " QB_XS " (%s)",
+                  error.message, error.name);
         dbus_error_free(&error);
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
@@ -987,7 +990,7 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
                                        finalize_async_action_dbus)) {
             return;
         }
-        crm_err("Could not add D-Bus filter for systemd JobRemoved signals");
+        pcmk__err("Could not add D-Bus filter for systemd JobRemoved signals");
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                              "Failed to add D-Bus filter for systemd "
                              "JobRemoved signal");
@@ -1074,8 +1077,8 @@ systemd_create_override(const char *agent, int timeout)
     filename = get_override_dir(unit_name);
     rc = pcmk__build_path(filename->str, 0755);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not create systemd override directory %s: %s",
-                filename->str, pcmk_rc_str(rc));
+        pcmk__err("Could not create systemd override directory %s: %s",
+                  filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1083,8 +1086,8 @@ systemd_create_override(const char *agent, int timeout)
     fp = fopen(filename->str, "w");
     if (fp == NULL) {
         rc = errno;
-        crm_err("Cannot open systemd override file %s for writing: %s",
-                filename->str, pcmk_rc_str(rc));
+        pcmk__err("Cannot open systemd override file %s for writing: %s",
+                  filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1092,8 +1095,8 @@ systemd_create_override(const char *agent, int timeout)
     fd = fileno(fp);
     if ((fd < 0) || (fchmod(fd, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH) < 0)) {
         rc = errno;
-        crm_err("Failed to set permissions on systemd override file %s: %s",
-                filename->str, pcmk_rc_str(rc));
+        pcmk__err("Failed to set permissions on systemd override file %s: %s",
+                  filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1105,7 +1108,7 @@ systemd_create_override(const char *agent, int timeout)
 
     if (fputs(override->str, fp) == EOF) {
         rc = EIO;
-        crm_err("Cannot write to systemd override file %s", filename->str);
+        pcmk__err("Cannot write to systemd override file %s", filename->str);
     }
 
 done:

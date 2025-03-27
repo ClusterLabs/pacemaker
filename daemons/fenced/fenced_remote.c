@@ -506,10 +506,10 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 
         } else {
             // Possible if (for example) it timed out already
-            crm_err("Skipping duplicate notification for %s@%s "
-                    QB_XS " state=%s id=%.8s",
-                    other->client_name, other->originator,
-                    stonith_op_state_str(other->state), other->id);
+            pcmk__err("Skipping duplicate notification for %s@%s "
+                      QB_XS " state=%s id=%.8s",
+                      other->client_name, other->originator,
+                      stonith_op_state_str(other->state), other->id);
         }
     }
 }
@@ -2025,8 +2025,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         return;
 
     } else if (op->owner == FALSE) {
-        crm_err("Fencing (%s) targeting %s for client %s is not ours to control",
-                op->action, op->target, op->client_name);
+        pcmk__err("Fencing (%s) targeting %s for client %s is not ours to "
+                  "control",
+                  op->action, op->target, op->client_name);
 
     } else if (op->query_timer == 0) {
         /* We've exhausted all available peers */
@@ -2313,8 +2314,8 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices,
 
     peer->ndevices = g_hash_table_size(peer->devices);
     CRM_CHECK(ndevices == peer->ndevices,
-              crm_err("Query claimed to have %d device%s but %d found",
-                      ndevices, pcmk__plural_s(ndevices), peer->ndevices));
+              pcmk__err("Query claimed to have %d device%s but %d found",
+                        ndevices, pcmk__plural_s(ndevices), peer->ndevices));
 
     op->query_results = g_list_insert_sorted(op->query_results, peer, sort_peers);
     return peer;
@@ -2487,9 +2488,10 @@ fenced_process_fencing_reply(xmlNode *msg)
     op->result = result; // The operation takes ownership of the result
 
     if (op->devices && device && !pcmk__str_eq(op->devices->data, device, pcmk__str_casei)) {
-        crm_err("Received outdated reply for device %s (instead of %s) to "
-                "fence (%s) %s. Operation already timed out at peer level.",
-                device, (const char *) op->devices->data, op->action, op->target);
+        pcmk__err("Received outdated reply for device %s (instead of %s) to "
+                  "fence (%s) %s. Operation already timed out at peer level.",
+                  device, (const char *) op->devices->data, op->action,
+                  op->target);
         return;
     }
 
@@ -2508,9 +2510,9 @@ fenced_process_fencing_reply(xmlNode *msg)
                              pcmk__str_casei)) {
         /* If this isn't a remote level broadcast, and we are not the
          * originator of the operation, we should not be receiving this msg. */
-        crm_err("Received non-broadcast fencing result for operation %.8s "
-                "we do not own (device %s targeting %s)",
-                op->id, device, op->target);
+        pcmk__err("Received non-broadcast fencing result for operation %.8s we "
+                  "do not own (device %s targeting %s)",
+                  op->id, device, op->target);
         return;
     }
 
