@@ -21,6 +21,24 @@
 extern "C" {
 #endif
 
+/* Define custom log priorities.
+ *
+ * syslog(3) uses int for priorities, but libqb's struct qb_log_callsite uses
+ * uint8_t, so make sure they fit in the latter.
+ */
+
+/*!
+ * \internal
+ * \brief Request to print message to \c stdout instead of logging it
+ *
+ * Some callees print nothing when this is the log level.
+ *
+ * \note This value must stay the same as \c LOG_STDOUT until the latter is
+ *       dropped. Be mindful of public API functions that may pass arbitrary
+ *       integer log levels as well.
+ */
+#define PCMK__LOG_STDOUT 254
+
 /*!
  * \internal
  * \brief Log a message at \c LOG_EMERG level
@@ -221,14 +239,14 @@ extern bool pcmk__config_has_warning;
  * \param[in] level  Priority at which to log the messages
  * \param[in] xml    XML to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  */
 #define pcmk__log_xml_changes(level, xml) do {                              \
         uint8_t _level = pcmk__clip_log_level(level);                       \
         static struct qb_log_callsite *xml_cs = NULL;                       \
                                                                             \
         switch (_level) {                                                   \
-            case LOG_STDOUT:                                                \
+            case PCMK__LOG_STDOUT:                                          \
             case LOG_NEVER:                                                 \
                 break;                                                      \
             default:                                                        \
@@ -252,14 +270,14 @@ extern bool pcmk__config_has_warning;
  * \param[in] level     Priority at which to log the messages
  * \param[in] patchset  XML patchset to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  */
 #define pcmk__log_xml_patchset(level, patchset) do {                        \
         uint8_t _level = pcmk__clip_log_level(level);                       \
         static struct qb_log_callsite *xml_cs = NULL;                       \
                                                                             \
         switch (_level) {                                                   \
-            case LOG_STDOUT:                                                \
+            case PCMK__LOG_STDOUT:                                          \
             case LOG_NEVER:                                                 \
                 break;                                                      \
             default:                                                        \

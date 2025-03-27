@@ -930,7 +930,7 @@ mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                                     &source);
 
     if (rc != pcmk_rc_ok) {
-        if (crm_log_level == LOG_STDOUT) {
+        if (crm_log_level == PCMK__LOG_STDOUT) {
             fprintf(stderr, "Connection to %s failed: %s",
                     name, pcmk_rc_str(rc));
         }

@@ -654,7 +654,7 @@ pcmk__time_log_as(const char *file, const char *function, int line,
         free(old);
     }
 
-    if (level == LOG_STDOUT) {
+    if (level == PCMK__LOG_STDOUT) {
         printf("%s\n", date_s);
     } else {
         do_crm_log_alias(level, file, function, line, "%s", date_s);
