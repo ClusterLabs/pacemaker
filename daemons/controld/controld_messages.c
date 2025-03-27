@@ -157,8 +157,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_SHUTDOWN:
             case C_UNKNOWN:
             case C_STARTUP:
-                crm_crit("Copying %s data (from %s) is not yet implemented",
-                         fsa_cause2string(cause), raised_from);
+                pcmk__crit("Copying %s data (from %s) is not yet implemented",
+                           fsa_cause2string(cause), raised_from);
                 crmd_exit(CRM_EX_SOFTWARE);
                 break;
         }

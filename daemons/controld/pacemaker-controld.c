@@ -134,8 +134,8 @@ main(int argc, char **argv)
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_crit("Aborting start-up because another controller instance is "
-                 "already active");
+        pcmk__crit("Aborting start-up because another controller instance is "
+                   "already active");
         initialize = false;
         goto done;
 

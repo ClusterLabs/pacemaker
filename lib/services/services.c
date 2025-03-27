@@ -264,7 +264,7 @@ services__create_resource_action(const char *name, const char *standard,
 
     op = new_action();
     if (op == NULL) {
-        crm_crit("Cannot prepare action: %s", strerror(ENOMEM));
+        pcmk__crit("Cannot prepare action: %s", strerror(ENOMEM));
         if (params != NULL) {
             g_hash_table_destroy(params);
         }
@@ -296,8 +296,8 @@ services__create_resource_action(const char *name, const char *standard,
 
     if (copy_action_arguments(op, ra_caps, name, standard, provider, agent,
                               action) != pcmk_rc_ok) {
-        crm_crit("Cannot prepare %s action for %s: %s",
-                 action, name, strerror(ENOMEM));
+        pcmk__crit("Cannot prepare %s action for %s: %s", action, name,
+                   strerror(ENOMEM));
         services__handle_exec_error(op, ENOMEM);
         return op;
     }
@@ -357,7 +357,8 @@ services_action_create_generic(const char *exec, const char *args[])
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
     if ((op->opaque->exec == NULL) || (op->opaque->args[0] == NULL)) {
-        crm_crit("Cannot prepare action for '%s': %s", exec, strerror(ENOMEM));
+        pcmk__crit("Cannot prepare action for '%s': %s", exec,
+                   strerror(ENOMEM));
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                              strerror(ENOMEM));
         return op;
@@ -379,8 +380,8 @@ services_action_create_generic(const char *exec, const char *args[])
 
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
         if (op->opaque->args[cur_arg] == NULL) {
-            crm_crit("Cannot prepare action for '%s': %s",
-                     exec, strerror(ENOMEM));
+            pcmk__crit("Cannot prepare action for '%s': %s", exec,
+                       strerror(ENOMEM));
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                                  strerror(ENOMEM));
             break;

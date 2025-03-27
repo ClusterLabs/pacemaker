@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2024 the Pacemaker project contributors
+ * Copyright 2014-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -130,7 +130,8 @@ dispatch_fd_data(gpointer userdata)
     }
 
     if (oom) {
-        crm_crit("Could not dispatch DBus file descriptor data: Out of memory");
+        pcmk__crit("Could not dispatch DBus file descriptor data: Out of "
+                   "memory");
     } else {
         dispatch_messages();
     }
@@ -728,8 +729,8 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
 
     query_data = malloc(sizeof(struct property_query));
     if (query_data == NULL) {
-        crm_crit("DBus query for %s property '%s' failed: Out of memory",
-                 obj, name);
+        pcmk__crit("DBus query for %s property '%s' failed: Out of memory", obj,
+                   name);
         dbus_message_unref(msg);
         return NULL;
     }
