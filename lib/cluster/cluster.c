@@ -415,7 +415,7 @@ pcmk_get_cluster_layer(void)
     } else {
         // Nothing configured, so test supported cluster layers
 #if SUPPORT_COROSYNC
-        crm_debug("Testing with Corosync");
+        pcmk__debug("Testing with Corosync");
         if (pcmk__corosync_is_active()) {
             cluster_layer = pcmk_cluster_layer_corosync;
         }

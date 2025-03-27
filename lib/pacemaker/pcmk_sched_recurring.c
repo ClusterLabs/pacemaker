@@ -471,8 +471,8 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
         }
 
         if (!pcmk__is_set(stop->flags, pcmk__action_runnable)) {
-            crm_debug("%s unrunnable on %s: stop is unrunnable",
-                      action->uuid, pcmk__node_name(node));
+            pcmk__debug("%s unrunnable on %s: stop is unrunnable", action->uuid,
+                        pcmk__node_name(node));
             pcmk__clear_action_flags(action, pcmk__action_runnable);
         }
 

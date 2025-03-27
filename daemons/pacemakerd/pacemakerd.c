@@ -276,7 +276,7 @@ handle_old_instance(gboolean shutdown)
 
     int rc = pcmk_rc_ok;
 
-    crm_debug("Checking for existing Pacemaker instance");
+    pcmk__debug("Checking for existing Pacemaker instance");
 
     rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
     if (old_instance == NULL) {
@@ -287,8 +287,8 @@ handle_old_instance(gboolean shutdown)
     pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
     rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s instance found: %s",
-                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
+        pcmk__debug("No existing %s instance found: %s",
+                    pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
         rc = pcmk_rc_ok;
     }
 

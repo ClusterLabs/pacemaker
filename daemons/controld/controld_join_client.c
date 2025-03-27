@@ -59,7 +59,7 @@ do_cl_join_query(long long action, enum crmd_fsa_cause cause,
     // Unset any existing value so that any response is not discarded
     update_dc(NULL);
 
-    crm_debug("Querying for a DC");
+    pcmk__debug("Querying for a DC");
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
     pcmk__xml_free(req);
 }
@@ -84,7 +84,7 @@ do_cl_join_announce(long long action, enum crmd_fsa_cause cause,
     update_dc(NULL);
 
     // Send as a broadcast
-    crm_debug("Announcing availability");
+    pcmk__debug("Announcing availability");
     req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_DC, CRM_OP_JOIN_ANNOUNCE, NULL);
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
@@ -121,13 +121,13 @@ join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     }
 
     if (controld_globals.dc_name == NULL) {
-        crm_debug("Membership is in flux, not continuing join-%s",
-                  pcmk__s(join_id, "(unknown)"));
+        pcmk__debug("Membership is in flux, not continuing join-%s",
+                    pcmk__s(join_id, "(unknown)"));
         return;
     }
 
-    crm_debug("Responding to join offer join-%s from %s",
-              pcmk__s(join_id, "(unknown)"), controld_globals.dc_name);
+    pcmk__debug("Responding to join offer join-%s from %s",
+                pcmk__s(join_id, "(unknown)"), controld_globals.dc_name);
 
     dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
                              pcmk__node_search_cluster_member);
@@ -220,7 +220,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               (remote? PCMK_VALUE_REMOTE : NULL));
 
     } else if (pcmk__str_eq(start_state, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        crm_debug("Not forcing a starting state on node %s", node_name);
+        pcmk__debug("Not forcing a starting state on node %s", node_name);
 
     } else {
         pcmk__warn("Unrecognized start state '%s', using "
@@ -323,8 +323,8 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
         return;
     }
 
-    crm_debug("Confirming join-%d: sending local operation history to %s",
-              join_id, controld_globals.dc_name);
+    pcmk__debug("Confirming join-%d: sending local operation history to %s",
+                join_id, controld_globals.dc_name);
 
     join_confirm = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
                                      controld_globals.dc_name, CRM_SYSTEM_DC,

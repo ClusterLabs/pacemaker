@@ -71,8 +71,8 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         remote_ra_process_pseudo(pseudo->xml);
     }
 
-    crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
-              pcmk__xe_get(pseudo->xml, PCMK__XA_OPERATION_KEY));
+    pcmk__debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
+                pcmk__xe_get(pseudo->xml, PCMK__XA_OPERATION_KEY));
     te_action_confirmed(pseudo, graph);
     return pcmk_rc_ok;
 }
@@ -450,8 +450,9 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         trigger_graph();
 
     } else if (pcmk__is_set(action->flags, pcmk__graph_action_confirmed)) {
-        crm_debug("Action %d: %s %s on %s(timeout %dms) was already confirmed.",
-                  action->id, task, task_uuid, on_node, action->timeout);
+        pcmk__debug("Action %d: %s %s on %s (timeout %dms) was already "
+                    "confirmed",
+                    action->id, task, task_uuid, on_node, action->timeout);
     } else {
         if (action->timeout <= 0) {
             pcmk__err("Action %d: %s %s on %s had an invalid timeout (%dms). "
@@ -701,8 +702,8 @@ notify_crmd(pcmk__graph_t *graph)
     const char *type = "unknown";
     enum crmd_fsa_input event = I_NULL;
 
-    crm_debug("Processing transition completion in state %s",
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__debug("Processing transition completion in state %s",
+                fsa_state2string(controld_globals.fsa_state));
 
     CRM_CHECK(graph->complete, graph->complete = true);
 
@@ -748,8 +749,8 @@ notify_crmd(pcmk__graph_t *graph)
             }
     }
 
-    crm_debug("Transition %d status: %s - %s", graph->id, type,
-              pcmk__s(graph->abort_reason, "unspecified reason"));
+    pcmk__debug("Transition %d status: %s - %s", graph->id, type,
+                pcmk__s(graph->abort_reason, "unspecified reason"));
 
     graph->abort_reason = NULL;
     graph->completion_action = pcmk__graph_done;

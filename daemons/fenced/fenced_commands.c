@@ -238,7 +238,7 @@ get_value_if_matching(const char *target, const char *mapping)
     value = nvpair[1];
     nvpair[1] = NULL;
 
-    crm_debug(PCMK_FENCING_DELAY_BASE " mapped to %s for %s", value, target);
+    pcmk__debug(PCMK_FENCING_DELAY_BASE " mapped to %s for %s", value, target);
 
 done:
     g_strfreev(nvpair);
@@ -599,10 +599,10 @@ fork_cb(int pid, void *user_data)
     }
 
     pcmk__assert(device != NULL);
-    crm_debug("Operation '%s' [%d]%s%s using %s now running with %ds timeout",
-              cmd->action, pid,
-              ((cmd->target == NULL)? "" : " targeting "),
-              pcmk__s(cmd->target, ""), device->id, cmd->timeout);
+    pcmk__debug("Operation '%s' [%d]%s%s using %s now running with %ds timeout",
+                cmd->action, pid,
+                ((cmd->target != NULL)? " targeting " : ""),
+                pcmk__s(cmd->target, ""), device->id, cmd->timeout);
     cmd->active_on = device;
     cmd->activating_on = NULL;
 }
@@ -809,18 +809,19 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
     cmd->timeout = get_action_timeout(device, cmd->action, cmd->default_timeout);
 
     if (cmd->remote_op_id) {
-        crm_debug("Scheduling '%s' action%s%s using %s for remote peer %s "
-                  "with op id %.8s and timeout %ds",
-                  cmd->action,
-                  (cmd->target == NULL)? "" : " targeting ",
-                  pcmk__s(cmd->target, ""),
-                  device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
+        pcmk__debug("Scheduling '%s' action%s%s using %s for remote peer %s "
+                    "with op id %.8s and timeout %ds",
+                    cmd->action,
+                    ((cmd->target != NULL)? " targeting " : ""),
+                    pcmk__s(cmd->target, ""),
+                    device->id, cmd->origin, cmd->remote_op_id, cmd->timeout);
     } else {
-        crm_debug("Scheduling '%s' action%s%s using %s for %s with timeout %ds",
-                  cmd->action,
-                  (cmd->target == NULL)? "" : " targeting ",
-                  pcmk__s(cmd->target, ""),
-                  device->id, cmd->client, cmd->timeout);
+        pcmk__debug("Scheduling '%s' action%s%s using %s for %s with timeout "
+                    "%ds",
+                    cmd->action,
+                    ((cmd->target != NULL)? " targeting " : ""),
+                    pcmk__s(cmd->target, ""),
+                    device->id, cmd->client, cmd->timeout);
     }
 
     device->pending_ops = g_list_append(device->pending_ops, cmd);
@@ -956,7 +957,7 @@ build_port_aliases(const char *hostmap, GList **targets)
                       *mapping);
 
         } else {
-            crm_debug("Adding alias '%s'='%s'", nvpair[0], nvpair[1]);
+            pcmk__debug("Adding alias '%s'='%s'", nvpair[0], nvpair[1]);
             pcmk__insert_dup(aliases, nvpair[0], nvpair[1]);
             *targets = g_list_append(*targets, pcmk__str_copy(nvpair[1]));
         }
@@ -1463,8 +1464,8 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
         }
 
         if (!node_does_watchdog_fencing(local_node_name)) {
-            crm_debug("Skip registration of watchdog fence device on node not "
-                      "in host list");
+            pcmk__debug("Skip registration of watchdog fence device on node "
+                        "not in host list");
             device->targets = NULL;
             stonith_device_remove(device->id, from_cib);
             goto done;
@@ -1481,8 +1482,8 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
     if (dup != NULL) {
         guint ndevices = g_hash_table_size(device_table);
 
-        crm_debug("Device '%s' already in device list (%d active device%s)",
-                  device->id, ndevices, pcmk__plural_s(ndevices));
+        pcmk__debug("Device '%s' already in device list (%d active device%s)",
+                    device->id, ndevices, pcmk__plural_s(ndevices));
         free_device(device);
         device = dup;
         fenced_device_clear_flags(device, fenced_df_dirty);
@@ -2058,10 +2059,11 @@ search_devices_record_result(struct device_search_s *search, const char *device,
 
         guint ndevices = g_list_length(search->capable);
 
-        crm_debug("Search found %d device%s that can perform '%s' targeting %s",
-                  ndevices, pcmk__plural_s(ndevices),
-                  (search->action? search->action : "unknown action"),
-                  (search->host? search->host : "any node"));
+        pcmk__debug("Search found %d device%s that can perform '%s' targeting "
+                    "%s",
+                    ndevices, pcmk__plural_s(ndevices),
+                    pcmk__s(search->action, "unknown action"),
+                    pcmk__s(search->host, "any node"));
 
         search->callback(search->capable, search->user_data);
         free(search->host);
@@ -2314,10 +2316,10 @@ get_capable_devices(const char *host, const char *action, int timeout,
      */
     search->replies_needed = ndevices;
 
-    crm_debug("Searching %d device%s to see which can execute '%s' targeting %s",
-              ndevices, pcmk__plural_s(ndevices),
-              (search->action? search->action : "unknown action"),
-              (search->host? search->host : "any node"));
+    pcmk__debug("Searching %d device%s to see which can execute '%s' "
+                "targeting %s", ndevices, pcmk__plural_s(ndevices),
+                pcmk__s(search->action, "unknown action"),
+                pcmk__s(search->host, "any node"));
     fenced_foreach_device(search_devices, search);
 }
 
@@ -2552,12 +2554,12 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
 
     pcmk__xe_set_int(list, PCMK__XA_ST_AVAILABLE_DEVICES, available_devices);
     if (query->target) {
-        crm_debug("Found %d matching device%s for target '%s'",
-                  available_devices, pcmk__plural_s(available_devices),
-                  query->target);
+        pcmk__debug("Found %d matching device%s for target '%s'",
+                    available_devices, pcmk__plural_s(available_devices),
+                    query->target);
     } else {
-        crm_debug("%d device%s installed",
-                  available_devices, pcmk__plural_s(available_devices));
+        pcmk__debug("%d device%s installed", available_devices,
+                    pcmk__plural_s(available_devices));
     }
 
     crm_log_xml_trace(list, "query-result");
@@ -3154,14 +3156,14 @@ remove_relay_op(xmlNode * request)
                     }
                 }
             }
-            crm_debug("Deleting relay op %s ('%s'%s%s for %s), "
-                      "replaced by op %s ('%s'%s%s for %s)",
-                      relay_op->id, relay_op->action,
-                      (relay_op->target == NULL)? "" : " targeting ",
-                      pcmk__s(relay_op->target, ""),
-                      relay_op->client_name, op_id, relay_op->action,
-                      (target == NULL)? "" : " targeting ", pcmk__s(target, ""),
-                      client_name);
+            pcmk__debug("Deleting relay op %s ('%s'%s%s for %s), replaced by "
+                        "op %s ('%s'%s%s for %s)",
+                        relay_op->id, relay_op->action,
+                        ((relay_op->target != NULL)? " targeting " : ""),
+                        pcmk__s(relay_op->target, ""),
+                        relay_op->client_name, op_id, relay_op->action,
+                        ((target != NULL)? " targeting " : ""),
+                        pcmk__s(target, ""), client_name);
 
             g_hash_table_remove(stonith_remote_op_list, relay_op_id);
         }
@@ -3295,16 +3297,16 @@ handle_notify_request(pcmk__request_t *request)
     pcmk__assert(request->ipc_client != NULL);
     flag_name = pcmk__xe_get(request->xml, PCMK__XA_ST_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
-        crm_debug("Enabling %s callbacks for client %s",
-                  flag_name, pcmk__request_origin(request));
+        pcmk__debug("Enabling %s callbacks for client %s", flag_name,
+                    pcmk__request_origin(request));
         pcmk__set_client_flags(request->ipc_client,
                                fenced_parse_notify_flag(flag_name));
     }
 
     flag_name = pcmk__xe_get(request->xml, PCMK__XA_ST_NOTIFY_DEACTIVATE);
     if (flag_name != NULL) {
-        crm_debug("Disabling %s callbacks for client %s",
-                  flag_name, pcmk__request_origin(request));
+        pcmk__debug("Disabling %s callbacks for client %s", flag_name,
+                    pcmk__request_origin(request));
         pcmk__clear_client_flags(request->ipc_client,
                                  fenced_parse_notify_flag(flag_name));
     }
@@ -3626,13 +3628,13 @@ handle_request(pcmk__request_t *request)
     }
 
     reason = request->result.exit_reason;
-    crm_debug("Processed %s request from %s %s: %s%s%s%s",
-              request->op, pcmk__request_origin_type(request),
-              pcmk__request_origin(request),
-              pcmk_exec_status_str(request->result.execution_status),
-              (reason == NULL)? "" : " (",
-              (reason == NULL)? "" : reason,
-              (reason == NULL)? "" : ")");
+    pcmk__debug("Processed %s request from %s %s: %s%s%s%s",
+                request->op, pcmk__request_origin_type(request),
+                pcmk__request_origin(request),
+                pcmk_exec_status_str(request->result.execution_status),
+                ((reason != NULL)? " (" : ""),
+                pcmk__s(reason, ""),
+                ((reason != NULL)? ")" : ""));
 }
 
 static void
@@ -3656,9 +3658,9 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
         free(op);
         return;
     }
-    crm_debug("Processed %s reply from %s %s",
-              op, ((client == NULL)? "peer" : "client"),
-              ((client == NULL)? remote_peer : pcmk__client_name(client)));
+    pcmk__debug("Processed %s reply from %s %s", op,
+                ((client != NULL)? "client" : "peer"),
+                ((client != NULL)? pcmk__client_name(client) : remote_peer));
     free(op);
 }
 
@@ -3693,12 +3695,12 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
         pcmk__warn("Couldn't parse options from message: %s", pcmk_rc_str(rc));
     }
 
-    crm_debug("Processing %ssynchronous %s %s %u from %s %s",
-              pcmk__is_set(call_options, st_opt_sync_call)? "" : "a",
-              pcmk__xe_get(message, PCMK__XA_ST_OP),
-              (is_reply? "reply" : "request"), id,
-              ((client == NULL)? "peer" : "client"),
-              ((client == NULL)? remote_peer : pcmk__client_name(client)));
+    pcmk__debug("Processing %ssynchronous %s %s %u from %s %s",
+                (pcmk__is_set(call_options, st_opt_sync_call)? "" : "a"),
+                pcmk__xe_get(message, PCMK__XA_ST_OP),
+                (is_reply? "reply" : "request"), id,
+                ((client != NULL)? "client" : "peer"),
+                ((client != NULL)? pcmk__client_name(client) : remote_peer));
 
     if (pcmk__is_set(call_options, st_opt_sync_call)) {
         pcmk__assert((client == NULL) || (client->request_id == id));

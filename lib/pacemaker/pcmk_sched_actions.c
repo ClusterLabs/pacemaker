@@ -1226,9 +1226,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     if (op->user_data == NULL) {
-        crm_debug("Generating fake transition key for: " PCMK__OP_FMT
-                  " %d from %s", op->rsc_id, op->op_type, op->interval_ms,
-                  op->call_id, origin);
+        pcmk__debug("Generating fake transition key for: " PCMK__OP_FMT
+                    " %d from %s",
+                    op->rsc_id, op->op_type, op->interval_ms, op->call_id,
+                    origin);
         local_user_data = pcmk__transition_key(-1, op->call_id, target_rc,
                                                FAKE_TE_ID);
         op->user_data = local_user_data;

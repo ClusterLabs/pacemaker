@@ -212,10 +212,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_dump_actions(new_actions, "New actions");
 
         if (fsa_data->fsa_input != I_NULL && fsa_data->fsa_input != I_ROUTER) {
-            crm_debug("Processing %s: [ state=%s cause=%s origin=%s ]",
-                      fsa_input2string(fsa_data->fsa_input),
-                      fsa_state2string(globals->fsa_state),
-                      fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
+            pcmk__debug("Processing %s: [ state=%s cause=%s origin=%s ]",
+                        fsa_input2string(fsa_data->fsa_input),
+                        fsa_state2string(globals->fsa_state),
+                        fsa_cause2string(fsa_data->fsa_cause),
+                        fsa_data->origin);
         }
 
         /* logging : *before* the state is changed */
@@ -258,12 +259,12 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         || (controld_globals.fsa_actions != A_NOTHING)
         || pcmk__is_set(controld_globals.flags, controld_fsa_is_stalled)) {
 
-        crm_debug("Exiting the FSA: queue=%u, fsa_actions=%" PRIx64
-                  ", stalled=%s",
-                  controld_fsa_message_queue_length(),
-                  controld_globals.fsa_actions,
-                  pcmk__flag_text(controld_globals.flags,
-                                  controld_fsa_is_stalled));
+        pcmk__debug("Exiting the FSA: queue=%u, fsa_actions=%" PRIx64
+                    ", stalled=%s",
+                    controld_fsa_message_queue_length(),
+                    controld_globals.fsa_actions,
+                    pcmk__flag_text(controld_globals.flags,
+                                    controld_fsa_is_stalled));
     } else {
         crm_trace("Exiting the FSA");
     }
@@ -519,9 +520,9 @@ check_join_counts(fsa_data_t *msg_data)
     count = crmd_join_phase_count(controld_join_confirmed);
     if (count == npeers) {
         if (npeers == 1) {
-            crm_debug("Sole active cluster node is fully joined");
+            pcmk__debug("Sole active cluster node is fully joined");
         } else {
-            crm_debug("All %d active cluster nodes are fully joined", count);
+            pcmk__debug("All %d active cluster nodes are fully joined", count);
         }
 
     } else if (count > npeers) {
@@ -652,8 +653,8 @@ do_state_transition(enum crmd_fsa_state cur_state,
                 crmd_join_phase_log(LOG_NOTICE);
 
             } else {
-                crm_debug("All cluster nodes (%d) responded to join offer",
-                          crmd_join_phase_count(controld_join_integrated));
+                pcmk__debug("All cluster nodes (%d) responded to join offer",
+                            crmd_join_phase_count(controld_join_integrated));
             }
             break;
 

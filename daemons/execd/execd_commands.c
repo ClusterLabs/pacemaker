@@ -332,9 +332,9 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"),
                      PCMK_VALUE_BLOCK, pcmk__str_casei)) {
-        crm_debug("Setting flag to leave pid group on timeout and "
-                  "only kill action pid for " PCMK__OP_FMT,
-                  cmd->rsc_id, cmd->action, cmd->interval_ms);
+        pcmk__debug("Setting flag to leave pid group on timeout and only kill "
+                    "action pid for " PCMK__OP_FMT,
+                    cmd->rsc_id, cmd->action, cmd->interval_ms);
         cmd->service_flags = pcmk__set_flags_as(__func__, __LINE__,
                                                 LOG_TRACE, "Action",
                                                 cmd->action, 0,
@@ -906,11 +906,11 @@ action_complete(svc_action_t * action)
             int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
             int timeout_left = cmd->timeout_orig - time_sum;
 
-            crm_debug("%s systemd %s is now complete (elapsed=%dms, "
-                      "remaining=%dms): %s (%d)",
-                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
-                      crm_exit_str(cmd->result.exit_status),
-                      cmd->result.exit_status);
+            pcmk__debug("%s systemd %s is now complete (elapsed=%dms, "
+                        "remaining=%dms): %s (%d)",
+                        cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                        crm_exit_str(cmd->result.exit_status),
+                        cmd->result.exit_status);
             cmd_original_times(cmd);
 
             // Monitors may return "not running", but start/stop shouldn't
@@ -970,8 +970,10 @@ action_complete(svc_action_t * action)
         cmd->timeout = timeout_left;
 
         if (pcmk__result_ok(&(cmd->result))) {
-            crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
+            pcmk__debug("%s %s may still be in progress: re-scheduling "
+                        "(elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                        cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                        delay);
 
         } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
             pcmk__info("%s %s is still in progress: re-scheduling "

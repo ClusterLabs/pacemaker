@@ -479,7 +479,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
             .now = now,
         };
 
-        crm_debug("Call %d : Parsing CIB options", call_id);
+        pcmk__debug("Call %d : Parsing CIB options", call_id);
         pcmk_unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
                                   PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
                                   config_hash, NULL);
@@ -520,7 +520,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                                                        NULL);
             }
         } else {
-            crm_debug("Skipping remote_config_check for guest-nodes");
+            pcmk__debug("Skipping remote_config_check for guest-nodes");
         }
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {

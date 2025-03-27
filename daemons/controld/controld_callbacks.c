@@ -137,9 +137,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                                            NULL, CRM_SYSTEM_CRMD, CRM_OP_HELLO,
                                            NULL);
 
-        crm_debug("Sending hello to node %" PRIu32 " so that it learns our "
-                  "node name",
-                  node->cluster_layer_id);
+        pcmk__debug("Sending hello to node %" PRIu32 " so that it learns our "
+                    "node name",
+                    node->cluster_layer_id);
         pcmk__cluster_send_message(node, pcmk_ipc_controld, query);
         pcmk__xml_free(query);
     }
@@ -366,7 +366,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         /* Update the CIB node state */
         update = create_node_state_update(node, flags, NULL, __func__);
         if (update == NULL) {
-            crm_debug("Node state update not yet possible for %s", node->name);
+            pcmk__debug("Node state update not yet possible for %s",
+                        node->name);
         } else {
             fsa_cib_anon_update(PCMK_XE_STATUS, update);
         }

@@ -191,7 +191,8 @@ attrd_client_query(pcmk__request_t *request)
     xmlNode *reply = NULL;
     const char *attr = NULL;
 
-    crm_debug("Query arrived from %s", pcmk__client_name(request->ipc_client));
+    pcmk__debug("Query arrived from %s",
+                pcmk__client_name(request->ipc_client));
 
     /* Request must specify attribute name to query */
     attr = pcmk__xe_get(query, PCMK__XA_ATTR_NAME);
@@ -252,7 +253,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
         GHashTableIter aIter;
         regex_t r_patt;
 
-        crm_debug("Setting %s to %s", regex, value);
+        pcmk__debug("Setting %s to %s", regex, value);
         if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
             return EINVAL;
         }
@@ -471,9 +472,9 @@ attrd_client_update(pcmk__request_t *request)
         return;
     }
 
-    crm_debug("Broadcasting %s[%s]=%s%s",
-              attr, pcmk__xe_get(xml, PCMK__XA_ATTR_HOST),
-              value, (attrd_election_won()? " (writer)" : ""));
+    pcmk__debug("Broadcasting %s[%s]=%s%s", attr,
+                pcmk__xe_get(xml, PCMK__XA_ATTR_HOST), value,
+                (attrd_election_won()? " (writer)" : ""));
 
     send_update_msg_to_cluster(request, xml);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -563,7 +564,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
     if (data == NULL) {
-        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
@@ -596,7 +597,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     if (xml == NULL) {
-        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_PROTOCOL);
         return 0;

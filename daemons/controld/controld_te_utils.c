@@ -39,7 +39,7 @@ static gboolean
 te_graph_trigger(gpointer user_data)
 {
     if (controld_globals.transition_graph == NULL) {
-        crm_debug("Nothing to do");
+        pcmk__debug("Nothing to do");
         return TRUE;
     }
 
@@ -83,8 +83,8 @@ te_graph_trigger(gpointer user_data)
         }
     }
 
-    crm_debug("Transition %d is now complete",
-              controld_globals.transition_graph->id);
+    pcmk__debug("Transition %d is now complete",
+                controld_globals.transition_graph->id);
     controld_globals.transition_graph->complete = true;
     notify_crmd(controld_globals.transition_graph);
 
@@ -319,18 +319,21 @@ update_abort_priority(pcmk__graph_t *graph, int priority,
     }
 
     if (graph->abort_priority < priority) {
-        crm_debug("Abort priority upgraded from %d to %d", graph->abort_priority, priority);
+        pcmk__debug("Abort priority upgraded from %d to %d",
+                    graph->abort_priority, priority);
         graph->abort_priority = priority;
         if (graph->abort_reason != NULL) {
-            crm_debug("'%s' abort superseded by %s", graph->abort_reason, abort_reason);
+            pcmk__debug("'%s' abort superseded by %s", graph->abort_reason,
+                        abort_reason);
         }
         graph->abort_reason = abort_reason;
         change = TRUE;
     }
 
     if (graph->completion_action < action) {
-        crm_debug("Abort action %s superseded by %s: %s",
-                  abort2text(graph->completion_action), abort2text(action), abort_reason);
+        pcmk__debug("Abort action %s superseded by %s: %s",
+                    abort2text(graph->completion_action), abort2text(action),
+                    abort_reason);
         graph->completion_action = action;
         change = TRUE;
     }

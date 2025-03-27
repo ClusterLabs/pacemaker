@@ -216,7 +216,7 @@ pcmk__set_graph_functions(pcmk__graph_functions_t *fns)
 
     pcmk__assert((fns != NULL) && (fns->rsc != NULL) && (fns->cluster != NULL)
                  && (fns->pseudo != NULL) && (fns->fence != NULL));
-    crm_debug("Setting custom functions for executing transition graphs");
+    pcmk__debug("Setting custom functions for executing transition graphs");
     graph_fns = fns;
 }
 
@@ -455,8 +455,8 @@ pcmk__execute_graph(pcmk__graph_t *graph)
         if ((graph->batch_limit > 0)
             && (graph->pending >= graph->batch_limit)) {
 
-            crm_debug("Throttling graph execution: batch limit (%d) reached",
-                      graph->batch_limit);
+            pcmk__debug("Throttling graph execution: batch limit (%d) reached",
+                        graph->batch_limit);
             break;
 
         } else if (pcmk__is_set(synapse->flags, pcmk__synapse_failed)) {
@@ -800,9 +800,9 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
         }
     }
 
-    crm_debug("Unpacked transition %d from %s: %d actions in %d synapses",
-              new_graph->id, new_graph->source, new_graph->num_actions,
-              new_graph->num_synapses);
+    pcmk__debug("Unpacked transition %d from %s: %d actions in %d synapses",
+                new_graph->id, new_graph->source, new_graph->num_actions,
+                new_graph->num_synapses);
 
     return new_graph;
 }
@@ -862,7 +862,7 @@ pcmk__event_from_graph_action(const xmlNode *resource,
         int tmp = 0;
 
         pcmk__xe_get_int(xop, PCMK__XA_CALL_ID, &tmp);
-        crm_debug("Got call_id=%d for %s", tmp, pcmk__xe_id(resource));
+        pcmk__debug("Got call_id=%d for %s", tmp, pcmk__xe_id(resource));
         if (tmp > op->call_id) {
             op->call_id = tmp;
         }

@@ -322,8 +322,8 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
         if (rc != pcmk_rc_ok) {
-            crm_debug("Couldn't send request to %s: %s rc=%d",
-                      pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
+            pcmk__debug("Couldn't send request to %s: %s rc=%d",
+                        pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
         }
         pcmk__xml_free(cmd);
     } else {

@@ -141,7 +141,7 @@ cluster_disconnect_cfg(void)
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
 	    counter++;					\
-	    crm_debug("Retrying Corosync operation after %ds", counter);    \
+	    pcmk__debug("Retrying Corosync operation after %ds", counter);  \
 	    sleep(counter);				\
 	} else {                                        \
             break;                                      \
@@ -199,7 +199,7 @@ cluster_connect_cfg(void)
                    QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
-    crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
+    pcmk__debug("Corosync reports local node ID is %" PRIu32, nodeid);
 
 #ifdef HAVE_COROSYNC_CFG_TRACKSTART
     retries = 0;

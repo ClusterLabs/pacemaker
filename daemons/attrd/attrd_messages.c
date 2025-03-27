@@ -108,7 +108,7 @@ handle_confirm_request(pcmk__request_t *request)
     if (request->peer != NULL) {
         int callid;
 
-        crm_debug("Received confirmation from %s", request->peer);
+        pcmk__debug("Received confirmation from %s", request->peer);
 
         if (pcmk__xe_get_int(request->xml, PCMK__XA_CALL_ID,
                              &callid) != pcmk_rc_ok) {
@@ -301,7 +301,7 @@ attrd_handle_request(pcmk__request_t *request)
     if (!pcmk__result_ok(&request->result)) {
         pcmk__warn("%s", log_msg);
     } else {
-        crm_debug("%s", log_msg);
+        pcmk__debug("%s", log_msg);
     }
 
     free(log_msg);
@@ -328,20 +328,17 @@ attrd_send_protocol(const pcmk__node_status_t *peer)
                  attrd_cluster->priv->node_xml_id);
 
     if (peer == NULL) {
-        crm_debug("Broadcasting attrd protocol version %s for node %s[%" PRIu32
-                  "]",
-                  ATTRD_PROTOCOL_VERSION,
-                  pcmk__s(attrd_cluster->priv->node_name, "unknown"),
-                  attrd_cluster->priv->node_id);
+        pcmk__debug("Broadcasting attrd protocol version "
+                    ATTRD_PROTOCOL_VERSION " for node %s[%" PRIu32 "]",
+                    pcmk__s(attrd_cluster->priv->node_name, "unknown"),
+                    attrd_cluster->priv->node_id);
 
     } else {
-        crm_debug("Sending attrd protocol version %s for node %s[%" PRIu32
-                  "] to node %s[%" PRIu32 "]",
-                  ATTRD_PROTOCOL_VERSION,
-                  pcmk__s(attrd_cluster->priv->node_name, "unknown"),
-                  attrd_cluster->priv->node_id,
-                  pcmk__s(peer->name, "unknown"),
-                  peer->cluster_layer_id);
+        pcmk__debug("Sending attrd protocol version " ATTRD_PROTOCOL_VERSION " "
+                    "for node %s[%" PRIu32 "] to node %s[%" PRIu32 "]",
+                    pcmk__s(attrd_cluster->priv->node_name, "unknown"),
+                    attrd_cluster->priv->node_id,
+                    pcmk__s(peer->name, "unknown"), peer->cluster_layer_id);
     }
 
     attrd_send_message(peer, attrd_op, false); /* ends up at attrd_peer_message() */

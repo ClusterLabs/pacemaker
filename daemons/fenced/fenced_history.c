@@ -333,14 +333,18 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                         g_hash_table_lookup(remote_history, op->id);
 
                     if (remote_op) {
+                        const char *state_s = stonith__op_state_text(op->state);
+                        const char *remote_state_s =
+                            stonith__op_state_text(remote_op->state);
+
                         if (stonith__op_state_pending(op->state)
                             && !stonith__op_state_pending(remote_op->state)) {
 
-                            crm_debug("Updating outdated pending operation %.8s "
-                                      "(state=%s) according to the one (state=%s) from "
-                                      "remote peer history",
-                                      op->id, stonith__op_state_text(op->state),
-                                      stonith__op_state_text(remote_op->state));
+                            pcmk__debug("Updating outdated pending "
+                                        "operation %.8s (state=%s) "
+                                        "according to the one (state=%s) "
+                                        "from remote peer history",
+                                        op->id, state_s, remote_state_s);
 
                             g_hash_table_steal(remote_history, op->id);
                             op->id = remote_op->id;
@@ -353,11 +357,11 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                         } else if (!stonith__op_state_pending(op->state)
                                    && stonith__op_state_pending(remote_op->state)) {
 
-                            crm_debug("Broadcasting operation %.8s (state=%s) to "
-                                      "update the outdated pending one "
-                                      "(state=%s) in remote peer history",
-                                      op->id, stonith__op_state_text(op->state),
-                                      stonith__op_state_text(remote_op->state));
+                            pcmk__debug("Broadcasting "
+                                        "operation %.8s (state=%s) to update "
+                                        "the outdated pending one (state=%s) "
+                                        "in remote peer history",
+                                        op->id, state_s, remote_state_s);
 
                             g_hash_table_remove(remote_history, op->id);
 

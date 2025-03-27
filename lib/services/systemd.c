@@ -673,7 +673,7 @@ systemd_unit_listall(void)
 
         dbus_message_iter_get_basic(&elem, &value);
         if (value.str == NULL) {
-            crm_debug("ListUnitFiles reply did not provide a string");
+            pcmk__debug("ListUnitFiles reply did not provide a string");
             continue;
         }
         crm_trace("DBus ListUnitFiles listed: %s", value.str);
@@ -681,8 +681,8 @@ systemd_unit_listall(void)
         match = systemd_unit_extension(value.str);
         if (match == NULL) {
             // This is not a unit file type we know how to manage
-            crm_debug("ListUnitFiles entry '%s' is not supported as resource",
-                      value.str);
+            pcmk__debug("ListUnitFiles entry '%s' is not supported as resource",
+                        value.str);
             continue;
         }
 
@@ -853,8 +853,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                               DBUS_TYPE_OBJECT_PATH, &path,
                               DBUS_TYPE_INVALID);
 
-        crm_debug("DBus request for %s of %s using %s succeeded",
-                  op->action, pcmk__s(op->rsc, "unknown resource"), path);
+        pcmk__debug("DBus request for %s of %s using %s succeeded",
+                    op->action, pcmk__s(op->rsc, "unknown resource"), path);
 
         if (!op->synchronous && start_stop) {
             // Should be set to unknown/pending already
@@ -1406,9 +1406,10 @@ services__execute_systemd(svc_action_t *op)
         goto done;
     }
 
-    crm_debug("Performing %ssynchronous %s op on systemd unit %s%s%s",
-              (op->synchronous? "" : "a"), op->action, op->agent,
-              ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
+    pcmk__debug("Performing %ssynchronous %s op on systemd unit %s%s%s",
+                (op->synchronous? "" : "a"), op->action, op->agent,
+                ((op->rsc != NULL)? " for resource " : ""),
+                pcmk__s(op->rsc, ""));
 
     if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);

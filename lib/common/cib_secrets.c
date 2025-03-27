@@ -153,7 +153,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
         if (filename == NULL) {
             // First secret parameter. Fill in directory path for use with all.
-            crm_debug("Replacing secret parameters for resource %s", rsc_id);
+            pcmk__debug("Replacing secret parameters for resource %s", rsc_id);
 
             filename = g_string_sized_new(128);
             pcmk__g_strcat(filename, PCMK__CIB_SECRETS_DIR "/", rsc_id, "/",

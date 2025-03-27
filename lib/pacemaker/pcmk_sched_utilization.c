@@ -233,10 +233,10 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     remaining = utilization_value(node_value_s);
 
     if (required > remaining) {
-        crm_debug("Remaining capacity for %s on %s (%d) is insufficient "
-                  "for resource %s usage (%d)",
-                  (const char *) key, pcmk__node_name(data->node), remaining,
-                  data->rsc_id, required);
+        pcmk__debug("Remaining capacity for %s on %s (%d) is insufficient for "
+                    "resource %s usage (%d)",
+                    (const char *) key, pcmk__node_name(data->node), remaining,
+                    data->rsc_id, required);
         data->is_enough = false;
     }
 }

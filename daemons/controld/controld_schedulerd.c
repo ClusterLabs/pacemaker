@@ -361,14 +361,14 @@ do_pe_invoke(long long action, enum crmd_fsa_cause cause,
     }
 
     if (controld_cib_retry_timer != NULL) {
-        crm_debug("Not invoking scheduler until CIB retry timer expires");
+        pcmk__debug("Not invoking scheduler until CIB retry timer expires");
         return;
     }
 
     fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_none);
 
-    crm_debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__debug("Query %d: Requesting the current CIB: %s", fsa_pe_query,
+                fsa_state2string(controld_globals.fsa_state));
 
     controld_expect_sched_reply(NULL);
     fsa_register_cib_callback(fsa_pe_query, NULL, do_pe_invoke_callback);
@@ -478,18 +478,19 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else if (!AM_I_DC
                || !pcmk__is_set(controld_globals.fsa_input_register,
                                 R_PE_CONNECTED)) {
-        crm_debug("No need to invoke the scheduler anymore");
+        pcmk__debug("No need to invoke the scheduler anymore");
         return;
 
     } else if (controld_globals.fsa_state != S_POLICY_ENGINE) {
-        crm_debug("Discarding scheduler request in state: %s",
-                  fsa_state2string(controld_globals.fsa_state));
+        pcmk__debug("Discarding scheduler request in state: %s",
+                    fsa_state2string(controld_globals.fsa_state));
         return;
 
     /* this callback counts as 1 */
     } else if (num_cib_op_callbacks() > 1) {
-        crm_debug("Re-asking for the CIB: %d other peer updates still pending",
-                  (num_cib_op_callbacks() - 1));
+        pcmk__debug("Re-asking for the CIB: %d other peer updates still "
+                    "pending", (num_cib_op_callbacks() - 1));
+
         controld_cib_retry_timer = mainloop_timer_add("cib_retry", 1000, false,
                                                       sleep_timer, NULL);
         mainloop_timer_start(controld_cib_retry_timer);
@@ -525,10 +526,11 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else {
         pcmk__assert(ref != NULL);
         controld_expect_sched_reply(ref);
-        crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
-                  "quorate=%s",
-                  fsa_pe_query, controld_globals.fsa_pe_ref,
-                  controld_globals.peer_seq,
-                  pcmk__flag_text(controld_globals.flags, controld_has_quorum));
+        pcmk__debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, "
+                    "quorate=%s",
+                    fsa_pe_query, controld_globals.fsa_pe_ref,
+                    controld_globals.peer_seq,
+                    pcmk__flag_text(controld_globals.flags,
+                                    controld_has_quorum));
     }
 }

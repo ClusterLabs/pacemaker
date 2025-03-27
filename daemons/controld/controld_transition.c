@@ -52,7 +52,7 @@ do_te_control(long long action, enum crmd_fsa_cause cause,
     }
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_TE_CONNECTED)) {
-        crm_debug("The transitioner is already active");
+        pcmk__debug("The transitioner is already active");
         return;
     }
 
@@ -79,7 +79,7 @@ do_te_control(long long action, enum crmd_fsa_cause cause,
     pcmk__free_graph(controld_globals.transition_graph);
     controld_globals.transition_graph = create_blank_graph();
     controld_set_fsa_input_flags(R_TE_CONNECTED);
-    crm_debug("Transitioner is now active");
+    pcmk__debug("Transitioner is now active");
 }
 
 // A_TE_INVOKE, A_TE_CANCEL
@@ -108,8 +108,9 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
     }
 
     if (pcmk__is_set(action, A_TE_CANCEL)) {
-        crm_debug("Cancelling the transition: %sactive",
-                  controld_globals.transition_graph->complete? "in" : "");
+        pcmk__debug("Cancelling the transition: %sactive",
+                    (controld_globals.transition_graph->complete? "in" : ""));
+
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Peer cancelled", NULL);
         if (!controld_globals.transition_graph->complete) {
@@ -161,7 +162,7 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
     }
 
     if (controld_is_started_transition_timer()) {
-        crm_debug("The transitioner wait for a transition timer");
+        pcmk__debug("The transitioner wait for a transition timer");
         return;
     }
 
