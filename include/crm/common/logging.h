@@ -298,9 +298,6 @@ pcmk__clip_log_level(int level)
         }                                                                   \
     } while (0)
 
-// NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt, ##args)
-
 #define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt, ##args)
 
 #define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
