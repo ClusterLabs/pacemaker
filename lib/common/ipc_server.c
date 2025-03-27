@@ -936,9 +936,9 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(PCMK__VALUE_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_crit("Exiting fatally because unable to serve " PCMK__SERVER_ATTRD
-                 " IPC (verify pacemaker and pacemaker_remote are not both "
-                 "enabled)");
+        pcmk__crit("Exiting fatally because unable to serve " PCMK__SERVER_ATTRD
+                   " IPC (verify pacemaker and pacemaker_remote are not both"
+                   " enabled)");
         crm_exit(CRM_EX_FATAL);
     }
 }

@@ -38,7 +38,7 @@ handle_cib_disconnect(gpointer user_data)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         // @TODO This should trigger a reconnect, not a shutdown
-        crm_crit("Lost connection to the CIB manager, shutting down");
+        pcmk__crit("Lost connection to the CIB manager, shutting down");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 

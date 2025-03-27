@@ -332,8 +332,8 @@ watchdog_device_update(void)
             if (rc != pcmk_ok) {
                 rc = pcmk_legacy2rc(rc);
                 exit_code = CRM_EX_FATAL;
-                crm_crit("Cannot register watchdog pseudo fence agent: %s",
-                         pcmk_rc_str(rc));
+                pcmk__crit("Cannot register watchdog pseudo fence agent: %s",
+                           pcmk_rc_str(rc));
                 stonith_shutdown(0);
             }
         }
@@ -557,7 +557,7 @@ cib_connection_destroy(gpointer user_data)
         crm_info("Connection to the CIB manager closed");
         return;
     } else {
-        crm_crit("Lost connection to the CIB manager, shutting down");
+        pcmk__crit("Lost connection to the CIB manager, shutting down");
     }
     if (cib_api) {
         cib_api->cmds->signoff(cib_api);

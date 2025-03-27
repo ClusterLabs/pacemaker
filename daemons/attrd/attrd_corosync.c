@@ -133,7 +133,7 @@ attrd_cpg_destroy(gpointer unused)
         crm_info("Disconnected from Corosync process group");
 
     } else {
-        crm_crit("Lost connection to Corosync process group, shutting down");
+        pcmk__crit("Lost connection to Corosync process group, shutting down");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }

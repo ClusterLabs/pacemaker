@@ -151,37 +151,37 @@ cluster_connect_cfg(void)
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
     if (rc != CS_OK) {
-        crm_crit("Could not connect to Corosync CFG: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+        pcmk__crit("Could not connect to Corosync CFG: %s " QB_XS " rc=%d",
+                   cs_strerror(rc), rc);
         return FALSE;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
     if (rc != CS_OK) {
-        crm_crit("Could not get Corosync CFG descriptor: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+        pcmk__crit("Could not get Corosync CFG descriptor: %s " QB_XS " rc=%d",
+                   cs_strerror(rc), rc);
         goto bail;
     }
 
     /* CFG provider run as root (in given user namespace, anyway)? */
     if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
-        crm_crit("Rejecting Corosync CFG provider because process %lld "
-                 "is running as uid %lld gid %lld, not root",
-                  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                 (long long) found_uid, (long long) found_gid);
+        pcmk__crit("Rejecting Corosync CFG provider because process %lld "
+                   "is running as uid %lld gid %lld, not root",
+                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                   (long long) found_uid, (long long) found_gid);
         goto bail;
     } else if (rv < 0) {
-        crm_crit("Could not authenticate Corosync CFG provider: %s "
-                 QB_XS " rc=%d", strerror(-rv), -rv);
+        pcmk__crit("Could not authenticate Corosync CFG provider: %s "
+                   QB_XS " rc=%d", strerror(-rv), -rv);
         goto bail;
     }
 
     retries = 0;
     cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, &nodeid));
     if (rc != CS_OK) {
-        crm_crit("Could not get local node ID from Corosync: %s "
-                 QB_XS " rc=%d", cs_strerror(rc), rc);
+        pcmk__crit("Could not get local node ID from Corosync: %s "
+                   QB_XS " rc=%d", cs_strerror(rc), rc);
         goto bail;
     }
     crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
@@ -190,8 +190,9 @@ cluster_connect_cfg(void)
     retries = 0;
     cs_repeat(retries, 30, rc = corosync_cfg_trackstart(cfg_handle, 0));
     if (rc != CS_OK) {
-        crm_crit("Could not enable Corosync CFG shutdown tracker: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+        pcmk__crit("Could not enable Corosync CFG shutdown tracker: %s "
+                   QB_XS " rc=%d",
+                   cs_strerror(rc), rc);
         goto bail;
     }
 #endif
@@ -291,15 +292,15 @@ pacemakerd_read_config(void)
     } while (retries < 5);
 
     if (rc != CS_OK) {
-        crm_crit("Could not connect to Corosync CMAP: %s "
-                 QB_XS " rc=%d", cs_strerror(rc), rc);
+        pcmk__crit("Could not connect to Corosync CMAP: %s "
+                   QB_XS " rc=%d", cs_strerror(rc), rc);
         return FALSE;
     }
 
     rc = cmap_fd_get(local_handle, &fd);
     if (rc != CS_OK) {
-        crm_crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+        pcmk__crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
+                   cs_strerror(rc), rc);
         cmap_finalize(local_handle);
         return FALSE;
     }
@@ -307,15 +308,15 @@ pacemakerd_read_config(void)
     /* CMAP provider run as root (in given user namespace, anyway)? */
     if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
-        crm_crit("Rejecting Corosync CMAP provider because process %lld "
-                 "is running as uid %lld gid %lld, not root",
-                 (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                 (long long) found_uid, (long long) found_gid);
+        pcmk__crit("Rejecting Corosync CMAP provider because process %lld "
+                   "is running as uid %lld gid %lld, not root",
+                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                   (long long) found_uid, (long long) found_gid);
         cmap_finalize(local_handle);
         return FALSE;
     } else if (rv < 0) {
-        crm_crit("Could not authenticate Corosync CMAP provider: %s "
-                 QB_XS " rc=%d", strerror(-rv), -rv);
+        pcmk__crit("Could not authenticate Corosync CMAP provider: %s "
+                   QB_XS " rc=%d", strerror(-rv), -rv);
         cmap_finalize(local_handle);
         return FALSE;
     }
@@ -324,9 +325,9 @@ pacemakerd_read_config(void)
     cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {
-        crm_crit("Expected Corosync cluster layer but detected %s "
-                 QB_XS " cluster_layer=%d",
-                 cluster_layer_s, cluster_layer);
+        pcmk__crit("Expected Corosync cluster layer but detected %s "
+                   QB_XS " cluster_layer=%d",
+                   cluster_layer_s, cluster_layer);
         return FALSE;
     }
 

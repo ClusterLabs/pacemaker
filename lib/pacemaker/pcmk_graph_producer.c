@@ -1085,16 +1085,18 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
              */
             if (pcmk__is_set(scheduler->flags, pcmk__sched_quorate)
                 || (scheduler->no_quorum_policy == pcmk_no_quorum_ignore)) {
+
+                const bool unclean = action->node->details->unclean;
                 const bool managed = pcmk__is_set(action->rsc->flags,
                                                   pcmk__rsc_managed);
                 const bool failed = pcmk__is_set(action->rsc->flags,
                                                  pcmk__rsc_failed);
 
-                crm_crit("Cannot %s %s because of %s:%s%s (%s)",
-                         action->node->details->unclean? "fence" : "shut down",
-                         pcmk__node_name(action->node), action->rsc->id,
-                         (managed? " blocked" : " unmanaged"),
-                         (failed? " failed" : ""), action->uuid);
+                pcmk__crit("Cannot %s %s because of %s:%s%s (%s)",
+                           (unclean? "fence" : "shut down"),
+                           pcmk__node_name(action->node), action->rsc->id,
+                           (managed? " blocked" : " unmanaged"),
+                           (failed? " failed" : ""), action->uuid);
             }
         }
 

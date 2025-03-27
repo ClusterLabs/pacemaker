@@ -221,7 +221,7 @@ handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
 static void
 stonith_peer_cs_destroy(gpointer user_data)
 {
-    crm_crit("Lost connection to cluster layer, shutting down");
+    pcmk__crit("Lost connection to cluster layer, shutting down");
     stonith_shutdown(0);
 }
 #endif
@@ -591,8 +591,8 @@ main(int argc, char **argv)
         // IPC endpoint already up
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_crit("Aborting start-up because another fencer instance is "
-                 "already active");
+        pcmk__crit("Aborting start-up because another fencer instance is "
+                   "already active");
         goto done;
     } else {
         // Not up or not authentic, we'll proceed either way
@@ -626,7 +626,7 @@ main(int argc, char **argv)
 
     if (pcmk_cluster_connect(cluster) != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
-        crm_crit("Cannot sign in to the cluster... terminating");
+        pcmk__crit("Cannot sign in to the cluster... terminating");
         goto done;
     }
     fenced_set_local_node(cluster->priv->node_name);

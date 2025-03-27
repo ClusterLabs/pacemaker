@@ -140,8 +140,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_SHUTDOWN:
             case C_UNKNOWN:
             case C_STARTUP:
-                crm_crit("Copying %s data (from %s) is not yet implemented",
-                         fsa_cause2string(cause), raised_from);
+                pcmk__crit("Copying %s data (from %s) is not yet implemented",
+                           fsa_cause2string(cause), raised_from);
                 crmd_exit(CRM_EX_SOFTWARE);
                 break;
         }
@@ -267,8 +267,9 @@ fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char 
         crm_err("%s: No message data available. Origin: %s", caller, fsa_data->origin);
 
     } else if (fsa_data->data_type != a_type) {
-        crm_crit("%s: Message data was the wrong type! %d vs. requested=%d.  Origin: %s",
-                 caller, fsa_data->data_type, a_type, fsa_data->origin);
+        pcmk__crit("%s: Message data was the wrong type! %d vs. requested=%d. "
+                   "Origin: %s",
+                   caller, fsa_data->data_type, a_type, fsa_data->origin);
         pcmk__assert(fsa_data->data_type == a_type);
     } else {
         ret_val = fsa_data->data;

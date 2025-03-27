@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -142,7 +142,7 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
                     "Aborting start-up because an attribute manager "
                     "instance is already active");
-        crm_crit("%s", error->message);
+        pcmk__crit("%s", error->message);
         goto done;
     }
 

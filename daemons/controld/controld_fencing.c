@@ -544,8 +544,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
          * set our status to lost because of the fencing callback and discard
          * our subsequent election votes as "not part of our cluster".
          */
-        crm_crit("We were allegedly just fenced by %s for %s!",
-                 executioner, event->origin); // Dumps blackbox if enabled
+        pcmk__crit("We were allegedly just fenced by %s for %s!", executioner,
+                   event->origin); // Dumps blackbox if enabled
         if (fence_reaction_panic) {
             pcmk__panic("Notified of own fencing");
         } else {

@@ -744,9 +744,9 @@ join_node_state_commit_callback(xmlNode *msg, int call_id, int rc,
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;    // for register_fsa_error() macro
 
-        crm_crit("join-%d node history update (via CIB call %d) for node %s "
-                 "failed: %s",
-                 current_join_id, call_id, node, pcmk_strerror(rc));
+        pcmk__crit("join-%d node history update (via CIB call %d) for node %s "
+                   "failed: %s",
+                   current_join_id, call_id, node, pcmk_strerror(rc));
         crm_log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
@@ -887,8 +887,8 @@ do_dc_join_ack(long long action,
 
 done:
     if (rc != pcmk_ok) {
-        crm_crit("join-%d node history update for node %s failed: %s",
-                 current_join_id, join_from, pcmk_strerror(rc));
+        pcmk__crit("join-%d node history update for node %s failed: %s",
+                   current_join_id, join_from, pcmk_strerror(rc));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
     free(join_from);

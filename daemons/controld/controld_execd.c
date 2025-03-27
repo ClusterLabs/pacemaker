@@ -51,7 +51,7 @@ static void
 lrm_connection_destroy(void)
 {
     if (pcmk__is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
-        crm_crit("Lost connection to local executor");
+        pcmk__crit("Lost connection to local executor");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     }

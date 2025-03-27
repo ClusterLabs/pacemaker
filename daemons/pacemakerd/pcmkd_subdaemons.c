@@ -151,10 +151,10 @@ check_next_subdaemon(gpointer user_data)
         case pcmk_rc_ipc_pid_only: // Child was previously OK
             if (++(child->check_count) >= PCMK_PROCESS_CHECK_RETRIES) {
                 // cts-lab looks for this message
-                crm_crit("Subdaemon %s[%lld] is unresponsive to IPC "
-                         "after %d attempt%s and will now be killed",
-                         name, pid, child->check_count,
-                         pcmk__plural_s(child->check_count));
+                pcmk__crit("Subdaemon %s[%lld] is unresponsive to IPC "
+                           "after %d attempt%s and will now be killed",
+                           name, pid, child->check_count,
+                           pcmk__plural_s(child->check_count));
                 stop_child(child, SIGKILL);
                 if (pcmk__is_set(child->flags, child_respawn)) {
                     // Respawn limit hasn't been reached, so retry another round
@@ -536,7 +536,7 @@ start_child(pcmkd_child_t * child)
         free(path);
     }
 
-    crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
+    pcmk__crit("Could not execute subdaemon %s: %s", name, strerror(errno));
     crm_exit(CRM_EX_FATAL);
     return pcmk_rc_ok;  // Never reached
 }
@@ -729,10 +729,11 @@ find_and_track_existing_processes(void)
                             pcmk__env_option(PCMK__ENV_FAIL_FAST);
 
                         if (pcmk__is_true(fail_fast)) {
-                            crm_crit("Cannot reliably track pre-existing"
-                                     " authentic process behind %s IPC on this"
-                                     " platform and PCMK_" PCMK__ENV_FAIL_FAST
-                                     " requested", ipc_name);
+                            pcmk__crit("Cannot reliably track pre-existing "
+                                       "authentic process behind %s IPC on "
+                                       "this platform and "
+                                       "PCMK_" PCMK__ENV_FAIL_FAST " requested",
+                                       ipc_name);
                             return EOPNOTSUPP;
                         } else if (pcmk_children[i].respawn_count == WAIT_TRIES) {
                             crm_notice("Assuming pre-existing authentic, though"
@@ -771,11 +772,12 @@ find_and_track_existing_processes(void)
                     break;
                 case pcmk_rc_ipc_pid_only:
                     if (pcmk_children[i].respawn_count == WAIT_TRIES) {
-                        crm_crit("%s IPC endpoint for existing authentic"
-                                 " process %lld did not (re)appear",
-                                 ipc_name,
-                                 (long long) PCMK__SPECIAL_PID_AS_0(
-                                                 pcmk_children[i].pid));
+                        pid_t child_pid =
+                            PCMK__SPECIAL_PID_AS_0(pcmk_children[i].pid);
+
+                        pcmk__crit("%s IPC endpoint for existing authentic"
+                                   " process %lld did not (re)appear",
+                                   ipc_name, (long long) child_pid);
                         return rc;
                     }
                     wait_in_progress = true;
@@ -788,8 +790,8 @@ find_and_track_existing_processes(void)
                              WAIT_TRIES - pcmk_children[i].respawn_count);
                     continue;
                 default:
-                    crm_crit("Checked liveness of %s: %s " QB_XS " rc=%d",
-                             name, pcmk_rc_str(rc), rc);
+                    pcmk__crit("Checked liveness of %s: %s " QB_XS " rc=%d",
+                               name, pcmk_rc_str(rc), rc);
                     return rc;
             }
         }

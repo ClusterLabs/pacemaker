@@ -241,8 +241,8 @@ main(int argc, char **argv)
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_crit("Aborting start-up because another CIB manager instance is "
-                 "already active");
+        pcmk__crit("Aborting start-up because another CIB manager instance is "
+                   "already active");
         goto done;
     } else {
         /* not up or not authentic, we'll proceed either way */
@@ -343,8 +343,8 @@ cib_cs_destroy(gpointer user_data)
     if (cib_shutdown_flag) {
         crm_info("Corosync disconnection complete");
     } else {
-        crm_crit("Exiting immediately after losing connection "
-                 "to cluster layer");
+        pcmk__crit("Exiting immediately after losing connection to cluster "
+                   "layer");
         terminate_cib(CRM_EX_DISCONNECT);
     }
 }
@@ -386,7 +386,7 @@ cib_init(void)
     config_hash = pcmk__strkey_table(free, free);
 
     if (startCib("cib.xml") == FALSE) {
-        crm_crit("Cannot start CIB... terminating");
+        pcmk__crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
 
@@ -394,7 +394,7 @@ cib_init(void)
         pcmk__cluster_set_status_callback(&cib_peer_update_callback);
 
         if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
-            crm_crit("Cannot sign in to the cluster... terminating");
+            pcmk__crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }
     }
