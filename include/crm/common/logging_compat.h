@@ -42,13 +42,12 @@ extern "C" {
             default: {                                                      \
                 const char *err = strerror(errno);                          \
                 if (_level <= crm_log_level) {                              \
-                    fprintf(stderr, fmt ": %s (%d)\n" , ##args, err,        \
-                            errno);                                         \
+                    fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno); \
                 }                                                           \
                 /* Pass original level arg since do_crm_log() also declares \
                  * _level                                                   \
                  */                                                         \
-                do_crm_log((level), fmt ": %s (%d)" , ##args, err, errno);  \
+                do_crm_log((level), fmt ": %s (%d)", ##args, err, errno);   \
             }                                                               \
             break;                                                          \
         }                                                                   \
