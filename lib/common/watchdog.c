@@ -95,9 +95,10 @@ panic_local(void)
         reboot_cmd = RB_POWEROFF;
 #endif
     } else {
-        crm_warn("Using default '" PCMK_VALUE_REBOOT "' for local option PCMK_"
-                 PCMK__ENV_PANIC_ACTION " because '%s' is not a valid value",
-                 full_panic_action);
+        pcmk__warn("Using default '" PCMK_VALUE_REBOOT "' for local option "
+                   "PCMK_" PCMK__ENV_PANIC_ACTION " because '%s' is not a "
+                   "valid value",
+                   full_panic_action);
         pcmk__sysrq_trigger('b');
     }
 
@@ -250,9 +251,9 @@ pcmk__get_sbd_sync_resource_startup(void)
 
         } else if (pcmk__parse_bool(sync_env,
                                     &sync_resource_startup) != pcmk_rc_ok) {
-            crm_warn("Defaulting to %sstart-up synchronization with sbd "
-                     "because environment value '%s' is invalid",
-                     (PCMK__SBD_SYNC_DEFAULT? "" : "no "), sync_env);
+            pcmk__warn("Defaulting to %sstart-up synchronization with sbd "
+                       "because environment value '%s' is invalid",
+                       (PCMK__SBD_SYNC_DEFAULT? "" : "no "), sync_env);
         }
         checked_sync_resource_startup = true;
     }

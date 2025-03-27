@@ -304,8 +304,9 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok && header->version > REMOTE_MSG_VERSION) {
-            crm_warn("Couldn't decompress v%d message, we only understand v%d",
-                     header->version, REMOTE_MSG_VERSION);
+            pcmk__warn("Couldn't decompress v%d message, we only understand "
+                       "v%d",
+                       header->version, REMOTE_MSG_VERSION);
             free(uncompressed);
             return NULL;
 
@@ -347,8 +348,8 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
     xml = pcmk__xml_parse(payload);
     if (xml == NULL) {
         if (header->version > REMOTE_MSG_VERSION) {
-            crm_warn("Couldn't parse v%d message, we only understand v%d",
-                     header->version, REMOTE_MSG_VERSION);
+            pcmk__warn("Couldn't parse v%d message, we only understand v%d",
+                       header->version, REMOTE_MSG_VERSION);
         } else {
             pcmk__err("Couldn't parse: '%.120s'", payload);
         }
@@ -701,8 +702,8 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
 
     rc = pcmk__set_nonblocking(sock);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
         return rc;
     }
 
@@ -716,8 +717,8 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
                 break;
 
             default:
-                crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
-                         pcmk_rc_str(rc), rc);
+                pcmk__warn("Could not connect socket: %s " QB_XS " rc=%d",
+                           pcmk_rc_str(rc), rc);
                 return rc;
         }
     }
@@ -775,15 +776,15 @@ connect_socket_once(int sock, const struct sockaddr *addr, socklen_t addrlen)
 
     if (rc < 0) {
         rc = errno;
-        crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__warn("Could not connect socket: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
         return rc;
     }
 
     rc = pcmk__set_nonblocking(sock);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
         return rc;
     }
 
@@ -858,8 +859,9 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
         sock = socket(rp->ai_family, SOCK_STREAM, IPPROTO_TCP);
         if (sock == -1) {
             rc = errno;
-            crm_warn("Could not create socket for remote connection to %s:%d: "
-                     "%s " QB_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+            pcmk__warn("Could not create socket for remote connection to "
+                       "%s:%d: %s " QB_XS " rc=%d",
+                       server, port, pcmk_rc_str(rc), rc);
             continue;
         }
 
@@ -1015,9 +1017,9 @@ crm_default_remote_port(void)
             errno = 0;
             port = strtol(env, NULL, 10);
             if (errno || (port < 1) || (port > 65535)) {
-                crm_warn("Environment variable PCMK_" PCMK__ENV_REMOTE_PORT
-                         " has invalid value '%s', using %d instead",
-                         env, DEFAULT_REMOTE_PORT);
+                pcmk__warn("Environment variable PCMK_" PCMK__ENV_REMOTE_PORT
+                           " has invalid value '%s', using %d instead",
+                           env, DEFAULT_REMOTE_PORT);
                 port = DEFAULT_REMOTE_PORT;
             }
         } else {

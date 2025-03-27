@@ -76,8 +76,8 @@ do_cl_join_announce(long long action, enum crmd_fsa_cause cause,
     xmlNode *req = NULL;
 
     if (cur_state != S_PENDING) {
-        crm_warn("Not announcing cluster join because in state %s",
-                 fsa_state2string(cur_state));
+        pcmk__warn("Not announcing cluster join because in state %s",
+                   fsa_state2string(cur_state));
         return;
     }
 
@@ -171,8 +171,8 @@ do_cl_join_offer_respond(long long action, enum crmd_fsa_cause cause,
     }
 
     if (!update_dc(input->msg)) {
-        crm_warn("Discarding cluster join offer from node %s (expected %s)",
-                 welcome_from, controld_globals.dc_name);
+        pcmk__warn("Discarding cluster join offer from node %s (expected %s)",
+                   welcome_from, controld_globals.dc_name);
         return;
     }
 
@@ -221,9 +221,9 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
         crm_debug("Not forcing a starting state on node %s", node_name);
 
     } else {
-        crm_warn("Unrecognized start state '%s', using "
-                 "'" PCMK_VALUE_DEFAULT "' (%s)",
-                 start_state, node_name);
+        pcmk__warn("Unrecognized start state '%s', using "
+                   "'" PCMK_VALUE_DEFAULT "' (%s)",
+                   start_state, node_name);
     }
 }
 
@@ -293,14 +293,15 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
     }
 
     if (!AM_I_DC && controld_is_local_node(welcome_from)) {
-        crm_warn("Discarding our own welcome - we're no longer the DC");
+        pcmk__warn("Discarding our own welcome - we're no longer the DC");
         return;
     }
 
     if (!update_dc(input->msg)) {
-        crm_warn("Discarding %s from node %s (expected from %s)",
-                 pcmk__s(op, "unspecified op"),
-                 pcmk__s(welcome_from, "(unknown)"), controld_globals.dc_name);
+        pcmk__warn("Discarding %s from node %s (expected from %s)",
+                   pcmk__s(op, "unspecified op"),
+                   pcmk__s(welcome_from, "(unknown)"),
+                   controld_globals.dc_name);
         return;
     }
 

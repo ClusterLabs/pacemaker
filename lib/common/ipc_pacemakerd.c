@@ -207,9 +207,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         int rc = pcmk__scan_ll(status, &ack_status, CRM_EX_OK);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ack reply from %s has invalid " PCMK_XA_STATUS
-                     " '%s' (bug?)",
-                     pcmk_ipc_name(api, true), pcmk__s(status, ""));
+            pcmk__warn("Ack reply from %s has invalid " PCMK_XA_STATUS " '%s' "
+                       "(bug?)",
+                       pcmk_ipc_name(api, true), pcmk__s(status, ""));
         }
         return ack_status == CRM_EX_INDETERMINATE;
     }

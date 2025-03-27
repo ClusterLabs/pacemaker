@@ -767,16 +767,18 @@ search_cluster_member_cache(unsigned int id, const char *uname,
                                         by_name);
 
         } else {
-            crm_warn("Nodes '%s' and '%s' share the same cluster nodeid: %u %s",
-                     by_id->name, by_name->name, id, uname);
+            pcmk__warn("Nodes '%s' and '%s' share the same cluster nodeid: %u "
+                       "%s",
+                       by_id->name, by_name->name, id, uname);
             dump_peer_hash(LOG_INFO, __func__);
             crm_abort(__FILE__, __func__, __LINE__, "member weirdness", TRUE,
                       TRUE);
         }
 
     } else if ((id > 0) && (by_name->cluster_layer_id > 0)) {
-        crm_warn("Nodes %" PRIu32 " and %" PRIu32 " share the same name: '%s'",
-                 by_id->cluster_layer_id, by_name->cluster_layer_id, uname);
+        pcmk__warn("Nodes %" PRIu32 " and %" PRIu32 " share the same name: "
+                   "'%s'",
+                   by_id->cluster_layer_id, by_name->cluster_layer_id, uname);
 
     } else {
         /* Simple merge */
@@ -911,10 +913,10 @@ remove_conflicting_peer(pcmk__node_status_t *node)
                 continue;
             }
 
-            crm_warn("Removing cached offline node %" PRIu32 "/%s which has "
-                     "conflicting name with %" PRIu32,
-                     existing_node->cluster_layer_id, existing_node->name,
-                     node->cluster_layer_id);
+            pcmk__warn("Removing cached offline node %" PRIu32 "/%s which has "
+                       "conflicting name with %" PRIu32,
+                       existing_node->cluster_layer_id, existing_node->name,
+                       node->cluster_layer_id);
 
             g_hash_table_iter_remove(&iter);
             matches++;
@@ -1050,8 +1052,9 @@ update_peer_uname(pcmk__node_status_t *node, const char *uname)
 
     for (const char *c = uname; *c; ++c) {
         if ((*c >= 'A') && (*c <= 'Z')) {
-            crm_warn("Node names with capitals are discouraged, consider changing '%s'",
-                     uname);
+            pcmk__warn("Node names with capitals are discouraged, consider "
+                       "changing '%s'",
+                       uname);
             break;
         }
     }

@@ -280,7 +280,7 @@ add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GErr
         || (tolerance_ms < 0)) {
 
         // @COMPAT Treat as an error and return FALSE?
-        crm_warn("Ignoring invalid tolerance '%s'", optarg);
+        pcmk__warn("Ignoring invalid tolerance '%s'", optarg);
     } else {
         options.tolerance_ms = (unsigned int) QB_MIN(tolerance_ms, UINT_MAX);
     }

@@ -436,7 +436,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
                && (match->parent->type == XML_ELEMENT_NODE)) {
                 return match->parent;
            }
-           crm_warn("Unsupported XPath match type %d (bug?)", match->type);
+           pcmk__warn("Unsupported XPath match type %d (bug?)", match->type);
            return NULL;
     }
 }

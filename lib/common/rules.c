@@ -761,8 +761,9 @@ pcmk__cmp_by_type(const char *value1, const char *value2, enum pcmk__type type)
 
                 if ((pcmk__scan_ll(value1, &integer1, 0LL) != pcmk_rc_ok)
                     || (pcmk__scan_ll(value2, &integer2, 0LL) != pcmk_rc_ok)) {
-                    crm_warn("Comparing '%s' and '%s' as strings because "
-                             "invalid as integers", value1, value2);
+                    pcmk__warn("Comparing '%s' and '%s' as strings because "
+                               "invalid as integers",
+                               value1, value2);
                     return strcasecmp(value1, value2);
                 }
                 return (integer1 < integer2)? -1 : (integer1 > integer2)? 1 : 0;
@@ -777,8 +778,9 @@ pcmk__cmp_by_type(const char *value1, const char *value2, enum pcmk__type type)
                 if ((pcmk__scan_double(value1, &num1, NULL, NULL) != pcmk_rc_ok)
                     || (pcmk__scan_double(value2, &num2, NULL,
                                           NULL) != pcmk_rc_ok)) {
-                    crm_warn("Comparing '%s' and '%s' as strings because invalid as "
-                             "numbers", value1, value2);
+                    pcmk__warn("Comparing '%s' and '%s' as strings because "
+                               "invalid as numbers",
+                               value1, value2);
                     return strcasecmp(value1, value2);
                 }
                 return (num1 < num2)? -1 : (num1 > num2)? 1 : 0;

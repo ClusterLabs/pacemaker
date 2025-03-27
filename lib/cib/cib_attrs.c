@@ -89,7 +89,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
 
     xpath_base = pcmk_cib_xpath_for(section);
     if (xpath_base == NULL) {
-        crm_warn("%s CIB section not known", section);
+        pcmk__warn("%s CIB section not known", section);
         return ENOMSG;
     }
 

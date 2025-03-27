@@ -219,7 +219,7 @@ crm_cs_flush(gpointer data)
         pcmk__err("CPG queue has grown to %d", queue_len);
 
     } else if (queue_len == CS_SEND_MAX) {
-        crm_warn("CPG queue has grown to %d", queue_len);
+        pcmk__warn("CPG queue has grown to %d", queue_len);
     }
 
     if (cs_message_timer != 0) {
@@ -407,9 +407,9 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
         if (msg->sender.id == 0) {
             msg->sender.id = sender_id;
         } else if (msg->sender.id != sender_id) {
-            crm_warn("Ignoring CPG message from ID %" PRIu32 " PID %" PRIu32
-                     ": claimed ID %" PRIu32,
-                    sender_id, pid, msg->sender.id);
+            pcmk__warn("Ignoring CPG message from ID %" PRIu32 " PID %" PRIu32
+                       ": claimed ID %" PRIu32,
+                       sender_id, pid, msg->sender.id);
             return NULL;
         }
 
@@ -473,10 +473,10 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
         }
         if (rc != pcmk_rc_ok) {
             free(uncompressed);
-            crm_warn("Ignoring compressed CPG message %d from %s (ID %" PRIu32
-                    " PID %" PRIu32 "): %s",
-                     msg->id, ais_dest(&(msg->sender)), sender_id, pid,
-                     pcmk_rc_str(rc));
+            pcmk__warn("Ignoring compressed CPG message %d from %s (ID %" PRIu32
+                       " PID %" PRIu32 "): %s",
+                       msg->id, ais_dest(&(msg->sender)), sender_id, pid,
+                       pcmk_rc_str(rc));
             return NULL;
         }
         data = uncompressed;
@@ -603,15 +603,15 @@ node_left(const char *cpg_group_name, int event_counter,
                                  PCMK_VALUE_OFFLINE);
         }
     } else if (cpg_peer->nodeid == local_nodeid) {
-        crm_warn("Group %s event %d: duplicate local pid %u left%s",
-                 cpg_group_name, event_counter,
-                 cpg_peer->pid, cpgreason2str(cpg_peer->reason));
+        pcmk__warn("Group %s event %d: duplicate local pid %u left%s",
+                   cpg_group_name, event_counter,
+                   cpg_peer->pid, cpgreason2str(cpg_peer->reason));
     } else {
-        crm_warn("Group %s event %d: "
-                 "%s (node %u) duplicate pid %u left%s (%u remains)",
-                 cpg_group_name, event_counter, peer_name(peer),
-                 cpg_peer->nodeid, cpg_peer->pid,
-                 cpgreason2str(cpg_peer->reason), (*rival)->pid);
+        pcmk__warn("Group %s event %d: %s (node %u) duplicate pid %u left%s "
+                   "(%u remains)",
+                   cpg_group_name, event_counter, peer_name(peer),
+                   cpg_peer->nodeid, cpg_peer->pid,
+                   cpgreason2str(cpg_peer->reason), (*rival)->pid);
     }
 }
 
@@ -679,8 +679,8 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
         if (member_list[i].nodeid == local_nodeid
                 && member_list[i].pid != getpid()) {
             // See the note in node_left()
-            crm_warn("Group %s event %d: detected duplicate local pid %u",
-                     group_name->value, counter, member_list[i].pid);
+            pcmk__warn("Group %s event %d: detected duplicate local pid %u",
+                       group_name->value, counter, member_list[i].pid);
             continue;
         }
         crm_info("Group %s event %d: %s (node %u pid %u) is member",
@@ -709,9 +709,9 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
 
             } else if (now > (peer->when_lost + 60)) {
                 // If it persists for more than a minute, update the state
-                crm_warn("Node %u is member of group %s but was believed "
-                         "offline",
-                         member_list[i].nodeid, group_name->value);
+                pcmk__warn("Node %u is member of group %s but was believed "
+                           "offline",
+                           member_list[i].nodeid, group_name->value);
                 pcmk__update_peer_state(__func__, peer, PCMK_VALUE_MEMBER, 0);
             }
         }

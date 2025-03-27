@@ -732,9 +732,9 @@ should_add_input_to_graph(const pcmk_action_t *action,
                && !pcmk__is_set(input->action->rsc->flags, pcmk__rsc_managed)
                && g_str_has_suffix(input->action->uuid, "_stop_0")
                && pcmk__is_clone(action->rsc)) {
-        crm_warn("Ignoring requirement that %s complete before %s:"
-                 " unmanaged failed resources cannot prevent clone shutdown",
-                 input->action->uuid, action->uuid);
+        pcmk__warn("Ignoring requirement that %s complete before %s: unmanaged "
+                   "failed resources cannot prevent clone shutdown",
+                   input->action->uuid, action->uuid);
         return false;
 
     } else if (pcmk__is_set(input->action->flags, pcmk__action_optional)
@@ -952,10 +952,10 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
 
     } else if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_warning)
                || pcmk__config_has_warning) {
-        crm_warn("Calculated transition %d (with warnings)%s%s",
-                 transition_id,
-                 (filename == NULL)? "" : ", saving inputs in ",
-                 (filename == NULL)? "" : filename);
+        pcmk__warn("Calculated transition %d (with warnings)%s%s",
+                   transition_id,
+                   ((filename != NULL)? ", saving inputs in " : ""),
+                   pcmk__s(filename, ""));
 
     } else {
         crm_notice("Calculated transition %d%s%s",
@@ -1040,8 +1040,9 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash, PCMK_OPT_MIGRATION_LIMIT);
     rc = pcmk__scan_ll(value, &limit, 0LL);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Ignoring invalid value '%s' for " PCMK_OPT_MIGRATION_LIMIT
-                 ": %s", value, pcmk_rc_str(rc));
+        pcmk__warn("Ignoring invalid value '%s' for " PCMK_OPT_MIGRATION_LIMIT
+                   ": %s",
+                   value, pcmk_rc_str(rc));
     } else if (limit > 0) {
         pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_MIGRATION_LIMIT, value);
     }

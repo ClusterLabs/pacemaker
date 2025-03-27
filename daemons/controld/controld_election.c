@@ -78,8 +78,8 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
         case S_RECOVERY:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_warn("Not voting in election, we're in state %s",
-                     fsa_state2string(cur_state));
+            pcmk__warn("Not voting in election, we're in state %s",
+                       fsa_state2string(cur_state));
             controld_fsa_append(C_FSA_INTERNAL,
                                 (AM_I_DC? I_RELEASE_DC : I_PENDING), NULL);
             return;

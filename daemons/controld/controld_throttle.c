@@ -238,9 +238,9 @@ throttle_update_job_max(const char *preference)
         int rc = pcmk__scan_ll(env_limit, &max, 0LL);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ignoring local option PCMK_" PCMK__ENV_NODE_ACTION_LIMIT
-                     " because '%s' is not a valid value: %s",
-                     env_limit, pcmk_rc_str(rc));
+            pcmk__warn("Ignoring local option PCMK_" PCMK__ENV_NODE_ACTION_LIMIT
+                       " because '%s' is not a valid value: %s",
+                       env_limit, pcmk_rc_str(rc));
             env_limit = NULL;
         }
     }

@@ -181,8 +181,8 @@ fail_assert_as(const char *file, const char *function, int line,
     pid = fork();
     switch (pid) {
         case -1: // Fork failed
-            crm_warn("%s: Cannot dump core for non-fatal assertion at %s:%d "
-                     ": %s", function, file, line, assert_condition);
+            pcmk__warn("%s: Cannot dump core for non-fatal assertion at %s:%d "
+                       ": %s", function, file, line, assert_condition);
             break;
 
         case 0: // Child process: just abort to dump core

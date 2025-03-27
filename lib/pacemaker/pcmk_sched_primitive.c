@@ -1620,9 +1620,9 @@ shutdown_time(pcmk_node_t *node)
         if (rc == pcmk_rc_ok) {
             result = (time_t) result_ll;
         } else {
-            crm_warn("Ignoring invalid value '%s' for %s "
-                     PCMK__NODE_ATTR_SHUTDOWN " attribute: %s",
-                     shutdown, pcmk__node_name(node), pcmk_rc_str(rc));
+            pcmk__warn("Ignoring invalid value '%s' for %s "
+                       PCMK__NODE_ATTR_SHUTDOWN " attribute: %s",
+                       shutdown, pcmk__node_name(node), pcmk_rc_str(rc));
         }
     }
     if (result == 0) {

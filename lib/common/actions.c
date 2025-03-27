@@ -411,8 +411,9 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
                   pcmk_rc_str(errno));
         result = FALSE;
     } else if (res < 3) {
-        crm_warn("Transition information '%s' incomplete (%d of 3 expected items)",
-                 magic, res);
+        pcmk__warn("Transition information '%s' incomplete (%d of 3 expected "
+                   "items)",
+                   magic, res);
         result = FALSE;
     } else {
         if (op_status) {
@@ -480,7 +481,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
         return FALSE;
     }
     if (strlen(local_uuid) != 36) {
-        crm_warn("Invalid UUID '%s' in transition key '%s'", local_uuid, key);
+        pcmk__warn("Invalid UUID '%s' in transition key '%s'", local_uuid, key);
     }
     if (uuid) {
         *uuid = pcmk__str_copy(local_uuid);

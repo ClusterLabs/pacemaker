@@ -164,10 +164,10 @@ score_from_attr(const char *constraint_id, const char *attr_name,
 
     rc = pcmk_parse_score(score_s, score, 0);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Ignoring location %s for node %s because node "
-                 "attribute %s value '%s' is not a valid score: %s",
-                 constraint_id, pcmk__node_name(node), attr_name,
-                 score_s, pcmk_rc_str(rc));
+        pcmk__warn("Ignoring location %s for node %s because node attribute "
+                   "%s value '%s' is not a valid score: %s",
+                   constraint_id, pcmk__node_name(node), attr_name,
+                   score_s, pcmk_rc_str(rc));
         return rc;
     }
     return pcmk_rc_ok;
