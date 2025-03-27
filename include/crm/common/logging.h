@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -352,19 +352,19 @@ pcmk__clip_log_level(int level)
         }                                                                   \
     } while (0)
 
-#define crm_emerg(fmt, args...)   qb_log(LOG_EMERG,       fmt , ##args)
-#define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
+#define crm_emerg(fmt, args...)   qb_log(LOG_EMERG, fmt , ##args)
+#define crm_crit(fmt, args...)    qb_log(LOG_CRIT, fmt , ##args)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
+#define crm_err(fmt, args...)     qb_log(LOG_ERR, fmt , ##args)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
+#define crm_warn(fmt, args...)    qb_log(LOG_WARNING, fmt , ##args)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
+#define crm_notice(fmt, args...)  qb_log(LOG_NOTICE, fmt , ##args)
 
-#define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
+#define crm_info(fmt, args...)    qb_log(LOG_INFO, fmt , ##args)
                                                 //
 // NOTE: sbd (as of at least 1.5.2) uses this
 #define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
