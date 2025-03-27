@@ -26,8 +26,8 @@
 #include "crmcommon_private.h"
 
 typedef struct xml_acl_s {
-        enum xml_private_flags mode;
-        gchar *xpath;
+    enum pcmk__xml_flags mode;
+    gchar *xpath;
 } xml_acl_t;
 
 static void
@@ -48,7 +48,7 @@ pcmk__free_acls(GList *acls)
 }
 
 static GList *
-create_acl(const xmlNode *xml, GList *acls, enum xml_private_flags mode)
+create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 {
     xml_acl_t *acl = NULL;
 
@@ -198,7 +198,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 */
 
 static const char *
-acl_to_text(enum xml_private_flags flags)
+acl_to_text(enum pcmk__xml_flags flags)
 {
     if (pcmk_is_set(flags, pcmk__xf_acl_deny)) {
         return "deny";
@@ -386,7 +386,7 @@ pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
 }
 
 static inline bool
-test_acl_mode(enum xml_private_flags allowed, enum xml_private_flags requested)
+test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
 {
     if (pcmk_is_set(allowed, pcmk__xf_acl_deny)) {
         return false;
@@ -719,7 +719,7 @@ xml_acl_enabled(const xmlNode *xml)
  * \param[in]     prefix     Prefix describing ACL that denied access (for
  *                           logging only)
  * \param[in]     user       User accessing \p xml (for logging only)
- * \param[in]     mode       Access mode
+ * \param[in]     mode       Access mode (for logging only)
  */
 #define check_acl_deny(xml, attr_name, prefix, user, mode) do {             \
         xmlNode *tree = xml;                                                \
@@ -745,8 +745,7 @@ xml_acl_enabled(const xmlNode *xml)
     } while (false);
 
 bool
-pcmk__check_acl(xmlNode *xml, const char *attr_name,
-                enum xml_private_flags mode)
+pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
 {
     xml_doc_private_t *docpriv = NULL;
 

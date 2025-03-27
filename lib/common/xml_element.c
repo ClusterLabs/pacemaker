@@ -760,7 +760,7 @@ replace_node(xmlNode *old, xmlNode *new)
         // Replaced sections may have included relevant ACLs
         pcmk__apply_acl(new);
     }
-    xml_calculate_changes(old, new);
+    pcmk__xml_mark_changes(old, new);
     pcmk__xml_free_node(old);
 }
 
