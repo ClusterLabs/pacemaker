@@ -71,6 +71,9 @@ extern "C" {
 //! \deprecated Do not use
 #define crm_notice(fmt, args...) qb_log(LOG_NOTICE, fmt, ##args)
 
+//! \deprecated Do not use
+#define crm_info(fmt, args...) qb_log(LOG_INFO, fmt, ##args)
+
 #ifdef __cplusplus
 }
 #endif
