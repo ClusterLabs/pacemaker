@@ -226,7 +226,7 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_BASED, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker CIB manager");
+    pcmk__notice("Starting Pacemaker CIB manager");
 
     old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
     if (old_instance == NULL) {
@@ -260,7 +260,7 @@ main(int argc, char **argv)
     if (cib_root == NULL) {
         cib_root = g_strdup(CRM_CONFIG_DIR);
     } else {
-        crm_notice("Using custom config location: %s", cib_root);
+        pcmk__notice("Using custom config location: %s", cib_root);
     }
 
     if (!pcmk__daemon_can_write(cib_root, NULL)) {
@@ -278,7 +278,8 @@ main(int argc, char **argv)
 
     // Run the main loop
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker CIB manager successfully started and accepting connections");
+    pcmk__notice("Pacemaker CIB manager successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case

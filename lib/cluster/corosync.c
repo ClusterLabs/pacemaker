@@ -229,7 +229,7 @@ pcmk__corosync_disconnect(pcmk_cluster_t *cluster)
         quorum_finalize(pcmk_quorum_handle);
         pcmk_quorum_handle = 0;
     }
-    crm_notice("Disconnected from Corosync");
+    pcmk__notice("Disconnected from Corosync");
 }
 
 /*!
@@ -278,9 +278,9 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
     bool was_quorate = pcmk__cluster_has_quorum();
 
     if (is_quorate && !was_quorate) {
-        crm_notice("Quorum acquired " QB_XS " membership=%" PRIu64
-                   " members=%" PRIu32,
-                   ring_id, view_list_entries);
+        pcmk__notice("Quorum acquired " QB_XS " membership=%" PRIu64
+                     " members=%" PRIu32,
+                     ring_id, view_list_entries);
         pcmk__cluster_set_quorum(true);
 
     } else if (!is_quorate && was_quorate) {
@@ -426,7 +426,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
     }
 
     if (quorate) {
-        crm_notice("Quorum acquired");
+        pcmk__notice("Quorum acquired");
     } else {
         pcmk__warn("No quorum");
     }

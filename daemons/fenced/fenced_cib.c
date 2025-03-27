@@ -518,7 +518,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
                 break;
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
-                crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__notice("[%s] Patch aborted: %s (%d)", event,
+                             pcmk_strerror(rc), rc);
                 pcmk__xml_free(local_cib);
                 local_cib = NULL;
                 break;

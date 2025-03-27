@@ -57,7 +57,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
             pcmk__err("Could not save CIB to %s after scheduler crash",
                       filename);
         } else {
-            crm_notice("Saved CIB to %s after scheduler crash", filename);
+            pcmk__notice("Saved CIB to %s after scheduler crash", filename);
         }
         free(filename);
     }
@@ -347,8 +347,8 @@ do_pe_invoke(long long action, enum crmd_fsa_cause cause,
     }
 
     if (cur_state != S_POLICY_ENGINE) {
-        crm_notice("Not invoking scheduler because in state %s",
-                   fsa_state2string(cur_state));
+        pcmk__notice("Not invoking scheduler because in state %s",
+                     fsa_state2string(cur_state));
         return;
     }
 

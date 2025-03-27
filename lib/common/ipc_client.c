@@ -976,8 +976,8 @@ crm_ipc_destroy(crm_ipc_t * client)
 {
     if (client) {
         if (client->ipc && qb_ipcc_is_connected(client->ipc)) {
-            crm_notice("Destroying active %s IPC connection",
-                       client->server_name);
+            pcmk__notice("Destroying active %s IPC connection",
+                         client->server_name);
             /* The next line is basically unsafe
              *
              * If this connection was attached to mainloop and mainloop is active,
@@ -1326,8 +1326,9 @@ discard_old_replies(crm_ipc_t *client, int32_t ms_timeout)
 
     } else if (!pcmk__is_set(header->flags, crm_ipc_multipart)
                || pcmk__is_set(header->flags, crm_ipc_multipart_end)) {
-        crm_notice("Sending %s IPC re-enabled after pending reply received",
-                   client->server_name);
+
+        pcmk__notice("Sending %s IPC re-enabled after pending reply received",
+                     client->server_name);
         client->need_reply = FALSE;
 
     } else {
@@ -1368,14 +1369,14 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     uint16_t index = 0;
 
     if (client == NULL) {
-        crm_notice("Can't send IPC request without connection (bug?): %.100s",
-                   message);
+        pcmk__notice("Can't send IPC request without connection (bug?): %.100s",
+                     message);
         return -ENOTCONN;
 
     } else if (!crm_ipc_connected(client)) {
         /* Don't even bother */
-        crm_notice("Can't send %s IPC requests: Connection closed",
-                   client->server_name);
+        pcmk__notice("Can't send %s IPC requests: Connection closed",
+                     client->server_name);
         return -ENOTCONN;
     }
 
@@ -1508,8 +1509,9 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
   send_cleanup:
     if (!crm_ipc_connected(client)) {
-        crm_notice("Couldn't send %s IPC request %d: Connection closed "
-                   QB_XS " rc=%d", client->server_name, header->qb.id, rc);
+        pcmk__notice("Couldn't send %s IPC request %d: Connection closed "
+                     QB_XS " rc=%d",
+                     client->server_name, header->qb.id, rc);
 
     } else if (rc == -ETIMEDOUT) {
         pcmk__warn("%s IPC request %d failed: %s after %dms " QB_XS " rc=%d",
@@ -1748,11 +1750,11 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
                        "least privilege principle",
                        name, (long long) refuid, (long long) refgid);
         } else {
-            crm_notice("Daemon (IPC %s) runs as %lld:%lld, whereas the"
-                       " expected credentials are %lld:%lld, which may"
-                       " mean a different set of privileges than expected",
-                       name, (long long) found_uid, (long long) found_gid,
-                       (long long) refuid, (long long) refgid);
+            pcmk__notice("Daemon (IPC %s) runs as %lld:%lld, whereas the "
+                         "expected credentials are %lld:%lld, which may "
+                         "mean a different set of privileges than expected",
+                         name, (long long) found_uid, (long long) found_gid,
+                         (long long) refuid, (long long) refgid);
         }
         memccpy(last_asked_name, name, '\0', sizeof(last_asked_name));
     }

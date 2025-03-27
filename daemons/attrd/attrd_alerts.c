@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -87,7 +87,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crm_debug("Local CIB has no alerts section");
         return;
     } else if (rc != pcmk_ok) {
-        crm_notice("Could not query local CIB: %s", pcmk_strerror(rc));
+        pcmk__notice("Could not query local CIB: %s", pcmk_strerror(rc));
         return;
     }
 
@@ -96,7 +96,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crmalerts = pcmk__xe_first_child(crmalerts, PCMK_XE_ALERTS, NULL, NULL);
     }
     if (!crmalerts) {
-        crm_notice("CIB query result has no " PCMK_XE_ALERTS " section");
+        pcmk__notice("CIB query result has no " PCMK_XE_ALERTS " section");
         return;
     }
 

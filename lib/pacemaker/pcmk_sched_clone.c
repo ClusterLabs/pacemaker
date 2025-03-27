@@ -312,8 +312,9 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
         }
 
         if (colocation->score >= PCMK_SCORE_INFINITY) {
-            crm_notice("%s cannot run because it cannot interleave with "
-                       "any instance of %s", dependent->id, primary->id);
+            pcmk__notice("%s cannot run because it cannot interleave with "
+                         "any instance of %s",
+                         dependent->id, primary->id);
             pcmk__assign_resource(dependent, NULL, true, true);
 
         } else {

@@ -193,8 +193,8 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
 
     } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         if (rsc->priv->fns->state(rsc, true) == pcmk_role_promoted) {
-            crm_notice("Unmanaged instance %s will be left promoted on %s",
-                       rsc->id, pcmk__node_name(node));
+            pcmk__notice("Unmanaged instance %s will be left promoted on %s",
+                         rsc->id, pcmk__node_name(node));
         } else {
             pcmk__rsc_trace(rsc, "%s can't be promoted because it is unmanaged",
                             rsc->id);
@@ -1067,8 +1067,8 @@ set_instance_role(gpointer data, gpointer user_data)
     if ((instance->priv->orig_role < pcmk_role_promoted)
         && !pcmk__is_set(scheduler->flags, pcmk__sched_quorate)
         && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
-        crm_notice("Clone instance %s cannot be promoted without quorum",
-                   instance->id);
+        pcmk__notice("Clone instance %s cannot be promoted without quorum",
+                     instance->id);
         set_next_role_unpromoted(instance, NULL);
         return;
     }

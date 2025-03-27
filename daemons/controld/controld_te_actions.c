@@ -424,10 +424,10 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
-        crm_notice("Asking %s to execute %s on %s%s "
-                   QB_XS " transition %s action %d",
-                   router_node, task_uuid, on_node,
-                   (no_wait? " without waiting" : ""), counter, action->id);
+        pcmk__notice("Asking %s to execute %s on %s%s "
+                     QB_XS " transition %s action %d",
+                     router_node, task_uuid, on_node,
+                     (no_wait? " without waiting" : ""), counter, action->id);
         rc = pcmk__cluster_send_message(node, pcmk_ipc_execd, cmd);
     }
 
