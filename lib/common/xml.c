@@ -1342,23 +1342,36 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
                         pcmk__xf_skip);
 }
 
+/*!
+ * \internal
+ * \brief Mark a new child as moved and set \c pcmk__xf_skip as appropriate
+ *
+ * \param[in,out] old_child  Child of old XML
+ * \param[in,out] new_child  Child of new XML that matches \p old_child
+ * \param[in]     old_pos    Position of \p old_child among its siblings
+ * \param[in]     new_pos    Position of \p new_child among its siblings
+ */
 static void
-mark_child_moved(xmlNode *old_child, xmlNode *new_parent, xmlNode *new_child,
-                 int p_old, int p_new)
+mark_child_moved(xmlNode *old_child, xmlNode *new_child, int old_pos,
+                 int new_pos)
 {
+    const char *id_s = pcmk__s(pcmk__xe_id(new_child), "<no id>");
+    xmlNode *new_parent = new_child->parent;
     xml_node_private_t *nodepriv = new_child->_private;
 
-    crm_trace("Child element %s with "
-              PCMK_XA_ID "='%s' moved from position %d to %d under %s",
-              new_child->name, pcmk__s(pcmk__xe_id(new_child), "<no id>"),
-              p_old, p_new, new_parent->name);
+    crm_trace("Child element %s with " PCMK_XA_ID "='%s' moved from position "
+              "%d to %d under %s",
+              new_child->name, id_s, old_pos, new_pos, new_parent->name);
     pcmk__mark_xml_node_dirty(new_parent);
     pcmk__set_xml_flags(nodepriv, pcmk__xf_moved);
 
-    if (p_old > p_new) {
+    /* @TODO Figure out and document why we skip the old child in future
+     * position calculations if the old position is higher, and skip the new
+     * child in future position calculations if the new position is higher. This
+     * goes back to 9bb15b38, and there's no explanation in the commit message.
+     */
+    if (old_pos > new_pos) {
         nodepriv = old_child->_private;
-    } else {
-        nodepriv = new_child->_private;
     }
     pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
 }
@@ -1612,8 +1625,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
             int new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
 
             if (old_pos != new_pos) {
-                mark_child_moved(old_child, new_xml, new_child, old_pos,
-                                 new_pos);
+                mark_child_moved(old_child, new_child, old_pos, new_pos);
             }
             nodepriv->match = NULL;
             continue;
