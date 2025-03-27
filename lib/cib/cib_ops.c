@@ -159,7 +159,7 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
 
     *operation = g_hash_table_lookup(operation_table, op);
     if (*operation == NULL) {
-        crm_err("Operation %s is invalid", op);
+        pcmk__err("Operation %s is invalid", op);
         return EINVAL;
     }
     return pcmk_rc_ok;
@@ -204,7 +204,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     }
 
     if (result == pcmk_ok && *answer == NULL) {
-        crm_err("Error creating query response");
+        pcmk__err("Error creating query response");
         result = -ENOMSG;
     }
 
@@ -346,8 +346,9 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
             char *digest_verify = pcmk__digest_xml(input, true);
 
             if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
-                crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer,
-                        digest_verify, digest);
+                pcmk__err("Digest mis-match on replace from %s: %s vs. %s "
+                          "(expected)",
+                          peer, digest_verify, digest);
                 reason = "digest mismatch";
 
             } else {
@@ -436,7 +437,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (input == NULL) {
-        crm_err("Cannot perform modification with no data");
+        pcmk__err("Cannot perform modification with no data");
         return -EINVAL;
     }
 
@@ -465,7 +466,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (input == NULL) {
-        crm_err("Cannot perform modification with no data");
+        pcmk__err("Cannot perform modification with no data");
         return -EINVAL;
     }
 
@@ -598,7 +599,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     CRM_CHECK(strcmp(op, PCMK__CIB_REQUEST_CREATE) == 0, return -EINVAL);
 
     if (input == NULL) {
-        crm_err("Cannot perform modification with no data");
+        pcmk__err("Cannot perform modification with no data");
         return -EINVAL;
     }
 

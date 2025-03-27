@@ -486,12 +486,12 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
 
     if (pcmk__xe_get_int(request->xml, PCMK__XA_CALL_ID,
                          &callid) != pcmk_rc_ok) {
-        crm_err("Could not get callid from xml");
+        pcmk__err("Could not get callid from xml");
         return;
     }
 
     if (pcmk__intkey_table_lookup(expected_confirmations, callid)) {
-        crm_err("Already waiting on confirmations for call id %d", callid);
+        pcmk__err("Already waiting on confirmations for call id %d", callid);
         return;
     }
 

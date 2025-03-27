@@ -183,7 +183,7 @@ lrmd_auth_timeout_cb(gpointer data)
 
     mainloop_del_fd(client->remote->source);
     client->remote->source = NULL;
-    crm_err("Remote client authentication timed out");
+    pcmk__err("Remote client authentication timed out");
 
     return FALSE;
 }
@@ -260,7 +260,7 @@ bind_and_listen(struct addrinfo *addr)
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (fd < 0) {
         rc = errno;
-        crm_err("Listener socket creation failed: %", pcmk_rc_str(rc));
+        pcmk__err("Listener socket creation failed: %", pcmk_rc_str(rc));
         return -rc;
     }
 
@@ -269,7 +269,8 @@ bind_and_listen(struct addrinfo *addr)
     rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
         rc = errno;
-        crm_err("Local address reuse not allowed on %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Local address reuse not allowed on %s: %s", buffer,
+                  pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
@@ -279,7 +280,8 @@ bind_and_listen(struct addrinfo *addr)
         rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval));
         if (rc < 0) {
             rc = errno;
-            crm_err("Couldn't disable IPV6-only on %s: %s", buffer, pcmk_rc_str(rc));
+            pcmk__err("Couldn't disable IPV6-only on %s: %s", buffer,
+                      pcmk_rc_str(rc));
             close(fd);
             return -rc;
         }
@@ -287,14 +289,14 @@ bind_and_listen(struct addrinfo *addr)
 
     if (bind(fd, addr->ai_addr, addr->ai_addrlen) != 0) {
         rc = errno;
-        crm_err("Cannot bind to %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Cannot bind to %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
 
     if (listen(fd, 10) == -1) {
         rc = errno;
-        crm_err("Cannot listen on %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Cannot listen on %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
@@ -318,8 +320,8 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
     rc = pcmk__gaierror2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Unable to get IP address(es) for %s: %s",
-                (bind_name? bind_name : "local node"), pcmk_rc_str(rc));
+        pcmk__err("Unable to get IP address(es) for %s: %s",
+                  pcmk__s(bind_name, "local node"), pcmk_rc_str(rc));
     }
 
     free(port_s);

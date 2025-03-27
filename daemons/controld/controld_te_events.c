@@ -203,7 +203,7 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     /* Sanity check */
     CRM_CHECK(on_uname != NULL, return TRUE);
     CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval_ms),
-              crm_err("Couldn't parse: %s", pcmk__xe_id(event)); goto bail);
+              pcmk__err("Couldn't parse: %s", pcmk__xe_id(event)); goto bail);
 
     /* Decide whether update is necessary and what value to use */
     if ((interval_ms > 0)
@@ -462,8 +462,9 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (decode_transition_key(magic, &update_te_uuid, &transition_num,
                               &action_num, &target_rc) == FALSE) {
         // decode_transition_key() already logged the bad key
-        crm_err("Can't process action %s result: Incompatible versions? "
-                QB_XS " call-id=%d", id, callid);
+        pcmk__err("Can't process action %s result: Incompatible versions? "
+                  QB_XS " call-id=%d",
+                  id, callid);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Bad event", event);
         return;

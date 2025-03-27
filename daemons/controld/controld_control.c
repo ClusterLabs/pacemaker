@@ -70,7 +70,7 @@ do_ha_control(long long action, enum crmd_fsa_cause cause,
                              pcmk__cluster_get_xml_id(node));
 
             if (controld_globals.our_uuid == NULL) {
-                crm_err("Could not obtain local node UUID");
+                pcmk__err("Could not obtain local node UUID");
                 connected = false;
             }
         }
@@ -87,8 +87,8 @@ do_ha_control(long long action, enum crmd_fsa_cause cause,
     }
 
     if ((action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) != 0) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action),
-                __func__);
+        pcmk__err("Unexpected action %s in %s", fsa_action2string(action),
+                  __func__);
     }
 }
 
@@ -135,7 +135,7 @@ crmd_fast_exit(crm_exit_t exit_code)
     } else if ((exit_code == CRM_EX_OK)
                && pcmk__is_set(controld_globals.fsa_input_register,
                                R_IN_RECOVERY)) {
-        crm_err("Could not recover from internal error");
+        pcmk__err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
 
@@ -317,7 +317,7 @@ do_exit(long long action, enum crmd_fsa_cause cause,
 
     if (pcmk__is_set(action, A_EXIT_1)) {
         exit_code = CRM_EX_ERROR;
-        crm_err("Exiting now due to errors");
+        pcmk__err("Exiting now due to errors");
     }
     verify_stopped(cur_state, LOG_ERR);
     crmd_exit(exit_code);
@@ -384,7 +384,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (client->buffer != NULL) {
             g_byte_array_free(client->buffer, TRUE);
@@ -467,8 +467,8 @@ do_started(long long action, enum crmd_fsa_cause cause,
     };
 
     if (cur_state != S_STARTING) {
-        crm_err("Start cancelled: current state is %s",
-                fsa_state2string(cur_state));
+        pcmk__err("Start cancelled: current state is %s",
+                  fsa_state2string(cur_state));
         return;
     }
 
@@ -511,8 +511,8 @@ do_started(long long action, enum crmd_fsa_cause cause,
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
 
     if (ipcs == NULL) {
-        crm_err("Failed to create IPC server: shutting down and inhibiting "
-                "respawn");
+        pcmk__err("Failed to create IPC server: shutting down and inhibiting "
+                  "respawn");
         register_fsa_error(I_ERROR, msg_data);
 
     } else {
@@ -549,11 +549,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     };
 
     if (rc != pcmk_ok) {
-        crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
+        pcmk__err("Local CIB query resulted in an error: %s",
+                  pcmk_strerror(rc));
         register_fsa_error(I_ERROR, NULL);
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
-            crm_err("The cluster is mis-configured - shutting down and staying down");
+            pcmk__err("The cluster is mis-configured - shutting down and "
+                      "staying down");
             controld_set_fsa_input_flags(R_STAYDOWN);
         }
         goto bail;
@@ -565,7 +567,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                                          NULL);
     }
     if (!crmconfig) {
-        crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
+        pcmk__err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
         register_fsa_error(I_ERROR, NULL);
         goto bail;
     }
@@ -687,7 +689,7 @@ crm_shutdown(int nsig)
     }
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-        crm_err("Escalating shutdown");
+        pcmk__err("Escalating shutdown");
         controld_fsa_prepend(C_SHUTDOWN, I_ERROR, NULL);
         return;
     }

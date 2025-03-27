@@ -81,11 +81,11 @@ localized_remote_header(pcmk__remote_t *remote)
         uint32_t endian_swapped = GUINT32_SWAP_LE_BE(header->endian);
 
         CRM_CHECK(endian_swapped == ENDIAN_LOCAL,
-                  crm_err("Invalid message detected (endian mismatch): local "
-                          "magic number %" PRIx32 " matches neither the "
-                          "header's magic number %" PRIx32 " nor the "
-                          "byte-swapped form %" PRIx32,
-                          ENDIAN_LOCAL, header->endian, endian_swapped);
+                  pcmk__err("Invalid message detected (endian mismatch): local "
+                            "magic number %" PRIx32 " matches neither the "
+                            "header's magic number %" PRIx32 " nor the "
+                            "byte-swapped form %" PRIx32,
+                            ENDIAN_LOCAL, header->endian, endian_swapped);
                   return NULL);
 
         header->endian = endian_swapped;
@@ -258,8 +258,8 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 
     rc = remote_send_iovs(remote, iov, 2);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not send remote message: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not send remote message: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
     }
 
     free(iov[0].iov_base);
@@ -310,8 +310,8 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
             return NULL;
 
         } else if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " QB_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
+            pcmk__err("Decompression failed: %s " QB_XS " rc=%d",
+                      pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
         }
@@ -350,7 +350,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
             crm_warn("Couldn't parse v%d message, we only understand v%d",
                      header->version, REMOTE_MSG_VERSION);
         } else {
-            crm_err("Couldn't parse: '%.120s'", payload);
+            pcmk__err("Couldn't parse: '%.120s'", payload);
         }
 
     } else {
@@ -368,7 +368,7 @@ get_remote_socket(const pcmk__remote_t *remote)
     if (remote->tcp_socket >= 0) {
         return remote->tcp_socket;
     }
-    crm_err("Remote connection type undetermined (bug?)");
+    pcmk__err("Remote connection type undetermined (bug?)");
     return -1;
 }
 
@@ -476,7 +476,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
             rc = errno;
         }
     } else {
-        crm_err("Remote connection type undetermined (bug?)");
+        pcmk__err("Remote connection type undetermined (bug?)");
         return ESOCKTNOSUPPORT;
     }
 
@@ -549,8 +549,8 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
         rc = pcmk__remote_ready(remote, remaining_timeout);
 
         if (rc == ETIME) {
-            crm_err("Timed out (%d ms) while waiting for remote data",
-                    remaining_timeout);
+            pcmk__err("Timed out (%d ms) while waiting for remote data",
+                      remaining_timeout);
             return rc;
 
         } else if (rc != pcmk_rc_ok) {
@@ -831,13 +831,13 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
     rc = pcmk__gaierror2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Unable to get IP address info for %s: %s",
-                server, pcmk_rc_str(rc));
+        pcmk__err("Unable to get IP address info for %s: %s", server,
+                  pcmk_rc_str(rc));
         goto async_cleanup;
     }
 
     if (!res || !res->ai_addr) {
-        crm_err("Unable to get IP address info for %s: no result", server);
+        pcmk__err("Unable to get IP address info for %s: no result", server);
         rc = ENOTCONN;
         goto async_cleanup;
     }
@@ -957,8 +957,9 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     *csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (*csock == -1) {
         rc = errno;
-        crm_err("Could not accept remote client connection: %s "
-                QB_XS " rc=%d", pcmk_rc_str(rc), rc);
+        pcmk__err("Could not accept remote client connection: %s "
+                  QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
         return rc;
     }
     pcmk__sockaddr2str(&addr, addr_str);
@@ -966,8 +967,8 @@ pcmk__accept_remote_connection(int ssock, int *csock)
 
     rc = pcmk__set_nonblocking(*csock);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
         close(*csock);
         *csock = -1;
         return rc;
@@ -984,8 +985,9 @@ pcmk__accept_remote_connection(int ssock, int *csock)
                         &optval, sizeof(optval));
         if (rc < 0) {
             rc = errno;
-            crm_err("Could not set TCP timeout to %d ms on remote connection: "
-                    "%s " QB_XS " rc=%d", optval, pcmk_rc_str(rc), rc);
+            pcmk__err("Could not set TCP timeout to %d ms on remote "
+                      "connection: %s " QB_XS " rc=%d",
+                      optval, pcmk_rc_str(rc), rc);
             close(*csock);
             *csock = -1;
             return rc;

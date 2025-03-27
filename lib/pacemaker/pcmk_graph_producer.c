@@ -945,10 +945,10 @@ pcmk__log_transition_summary(const pcmk_scheduler_t *scheduler,
 {
     if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_error)
         || pcmk__config_has_error) {
-        crm_err("Calculated transition %d (with errors)%s%s",
-                transition_id,
-                (filename == NULL)? "" : ", saving inputs in ",
-                (filename == NULL)? "" : filename);
+        pcmk__err("Calculated transition %d (with errors)%s%s",
+                  transition_id,
+                  ((filename != NULL)? ", saving inputs in " : ""),
+                  ((filename != NULL)? filename : ""));
 
     } else if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_warning)
                || pcmk__config_has_warning) {

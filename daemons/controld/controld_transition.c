@@ -66,7 +66,7 @@ do_te_control(long long action, enum crmd_fsa_cause cause,
         || (cib_conn->cmds->add_notify_callback(cib_conn,
                                                 PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                 te_update_diff) != pcmk_ok)) {
-        crm_err("Could not set CIB notification callback");
+        pcmk__err("Could not set CIB notification callback");
         return;
     }
 
@@ -166,7 +166,7 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
     }
 
     CRM_CHECK(graph_data != NULL,
-              crm_err("Input raised by %s is invalid", msg_data->origin);
+              pcmk__err("Input raised by %s is invalid", msg_data->origin);
               crm_log_xml_err(input->msg, "Bad command");
               return);
 

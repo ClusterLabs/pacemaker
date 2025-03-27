@@ -75,7 +75,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     if (file_num < 0) {
         int rc = errno;
 
-        crm_err("Could not list " PCMK__FENCE_BINDIR ": %s", pcmk_rc_str(rc));
+        pcmk__err("Could not list " PCMK__FENCE_BINDIR ": %s", pcmk_rc_str(rc));
         free(namelist);
         return 0;
     }

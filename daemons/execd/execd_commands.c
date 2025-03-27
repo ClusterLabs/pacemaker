@@ -834,8 +834,9 @@ action_complete(svc_action_t * action)
 #endif
 
     if (!cmd) {
-        crm_err("Completed executor action (%s) does not match any known operations",
-                action->id);
+        pcmk__err("Completed executor action (%s) does not match any known "
+                  "operations",
+                  action->id);
         return;
     }
 
@@ -1239,8 +1240,8 @@ static void
 fencing_rsc_monitor_cb(stonith_t *stonith, stonith_callback_data_t *data)
 {
     if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fencing resource monitor result: "
-                "Invalid callback arguments (bug?)");
+        pcmk__err("Ignoring fencing resource monitor result: "
+                  "Invalid callback arguments (bug?)");
     } else {
         fencing_rsc_action_complete((lrmd_cmd_t *) data->userdata,
                                     stonith__exit_status(data),
@@ -1521,8 +1522,9 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     if (pcmk__compare_versions(protocol_version,
                                LRMD_COMPATIBLE_PROTOCOL) < 0) {
-        crm_err("Cluster API version must be greater than or equal to %s, not %s",
-                LRMD_COMPATIBLE_PROTOCOL, protocol_version);
+        pcmk__err("Cluster API version must be greater than or equal to "
+                  LRMD_COMPATIBLE_PROTOCOL " , not %s",
+                  protocol_version);
         rc = EPROTO;
     }
 

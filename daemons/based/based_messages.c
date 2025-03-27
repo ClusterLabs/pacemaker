@@ -55,7 +55,7 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
     }
 
     if (!cib_shutdown_flag) {
-        crm_err("Peer %s mistakenly thinks we wanted to shut down", host);
+        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
         return -EINVAL;
     }
 
@@ -473,8 +473,8 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
     if (rc != pcmk_rc_ok) {
         char *source = based_transaction_source_str(client, origin);
 
-        crm_err("Could not commit transaction for %s: %s",
-                source, pcmk_rc_str(rc));
+        pcmk__err("Could not commit transaction for %s: %s", source,
+                  pcmk_rc_str(rc));
         free(source);
     }
     return pcmk_rc2legacy(rc);

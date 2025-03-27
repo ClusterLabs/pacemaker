@@ -557,7 +557,7 @@ version_helper(const char *text, const char **end_text)
         atoi_result = (int) strtol(text, (char **) end_text, 10);
 
         if (errno == EINVAL) {
-            crm_err("Conversion of '%s' %c failed", text, text[0]);
+            pcmk__err("Conversion of '%s' %c failed", text, text[0]);
             atoi_result = -1;
         }
     }

@@ -280,7 +280,7 @@ update_cib_stonith_devices(const xmlNode *patchset)
 
             CRM_LOG_ASSERT(end_quote != NULL);
             if (end_quote == NULL) {
-                crm_err("Bug: Malformed item in Pacemaker-generated patchset");
+                pcmk__err("Bug: Malformed item in Pacemaker-generated patchset");
                 continue;
             }
 
@@ -376,8 +376,8 @@ fenced_query_cib(void)
     if (rc == pcmk_rc_ok) {
         pcmk__assert(local_cib != NULL);
     } else {
-        crm_err("Couldn't retrieve the CIB: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Couldn't retrieve the CIB: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
     }
     return rc;
 }
@@ -608,7 +608,7 @@ setup_cib(void)
 
     cib_api = cib_new();
     if (cib_api == NULL) {
-        crm_err("No connection to the CIB manager");
+        pcmk__err("No connection to the CIB manager");
         return;
     }
 
@@ -618,7 +618,8 @@ setup_cib(void)
     } while (rc == -ENOTCONN && ++retries < 5);
 
     if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB manager: %s (%d)", pcmk_strerror(rc), rc);
+        pcmk__err("Could not connect to the CIB manager: %s (%d)",
+                  pcmk_strerror(rc), rc);
         return;
     }
 
@@ -626,7 +627,7 @@ setup_cib(void)
                                             PCMK__VALUE_CIB_DIFF_NOTIFY,
                                             update_cib_cache_cb);
     if (rc != pcmk_ok) {
-        crm_err("Could not set CIB notification callback");
+        pcmk__err("Could not set CIB notification callback");
         return;
     }
 
