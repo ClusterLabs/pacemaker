@@ -306,7 +306,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
             }
         }
 
-        do_crm_log((is_optional? LOG_INFO : LOG_TRACE),
+        do_crm_log((is_optional? LOG_INFO : PCMK__LOG_TRACE),
                    "%s recurring action %s because %s configured for %s role "
                    "(not %s)",
                    (is_optional? "Cancelling" : "Ignoring"), op->key, op->id,

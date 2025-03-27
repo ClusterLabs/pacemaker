@@ -172,7 +172,7 @@ xmlNode *
 pcmk_find_cib_element(xmlNode *cib, const char *element_name)
 {
     return pcmk__xpath_find_one(cib->doc, pcmk_cib_xpath_for(element_name),
-                                LOG_TRACE);
+                                PCMK__LOG_TRACE);
 }
 
 /*!

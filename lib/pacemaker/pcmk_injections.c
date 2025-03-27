@@ -390,7 +390,8 @@ find_resource_xml(xmlNode *cib_node, const char *resource)
 {
     const char *node = pcmk__xe_get(cib_node, PCMK_XA_UNAME);
     char *xpath = pcmk__assert_asprintf(XPATH_RSC_HISTORY, node, resource);
-    xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath, LOG_TRACE);
+    xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath,
+                                          PCMK__LOG_TRACE);
 
     free(xpath);
     return match;

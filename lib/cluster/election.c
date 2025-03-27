@@ -571,7 +571,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
 
     } else if (we_are_owner
                && (vote.election_id != cluster->priv->election->count)) {
-        log_level = LOG_TRACE;
+        log_level = PCMK__LOG_TRACE;
         reason = "Superseded";
         done = TRUE;
 

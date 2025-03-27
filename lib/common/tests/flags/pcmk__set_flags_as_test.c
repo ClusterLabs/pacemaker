@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,12 +13,15 @@
 
 static void
 set_flags(void **state) {
-    assert_int_equal(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                     "test", 0x0f0, 0x00f, NULL), 0x0ff);
-    assert_int_equal(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                     "test", 0x0f0, 0xf0f, NULL), 0xfff);
-    assert_int_equal(pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                     "test", 0x0f0, 0xfff, NULL), 0xfff);
+    assert_int_equal(pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                        "Test", "test", 0x0f0, 0x00f, NULL),
+                     0x0ff);
+    assert_int_equal(pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                        "Test", "test", 0x0f0, 0xf0f, NULL),
+                     0xfff);
+    assert_int_equal(pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                        "Test", "test", 0x0f0, 0xfff, NULL),
+                     0xfff);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

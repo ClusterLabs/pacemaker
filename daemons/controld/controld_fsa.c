@@ -57,7 +57,7 @@ do_log(long long action, enum crmd_fsa_cause cause,
        enum crmd_fsa_state cur_state,
        enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
-    unsigned log_type = LOG_TRACE;
+    unsigned log_type = PCMK__LOG_TRACE;
 
     if (action & A_LOG) {
         log_type = LOG_INFO;

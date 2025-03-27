@@ -3077,7 +3077,7 @@ remove_relay_op(xmlNode * request)
 {
     xmlNode *dev = pcmk__xpath_find_one(request->doc,
                                         "//*[@" PCMK__XA_ST_DEVICE_ACTION "]",
-                                        LOG_TRACE);
+                                        PCMK__LOG_TRACE);
     const char *relay_op_id = NULL; 
     const char *op_id = NULL;
     const char *client_name = NULL;
@@ -3282,7 +3282,7 @@ handle_relay_request(pcmk__request_t *request)
 {
     xmlNode *dev = pcmk__xpath_find_one(request->xml->doc,
                                         "//*[@" PCMK__XA_ST_TARGET "]",
-                                        LOG_TRACE);
+                                        PCMK__LOG_TRACE);
 
     pcmk__notice("Received forwarded fencing request from %s %s to fence (%s) "
                  "peer %s",
@@ -3327,7 +3327,7 @@ handle_fence_request(pcmk__request_t *request)
         const char *alternate_host = NULL;
         xmlNode *dev = pcmk__xpath_find_one(request->xml->doc,
                                             "//*[@" PCMK__XA_ST_TARGET "]",
-                                            LOG_TRACE);
+                                            PCMK__LOG_TRACE);
         const char *target = pcmk__xe_get(dev, PCMK__XA_ST_TARGET);
         const char *action = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ACTION);
         const char *device = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ID);

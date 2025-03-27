@@ -728,7 +728,7 @@ xml_acl_disable(xmlNode *xml)
                 qb_log_from_external_source(__func__, __FILE__,             \
                                             "%sACL denies user '%s' %s "    \
                                             "access to %s",                 \
-                                            LOG_TRACE, __LINE__, 0 ,        \
+                                            PCMK__LOG_TRACE, __LINE__, 0 ,  \
                                             prefix, user,                   \
                                             acl_to_text(mode), xpath->str); \
                 g_string_free(xpath, TRUE);                                 \

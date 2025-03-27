@@ -101,10 +101,14 @@ crm_get_utc_time(const crm_time_t *dt)
         utc->months = dt->months;
     }
 
-    crm_time_log(LOG_TRACE, "utc-source", dt,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_TRACE, "utc-target", utc,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    crm_time_log(PCMK__LOG_TRACE, "utc-source", dt,
+                 crm_time_log_date
+                 |crm_time_log_timeofday
+                 |crm_time_log_with_timezone);
+    crm_time_log(PCMK__LOG_TRACE, "utc-target", utc,
+                 crm_time_log_date
+                 |crm_time_log_timeofday
+                 |crm_time_log_with_timezone);
     return utc;
 }
 
@@ -927,7 +931,8 @@ parse_date(const char *date_str)
             || isspace(date_str[5]))) {
         dt->days = 1;
         dt->years = 1970;
-        crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
+        crm_time_log(PCMK__LOG_TRACE, "Unpacked", dt,
+                     crm_time_log_date|crm_time_log_timeofday);
         return dt;
     }
 
@@ -1051,7 +1056,8 @@ parse_date(const char *date_str)
         goto invalid;
     }
 
-    crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
+    crm_time_log(PCMK__LOG_TRACE, "Unpacked", dt,
+                 crm_time_log_date|crm_time_log_timeofday);
     if (crm_time_check(dt) == FALSE) {
         pcmk__err("'%s' is not a valid ISO 8601 date/time specification",
                   date_str);
@@ -1403,10 +1409,14 @@ crm_time_set(crm_time_t *target, const crm_time_t *source)
     target->seconds = source->seconds;
     target->offset = source->offset;
 
-    crm_time_log(LOG_TRACE, "source", source,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_TRACE, "target", target,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    crm_time_log(PCMK__LOG_TRACE, "source", source,
+                 crm_time_log_date
+                 |crm_time_log_timeofday
+                 |crm_time_log_with_timezone);
+    crm_time_log(PCMK__LOG_TRACE, "target", target,
+                 crm_time_log_date
+                 |crm_time_log_timeofday
+                 |crm_time_log_with_timezone);
 }
 
 static void

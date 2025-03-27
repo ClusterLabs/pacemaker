@@ -362,7 +362,8 @@ clone_unpack(pcmk_resource_t *rsc)
 
     if (pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
                                           PCMK_META_ORDERED))) {
-        clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+        clone_data->flags = pcmk__set_flags_as(__func__, __LINE__,
+                                               PCMK__LOG_TRACE,
                                                "Clone", rsc->id,
                                                clone_data->flags,
                                                pcmk__clone_ordered,
@@ -1071,7 +1072,7 @@ pe__set_clone_flag(pcmk_resource_t *clone, enum pcmk__clone_flags flag)
     if (pcmk__is_set(clone_data->flags, flag)) {
         return pcmk_rc_already;
     }
-    clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+    clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
                                            "Clone", clone->id,
                                            clone_data->flags, flag, "flag");
     return pcmk_rc_ok;

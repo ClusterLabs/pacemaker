@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/messages_internal.h>
 #include <crm/cib/cib_types.h>
 
@@ -141,16 +142,21 @@ typedef struct attribute_s {
     mainloop_timer_t *timer;    // Timer to use for timeout_ms
 } attribute_t;
 
-#define attrd_set_attr_flags(attr, flags_to_set) do {               \
-        (attr)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
-            LOG_TRACE, "Value for attribute", (attr)->id,           \
-            (attr)->flags, (flags_to_set), #flags_to_set);          \
+#define attrd_set_attr_flags(attr, flags_to_set) do {                       \
+        (attr)->flags = pcmk__set_flags_as(__func__, __LINE__,              \
+                                           PCMK__LOG_TRACE,                 \
+                                           "Value for attribute",           \
+                                           (attr)->id, (attr)->flags,       \
+                                           (flags_to_set), #flags_to_set);  \
     } while (0)
 
-#define attrd_clear_attr_flags(attr, flags_to_clear) do {           \
-        (attr)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
-            LOG_TRACE, "Value for attribute", (attr)->id,           \
-            (attr)->flags, (flags_to_clear), #flags_to_clear);      \
+#define attrd_clear_attr_flags(attr, flags_to_clear) do {               \
+        (attr)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
+                                             PCMK__LOG_TRACE,           \
+                                             "Value for attribute",     \
+                                             (attr)->id, (attr)->flags, \
+                                             (flags_to_clear),          \
+                                             #flags_to_clear);          \
     } while (0)
 
 enum attrd_value_flags {
@@ -166,16 +172,24 @@ typedef struct attribute_value_s {
     uint32_t flags;     // Group of attrd_value_flags
 } attribute_value_t;
 
-#define attrd_set_value_flags(attr_value, flags_to_set) do {            \
-        (attr_value)->flags = pcmk__set_flags_as(__func__, __LINE__,    \
-            LOG_TRACE, "Value for node", (attr_value)->nodename,        \
-            (attr_value)->flags, (flags_to_set), #flags_to_set);        \
+#define attrd_set_value_flags(attr_value, flags_to_set) do {                \
+        (attr_value)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
+                                                 PCMK__LOG_TRACE,           \
+                                                 "Value for node",          \
+                                                 (attr_value)->nodename,    \
+                                                 (attr_value)->flags,       \
+                                                 (flags_to_set),            \
+                                                 #flags_to_set);            \
     } while (0)
 
-#define attrd_clear_value_flags(attr_value, flags_to_clear) do {        \
-        (attr_value)->flags = pcmk__clear_flags_as(__func__, __LINE__,  \
-            LOG_TRACE, "Value for node", (attr_value)->nodename,        \
-            (attr_value)->flags, (flags_to_clear), #flags_to_clear);    \
+#define attrd_clear_value_flags(attr_value, flags_to_clear) do {            \
+        (attr_value)->flags = pcmk__clear_flags_as(__func__, __LINE__,      \
+                                                   PCMK__LOG_TRACE,         \
+                                                   "Value for node",        \
+                                                   (attr_value)->nodename,  \
+                                                   (attr_value)->flags,     \
+                                                   (flags_to_clear),        \
+                                                   #flags_to_clear);        \
     } while (0)
 
 extern pcmk_cluster_t *attrd_cluster;

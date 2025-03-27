@@ -245,7 +245,7 @@ crm_cs_flush(gpointer data)
     }
 
     queue_len -= sent;
-    do_crm_log((queue_len > 5)? LOG_INFO : LOG_TRACE,
+    do_crm_log(((queue_len > 5)? LOG_INFO : PCMK__LOG_TRACE),
                "Sent %u CPG message%s (%d still queued): %s (rc=%d)",
                sent, pcmk__plural_s(sent), queue_len, pcmk__cs_err_str(rc),
                (int) rc);

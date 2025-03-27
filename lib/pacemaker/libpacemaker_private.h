@@ -20,6 +20,7 @@
 #include <glib.h>                   // guint, gpointer, GList, GHashTable
 #include <libxml/tree.h>            // xmlNode
 
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/scheduler.h>   // pcmk_action_t, pcmk_node_t, etc.
 #include <crm/common/scheduler_internal.h>  // pcmk__location_t, etc.
 #include <crm/common/xml_internal.h>    // pcmk__idref_t (indirectly)
@@ -68,14 +69,14 @@ enum pcmk__updated {
 
 #define pcmk__set_updated_flags(au_flags, action, flags_to_set) do {        \
         au_flags = pcmk__set_flags_as(__func__, __LINE__,                   \
-                                      LOG_TRACE, "Action update",           \
+                                      PCMK__LOG_TRACE, "Action update",     \
                                       (action)->uuid, au_flags,             \
                                       (flags_to_set), #flags_to_set);       \
     } while (0)
 
 #define pcmk__clear_updated_flags(au_flags, action, flags_to_clear) do {    \
         au_flags = pcmk__clear_flags_as(__func__, __LINE__,                 \
-                                        LOG_TRACE, "Action update",         \
+                                        PCMK__LOG_TRACE, "Action update",   \
                                         (action)->uuid, au_flags,           \
                                         (flags_to_clear), #flags_to_clear); \
     } while (0)

@@ -58,14 +58,18 @@ struct action_history {
         if (scf_value != NULL) {                                              \
             if (pcmk__is_true(scf_value)) {                                   \
                 (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,   \
-                                    LOG_TRACE, "Scheduler",                   \
-                                    crm_system_name, (scheduler)->flags,      \
-                                    (flag), #flag);                           \
+                                                        PCMK__LOG_TRACE,      \
+                                                        "Scheduler",          \
+                                                        crm_system_name,      \
+                                                        (scheduler)->flags,   \
+                                                        (flag), #flag);       \
             } else {                                                          \
                 (scheduler)->flags = pcmk__clear_flags_as(__func__, __LINE__, \
-                                    LOG_TRACE, "Scheduler",                   \
-                                    crm_system_name, (scheduler)->flags,      \
-                                    (flag), #flag);                           \
+                                                          PCMK__LOG_TRACE,    \
+                                                          "Scheduler",        \
+                                                          crm_system_name,    \
+                                                          (scheduler)->flags, \
+                                                          (flag), #flag);     \
             }                                                                 \
         }                                                                     \
     } while(0)

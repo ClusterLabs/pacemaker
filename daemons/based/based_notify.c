@@ -136,7 +136,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     int del_epoch = 0;
     int del_admin_epoch = 0;
 
-    uint8_t log_level = LOG_TRACE;
+    uint8_t log_level = PCMK__LOG_TRACE;
 
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;

@@ -176,7 +176,7 @@ do_te_invoke(long long action,
         te_reset_job_counts();
 
         trigger_graph();
-        pcmk__log_graph(LOG_TRACE, controld_globals.transition_graph);
+        pcmk__log_graph(PCMK__LOG_TRACE, controld_globals.transition_graph);
 
         if (graph_data != input->xml) {
             pcmk__xml_free(graph_data);

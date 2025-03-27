@@ -747,7 +747,7 @@ crm_update_callsites(void)
 static gboolean
 crm_tracing_enabled(void)
 {
-    return (crm_log_level == LOG_TRACE)
+    return (crm_log_level == PCMK__LOG_TRACE)
             || (pcmk__env_option(PCMK__ENV_TRACE_FILES) != NULL)
             || (pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS) != NULL)
             || (pcmk__env_option(PCMK__ENV_TRACE_FORMATS) != NULL)
@@ -934,8 +934,8 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     pcmk__is_daemon = daemon;
     crm_log_preinit(entity, argc, argv);
 
-    if (level > LOG_TRACE) {
-        level = LOG_TRACE;
+    if (level > PCMK__LOG_TRACE) {
+        level = PCMK__LOG_TRACE;
     }
     if(level > crm_log_level) {
         crm_log_level = level;
@@ -1062,8 +1062,8 @@ set_crm_log_level(unsigned int level)
 {
     unsigned int old = crm_log_level;
 
-    if (level > LOG_TRACE) {
-        level = LOG_TRACE;
+    if (level > PCMK__LOG_TRACE) {
+        level = PCMK__LOG_TRACE;
     }
     crm_log_level = level;
     crm_update_callsites();
@@ -1146,7 +1146,7 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
 
     if (output == NULL) {
         if (level != PCMK__LOG_STDOUT) {
-            level = LOG_TRACE;
+            level = PCMK__LOG_TRACE;
         }
         output = "-- empty --";
     }

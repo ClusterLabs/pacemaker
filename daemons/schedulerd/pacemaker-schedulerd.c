@@ -163,7 +163,7 @@ main(int argc, char **argv)
     }
     pe__register_messages(logger_out);
     pcmk__register_lib_messages(logger_out);
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    pcmk__output_set_log_level(logger_out, PCMK__LOG_TRACE);
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);

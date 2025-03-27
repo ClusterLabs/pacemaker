@@ -20,6 +20,7 @@
 #include <crm/common/group_internal.h>
 #include <crm/common/history_internal.h>
 #include <crm/common/location_internal.h>
+#include <crm/common/logging_internal.h>            // PCMK__LOG_TRACE
 #include <crm/common/nodes_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/primitive_internal.h>
@@ -228,8 +229,9 @@ extern uint32_t pcmk__warnings;
  * \param[in] rsc       Tag message with this resource's ID
  * \param[in] fmt...    printf(3)-style format and arguments
  */
-#define pcmk__rsc_trace(rsc, fmt, args...)  \
-    crm_log_tag(LOG_TRACE, ((rsc) == NULL)? "<NULL>" : (rsc)->id, (fmt), ##args)
+#define pcmk__rsc_trace(rsc, fmt, args...)                                  \
+    crm_log_tag(PCMK__LOG_TRACE, (((rsc) != NULL)? (rsc)->id : "<NULL>"),   \
+                (fmt), ##args)
 
 /*!
  * \internal
@@ -266,8 +268,12 @@ extern uint32_t pcmk__warnings;
  */
 #define pcmk__set_scheduler_flags(scheduler, flags_to_set) do {             \
         (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
-            LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (scheduler)->flags, (flags_to_set), #flags_to_set);             \
+                                                PCMK__LOG_TRACE,            \
+                                                "Scheduler",                \
+                                                crm_system_name,            \
+                                                (scheduler)->flags,         \
+                                                (flags_to_set),             \
+                                                #flags_to_set);             \
     } while (0)
 
 /*!
@@ -279,8 +285,12 @@ extern uint32_t pcmk__warnings;
  */
 #define pcmk__clear_scheduler_flags(scheduler, flags_to_clear) do {         \
         (scheduler)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \
-            LOG_TRACE, "Scheduler", crm_system_name,                        \
-            (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
+                                                  PCMK__LOG_TRACE,          \
+                                                  "Scheduler",              \
+                                                  crm_system_name,          \
+                                                  (scheduler)->flags,       \
+                                                  (flags_to_clear),         \
+                                                  #flags_to_clear);         \
     } while (0)
 
 void pcmk__set_scheduler_defaults(pcmk_scheduler_t *scheduler);

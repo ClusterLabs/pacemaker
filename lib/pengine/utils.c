@@ -223,13 +223,12 @@ pe__log_node_weights(const char *file, const char *function, int line,
         if (rsc) {
             qb_log_from_external_source(function, file,
                                         "%s: %s allocation score on %s: %s",
-                                        LOG_TRACE, line, 0,
-                                        comment, rsc->id,
-                                        pcmk__node_name(node),
+                                        PCMK__LOG_TRACE, line, 0,
+                                        comment, rsc->id, pcmk__node_name(node),
                                         pcmk_readable_score(node->assign->score));
         } else {
             qb_log_from_external_source(function, file, "%s: %s = %s",
-                                        LOG_TRACE, line, 0,
+                                        PCMK__LOG_TRACE, line, 0,
                                         comment, pcmk__node_name(node),
                                         pcmk_readable_score(node->assign->score));
         }

@@ -1632,10 +1632,10 @@ pcmk__instance_update_ordered_actions(pcmk_action_t *first, pcmk_action_t *then,
     }
 }
 
-#define pe__clear_action_summary_flags(flags, action, flag) do {        \
-        flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
-                                     "Action summary", action->rsc->id, \
-                                     flags, flag, #flag);               \
+#define pe__clear_action_summary_flags(flags, action, flag) do {            \
+        flags = pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,   \
+                                     "Action summary", action->rsc->id,     \
+                                     flags, flag, #flag);                   \
     } while (0)
 
 /*!

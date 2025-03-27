@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,8 @@
 #ifndef CONTROLD_LRM__H
 #  define CONTROLD_LRM__H
 
-#include <controld_messages.h>
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
+#include "controld_messages.h"
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
@@ -55,14 +56,22 @@ typedef struct active_op_s {
 
 #define controld_set_active_op_flags(active_op, flags_to_set) do {          \
         (active_op)->flags = pcmk__set_flags_as(__func__, __LINE__,         \
-            LOG_TRACE, "Active operation", (active_op)->op_key,             \
-            (active_op)->flags, (flags_to_set), #flags_to_set);             \
+                                                PCMK__LOG_TRACE,            \
+                                                "Active operation",         \
+                                                (active_op)->op_key,        \
+                                                (active_op)->flags,         \
+                                                (flags_to_set),             \
+                                                #flags_to_set);             \
     } while (0)
 
 #define controld_clear_active_op_flags(active_op, flags_to_clear) do {      \
         (active_op)->flags = pcmk__clear_flags_as(__func__, __LINE__,       \
-            LOG_TRACE, "Active operation", (active_op)->op_key,             \
-            (active_op)->flags, (flags_to_clear), #flags_to_clear);         \
+                                                  PCMK__LOG_TRACE,          \
+                                                  "Active operation",       \
+                                                  (active_op)->op_key,      \
+                                                  (active_op)->flags,       \
+                                                  (flags_to_clear),         \
+                                                  #flags_to_clear);         \
     } while (0)
 
 typedef struct lrm_state_s {

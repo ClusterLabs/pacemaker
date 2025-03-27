@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,8 @@
 #include <stdint.h>         // uint32_t, UINT32_C()
 #include <sys/types.h>      // time_t
 #include <glib.h>           // GHashTable
+
+#include <crm/common/logging_internal.h>        // PCMK__LOG_TRACE
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,10 +33,12 @@ extern "C" {
  * \param[in,out] ticket        Ticket to set flags for
  * \param[in]     flags_to_set  Group of enum pcmk__ticket_flags to set
  */
-#define pcmk__set_ticket_flags(ticket, flags_to_set) do {           \
-        (ticket)->flags = pcmk__set_flags_as(__func__, __LINE__,    \
-            LOG_TRACE, "Ticket", (ticket)->id, (ticket)->flags,     \
-            (flags_to_set), #flags_to_set);                         \
+#define pcmk__set_ticket_flags(ticket, flags_to_set) do {                   \
+        (ticket)->flags = pcmk__set_flags_as(__func__, __LINE__,            \
+                                             PCMK__LOG_TRACE, "Ticket",     \
+                                             (ticket)->id, (ticket)->flags, \
+                                             (flags_to_set),                \
+                                             #flags_to_set);                \
     } while (0)
 
 /*!
@@ -44,10 +48,13 @@ extern "C" {
  * \param[in,out] ticket          Ticket to clear flags for
  * \param[in]     flags_to_clear  Group of enum pcmk__ticket_flags to clear
  */
-#define pcmk__clear_ticket_flags(ticket, flags_to_clear) do {       \
-        (ticket)->flags = pcmk__clear_flags_as(__func__, __LINE__,  \
-            LOG_TRACE, "Ticket", (ticket)->id, (ticket)->flags,     \
-            (flags_to_clear), #flags_to_clear);                     \
+#define pcmk__clear_ticket_flags(ticket, flags_to_clear) do {               \
+        (ticket)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
+                                               PCMK__LOG_TRACE, "Ticket",   \
+                                               (ticket)->id,                \
+                                               (ticket)->flags,             \
+                                               (flags_to_clear),            \
+                                               #flags_to_clear);            \
     } while (0)
 
 enum pcmk__ticket_flags {

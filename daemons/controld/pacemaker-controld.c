@@ -170,7 +170,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__output_set_log_level(controld_globals.logger_out, LOG_TRACE);
+    pcmk__output_set_log_level(controld_globals.logger_out, PCMK__LOG_TRACE);
 
 done:
     g_strfreev(processed_args);

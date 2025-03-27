@@ -26,16 +26,21 @@
 #define MAX_START_TIMEOUT_MS 10000
 
 #define cmd_set_flags(cmd, flags_to_set) do { \
-    (cmd)->status = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, \
-                                       "Remote command", (cmd)->rsc_id, (cmd)->status, \
-                                       (flags_to_set), #flags_to_set); \
-        } while (0)
+        (cmd)->status = pcmk__set_flags_as(__func__, __LINE__,              \
+                                           PCMK__LOG_TRACE,                 \
+                                           "Remote command", (cmd)->rsc_id, \
+                                           (cmd)->status, (flags_to_set),   \
+                                           #flags_to_set);                  \
+    } while (0)
 
 #define cmd_clear_flags(cmd, flags_to_clear) do { \
-    (cmd)->status = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, \
-                                         "Remote command", (cmd)->rsc_id, (cmd)->status, \
-                                         (flags_to_clear), #flags_to_clear); \
-        } while (0)
+        (cmd)->status = pcmk__clear_flags_as(__func__, __LINE__,            \
+                                             PCMK__LOG_TRACE,               \
+                                             "Remote command",              \
+                                             (cmd)->rsc_id, (cmd)->status,  \
+                                             (flags_to_clear),              \
+                                             #flags_to_clear);              \
+    } while (0)
 
 enum remote_cmd_status {
     cmd_reported_success    = (1 << 0),
@@ -71,21 +76,26 @@ typedef struct remote_ra_cmd_s {
     uint32_t status;
 } remote_ra_cmd_t;
 
-#define lrm_remote_set_flags(lrm_state, flags_to_set) do { \
-    lrm_state_t *lrm = (lrm_state); \
-    remote_ra_data_t *ra = lrm->remote_ra_data; \
-    ra->status = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, "Remote", \
-                                    lrm->node_name, ra->status, \
-                                    (flags_to_set), #flags_to_set); \
-        } while (0)
+#define lrm_remote_set_flags(lrm_state, flags_to_set) do {                  \
+        lrm_state_t *lrm = (lrm_state);                                     \
+        remote_ra_data_t *ra = lrm->remote_ra_data;                         \
+                                                                            \
+        ra->status = pcmk__set_flags_as(__func__, __LINE__,                 \
+                                        PCMK__LOG_TRACE, "Remote",          \
+                                        lrm->node_name, ra->status,         \
+                                        (flags_to_set), #flags_to_set);     \
+    } while (0)
 
-#define lrm_remote_clear_flags(lrm_state, flags_to_clear) do { \
-    lrm_state_t *lrm = (lrm_state); \
-    remote_ra_data_t *ra = lrm->remote_ra_data; \
-    ra->status = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Remote", \
-                                      lrm->node_name, ra->status, \
-                                      (flags_to_clear), #flags_to_clear); \
-        } while (0)
+#define lrm_remote_clear_flags(lrm_state, flags_to_clear) do {              \
+        lrm_state_t *lrm = (lrm_state);                                     \
+        remote_ra_data_t *ra = lrm->remote_ra_data;                         \
+                                                                            \
+        ra->status = pcmk__clear_flags_as(__func__, __LINE__,               \
+                                          PCMK__LOG_TRACE, "Remote",        \
+                                          lrm->node_name, ra->status,       \
+                                          (flags_to_clear),                 \
+                                          #flags_to_clear);                 \
+    } while (0)
 
 enum remote_status {
     expect_takeover     = (1 << 0),

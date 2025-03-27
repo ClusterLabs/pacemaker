@@ -873,7 +873,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                                  &result_diff, privileged);
 
         if (!is_update) {
-            level = LOG_TRACE;
+            level = PCMK__LOG_TRACE;
 
         } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
             switch (rc) {
@@ -883,7 +883,7 @@ cib_process_request(xmlNode *request, gboolean privileged,
                 case -pcmk_err_old_data:
                 case -pcmk_err_diff_resync:
                 case -pcmk_err_diff_failed:
-                    level = LOG_TRACE;
+                    level = PCMK__LOG_TRACE;
                     break;
                 default:
                     level = LOG_ERR;
@@ -1191,7 +1191,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                         input, *cib_diff);
     }
 
-    pcmk__log_xml_patchset(LOG_TRACE, *cib_diff);
+    pcmk__log_xml_patchset(PCMK__LOG_TRACE, *cib_diff);
 
   done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {

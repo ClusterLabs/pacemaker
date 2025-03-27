@@ -16,6 +16,7 @@
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/roles.h>               // enum rsc_role_e
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_node_t
 #include <crm/common/strings_internal.h>    // pcmk__str_eq()
@@ -36,7 +37,7 @@ extern "C" {
  */
 #define pcmk__set_action_flags(action, flags_to_set) do {               \
         (action)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
-                                             LOG_TRACE,                 \
+                                             PCMK__LOG_TRACE,           \
                                              "Action", (action)->uuid,  \
                                              (action)->flags,           \
                                              (flags_to_set),            \
@@ -52,7 +53,7 @@ extern "C" {
  */
 #define pcmk__clear_action_flags(action, flags_to_clear) do {               \
         (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
-                                               LOG_TRACE,                   \
+                                               PCMK__LOG_TRACE,             \
                                                "Action", (action)->uuid,    \
                                                (action)->flags,             \
                                                (flags_to_clear),            \
@@ -69,8 +70,8 @@ extern "C" {
  */
 #define pcmk__set_raw_action_flags(action_flags, action_name, to_set) do {  \
         action_flags = pcmk__set_flags_as(__func__, __LINE__,               \
-                                          LOG_TRACE, "Action", action_name, \
-                                          (action_flags),                   \
+                                          PCMK__LOG_TRACE, "Action",        \
+                                          action_name, (action_flags),      \
                                           (to_set), #to_set);               \
     } while (0)
 
@@ -84,9 +85,9 @@ extern "C" {
  */
 #define pcmk__clear_raw_action_flags(action_flags, action_name, to_clear)   \
     do {                                                                    \
-        action_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,  \
-                                            "Action", action_name,          \
-                                            (action_flags),                 \
+        action_flags = pcmk__clear_flags_as(__func__, __LINE__,             \
+                                            PCMK__LOG_TRACE, "Action",      \
+                                            action_name, (action_flags),    \
                                             (to_clear), #to_clear);         \
     } while (0)
 

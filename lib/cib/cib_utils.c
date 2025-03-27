@@ -429,7 +429,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     local_diff = xml_create_patchset(0, patchset_cib, scratch,
                                      config_changed, manage_counters);
 
-    pcmk__log_xml_changes(LOG_TRACE, scratch);
+    pcmk__log_xml_changes(PCMK__LOG_TRACE, scratch);
     pcmk__xml_commit_changes(scratch->doc);
 
     if(local_diff) {

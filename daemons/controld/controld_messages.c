@@ -80,7 +80,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                     raised_from, fsa_cause2string(cause), data, old_len);
 
         if (old_len > 0) {
-            fsa_dump_queue(LOG_TRACE);
+            fsa_dump_queue(PCMK__LOG_TRACE);
             prepend = FALSE;
         }
 
@@ -160,7 +160,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     crm_trace("FSA message queue length is %d",
               g_list_length(controld_globals.fsa_message_queue));
 
-    /* fsa_dump_queue(LOG_TRACE); */
+    /* fsa_dump_queue(PCMK__LOG_TRACE); */
 
     if (old_len == g_list_length(controld_globals.fsa_message_queue)) {
         pcmk__err("Couldn't add message to the queue");

@@ -774,7 +774,7 @@ pcmk__schedule_actions(pcmk_scheduler_t *scheduler)
     log_all_actions(scheduler);
     pcmk__create_graph(scheduler);
 
-    if (get_crm_log_level() == LOG_TRACE) {
+    if (get_crm_log_level() == PCMK__LOG_TRACE) {
         log_unrunnable_actions(scheduler);
     }
 }

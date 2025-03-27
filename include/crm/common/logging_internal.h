@@ -26,6 +26,18 @@ extern "C" {
  * uint8_t, so make sure they fit in the latter.
  */
 
+#ifndef PCMK__LOG_TRACE
+/*!
+ * \internal
+ * \brief Log level for tracing (less importance than \c LOG_DEBUG messages)
+ *
+ * \note This value must stay the same as \c LOG_TRACE until the latter is
+ *       dropped. Be mindful of public API functions that may pass arbitrary
+ *       integer log levels as well.
+ */
+#define PCMK__LOG_TRACE (LOG_DEBUG + 1)
+#endif  // PCMK__LOG_TRACE
+
 #ifndef PCMK__LOG_STDOUT
 /*!
  * \internal
@@ -151,7 +163,7 @@ enum pcmk__warnings {
                 pcmk__config_warn(fmt);                                 \
             }                                                           \
             pcmk__warnings = pcmk__set_flags_as(__func__, __LINE__,     \
-                                                LOG_TRACE,              \
+                                                PCMK__LOG_TRACE,        \
                                                 "Warn-once", "logging", \
                                                 pcmk__warnings,         \
                                                 (wo_flag), #wo_flag);   \
@@ -225,20 +237,20 @@ extern bool pcmk__config_has_warning;
  * \note Neither \p if_action nor \p else_action can contain a \p break or
  *       \p continue statement.
  */
-#define pcmk__if_tracing(if_action, else_action) do {                   \
-        static struct qb_log_callsite *trace_cs = NULL;                 \
-                                                                        \
-        if (trace_cs == NULL) {                                         \
-            trace_cs = qb_log_callsite_get(__func__, __FILE__,          \
-                                           "if_tracing", LOG_TRACE,     \
-                                           __LINE__, crm_trace_nonlog); \
-        }                                                               \
-        if (crm_is_callsite_active(trace_cs, LOG_TRACE,                 \
-                                   crm_trace_nonlog)) {                 \
-            if_action;                                                  \
-        } else {                                                        \
-            else_action;                                                \
-        }                                                               \
+#define pcmk__if_tracing(if_action, else_action) do {                       \
+        static struct qb_log_callsite *trace_cs = NULL;                     \
+                                                                            \
+        if (trace_cs == NULL) {                                             \
+            trace_cs = qb_log_callsite_get(__func__, __FILE__,              \
+                                           "if_tracing", PCMK__LOG_TRACE,   \
+                                           __LINE__, crm_trace_nonlog);     \
+        }                                                                   \
+        if (crm_is_callsite_active(trace_cs, PCMK__LOG_TRACE,               \
+                                   crm_trace_nonlog)) {                     \
+            if_action;                                                      \
+        } else {                                                            \
+            else_action;                                                    \
+        }                                                                   \
     } while (0)
 
 /*!

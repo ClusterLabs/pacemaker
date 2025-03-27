@@ -47,7 +47,7 @@ fenced_scheduler_init(void)
 
     pe__register_messages(logger);
     pcmk__register_lib_messages(logger);
-    pcmk__output_set_log_level(logger, LOG_TRACE);
+    pcmk__output_set_log_level(logger, PCMK__LOG_TRACE);
     scheduler->priv->out = logger;
 
     return pcmk_rc_ok;

@@ -139,22 +139,23 @@ static uid_t cib_file_owner = 0;
 static uid_t cib_file_group = 0;
 static gboolean cib_do_chown = FALSE;
 
-#define cib_set_file_flags(cibfile, flags_to_set) do {                  \
-        (cibfile)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
-                                              LOG_TRACE, "CIB file",    \
-                                              cibfile->filename,        \
-                                              (cibfile)->flags,         \
-                                              (flags_to_set),           \
-                                              #flags_to_set);           \
+#define cib_set_file_flags(cibfile, flags_to_set) do {                      \
+        (cibfile)->flags = pcmk__set_flags_as(__func__, __LINE__,           \
+                                              PCMK__LOG_TRACE, "CIB file",  \
+                                              cibfile->filename,            \
+                                              (cibfile)->flags,             \
+                                              (flags_to_set),               \
+                                              #flags_to_set);               \
     } while (0)
 
-#define cib_clear_file_flags(cibfile, flags_to_clear) do {              \
-        (cibfile)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
-                                                LOG_TRACE, "CIB file",  \
-                                                cibfile->filename,      \
-                                                (cibfile)->flags,       \
-                                                (flags_to_clear),       \
-                                                #flags_to_clear);       \
+#define cib_clear_file_flags(cibfile, flags_to_clear) do {          \
+        (cibfile)->flags = pcmk__clear_flags_as(__func__, __LINE__, \
+                                                PCMK__LOG_TRACE,    \
+                                                "CIB file",         \
+                                                cibfile->filename,  \
+                                                (cibfile)->flags,   \
+                                                (flags_to_clear),   \
+                                                #flags_to_clear);   \
     } while (0)
 
 /*!

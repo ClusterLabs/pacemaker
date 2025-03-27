@@ -760,9 +760,9 @@ free_xml_with_position(xmlNode *node, int position)
                 GString *xpath = pcmk__element_xpath(node);
 
                 qb_log_from_external_source(__func__, __FILE__,
-                                            "Cannot remove %s %x", LOG_TRACE,
-                                            __LINE__, 0, xpath->str,
-                                            nodepriv->flags);
+                                            "Cannot remove %s %x",
+                                            PCMK__LOG_TRACE, __LINE__, 0,
+                                            xpath->str, nodepriv->flags);
                 g_string_free(xpath, TRUE);
             },
             {}

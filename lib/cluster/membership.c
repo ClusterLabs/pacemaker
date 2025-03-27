@@ -67,19 +67,19 @@ static bool has_quorum = false;
 
 // Flag setting and clearing for pcmk__node_status_t:flags
 
-#define set_peer_flags(peer, flags_to_set) do {                               \
-        (peer)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
-                                           "Peer", (peer)->name,              \
-                                           (peer)->flags, (flags_to_set),     \
-                                           #flags_to_set);                    \
+#define set_peer_flags(peer, flags_to_set) do {                             \
+        (peer)->flags = pcmk__set_flags_as(__func__, __LINE__,              \
+                                           PCMK__LOG_TRACE, "Peer",         \
+                                           (peer)->name, (peer)->flags,     \
+                                           (flags_to_set), #flags_to_set);  \
     } while (0)
 
-#define clear_peer_flags(peer, flags_to_clear) do {                           \
-        (peer)->flags = pcmk__clear_flags_as(__func__, __LINE__,              \
-                                             LOG_TRACE,                       \
-                                             "Peer", (peer)->name,            \
-                                             (peer)->flags, (flags_to_clear), \
-                                             #flags_to_clear);                \
+#define clear_peer_flags(peer, flags_to_clear) do {                         \
+        (peer)->flags = pcmk__clear_flags_as(__func__, __LINE__,            \
+                                             PCMK__LOG_TRACE, "Peer",       \
+                                             (peer)->name, (peer)->flags,   \
+                                             (flags_to_clear),              \
+                                             #flags_to_clear);              \
     } while (0)
 
 static void update_peer_uname(pcmk__node_status_t *node, const char *uname);
@@ -1142,15 +1142,16 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
     } else if (pcmk__str_eq(status, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
         if ((node->processes & flag) != flag) {
             node->processes = pcmk__set_flags_as(__func__, __LINE__,
-                                                 LOG_TRACE, "Peer process",
-                                                 node->name, node->processes,
-                                                 flag, "processes");
+                                                 PCMK__LOG_TRACE,
+                                                 "Peer process", node->name,
+                                                 node->processes, flag,
+                                                 "processes");
             changed = TRUE;
         }
 
     } else if (node->processes & flag) {
         node->processes = pcmk__clear_flags_as(__func__, __LINE__,
-                                               LOG_TRACE, "Peer process",
+                                               PCMK__LOG_TRACE, "Peer process",
                                                node->name, node->processes,
                                                flag, "processes");
         changed = TRUE;

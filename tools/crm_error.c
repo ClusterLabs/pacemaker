@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -123,7 +123,7 @@ main(int argc, char **argv)
         uint32_t flags = pcmk_rc_disp_code|pcmk_rc_disp_desc;
 
         if (options.with_name) {
-            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+            flags = pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
                                        "pcmk_rc_disp_flags",
                                        "pcmk__list_result_codes", flags,
                                        pcmk_rc_disp_name, "pcmk_rc_disp_name");
@@ -135,14 +135,14 @@ main(int argc, char **argv)
 
         // For text output, print only "[name -] description" by default
         if (args->verbosity > 0) {
-            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+            flags = pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
                                        "pcmk_rc_disp_flags",
                                        "pcmk__show_result_code", flags,
                                        pcmk_rc_disp_code, "pcmk_rc_disp_code");
         }
 
         if (options.with_name) {
-            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+            flags = pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
                                        "pcmk_rc_disp_flags",
                                        "pcmk__show_result_code", flags,
                                        pcmk_rc_disp_name, "pcmk_rc_disp_name");

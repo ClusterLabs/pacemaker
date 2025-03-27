@@ -114,7 +114,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
                              PCMK__LOG_NEVER);
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
-                                   "//" PCMK_XE_CRM_CONFIG, LOG_TRACE);
+                                   "//" PCMK_XE_CRM_CONFIG, PCMK__LOG_TRACE);
     unpack_config(section, scheduler);
 
    if (!pcmk__any_flags_set(scheduler->flags,
@@ -126,18 +126,19 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_NODES,
-                                   LOG_TRACE);
+                                   PCMK__LOG_TRACE);
     unpack_nodes(section, scheduler);
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
-                                   "//" PCMK_XE_RESOURCES, LOG_TRACE);
+                                   "//" PCMK_XE_RESOURCES, PCMK__LOG_TRACE);
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
-                                   "//" PCMK_XE_FENCING_TOPOLOGY, LOG_TRACE);
+                                   "//" PCMK_XE_FENCING_TOPOLOGY,
+                                   PCMK__LOG_TRACE);
     pcmk__validate_fencing_topology(section);
 
     section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_TAGS,
@@ -146,7 +147,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         section = pcmk__xpath_find_one(scheduler->input->doc,
-                                       "//" PCMK_XE_STATUS, LOG_TRACE);
+                                       "//" PCMK_XE_STATUS, PCMK__LOG_TRACE);
         unpack_status(section, scheduler);
     }
 

@@ -613,7 +613,7 @@ stonith_action_to_svc(stonith_action_t *action)
     svc_action->params = action->args;
     svc_action->cb_data = (void *) action;
     svc_action->flags = pcmk__set_flags_as(__func__, __LINE__,
-                                           LOG_TRACE, "Action",
+                                           PCMK__LOG_TRACE, "Action",
                                            svc_action->id, svc_action->flags,
                                            SVC_ACTION_NON_BLOCKED,
                                            "SVC_ACTION_NON_BLOCKED");

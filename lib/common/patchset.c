@@ -814,7 +814,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    pcmk__log_xml_patchset(LOG_TRACE, patchset);
+    pcmk__log_xml_patchset(PCMK__LOG_TRACE, patchset);
 
     if (check_version) {
         rc = pcmk_rc2legacy(check_patchset_versions(xml, patchset));
