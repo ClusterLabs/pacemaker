@@ -250,7 +250,7 @@ controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
                     && g_main_loop_is_running(mainloop)) {
 
                     out->info(out, "... got reply (done)");
-                    crm_debug("Got all the replies we expected");
+                    pcmk__debug("Got all the replies we expected");
                     pcmk_disconnect_ipc(api);
 
                     *ec = CRM_EX_OK;
@@ -924,9 +924,9 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node,
         rsc = uber_parent(rsc);
     }
 
-    crm_debug("Erasing failures of %s (%s requested) on %s",
-              rsc->id, options.rsc_id,
-              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
+    pcmk__debug("Erasing failures of %s (%s requested) on %s", rsc->id,
+                options.rsc_id,
+                ((node != NULL)? pcmk__node_name(node) : "all nodes"));
     rc = cli_resource_delete(controld_api, rsc, node, options.operation,
                              options.interval_spec, true, options.force);
 
@@ -1029,7 +1029,7 @@ refresh(pcmk__output_t *out, const pcmk_node_t *node,
         return CRM_EX_OK;
     }
 
-    crm_debug("Re-checking the state of all resources on %s", log_node_name);
+    pcmk__debug("Re-checking the state of all resources on %s", log_node_name);
 
     // @FIXME We shouldn't discard rc here
     rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, NULL, NULL, NULL,
@@ -1057,9 +1057,9 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node,
         rsc = uber_parent(rsc);
     }
 
-    crm_debug("Re-checking the state of %s (%s requested) on %s",
-              rsc->id, options.rsc_id,
-              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
+    pcmk__debug("Re-checking the state of %s (%s requested) on %s", rsc->id,
+                options.rsc_id,
+                ((node != NULL)? pcmk__node_name(node) : "all nodes"));
     rc = cli_resource_delete(controld_api, rsc, node, NULL, 0, false,
                              options.force);
 
@@ -1430,7 +1430,7 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
         current = NULL;
     }
 
-    crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
+    pcmk__debug("Looking up %s in %s", options.prop_name, rsc->id);
 
     if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
                      pcmk__str_none)) {

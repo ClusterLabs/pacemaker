@@ -87,7 +87,7 @@ static void crm_cs_flush(gpointer data);
         rc = code;                                                      \
         if ((rc == CS_ERR_TRY_AGAIN) || (rc == CS_ERR_QUEUE_FULL)) {    \
             counter++;                                                  \
-            crm_debug("Retrying operation after %ds", counter);         \
+            pcmk__debug("Retrying operation after %ds", counter);       \
             sleep(counter);                                             \
         } else {                                                        \
             break;                                                      \
@@ -172,7 +172,7 @@ bail:
         crm_trace("Closing connection");
         cpg_finalize(local_handle);
     }
-    crm_debug("Local nodeid is %u", local_nodeid);
+    pcmk__debug("Local nodeid is %u", local_nodeid);
     return local_nodeid;
 }
 
@@ -436,11 +436,13 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
                                pcmk__node_search_cluster_member);
 
             if (peer->name == NULL) {
-                crm_debug("Received CPG message from node with ID %" PRIu32
-                          " but its name is unknown", sender_id);
+                pcmk__debug("Received CPG message from node with ID %" PRIu32
+                            " but its name is unknown",
+                            sender_id);
             } else {
-                crm_debug("Updating name of CPG message sender with ID %" PRIu32
-                          " to %s", sender_id, peer->name);
+                pcmk__debug("Updating name of CPG message sender with ID %" PRIu32
+                            " to %s",
+                            sender_id, peer->name);
                 msg->sender.size = strlen(peer->name);
                 memset(msg->sender.uname, 0, MAX_NAME);
                 memcpy(msg->sender.uname, peer->name, msg->sender.size);

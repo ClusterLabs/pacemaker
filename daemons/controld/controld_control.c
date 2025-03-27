@@ -157,7 +157,7 @@ crmd_exit(crm_exit_t exit_code)
     static bool in_progress = FALSE;
 
     if (in_progress && (exit_code == CRM_EX_OK)) {
-        crm_debug("Exit is already in progress");
+        pcmk__debug("Exit is already in progress");
         return exit_code;
 
     } else if(in_progress) {
@@ -188,7 +188,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_disconnect_fencer(TRUE);
 
     if ((exit_code == CRM_EX_OK) && (controld_globals.mainloop == NULL)) {
-        crm_debug("No mainloop detected");
+        pcmk__debug("No mainloop detected");
         exit_code = CRM_EX_ERROR;
     }
 
@@ -509,7 +509,7 @@ do_started(long long action, enum crmd_fsa_cause cause,
         return;
     }
 
-    crm_debug("Initializing IPC server");
+    pcmk__debug("Initializing IPC server");
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
 
     if (ipcs == NULL) {
@@ -574,7 +574,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         goto bail;
     }
 
-    crm_debug("Call %d : Parsing CIB options", call_id);
+    pcmk__debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
     pcmk_unpack_nvpair_blocks(crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET,
                               PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,

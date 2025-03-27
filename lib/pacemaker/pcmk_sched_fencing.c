@@ -479,8 +479,8 @@ pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
     pcmk_action_t *unfence = pe_fence_op(node, PCMK_ACTION_ON, true, NULL,
                                          false, rsc->priv->scheduler);
 
-    crm_debug("Ordering any stops of %s before %s, and any starts after",
-              rsc->id, unfence->uuid);
+    pcmk__debug("Ordering any stops of %s before %s, and any starts after",
+                rsc->id, unfence->uuid);
 
     /*
      * It would be more efficient to order clone resources once,

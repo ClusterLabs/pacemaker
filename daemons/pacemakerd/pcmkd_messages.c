@@ -217,7 +217,7 @@ pacemakerd_handle_request(pcmk__request_t *request)
     if (!pcmk__result_ok(&request->result)) {
         pcmk__warn("%s", log_msg);
     } else {
-        crm_debug("%s", log_msg);
+        pcmk__debug("%s", log_msg);
     }
 
     free(log_msg);

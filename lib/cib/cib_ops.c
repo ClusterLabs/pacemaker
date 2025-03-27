@@ -692,10 +692,10 @@ cib_process_xpath(const char *op, int options, const char *section,
     num_results = pcmk__xpath_num_results(xpathObj);
     if (num_results == 0) {
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-            crm_debug("%s was already removed", section);
+            pcmk__debug("%s was already removed", section);
 
         } else {
-            crm_debug("%s: %s does not exist", op, section);
+            pcmk__debug("%s: %s does not exist", op, section);
             rc = -ENXIO;
         }
         goto done;
@@ -736,7 +736,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         }
 
         path = xmlGetNodePath(match);
-        crm_debug("Processing %s op for %s with %s", op, section, path);
+        pcmk__debug("Processing %s op for %s with %s", op, section, path);
         free(path);
 
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {

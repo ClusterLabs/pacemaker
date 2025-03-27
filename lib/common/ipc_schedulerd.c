@@ -177,8 +177,8 @@ do_schedulerd_api_call(pcmk_ipc_api_t *api, const char *task, xmlNode *cib, char
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
         if (rc != pcmk_rc_ok) {
-            crm_debug("Couldn't send request to schedulerd: %s rc=%d",
-                      pcmk_rc_str(rc), rc);
+            pcmk__debug("Couldn't send request to schedulerd: %s rc=%d",
+                        pcmk_rc_str(rc), rc);
         }
 
         *ref = strdup(pcmk__xe_get(cmd, PCMK_XA_REFERENCE));

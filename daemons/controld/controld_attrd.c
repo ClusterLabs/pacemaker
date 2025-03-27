@@ -124,9 +124,9 @@ controld_purge_node_attrs(const char *node_name, bool from_cache)
         rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
     }
     if (rc == pcmk_rc_ok) {
-        crm_debug("Asking %s to purge transient attributes%s for %s",
-                  pcmk_ipc_name(attrd_api, true),
-                  (from_cache? " and node cache" : ""), node_name);
+        pcmk__debug("Asking %s to purge transient attributes%s for %s",
+                    pcmk_ipc_name(attrd_api, true),
+                    (from_cache? " and node cache" : ""), node_name);
         rc = pcmk__attrd_api_purge(attrd_api, node_name, from_cache);
     }
     if (rc != pcmk_rc_ok) {

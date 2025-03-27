@@ -1071,8 +1071,8 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
 
     if (rc < 0) {
-        crm_debug("Couldn't complete registration with the executor API: %s",
-                  pcmk_strerror(rc));
+        pcmk__debug("Couldn't complete registration with the executor API: %s",
+                    pcmk_strerror(rc));
         rc = ECOMM;
     } else if (reply == NULL) {
         pcmk__err("Did not receive registration reply");
@@ -1142,7 +1142,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
     }
 
     if (native->ipc == NULL) {
-        crm_debug("Could not connect to the executor API");
+        pcmk__debug("Could not connect to the executor API");
         rc = -ENOTCONN;
     }
 
@@ -1242,7 +1242,7 @@ clear_key_cache(struct key_cache_s *key_cache)
     if ((key_cache->updated != 0) || (key_cache->location != NULL)) {
         key_cache->updated = 0;
         key_cache->location = NULL;
-        crm_debug("Cleared Pacemaker Remote key cache");
+        pcmk__debug("Cleared Pacemaker Remote key cache");
     }
 }
 
@@ -1250,8 +1250,8 @@ static void
 get_cached_key(struct key_cache_s *key_cache, gnutls_datum_t *key)
 {
     copy_gnutls_datum(key, &(key_cache->key));
-    crm_debug("Using cached Pacemaker Remote key from %s",
-              pcmk__s(key_cache->location, "unknown location"));
+    pcmk__debug("Using cached Pacemaker Remote key from %s",
+                pcmk__s(key_cache->location, "unknown location"));
 }
 
 static void
@@ -1261,8 +1261,8 @@ cache_key(struct key_cache_s *key_cache, gnutls_datum_t *key,
     key_cache->updated = time(NULL);
     key_cache->location = location;
     copy_gnutls_datum(&(key_cache->key), key);
-    crm_debug("Using (and cacheing) Pacemaker Remote key from %s",
-              pcmk__s(location, "unknown location"));
+    pcmk__debug("Using (and cacheing) Pacemaker Remote key from %s",
+                pcmk__s(location, "unknown location"));
 }
 
 /*!
@@ -1800,12 +1800,12 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 
     switch (native->type) {
         case pcmk__client_ipc:
-            crm_debug("Disconnecting from local executor");
+            pcmk__debug("Disconnecting from local executor");
             lrmd_ipc_disconnect(lrmd);
             break;
         case pcmk__client_tls:
-            crm_debug("Disconnecting from remote executor on %s",
-                      native->remote_nodename);
+            pcmk__debug("Disconnecting from remote executor on %s",
+                        native->remote_nodename);
             lrmd_tls_disconnect(lrmd);
             break;
         default:

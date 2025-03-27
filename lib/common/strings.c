@@ -48,25 +48,27 @@ scan_ll(const char *text, long long *result, long long default_value,
         local_result = strtoll(text, &local_end_text, 10);
         if (errno == ERANGE) {
             rc = errno;
-            crm_debug("Integer parsed from '%s' was clipped to %lld",
-                      text, local_result);
+            pcmk__debug("Integer parsed from '%s' was clipped to %lld", text,
+                        local_result);
 
         } else if (local_end_text == text) {
             rc = pcmk_rc_bad_input;
             local_result = default_value;
-            crm_debug("Could not parse integer from '%s' (using %lld instead): "
-                      "No digits found", text, default_value);
+            pcmk__debug("Could not parse integer from '%s' (using %lld "
+                        "instead): No digits found",
+                        text, default_value);
 
         } else if (errno != 0) {
             rc = errno;
             local_result = default_value;
-            crm_debug("Could not parse integer from '%s' (using %lld instead): "
-                      "%s", text, default_value, pcmk_rc_str(rc));
+            pcmk__debug("Could not parse integer from '%s' (using %lld "
+                        "instead): %s",
+                        text, default_value, pcmk_rc_str(rc));
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
-            crm_debug("Characters left over after parsing '%s': '%s'",
-                      text, local_end_text);
+            pcmk__debug("Characters left over after parsing '%s': '%s'",
+                        text, local_end_text);
         }
         errno = rc;
     }
@@ -204,7 +206,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
 
     if (text == NULL) {
         rc = EINVAL;
-        crm_debug("No text and no default conversion value supplied");
+        pcmk__debug("No text and no default conversion value supplied");
 
     } else {
         errno = 0;
@@ -230,26 +232,27 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
                 over_under = "under";
             }
 
-            crm_debug("Floating-point value parsed from '%s' would %sflow "
-                      "(using %g instead)", text, over_under, *result);
+            pcmk__debug("Floating-point value parsed from '%s' would %sflow "
+                        "(using %g instead)",
+                        text, over_under, *result);
 
         } else if (errno != 0) {
             rc = errno;
             // strtod() set *result = 0 on parse failure
             *result = PCMK__PARSE_DBL_DEFAULT;
 
-            crm_debug("Could not parse floating-point value from '%s' (using "
-                      "%.1f instead): %s", text, PCMK__PARSE_DBL_DEFAULT,
-                      pcmk_rc_str(rc));
+            pcmk__debug("Could not parse floating-point value from '%s' (using "
+                        "%.1f instead): %s",
+                        text, PCMK__PARSE_DBL_DEFAULT, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             // errno == 0, but nothing was parsed
             rc = EINVAL;
             *result = PCMK__PARSE_DBL_DEFAULT;
 
-            crm_debug("Could not parse floating-point value from '%s' (using "
-                      "%.1f instead): No digits found", text,
-                      PCMK__PARSE_DBL_DEFAULT);
+            pcmk__debug("Could not parse floating-point value from '%s' (using "
+                        "%.1f instead): No digits found",
+                        text, PCMK__PARSE_DBL_DEFAULT);
 
         } else if (QB_ABS(*result) <= DBL_MIN) {
             /*
@@ -267,8 +270,8 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
             for (const char *p = text; p != local_end_text; p++) {
                 if (strchr("0.eE", *p) == NULL) {
                     rc = pcmk_rc_underflow;
-                    crm_debug("Floating-point value parsed from '%s' would "
-                              "underflow (using %g instead)", text, *result);
+                    pcmk__debug("Floating-point value parsed from '%s' would "
+                                "underflow (using %g instead)", text, *result);
                     break;
                 }
             }
@@ -279,8 +282,8 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
-            crm_debug("Characters left over after parsing '%s': '%s'",
-                      text, local_end_text);
+            pcmk__debug("Characters left over after parsing '%s': '%s'", text,
+                        local_end_text);
         }
     }
 

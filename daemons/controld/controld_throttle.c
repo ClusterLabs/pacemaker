@@ -89,7 +89,7 @@ throttle_check_thresholds(float load, const char *desc,
         return throttle_med;
 
     } else if (load > thresholds[0]) {
-        crm_debug("Noticeable %s detected: %f", desc, load);
+        pcmk__debug("Noticeable %s detected: %f", desc, load);
         return throttle_low;
     }
 
@@ -171,7 +171,7 @@ throttle_mode(void)
         if (cpu_load > mode) {
             mode = cpu_load;
         }
-        crm_debug("Current load is %f across %u core(s)", load, cores);
+        pcmk__debug("Current load is %f across %u core(s)", load, cores);
     }
 
     return mode;
@@ -401,7 +401,8 @@ throttle_update(xmlNode *xml)
     r->max = max;
     r->mode = (enum throttle_state_e) mode;
 
-    crm_debug("Node %s has %s load and supports at most %d jobs; new job limit %d",
-              from, load2str((enum throttle_state_e) mode), max,
-              throttle_get_job_limit(from));
+    pcmk__debug("Node %s has %s load and supports at most %d jobs; new job "
+                "limit %d",
+                from, load2str((enum throttle_state_e) mode), max,
+                throttle_get_job_limit(from));
 }

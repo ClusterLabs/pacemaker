@@ -392,9 +392,9 @@ te_update_diff(const char *event, xmlNode * msg)
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     pcmk__xml_patchset_versions(diff, p_del, p_add);
-    crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
-              p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
+                p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
+                fsa_state2string(controld_globals.fsa_state));
 
     pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
@@ -446,9 +446,9 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
         return;
     }
 
-    crm_debug("Processing transition request with ref='%s' origin='%s'",
-              pcmk__s(pcmk__xe_get(msg, PCMK_XA_REFERENCE), ""),
-              pcmk__s(pcmk__xe_get(msg, PCMK__XA_SRC), ""));
+    pcmk__debug("Processing transition request with ref='%s' origin='%s'",
+                pcmk__s(pcmk__xe_get(msg, PCMK_XA_REFERENCE), ""),
+                pcmk__s(pcmk__xe_get(msg, PCMK__XA_SRC), ""));
 
     xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
     nmatches = pcmk__xpath_num_results(xpathObj);

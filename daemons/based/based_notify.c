@@ -100,8 +100,8 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            crm_debug("Sent %s notification to client %s (id %s)",
-                      type, pcmk__client_name(client), client->id);
+            pcmk__debug("Sent %s notification to client %s (id %s)", type,
+                        pcmk__client_name(client), client->id);
             pcmk__remote_send_xml(client->remote, update->msg);
             break;
 

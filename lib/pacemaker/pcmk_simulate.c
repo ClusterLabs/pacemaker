@@ -582,7 +582,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
-        crm_debug("No history injection for %s op on %s", operation, node);
+        pcmk__debug("No history injection for %s op on %s", operation, node);
         goto done; // Confirm action and update graph
     }
 

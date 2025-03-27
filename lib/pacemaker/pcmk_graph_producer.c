@@ -278,16 +278,16 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * unique meta-attribute might have just been toggled from on to
          * off.
          */
-        crm_debug("Using \"removed\" clone name %s instead of history ID %s",
-                  action->rsc->id, action->rsc->priv->history_id);
+        pcmk__debug("Using \"removed\" clone name %s instead of history ID %s",
+                    action->rsc->id, action->rsc->priv->history_id);
         pcmk__xe_set(rsc_xml, PCMK_XA_ID, action->rsc->priv->history_id);
         pcmk__xe_set(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
 
     } else if (!pcmk__is_set(action->rsc->flags, pcmk__rsc_unique)) {
         const char *xml_id = pcmk__xe_id(action->rsc->priv->xml);
 
-        crm_debug("Using anonymous clone name %s for %s (aka %s)",
-                  xml_id, action->rsc->id, action->rsc->priv->history_id);
+        pcmk__debug("Using anonymous clone name %s for %s (aka %s)", xml_id,
+                    action->rsc->id, action->rsc->priv->history_id);
 
         /* ID is what we'd like client to use
          * LONG_ID is what they might know it as instead
@@ -792,11 +792,9 @@ pcmk__graph_has_loop(const pcmk_action_t *init_action,
     }
 
     if (input->action == init_action) {
-        crm_debug("Input loop found in %s@%s ->...-> %s@%s",
-                  action->uuid,
-                  action->node? action->node->priv->name : "",
-                  init_action->uuid,
-                  init_action->node? init_action->node->priv->name : "");
+        pcmk__debug("Input loop found in %s@%s ->...-> %s@%s",
+                    action->uuid, pcmk__node_name(action->node),
+                    init_action->uuid, pcmk__node_name(init_action->node));
         return true;
     }
 

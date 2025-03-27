@@ -90,8 +90,8 @@ alert_complete(svc_action_t *action)
                      action->pid, action->rc, cb_data->client_id);
 
     } else {
-        crm_debug("Alert [%d] completed " QB_XS " client=%s",
-                  action->pid, cb_data->client_id);
+        pcmk__debug("Alert [%d] completed " QB_XS " client=%s", action->pid,
+                    cb_data->client_id);
     }
 
     free(cb_data->client_id);

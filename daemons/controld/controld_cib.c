@@ -52,7 +52,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     const xmlNode *patchset = NULL;
     const char *client_name = NULL;
 
-    crm_debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
+    pcmk__debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
 
     if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
         return;
@@ -102,7 +102,7 @@ controld_disconnect_cib_manager(void)
 
     pcmk__assert(cib_conn != NULL);
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
@@ -254,7 +254,8 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     char *desc = user_data;
 
     if (rc == 0) {
-        crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
+        pcmk__debug("Deletion of %s (via CIB call %d) succeeded", desc,
+                    call_id);
     } else {
         pcmk__warn("Deletion of %s (via CIB call %d) failed: %s "
                    QB_XS " rc=%d",
@@ -400,9 +401,9 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     if (pcmk__is_set(call_options, cib_sync_call)) {
         if (pcmk__is_set(call_options, cib_dryrun)) {
-            crm_debug("Deletion of %s would succeed", desc);
+            pcmk__debug("Deletion of %s would succeed", desc);
         } else {
-            crm_debug("Deletion of %s succeeded", desc);
+            pcmk__debug("Deletion of %s succeeded", desc);
         }
         free(desc);
 
@@ -716,9 +717,9 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
 
     lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
-    crm_debug("Recording pending %s-interval %s for %s on %s in the CIB",
-              pcmk__readable_interval(op->interval_ms), op->op_type, op->rsc_id,
-              node_name);
+    pcmk__debug("Recording pending %s-interval %s for %s on %s in the CIB",
+                pcmk__readable_interval(op->interval_ms), op->op_type,
+                op->rsc_id, node_name);
     controld_update_resource_history(node_name, rsc, op, 0);
     return true;
 }
@@ -796,8 +797,8 @@ controld_update_cib(const char *section, xmlNode *data, int options,
     if (cib != NULL) {
         cib_rc = cib->cmds->modify(cib, section, data, options);
         if (cib_rc >= 0) {
-            crm_debug("Submitted CIB update %d for %s section",
-                      cib_rc, section);
+            pcmk__debug("Submitted CIB update %d for %s section", cib_rc,
+                        section);
         }
     }
 
@@ -936,8 +937,9 @@ controld_delete_action_history(const lrmd_event_data_t *op)
         free(op_id);
     }
 
-    crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
-              op->rsc_id, op->op_type, op->interval_ms, op->call_id);
+    pcmk__debug("Erasing resource operation history for " PCMK__OP_FMT
+                " (call=%d)",
+                op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             PCMK_XE_STATUS, xml_top, cib_none);

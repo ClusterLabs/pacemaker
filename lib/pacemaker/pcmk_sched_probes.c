@@ -137,9 +137,9 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
     pcmk_action_t *probe = NULL;
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
-    crm_debug("Scheduling probe of %s %s on %s",
-              pcmk_role_text(rsc->priv->orig_role), rsc->id,
-              pcmk__node_name(node));
+    pcmk__debug("Scheduling probe of %s %s on %s",
+                pcmk_role_text(rsc->priv->orig_role), rsc->id,
+                pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->priv->scheduler);
@@ -793,7 +793,7 @@ order_then_probes(pcmk_scheduler_t *scheduler)
         }
 
         if (start == NULL) {
-            crm_debug("No start action for %s", rsc->id);
+            pcmk__debug("No start action for %s", rsc->id);
             continue;
         }
 
@@ -841,14 +841,14 @@ order_then_probes(pcmk_scheduler_t *scheduler)
                 continue;
             }
 
-            crm_debug("Applying %s before %s", first->uuid, start->uuid);
+            pcmk__debug("Applying %s before %s", first->uuid, start->uuid);
 
             for (GList *probe_iter = probes; probe_iter != NULL;
                  probe_iter = probe_iter->next) {
 
                 pcmk_action_t *probe = (pcmk_action_t *) probe_iter->data;
 
-                crm_debug("Ordering %s before %s", first->uuid, probe->uuid);
+                pcmk__debug("Ordering %s before %s", first->uuid, probe->uuid);
                 order_actions(first, probe, pcmk__ar_ordered);
             }
         }
