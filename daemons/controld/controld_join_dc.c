@@ -192,10 +192,10 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
         return;
     }
 
-    crm_warn("Rejecting join-%d phase update for node %s because can't go from "
-             "%s to %s " QB_XS " nodeid=%" PRIu32 " source=%s",
-             current_join_id, node->name, join_phase_text(last),
-             join_phase_text(phase), node->cluster_layer_id, source);
+    pcmk__warn("Rejecting join-%d phase update for node %s because can't go "
+               "from %s to %s " QB_XS " nodeid=%" PRIu32 " source=%s",
+               current_join_id, node->name, join_phase_text(last),
+               join_phase_text(phase), node->cluster_layer_id, source);
 }
 
 static void
@@ -416,14 +416,16 @@ compare_int_fields(xmlNode * left, xmlNode * right, const char *field)
 
     rc = pcmk__scan_ll(elem_l, &int_elem_l, -1LL);
     if (rc != pcmk_rc_ok) { // Shouldn't be possible
-        crm_warn("Comparing current CIB %s as -1 "
-                 "because '%s' is not an integer", field, elem_l);
+        pcmk__warn("Comparing current CIB %s as -1 because '%s' is not an "
+                   "integer",
+                   field, elem_l);
     }
 
     rc = pcmk__scan_ll(elem_r, &int_elem_r, -1LL);
     if (rc != pcmk_rc_ok) { // Shouldn't be possible
-        crm_warn("Comparing joining node's CIB %s as -1 "
-                 "because '%s' is not an integer", field, elem_r);
+        pcmk__warn("Comparing joining node's CIB %s as -1 because '%s' is not "
+                   "an integer",
+                   field, elem_r);
     }
 
     if (int_elem_l < int_elem_r) {
@@ -650,8 +652,8 @@ do_dc_join_finalize(long long action,
     }
 
     if (!controld_globals.transition_graph->complete) {
-        crm_warn("Delaying join-%d finalization while transition in progress",
-                 current_join_id);
+        pcmk__warn("Delaying join-%d finalization while transition in progress",
+                   current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
         crmd_fsa_stall(FALSE);
         return;
@@ -784,11 +786,11 @@ do_dc_join_ack(long long action,
 
     // Sanity checks
     if (join_from == NULL) {
-        crm_warn("Ignoring message received without node identification");
+        pcmk__warn("Ignoring message received without node identification");
         goto done;
     }
     if (op == NULL) {
-        crm_warn("Ignoring message received from %s without task", join_from);
+        pcmk__warn("Ignoring message received from %s without task", join_from);
         goto done;
     }
 
@@ -800,8 +802,8 @@ do_dc_join_ack(long long action,
 
     if (pcmk__xe_get_int(join_ack->msg, PCMK__XA_JOIN_ID,
                          &join_id) != pcmk_rc_ok) {
-        crm_warn("Ignoring join confirmation from %s without valid join ID",
-                 join_from);
+        pcmk__warn("Ignoring join confirmation from %s without valid join ID",
+                   join_from);
         goto done;
     }
 
@@ -860,9 +862,9 @@ do_dc_join_ack(long long action,
             state = execd_state;
 
         } else {
-            crm_warn("Updating local node history from join-%d confirmation "
-                     "because query failed",
-                     current_join_id);
+            pcmk__warn("Updating local node history from join-%d confirmation "
+                       "because query failed",
+                       current_join_id);
         }
 
     } else {

@@ -99,11 +99,11 @@ init_remote_listener(int port, gboolean encrypted)
             return -1;
         }
     } else {
-        crm_warn("Starting plain-text listener on port %d", port);
+        pcmk__warn("Starting plain-text listener on port %d", port);
     }
 #ifndef HAVE_PAM
-    crm_warn("This build does not support remote administrators "
-             "because PAM support is not available");
+    pcmk__warn("This build does not support remote administrators because PAM "
+               "support is not available");
 #endif
 
     /* create server socket */
@@ -201,16 +201,18 @@ cib_remote_auth(xmlNode * login)
     }
 
     if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
-        crm_warn("Rejecting remote client: Unrecognizable message "
-                 "(element '%s' not '" PCMK__XE_CIB_COMMAND "')", login->name);
+        pcmk__warn("Rejecting remote client: Unrecognizable message (element "
+                   "'%s' not '" PCMK__XE_CIB_COMMAND "')",
+                   login->name);
         crm_log_xml_debug(login, "bad");
         return FALSE;
     }
 
     tmp = pcmk__xe_get(login, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
-        crm_warn("Rejecting remote client: Unrecognizable message "
-                 "(operation '%s' not 'authenticate')", tmp);
+        pcmk__warn("Rejecting remote client: Unrecognizable message (operation "
+                   "'%s' not 'authenticate')",
+                   tmp);
         crm_log_xml_debug(login, "bad");
         return FALSE;
     }
@@ -218,8 +220,8 @@ cib_remote_auth(xmlNode * login)
     user = pcmk__xe_get(login, PCMK_XA_USER);
     pass = pcmk__xe_get(login, PCMK__XA_PASSWORD);
     if (!user || !pass) {
-        crm_warn("Rejecting remote client: No %s given",
-                 ((user == NULL)? "username" : "password"));
+        pcmk__warn("Rejecting remote client: No %s given",
+                   ((user == NULL)? "username" : "password"));
         crm_log_xml_debug(login, "bad");
         return FALSE;
     }
@@ -269,7 +271,8 @@ cib_remote_listen(gpointer data)
     memset(&addr, 0, sizeof(addr));
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (csock == -1) {
-        crm_warn("Could not accept remote connection: %s", pcmk_rc_str(errno));
+        pcmk__warn("Could not accept remote connection: %s",
+                   pcmk_rc_str(errno));
         return TRUE;
     }
 
@@ -277,9 +280,9 @@ cib_remote_listen(gpointer data)
 
     rc = pcmk__set_nonblocking(csock);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Dropping remote connection from %s because "
-                 "it could not be set to non-blocking: %s",
-                 ipstr, pcmk_rc_str(rc));
+        pcmk__warn("Dropping remote connection from %s because it could not be "
+                   "set to non-blocking: %s",
+                   ipstr, pcmk_rc_str(rc));
         close(csock);
         return TRUE;
     }
@@ -351,9 +354,9 @@ cib_remote_connection_destroy(gpointer user_data)
             }
             break;
         default:
-            crm_warn("Unknown transport for client %s "
-                     QB_XS " flags=%#016" PRIx64,
-                     pcmk__client_name(client), client->flags);
+            pcmk__warn("Unknown transport for client %s "
+                       QB_XS " flags=%#016" PRIx64,
+                       pcmk__client_name(client), client->flags);
     }
 
     if (csock >= 0) {
@@ -554,8 +557,8 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
             data = NULL;
             break;
         default:
-            crm_warn("Ignoring PAM message of unrecognized type %d",
-                     msg[0]->msg_style);
+            pcmk__warn("Ignoring PAM message of unrecognized type %d",
+                       msg[0]->msg_style);
             return PAM_CONV_ERR;
     }
 
@@ -603,9 +606,9 @@ authenticate_user(const char *user, const char *passwd)
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {
-        crm_warn("Rejecting remote client for user %s "
-                 "because PAM initialization failed: %s",
-                 user, pam_strerror(pam_h, rc));
+        pcmk__warn("Rejecting remote client for user %s because PAM "
+                   "initialization failed: %s",
+                   user, pam_strerror(pam_h, rc));
         goto bail;
     }
 
@@ -623,22 +626,23 @@ authenticate_user(const char *user, const char *passwd)
      */
     rc = pam_get_item(pam_h, PAM_USER, &p_user);
     if (rc != PAM_SUCCESS) {
-        crm_warn("Rejecting remote client for user %s "
-                 "because PAM failed to return final user name: %s",
-                 user, pam_strerror(pam_h, rc));
+        pcmk__warn("Rejecting remote client for user %s because PAM failed to "
+                   "return final user name: %s",
+                   user, pam_strerror(pam_h, rc));
         goto bail;
     }
     if (p_user == NULL) {
-        crm_warn("Rejecting remote client for user %s "
-                 "because PAM returned no final user name", user);
+        pcmk__warn("Rejecting remote client for user %s because PAM returned "
+                   "no final user name",
+                   user);
         goto bail;
     }
 
     // @TODO Why do we require these to match?
     if (!pcmk__str_eq(p_user, user, pcmk__str_none)) {
-        crm_warn("Rejecting remote client for user %s "
-                 "because PAM returned different final user name %s",
-                 user, p_user);
+        pcmk__warn("Rejecting remote client for user %s because PAM returned "
+                   "different final user name %s",
+                   user, p_user);
         goto bail;
     }
 
@@ -656,8 +660,9 @@ bail:
     return pass;
 #else
     // @TODO Implement for non-PAM environments
-    crm_warn("Rejecting remote user %s because this build does not have "
-             "PAM support", user);
+    pcmk__warn("Rejecting remote user %s because this build does not have PAM "
+               "support",
+               user);
     return false;
 #endif
 }

@@ -118,8 +118,8 @@ pcmk__client_cleanup(void)
         int active = g_hash_table_size(client_connections);
 
         if (active > 0) {
-            crm_warn("Exiting with %d active IPC client%s",
-                     active, pcmk__plural_s(active));
+            pcmk__warn("Exiting with %d active IPC client%s", active,
+                       pcmk__plural_s(active));
         }
         g_hash_table_destroy(client_connections);
         client_connections = NULL;
@@ -220,8 +220,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
         static bool need_log = true;
 
         if (need_log) {
-            crm_warn("Could not find user and group IDs for user "
-                     CRM_DAEMON_USER);
+            pcmk__warn("Could not find user and group IDs for user "
+                       CRM_DAEMON_USER);
             need_log = false;
         }
     }
@@ -554,8 +554,9 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
             if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
                 /* Don't evict for a new or shrinking backlog */
-                crm_warn("Client with process ID %u has a backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
+                pcmk__warn("Client with process ID %u has a backlog of %u "
+                           "messages " QB_XS " %p",
+                           c->pid, queue_len, c->ipcs);
             } else {
                 pcmk__err("Evicting client with process ID %u due to backlog "
                           "of %u messages " QB_XS " %p",
@@ -883,7 +884,8 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
         pcmk__err("Failed to create the CIB manager: exiting and inhibiting "
                   "respawn");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
+        pcmk__warn("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -964,7 +966,8 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
 
     if (*ipcs == NULL) {
         pcmk__err("Failed to create fencer: exiting and inhibiting respawn");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        pcmk__warn("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -986,7 +989,8 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
 
     if (*ipcs == NULL) {
         pcmk__err("Couldn't start pacemakerd IPC server");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        pcmk__warn("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
          * if we want to prevent pacemakerd from restarting them.
          * With pacemakerd we leave the exit-code shown to e.g. systemd

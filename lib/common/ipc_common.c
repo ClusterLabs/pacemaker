@@ -39,16 +39,16 @@ pcmk__ipc_buffer_size(unsigned int max)
         if (rc != pcmk_rc_ok) {
             env_value = MAX_MSG_SIZE;
             max = QB_MAX(max, env_value);
-            crm_warn("Using %u as IPC buffer size because '%s' is not "
-                     "a valid value for PCMK_" PCMK__ENV_IPC_BUFFER ": %s",
-                     max, env_value_s, pcmk_rc_str(rc));
+            pcmk__warn("Using %u as IPC buffer size because '%s' is not "
+                       "a valid value for PCMK_" PCMK__ENV_IPC_BUFFER ": %s",
+                       max, env_value_s, pcmk_rc_str(rc));
 
         } else if (env_value <= 0LL) {
             env_value = MAX_MSG_SIZE;
             max = QB_MAX(max, env_value);
-            crm_warn("Using %u as IPC buffer size because PCMK_"
-                     PCMK__ENV_IPC_BUFFER " (%s) is not a positive integer",
-                     max, env_value_s);
+            pcmk__warn("Using %u as IPC buffer size because PCMK_"
+                       PCMK__ENV_IPC_BUFFER " (%s) is not a positive integer",
+                       max, env_value_s);
 
         } else if (env_value < MIN_MSG_SIZE) {
             env_value = MIN_MSG_SIZE;

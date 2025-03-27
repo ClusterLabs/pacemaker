@@ -329,8 +329,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 crm_info("Stonith/shutdown of node %s is unknown to the "
                          "current DC", node->name);
             } else {
-                crm_warn("Stonith/shutdown of node %s was not expected",
-                         node->name);
+                pcmk__warn("Stonith/shutdown of node %s was not expected",
+                           node->name);
             }
             if (!is_remote) {
                 crm_update_peer_join(__func__, node, controld_join_none);

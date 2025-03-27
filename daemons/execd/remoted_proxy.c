@@ -77,8 +77,9 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     xmlNode *msg;
 
     if (ipc_proxy == NULL) {
-        crm_warn("Cannot proxy IPC connection from uid %d gid %d to %s "
-                 "because not connected to cluster", uid, gid, ipc_channel);
+        pcmk__warn("Cannot proxy IPC connection from uid %d gid %d to %s "
+                   "because not connected to cluster",
+                   uid, gid, ipc_channel);
         return -EREMOTEIO;
     }
 
@@ -220,8 +221,8 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not proxy IPC to client %s: %s " QB_XS " rc=%d",
-                 ipc_client->id, pcmk_rc_str(rc), rc);
+        pcmk__warn("Could not proxy IPC to client %s: %s " QB_XS " rc=%d",
+                   ipc_client->id, pcmk_rc_str(rc), rc);
     }
 }
 
@@ -458,7 +459,8 @@ ipc_proxy_init(void)
     if (crmd_ipcs == NULL) {
         pcmk__err("Failed to create controller: exiting and inhibiting "
                   "respawn");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
+        pcmk__warn("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }

@@ -896,7 +896,7 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
+        pcmk__warn("Unknown patch format: %d", format);
         return false;
     }
 

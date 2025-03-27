@@ -235,7 +235,7 @@ do_pe_control(long long action,
             crm_info("Ignoring request to connect to scheduler while shutting down");
 
         } else if (!new_schedulerd_ipc_connection()) {
-            crm_warn("Could not connect to scheduler");
+            pcmk__warn("Could not connect to scheduler");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
         }
     }

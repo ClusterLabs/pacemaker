@@ -130,8 +130,8 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     rc = pcmk__xe_get_flags(request, PCMK__XA_ST_CALLOPT, &call_options,
                             st_opt_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from IPC request: %s",
-                 pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from IPC request: %s",
+                   pcmk_rc_str(rc));
     }
 
     crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
@@ -247,9 +247,9 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
         crm_trace("Sent response %d to client %s",
                   rid, pcmk__client_name(client));
     } else {
-        crm_warn("%synchronous reply to client %s failed: %s",
-                 (pcmk__is_set(call_options, st_opt_sync_call)? "S" : "As"),
-                 pcmk__client_name(client), pcmk_rc_str(local_rc));
+        pcmk__warn("%synchronous reply to client %s failed: %s",
+                   (pcmk__is_set(call_options, st_opt_sync_call)? "S" : "As"),
+                   pcmk__client_name(client), pcmk_rc_str(local_rc));
     }
 }
 
@@ -301,9 +301,10 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
                                     crm_ipc_server_event);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("%s notification of client %s failed: %s "
-                     QB_XS " id=%.8s rc=%d", type, pcmk__client_name(client),
-                     pcmk_rc_str(rc), client->id, rc);
+            pcmk__warn("%s notification of client %s failed: %s "
+                       QB_XS " id=%.8s rc=%d",
+                       type, pcmk__client_name(client), pcmk_rc_str(rc),
+                       client->id, rc);
         } else {
             crm_trace("Sent %s notification to client %s",
                       type, pcmk__client_name(client));

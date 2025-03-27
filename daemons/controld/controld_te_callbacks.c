@@ -162,8 +162,8 @@ process_op_deletion(const char *xpath, xmlNode *change)
         key = strrchr(mutable_key, '\'');
     }
     if (key == NULL) {
-        crm_warn("Ignoring malformed CIB update (resource deletion of %s)",
-                 xpath);
+        pcmk__warn("Ignoring malformed CIB update (resource deletion of %s)",
+                   xpath);
         free(mutable_key);
         return;
     }
@@ -274,8 +274,9 @@ te_update_diff_element(xmlNode *change, void *userdata)
     } else if (!pcmk__str_any_of(op,
                                  PCMK_VALUE_DELETE, PCMK_VALUE_MOVE,
                                  NULL)) {
-        crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
-                 op, xpath);
+        pcmk__warn("Ignoring malformed CIB update (%s operation on %s is "
+                   "unrecognized)",
+                   op, xpath);
         return pcmk_rc_ok;
     }
 
@@ -312,8 +313,8 @@ te_update_diff_element(xmlNode *change, void *userdata)
         process_delete_diff(xpath, op, change);
 
     } else if (name == NULL) {
-        crm_warn("Ignoring malformed CIB update (%s at %s has no result)",
-                 op, xpath);
+        pcmk__warn("Ignoring malformed CIB update (%s at %s has no result)", op,
+                   xpath);
 
     } else if (strcmp(name, PCMK_XE_CIB) == 0) {
         process_cib_diff(match, change, op, xpath);
@@ -347,8 +348,9 @@ te_update_diff_element(xmlNode *change, void *userdata)
         free(local_node);
 
     } else {
-        crm_warn("Ignoring malformed CIB update (%s at %s has unrecognized result %s)",
-                 op, xpath, name);
+        pcmk__warn("Ignoring malformed CIB update (%s at %s has unrecognized "
+                   "result %s)",
+                   op, xpath, name);
     }
 
     return pcmk_rc_ok;
@@ -402,8 +404,8 @@ te_update_diff(const char *event, xmlNode * msg)
         pcmk__xe_foreach_child(diff, NULL, te_update_diff_element, NULL);
 
     } else {
-        crm_warn("Ignoring malformed CIB update (unknown patch format %d)",
-                 format);
+        pcmk__warn("Ignoring malformed CIB update (unknown patch format %d)",
+                   format);
     }
     controld_remove_all_outside_events();
 }

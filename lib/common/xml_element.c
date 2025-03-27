@@ -1694,9 +1694,9 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
         if (rc == pcmk_rc_ok) {
             return 0;
         }
-        crm_warn("Using default for %s "
-                 "because '%s' is not a valid integer: %s",
-                 name, value, pcmk_rc_str(rc));
+        pcmk__warn("Using default for %s because '%s' is not a valid integer: "
+                   "%s",
+                   name, value, pcmk_rc_str(rc));
     }
     return -1;
 }
@@ -1759,14 +1759,14 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
     value = crm_element_value(data, name);
     rc = pcmk__scan_ll(value, &value_ll, 0LL);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Using default for %s "
-                 "because '%s' is not valid milliseconds: %s",
-                 name, value, pcmk_rc_str(rc));
+        pcmk__warn("Using default for %s because '%s' is not valid "
+                   "milliseconds: %s",
+                   name, value, pcmk_rc_str(rc));
         return -1;
     }
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
-        crm_warn("Using default for %s because '%s' is out of range",
-                 name, value);
+        pcmk__warn("Using default for %s because '%s' is out of range", name,
+                   value);
         return -1;
     }
     *dest = (guint) value_ll;
@@ -1786,12 +1786,12 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
 
         *dest = PCMK__PARSE_INT_DEFAULT;
         if (rc != pcmk_rc_ok) {
-            crm_warn("Using default for %s "
-                     "because '%s' is not a valid integer: %s",
-                     name, value, pcmk_rc_str(rc));
+            pcmk__warn("Using default for %s because '%s' is not a valid "
+                       "integer: %s",
+                       name, value, pcmk_rc_str(rc));
         } else if ((value_ll < INT_MIN) || (value_ll > INT_MAX)) {
-            crm_warn("Using default for %s because '%s' is out of range",
-                     name, value);
+            pcmk__warn("Using default for %s because '%s' is out of range",
+                       name, value);
         } else {
             *dest = (int) value_ll;
             return 0;

@@ -372,17 +372,17 @@ relay_message(xmlNode * msg, gboolean originated_locally)
 
     // Require message type (set by pcmk__new_request())
     if (!pcmk__str_eq(type, PCMK__VALUE_CRMD, pcmk__str_none)) {
-        crm_warn("Ignoring invalid message %s with type '%s' "
-                 "(not '" PCMK__VALUE_CRMD "')",
-                 ref, pcmk__s(type, ""));
+        pcmk__warn("Ignoring invalid message %s with type '%s' "
+                   "(not '" PCMK__VALUE_CRMD "')",
+                   ref, pcmk__s(type, ""));
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
     }
 
     // Require a destination subsystem (also set by pcmk__new_request())
     if (sys_to == NULL) {
-        crm_warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
-                 ref);
+        pcmk__warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
+                   ref);
         crm_log_xml_trace(msg, "ignored");
         return TRUE;
     }
@@ -508,8 +508,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         node_to = pcmk__search_node_caches(0, host_to, NULL,
                                            pcmk__node_search_cluster_member);
         if (node_to == NULL) {
-            crm_warn("Ignoring message %s because node %s is unknown",
-                     ref, host_to);
+            pcmk__warn("Ignoring message %s because node %s is unknown",
+                       ref, host_to);
             crm_log_xml_trace(msg, "ignored");
             return TRUE;
         }
@@ -533,10 +533,10 @@ authorize_version(xmlNode *message_data, const char *field,
     if ((pcmk__scan_ll(version, &version_num, -1LL) != pcmk_rc_ok)
         || (version_num < 0LL)) {
 
-        crm_warn("Rejected IPC hello from %s: '%s' is not a valid protocol %s "
-                 QB_XS " ref=%s uuid=%s",
-                 client_name, ((version == NULL)? "" : version),
-                 field, (ref? ref : "none"), uuid);
+        pcmk__warn("Rejected IPC hello from %s: '%s' is not a valid protocol %s "
+                   QB_XS " ref=%s uuid=%s",
+                   client_name, pcmk__s(version, ""), field,
+                   pcmk__s(ref, "none"), uuid);
         return false;
     }
     return true;
@@ -569,8 +569,9 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     const char *uuid = (curr_client? curr_client->id : proxy_session);
 
     if (uuid == NULL) {
-        crm_warn("IPC message from client rejected: No client identifier "
-                 QB_XS " ref=%s", (ref? ref : "none"));
+        pcmk__warn("IPC message from client rejected: No client identifier "
+                   QB_XS " ref=%s",
+                   pcmk__s(ref, "none"));
         goto rejected;
     }
 
@@ -584,8 +585,9 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
 
     client_name = pcmk__xe_get(message_data, PCMK__XA_CLIENT_NAME);
     if (pcmk__str_empty(client_name)) {
-        crm_warn("IPC hello from client rejected: No client name",
-                 QB_XS " ref=%s uuid=%s", (ref? ref : "none"), uuid);
+        pcmk__warn("IPC hello from client rejected: No client name",
+                   QB_XS " ref=%s uuid=%s",
+                   pcmk__s(ref, "none"), uuid);
         goto rejected;
     }
     if (!authorize_version(message_data, PCMK__XA_MAJOR_VERSION, client_name,
@@ -630,8 +632,8 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
         return I_NULL;
     }
 
-    crm_warn("Ignoring message with unknown " PCMK__XA_SUBT" '%s'",
-             pcmk__s(type, ""));
+    pcmk__warn("Ignoring message with unknown " PCMK__XA_SUBT" '%s'",
+               pcmk__s(type, ""));
     crm_log_xml_trace(msg, "bad");
     return I_NULL;
 }
@@ -1033,7 +1035,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
     const char *host_from = pcmk__xe_get(stored_msg, PCMK__XA_SRC);
 
     if (host_from == NULL) {
-        crm_warn("Ignoring shutdown request without origin specified");
+        pcmk__warn("Ignoring shutdown request without origin specified");
         return I_NULL;
     }
 
@@ -1052,8 +1054,8 @@ handle_shutdown_ack(xmlNode *stored_msg)
         return I_STOP;
     }
 
-    crm_warn("Ignoring shutdown request from %s because DC is %s",
-             host_from, controld_globals.dc_name);
+    pcmk__warn("Ignoring shutdown request from %s because DC is %s",
+               host_from, controld_globals.dc_name);
     return I_NULL;
 }
 
@@ -1067,7 +1069,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     crm_log_xml_trace(stored_msg, "request");
     if (op == NULL) {
-        crm_warn("Ignoring request without " PCMK__XA_CRM_TASK);
+        pcmk__warn("Ignoring request without " PCMK__XA_CRM_TASK);
         return I_NULL;
     }
 
@@ -1236,7 +1238,7 @@ handle_response(xmlNode *stored_msg)
 
     crm_log_xml_trace(stored_msg, "reply");
     if (op == NULL) {
-        crm_warn("Ignoring reply without " PCMK__XA_CRM_TASK);
+        pcmk__warn("Ignoring reply without " PCMK__XA_CRM_TASK);
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
         // Check whether scheduler answer been superseded by subsequent request

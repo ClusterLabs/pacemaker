@@ -1024,10 +1024,10 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
         int rc = pcmk__scan_ll(last_granted, &last_granted_ll, 0LL);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Using %lld instead of invalid " PCMK_XA_LAST_GRANTED
-                     " value '%s' in state for ticket %s: %s",
-                     last_granted_ll, last_granted, ticket->id,
-                     pcmk_rc_str(rc));
+            pcmk__warn("Using %lld instead of invalid " PCMK_XA_LAST_GRANTED
+                       " value '%s' in state for ticket %s: %s",
+                       last_granted_ll, last_granted, ticket->id,
+                       pcmk_rc_str(rc));
         }
         ticket->last_granted = (time_t) last_granted_ll;
     }
@@ -1486,8 +1486,9 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
 
         if ((pcmk__scan_ll(member_time, &when_member,
                            0LL) != pcmk_rc_ok) || (when_member < 0LL)) {
-            crm_warn("Unrecognized value '%s' for " PCMK__XA_IN_CCM
-                     " in " PCMK__XE_NODE_STATE " entry", member_time);
+            pcmk__warn("Unrecognized value '%s' for " PCMK__XA_IN_CCM " in "
+                       PCMK__XE_NODE_STATE " entry",
+                       member_time);
             return -1LL;
         }
         return when_member;
@@ -1532,8 +1533,9 @@ unpack_node_online(const xmlNode *node_state)
 
         if ((pcmk__scan_ll(peer_time, &when_online, 0LL) != pcmk_rc_ok)
             || (when_online < 0)) {
-            crm_warn("Unrecognized value '%s' for " PCMK_XA_CRMD " in "
-                     PCMK__XE_NODE_STATE " entry, assuming offline", peer_time);
+            pcmk__warn("Unrecognized value '%s' for " PCMK_XA_CRMD " in "
+                       PCMK__XE_NODE_STATE " entry, assuming offline",
+                       peer_time);
             return 0LL;
         }
         return when_online;
@@ -1568,9 +1570,9 @@ unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
     if (rc == pcmk_rc_ok) {
         return (value_ll > 0);
     }
-    crm_warn("Ignoring unrecognized value '%s' for " PCMK_NODE_ATTR_TERMINATE
-             "node attribute for %s: %s",
-             value_s, pcmk__node_name(node), pcmk_rc_str(rc));
+    pcmk__warn("Ignoring unrecognized value '%s' for " PCMK_NODE_ATTR_TERMINATE
+               "node attribute for %s: %s",
+               value_s, pcmk__node_name(node), pcmk_rc_str(rc));
     return false;
 }
 
@@ -4787,12 +4789,12 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
         case PCMK_EXEC_NOT_INSTALLED:
             unpack_failure_handling(&history, &failure_strategy, &fail_role);
             if (failure_strategy == pcmk__on_fail_ignore) {
-                crm_warn("Cannot ignore failed %s of %s on %s: "
-                         "Resource agent doesn't exist "
-                         QB_XS " status=%d rc=%d id=%s",
-                         history.task, rsc->id, pcmk__node_name(node),
-                         history.execution_status, history.exit_status,
-                         history.id);
+                pcmk__warn("Cannot ignore failed %s of %s on %s: Resource "
+                           "agent doesn't exist "
+                           QB_XS " status=%d rc=%d id=%s",
+                           history.task, rsc->id, pcmk__node_name(node),
+                           history.execution_status, history.exit_status,
+                           history.id);
                 /* Also for printing it as "FAILED" by marking it as
                  * pcmk__rsc_failed later
                  */
@@ -4838,12 +4840,12 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
 
         char *last_change_s = last_change_str(xml_op);
 
-        crm_warn("Pretending failed %s (%s%s%s) of %s on %s at %s succeeded "
-                 QB_XS " %s",
-                 history.task, crm_exit_str(history.exit_status),
-                 (pcmk__str_empty(history.exit_reason)? "" : ": "),
-                 pcmk__s(history.exit_reason, ""), rsc->id,
-                 pcmk__node_name(node), last_change_s, history.id);
+        pcmk__warn("Pretending failed %s (%s%s%s) of %s on %s at %s succeeded "
+                   QB_XS " %s",
+                   history.task, crm_exit_str(history.exit_status),
+                   (pcmk__str_empty(history.exit_reason)? "" : ": "),
+                   pcmk__s(history.exit_reason, ""), rsc->id,
+                   pcmk__node_name(node), last_change_s, history.id);
         free(last_change_s);
 
         update_resource_state(&history, history.expected_exit_status,

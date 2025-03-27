@@ -1237,8 +1237,8 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     rc = pcmk__xe_get_flags(request, PCMK__XA_ST_CALLOPT, &(op->call_options),
                             0U);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request %s: %s",
-                 op->id, pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request %s: %s", op->id,
+                   pcmk_rc_str(rc));
     }
 
     pcmk__xe_get_int(request, PCMK__XA_ST_CALLID, &(op->client_callid));
@@ -1266,7 +1266,8 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
             pcmk__str_update(&(op->target), node->name);
 
         } else {
-            crm_warn("Could not expand nodeid '%s' into a host name", op->target);
+            pcmk__warn("Could not expand nodeid '%s' into a host name",
+                       op->target);
         }
     }
 
@@ -1329,8 +1330,9 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
             // advance_topology_level() exhausted levels
             pcmk__set_result(&op->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                              "All topology levels failed");
-            crm_warn("Could not request peer fencing (%s) targeting %s "
-                     QB_XS " id=%.8s", op->action, op->target, op->id);
+            pcmk__warn("Could not request peer fencing (%s) targeting %s "
+                       QB_XS " id=%.8s",
+                       op->action, op->target, op->id);
             finalize_op(op, NULL, false);
             return op;
 
@@ -1518,17 +1520,17 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
 
     if (timeout > specified_timeout) {
         if (action_specific) {
-            crm_warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
-                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
-                     "instead",
-                     op->action, specified_timeout, device? device : "watchdog",
-                     timeout, timeout);
+            pcmk__warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
+                        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                       "instead",
+                       op->action, specified_timeout,
+                       pcmk__s(device, "watchdog"), timeout, timeout);
 
         } else {
-            crm_warn("Fencing timeout %ds is too short (must be >= "
-                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
-                     "instead",
-                     specified_timeout, timeout, timeout);
+            pcmk__warn("Fencing timeout %ds is too short (must be >= "
+                       PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                       "instead",
+                       specified_timeout, timeout, timeout);
         }
     }
 
@@ -2019,8 +2021,9 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         /* A remapped "on" cannot be executed, but the node was already
          * turned off successfully, so ignore the error and continue.
          */
-        crm_warn("Ignoring %s 'on' failure (no capable peers) targeting %s "
-                 "after successful 'off'", device, op->target);
+        pcmk__warn("Ignoring %s 'on' failure (no capable peers) targeting %s "
+                   "after successful 'off'",
+                   device, op->target);
         advance_topology_device_in_level(op, device, NULL);
         return;
 
@@ -2255,8 +2258,9 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
                             &(props->device_support_flags),
                             st_device_supports_on);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't determine device support for %s "
-                 "(assuming unfencing): %s", device, pcmk_rc_str(rc));
+        pcmk__warn("Couldn't determine device support for %s "
+                   "(assuming unfencing): %s",
+                   device, pcmk_rc_str(rc));
     }
 
     /* Parse action-specific device properties */
@@ -2533,12 +2537,12 @@ fenced_process_fencing_reply(xmlNode *msg)
             /* A remapped "on" failed, but the node was already turned off
              * successfully, so ignore the error and continue.
              */
-            crm_warn("Ignoring %s 'on' failure (%s%s%s) targeting %s "
-                     "after successful 'off'",
-                     device, pcmk_exec_status_str(op->result.execution_status),
-                     (reason == NULL)? "" : ": ",
-                     (reason == NULL)? "" : reason,
-                     op->target);
+            pcmk__warn("Ignoring %s 'on' failure (%s%s%s) targeting %s after "
+                       "successful 'off'",
+                       device,
+                       pcmk_exec_status_str(op->result.execution_status),
+                       ((reason != NULL)? ": " : ""), pcmk__s(reason, ""),
+                       op->target);
             pcmk__set_result(&op->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         } else {
             crm_notice("Action '%s' targeting %s%s%s on behalf of %s@%s: "

@@ -518,9 +518,10 @@ check_join_counts(fsa_data_t *msg_data)
         register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else {
-        crm_warn("Only %d of %u active cluster nodes fully joined "
-                 "(%d did not respond to offer)",
-                 count, npeers, crmd_join_phase_count(controld_join_welcomed));
+        pcmk__warn("Only %d of %u active cluster nodes fully joined (%d did "
+                   "not respond to offer)",
+                   count, npeers,
+                   crmd_join_phase_count(controld_join_welcomed));
     }
 }
 
@@ -621,13 +622,14 @@ do_state_transition(enum crmd_fsa_state cur_state,
         case S_FINALIZE_JOIN:
             CRM_LOG_ASSERT(AM_I_DC);
             if (cause == C_TIMER_POPPED) {
-                crm_warn("Progressed to state %s after %s",
-                         fsa_state2string(next_state), fsa_cause2string(cause));
+                pcmk__warn("Progressed to state %s after %s",
+                           fsa_state2string(next_state),
+                           fsa_cause2string(cause));
             }
             count = crmd_join_phase_count(controld_join_welcomed);
             if (count > 0) {
-                crm_warn("%d cluster node%s failed to respond to join offer",
-                         count, pcmk__plural_s(count));
+                pcmk__warn("%d cluster node%s failed to respond to join offer",
+                           count, pcmk__plural_s(count));
                 crmd_join_phase_log(LOG_NOTICE);
 
             } else {

@@ -289,7 +289,7 @@ pcmk__sysrq_trigger(char t)
     FILE *procf = fopen("/proc/sysrq-trigger", "a");
 
     if (procf == NULL) {
-        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
+        pcmk__warn("Could not open sysrq-trigger: %s", strerror(errno));
     } else {
         fprintf(procf, "%c\n", t);
         fclose(procf);
@@ -366,7 +366,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
 
         loadfile = find_cib_loadfile(server);
         if (loadfile == NULL) {
-            crm_warn("Couldn't find CIB load file");
+            pcmk__warn("Couldn't find CIB load file");
             return false;
         }
 
@@ -378,7 +378,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
     if (stream == NULL) {
         int rc = errno;
 
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        pcmk__warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         free(loadfile);
         loadfile = NULL;
         return false;
@@ -445,7 +445,7 @@ pcmk__throttle_load_avg(float *load)
     stream = fopen(loadfile, "r");
     if (stream == NULL) {
         int rc = errno;
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        pcmk__warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         return false;
     }
 

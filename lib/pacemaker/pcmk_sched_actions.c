@@ -195,8 +195,9 @@ action_for_ordering(pcmk_action_t *action)
 
         result = find_first_action(rsc->priv->actions, uuid, NULL, NULL);
         if (result == NULL) {
-            crm_warn("Not remapping %s to %s because %s does not have "
-                     "remapped action", action->uuid, uuid, rsc->id);
+            pcmk__warn("Not remapping %s to %s because %s does not have "
+                       "remapped action",
+                       action->uuid, uuid, rsc->id);
             result = action;
         }
         free(uuid);

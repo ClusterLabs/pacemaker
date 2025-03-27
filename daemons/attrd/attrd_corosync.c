@@ -340,7 +340,7 @@ attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
     const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
 
     if (attr == NULL) {
-        crm_warn("Could not update attribute: peer did not specify name");
+        pcmk__warn("Could not update attribute: peer did not specify name");
         return;
     }
 

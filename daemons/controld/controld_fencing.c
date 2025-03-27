@@ -74,8 +74,9 @@ set_fence_reaction(const char *reaction_s)
 
     } else {
         if (!pcmk__str_eq(reaction_s, PCMK_VALUE_STOP, pcmk__str_casei)) {
-            crm_warn("Invalid value '%s' for %s, using 'stop'",
-                     reaction_s, PCMK_OPT_FENCE_REACTION);
+            pcmk__warn("Invalid value '%s' for " PCMK_OPT_FENCE_REACTION
+                       ", using '" PCMK_VALUE_STOP "'",
+                       reaction_s);
         }
         fence_reaction_panic = false;
     }
@@ -129,8 +130,8 @@ too_many_st_failures(const char *target)
     return FALSE;
 
 too_many:
-    crm_warn("Too many failures (%d) to fence %s, giving up",
-             value->count, target);
+    pcmk__warn("Too many failures (%d) to fence %s, giving up", value->count,
+               target);
     return TRUE;
 }
 
@@ -435,7 +436,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
     }
 
     if (last_action != NULL) {
-        crm_warn("Fencer failure resulted in unrunnable actions");
+        pcmk__warn("Fencer failure resulted in unrunnable actions");
         abort_for_stonith_failure(pcmk__graph_restart, NULL, last_action);
         return TRUE;
     }
@@ -903,9 +904,9 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
          * checking again, so don't start a new transition in that case.
          */
         if (status == PCMK_EXEC_NO_FENCE_DEVICE) {
-            crm_warn("Fence operation %d for %s failed: %s "
-                     "(aborting transition and giving up for now)",
-                     data->call_id, target, reason);
+            pcmk__warn("Fence operation %d for %s failed: %s (aborting "
+                       "transition and giving up for now)",
+                       data->call_id, target, reason);
             abort_action = pcmk__graph_wait;
         } else {
             crm_notice("Fence operation %d for %s failed: %s "

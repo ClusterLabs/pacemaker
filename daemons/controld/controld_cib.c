@@ -187,8 +187,9 @@ do_cib_control(long long action,
         cib_retries++;
 
         if (cib_retries < 30) {
-            crm_warn("Couldn't complete CIB registration %d times... "
-                     "pause and retry", cib_retries);
+            pcmk__warn("Couldn't complete CIB registration %d times... pause "
+                       "and retry",
+                       cib_retries);
             controld_start_wait_timer();
             crmd_fsa_stall(FALSE);
 
@@ -257,8 +258,9 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == 0) {
         crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
     } else {
-        crm_warn("Deletion of %s (via CIB call %d) failed: %s " QB_XS " rc=%d",
-                 desc, call_id, pcmk_strerror(rc), rc);
+        pcmk__warn("Deletion of %s (via CIB call %d) failed: %s "
+                   QB_XS " rc=%d",
+                   desc, call_id, pcmk_strerror(rc), rc);
     }
 }
 
@@ -683,9 +685,9 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
 
     lrm_state = controld_get_executor_state(node_name, false);
     if (lrm_state == NULL) {
-        crm_warn("Cannot calculate digests for operation " PCMK__OP_FMT
-                 " because we have no connection to executor for %s",
-                 op->rsc_id, op->op_type, op->interval_ms, node_name);
+        pcmk__warn("Cannot calculate digests for operation " PCMK__OP_FMT
+                   " because we have no connection to executor for %s",
+                   op->rsc_id, op->op_type, op->interval_ms, node_name);
         return;
     }
 
@@ -770,11 +772,12 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
             break;
         default:
             if (call_id > 0) {
-                crm_warn("Resource history update %d failed: %s "
-                         QB_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
+                pcmk__warn("Resource history update %d failed: %s "
+                           QB_XS " rc=%d",
+                           call_id, pcmk_strerror(rc), rc);
             } else {
-                crm_warn("Resource history update failed: %s " QB_XS " rc=%d",
-                         pcmk_strerror(rc), rc);
+                pcmk__warn("Resource history update failed: %s " QB_XS " rc=%d",
+                           pcmk_strerror(rc), rc);
             }
     }
 
@@ -881,7 +884,7 @@ controld_update_resource_history(const char *node_name,
     CRM_CHECK((node_name != NULL) && (op != NULL), return);
 
     if (rsc == NULL) {
-        crm_warn("Resource %s no longer exists in the executor", op->rsc_id);
+        pcmk__warn("Resource %s no longer exists in the executor", op->rsc_id);
         controld_ack_event_directly(NULL, NULL, rsc, op, op->rsc_id);
         return;
     }

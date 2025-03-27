@@ -195,7 +195,7 @@ systemd_init(void)
 
     if (systemd_proxy
         && dbus_connection_get_is_connected(systemd_proxy) == FALSE) {
-        crm_warn("Connection to System DBus is closed. Reconnecting...");
+        pcmk__warn("Connection to System DBus is closed. Reconnecting...");
         pcmk_dbus_disconnect(systemd_proxy);
         systemd_proxy = NULL;
         need_init = 1;
@@ -312,8 +312,8 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
     }
 
     if (pcmk_dbus_find_error(pending, reply, &error)) {
-        crm_warn("Could not issue systemd reload %d: %s",
-                 reload_count, error.message);
+        pcmk__warn("Could not issue systemd reload %d: %s", reload_count,
+                   error.message);
         dbus_error_free(&error);
 
     } else {
@@ -640,13 +640,13 @@ systemd_unit_listall(void)
         char *basename = NULL;
 
         if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __func__, __LINE__)) {
-            crm_warn("Skipping systemd reply argument with unexpected type");
+            pcmk__warn("Skipping systemd reply argument with unexpected type");
             continue;
         }
 
         dbus_message_iter_recurse(&unit, &elem);
         if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __func__, __LINE__)) {
-            crm_warn("Skipping systemd reply argument with no string");
+            pcmk__warn("Skipping systemd reply argument with no string");
             continue;
         }
 
@@ -1153,8 +1153,8 @@ systemd_remove_override(const char *agent, int timeout)
 
         if (rc != ENOENT) {
             // Stop may be called when already stopped, which is fine
-            crm_warn("Cannot remove systemd override file %s: %s",
-                     filename->str, pcmk_rc_str(rc));
+            pcmk__warn("Cannot remove systemd override file %s: %s",
+                       filename->str, pcmk_rc_str(rc));
         }
 
     } else {

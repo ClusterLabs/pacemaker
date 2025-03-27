@@ -370,17 +370,17 @@ election_check(pcmk_cluster_t *cluster)
             const pcmk__node_status_t *node = NULL;
             char *key = NULL;
 
-            crm_warn("Received too many votes in election");
+            pcmk__warn("Received too many votes in election");
             g_hash_table_iter_init(&gIter, pcmk__peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
                 if (pcmk__cluster_is_node_active(node)) {
-                    crm_warn("* expected vote: %s", node->name);
+                    pcmk__warn("* expected vote: %s", node->name);
                 }
             }
 
             g_hash_table_iter_init(&gIter, cluster->priv->election->voted);
             while (g_hash_table_iter_next(&gIter, (gpointer *) & key, NULL)) {
-                crm_warn("* actual vote: %s", key);
+                pcmk__warn("* actual vote: %s", key);
             }
 
         }
@@ -439,9 +439,8 @@ parse_election_message(const xmlNode *message, struct vote *vote)
     if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
         || (vote->election_owner == NULL) || (vote->election_id < 0)) {
 
-        crm_warn("Invalid %s message from %s",
-                 pcmk__s(vote->op, "election"),
-                 pcmk__s(vote->from, "unspecified node"));
+        pcmk__warn("Invalid %s message from %s", pcmk__s(vote->op, "election"),
+                   pcmk__s(vote->from, "unspecified node"));
         crm_log_xml_trace(message, "bad-vote");
         return FALSE;
     }
@@ -457,9 +456,9 @@ parse_election_message(const xmlNode *message, struct vote *vote)
                                    &(vote->age)) != pcmk_rc_ok)
             || (vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
 
-            crm_warn("Cannot count election %s from %s because uptime is "
-                     "missing or invalid",
-                     vote->op, vote->from);
+            pcmk__warn("Cannot count election %s from %s because uptime is "
+                       "missing or invalid",
+                       vote->op, vote->from);
             return FALSE;
         }
 
@@ -582,10 +581,10 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
          * for us to win
          */
         if (!we_are_owner) {
-            crm_warn("Cannot count election round %d %s from %s "
-                     "because we did not start election (node ID %s did)",
-                     vote.election_id, vote.op, vote.from,
-                     vote.election_owner);
+            pcmk__warn("Cannot count election round %d %s from %s because we "
+                       "did not start election (node ID %s did)",
+                       vote.election_id, vote.op, vote.from,
+                       vote.election_owner);
             return election_error;
         }
         if (cluster->priv->election->state != election_in_progress) {
@@ -640,8 +639,8 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
          */
         cluster->priv->election->election_wins++;
         if (cluster->priv->election->election_wins > (peers * peers)) {
-            crm_warn("Election storm detected: %d wins in %d seconds",
-                     cluster->priv->election->election_wins, STORM_INTERVAL);
+            pcmk__warn("Election storm detected: %d wins in %d seconds",
+                       cluster->priv->election->election_wins, STORM_INTERVAL);
             cluster->priv->election->election_wins = 0;
             cluster->priv->election->expires = tm_now + STORM_INTERVAL;
             if (!(cluster->priv->election->wrote_blackbox)) {

@@ -95,12 +95,13 @@ static void
 log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
 {
     if (pcmk__str_empty(ra_ocf_version)) {
-        crm_warn("%s does not advertise OCF version supported", ra_key);
+        pcmk__warn("%s does not advertise OCF version supported", ra_key);
 
     } else if (pcmk__compare_versions(ra_ocf_version, "2") >= 0) {
-        crm_warn("%s supports OCF version %s (this Pacemaker version supports "
-                 PCMK_OCF_VERSION " and might not work properly with agent)",
-                 ra_key, ra_ocf_version);
+        pcmk__warn("%s supports OCF version %s (this Pacemaker version "
+                   "supports " PCMK_OCF_VERSION " and might not work properly "
+                   "with agent)",
+                   ra_key, ra_ocf_version);
 
     } else if (pcmk__compare_versions(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
         crm_info("%s supports OCF version %s (this Pacemaker version supports "
@@ -187,8 +188,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         const char *param_name = pcmk__xe_get(match, PCMK_XA_NAME);
 
         if (param_name == NULL) {
-            crm_warn("Metadata for %s:%s:%s has parameter without a "
-                     PCMK_XA_NAME, rsc->standard, rsc->provider, rsc->type);
+            pcmk__warn("Metadata for %s:%s:%s has parameter without a "
+                       PCMK_XA_NAME,
+                       rsc->standard, rsc->provider, rsc->type);
         } else {
             struct ra_param_s *p = ra_param_from_xml(match);
 
@@ -224,9 +226,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     return md;
 
 err:
-    crm_warn("Unable to update metadata for %s (%s%s%s:%s): %s",
-             rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
-             pcmk__s(rsc->provider, ""), rsc->type, reason);
+    pcmk__warn("Unable to update metadata for %s (%s%s%s:%s): %s", rsc->id,
+               rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+               pcmk__s(rsc->provider, ""), rsc->type, reason);
     free(key);
     pcmk__xml_free(metadata);
     metadata_free(md);
@@ -297,11 +299,10 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
     rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
                                 rsc->type, &metadata_str, 0);
     if (rc != pcmk_ok) {
-        crm_warn("Failed to get metadata for %s (%s%s%s:%s): %s",
-                 rsc->id, rsc->standard,
-                 ((rsc->provider == NULL)? "" : ":"),
-                 ((rsc->provider == NULL)? "" : rsc->provider),
-                 rsc->type, pcmk_strerror(rc));
+        pcmk__warn("Failed to get metadata for %s (%s%s%s:%s): %s", rsc->id,
+                   rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+                   ((rsc->provider == NULL)? "" : rsc->provider), rsc->type,
+                   pcmk_strerror(rc));
         return NULL;
     }
 

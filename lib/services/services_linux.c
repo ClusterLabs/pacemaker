@@ -135,14 +135,14 @@ sigchld_cleanup(struct sigchld_data_s *data)
     // Restore the original set of blocked signals
     if ((sigismember(&(data->old_mask), SIGCHLD) == 0)
         && (sigprocmask(SIG_UNBLOCK, &(data->mask), NULL) < 0)) {
-        crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not clean up after child process completion: %s",
+                   pcmk_rc_str(errno));
     }
 
     // Resend any ignored SIGCHLD for other children so that they'll be handled.
     if (data->ignored && kill(getpid(), SIGCHLD) != 0) {
-        crm_warn("Could not resend ignored SIGCHLD to ourselves: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not resend ignored SIGCHLD to ourselves: %s",
+                   pcmk_rc_str(errno));
     }
 }
 
@@ -245,16 +245,16 @@ sigchld_cleanup(struct sigchld_data_s *data)
 {
     // Restore the previous SIGCHLD handler
     if (sigaction(SIGCHLD, &(data->old_sa), NULL) < 0) {
-        crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not clean up after child process completion: %s",
+                   pcmk_rc_str(errno));
     }
 
     close_pipe(data->pipe_fd);
 
     // Resend any ignored SIGCHLD for other children so that they'll be handled.
     if (data->ignored && kill(getpid(), SIGCHLD) != 0) {
-        crm_warn("Could not resend ignored SIGCHLD to ourselves: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not resend ignored SIGCHLD to ourselves: %s",
+                   pcmk_rc_str(errno));
     }
 }
 
@@ -335,8 +335,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     } while ((rc == buf_read_len) || (rc < 0));
 
     if (discarded > 0) {
-        crm_warn("Truncated %s %s to %zu bytes (discarded %zu)",
-                 op->id, out_type(is_stderr), len, discarded);
+        pcmk__warn("Truncated %s %s to %zu bytes (discarded %zu)", op->id,
+                   out_type(is_stderr), len, discarded);
     }
 
     if (is_stderr) {
@@ -1156,8 +1156,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
            This is to limit killing wrong target a bit more. */
         if ((wait_rc == 0) && (waitpid(op->pid, &status, WNOHANG) == 0)) {
             if (kill(op->pid, SIGKILL)) {
-                crm_warn("Could not kill rogue child %s[%d]: %s",
-                         op->id, op->pid, pcmk_rc_str(errno));
+                pcmk__warn("Could not kill rogue child %s[%d]: %s", op->id,
+                           op->pid, pcmk_rc_str(errno));
             }
             /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
             while ((waitpid(op->pid, &status, 0) == (pid_t) -1)
@@ -1182,7 +1182,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
 #ifdef WCOREDUMP
         if (WCOREDUMP(status)) {
-            crm_warn("%s[%d] dumped core", op->id, op->pid);
+            pcmk__warn("%s[%d] dumped core", op->id, op->pid);
         }
 #endif
 
@@ -1296,26 +1296,26 @@ services__execute_file(svc_action_t *op)
             }
             if (STDOUT_FILENO != stdout_fd[1]) {
                 if (dup2(stdout_fd[1], STDOUT_FILENO) != STDOUT_FILENO) {
-                    crm_warn("Can't redirect output from '%s': %s "
-                             QB_XS " errno=%d",
-                             op->opaque->exec, pcmk_rc_str(errno), errno);
+                    pcmk__warn("Can't redirect output from '%s': %s "
+                               QB_XS " errno=%d",
+                               op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdout_fd[1]);
             }
             if (STDERR_FILENO != stderr_fd[1]) {
                 if (dup2(stderr_fd[1], STDERR_FILENO) != STDERR_FILENO) {
-                    crm_warn("Can't redirect error output from '%s': %s "
-                             QB_XS " errno=%d",
-                             op->opaque->exec, pcmk_rc_str(errno), errno);
+                    pcmk__warn("Can't redirect error output from '%s': %s "
+                               QB_XS " errno=%d",
+                               op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stderr_fd[1]);
             }
             if ((stdin_fd[0] >= 0) &&
                 (STDIN_FILENO != stdin_fd[0])) {
                 if (dup2(stdin_fd[0], STDIN_FILENO) != STDIN_FILENO) {
-                    crm_warn("Can't redirect input to '%s': %s "
-                             QB_XS " errno=%d",
-                             op->opaque->exec, pcmk_rc_str(errno), errno);
+                    pcmk__warn("Can't redirect input to '%s': %s "
+                               QB_XS " errno=%d",
+                               op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdin_fd[0]);
             }

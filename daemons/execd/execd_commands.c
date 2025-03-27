@@ -483,10 +483,10 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
      */
-    crm_warn("Duplicate recurring op entry detected (" PCMK__OP_FMT
-             "), merging with previous op entry",
-             rsc->rsc_id, normalize_action_name(rsc, dup->action),
-             dup->interval_ms);
+    pcmk__warn("Duplicate recurring op entry detected (" PCMK__OP_FMT "), "
+               "merging with previous op entry",
+               rsc->rsc_id, normalize_action_name(rsc, dup->action),
+               dup->interval_ms);
 
     // Merge new action's call ID and user data into existing action
     dup->first_notify_sent = false;
@@ -1133,8 +1133,8 @@ stonith_connection_failed(void)
     GHashTableIter iter;
     lrmd_rsc_t *rsc = NULL;
 
-    crm_warn("Connection to fencer lost (any pending operations for "
-             "fence devices will be considered failed)");
+    pcmk__warn("Connection to fencer lost (any pending operations for fence "
+               "devices will be considered failed)");
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &rsc)) {
@@ -1979,8 +1979,8 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     }
 
     if (rc == -EACCES) {
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 op, pcmk__client_name(client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s", op,
+                   pcmk__client_name(client));
     }
 
     crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",
@@ -1995,8 +1995,9 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         send_rc = lrmd_server_send_reply(client, id, reply);
         pcmk__xml_free(reply);
         if (send_rc != pcmk_rc_ok) {
-            crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
-                     pcmk__client_name(client), pcmk_rc_str(send_rc), send_rc);
+            pcmk__warn("Reply to client %s failed: %s " QB_XS " rc=%d",
+                       pcmk__client_name(client), pcmk_rc_str(send_rc),
+                       send_rc);
         }
     }
 

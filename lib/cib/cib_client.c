@@ -73,7 +73,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
                                    ciblib_GCompareFunc);
 
     if (list_item != NULL) {
-        crm_warn("Callback already present");
+        pcmk__warn("Callback already present");
         free(new_client);
         return -EINVAL;
 
@@ -177,7 +177,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
         if (only_success == FALSE) {
             callback(NULL, call_id, call_id, NULL, user_data);
         } else {
-            crm_warn("CIB call failed: %s", pcmk_strerror(call_id));
+            pcmk__warn("CIB call failed: %s", pcmk_strerror(call_id));
         }
         if (user_data && free_func) {
             free_func(user_data);

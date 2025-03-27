@@ -80,8 +80,8 @@ te_graph_trigger(gpointer user_data)
         }
 
         if (graph_rc != pcmk__graph_complete) {
-            crm_warn("Transition failed: %s",
-                     pcmk__graph_status2text(graph_rc));
+            pcmk__warn("Transition failed: %s",
+                       pcmk__graph_status2text(graph_rc));
             pcmk__log_graph(LOG_NOTICE, controld_globals.transition_graph);
         }
     }
@@ -192,9 +192,9 @@ node_pending_timer_popped(gpointer key)
         return FALSE;
     }
 
-    crm_warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) "
-             "on joining the process group",
-             (const char *) key, controld_globals.node_pending_timeout);
+    pcmk__warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) on "
+               "joining the process group",
+               (const char *) key, controld_globals.node_pending_timeout);
 
     if (controld_globals.node_pending_timeout > 0) {
         abort_timer_popped(node_pending_timer);

@@ -132,8 +132,8 @@ void
 crmd_fast_exit(crm_exit_t exit_code)
 {
     if (pcmk__is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
-        crm_warn("Inhibiting respawn " QB_XS " remapping exit code %d to %d",
-                 exit_code, CRM_EX_FATAL);
+        pcmk__warn("Inhibiting respawn " QB_XS " remapping exit code %d to %d",
+                   exit_code, CRM_EX_FATAL);
         exit_code = CRM_EX_FATAL;
 
     } else if ((exit_code == CRM_EX_OK)
@@ -518,7 +518,7 @@ do_recover(long long action,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     controld_set_fsa_input_flags(R_IN_RECOVERY);
-    crm_warn("Fast-tracking shutdown in response to errors");
+    pcmk__warn("Fast-tracking shutdown in response to errors");
 
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }

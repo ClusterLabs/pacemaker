@@ -139,7 +139,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                 acls = create_acl(child, acls, pcmk__xf_acl_deny);
 
             } else {
-                crm_warn("Ignoring unknown ACL kind '%s'", kind);
+                pcmk__warn("Ignoring unknown ACL kind '%s'", kind);
             }
 
         } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {

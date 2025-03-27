@@ -294,7 +294,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
                                         (reason == NULL)? "" : ")");
 
         if (!pcmk__result_ok(&request.result)) {
-            crm_warn("%s", log_msg);
+            pcmk__warn("%s", log_msg);
         } else {
             crm_debug("%s", log_msg);
         }

@@ -329,8 +329,8 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
 
     int target_rc = get_target_rc(action);
 
-    crm_warn("%s %d: %s on %s timed out",
-             action->xml->name, action->id, task_uuid, target);
+    pcmk__warn("%s %d: %s on %s timed out", action->xml->name, action->id,
+               task_uuid, target);
 
     op = synthesize_timeout_event(action, target_rc);
     controld_record_action_event(action, op);

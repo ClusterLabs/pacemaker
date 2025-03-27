@@ -732,8 +732,8 @@ update_dc(xmlNode * msg)
                 pcmk__err("Not updating DC to %s (%s): we are also a DC",
                           welcome_from, dc_version);
             } else {
-                crm_warn("New DC %s is not %s",
-                         welcome_from, controld_globals.dc_name);
+                pcmk__warn("New DC %s is not %s", welcome_from,
+                           controld_globals.dc_name);
             }
 
             controld_set_fsa_action_flags(A_CL_JOIN_QUERY | A_DC_TIMER_START);

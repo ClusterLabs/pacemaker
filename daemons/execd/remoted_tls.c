@@ -378,7 +378,8 @@ lrmd_init_remote_tls_server(void)
          * going to be added later.
          */
         if (lrmd__init_remote_key(&psk_key) != pcmk_rc_ok) {
-            crm_warn("A cluster connection will not be possible until the key is available");
+            pcmk__warn("A cluster connection will not be possible until the "
+                       "key is available");
         }
 
         gnutls_free(psk_key.data);

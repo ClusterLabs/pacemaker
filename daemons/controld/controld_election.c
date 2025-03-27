@@ -81,7 +81,8 @@ do_election_vote(long long action,
         case S_RECOVERY:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_warn("Not voting in election, we're in state %s", fsa_state2string(cur_state));
+            pcmk__warn("Not voting in election, we're in state %s",
+                       fsa_state2string(cur_state));
             not_voting = TRUE;
             break;
         case S_ELECTION:

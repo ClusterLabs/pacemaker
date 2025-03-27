@@ -395,8 +395,8 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             dump_xml_cdata(data, options, buffer, depth);
             break;
         default:
-            crm_warn("Cannot convert XML %s node to text " QB_XS " type=%d",
-                     pcmk__xml_element_type_text(data->type), data->type);
+            pcmk__warn("Cannot convert XML %s node to text " QB_XS " type=%d",
+                       pcmk__xml_element_type_text(data->type), data->type);
             break;
     }
 }
@@ -424,18 +424,18 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
 
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not compressing %s: could not prepare file stream: %s "
-                 QB_XS " rc=%d",
-                 filename, pcmk_rc_str(rc), rc);
+        pcmk__warn("Not compressing %s: could not prepare file stream: %s "
+                   QB_XS " rc=%d",
+                   filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
     BZ2_bzWrite(&rc, bz_file, text, strlen(text));
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not compressing %s: could not compress data: %s "
-                 QB_XS " rc=%d errno=%d",
-                 filename, pcmk_rc_str(rc), rc, errno);
+        pcmk__warn("Not compressing %s: could not compress data: %s "
+                   QB_XS " rc=%d errno=%d",
+                   filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
 
@@ -443,9 +443,9 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     bz_file = NULL;
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not compressing %s: could not write compressed data: %s "
-                 QB_XS " rc=%d errno=%d",
-                 filename, pcmk_rc_str(rc), rc, errno);
+        pcmk__warn("Not compressing %s: could not write compressed data: %s "
+                   QB_XS " rc=%d errno=%d",
+                   filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
 

@@ -1272,9 +1272,10 @@ order_resource_actions_after(pcmk_action_t *first_action,
             order_actions(first_action, then_action_iter, flags);
         } else {
             pcmk__clear_action_flags(then_action_iter, pcmk__action_runnable);
-            crm_warn("%s of %s is unrunnable because there is no %s of %s "
-                     "to order it after", then_action_iter->task, rsc->id,
-                     order->task1, order->rsc1->id);
+            pcmk__warn("%s of %s is unrunnable because there is no %s of %s to "
+                       "order it after",
+                       then_action_iter->task, rsc->id, order->task1,
+                       order->rsc1->id);
         }
     }
 

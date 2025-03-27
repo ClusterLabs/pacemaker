@@ -510,8 +510,8 @@ services_action_cleanup(svc_action_t * op)
     if(op->opaque->pending) {
         if (dbus_pending_call_get_completed(op->opaque->pending)) {
             // This should never be the case
-            crm_warn("Result of %s op %s was unhandled",
-                     op->standard, op->id);
+            pcmk__warn("Result of %s op %s was unhandled", op->standard,
+                       op->id);
         } else {
             crm_debug("Will ignore any result of canceled %s op %s",
                       op->standard, op->id);
@@ -561,8 +561,8 @@ services_result2ocf(const char *standard, const char *action, int exit_status)
 #endif
 
     } else {
-        crm_warn("Treating result from unknown standard '%s' as OCF",
-                 ((standard == NULL)? "unspecified" : standard));
+        pcmk__warn("Treating result from unknown standard '%s' as OCF",
+                   pcmk__s(standard, "unspecified"));
         return services__ocf2ocf(exit_status);
     }
 }

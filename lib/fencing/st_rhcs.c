@@ -137,31 +137,32 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 
     if (result == NULL) {
         if (rc < 0) {
-            crm_warn("Could not execute metadata action for %s: %s "
-                     QB_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+            pcmk__warn("Could not execute metadata action for %s: %s "
+                       QB_XS " rc=%d",
+                       agent, pcmk_strerror(rc), rc);
         }
         stonith__destroy_action(action);
         return rc;
     }
 
     if (result->execution_status != PCMK_EXEC_DONE) {
-        crm_warn("Could not execute metadata action for %s: %s",
-                 agent, pcmk_exec_status_str(result->execution_status));
+        pcmk__warn("Could not execute metadata action for %s: %s", agent,
+                   pcmk_exec_status_str(result->execution_status));
         rc = pcmk_rc2legacy(stonith__result2rc(result));
         stonith__destroy_action(action);
         return rc;
     }
 
     if (!pcmk__result_ok(result)) {
-        crm_warn("Metadata action for %s returned error code %d",
-                 agent, result->exit_status);
+        pcmk__warn("Metadata action for %s returned error code %d", agent,
+                   result->exit_status);
         rc = pcmk_rc2legacy(stonith__result2rc(result));
         stonith__destroy_action(action);
         return rc;
     }
 
     if (result->action_stdout == NULL) {
-        crm_warn("Metadata action for %s returned no data", agent);
+        pcmk__warn("Metadata action for %s returned no data", agent);
         stonith__destroy_action(action);
         return -ENODATA;
     }
@@ -170,7 +171,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     stonith__destroy_action(action);
 
     if (xml == NULL) {
-        crm_warn("Metadata for %s is invalid", agent);
+        pcmk__warn("Metadata for %s is invalid", agent);
         return -pcmk_err_schema_validation;
     }
 

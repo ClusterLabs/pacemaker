@@ -326,10 +326,11 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
 
     // Otherwise, if we can try again, set a timer to do so
     if (lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
-        crm_warn("Failed to connect to the local executor %d time%s "
-                 "(%d max): %s", lrm_state->num_lrm_register_fails,
-                 pcmk__plural_s(lrm_state->num_lrm_register_fails),
-                 MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
+        pcmk__warn("Failed to connect to the local executor %d time%s "
+                   "(%d max): %s",
+                   lrm_state->num_lrm_register_fails,
+                   pcmk__plural_s(lrm_state->num_lrm_register_fails),
+                   MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
         controld_start_wait_timer();
         crmd_fsa_stall(FALSE);
         return;
@@ -992,9 +993,10 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
         }
         return;
     } else {
-        crm_warn("Could not delete '%s' from executor for %s%s%s: %s "
-                 QB_XS " rc=%d", id, sys, (user? " as " : ""),
-                 (user? user : ""), pcmk_strerror(rc), rc);
+        pcmk__warn("Could not delete '%s' from executor for %s%s%s: %s "
+                   QB_XS " rc=%d",
+                   id, sys, ((user != NULL)? " as " : ""), pcmk__s(user, ""),
+                   pcmk_strerror(rc), rc);
     }
 
     delete_rsc_entry(lrm_state, request, id, iter, rc, user, from_cib);

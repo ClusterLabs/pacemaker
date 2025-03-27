@@ -386,7 +386,7 @@ create_async_command(xmlNode *msg)
     rc = pcmk__xe_get_flags(msg, PCMK__XA_ST_CALLOPT, &(cmd->options),
                             st_opt_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     cmd->origin = pcmk__xe_get_copy(msg, PCMK__XA_SRC);
@@ -705,10 +705,10 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         delay_max = delay_base;
     }
     if (delay_max < delay_base) {
-        crm_warn(PCMK_STONITH_DELAY_BASE " (%ds) is larger than "
-                 PCMK_STONITH_DELAY_MAX " (%ds) for %s using %s "
-                 "(limiting to maximum delay)",
-                 delay_base, delay_max, cmd->action, device->id);
+        pcmk__warn(PCMK_STONITH_DELAY_BASE " (%ds) is larger than "
+                   PCMK_STONITH_DELAY_MAX " (%ds) for %s using %s (limiting to "
+                   "maximum delay)",
+                   delay_base, delay_max, cmd->action, device->id);
         delay_base = delay_max;
     }
     if (delay_max > 0) {
@@ -743,7 +743,8 @@ free_device(gpointer data)
     for (gIter = device->pending_ops; gIter != NULL; gIter = gIter->next) {
         async_command_t *cmd = gIter->data;
 
-        crm_warn("Removal of device '%s' purged operation '%s'", device->id, cmd->action);
+        pcmk__warn("Removal of device '%s' purged operation '%s'", device->id,
+                   cmd->action);
         report_internal_result(cmd, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                                "Device was removed before action could be executed");
     }
@@ -900,8 +901,8 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
         int rc;
 
         if (st == NULL) {
-            crm_warn("Could not get agent meta-data: "
-                     "API memory allocation failed");
+            pcmk__warn("Could not get agent meta-data: API memory allocation "
+                       "failed");
             return EAGAIN;
         }
         rc = st->cmds->metadata(st, st_opt_sync_call, agent,
@@ -1166,13 +1167,14 @@ status_search_cb(int pid, const pcmk__action_result_t *result, void *user_data)
     mainloop_set_trigger(dev->work);
 
     if (result->execution_status != PCMK_EXEC_DONE) {
-        crm_warn("Assuming %s cannot fence %s "
-                 "because status could not be executed: %s%s%s%s",
-                 dev->id, search->host,
-                 pcmk_exec_status_str(result->execution_status),
-                 ((result->exit_reason == NULL)? "" : " ("),
-                 ((result->exit_reason == NULL)? "" : result->exit_reason),
-                 ((result->exit_reason == NULL)? "" : ")"));
+        const char *reason = result->exit_reason;
+
+        pcmk__warn("Assuming %s cannot fence %s because status could not be "
+                   "executed: %s%s%s%s",
+                   dev->id, search->host,
+                   pcmk_exec_status_str(result->execution_status),
+                   ((reason != NULL)? " (" : ""), pcmk__s(reason, ""),
+                   ((reason != NULL)? ")" : ""));
         search_devices_record_result(search, dev->id, FALSE);
         return;
     }
@@ -1189,9 +1191,9 @@ status_search_cb(int pid, const pcmk__action_result_t *result, void *user_data)
             break;
 
         default:
-            crm_warn("Assuming %s cannot fence %s "
-                     "(status returned unknown code %d)",
-                     dev->id, search->host, result->exit_status);
+            pcmk__warn("Assuming %s cannot fence %s (status returned unknown "
+                       "code %d)",
+                       dev->id, search->host, result->exit_status);
             break;
     }
     search_devices_record_result(search, dev->id, can);
@@ -1242,17 +1244,18 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
 
     } else { // We have never successfully executed list
         if (result->execution_status == PCMK_EXEC_DONE) {
-            crm_warn("Assuming %s cannot fence %s "
-                     "because list returned error code %d",
-                     dev->id, search->host, result->exit_status);
+            pcmk__warn("Assuming %s cannot fence %s because list returned "
+                       "error code %d",
+                       dev->id, search->host, result->exit_status);
         } else {
-            crm_warn("Assuming %s cannot fence %s "
-                     "because list could not be executed: %s%s%s%s",
-                     dev->id, search->host,
-                     pcmk_exec_status_str(result->execution_status),
-                     ((result->exit_reason == NULL)? "" : " ("),
-                     ((result->exit_reason == NULL)? "" : result->exit_reason),
-                     ((result->exit_reason == NULL)? "" : ")"));
+            const char *reason = result->exit_reason;
+
+            pcmk__warn("Assuming %s cannot fence %s because list could not be "
+                       "executed: %s%s%s%s",
+                       dev->id, search->host,
+                       pcmk_exec_status_str(result->execution_status),
+                       ((reason != NULL)? " (" : ""), pcmk__s(reason, ""),
+                       ((reason != NULL)? ")" : ""));
         }
 
         /* Fall back to pcmk_host_check=PCMK_VALUE_STATUS if the user didn't
@@ -1704,7 +1707,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
     // Ensure an ID was given (even the client API adds an ID)
     if (pcmk__str_empty(pcmk__xe_id(level))) {
-        crm_warn("Ignoring registration for topology level without ID");
+        pcmk__warn("Ignoring registration for topology level without ID");
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
@@ -1714,8 +1717,9 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
     // Ensure a valid target was specified
     if (mode == fenced_target_by_unknown) {
-        crm_warn("Ignoring registration for topology level '%s' "
-                 "without valid target", pcmk__xe_id(level));
+        pcmk__warn("Ignoring registration for topology level '%s' without "
+                   "valid target",
+                   pcmk__xe_id(level));
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
@@ -1726,8 +1730,9 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
     // Ensure level ID is in allowed range
     if ((id < ST__LEVEL_MIN) || (id > ST__LEVEL_MAX)) {
-        crm_warn("Ignoring topology registration for %s with invalid level %d",
-                  target, id);
+        pcmk__warn("Ignoring topology registration for %s with invalid level "
+                   "%d",
+                   target, id);
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
@@ -1810,8 +1815,9 @@ fenced_unregister_level(xmlNode *msg, char **desc,
 
     // Ensure level ID is in allowed range
     if ((id < 0) || (id >= ST__LEVEL_COUNT)) {
-        crm_warn("Ignoring topology unregistration for %s with invalid level %d",
-                  target, id);
+        pcmk__warn("Ignoring topology unregistration for %s with invalid level "
+                   "%d",
+                   target, id);
         free(target);
         crm_log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
@@ -2947,9 +2953,9 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
          *
          * @TODO Maybe synchronize this information at start-up?
          */
-        crm_warn("Missing request information for client notifications for "
-                 "operation with result '%s' (initiated before we came up?)",
-                 pcmk_exec_status_str(result->execution_status));
+        pcmk__warn("Missing request information for client notifications for "
+                   "operation with result '%s' (initiated before we came up?)",
+                   pcmk_exec_status_str(result->execution_status));
 
     } else {
         const char *name = NULL;
@@ -3051,7 +3057,7 @@ check_alternate_host(const char *target)
                 return entry->name;
             }
         }
-        crm_warn("Will handle own fencing because no peer can");
+        pcmk__warn("Will handle own fencing because no peer can");
     }
     return NULL;
 }
@@ -3133,8 +3139,8 @@ is_privileged(const pcmk__client_t *c, const char *op)
     if ((c == NULL) || pcmk__is_set(c->flags, pcmk__client_privileged)) {
         return true;
     } else {
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 pcmk__s(op, ""), pcmk__client_name(c));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   pcmk__s(op, ""), pcmk__client_name(c));
         return false;
     }
 }
@@ -3638,7 +3644,7 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
     rc = pcmk__xe_get_flags(message, PCMK__XA_ST_CALLOPT, &call_options,
                             st_opt_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from message: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from message: %s", pcmk_rc_str(rc));
     }
 
     crm_debug("Processing %ssynchronous %s %s %u from %s %s",

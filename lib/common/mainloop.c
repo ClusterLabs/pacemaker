@@ -1086,7 +1086,8 @@ child_timeout_callback(gpointer p)
 
     child->timerid = 0;
     if (child->timeout) {
-        crm_warn("%s process (PID %d) will not die!", child->desc, (int)child->pid);
+        pcmk__warn("%s process (PID %lld) will not die!", child->desc,
+                   (long long) child->pid);
         return FALSE;
     }
 
