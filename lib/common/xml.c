@@ -1314,6 +1314,11 @@ xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
  *
  * \param[in,out] old_child   Child of old XML
  * \param[in,out] new_parent  New XML that does not contain \p old_child
+ *
+ * \note The deletion is checked using the new XML's ACLs. The ACLs may have
+ *       also changed between the old and new XML trees. Callers should take
+ *       reasonable action if there were ACL changes that themselves would have
+ *       been denied.
  */
 static void
 mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
