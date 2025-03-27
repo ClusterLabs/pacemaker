@@ -302,10 +302,10 @@ attrd_handle_request(pcmk__request_t *request)
 
 /*!
     \internal
-    \brief Broadcast private attribute for local node with protocol version
+    \brief Send or broadcast private attribute for local node with protocol version
 */
 void
-attrd_broadcast_protocol(void)
+attrd_send_protocol(const pcmk__node_status_t *peer)
 {
     xmlNode *attrd_op = pcmk__xe_create(NULL, __func__);
 
@@ -319,16 +319,30 @@ attrd_broadcast_protocol(void)
     crm_xml_add(attrd_op, PCMK__XA_ATTR_HOST_ID,
                 attrd_cluster->priv->node_xml_id);
 
-    crm_debug("Broadcasting attrd protocol version %s for node %s",
-              ATTRD_PROTOCOL_VERSION, attrd_cluster->priv->node_name);
+    if (peer == NULL) {
+        crm_debug("Broadcasting attrd protocol version %s for node %s[%" PRIu32
+                  "]",
+                  ATTRD_PROTOCOL_VERSION,
+                  pcmk__s(attrd_cluster->priv->node_name, "unknown"),
+                  attrd_cluster->priv->node_id);
 
-    attrd_send_message(NULL, attrd_op, false); /* ends up at attrd_peer_message() */
+    } else {
+        crm_debug("Sending attrd protocol version %s for node %s[%" PRIu32
+                  "] to node %s[%" PRIu32 "]",
+                  ATTRD_PROTOCOL_VERSION,
+                  pcmk__s(attrd_cluster->priv->node_name, "unknown"),
+                  attrd_cluster->priv->node_id,
+                  pcmk__s(peer->name, "unknown"),
+                  peer->cluster_layer_id);
+    }
+
+    attrd_send_message(peer, attrd_op, false); /* ends up at attrd_peer_message() */
 
     pcmk__xml_free(attrd_op);
 }
 
 gboolean
-attrd_send_message(pcmk__node_status_t *node, xmlNode *data, bool confirm)
+attrd_send_message(const pcmk__node_status_t *node, xmlNode *data, bool confirm)
 {
     const char *op = crm_element_value(data, PCMK_XA_TASK);
 

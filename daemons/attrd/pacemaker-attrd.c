@@ -184,7 +184,7 @@ main(int argc, char **argv)
      * across all nodes. It also ensures that the writer learns our node name,
      * so it can send our attributes to the CIB.
      */
-    attrd_broadcast_protocol();
+    attrd_send_protocol(NULL);
 
     attrd_init_ipc();
     crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
