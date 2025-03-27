@@ -1145,7 +1145,7 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
     }
 
     if (output == NULL) {
-        if (level != LOG_STDOUT) {
+        if (level != PCMK__LOG_STDOUT) {
             level = LOG_TRACE;
         }
         output = "-- empty --";
@@ -1186,7 +1186,7 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
  * \param[in] text      Prefix for each line
  * \param[in] xml       XML to log
  *
- * \note This does nothing when \p level is \p LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  * \note Do not call this function directly. It should be called only from the
  *       \p do_crm_log_xml() macro.
  */
@@ -1225,7 +1225,7 @@ pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
  * \param[in] level     Priority at which to log the messages
  * \param[in] xml       XML whose changes to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  */
 void
 pcmk__log_xml_changes_as(const char *file, const char *function, uint32_t line,
@@ -1256,7 +1256,7 @@ pcmk__log_xml_changes_as(const char *file, const char *function, uint32_t line,
  * \param[in] level     Priority at which to log the messages
  * \param[in] patchset  XML patchset to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  */
 void
 pcmk__log_xml_patchset_as(const char *file, const char *function, uint32_t line,
