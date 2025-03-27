@@ -65,7 +65,7 @@ tls_load_x509_data(pcmk__tls_t *tls)
                                                 tls->ca_file,
                                                 GNUTLS_X509_FMT_PEM);
     if (rc <= 0) {
-        crm_err("Failed to set X509 CA file: %s", gnutls_strerror(rc));
+        pcmk__err("Failed to set X509 CA file: %s", gnutls_strerror(rc));
         return ENODATA;
     }
 
@@ -77,8 +77,7 @@ tls_load_x509_data(pcmk__tls_t *tls)
                                                   tls->crl_file,
                                                   GNUTLS_X509_FMT_PEM);
         if (rc < 0) {
-            crm_err("Failed to set X509 CRL file: %s",
-                    gnutls_strerror(rc));
+            pcmk__err("Failed to set X509 CRL file: %s", gnutls_strerror(rc));
             return ENODATA;
         }
     }
@@ -91,8 +90,7 @@ tls_load_x509_data(pcmk__tls_t *tls)
                                                GNUTLS_X509_FMT_PEM, NULL,
                                                GNUTLS_PKCS_PLAIN);
     if (rc < 0) {
-        crm_err("Failed to set X509 cert/key pair: %s",
-                gnutls_strerror(rc));
+        pcmk__err("Failed to set X509 cert/key pair: %s", gnutls_strerror(rc));
         return ENODATA;
     }
 
@@ -258,8 +256,9 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
     return pcmk_rc_ok;
 
 error:
-    crm_err("Could not initialize Diffie-Hellman parameters for TLS: %s "
-            QB_XS " rc=%d", gnutls_strerror(rc), rc);
+    pcmk__err("Could not initialize Diffie-Hellman parameters for TLS: %s "
+              QB_XS " rc=%d",
+              gnutls_strerror(rc), rc);
     return EPROTO;
 }
 
@@ -313,7 +312,7 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
     } else if (tls->cred_type == GNUTLS_CRD_PSK) {
         rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.psk_c);
     } else {
-        crm_err("Unknown credential type: %d", tls->cred_type);
+        pcmk__err("Unknown credential type: %d", tls->cred_type);
         rc = EINVAL;
         goto error;
     }
@@ -337,10 +336,11 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
     return session;
 
 error:
-    crm_err("Could not initialize %s TLS %s session: %s " QB_XS " rc=%d priority='%s'",
-            tls_cred_str(tls->cred_type),
-            (conn_type == GNUTLS_SERVER)? "server" : "client",
-            gnutls_strerror(rc), rc, prio);
+    pcmk__err("Could not initialize %s TLS %s session: %s "
+              QB_XS " rc=%d priority='%s'",
+              tls_cred_str(tls->cred_type),
+              ((conn_type == GNUTLS_SERVER)? "server" : "client"),
+              gnutls_strerror(rc), rc, prio);
     free(prio);
     if (session != NULL) {
         gnutls_deinit(session);
@@ -390,11 +390,11 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
         gnutls_datum_t out;
 
         gnutls_certificate_verification_status_print(status, type, &out, 0);
-        crm_err("Certificate verification failed: %s", out.data);
+        pcmk__err("Certificate verification failed: %s", out.data);
         gnutls_free(out.data);
     } else if (rc != GNUTLS_E_SUCCESS) {
-        crm_err("TLS handshake with remote client failed: %s "
-                QB_XS " rc=%d", gnutls_strerror(rc), rc);
+        pcmk__err("TLS handshake with remote client failed: %s " QB_XS " rc=%d",
+                  gnutls_strerror(rc), rc);
         return EPROTO;
     }
     return pcmk_rc_ok;
@@ -483,7 +483,7 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
             gnutls_datum_t out;
 
             gnutls_certificate_verification_status_print(status, type, &out, 0);
-            crm_err("Certificate verification failed: %s", out.data);
+            pcmk__err("Certificate verification failed: %s", out.data);
             gnutls_free(out.data);
             break;
         }

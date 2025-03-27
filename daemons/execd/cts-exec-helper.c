@@ -480,7 +480,7 @@ generate_params(void)
                                       pcmk_rsc_match_history
                                       |pcmk_rsc_match_basename);
     if (rsc == NULL) {
-        crm_err("Resource does not exist in config");
+        pcmk__err("Resource does not exist in config");
         pcmk_free_scheduler(scheduler);
         return EINVAL;
     }

@@ -38,8 +38,8 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
         fenced_process_fencing_reply(request);
 
     } else {
-        crm_err("Ignoring unknown %s reply from peer %s", pcmk__s(op, "untyped"),
-                remote_peer);
+        pcmk__err("Ignoring unknown %s reply from peer %s",
+                  pcmk__s(op, "untyped"), remote_peer);
         crm_log_xml_warn(request, "UnknownOp");
         return;
     }
@@ -146,8 +146,8 @@ fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Bad message received from %s[%" PRIu32 "]: '%.120s'",
-                from, nodeid, data);
+        pcmk__err("Bad message received from %s[%" PRIu32 "]: '%.120s'",
+                  from, nodeid, data);
     } else {
         pcmk__xe_set(xml, PCMK__XA_SRC, from);
         fenced_peer_message(pcmk__get_node(nodeid, from, NULL,
@@ -192,7 +192,7 @@ fenced_cluster_connect(void)
 
     rc = pcmk_cluster_connect(fenced_cluster);
     if (rc != pcmk_rc_ok) {
-        crm_err("Cluster connection failed");
+        pcmk__err("Cluster connection failed");
     }
 
     return rc;

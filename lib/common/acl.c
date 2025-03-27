@@ -818,9 +818,9 @@ pcmk__uid2username(uid_t uid)
     pwent = getpwuid(uid);
 
     if (pwent == NULL) {
-        crm_err("Cannot get name from password database for user ID %lld: %s",
-                (long long) uid,
-                ((errno != 0)? strerror(errno) : "No matching entry found"));
+        pcmk__err("Cannot get name from password database for user ID %lld: %s",
+                  (long long) uid,
+                  ((errno != 0)? strerror(errno) : "No matching entry found"));
         return NULL;
     }
 
@@ -857,7 +857,8 @@ pcmk__update_acl_user(xmlNode *request, const char *field,
         effective_user = pcmk__uid2username(geteuid());
         if (effective_user == NULL) {
             effective_user = pcmk__str_copy("#unprivileged");
-            crm_err("Unable to determine effective user, assuming unprivileged for ACLs");
+            pcmk__err("Unable to determine effective user, assuming "
+                      "unprivileged for ACLs");
         }
     }
 

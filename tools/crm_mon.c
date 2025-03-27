@@ -1766,12 +1766,12 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     if (!decode_transition_magic(magic, NULL, NULL, NULL, &status, &rc,
                                  &target_rc)) {
-        crm_err("Invalid event %s detected for %s", magic, id);
+        pcmk__err("Invalid event %s detected for %s", magic, id);
         return pcmk_rc_ok;
     }
 
     if (parse_op_key(id, &rsc, &task, NULL) == FALSE) {
-        crm_err("Invalid event detected for %s", id);
+        pcmk__err("Invalid event detected for %s", id);
         goto bail;
     }
 
@@ -1794,7 +1794,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     }
 
     if (node == NULL) {
-        crm_err("No node detected for event %s (%s)", magic, id);
+        pcmk__err("No node detected for event %s (%s)", magic, id);
         goto bail;
     }
 
@@ -1981,7 +1981,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             pcmk__xe_foreach_child(diff, NULL, crm_diff_update_element, NULL);
 
         } else {
-            crm_err("Unknown patch format: %d", format);
+            pcmk__err("Unknown patch format: %d", format);
         }
     }
 

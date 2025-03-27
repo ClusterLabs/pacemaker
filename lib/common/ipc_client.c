@@ -589,8 +589,8 @@ pcmk_connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type)
     int rc = pcmk__connect_ipc(api, dispatch_type, 2);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Connection to %s failed: %s",
-                pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        pcmk__err("Connection to %s failed: %s", pcmk_ipc_name(api, true),
+                  pcmk_rc_str(rc));
     }
     return rc;
 }
@@ -880,14 +880,14 @@ crm_ipc_new(const char *name, size_t max_size)
 
     client = calloc(1, sizeof(crm_ipc_t));
     if (client == NULL) {
-        crm_err("Could not create IPC connection: %s", strerror(errno));
+        pcmk__err("Could not create IPC connection: %s", strerror(errno));
         return NULL;
     }
 
     client->server_name = strdup(name);
     if (client->server_name == NULL) {
-        crm_err("Could not create %s IPC connection: %s",
-                name, strerror(errno));
+        pcmk__err("Could not create %s IPC connection: %s", name,
+                  strerror(errno));
         free(client);
         return NULL;
     }
@@ -1029,8 +1029,8 @@ crm_ipc_get_fd(crm_ipc_t * client)
     int fd = -1;
 
     if (pcmk__ipc_fd(client, &fd) != pcmk_rc_ok) {
-        crm_err("Could not obtain file descriptor for %s IPC",
-                ((client == NULL)? "unspecified" : client->server_name));
+        pcmk__err("Could not obtain file descriptor for %s IPC",
+                  ((client == NULL)? "unspecified" : client->server_name));
         errno = EINVAL;
         return -EINVAL;
     }
@@ -1106,17 +1106,19 @@ crm_ipc_read(crm_ipc_t *client)
                       client->server_name, strerror(-bytes));
 
             if (!crm_ipc_connected(client) || bytes == -ENOTCONN) {
-                crm_err("Connection to %s IPC failed", client->server_name);
+                pcmk__err("Connection to %s IPC failed", client->server_name);
                 rc = -ENOTCONN;
                 pcmk__ipc_free_client_buffer(client);
+
             } else if (bytes == -EAGAIN) {
                 rc = -EAGAIN;
             }
 
             goto done;
+        }
 
-        } else if (bytes != header->size + sizeof(pcmk__ipc_header_t)) {
-            crm_err("Message size does not match header");
+        if (bytes != header->size + sizeof(pcmk__ipc_header_t)) {
+            pcmk__err("Message size does not match header");
             rc = -EBADMSG;
             pcmk__ipc_free_client_buffer(client);
             goto done;
@@ -1223,15 +1225,16 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
 
         if (*bytes <= 0) {
             if (!crm_ipc_connected(client)) {
-                crm_err("%s IPC provider disconnected while waiting for message %d",
-                        client->server_name, request_id);
+                pcmk__err("%s IPC provider disconnected while waiting for "
+                          "message %d",
+                          client->server_name, request_id);
                 break;
             }
 
             continue;
 
         } else if (*bytes != hdr->size + sizeof(pcmk__ipc_header_t)) {
-            crm_err("Message size does not match header");
+            pcmk__err("Message size does not match header");
             *bytes = -EBADMSG;
             break;
         }
@@ -1255,10 +1258,13 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
         xml = pcmk__xml_parse((const char *) data);
 
         if (reply_id < request_id) {
-            crm_err("Discarding old reply %d (need %d)", reply_id, request_id);
+            pcmk__err("Discarding old reply %d (need %d)", reply_id,
+                      request_id);
             crm_log_xml_notice(xml, "OldIpcReply");
+
         } else if (reply_id > request_id) {
-            crm_err("Discarding newer reply %d (need %d)", reply_id, request_id);
+            pcmk__err("Discarding newer reply %d (need %d)", reply_id,
+                      request_id);
             crm_log_xml_notice(xml, "ImpossibleReply");
             pcmk__assert(hdr->qb.id <= request_id);
         }
@@ -1705,26 +1711,27 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     qb_rc = qb_ipcc_fd_get(c, &fd);
     if (qb_rc != 0) {
         rc = (int) -qb_rc; // System errno
-        crm_err("Could not get fd from %s IPC: %s " QB_XS " rc=%d",
-                name, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not get fd from %s IPC: %s " QB_XS " rc=%d",
+                  name, pcmk_rc_str(rc), rc);
         goto bail;
     }
 
     auth_rc = is_ipc_provider_expected(c, fd, refuid, refgid,
                                        &found_pid, &found_uid, &found_gid);
     if (auth_rc == pcmk_rc_ipc_unauthorized) {
-        crm_err("Daemon (IPC %s) effectively blocked with unauthorized"
-                " process %lld (uid: %lld, gid: %lld)",
-                name, (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                (long long) found_uid, (long long) found_gid);
+        pcmk__err("Daemon (IPC %s) effectively blocked with unauthorized "
+                  "process %lld (uid: %lld, gid: %lld)",
+                  name, (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                  (long long) found_uid, (long long) found_gid);
         rc = pcmk_rc_ipc_unauthorized;
         goto bail;
     }
 
     if (auth_rc != pcmk_rc_ok) {
         rc = auth_rc;
-        crm_err("Could not get peer credentials from %s IPC: %s "
-                QB_XS " rc=%d", name, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not get peer credentials from %s IPC: %s "
+                  QB_XS " rc=%d",
+                  name, pcmk_rc_str(rc), rc);
         goto bail;
     }
 
@@ -1775,12 +1782,12 @@ crm_ipc_connect(crm_ipc_t *client)
         crm_debug("Could not establish %s IPC connection: %s (%d)",
                   client->server_name, pcmk_rc_str(errno), errno);
     } else if (rc == pcmk_rc_ipc_unauthorized) {
-        crm_err("%s IPC provider authentication failed",
-                (client == NULL)? "Pacemaker" : client->server_name);
+        pcmk__err("%s IPC provider authentication failed",
+                  (client == NULL)? "Pacemaker" : client->server_name);
         errno = ECONNABORTED;
     } else {
-        crm_err("Could not verify authenticity of %s IPC provider",
-                (client == NULL)? "Pacemaker" : client->server_name);
+        pcmk__err("Could not verify authenticity of %s IPC provider",
+                  (client == NULL)? "Pacemaker" : client->server_name);
         errno = ENOTCONN;
     }
     return false;

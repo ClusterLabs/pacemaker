@@ -373,7 +373,7 @@ throttle_get_job_limit(const char *node)
             jobs = QB_MAX(1, r->max);
             break;
         default:
-            crm_err("Unknown throttle mode %.4x on %s", r->mode, node);
+            pcmk__err("Unknown throttle mode %.4x on %s", r->mode, node);
             break;
     }
     return jobs;

@@ -166,8 +166,8 @@ create_pcmk_dirs(void)
     };
 
     if (pcmk__daemon_user(&pcmk_uid, &pcmk_gid) != pcmk_rc_ok) {
-        crm_err("Cluster user " CRM_DAEMON_USER " does not exist, aborting "
-                "Pacemaker startup");
+        pcmk__err("Cluster user " CRM_DAEMON_USER " does not exist, aborting "
+                  "Pacemaker startup");
         crm_exit(CRM_EX_NOUSER);
     }
 
@@ -326,7 +326,7 @@ handle_old_instance(gboolean shutdown)
         }
 
     } else if (old_instance_connected) {
-        crm_err("Aborting start-up because active Pacemaker instance found");
+        pcmk__err("Aborting start-up because active Pacemaker instance found");
         rc = pcmk_rc_already;
     }
 

@@ -176,8 +176,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
                                     entry->timeout, copy_params);
         if (rc < 0) {
-            crm_err("Could not execute alert %s: %s " QB_XS " rc=%d",
-                    entry->id, pcmk_strerror(rc), rc);
+            pcmk__err("Could not execute alert %s: %s " QB_XS " rc=%d",
+                      entry->id, pcmk_strerror(rc), rc);
             any_failure = true;
         } else {
             any_success = true;

@@ -46,15 +46,16 @@ decompress_file(const char *filename)
     FILE *input = fopen(filename, "r");
 
     if (input == NULL) {
-        crm_err("Could not open %s for reading: %s", filename, strerror(errno));
+        pcmk__err("Could not open %s for reading: %s", filename,
+                  strerror(errno));
         return NULL;
     }
 
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not prepare to read compressed %s: %s "
-                QB_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not prepare to read compressed %s: %s " QB_XS " rc=%d",
+                  filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -73,8 +74,8 @@ decompress_file(const char *filename)
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         rc = pcmk__bzlib2rc(rc);
-        crm_err("Could not read compressed %s: %s " QB_XS " rc=%d",
-                filename, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not read compressed %s: %s " QB_XS " rc=%d", filename,
+                  pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
     } else {
@@ -496,7 +497,7 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
     rc = fprintf(stream, "%s", buffer->str);
     if (rc < 0) {
         rc = EIO;
-        crm_err("Error writing %s", filename);
+        pcmk__err("Error writing %s", filename);
         goto done;
     }
     bytes_out = (unsigned int) rc;
@@ -505,13 +506,13 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
 done:
     if (fflush(stream) != 0) {
         rc = errno;
-        crm_err("Error flushing %s: %s", filename, strerror(errno));
+        pcmk__err("Error flushing %s: %s", filename, strerror(errno));
     }
 
     // Don't report error if the file does not support synchronization
     if ((fsync(fileno(stream)) < 0) && (errno != EROFS) && (errno != EINVAL)) {
         rc = errno;
-        crm_err("Error synchronizing %s: %s", filename, strerror(errno));
+        pcmk__err("Error synchronizing %s: %s", filename, strerror(errno));
     }
 
     fclose(stream);

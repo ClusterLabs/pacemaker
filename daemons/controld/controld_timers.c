@@ -195,10 +195,10 @@ crm_timer_popped(gpointer data)
     fsa_timer_t *timer = (fsa_timer_t *) data;
 
     if (timer->log_error) {
-        crm_err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
-                get_timer_desc(timer),
-                fsa_state2string(controld_globals.fsa_state),
-                fsa_input2string(timer->fsa_input), timer->period_ms);
+        pcmk__err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
+                  get_timer_desc(timer),
+                  fsa_state2string(controld_globals.fsa_state),
+                  fsa_input2string(timer->fsa_input), timer->period_ms);
     } else {
         crm_info("%s just popped " QB_XS " input=%s time=%ums",
                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),

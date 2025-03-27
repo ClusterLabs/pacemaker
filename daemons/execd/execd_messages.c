@@ -469,9 +469,11 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
     pcmk__client_t *client = pcmk__find_client(qbc);
     xmlNode *msg = NULL;
 
-    CRM_CHECK(client != NULL, crm_err("Invalid client");
+    CRM_CHECK(client != NULL,
+              pcmk__err("Invalid client");
               return FALSE);
-    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
+    CRM_CHECK(client->id != NULL,
+              pcmk__err("Invalid client: %p", client);
               return FALSE);
 
     rc = pcmk__ipc_msg_append(&client->buffer, data);
@@ -492,7 +494,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (client->buffer != NULL) {
             g_byte_array_free(client->buffer, TRUE);
@@ -502,7 +504,8 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
         return 0;
     }
 
-    CRM_CHECK(flags & crm_ipc_client_response, crm_err("Invalid client request: %p", client);
+    CRM_CHECK(pcmk__is_set(flags, crm_ipc_client_response),
+              pcmk__err("Invalid client request: %p", client);
               return FALSE);
 
     if (!msg) {

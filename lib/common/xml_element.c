@@ -1650,12 +1650,12 @@ crm_element_value(const xmlNode *data, const char *name)
     xmlAttr *attr = NULL;
 
     if (data == NULL) {
-        crm_err("Couldn't find %s in NULL", name ? name : "<null>");
+        pcmk__err("Couldn't find %s in NULL", pcmk__s(name, "<null>"));
         CRM_LOG_ASSERT(data != NULL);
         return NULL;
 
     } else if (name == NULL) {
-        crm_err("Couldn't find NULL in %s", data->name);
+        pcmk__err("Couldn't find NULL in %s", data->name);
         return NULL;
     }
 

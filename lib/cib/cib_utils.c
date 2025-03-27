@@ -79,7 +79,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     *patchset = NULL;
 
     if (msg == NULL) {
-        crm_err("CIB diff notification received with no XML");
+        pcmk__err("CIB diff notification received with no XML");
         return ENOMSG;
     }
 
@@ -96,7 +96,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (*patchset == NULL) {
-        crm_err("CIB diff notification received with no patchset");
+        pcmk__err("CIB diff notification received with no patchset");
         return ENOMSG;
     }
     return pcmk_rc_ok;
@@ -376,8 +376,9 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
         rc = pcmk__check_feature_set(new_version);
         if (rc != pcmk_rc_ok) {
-            crm_err("Discarding update with feature set '%s' greater than "
-                    "our own '%s'", new_version, CRM_FEATURE_SET);
+            pcmk__err("Discarding update with feature set '%s' greater than "
+                      "our own '%s'",
+                      new_version, CRM_FEATURE_SET);
             rc = pcmk_rc2legacy(rc);
             goto done;
         }
@@ -391,8 +392,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         pcmk__xe_get_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
 
         if (old > new) {
-            crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                    PCMK_XA_ADMIN_EPOCH, old, new, call_options);
+            pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
+                      PCMK_XA_ADMIN_EPOCH, old, new, call_options);
             crm_log_xml_warn(req, "Bad Op");
             crm_log_xml_warn(input, "Bad Data");
             rc = -pcmk_err_old_data;
@@ -401,8 +402,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             pcmk__xe_get_int(scratch, PCMK_XA_EPOCH, &new);
             pcmk__xe_get_int(patchset_cib, PCMK_XA_EPOCH, &old);
             if (old > new) {
-                crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                        PCMK_XA_EPOCH, old, new, call_options);
+                pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
+                          PCMK_XA_EPOCH, old, new, call_options);
                 crm_log_xml_warn(req, "Bad Op");
                 crm_log_xml_warn(input, "Bad Data");
                 rc = -pcmk_err_old_data;
@@ -459,10 +460,10 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                                               NULL);
                     pcmk__xml_write_temp_file(local_diff, "PatchApply:diff",
                                               NULL);
-                    crm_err("v%d patchset error, patch failed to apply: %s "
-                            "(%d)",
-                            format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
-                            test_rc);
+                    pcmk__err("v%d patchset error, patch failed to apply: %s "
+                              "(%d)",
+                              format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
+                              test_rc);
                 }
                 pcmk__xml_free(cib_copy);
             },
@@ -617,14 +618,14 @@ validate_transaction_request(const xmlNode *request)
     }
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)) {
-        crm_err("Operation %s is not supported in CIB transactions", op);
+        pcmk__err("Operation %s is not supported in CIB transactions", op);
         return EOPNOTSUPP;
     }
 
     if (host != NULL) {
-        crm_err("Operation targeting a specific node (%s) is not supported in "
-                "a CIB transaction",
-                host);
+        pcmk__err("Operation targeting a specific node (%s) is not supported "
+                  "in a CIB transaction",
+                  host);
         return EOPNOTSUPP;
     }
     return pcmk_rc_ok;
@@ -660,8 +661,9 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);
-        crm_err("Failed to add '%s' operation to transaction for client %s: %s",
-                op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
+        pcmk__err("Failed to add '%s' operation to transaction for client %s: "
+                  "%s",
+                  op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
         crm_log_xml_info(request, "failed");
     }
     return pcmk_rc2legacy(rc);
@@ -864,7 +866,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         if (out != NULL) {                              \
             out->err(out, fmt, ##args);                 \
         } else {                                        \
-            crm_err(fmt, ##args);                       \
+            pcmk__err(fmt, ##args);                     \
         }                                               \
     } while (0)
 

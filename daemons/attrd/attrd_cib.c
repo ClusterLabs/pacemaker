@@ -124,8 +124,8 @@ attrd_cib_connect(int max_retry)
     } while ((rc != pcmk_ok) && (attempts < max_retry));
 
     if (rc != pcmk_ok) {
-        crm_err("Connection to the CIB manager failed: %s " QB_XS " rc=%d",
-                pcmk_strerror(rc), rc);
+        pcmk__err("Connection to the CIB manager failed: %s " QB_XS " rc=%d",
+                  pcmk_strerror(rc), rc);
         goto cleanup;
     }
 
@@ -133,7 +133,7 @@ attrd_cib_connect(int max_retry)
 
     rc = the_cib->cmds->set_connection_dnotify(the_cib, attrd_cib_destroy_cb);
     if (rc != pcmk_ok) {
-        crm_err("Could not set disconnection callback");
+        pcmk__err("Could not set disconnection callback");
         goto cleanup;
     }
 
@@ -141,7 +141,7 @@ attrd_cib_connect(int max_retry)
                                             PCMK__VALUE_CIB_DIFF_NOTIFY,
                                             attrd_cib_updated_cb);
     if (rc != pcmk_ok) {
-        crm_err("Could not set CIB notification callback");
+        pcmk__err("Could not set CIB notification callback");
         goto cleanup;
     }
 
@@ -171,8 +171,9 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc == pcmk_ok) {
         crm_info("Cleared transient node attributes for %s from CIB", node);
     } else {
-        crm_err("Unable to clear transient node attributes for %s from CIB: %s",
-                node, pcmk_strerror(rc));
+        pcmk__err("Unable to clear transient node attributes for %s from CIB: "
+                  "%s",
+                  node, pcmk_strerror(rc));
     }
 }
 
@@ -533,9 +534,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
         the_cib->cmds->set_user(the_cib, a->user);
         rc = the_cib->cmds->init_transaction(the_cib);
         if (rc != pcmk_ok) {
-            crm_err("Failed to write %s (set %s): Could not initiate "
-                    "CIB transaction",
-                    a->id, pcmk__s(a->set_id, "unspecified"));
+            pcmk__err("Failed to write %s (set %s): Could not initiate "
+                      "CIB transaction",
+                      a->id, pcmk__s(a->set_id, "unspecified"));
             goto done;
         }
     }
@@ -606,10 +607,10 @@ write_attribute(attribute_t *a, bool ignore_delay)
         // Update this value as part of the CIB transaction we're building
         rc = add_attr_update(a, v->current, node_xml_id);
         if (rc != pcmk_rc_ok) {
-            crm_err("Couldn't add %s[%s]='%s' to CIB transaction: %s "
-                    QB_XS " node XML ID %s",
-                    a->id, v->nodename, v->current, pcmk_rc_str(rc),
-                    node_xml_id);
+            pcmk__err("Couldn't add %s[%s]='%s' to CIB transaction: %s "
+                      QB_XS " node XML ID %s",
+                      a->id, v->nodename, v->current, pcmk_rc_str(rc),
+                      node_xml_id);
             continue;
         }
 

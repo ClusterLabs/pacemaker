@@ -265,7 +265,7 @@ pcmk_dbus_connect(void)
     dbus_error_init(&err);
     connection = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
     if (dbus_error_is_set(&err)) {
-        crm_err("Could not connect to DBus: %s", err.message);
+        pcmk__err("Could not connect to DBus: %s", err.message);
         dbus_error_free(&err);
         return NULL;
     }
@@ -492,12 +492,12 @@ pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
 
     // send message and get a handle for a reply
     if (!dbus_connection_send_with_reply(connection, msg, &pending, timeout)) {
-        crm_err("Could not send DBus %s message: failed", method);
+        pcmk__err("Could not send DBus %s message: failed", method);
         return NULL;
 
     } else if (pending == NULL) {
-        crm_err("Could not send DBus %s message: connection may be closed",
-                method);
+        pcmk__err("Could not send DBus %s message: connection may be closed",
+                  method);
         return NULL;
     }
 
@@ -599,8 +599,8 @@ handle_query_result(DBusMessage *reply, struct property_query *data)
 
     // First, check if the reply contains an error
     if (pcmk_dbus_find_error((void*)&error, reply, &error)) {
-        crm_err("DBus query for %s property '%s' failed: %s",
-                data->object, data->name, error.message);
+        pcmk__err("DBus query for %s property '%s' failed: %s", data->object,
+                  data->name, error.message);
         dbus_error_free(&error);
         goto cleanup;
     }
@@ -609,8 +609,9 @@ handle_query_result(DBusMessage *reply, struct property_query *data)
     dbus_message_iter_init(reply, &args);
     if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_VARIANT,
                               __func__, __LINE__)) {
-        crm_err("DBus query for %s property '%s' failed: Unexpected reply type",
-                data->object, data->name);
+        pcmk__err("DBus query for %s property '%s' failed: Unexpected reply "
+                  "type",
+                  data->object, data->name);
         goto cleanup;
     }
 
@@ -618,8 +619,9 @@ handle_query_result(DBusMessage *reply, struct property_query *data)
     dbus_message_iter_recurse(&args, &variant_iter);
     if (!pcmk_dbus_type_check(reply, &variant_iter, DBUS_TYPE_STRING,
                               __func__, __LINE__)) {
-        crm_err("DBus query for %s property '%s' failed: "
-                "Unexpected variant type", data->object, data->name);
+        pcmk__err("DBus query for %s property '%s' failed: Unexpected variant "
+                  "type",
+                  data->object, data->name);
         goto cleanup;
     }
     dbus_message_iter_get_basic(&variant_iter, &value);
@@ -627,15 +629,16 @@ handle_query_result(DBusMessage *reply, struct property_query *data)
     // There should be no more arguments (in variant or reply)
     dbus_message_iter_next(&variant_iter);
     if (dbus_message_iter_get_arg_type(&variant_iter) != DBUS_TYPE_INVALID) {
-        crm_err("DBus query for %s property '%s' failed: "
-                "Too many arguments in reply",
-                data->object, data->name);
+        pcmk__err("DBus query for %s property '%s' failed: Too many arguments "
+                  "in reply",
+                  data->object, data->name);
         goto cleanup;
     }
     dbus_message_iter_next(&args);
     if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_INVALID) {
-        crm_err("DBus query for %s property '%s' failed: "
-                "Too many arguments in reply", data->object, data->name);
+        pcmk__err("DBus query for %s property '%s' failed: Too many arguments "
+                  "in reply",
+                  data->object, data->name);
         goto cleanup;
     }
 
@@ -711,8 +714,9 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
     // Create a new message to use to invoke method
     msg = dbus_message_new_method_call(target, obj, BUS_PROPERTY_IFACE, "Get");
     if (msg == NULL) {
-        crm_err("DBus query for %s property '%s' failed: "
-                "Unable to create message", obj, name);
+        pcmk__err("DBus query for %s property '%s' failed: Unable to create "
+                  "message",
+                  obj, name);
         return NULL;
     }
 
@@ -721,8 +725,9 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
                                   DBUS_TYPE_STRING, &iface,
                                   DBUS_TYPE_STRING, &name,
                                   DBUS_TYPE_INVALID)) {
-        crm_err("DBus query for %s property '%s' failed: "
-                "Could not append arguments", obj, name);
+        pcmk__err("DBus query for %s property '%s' failed: Could not append "
+                  "arguments",
+                  obj, name);
         dbus_message_unref(msg);
         return NULL;
     }

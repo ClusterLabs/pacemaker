@@ -113,8 +113,8 @@ join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 
     if ((rc != pcmk_ok) || (output == NULL)) {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Could not retrieve version details for join-%s: %s (%d)",
-                pcmk__s(join_id, "(unknown)"), pcmk_rc_str(rc), rc);
+        pcmk__err("Could not retrieve version details for join-%s: %s (%d)",
+                  pcmk__s(join_id, "(unknown)"), pcmk_rc_str(rc), rc);
 
         register_fsa_error(I_ERROR, NULL);
         return;
@@ -284,9 +284,9 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
     pcmk__xe_get_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
 
     if (!pcmk__xe_attr_is_true(input->msg, CRM_OP_JOIN_ACKNAK)) {
-        crm_err("Shutting down because cluster join with leader %s failed "
-                QB_XS " join-%d NACK'd",
-                pcmk__s(welcome_from, "(unknown)"), join_id);
+        pcmk__err("Shutting down because cluster join with leader %s failed "
+                  QB_XS " join-%d NACK'd",
+                  pcmk__s(welcome_from, "(unknown)"), join_id);
         register_fsa_error(I_ERROR, msg_data);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
@@ -313,9 +313,9 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
     // Send our status section to the DC
     state = controld_query_executor_state();
     if (state == NULL) {
-        crm_err("Could not confirm join-%d with %s: "
-                "Failed to get executor state for local node",
-                join_id, controld_globals.dc_name);
+        pcmk__err("Could not confirm join-%d with %s: Failed to get executor "
+                  "state for local node",
+                  join_id, controld_globals.dc_name);
         register_fsa_error(I_FAIL, msg_data);
         return;
     }

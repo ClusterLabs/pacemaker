@@ -641,10 +641,10 @@ create_hello_message(const char *uuid, const char *client_name,
 
     if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
         || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "missing information",
-                client_name? client_name : "unknown client",
-                uuid? uuid : "unknown");
+        pcmk__err("Could not create IPC hello message from %s (UUID %s): "
+                  "missing information",
+                  pcmk__s(client_name, "unknown client"),
+                  pcmk__s(uuid, "unknown"));
         return NULL;
     }
 
@@ -662,8 +662,9 @@ create_hello_message(const char *uuid, const char *client_name,
     free(sender_system);
     pcmk__xml_free(hello_node);
     if (hello == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Request creation failed", client_name, uuid);
+        pcmk__err("Could not create IPC hello message from %s (UUID %s): "
+                  "Request creation failed",
+                  client_name, uuid);
         return NULL;
     }
 

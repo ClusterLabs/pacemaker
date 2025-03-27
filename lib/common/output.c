@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -302,8 +302,8 @@ pcmk__log_output_new(pcmk__output_t **out)
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(out, "log", NULL, (char **) argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
-        crm_err("Can't log certain messages due to internal error: %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Can't log certain messages due to internal error: %s",
+                  pcmk_rc_str(rc));
         return rc;
     }
     return pcmk_rc_ok;
@@ -331,8 +331,8 @@ pcmk__text_output_new(pcmk__output_t **out, const char *filename)
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(out, "text", filename, (char **) argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
-        crm_err("Can't create text output object to internal error: %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Can't create text output object to internal error: %s",
+                  pcmk_rc_str(rc));
         return rc;
     }
     return pcmk_rc_ok;

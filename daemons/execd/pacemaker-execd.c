@@ -76,15 +76,19 @@ execd_get_fencer_connection(void)
 
         fencer_api = stonith__api_new();
         if (fencer_api == NULL) {
-            crm_err("Could not connect to fencer: API memory allocation failed");
+            pcmk__err("Could not connect to fencer: API memory allocation "
+                      "failed");
             return NULL;
         }
+
         rc = stonith__api_connect_retry(fencer_api, crm_system_name, 10);
         if (rc != pcmk_rc_ok) {
-            crm_err("Could not connect to fencer in 10 attempts: %s "
-                    QB_XS " rc=%d", pcmk_rc_str(rc), rc);
+            pcmk__err("Could not connect to fencer in 10 attempts: %s "
+                      QB_XS " rc=%d",
+                      pcmk_rc_str(rc), rc);
             stonith__api_free(fencer_api);
             fencer_api = NULL;
+
         } else {
             stonith_api_operations_t *cmds = fencer_api->cmds;
 
@@ -130,9 +134,9 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
             return lrmd__remote_send_xml(client->remote, reply, id, "reply");
 #endif
         default:
-            crm_err("Could not send reply: unknown type for client %s "
-                    QB_XS " flags=%#llx",
-                    pcmk__client_name(client), client->flags);
+            pcmk__err("Could not send reply: unknown type for client %s "
+                      QB_XS " flags=%#llx",
+                      pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
 }
@@ -159,9 +163,9 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
             }
 #endif
         default:
-            crm_err("Could not notify client %s with unknown transport "
-                    QB_XS " flags=%#llx",
-                    pcmk__client_name(client), client->flags);
+            pcmk__err("Could not notify client %s with unknown transport "
+                      QB_XS " flags=%#llx",
+                      pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
 }
@@ -428,14 +432,16 @@ main(int argc, char **argv)
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
-        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        pcmk__err("Failed to create IPC server: shutting down and inhibiting "
+                  "respawn");
         exit_code = CRM_EX_FATAL;
         goto done;
     }
 
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
-        crm_err("Failed to create TLS listener: shutting down and staying down");
+        pcmk__err("Failed to create TLS listener: shutting down and staying "
+                  "down");
         exit_code = CRM_EX_FATAL;
         goto done;
     }

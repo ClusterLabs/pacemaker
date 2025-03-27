@@ -617,8 +617,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             lrm_remote_set_flags(lrm_state, takeover_complete);
 
         } else {
-            crm_err("Disconnecting from Pacemaker Remote node %s due to "
-                    "unexpected client takeover", op->remote_nodename);
+            pcmk__err("Disconnecting from Pacemaker Remote node %s due to "
+                      "unexpected client takeover",
+                      op->remote_nodename);
             /* In this case, lrmd_tls_connection_destroy() will be called under the control of mainloop. */
             /* Do not free lrm_state->conn yet. */
             /* It'll be freed in the following stop action. */
@@ -644,8 +645,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                       lrm_state->node_name);
 
         } else if (!remote_ra_is_in_maintenance(lrm_state)) {
-            crm_err("Lost connection to Pacemaker Remote node %s",
-                    lrm_state->node_name);
+            pcmk__err("Lost connection to Pacemaker Remote node %s",
+                      lrm_state->node_name);
             ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
             ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
 
@@ -747,8 +748,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                              "Remote connection unexpectedly dropped "
                              "during monitor");
             report_remote_ra_result(cmd);
-            crm_err("Remote connection to %s unexpectedly dropped during monitor",
-                    lrm_state->node_name);
+            pcmk__err("Remote connection to %s unexpectedly dropped during "
+                      "monitor",
+                      lrm_state->node_name);
         }
         cmd_handled = TRUE;
 

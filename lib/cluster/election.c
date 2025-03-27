@@ -217,8 +217,8 @@ get_uptime(struct timeval *output)
 
         rc = getrusage(RUSAGE_SELF, &info);
         if (rc < 0) {
-            crm_err("Could not calculate the current uptime: %s",
-                    strerror(errno));
+            pcmk__err("Could not calculate the current uptime: %s",
+                      strerror(errno));
             expires = 0;
             return -1;
         }
@@ -286,7 +286,7 @@ election_vote(pcmk_cluster_t *cluster)
     CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
 
     if (cluster->priv->node_name == NULL) {
-        crm_err("Cannot start an election: Local node name unknown");
+        pcmk__err("Cannot start an election: Local node name unknown");
         return;
     }
 

@@ -204,9 +204,9 @@ load_env_vars(void)
     if (errno != 0) {
         int rc = errno;
 
-        crm_err("Error while reading environment variables from "
-                CONTAINER_ENV_FILE ": %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Error while reading environment variables from "
+                  CONTAINER_ENV_FILE ": %s",
+                  pcmk_rc_str(rc));
     }
     fclose(fp);
     free(line);
@@ -268,7 +268,7 @@ remoted_spawn_pidone(int argc, char **argv)
             // Child remains as pacemaker-remoted
             return;
         case -1:
-            crm_err("fork failed: %s", pcmk_rc_str(errno));
+            pcmk__err("fork failed: %s", pcmk_rc_str(errno));
     }
 
     /* Parent becomes the reaper of zombie processes */

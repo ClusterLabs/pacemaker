@@ -90,8 +90,8 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
             break;
 
         default:
-            crm_err("Bug: Voting in DC election in unexpected state %s",
-                    fsa_state2string(cur_state));
+            pcmk__err("Bug: Voting in DC election in unexpected state %s",
+                      fsa_state2string(cur_state));
             break;
     }
 
@@ -122,7 +122,7 @@ do_election_count_vote(long long action, enum crmd_fsa_cause cause,
 
     if (pcmk__peer_cache == NULL) {
         if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Internal error: no peer cache");
+            pcmk__err("Internal error: no peer cache");
         }
         return;
     }
@@ -264,8 +264,8 @@ do_dc_release(long long action, enum crmd_fsa_cause cause,
         controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 
     } else {
-        crm_err("Not releasing DC role due to unexpected action %s",
-                fsa_action2string(action));
+        pcmk__err("Not releasing DC role due to unexpected action %s",
+                  fsa_action2string(action));
     }
 
     crm_trace("Local node is%s the DC", (AM_I_DC? "" : " not"));

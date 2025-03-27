@@ -1084,12 +1084,12 @@ digests_xml(pcmk__output_t *out, va_list args)
         if ((current != NULL) && current->details->unclean) {               \
             /* It will be a pseudo op */                                    \
         } else if (stop == NULL) {                                          \
-            crm_err("%s:%d: No stop action exists for %s",                  \
-                    __func__, lineno, rsc->id);                             \
+            pcmk__err("%s:%d: No stop action exists for %s",                \
+                      __func__, lineno, rsc->id);                           \
             pcmk__assert(stop != NULL);                                     \
         } else if (pcmk__is_set(stop->flags, pcmk__action_optional)) {      \
-            crm_err("%s:%d: Action %s is still optional",                   \
-                    __func__, lineno, stop->uuid);                          \
+            pcmk__err("%s:%d: Action %s is still optional",                 \
+                      __func__, lineno, stop->uuid);                        \
             pcmk__assert(!pcmk__is_set(stop->flags,                         \
                                        pcmk__action_optional));             \
         }                                                                   \

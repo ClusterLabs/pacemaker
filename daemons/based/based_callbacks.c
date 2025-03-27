@@ -334,7 +334,7 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privi
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (cib_client->buffer != NULL) {
             g_byte_array_free(cib_client->buffer, TRUE);
@@ -818,13 +818,13 @@ cib_process_request(xmlNode *request, bool privileged,
     rc = cib__get_operation(op, &operation);
     if (rc != pcmk_rc_ok) {
         /* TODO: construct error reply? */
-        crm_err("Pre-processing of command failed: %s", pcmk_rc_str(rc));
+        pcmk__err("Pre-processing of command failed: %s", pcmk_rc_str(rc));
         return rc;
     }
 
     op_function = based_get_op_function(operation);
     if (op_function == NULL) {
-        crm_err("Operation %s not supported by CIB manager", op);
+        pcmk__err("Operation %s not supported by CIB manager", op);
         return EOPNOTSUPP;
     }
 
@@ -869,8 +869,8 @@ cib_process_request(xmlNode *request, bool privileged,
 
     if (cib_status != pcmk_rc_ok) {
         rc = cib_status;
-        crm_err("Ignoring request because cluster configuration is invalid "
-                "(please repair and restart): %s", pcmk_rc_str(rc));
+        pcmk__err("Ignoring request because cluster configuration is invalid "
+                  "(please repair and restart): %s", pcmk_rc_str(rc));
         op_reply = create_cib_reply(op, call_id, client_id, call_options,
                                     pcmk_rc2legacy(rc), the_cib);
 
@@ -927,7 +927,7 @@ cib_process_request(xmlNode *request, bool privileged,
         }
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
-            crm_err("Unexpected NULL reply to message");
+            pcmk__err("Unexpected NULL reply to message");
             crm_log_xml_err(request, "null reply");
             goto done;
         }
@@ -1122,7 +1122,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             rc = activateCibXml(result_cib, config_changed, op);
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {
-                crm_err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
+                pcmk__err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
             }
         }
 
@@ -1237,8 +1237,8 @@ disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
 {
     pcmk__client_t *a_client = value;
 
-    crm_err("Can't disconnect client %s: Not implemented",
-            pcmk__client_name(a_client));
+    pcmk__err("Can't disconnect client %s: Not implemented",
+              pcmk__client_name(a_client));
 }
 
 static void

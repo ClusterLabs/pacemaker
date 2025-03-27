@@ -1129,8 +1129,8 @@ pcmk__set_env_option(const char *option, const char *value, bool compat)
         if (rc < 0) {
             int err = errno;
 
-            crm_err("Failed to %sset %s: %s", ((value != NULL)? "" : "un"),
-                    env_name, strerror(err));
+            pcmk__err("Failed to %sset %s: %s", ((value != NULL)? "" : "un"),
+                      env_name, strerror(err));
         }
         free(env_name);
 
@@ -1372,8 +1372,8 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
     }
 
     CRM_CHECK((option->is_valid == NULL) || option->is_valid(value),
-              crm_err("Bug: default value for cluster option '%s' is invalid",
-                      option->name);
+              pcmk__err("Bug: default value for cluster option '%s' is invalid",
+                        option->name);
               return NULL);
 
     crm_trace("Using default value '%s' for cluster option '%s'",
@@ -1403,7 +1403,7 @@ pcmk__cluster_option(GHashTable *options, const char *name)
             return cluster_option_value(options, option);
         }
     }
-    CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
+    CRM_CHECK(FALSE, pcmk__err("Bug: looking for unknown option '%s'", name));
     return NULL;
 }
 

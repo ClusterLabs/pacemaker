@@ -252,7 +252,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         format = 2;
     }
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return NULL;
     }
 
@@ -347,7 +347,7 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return EINVAL;
     }
 
@@ -687,7 +687,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             continue;
 
         } else if (match == NULL) {
-            crm_err("No %s match for %s in %p", op, xpath, xml->doc);
+            pcmk__err("No %s match for %s in %p", op, xpath, xml->doc);
             rc = pcmk_rc_diff_failed;
             continue;
 
@@ -735,7 +735,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
 
         } else {
-            crm_err("Unknown operation: %s", op);
+            pcmk__err("Unknown operation: %s", op);
             rc = pcmk_rc_diff_failed;
         }
     }
@@ -820,10 +820,10 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
 
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
-                crm_err("Moved %s.%s to position %d instead of %d (%p)",
-                        match->name, pcmk__xe_id(match),
-                        pcmk__xml_position(match, pcmk__xf_skip),
-                        position, match->prev);
+                pcmk__err("Moved %s.%s to position %d instead of %d (%p)",
+                          match->name, pcmk__xe_id(match),
+                          pcmk__xml_position(match, pcmk__xf_skip),
+                          position, match->prev);
                 rc = pcmk_rc_diff_failed;
             }
         }
@@ -866,7 +866,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
         pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
 
         if (format != 2) {
-            crm_err("Unknown patch format: %d", format);
+            pcmk__err("Unknown patch format: %d", format);
             rc = -EINVAL;
 
         } else {
@@ -988,7 +988,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return true;
     }
 

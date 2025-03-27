@@ -67,14 +67,14 @@ find_library_function(void **handle, const char *lib, const char *fn)
     if (*handle == NULL) {
         *handle = dlopen(lib, RTLD_LAZY);
         if ((*handle) == NULL) {
-            crm_err("Could not open %s: %s", lib, dlerror());
+            pcmk__err("Could not open %s: %s", lib, dlerror());
             return NULL;
         }
     }
 
     a_function = dlsym(*handle, fn);
     if (a_function == NULL) {
-        crm_err("Could not find %s in %s: %s", fn, lib, dlerror());
+        pcmk__err("Could not find %s in %s: %s", fn, lib, dlerror());
     }
 
     return a_function;
@@ -243,7 +243,7 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
 
         } else {
             errno = EINVAL;
-            crm_err("Agent %s not found", agent);
+            pcmk__err("Agent %s not found", agent);
             return -EINVAL;
         }
 
@@ -304,6 +304,6 @@ stonith__lha_validate(stonith_t *st, int call_options, const char *target,
                       char **output, char **error_output)
 {
     errno = EOPNOTSUPP;
-    crm_err("Cannot validate Linux-HA fence agents");
+    pcmk__err("Cannot validate Linux-HA fence agents");
     return -EOPNOTSUPP;
 }

@@ -101,7 +101,7 @@ pcmk__md5sum(const char *input)
 
     checksum_g = g_compute_checksum_for_string(G_CHECKSUM_MD5, input, -1);
     if (checksum_g == NULL) {
-        crm_err("Failed to compute MD5 checksum for %s", input);
+        pcmk__err("Failed to compute MD5 checksum for %s", input);
         return NULL;
     }
 
@@ -258,7 +258,7 @@ pcmk__verify_digest(const xmlNode *input, const char *expected)
     if (input != NULL) {
         calculated = pcmk__digest_on_disk_cib(input);
         if (calculated == NULL) {
-            crm_err("Could not calculate digest for comparison");
+            pcmk__err("Could not calculate digest for comparison");
             return false;
         }
     }
@@ -266,8 +266,8 @@ pcmk__verify_digest(const xmlNode *input, const char *expected)
     if (passed) {
         crm_trace("Digest comparison passed: %s", calculated);
     } else {
-        crm_err("Digest comparison failed: expected %s, calculated %s",
-                expected, calculated);
+        pcmk__err("Digest comparison failed: expected %s, calculated %s",
+                  expected, calculated);
     }
     free(calculated);
     return passed;
@@ -427,7 +427,7 @@ crm_md5sum(const char *buffer)
     raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
 
     if (raw_digest == NULL) {
-        crm_err("Failed to calculate hash");
+        pcmk__err("Failed to calculate hash");
         return NULL;
     }
 

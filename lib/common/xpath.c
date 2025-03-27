@@ -118,8 +118,9 @@ pcmk__xpath_match_element(xmlNode *match)
                 // Probably an attribute; return parent element instead
                 return match->parent;
             }
-            crm_err("Cannot get element from XPath expression match of type %s",
-                    pcmk__xml_element_type_text(match->type));
+            pcmk__err("Cannot get element from XPath expression match of type "
+                      "%s",
+                      pcmk__xml_element_type_text(match->type));
             return NULL;
     }
 }
@@ -407,7 +408,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     CRM_CHECK(xpathObj != NULL, return NULL);
 
     if (index >= max) {
-        crm_err("Requested index %d of only %d items", index, max);
+        pcmk__err("Requested index %d of only %d items", index, max);
         return NULL;
 
     } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {

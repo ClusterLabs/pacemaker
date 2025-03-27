@@ -41,8 +41,8 @@ handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
         fenced_process_fencing_reply(request);
 
     } else {
-        crm_err("Ignoring unknown %s reply from client %s",
-                pcmk__s(op, "untyped"), pcmk__client_name(client));
+        pcmk__err("Ignoring unknown %s reply from client %s",
+                  pcmk__s(op, "untyped"), pcmk__client_name(client));
         crm_log_xml_warn(request, "UnknownOp");
         return;
     }
@@ -125,7 +125,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (client->buffer != NULL) {
             g_byte_array_free(client->buffer, TRUE);

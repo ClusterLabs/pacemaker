@@ -559,8 +559,8 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
             rc = qb_log_blackbox_write_to_file(buffer);
             if (rc < 0) {
                 // System errno
-                crm_err("Failed to write blackbox file %s: %s", buffer,
-                        strerror(-rc));
+                pcmk__err("Failed to write blackbox file %s: %s", buffer,
+                          strerror(-rc));
             }
 
             /* Flush the existing contents

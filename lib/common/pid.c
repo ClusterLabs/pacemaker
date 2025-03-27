@@ -63,9 +63,9 @@ pcmk__pid_active(pid_t pid, const char *daemon)
                              QB_XS " rc=%d",
                              (long long) pid, pcmk_rc_str(rc), rc);
                 } else {
-                    crm_err("Could not get executable for PID %lld: %s "
-                            QB_XS " rc=%d",
-                            (long long) pid, pcmk_rc_str(rc), rc);
+                    pcmk__err("Could not get executable for PID %lld: %s "
+                              QB_XS " rc=%d",
+                              (long long) pid, pcmk_rc_str(rc), rc);
                 }
                 last_asked_pid = pid;
             }

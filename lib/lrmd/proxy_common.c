@@ -180,7 +180,7 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     remote_proxy_t *proxy = NULL;
 
     if(channel == NULL) {
-        crm_err("No channel specified to proxy");
+        pcmk__err("No channel specified to proxy");
         remote_proxy_notify_destroy(lrmd, session_id);
         return NULL;
     }
@@ -290,8 +290,11 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             if(rc < 0) {
                 xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_NACK);
 
-                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
-                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
+                pcmk__err("Could not relay %s request %d from %s to %s for %s: "
+                          "%s (%d)",
+                          op, msg_id, proxy->node_name,
+                          crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc),
+                          rc);
 
                 /* Send a n'ack so the caller doesn't block */
                 pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
@@ -316,8 +319,10 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
             rc = crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
             if(rc < 0) {
-                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
-                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
+                pcmk__err("Could not relay %s request %d from %s to %s for %s: "
+                          "%s (%d)",
+                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                          name, pcmk_strerror(rc), rc);
             } else {
                 crm_trace("Relayed %s request %d from %s to %s for %s",
                           op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
@@ -329,6 +334,6 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             }
         }
     } else {
-        crm_err("Unknown proxy operation: %s", op);
+        pcmk__err("Unknown proxy operation: %s", op);
     }
 }
