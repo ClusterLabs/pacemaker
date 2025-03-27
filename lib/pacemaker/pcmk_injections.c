@@ -270,9 +270,9 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                                cib_xpath|cib_sync_call);
 
     if ((cib_object != NULL) && (pcmk__xe_id(cib_object) == NULL)) {
-        crm_err("Detected multiple " PCMK__XE_NODE_STATE " entries for "
-                "xpath=%s, bailing",
-                xpath);
+        pcmk__err("Detected multiple " PCMK__XE_NODE_STATE " entries for "
+                  "xpath=%s, bailing",
+                  xpath);
         duplicate = true;
         goto done;
     }
@@ -295,8 +295,9 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                                        cib_xpath|cib_sync_call);
 
             if ((cib_object != NULL) && (pcmk__xe_id(cib_object) == NULL)) {
-                crm_err("Can't inject node state for %s because multiple "
-                        "state entries found for ID %s", node, found_uuid);
+                pcmk__err("Can't inject node state for %s because multiple "
+                          "state entries found for ID %s",
+                          node, found_uuid);
                 duplicate = true;
                 free(xpath_by_uuid);
                 goto done;

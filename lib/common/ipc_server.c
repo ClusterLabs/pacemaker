@@ -169,8 +169,9 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = pcmk__str_copy("#unprivileged");
-            crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
-                    uid_client);
+            pcmk__err("Unable to enforce ACLs for user ID %d, assuming "
+                      "unprivileged",
+                      uid_client);
         }
         client->ipcs = c;
         pcmk__set_client_flags(client, pcmk__client_ipc);
@@ -568,8 +569,9 @@ no_more_retries:
                      QB_XS " %p", c->pid, queue_len, c->ipcs);
 
         } else {
-            crm_err("Evicting client with process ID %u due to backlog of %u messages "
-                     QB_XS " %p", c->pid, queue_len, c->ipcs);
+            pcmk__err("Evicting client with process ID %u due to backlog of %u "
+                      "messages " QB_XS " %p",
+                      c->pid, queue_len, c->ipcs);
             c->queue_backlog = 0;
             qb_ipcs_disconnect(c->ipcs);
             return rc;
@@ -1042,7 +1044,8 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
                                         QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
+        pcmk__err("Failed to create the CIB manager: exiting and inhibiting "
+                  "respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
         crm_exit(CRM_EX_FATAL);
     }
@@ -1123,7 +1126,7 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                                               QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create fencer: exiting and inhibiting respawn.");
+        pcmk__err("Failed to create fencer: exiting and inhibiting respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }
@@ -1145,7 +1148,7 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Couldn't start pacemakerd IPC server");
+        pcmk__err("Couldn't start pacemakerd IPC server");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
          * if we want to prevent pacemakerd from restarting them.

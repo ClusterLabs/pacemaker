@@ -642,8 +642,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                  resource_config_name,
                                                  rclass, rtype, rprovider);
     if (cib_resource == NULL) {
-        crm_err("Could not simulate action %d history for resource %s",
-                action->id, resource);
+        pcmk__err("Could not simulate action %d history for resource %s",
+                  action->id, resource);
         free(node);
         pcmk__xml_free(cib_node);
         return EINVAL;

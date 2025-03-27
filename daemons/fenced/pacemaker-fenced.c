@@ -118,7 +118,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (c->buffer != NULL) {
             g_byte_array_free(c->buffer, TRUE);
@@ -233,7 +233,7 @@ handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Invalid XML: '%.120s'", data);
+        pcmk__err("Invalid XML: '%.120s'", data);
         free(data);
         return;
     }
@@ -612,7 +612,7 @@ main(int argc, char **argv)
     old_instance = crm_ipc_new("stonith-ng", 0);
     if (old_instance == NULL) {
         /* crm_ipc_new() will have already logged an error message with
-         * crm_err()
+         * pcmk__err()
          */
         exit_code = CRM_EX_FATAL;
         goto done;

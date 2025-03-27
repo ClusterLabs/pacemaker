@@ -683,7 +683,7 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
                  id, op->pid);
         cancelled = mainloop_child_kill(op->pid);
         if (cancelled == FALSE) {
-            crm_err("Termination of %s[%d] failed", id, op->pid);
+            pcmk__err("Termination of %s[%d] failed", id, op->pid);
         }
         goto done;
     }

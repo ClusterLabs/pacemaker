@@ -130,8 +130,8 @@ log_assertion_as(const char *file, const char *function, int line,
     if (!pcmk__is_daemon) {
         crm_enable_stderr(TRUE); // Make sure command-line user sees message
     }
-    crm_err("%s: Triggered fatal assertion at %s:%d : %s",
-            function, file, line, assert_condition);
+    pcmk__err("%s: Triggered fatal assertion at %s:%d : %s", function, file,
+              line, assert_condition);
 }
 
 /* coverity[+kill] */
@@ -190,8 +190,9 @@ fail_assert_as(const char *file, const char *function, int line,
             break;
 
         default: // Parent process: wait for child
-            crm_err("%s: Forked child [%d] to record non-fatal assertion at "
-                    "%s:%d : %s", function, pid, file, line, assert_condition);
+            pcmk__err("%s: Forked child [%d] to record non-fatal assertion at "
+                      "%s:%d : %s",
+                      function, pid, file, line, assert_condition);
             crm_write_blackbox(SIGTRAP, NULL);
             do {
                 if (waitpid(pid, &status, 0) == pid) {
@@ -203,8 +204,8 @@ fail_assert_as(const char *file, const char *function, int line,
                 crm_trace("Cannot wait on forked child [%d] "
                           "(SIGCHLD is probably ignored)", pid);
             } else {
-                crm_err("Cannot wait on forked child [%d]: %s",
-                        pid, pcmk_rc_str(errno));
+                pcmk__err("Cannot wait on forked child [%d]: %s", pid,
+                          pcmk_rc_str(errno));
             }
             break;
     }

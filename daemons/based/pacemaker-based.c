@@ -231,7 +231,7 @@ main(int argc, char **argv)
     old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
     if (old_instance == NULL) {
         /* crm_ipc_new() will have already logged an error message with
-         * crm_err()
+         * pcmk__err()
          */
         exit_code = CRM_EX_FATAL;
         goto done;
@@ -265,7 +265,7 @@ main(int argc, char **argv)
 
     if (!pcmk__daemon_can_write(cib_root, NULL)) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Terminating due to bad permissions on %s", cib_root);
+        pcmk__err("Terminating due to bad permissions on %s", cib_root);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Bad permissions on %s (see logs for details)", cib_root);
         goto done;
@@ -326,7 +326,7 @@ cib_cs_dispatch(cpg_handle_t handle,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Invalid XML: '%.120s'", data);
+        pcmk__err("Invalid XML: '%.120s'", data);
         free(data);
         return;
     }

@@ -210,7 +210,7 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;
     }
 
@@ -265,7 +265,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;
     }
 

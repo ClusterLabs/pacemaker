@@ -407,8 +407,8 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     res = sscanf(magic, "%d:%d;%s", &local_op_status, &local_op_rc, key);
 #endif
     if (res == EOF) {
-        crm_err("Could not decode transition information '%s': %s",
-                magic, pcmk_rc_str(errno));
+        pcmk__err("Could not decode transition information '%s': %s", magic,
+                  pcmk_rc_str(errno));
         result = FALSE;
     } else if (res < 3) {
         crm_warn("Transition information '%s' incomplete (%d of 3 expected items)",
@@ -476,7 +476,7 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
     CRM_CHECK(key != NULL, return FALSE);
     if (sscanf(key, "%d:%d:%d:%36s", &local_action_id, &local_transition_id,
                &local_target_rc, local_uuid) != 4) {
-        crm_err("Invalid transition key '%s'", key);
+        pcmk__err("Invalid transition key '%s'", key);
         return FALSE;
     }
     if (strlen(local_uuid) != 36) {

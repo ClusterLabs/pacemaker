@@ -190,7 +190,8 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
             int rc = stonith_api->cmds->connect(stonith_api, "stonith-api", NULL);
 
             if (rc != pcmk_ok) {
-                crm_err("Failed connecting to Stonith-API for watchdog-fencing-query.");
+                pcmk__err("Failed connecting to Stonith-API for "
+                          "watchdog-fencing-query");
             }
         }
 
@@ -230,7 +231,7 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
             stonith__api_free(stonith_api);
         }
     } else {
-        crm_err("Stonith-API for watchdog-fencing-query couldn't be created.");
+        pcmk__err("Stonith-API for watchdog-fencing-query couldn't be created");
     }
     crm_trace("Pacemaker assumes node %s %sto do watchdog-fencing.",
               node, rv?"":"not ");
@@ -493,7 +494,7 @@ stonith_api_device_list(stonith_t *stonith, int call_options,
     enum stonith_namespace ns = parse_namespace(namespace_s);
 
     if (devices == NULL) {
-        crm_err("Parameter error: stonith_api_device_list");
+        pcmk__err("Parameter error: stonith_api_device_list");
         return -EFAULT;
     }
 
@@ -540,8 +541,8 @@ stonith_api_device_metadata(stonith_t *stonith, int call_options,
 #endif
 
         default:
-            crm_err("Can't get fence agent '%s' meta-data: No such agent",
-                    agent);
+            pcmk__err("Can't get fence agent '%s' meta-data: No such agent",
+                      agent);
             break;
     }
     return -ENODEV;
@@ -819,12 +820,12 @@ stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
             return 0;
 
         } else if (((long)a_client->notify) < ((long)b_client->notify)) {
-            crm_err("callbacks for %s are not equal: %p vs. %p",
-                    a_client->event, a_client->notify, b_client->notify);
+            pcmk__err("callbacks for %s are not equal: %p vs. %p",
+                      a_client->event, a_client->notify, b_client->notify);
             return -1;
         }
-        crm_err("callbacks for %s are not equal: %p vs. %p",
-                a_client->event, a_client->notify, b_client->notify);
+        pcmk__err("callbacks for %s are not equal: %p vs. %p",
+                  a_client->event, a_client->notify, b_client->notify);
         return 1;
     }
     return rc;
@@ -1015,7 +1016,8 @@ stonith_async_timeout_handler(gpointer data)
 {
     struct timer_rec_s *timer = data;
 
-    crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
+    pcmk__err("Async call %d timed out after %dms", timer->call_id,
+              timer->timeout);
     invoke_registered_callbacks(timer->stonith, NULL, timer->call_id);
 
     /* Always return TRUE, never remove the handler
@@ -1107,7 +1109,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
 
         update_callback_timeout(call_id, timeout, st);
     } else {
-        crm_err("Unknown message type: %s", type);
+        pcmk__err("Unknown message type: %s", type);
         crm_log_xml_warn(blob.xml, "BadReply");
     }
 
@@ -1443,7 +1445,7 @@ xml_to_event(xmlNode *msg)
         xmlNode *data = get_event_data_xml(msg, event->operation);
 
         if (data == NULL) {
-            crm_err("No data for %s event", event->operation);
+            pcmk__err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
             event->origin = pcmk__xe_get_copy(data, PCMK__XA_ST_ORIGIN);
@@ -1463,7 +1465,7 @@ xml_to_event(xmlNode *msg)
         xmlNode *data = get_event_data_xml(msg, event->operation);
 
         if (data == NULL) {
-            crm_err("No data for %s event", event->operation);
+            pcmk__err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
             event->device = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ID);
@@ -1608,8 +1610,8 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     pcmk__xml_free(op_msg);
 
     if (rc < 0) {
-        crm_err("Couldn't perform %s operation (timeout=%ds): %s", op, timeout,
-                pcmk_strerror(rc));
+        pcmk__err("Couldn't perform %s operation (timeout=%ds): %s", op,
+                  timeout, pcmk_strerror(rc));
         rc = -ECOMM;
         goto done;
     }
@@ -1642,14 +1644,15 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         }
 
     } else if (reply_id <= 0) {
-        crm_err("Received bad reply: No id set");
+        pcmk__err("Received bad reply: No id set");
         crm_log_xml_err(op_reply, "Bad reply");
         pcmk__xml_free(op_reply);
         op_reply = NULL;
         rc = -ENOMSG;
 
     } else {
-        crm_err("Received bad reply: %d (wanted %d)", reply_id, stonith->call_id);
+        pcmk__err("Received bad reply: %d (wanted %d)", reply_id,
+                  stonith->call_id);
         crm_log_xml_err(op_reply, "Old reply");
         pcmk__xml_free(op_reply);
         op_reply = NULL;
@@ -1658,7 +1661,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
   done:
     if (!crm_ipc_connected(native->ipc)) {
-        crm_err("Fencer disconnected");
+        pcmk__err("Fencer disconnected");
         free(native->token); native->token = NULL;
         stonith->state = stonith_disconnected;
     }
@@ -1695,7 +1698,7 @@ stonith__api_dispatch(stonith_t *stonith_api)
         }
 
         if (!crm_ipc_connected(private->ipc)) {
-            crm_err("Connection closed");
+            pcmk__err("Connection closed");
             return ENOTCONN;
         }
     }
@@ -1731,7 +1734,8 @@ free_stonith_api(stonith_t *stonith)
         free(stonith);
 
     } else {
-        crm_err("Not free'ing active connection: %s (%d)", pcmk_strerror(rc), rc);
+        pcmk__err("Not free'ing active connection: %s (%d)", pcmk_strerror(rc),
+                  rc);
     }
 
     return rc;
@@ -1814,7 +1818,7 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
                 *error_output = pcmk__assert_asprintf("Agent %s not found",
                                                       agent);
             } else {
-                crm_err("Agent %s not found", agent);
+                pcmk__err("Agent %s not found", agent);
             }
 
             break;
@@ -1828,7 +1832,7 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
                                                       "support validation",
                                                       agent);
             } else {
-                crm_err("Agent %s does not support validation", agent);
+                pcmk__err("Agent %s does not support validation", agent);
             }
 
             break;
@@ -2189,7 +2193,7 @@ stonith__agent_exists(const char *name)
 
     stonith_api = stonith__api_new();
     if (stonith_api == NULL) {
-        crm_err("Could not list fence agents: API memory allocation failed");
+        pcmk__err("Could not list fence agents: API memory allocation failed");
         return false;
     }
 

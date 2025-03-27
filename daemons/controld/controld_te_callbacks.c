@@ -130,7 +130,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
 
     node_uuid = extract_node_uuid(xpath);
     if(node_uuid == NULL) {
-        crm_err("Could not extract node ID from %s", xpath);
+        pcmk__err("Could not extract node ID from %s", xpath);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart, reason,
                          change);
         return;
@@ -448,7 +448,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
     nmatches = pcmk__xpath_num_results(xpathObj);
     if (nmatches == 0) {
-        crm_err("Received transition request with no results (bug?)");
+        pcmk__err("Received transition request with no results (bug?)");
     } else {
         for (int lpc = 0; lpc < nmatches; lpc++) {
             xmlNode *rsc_op = pcmk__xpath_result(xpathObj, lpc);
@@ -467,7 +467,7 @@ void
 cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     if (rc < pcmk_ok) {
-        crm_err("Update %d FAILED: %s", call_id, pcmk_strerror(rc));
+        pcmk__err("Update %d FAILED: %s", call_id, pcmk_strerror(rc));
     }
 }
 
@@ -502,12 +502,12 @@ action_timer_callback(gpointer data)
     } else {
         /* fail the action */
 
-        crm_err("Node %s did not send %s result (via %s) within %dms "
-                "(action timeout plus " PCMK_OPT_CLUSTER_DELAY ")",
-                (on_node? on_node : ""), (task? task : "unknown action"),
-                (via_node? via_node : "controller"),
-                (action->timeout
-                 + controld_globals.transition_graph->network_delay));
+        pcmk__err("Node %s did not send %s result (via %s) within %dms "
+                  "(action timeout plus " PCMK_OPT_CLUSTER_DELAY ")",
+                  pcmk__s(on_node, ""), pcmk__s(task, "unknown action"),
+                  pcmk__s(via_node, "controller"),
+                  (action->timeout
+                   + controld_globals.transition_graph->network_delay));
         pcmk__log_graph_action(LOG_ERR, action);
 
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
