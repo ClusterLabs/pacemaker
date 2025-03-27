@@ -189,39 +189,39 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
     }
 
     if (new_rsc_ticket->loss_policy == loss_ticket_fence) {
-        crm_debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  pcmk_role_text(new_rsc_ticket->role));
+        pcmk__debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
+                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    pcmk_role_text(new_rsc_ticket->role));
 
     } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_FREEZE, pcmk__str_casei)) {
-        crm_debug("On loss of ticket '%s': Freeze %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  pcmk_role_text(new_rsc_ticket->role));
+        pcmk__debug("On loss of ticket '%s': Freeze %s (%s)",
+                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_freeze;
 
     } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
-        crm_debug("On loss of ticket '%s': Demote %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  pcmk_role_text(new_rsc_ticket->role));
+        pcmk__debug("On loss of ticket '%s': Demote %s (%s)",
+                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_demote;
 
     } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_STOP, pcmk__str_casei)) {
-        crm_debug("On loss of ticket '%s': Stop %s (%s)",
-                  new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                  pcmk_role_text(new_rsc_ticket->role));
+        pcmk__debug("On loss of ticket '%s': Stop %s (%s)",
+                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
         if (new_rsc_ticket->role == pcmk_role_promoted) {
-            crm_debug("On loss of ticket '%s': Default to demote %s (%s)",
-                      new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                      pcmk_role_text(new_rsc_ticket->role));
+            pcmk__debug("On loss of ticket '%s': Default to demote %s (%s)",
+                        new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                        pcmk_role_text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_demote;
 
         } else {
-            crm_debug("On loss of ticket '%s': Default to stop %s (%s)",
-                      new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
-                      pcmk_role_text(new_rsc_ticket->role));
+            pcmk__debug("On loss of ticket '%s': Default to stop %s (%s)",
+                        new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                        pcmk_role_text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_stop;
         }
     }

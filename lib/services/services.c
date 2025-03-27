@@ -123,7 +123,7 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
         const char *found_class = resources_find_service_class(agent);
 
         if (found_class != NULL) {
-            crm_debug("Found %s agent %s for %s", found_class, agent, rsc);
+            pcmk__debug("Found %s agent %s for %s", found_class, agent, rsc);
             expanded_class = pcmk__str_copy(found_class);
         } else {
             const char *default_standard = NULL;
@@ -516,8 +516,8 @@ services_action_cleanup(svc_action_t * op)
             pcmk__warn("Result of %s op %s was unhandled", op->standard,
                        op->id);
         } else {
-            crm_debug("Will ignore any result of canceled %s op %s",
-                      op->standard, op->id);
+            pcmk__debug("Will ignore any result of canceled %s op %s",
+                        op->standard, op->id);
         }
         dbus_pending_call_cancel(op->opaque->pending);
         services_set_op_pending(op, NULL);

@@ -1691,7 +1691,8 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     char *status_s = pcmk__itoa(status);
     char *target_rc_s = pcmk__itoa(target_rc);
 
-    crm_debug("Sending external notification to '%s' via '%s'", options.external_recipient, options.external_agent);
+    pcmk__debug("Sending external notification to '%s' via '%s'",
+                options.external_recipient, options.external_agent);
 
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
@@ -1711,7 +1712,9 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
         out->err(out, "notification fork() failed: %s", strerror(errno));
     }
     if (pid == 0) {
-        /* crm_debug("notification: I am the child. Executing the nofitication program."); */
+        /* pcmk__debug("notification: I am the child. Executing the "
+         *             "notification program.");
+         */
         execl(options.external_agent, options.external_agent, NULL);
         crm_exit(CRM_EX_ERROR);
     }
@@ -1875,7 +1878,7 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         /* Version field, ignore */
 
     } else if(name == NULL) {
-        crm_debug("No result for %s operation to %s", op, xpath);
+        pcmk__debug("No result for %s operation to %s", op, xpath);
         pcmk__assert(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
                                       NULL));
 

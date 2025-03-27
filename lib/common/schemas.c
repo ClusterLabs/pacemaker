@@ -181,7 +181,7 @@ schema_filter(const struct dirent *a)
         /* crm_trace("%s - wrong format", a->d_name); */
 
     } else {
-        /* crm_debug("%s - candidate", a->d_name); */
+        // pcmk__debug("%s - candidate", a->d_name);
         rc = 1;
     }
 
@@ -545,7 +545,7 @@ pcmk__schema_init(void)
         for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
             pcmk__schema_t *schema = iter->data;
 
-            crm_debug("Loaded schema %d: %s", schema_index, schema->name);
+            pcmk__debug("Loaded schema %d: %s", schema_index, schema->name);
             schema->schema_index = schema_index++;
         }
     }
@@ -567,7 +567,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
         ctx = *cached_ctx;
 
     } else {
-        crm_debug("Creating RNG parser context");
+        pcmk__debug("Creating RNG parser context");
         ctx = pcmk__assert_alloc(1, sizeof(relaxng_ctx_cache_t));
 
         ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
@@ -1045,8 +1045,8 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
         const struct dirent *entry = iter->data;
         const char *transform = entry->d_name;
 
-        crm_debug("Upgrading schema from %s to %s: applying XSL transform %s",
-                  schema->name, upgraded_schema->name, transform);
+        pcmk__debug("Upgrading schema from %s to %s: applying XSL transform %s",
+                    schema->name, upgraded_schema->name, transform);
 
         new_xml = apply_transformation(input_xml, transform, to_logs);
         pcmk__xml_free(old_xml);
@@ -1157,7 +1157,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
         if (!validate_with(*xml, current_schema, error_handler,
                            GUINT_TO_POINTER(LOG_ERR))) {
-            crm_debug("Schema %s does not validate", current_schema->name);
+            pcmk__debug("Schema %s does not validate", current_schema->name);
             if (best_schema != NULL) {
                 /* we've satisfied the validation, no need to check further */
                 break;
@@ -1166,7 +1166,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             continue; // Try again with the next higher schema
         }
 
-        crm_debug("Schema %s validates", current_schema->name);
+        pcmk__debug("Schema %s validates", current_schema->name);
         rc = pcmk_rc_ok;
         best_schema = current_schema;
         if (current_schema->schema_index == max_schema_index) {

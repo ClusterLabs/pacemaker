@@ -233,7 +233,7 @@ cib_native_signoff(cib_t *cib)
 {
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
 
     cib_free_notify(cib);
     remove_cib_op_callback(0, TRUE);

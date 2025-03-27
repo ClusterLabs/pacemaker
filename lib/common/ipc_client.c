@@ -210,7 +210,7 @@ pcmk_free_ipc_api(pcmk_ipc_api_t *api)
     if (api == NULL) {
         return;
     }
-    crm_debug("Releasing %s IPC API", pcmk_ipc_name(api, true));
+    pcmk__debug("Releasing %s IPC API", pcmk_ipc_name(api, true));
 
     if (api->ipc != NULL) {
         if (api->mainloop_io != NULL) {
@@ -397,8 +397,8 @@ pcmk_poll_ipc(const pcmk_ipc_api_t *api, int timeout_ms)
 
     rc = pcmk__ipc_fd(api->ipc, &(pollfd.fd));
     if (rc != pcmk_rc_ok) {
-        crm_debug("Could not obtain file descriptor for %s IPC: %s",
-                  pcmk_ipc_name(api, true), pcmk_rc_str(rc));
+        pcmk__debug("Could not obtain file descriptor for %s IPC: %s",
+                    pcmk_ipc_name(api, true), pcmk_rc_str(rc));
         return rc;
     }
 
@@ -454,8 +454,8 @@ connect_with_main_loop(pcmk_ipc_api_t *api)
     if (rc != pcmk_rc_ok) {
         return rc;
     }
-    crm_debug("Connected to %s IPC (attached to main loop)",
-              pcmk_ipc_name(api, true));
+    pcmk__debug("Connected to %s IPC (attached to main loop)",
+                pcmk_ipc_name(api, true));
     /* After this point, api->mainloop_io owns api->ipc, so api->ipc
      * should not be explicitly freed.
      */
@@ -471,8 +471,8 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
     if (rc != pcmk_rc_ok) {
         crm_ipc_close(api->ipc);
     } else {
-        crm_debug("Connected to %s IPC (without main loop)",
-                  pcmk_ipc_name(api, true));
+        pcmk__debug("Connected to %s IPC (without main loop)",
+                    pcmk_ipc_name(api, true));
     }
     return rc;
 }
@@ -511,8 +511,8 @@ pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
 
     api->dispatch_type = dispatch_type;
 
-    crm_debug("Attempting connection to %s (up to %d time%s)",
-              pcmk_ipc_name(api, true), attempts, pcmk__plural_s(attempts));
+    pcmk__debug("Attempting connection to %s (up to %d time%s)",
+                pcmk_ipc_name(api, true), attempts, pcmk__plural_s(attempts));
     for (int remaining = attempts - 1; remaining >= 0; --remaining) {
         switch (dispatch_type) {
             case pcmk_ipc_dispatch_main:
@@ -531,9 +531,9 @@ pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
 
         // Retry after soft error (interrupted by signal, etc.)
         pcmk__sleep_ms((attempts - remaining) * 500);
-        crm_debug("Re-attempting connection to %s (%d attempt%s remaining)",
-                  pcmk_ipc_name(api, true), remaining,
-                  pcmk__plural_s(remaining));
+        pcmk__debug("Re-attempting connection to %s (%d attempt%s remaining)",
+                    pcmk_ipc_name(api, true), remaining,
+                    pcmk__plural_s(remaining));
     }
 
     if (rc != pcmk_rc_ok) {
@@ -814,8 +814,9 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
     rc = pcmk__send_ipc_request(api, request);
     pcmk__xml_free(request);
 
-    crm_debug("%s peer cache purge of node %s[%lu]: rc=%d",
-              pcmk_ipc_name(api, true), node_name, (unsigned long) nodeid, rc);
+    pcmk__debug("%s peer cache purge of node %s[%" PRIu32 "]: rc=%d",
+                pcmk_ipc_name(api, true), pcmk__s(node_name, "(unnamed)"),
+                nodeid, rc);
     return rc;
 }
 
@@ -1683,8 +1684,8 @@ crm_ipc_connect(crm_ipc_t *client)
     }
     if ((client != NULL) && (client->ipc == NULL)) {
         errno = (rc > 0)? rc : ENOTCONN;
-        crm_debug("Could not establish %s IPC connection: %s (%d)",
-                  client->server_name, pcmk_rc_str(errno), errno);
+        pcmk__debug("Could not establish %s IPC connection: %s (%d)",
+                    client->server_name, pcmk_rc_str(errno), errno);
     } else if (rc == pcmk_rc_ipc_unauthorized) {
         pcmk__err("%s IPC provider authentication failed",
                   (client == NULL)? "Pacemaker" : client->server_name);

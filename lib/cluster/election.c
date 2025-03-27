@@ -222,8 +222,9 @@ get_uptime(struct timeval *output)
             return -1;
         }
 
-        crm_debug("Current CPU usage is: %lds, %ldus", (long)info.ru_utime.tv_sec,
-                  (long)info.ru_utime.tv_usec);
+        pcmk__debug("Current CPU usage is: %llds, %lldus",
+                    (long long) info.ru_utime.tv_sec,
+                    (long long) info.ru_utime.tv_usec);
     }
 
     expires = tm_now + STORM_INTERVAL;  /* N seconds after the last _access_ */
@@ -241,18 +242,22 @@ compare_age(struct timeval your_age)
     get_uptime(&our_age); /* If an error occurred, our_age will be compared as {0,0} */
 
     if (our_age.tv_sec > your_age.tv_sec) {
-        crm_debug("Win: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
+        pcmk__debug("Win: %lld vs %lld (seconds)",
+                    (long long) our_age.tv_sec, (long long) your_age.tv_sec);
         return 1;
     } else if (our_age.tv_sec < your_age.tv_sec) {
-        crm_debug("Lose: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
+        pcmk__debug("Lose: %lld vs %lld (seconds)",
+                    (long long) our_age.tv_sec, (long long) your_age.tv_sec);
         return -1;
     } else if (our_age.tv_usec > your_age.tv_usec) {
-        crm_debug("Win: %ld.%06ld vs %ld.%06ld (usec)",
-                  (long)our_age.tv_sec, (long)our_age.tv_usec, (long)your_age.tv_sec, (long)your_age.tv_usec);
+        pcmk__debug("Win: %lld.%06lld vs %lld.%06lld (usec)",
+                    (long long) our_age.tv_sec, (long long) our_age.tv_usec,
+                    (long long) your_age.tv_sec, (long long) your_age.tv_usec);
         return 1;
     } else if (our_age.tv_usec < your_age.tv_usec) {
-        crm_debug("Lose: %ld.%06ld vs %ld.%06ld (usec)",
-                  (long)our_age.tv_sec, (long)our_age.tv_usec, (long)your_age.tv_sec, (long)your_age.tv_usec);
+        pcmk__debug("Lose: %lld.%06lld vs %lld.%06lld (usec)",
+                    (long long) our_age.tv_sec, (long long) our_age.tv_usec,
+                    (long long) your_age.tv_sec, (long long) your_age.tv_usec);
         return -1;
     }
 
@@ -320,7 +325,7 @@ election_vote(pcmk_cluster_t *cluster)
     pcmk__cluster_send_message(NULL, cluster->priv->server, vote);
     pcmk__xml_free(vote);
 
-    crm_debug("Started election round %u", cluster->priv->election->count);
+    pcmk__debug("Started election round %u", cluster->priv->election->count);
     election_timeout_start(cluster);
     return;
 }
@@ -390,9 +395,9 @@ election_check(pcmk_cluster_t *cluster)
         return TRUE;
 
     } else {
-        crm_debug("Election still waiting on %d of %d vote%s",
-                  num_members - voted_size, num_members,
-                  pcmk__plural_s(num_members));
+        pcmk__debug("Election still waiting on %d of %d vote%s",
+                    (num_members - voted_size), num_members,
+                    pcmk__plural_s(num_members));
     }
 
     return FALSE;
@@ -591,9 +596,9 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
         }
         if (cluster->priv->election->state != election_in_progress) {
             // Should only happen if we already lost
-            crm_debug("Not counting election round %d %s from %s "
-                      "because no election in progress",
-                      vote.election_id, vote.op, vote.from);
+            pcmk__debug("Not counting election round %d %s from %s because no "
+                        "election in progress",
+                        vote.election_id, vote.op, vote.from);
             return cluster->priv->election->state;
         }
         record_vote(cluster, &vote);

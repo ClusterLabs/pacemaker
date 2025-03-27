@@ -123,7 +123,8 @@ do_election_check(long long action,
     if (controld_globals.fsa_state == S_ELECTION) {
         election_check(controld_globals.cluster);
     } else {
-        crm_debug("Ignoring election check because we are not in an election");
+        pcmk__debug("Ignoring election check because we are not in an "
+                    "election");
     }
 }
 
@@ -253,7 +254,7 @@ do_dc_release(long long action,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (action & A_DC_RELEASE) {
-        crm_debug("Releasing the role of DC");
+        pcmk__debug("Releasing the role of DC");
         controld_clear_fsa_input_flags(R_THE_DC);
         controld_expect_sched_reply(NULL);
 

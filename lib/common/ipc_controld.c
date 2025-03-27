@@ -118,7 +118,7 @@ post_connect(pcmk_ipc_api_t *api)
         pcmk__info("Could not send IPC hello to %s: %s " QB_XS " rc=%s",
                    pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
     } else {
-        crm_debug("Sent IPC hello to %s", pcmk_ipc_name(api, true));
+        pcmk__debug("Sent IPC hello to %s", pcmk_ipc_name(api, true));
     }
     return rc;
 }
@@ -401,9 +401,9 @@ pcmk_controld_api_reprobe(pcmk_ipc_api_t *api, const char *target_node,
     if (router_node == NULL) {
         router_node = target_node;
     }
-    crm_debug("Sending %s IPC request to reprobe %s via %s",
-              pcmk_ipc_name(api, true), pcmk__s(target_node, "local node"),
-              pcmk__s(router_node, "local node"));
+    pcmk__debug("Sending %s IPC request to reprobe %s via %s",
+                pcmk_ipc_name(api, true), pcmk__s(target_node, "local node"),
+                pcmk__s(router_node, "local node"));
     msg_data = create_reprobe_message_data(target_node, router_node);
     request = create_controller_request(api, CRM_OP_REPROBE, router_node,
                                         msg_data);
@@ -572,11 +572,11 @@ pcmk_controld_api_fail(pcmk_ipc_api_t *api,
                        const char *standard, const char *provider,
                        const char *type)
 {
-    crm_debug("Sending %s IPC request to fail %s (a.k.a. %s) on %s via %s",
-              pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
-              pcmk__s(rsc_long_id, "no other names"),
-              pcmk__s(target_node, "unspecified node"),
-              pcmk__s(router_node, "unspecified node"));
+    pcmk__debug("Sending %s IPC request to fail %s (a.k.a. %s) on %s via %s",
+                pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
+                pcmk__s(rsc_long_id, "no other names"),
+                pcmk__s(target_node, "unspecified node"),
+                pcmk__s(router_node, "unspecified node"));
     return controller_resource_op(api, CRM_OP_LRM_FAIL, target_node,
                                   router_node, false, rsc_id, rsc_long_id,
                                   standard, provider, type);
@@ -605,11 +605,11 @@ pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
                           const char *standard, const char *provider,
                           const char *type, bool cib_only)
 {
-    crm_debug("Sending %s IPC request to refresh %s (a.k.a. %s) on %s via %s",
-              pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
-              pcmk__s(rsc_long_id, "no other names"),
-              pcmk__s(target_node, "unspecified node"),
-              pcmk__s(router_node, "unspecified node"));
+    pcmk__debug("Sending %s IPC request to refresh %s (a.k.a. %s) on %s via %s",
+                pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
+                pcmk__s(rsc_long_id, "no other names"),
+                pcmk__s(target_node, "unspecified node"),
+                pcmk__s(router_node, "unspecified node"));
     return controller_resource_op(api, CRM_OP_LRM_DELETE, target_node,
                                   router_node, cib_only, rsc_id, rsc_long_id,
                                   standard, provider, type);

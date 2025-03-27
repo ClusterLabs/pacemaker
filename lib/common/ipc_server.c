@@ -240,8 +240,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
         pcmk__set_client_flags(client, pcmk__client_privileged);
     }
 
-    crm_debug("New IPC client %s for PID %u with uid %d and gid %d",
-              client->id, client->pid, uid_client, gid_client);
+    pcmk__debug("New IPC client %s for PID %u with uid %d and gid %d",
+                client->id, client->pid, uid_client, gid_client);
     return client;
 }
 
@@ -306,7 +306,7 @@ pcmk__free_client(pcmk__client_t *c)
     }
 
     if (c->event_queue) {
-        crm_debug("Destroying %d events", g_queue_get_length(c->event_queue));
+        pcmk__debug("Destroying %d events", g_queue_get_length(c->event_queue));
         g_queue_free_full(c->event_queue, free_event);
     }
 
@@ -366,9 +366,9 @@ pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
                    pcmk__s(qmax, "default"), pcmk_rc_str(rc));
 
     } else if (client->queue_max != orig_value) {
-        crm_debug("IPC threshold for client %s[%u] is now %u (was %u)",
-                  pcmk__client_name(client), client->pid,
-                  client->queue_max, orig_value);
+        pcmk__debug("IPC threshold for client %s[%u] is now %u (was %u)",
+                    pcmk__client_name(client), client->pid, client->queue_max,
+                    orig_value);
     }
 }
 

@@ -89,7 +89,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
              * peer where it will have to do something with a PCMK__XA_CONFIRM type
              * message.
              */
-            crm_debug("Sending %s a confirmation", peer->name);
+            pcmk__debug("Sending %s a confirmation", peer->name);
             attrd_send_message(peer, reply, false);
             pcmk__xml_free(reply);
         }
@@ -168,23 +168,23 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
 
     switch (kind) {
         case pcmk__node_update_name:
-            crm_debug("%s node %s is now %s",
-                      (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state));
+            pcmk__debug("%s node %s is now %s",
+                        (is_remote? "Remote" : "Cluster"),
+                        peer->name, state_text(peer->state));
             break;
 
         case pcmk__node_update_processes:
             if (!pcmk__is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
-            crm_debug("Node %s is %s a peer",
-                      peer->name, (gone? "no longer" : "now"));
+            pcmk__debug("Node %s is %s a peer", peer->name,
+                        (gone? "no longer" : "now"));
             break;
 
         case pcmk__node_update_state:
-            crm_debug("%s node %s is now %s (was %s)",
-                      (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state), state_text(data));
+            pcmk__debug("%s node %s is now %s (was %s)",
+                        (is_remote? "Remote" : "Cluster"),
+                        peer->name, state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
@@ -359,7 +359,7 @@ attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
         // If no host was specified, update all hosts
         GHashTableIter vIter;
 
-        crm_debug("Setting %s for all hosts to %s", attr, value);
+        pcmk__debug("Setting %s for all hosts to %s", attr, value);
         pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_HOST_ID);
         g_hash_table_iter_init(&vIter, a->values);
 
@@ -411,7 +411,7 @@ broadcast_unseen_local_values(void)
     }
 
     if (sync != NULL) {
-        crm_debug("Broadcasting local-only values");
+        pcmk__debug("Broadcasting local-only values");
         attrd_send_message(NULL, sync, false);
         pcmk__xml_free(sync);
     }
@@ -541,7 +541,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         if(g_hash_table_remove(a->values, host)) {
-            crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
+            pcmk__debug("Removed %s[%s] for peer %s", a->id, host, source);
         }
     }
 
@@ -573,14 +573,13 @@ attrd_peer_sync(pcmk__node_status_t *peer)
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            crm_debug("Syncing %s[%s]='%s' to %s",
-                      a->id, v->nodename, readable_value(v),
-                      readable_peer(peer));
+            pcmk__debug("Syncing %s[%s]='%s' to %s", a->id, v->nodename,
+                        readable_value(v), readable_peer(peer));
             attrd_add_value_xml(sync, a, v, false);
         }
     }
 
-    crm_debug("Syncing values to %s", readable_peer(peer));
+    pcmk__debug("Syncing values to %s", readable_peer(peer));
     attrd_send_message(peer, sync, false);
     pcmk__xml_free(sync);
 }

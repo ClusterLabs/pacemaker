@@ -54,8 +54,9 @@ update_stonith_max_attempts(const char *value)
     CRM_CHECK((rc == pcmk_rc_ok) && (score > 0), return);
 
     if (stonith_max_attempts != score) {
-        crm_debug("Maximum fencing attempts per transition is now %d (was %lu)",
-                  score, stonith_max_attempts);
+        pcmk__debug("Maximum fencing attempts per transition is now %d (was "
+                    "%lu)",
+                    score, stonith_max_attempts);
     }
     stonith_max_attempts = score;
 }
@@ -268,7 +269,8 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
                                                  cib_can_create);
     pcmk__xml_free(node_state);
 
-    crm_debug("Updating node state for %s after fencing (call %d)", target, rc);
+    pcmk__debug("Updating node state for %s after fencing (call %d)", target,
+                rc);
     fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
 
     controld_delete_node_state(peer->name, controld_section_all, cib_none);
@@ -1062,7 +1064,7 @@ static void
 tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event)
 {
     te_cleanup_stonith_history_sync(st, FALSE);
-    crm_debug("Fence-history synced - cancel all timers");
+    pcmk__debug("Fence-history synced - cancel all timers");
 }
 
 static gboolean

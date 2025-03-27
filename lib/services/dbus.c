@@ -167,9 +167,9 @@ static void
 toggle_dbus_watch(DBusWatch *watch, void *data)
 {
     // @TODO Should this do something more?
-    crm_debug("DBus watch for file descriptor %d is now %s",
-              dbus_watch_get_unix_fd(watch),
-              (dbus_watch_get_enabled(watch)? "enabled" : "disabled"));
+    pcmk__debug("DBus watch for file descriptor %d is now %s",
+                dbus_watch_get_unix_fd(watch),
+                (dbus_watch_get_enabled(watch)? "enabled" : "disabled"));
 }
 
 static void
@@ -198,8 +198,8 @@ register_watch_functions(DBusConnection *connection)
 static gboolean
 timer_popped(gpointer data)
 {
-    crm_debug("%dms DBus timer expired",
-              dbus_timeout_get_interval((DBusTimeout *) data));
+    pcmk__debug("%dms DBus timer expired",
+                dbus_timeout_get_interval((DBusTimeout *) data));
     dbus_timeout_handle(data);
     return FALSE;
 }

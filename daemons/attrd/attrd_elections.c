@@ -67,8 +67,8 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
 
     switch(rc) {
         case election_start:
-            crm_debug("Unsetting writer (was %s) and starting new election",
-                      peer_writer? peer_writer : "unset");
+            pcmk__debug("Unsetting writer (was %s) and starting new election",
+                        pcmk__s(peer_writer, "unset"));
             free(peer_writer);
             peer_writer = NULL;
             election_vote(attrd_cluster);
@@ -88,8 +88,8 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
              */
             if ((peer_writer == NULL) || (previous != election_lost)) {
                 pcmk__str_update(&peer_writer, peer->name);
-                crm_debug("Election lost, presuming %s is writer for now",
-                          peer_writer);
+                pcmk__debug("Election lost, presuming %s is writer for now",
+                            peer_writer);
             }
             break;
 
@@ -164,7 +164,8 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
      * would be pending until it's timed out.
      */
     } else if (election_state(attrd_cluster) == election_in_progress) {
-       crm_debug("Checking election status upon loss of voter %s", peer->name);
+       pcmk__debug("Checking election status upon loss of voter %s",
+                   peer->name);
        election_check(attrd_cluster);
     }
 }

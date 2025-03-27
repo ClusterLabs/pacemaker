@@ -58,7 +58,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 
     if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_ALERTS)) {
         if (attrd_shutting_down(true)) {
-            crm_debug("Ignoring alerts change in CIB during shutdown");
+            pcmk__debug("Ignoring alerts change in CIB during shutdown");
         } else {
             mainloop_set_trigger(attrd_config_read);
         }
@@ -83,7 +83,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
 
         if (attrd_shutting_down(true)) {
-            crm_debug("Ignoring node change in CIB during shutdown");
+            pcmk__debug("Ignoring node change in CIB during shutdown");
             return;
         }
 
@@ -118,7 +118,7 @@ attrd_cib_connect(int max_retry)
             sleep(attempts);
         }
         attempts++;
-        crm_debug("Connection attempt %d to the CIB manager", attempts);
+        pcmk__debug("Connection attempt %d to the CIB manager", attempts);
         rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
     } while ((rc != pcmk_ok) && (attempts < max_retry));
@@ -129,7 +129,7 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    crm_debug("Connected to the CIB manager after %d attempts", attempts);
+    pcmk__debug("Connected to the CIB manager after %d attempts", attempts);
 
     rc = the_cib->cmds->set_connection_dnotify(the_cib, attrd_cib_destroy_cb);
     if (rc != pcmk_ok) {
@@ -197,8 +197,8 @@ attrd_cib_erase_transient_attrs(const char *node)
 
     xpath = pcmk__assert_asprintf(XPATH_TRANSIENT, node);
 
-    crm_debug("Clearing transient node attributes for %s from CIB using %s",
-              node, xpath);
+    pcmk__debug("Clearing transient node attributes for %s from CIB using %s",
+                node, xpath);
 
     call_id = the_cib->cmds->remove(the_cib, xpath, NULL, cib_xpath);
     free(xpath);
@@ -307,7 +307,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
              */
-            crm_debug("Pending update for %s can be written now", a->id);
+            pcmk__debug("Pending update for %s can be written now", a->id);
             write_attribute(a, false);
 
         /* We're re-attempting a write because the original failed; delay
@@ -523,7 +523,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
         } else if (mainloop_timer_running(a->timer)) {
             if (ignore_delay) {
                 mainloop_timer_stop(a->timer);
-                crm_debug("Overriding '%s' write delay", a->id);
+                pcmk__debug("Overriding '%s' write delay", a->id);
             } else {
                 pcmk__info("Delaying write of '%s'", a->id);
                 goto done;
@@ -615,9 +615,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
             continue;
         }
 
-        crm_debug("Added %s[%s]=%s to CIB transaction (node XML ID %s)",
-                  a->id, v->nodename, pcmk__s(v->current, "(unset)"),
-                  node_xml_id);
+        pcmk__debug("Added %s[%s]=%s to CIB transaction (node XML ID %s)",
+                    a->id, v->nodename, pcmk__s(v->current, "(unset)"),
+                    node_xml_id);
         cib_updates++;
 
         /* Preservation of the attribute to transmit alert */
@@ -675,8 +675,8 @@ attrd_write_attributes(uint32_t options)
     GHashTableIter iter;
     attribute_t *a = NULL;
 
-    crm_debug("Writing out %s attributes",
-              pcmk__is_set(options, attrd_write_all)? "all" : "changed");
+    pcmk__debug("Writing out %s attributes",
+                pcmk__is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
         if (!pcmk__is_set(options, attrd_write_all)

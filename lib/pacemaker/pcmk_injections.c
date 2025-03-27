@@ -520,8 +520,8 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
     }
 
     if (rc == pcmk_rc_ok) { // Ticket state found, use it
-        crm_debug("Injecting attribute into existing ticket state %s",
-                  ticket_id);
+        pcmk__debug("Injecting attribute into existing ticket state %s",
+                    ticket_id);
         xml_top = ticket_state_xml;
 
     } else if (rc == ENXIO) { // No ticket state, create it

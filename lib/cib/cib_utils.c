@@ -267,7 +267,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                                      &cib_filtered)) {
 
             if (cib_filtered == NULL) {
-                crm_debug("Pre-filtered the entire cib");
+                pcmk__debug("Pre-filtered the entire cib");
                 return -EACCES;
             }
             cib_ro = cib_filtered;
@@ -547,7 +547,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
 
         if (*result_cib == NULL) {
-            crm_debug("Pre-filtered the entire cib result");
+            pcmk__debug("Pre-filtered the entire cib result");
         }
         pcmk__xml_free(scratch);
     }
@@ -693,7 +693,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     }
 
     if (cib == NULL) {
-        crm_debug("No cib object supplied");
+        pcmk__debug("No cib object supplied");
     }
 
     if (rc == -pcmk_err_diff_resync) {
@@ -846,8 +846,8 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                               NULL);
 
         if (rc != pcmk_ok) {
-            crm_debug("Update didn't apply: %s (%d) %p",
-                      pcmk_strerror(rc), rc, *output);
+            pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc),
+                        rc, *output);
 
             if (rc == -pcmk_err_old_data) {
                 crm_trace("Masking error, we already have the supplied update");
@@ -941,8 +941,9 @@ cib__signon_attempts(cib_t *cib, enum cib_conn_type type, int attempts)
 
         // Retry after soft error (interrupted by signal, etc.)
         pcmk__sleep_ms((attempts - remaining) * 500);
-        crm_debug("Re-attempting connection to CIB manager (%d attempt%s remaining)",
-                  remaining, pcmk__plural_s(remaining));
+        pcmk__debug("Re-attempting connection to CIB manager (%d attempt%s "
+                    "remaining)",
+                    remaining, pcmk__plural_s(remaining));
     }
 
     return rc;

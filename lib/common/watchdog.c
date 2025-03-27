@@ -271,15 +271,15 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
         st_timeout = pcmk__auto_stonith_watchdog_timeout();
 
         // At this point, 0 <= sbd_timeout <= st_timeout
-        crm_debug("Using calculated value %lld for "
-                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
-                  st_timeout, value);
+        pcmk__debug("Using calculated value %lld for "
+                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
+                    st_timeout, value);
     }
 
     if (st_timeout == 0) {
-        crm_debug("Watchdog may be enabled but "
-                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " is disabled (%s)",
-                  value? value : "default");
+        pcmk__debug("Watchdog may be enabled but "
+                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " is disabled (%s)",
+                    pcmk__s(value, "default"));
 
     } else if (pcmk__locate_sbd() == 0) {
         pcmk__emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT

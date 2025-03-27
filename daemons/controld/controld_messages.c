@@ -75,8 +75,9 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     if (input == I_WAIT_FOR_EVENT) {
         controld_set_global_flags(controld_fsa_is_stalled);
-        crm_debug("Stalling the FSA pending further input: source=%s cause=%s data=%p queue=%d",
-                  raised_from, fsa_cause2string(cause), data, old_len);
+        pcmk__debug("Stalling the FSA pending further input: source=%s "
+                    "cause=%s data=%p queue=%d",
+                    raised_from, fsa_cause2string(cause), data, old_len);
 
         if (old_len > 0) {
             fsa_dump_queue(LOG_TRACE);
@@ -680,9 +681,9 @@ handle_failcount_op(xmlNode * stored_msg)
         is_remote_node = TRUE;
     }
 
-    crm_debug("Clearing failures for %s-interval %s on %s "
-              "from attribute manager, CIB, and executor state",
-              pcmk__readable_interval(interval_ms), rsc, uname);
+    pcmk__debug("Clearing failures for %s-interval %s on %s from attribute "
+                "manager, CIB, and executor state",
+                pcmk__readable_interval(interval_ms), rsc, uname);
 
     if (interval_ms) {
         interval_spec = pcmk__assert_asprintf("%ums", interval_ms);
@@ -739,9 +740,10 @@ handle_lrm_delete(xmlNode *stored_msg)
         from_sys = pcmk__xe_get(stored_msg, PCMK__XA_CRM_SYS_FROM);
         node = pcmk__xe_get(msg_data, PCMK__META_ON_NODE);
         user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
-        crm_debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
-                  "(clearing CIB resource history only)", rsc_id, node,
-                  (user_name? " for user " : ""), (user_name? user_name : ""));
+        pcmk__debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
+                    "(clearing CIB resource history only)",
+                    rsc_id, node, ((user_name != NULL)? " for user " : ""),
+                    pcmk__s(user_name, ""));
         rc = controld_delete_resource_history(rsc_id, node, user_name,
                                               cib_dryrun|cib_sync_call);
         if (rc == pcmk_rc_ok) {
@@ -1023,8 +1025,8 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
     }
 
     // Shouldn't happen, but we are already stopping anyway
-    crm_debug("Ignoring unexpected shutdown confirmation from %s",
-              (host_from? host_from : "another node"));
+    pcmk__debug("Ignoring unexpected shutdown confirmation from %s",
+                pcmk__s(host_from, "another node"));
     return I_NULL;
 }
 
@@ -1123,7 +1125,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         if (AM_I_DC && (controld_globals.transition_graph != NULL)
             && !controld_globals.transition_graph->complete) {
 
-            crm_debug("The throttle changed. Trigger a graph.");
+            pcmk__debug("The throttle changed. Trigger a graph");
             trigger_graph();
         }
         return I_NULL;
@@ -1142,19 +1144,19 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
         /* Sometimes we _must_ go into S_ELECTION */
         if (controld_globals.fsa_state == S_HALT) {
-            crm_debug("Forcing an election from S_HALT");
+            pcmk__debug("Forcing an election from S_HALT");
             return I_ELECTION;
         }
 
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
         verify_feature_set(stored_msg);
-        crm_debug("Raising I_JOIN_OFFER: join-%s",
-                  pcmk__xe_get(stored_msg, PCMK__XA_JOIN_ID));
+        pcmk__debug("Raising I_JOIN_OFFER: join-%s",
+                    pcmk__xe_get(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_OFFER;
 
     } else if (strcmp(op, CRM_OP_JOIN_ACKNAK) == 0) {
-        crm_debug("Raising I_JOIN_RESULT: join-%s",
-                  pcmk__xe_get(stored_msg, PCMK__XA_JOIN_ID));
+        pcmk__debug("Raising I_JOIN_RESULT: join-%s",
+                    pcmk__xe_get(stored_msg, PCMK__XA_JOIN_ID));
         return I_JOIN_RESULT;
 
     } else if (strcmp(op, CRM_OP_LRM_DELETE) == 0) {

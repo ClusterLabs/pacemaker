@@ -131,12 +131,12 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             break;
 
         } else if (reply_id < msg_id) {
-            crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
+            pcmk__debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
             crm_log_xml_trace(op_reply, "Old reply");
 
         } else if ((reply_id - 10000) > msg_id) {
             /* wrap-around case */
-            crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
+            pcmk__debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
             crm_log_xml_trace(op_reply, "Old reply");
         } else {
             pcmk__err("Received a __future__ reply:" " %d (wanted %d)",
@@ -519,7 +519,7 @@ cib_remote_signoff(cib_t *cib)
 {
     int rc = pcmk_ok;
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
     cib_tls_close(cib);
 
     cib->cmds->end_transaction(cib, false, cib_none);

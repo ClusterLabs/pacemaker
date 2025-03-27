@@ -369,8 +369,8 @@ handle_shutdown_ack(void)
         return;
     }
 #endif
-    crm_debug("Ignoring unexpected shutdown acknowledgment "
-              "from IPC proxy provider");
+    pcmk__debug("Ignoring unexpected shutdown acknowledgment from IPC proxy "
+                "provider");
 }
 
 /*!
@@ -388,7 +388,8 @@ handle_shutdown_nack(void)
         return;
     }
 #endif
-    crm_debug("Ignoring unexpected shutdown rejection from IPC proxy provider");
+    pcmk__debug("Ignoring unexpected shutdown rejection from IPC proxy "
+                "provider");
 }
 
 static GOptionEntry entries[] = {

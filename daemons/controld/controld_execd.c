@@ -160,7 +160,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     rsc_history_t *entry = NULL;
 
     if (op->rsc_deleted) {
-        crm_debug("Purged history for '%s' after %s", op->rsc_id, op->op_type);
+        pcmk__debug("Purged history for '%s' after %s", op->rsc_id,
+                    op->op_type);
         controld_delete_resource_history(op->rsc_id, lrm_state->node_name,
                                          NULL, crmd_cib_smart_opt());
         return;
@@ -170,7 +171,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         return;
     }
 
-    crm_debug("Updating history for '%s' with %s op", op->rsc_id, op->op_type);
+    pcmk__debug("Updating history for '%s' with %s op", op->rsc_id,
+                op->op_type);
 
     entry = g_hash_table_lookup(lrm_state->resource_history, op->rsc_id);
     if (entry == NULL && rsc) {
@@ -315,7 +317,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
 {
     int rc = pcmk_rc_ok;
 
-    crm_debug("Connecting to the local executor");
+    pcmk__debug("Connecting to the local executor");
 
     // If we can connect, great
     rc = controld_connect_local_executor(lrm_state);
@@ -403,7 +405,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     rsc_history_t *entry = NULL;
     active_op_t *pending = NULL;
 
-    crm_debug("Checking for active resources before exit");
+    pcmk__debug("Checking for active resources before exit");
 
     if (cur_state == S_TERMINATE) {
         log_level = LOG_ERR;
@@ -657,7 +659,8 @@ controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
         char *now_s = pcmk__assert_asprintf("%lld", (long long) time(NULL));
 
-        crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
+        pcmk__debug("Triggering a refresh after %s cleaned %s", from_sys,
+                    rsc_id);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_none,
                               PCMK_XE_CRM_CONFIG, NULL, NULL, NULL, NULL,
@@ -812,11 +815,11 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     if (pending) {
         if (remove && !pcmk__is_set(pending->flags, active_op_remove)) {
             controld_set_active_op_flags(pending, active_op_remove);
-            crm_debug("Scheduling %s for removal", key);
+            pcmk__debug("Scheduling %s for removal", key);
         }
 
         if (pcmk__is_set(pending->flags, active_op_cancelled)) {
-            crm_debug("Operation %s already cancelled", key);
+            pcmk__debug("Operation %s already cancelled", key);
             free(local_key);
             return FALSE;
         }
@@ -828,16 +831,16 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
         return FALSE;
     }
 
-    crm_debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
+    pcmk__debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
     rc = lrm_state_cancel(lrm_state, pending->rsc_id, pending->op_type,
                           pending->interval_ms);
     if (rc == pcmk_ok) {
-        crm_debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
+        pcmk__debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
         free(local_key);
         return TRUE;
     }
 
-    crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc_id, key);
+    pcmk__debug("Op %d for %s (%s): Nothing to cancel", op, rsc_id, key);
     /* The caller needs to make sure the entry is
      * removed from the active operations list
      *
@@ -1233,7 +1236,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, xmlNode *msg, const char *from_sys,
     if (!pcmk__strcase_any_of(from_sys, CRM_SYSTEM_PENGINE, CRM_SYSTEM_TENGINE, NULL)) {
         xmlNode *reply = pcmk__new_reply(msg, NULL);
 
-        crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
+        pcmk__debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
 
         if (relay_message(reply, TRUE) == FALSE) {
             crm_log_xml_err(reply, "Unable to route reply");
@@ -1275,8 +1278,8 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     call_id = pcmk__xe_get(params, meta_key);
     free(meta_key);
 
-    crm_debug("Scheduler requested op %s (call=%s) be cancelled",
-              op_key, (call_id? call_id : "NA"));
+    pcmk__debug("Scheduler requested op %s (call=%s) be cancelled", op_key,
+                pcmk__s(call_id, "NA"));
     pcmk__scan_min_int(call_id, &call, 0);
     if (call == 0) {
         // Normal case when the scheduler cancels a recurring op
@@ -1489,10 +1492,10 @@ do_lrm_invoke(long long action,
             /* Delete of malformed or nonexistent resource
              * (deleting something that does not exist is a success)
              */
-            crm_debug("Not registering resource '%s' for a %s event "
-                      QB_XS " get-rc=%d (%s) transition-key=%s",
-                      pcmk__xe_id(xml_rsc), operation,
-                      rc, pcmk_strerror(rc), pcmk__xe_id(input->xml));
+            pcmk__debug("Not registering resource '%s' for a %s event "
+                        QB_XS " get-rc=%d (%s) transition-key=%s",
+                        pcmk__xe_id(xml_rsc), operation, rc, pcmk_strerror(rc),
+                        pcmk__xe_id(input->xml));
             delete_rsc_entry(lrm_state, input, pcmk__xe_id(xml_rsc), NULL,
                              pcmk_ok, user_name, true);
             return;
@@ -1767,9 +1770,9 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
 
     crm_log_xml_trace(update, "[direct ACK]");
 
-    crm_debug("ACK'ing resource op " PCMK__OP_FMT " from %s: %s",
-              op->rsc_id, op->op_type, op->interval_ms, op->user_data,
-              pcmk__xe_get(reply, PCMK_XA_REFERENCE));
+    pcmk__debug("ACK'ing resource op " PCMK__OP_FMT " from %s: %s", op->rsc_id,
+                op->op_type, op->interval_ms, op->user_data,
+                pcmk__xe_get(reply, PCMK_XA_REFERENCE));
 
     if (relay_message(reply, TRUE) == FALSE) {
         crm_log_xml_err(reply, "Unable to route reply");
@@ -1815,7 +1818,8 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
     if ((op->interval_ms != 0)
         && pcmk__str_eq(op->rsc_id, event->rsc->id, pcmk__str_none)) {
 
-        crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, (char*)key);
+        pcmk__debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id,
+                    (const char *) key);
         remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
     }
 
@@ -1962,9 +1966,10 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
                                               &data);
 
         if (removed) {
-            crm_debug("Stopped %u recurring operation%s in preparation for "
-                      PCMK__OP_FMT, removed, pcmk__plural_s(removed),
-                      rsc->id, operation, op->interval_ms);
+            pcmk__debug("Stopped %u recurring operation%s in preparation for "
+                        PCMK__OP_FMT,
+                        removed, pcmk__plural_s(removed), rsc->id, operation,
+                        op->interval_ms);
         }
     }
 
@@ -2358,8 +2363,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
          * executor does not have resource information, likely due to resource
          * cleanup, refresh, or removal) and pending.
          */
-        crm_debug("Recurring op %s was cancelled due to resource deletion",
-                  op_key);
+        pcmk__debug("Recurring op %s was cancelled due to resource deletion",
+                    op_key);
         need_direct_ack = TRUE;
 
     } else {

@@ -418,8 +418,8 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        crm_debug("Opened connection to local file '%s' for %s",
-                  private->filename, pcmk__s(name, "client"));
+        pcmk__debug("Opened connection to local file '%s' for %s",
+                    private->filename, pcmk__s(name, "client"));
         cib->state = cib_connected_command;
         cib->type = cib_command;
         register_client(cib);
@@ -533,7 +533,7 @@ cib_file_signoff(cib_t *cib)
     int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
     unregister_client(cib);
@@ -958,7 +958,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
         goto cleanup;
     }
 
-    crm_debug("Writing CIB to disk");
+    pcmk__debug("Writing CIB to disk");
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     cib_file_prepare_xml(cib_root);
 
@@ -1021,7 +1021,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
         goto cleanup;
     }
     close(fd);
-    crm_debug("Wrote digest %s to disk", digest);
+    pcmk__debug("Wrote digest %s to disk", digest);
 
     /* Verify that what we wrote is sane */
     pcmk__info("Reading cluster configuration file %s (digest: %s)", tmp_cib,
@@ -1030,7 +1030,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     pcmk__assert(rc == 0);
 
     /* Rename temporary files to live, and sync directory changes to media */
-    crm_debug("Activating %s", tmp_cib);
+    pcmk__debug("Activating %s", tmp_cib);
     if (rename(tmp_cib, cib_path) < 0) {
         crm_perror(LOG_ERR, "Couldn't rename %s as %s", tmp_cib, cib_path);
         exit_rc = pcmk_err_cib_save;

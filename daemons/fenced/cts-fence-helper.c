@@ -112,7 +112,7 @@ dispatch_helper(int timeout)
 {
     int rc;
 
-    crm_debug("Looking for notification");
+    pcmk__debug("Looking for notification");
     pollfd.events = POLLIN;
     while (true) {
         rc = poll(&pollfd, 1, timeout); /* wait 10 minutes, -1 forever */
@@ -197,7 +197,7 @@ passive_test(void)
         if (verbose) {                   \
             pcmk__info("SUCCESS - %s: %d", str, rc);                        \
         } else {   \
-            crm_debug("SUCCESS - %s: %d", str, rc);    \
+            pcmk__debug("SUCCESS - %s: %d", str, rc);                       \
         }                          \
     } \
 }\
@@ -361,49 +361,49 @@ standard_dev_test(void)
                                    "some-host=pcmk-7 true_1_node1=3,4");
 
     rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_xvm", params);
-    crm_debug("Register: %d", rc);
+    pcmk__debug("Register: %d", rc);
 
     rc = st->cmds->list(st, st_opts, "test-id", &tmp, 10);
-    crm_debug("List: %d output: %s", rc, tmp ? tmp : "<none>");
+    pcmk__debug("List: %d output: %s", rc, tmp ? tmp : "<none>");
 
     rc = st->cmds->monitor(st, st_opts, "test-id", 10);
-    crm_debug("Monitor: %d", rc);
+    pcmk__debug("Monitor: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node2", 10);
-    crm_debug("Status false_1_node2: %d", rc);
+    pcmk__debug("Status false_1_node2: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
-    crm_debug("Status false_1_node1: %d", rc);
+    pcmk__debug("Status false_1_node1: %d", rc);
 
     rc = st->cmds->fence(st, st_opts, "unknown-host", PCMK_ACTION_OFF, 60, 0);
-    crm_debug("Fence unknown-host: %d", rc);
+    pcmk__debug("Fence unknown-host: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
-    crm_debug("Status false_1_node1: %d", rc);
+    pcmk__debug("Status false_1_node1: %d", rc);
 
     rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_OFF, 60, 0);
-    crm_debug("Fence false_1_node1: %d", rc);
+    pcmk__debug("Fence false_1_node1: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
-    crm_debug("Status false_1_node1: %d", rc);
+    pcmk__debug("Status false_1_node1: %d", rc);
 
     rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 10, 0);
-    crm_debug("Unfence false_1_node1: %d", rc);
+    pcmk__debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "false_1_node1", 10);
-    crm_debug("Status false_1_node1: %d", rc);
+    pcmk__debug("Status false_1_node1: %d", rc);
 
     rc = st->cmds->fence(st, st_opts, "some-host", PCMK_ACTION_OFF, 10, 0);
-    crm_debug("Fence alias: %d", rc);
+    pcmk__debug("Fence alias: %d", rc);
 
     rc = st->cmds->status(st, st_opts, "test-id", "some-host", 10);
-    crm_debug("Status alias: %d", rc);
+    pcmk__debug("Status alias: %d", rc);
 
     rc = st->cmds->fence(st, st_opts, "false_1_node1", PCMK_ACTION_ON, 10, 0);
-    crm_debug("Unfence false_1_node1: %d", rc);
+    pcmk__debug("Unfence false_1_node1: %d", rc);
 
     rc = st->cmds->remove_device(st, st_opts, "test-id");
-    crm_debug("Remove test-id: %d", rc);
+    pcmk__debug("Remove test-id: %d", rc);
 
     stonith_key_value_freeall(params, 1, 1);
 }
@@ -608,7 +608,7 @@ test_shutdown(int nsig)
         rc = st->cmds->disconnect(st);
         pcmk__info("Disconnect: %d", rc);
 
-        crm_debug("Destroy");
+        pcmk__debug("Destroy");
         stonith_api_delete(st);
     }
 

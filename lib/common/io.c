@@ -146,16 +146,16 @@ pcmk__read_series_sequence(const char *directory, const char *series,
     fp = fopen(series_file, "r");
     if (fp == NULL) {
         rc = errno;
-        crm_debug("Could not open series file %s: %s",
-                  series_file, strerror(rc));
+        pcmk__debug("Could not open series file %s: %s", series_file,
+                    strerror(rc));
         free(series_file);
         return rc;
     }
     errno = 0;
     if (fscanf(fp, "%u", seq) != 1) {
         rc = (errno == 0)? ENODATA : errno;
-        crm_debug("Could not read sequence number from series file %s: %s",
-                  series_file, pcmk_rc_str(rc));
+        pcmk__debug("Could not read sequence number from series file %s: %s",
+                    series_file, pcmk_rc_str(rc));
         fclose(fp);
         return rc;
     }

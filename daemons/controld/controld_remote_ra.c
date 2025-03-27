@@ -654,16 +654,16 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     CRM_CHECK((op != NULL) && (op->remote_nodename != NULL), return);
 
-    crm_debug("Processing '%s%s%s' event on remote connection to %s: %s "
-              "(%d) status=%s (%d)",
-              (op->op_type? op->op_type : ""), (op->op_type? " " : ""),
-              lrmd_event_type2str(op->type), op->remote_nodename,
-              crm_exit_str((crm_exit_t) op->rc), op->rc,
-              pcmk_exec_status_str(op->op_status), op->op_status);
+    pcmk__debug("Processing '%s%s%s' event on remote connection to %s: %s "
+                "(%d) status=%s (%d)",
+                pcmk__s(op->op_type, ""), ((op->op_type != NULL)? " " : ""),
+                lrmd_event_type2str(op->type), op->remote_nodename,
+                crm_exit_str((crm_exit_t) op->rc), op->rc,
+                pcmk_exec_status_str(op->op_status), op->op_status);
 
     lrm_state = controld_get_executor_state(op->remote_nodename, false);
     if (!lrm_state || !lrm_state->remote_ra_data) {
-        crm_debug("No state information found for remote connection event");
+        pcmk__debug("No state information found for remote connection event");
         return;
     }
     ra_data = lrm_state->remote_ra_data;
@@ -691,7 +691,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     /* filter all EXEC events up */
     if (op->type == lrmd_event_exec_complete) {
         if (pcmk__is_set(ra_data->status, takeover_complete)) {
-            crm_debug("ignoring event, this connection is taken over by another node");
+            pcmk__debug("ignoring event, this connection is taken over by "
+                        "another node");
         } else {
             lrm_op_callback(op);
         }
@@ -701,8 +702,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     if ((op->type == lrmd_event_disconnect) && (ra_data->cur_cmd == NULL)) {
 
         if (!pcmk__is_set(ra_data->status, remote_active)) {
-            crm_debug("Disconnection from Pacemaker Remote node %s complete",
-                      lrm_state->node_name);
+            pcmk__debug("Disconnection from Pacemaker Remote node %s complete",
+                        lrm_state->node_name);
 
         } else if (!remote_ra_is_in_maintenance(lrm_state)) {
             pcmk__err("Lost connection to Pacemaker Remote node %s",
@@ -724,7 +725,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     }
 
     if (!ra_data->cur_cmd) {
-        crm_debug("no event to match");
+        pcmk__debug("no event to match");
         return;
     }
 
@@ -764,7 +765,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             lrm_remote_set_flags(lrm_state, remote_active);
         }
 
-        crm_debug("Remote connection event matched %s action", cmd->action);
+        pcmk__debug("Remote connection event matched %s action", cmd->action);
         report_remote_ra_result(cmd);
         cmd_handled = TRUE;
 
@@ -786,7 +787,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd_set_flags(cmd, cmd_reported_success);
         }
 
-        crm_debug("Remote poke event matched %s action", cmd->action);
+        pcmk__debug("Remote poke event matched %s action", cmd->action);
 
         /* success, keep rescheduling if interval is present. */
         if (cmd->interval_ms && !pcmk__is_set(cmd->status, cmd_cancel)) {
@@ -815,7 +816,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         cmd_handled = TRUE;
 
     } else {
-        crm_debug("Event did not match %s action", ra_data->cur_cmd->action);
+        pcmk__debug("Event did not match %s action", ra_data->cur_cmd->action);
     }
 
     if (cmd_handled) {
@@ -931,8 +932,9 @@ handle_remote_ra_exec(gpointer user_data)
             if (handle_remote_ra_start(lrm_state, cmd,
                                        cmd->timeout) == pcmk_rc_ok) {
                 /* take care of this later when we get async connection result */
-                crm_debug("Initiated async remote connection, %s action will complete after connect event",
-                          cmd->action);
+                pcmk__debug("Initiated async remote connection, %s action will "
+                            "complete after connect event",
+                            cmd->action);
                 ra_data->cur_cmd = cmd;
                 return TRUE;
             }
@@ -953,8 +955,9 @@ handle_remote_ra_exec(gpointer user_data)
             }
 
             if (rc == 0) {
-                crm_debug("Poked Pacemaker Remote at node %s, waiting for async response",
-                          cmd->rsc_id);
+                pcmk__debug("Poked Pacemaker Remote at node %s, waiting for "
+                            "async response",
+                            cmd->rsc_id);
                 ra_data->cur_cmd = cmd;
                 cmd->monitor_timeout_id = pcmk__create_timer(cmd->timeout, monitor_timeout_cb, cmd);
                 return TRUE;

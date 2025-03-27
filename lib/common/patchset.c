@@ -403,8 +403,8 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
                       current[i], vfields[i],
                       ((current[i] < 0)? ", using 0" : ""));
         } else {
-            crm_debug("Failed to get value for current[%s], using 0",
-                      vfields[i]);
+            pcmk__debug("Failed to get value for current[%s], using 0",
+                        vfields[i]);
         }
         if (current[i] < 0) {
             current[i] = 0;
@@ -434,11 +434,11 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     // Ensure current version matches patchset source version
     for (int i = 0; i < PCMK__NELEM(vfields); i++) {
         if (current[i] < source[i]) {
-            crm_debug("Current %s is too low "
-                      "(%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
-                      vfields[i], current[0], current[1], current[2],
-                      source[0], source[1], source[2],
-                      target[0], target[1], target[2]);
+            pcmk__debug("Current %s is too low "
+                        "(%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
+                        vfields[i], current[0], current[1], current[2],
+                        source[0], source[1], source[2],
+                        target[0], target[1], target[2]);
             return pcmk_rc_diff_resync;
         }
         if (current[i] > source[i]) {
@@ -455,9 +455,9 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     // Ensure target version is newer than source version
     for (int i = 0; i < PCMK__NELEM(vfields); i++) {
         if (target[i] > source[i]) {
-            crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
-                      target[0], target[1], target[2],
-                      current[0], current[1], current[2]);
+            pcmk__debug("Can apply patch %d.%d.%d to %d.%d.%d",
+                        target[0], target[1], target[2],
+                        current[0], current[1], current[2]);
             return pcmk_rc_ok;
         }
     }
@@ -576,7 +576,7 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
                   (path = (char *) xmlGetNodePath(target)), key);
         free(path);
     } else {
-        crm_debug("No match for %s", key);
+        pcmk__debug("No match for %s", key);
     }
 
     free(remainder);
@@ -652,7 +652,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if ((match == NULL) && (strcmp(op, PCMK_VALUE_DELETE) == 0)) {
-            crm_debug("No %s match for %s in %p", op, xpath, xml->doc);
+            pcmk__debug("No %s match for %s in %p", op, xpath, xml->doc);
             continue;
 
         } else if (match == NULL) {

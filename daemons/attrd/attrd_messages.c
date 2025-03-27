@@ -106,7 +106,7 @@ handle_confirm_request(pcmk__request_t *request)
     if (request->peer != NULL) {
         int callid;
 
-        crm_debug("Received confirmation from %s", request->peer);
+        pcmk__debug("Received confirmation from %s", request->peer);
 
         if (pcmk__xe_get_int(request->xml, PCMK__XA_CALL_ID,
                              &callid) != pcmk_rc_ok) {
@@ -297,7 +297,7 @@ attrd_handle_request(pcmk__request_t *request)
     if (!pcmk__result_ok(&request->result)) {
         pcmk__warn("%s", log_msg);
     } else {
-        crm_debug("%s", log_msg);
+        pcmk__debug("%s", log_msg);
     }
 
     free(log_msg);
@@ -323,8 +323,8 @@ attrd_broadcast_protocol(void)
     pcmk__xe_set(attrd_op, PCMK__XA_ATTR_HOST_ID,
                  attrd_cluster->priv->node_xml_id);
 
-    crm_debug("Broadcasting attrd protocol version %s for node %s",
-              ATTRD_PROTOCOL_VERSION, attrd_cluster->priv->node_name);
+    pcmk__debug("Broadcasting attrd protocol version %s for node %s",
+                ATTRD_PROTOCOL_VERSION, attrd_cluster->priv->node_name);
 
     attrd_send_message(NULL, attrd_op, false); /* ends up at attrd_peer_message() */
 

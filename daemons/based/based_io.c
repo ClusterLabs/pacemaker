@@ -110,7 +110,7 @@ static int cib_archive_filter(const struct dirent * a)
         crm_trace("%s - wrong suffix", a->d_name);
 
     } else {
-        crm_debug("%s - candidate", a->d_name);
+        pcmk__debug("%s - candidate", a->d_name);
         rc = 1;
     }
 
@@ -304,7 +304,7 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
         the_cib = new_cib;
         pcmk__xml_free(saved_cib);
         if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
-            crm_debug("Triggering CIB write for %s op", op);
+            pcmk__debug("Triggering CIB write for %s op", op);
             mainloop_set_trigger(cib_writer);
         }
         return pcmk_ok;

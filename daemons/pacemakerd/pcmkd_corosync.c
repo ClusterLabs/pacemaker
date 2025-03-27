@@ -11,6 +11,8 @@
 #include "pacemakerd.h"
 #include "pcmkd_corosync.h"
 
+#include <inttypes.h>                   // PRIu32
+#include <stdint.h>                     // uint32_t
 #include <sys/utsname.h>
 #include <sys/stat.h>           /* for calls to stat() */
 #include <libgen.h>             /* For basename() and dirname() */
@@ -138,7 +140,7 @@ cluster_disconnect_cfg(void)
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
 	    counter++;					\
-	    crm_debug("Retrying Corosync operation after %ds", counter);    \
+	    pcmk__debug("Retrying Corosync operation after %ds", counter);  \
 	    sleep(counter);				\
 	} else {                                        \
             break;                                      \
@@ -196,7 +198,7 @@ cluster_connect_cfg(void)
                    QB_XS " rc=%d", cs_strerror(rc), rc);
         goto bail;
     }
-    crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
+    pcmk__debug("Corosync reports local node ID is %" PRIu32, nodeid);
 
 #ifdef HAVE_COROSYNC_CFG_TRACKSTART
     retries = 0;

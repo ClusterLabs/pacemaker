@@ -98,7 +98,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
             pcmk__info("We are now in R/W mode");
             based_is_primary = true;
         } else {
-            crm_debug("We are still in R/W mode");
+            pcmk__debug("We are still in R/W mode");
         }
 
     } else if (based_is_primary) {
@@ -419,7 +419,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     CRM_CHECK(the_cib != NULL, return -EINVAL);
     CRM_CHECK(all || (host != NULL), return -EINVAL);
 
-    crm_debug("Syncing CIB to %s", all ? "all peers" : host);
+    pcmk__debug("Syncing CIB to %s", (all? "all peers" : host));
 
     replace_request = cib_msg_copy(request);
 

@@ -117,11 +117,11 @@ cib_client_del_notify_callback(cib_t *cib, const char *event,
     }
 
     if (get_notify_list_event_count(cib, event) == 0) {
-        crm_debug("The callback of the event does not exist(%s)", event);
+        pcmk__debug("The callback of the event does not exist(%s)", event);
         return pcmk_ok;
     }
 
-    crm_debug("Removing callback for %s events", event);
+    pcmk__debug("Removing callback for %s events", event);
 
     new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
@@ -155,8 +155,8 @@ cib_async_timeout_handler(gpointer data)
 {
     struct timer_rec_s *timer = data;
 
-    crm_debug("Async call %d timed out after %ds",
-              timer->call_id, timer->timeout);
+    pcmk__debug("Async call %d timed out after %ds", timer->call_id,
+                timer->timeout);
     cib_native_callback(timer->cib, NULL, timer->call_id, -ETIME);
 
     // We remove the handler in remove_cib_op_callback()
@@ -604,8 +604,8 @@ cib_new(void)
         server = "localhost";
     }
 
-    crm_debug("Initializing %s remote CIB access to %s:%d as user %s",
-              (encrypted? "encrypted" : "plain-text"), server, port, user);
+    pcmk__debug("Initializing %s remote CIB access to %s:%d as user %s",
+                (encrypted? "encrypted" : "plain-text"), server, port, user);
     return cib_remote_new(server, user, pass, port, encrypted);
 }
 
@@ -752,7 +752,7 @@ cib_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
     int call = GPOINTER_TO_INT(key);
     cib_callback_client_t *blob = value;
 
-    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "without ID"));
+    pcmk__debug("Call %d (%s): pending", call, pcmk__s(blob->id, "without ID"));
 }
 
 void

@@ -14,6 +14,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdbool.h>
+#include <stdint.h>                     // uint32_t, etc.
 #include <sys/socket.h>
 #include <sys/utsname.h>
 
@@ -124,8 +125,8 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
             rc = pcmk__init_cmap(&local_handle);
             if (rc != CS_OK) {
                 retries++;
-                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
-                          retries);
+                pcmk__debug("API connection setup failed: %s. Retrying in %ds",
+                            cs_strerror(rc), retries);
                 sleep(retries);
             }
 
@@ -314,7 +315,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
     for (i = 0; i < view_list_entries; i++) {
         uint32_t id = view_list[i];
 
-        crm_debug("Member[%d] %u ", i, id);
+        pcmk__debug("Member[%d] %" PRIu32, i, id);
 
         /* Get this node's peer cache entry (adding one if not already there) */
         node = pcmk__get_node(id, NULL, NULL, pcmk__node_search_cluster_member);
@@ -364,7 +365,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
     quorum_fd_callbacks.dispatch = quorum_dispatch_cb;
     quorum_fd_callbacks.destroy = destroy;
 
-    crm_debug("Configuring Pacemaker to obtain quorum from Corosync");
+    pcmk__debug("Configuring Pacemaker to obtain quorum from Corosync");
 
     {
 #if 0
@@ -580,8 +581,8 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         rc = pcmk__init_cmap(&cmap_handle);
         if (rc != CS_OK) {
             retries++;
-            crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
-                      retries);
+            pcmk__debug("API connection setup failed: %s. Retrying in %ds",
+                        cs_strerror(rc), retries);
             sleep(retries);
         }
 
@@ -725,7 +726,7 @@ pcmk__corosync_cluster_name(void)
                    rc);
 
     } else {
-        crm_debug("cmap totem.cluster_name = '%s'", cluster_name);
+        pcmk__debug("cmap totem.cluster_name = '%s'", cluster_name);
     }
 
 bail:
@@ -765,8 +766,8 @@ pcmk__corosync_has_nodelist(void)
         cs_rc = pcmk__init_cmap(&cmap_handle);
         if (cs_rc != CS_OK) {
             retries++;
-            crm_debug("CMAP connection failed: %s (rc=%d, retrying in %ds)",
-                      cs_strerror(cs_rc), cs_rc, retries);
+            pcmk__debug("CMAP connection failed: %s (rc=%d, retrying in %ds)",
+                        cs_strerror(cs_rc), cs_rc, retries);
             sleep(retries);
         }
     } while ((retries < 5) && (cs_rc != CS_OK));
@@ -819,7 +820,7 @@ pcmk__corosync_has_nodelist(void)
 
     cmap_iter_finalize(cmap_handle, iter_handle);
     got_result = true;
-    crm_debug("Corosync %s node list", (result? "has" : "does not have"));
+    pcmk__debug("Corosync %s node list", (result? "has" : "does not have"));
 
 bail:
     cmap_finalize(cmap_handle);

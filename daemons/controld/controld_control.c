@@ -161,7 +161,7 @@ crmd_exit(crm_exit_t exit_code)
     static bool in_progress = FALSE;
 
     if (in_progress && (exit_code == CRM_EX_OK)) {
-        crm_debug("Exit is already in progress");
+        pcmk__debug("Exit is already in progress");
         return exit_code;
 
     } else if(in_progress) {
@@ -192,7 +192,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_disconnect_fencer(TRUE);
 
     if ((exit_code == CRM_EX_OK) && (controld_globals.mainloop == NULL)) {
-        crm_debug("No mainloop detected");
+        pcmk__debug("No mainloop detected");
         exit_code = CRM_EX_ERROR;
     }
 
@@ -346,7 +346,7 @@ do_startup(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    crm_debug("Registering Signal Handlers");
+    pcmk__debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, sigpipe_ignore);
 
@@ -356,7 +356,7 @@ do_startup(long long action,
     controld_init_fsa_trigger();
     controld_init_transition_trigger();
 
-    crm_debug("Creating CIB manager and executor objects");
+    pcmk__debug("Creating CIB manager and executor objects");
     controld_globals.cib_conn = cib_new();
 
     lrm_state_init_local();
@@ -499,7 +499,7 @@ do_started(long long action,
         return;
     }
 
-    crm_debug("Init server comms");
+    pcmk__debug("Init server comms");
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
     if (ipcs == NULL) {
         pcmk__err("Failed to create IPC server: shutting down and inhibiting "
@@ -568,7 +568,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         goto bail;
     }
 
-    crm_debug("Call %d : Parsing CIB options", call_id);
+    pcmk__debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
     pcmk_unpack_nvpair_blocks(crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET,
                               PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,

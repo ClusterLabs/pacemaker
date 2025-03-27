@@ -110,9 +110,9 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
     pcmk__xml_free(msg);
-    crm_debug("Accepted IPC proxy connection (session ID %s) "
-              "from uid %d gid %d on channel %s",
-              client->id, uid, gid, ipc_channel);
+    pcmk__debug("Accepted IPC proxy connection (session ID %s) from uid %d "
+                "gid %d on channel %s",
+                client->id, uid, gid, ipc_channel);
     return 0;
 }
 

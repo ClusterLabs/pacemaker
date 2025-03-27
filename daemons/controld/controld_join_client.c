@@ -55,7 +55,7 @@ do_cl_join_query(long long action,
 
     sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
-    crm_debug("Querying for a DC");
+    pcmk__debug("Querying for a DC");
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
     pcmk__xml_free(req);
 }
@@ -84,7 +84,7 @@ do_cl_join_announce(long long action,
                                          NULL, CRM_SYSTEM_DC,
                                          CRM_OP_JOIN_ANNOUNCE, NULL);
 
-        crm_debug("Announcing availability");
+        pcmk__debug("Announcing availability");
         update_dc(NULL);
         pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
         pcmk__xml_free(req);
@@ -165,7 +165,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
 
     } else if (controld_globals.dc_name == NULL) {
-        crm_debug("Membership is in flux, not continuing join-%s", join_id);
+        pcmk__debug("Membership is in flux, not continuing join-%s", join_id);
 
     } else {
         xmlNode *join_request = NULL;
@@ -173,8 +173,8 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
-        crm_debug("Respond to join offer join-%s from %s",
-                  join_id, controld_globals.dc_name);
+        pcmk__debug("Respond to join offer join-%s from %s", join_id,
+                    controld_globals.dc_name);
         pcmk__xe_copy_attrs(generation, output, pcmk__xaf_none);
 
         join_request = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
@@ -219,7 +219,7 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               (remote? PCMK_VALUE_REMOTE : NULL));
 
     } else if (pcmk__str_eq(start_state, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        crm_debug("Not forcing a starting state on node %s", node_name);
+        pcmk__debug("Not forcing a starting state on node %s", node_name);
 
     } else {
         pcmk__warn("Unrecognized start state '%s', using "
@@ -324,8 +324,8 @@ do_cl_join_finalize_respond(long long action,
 
         pcmk__xe_set_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
 
-        crm_debug("Confirming join-%d: sending local operation history to %s",
-                  join_id, controld_globals.dc_name);
+        pcmk__debug("Confirming join-%d: sending local operation history to %s",
+                    join_id, controld_globals.dc_name);
 
         /*
          * If this is the node's first join since the controller started on it,

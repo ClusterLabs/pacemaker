@@ -256,15 +256,15 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
     pcmk_parse_interval_spec(value, &(scheduler->priv->fence_timeout_ms));
 
-    crm_debug("Default fencing action timeout: %s",
-              pcmk__readable_interval(scheduler->priv->fence_timeout_ms));
+    pcmk__debug("Default fencing action timeout: %s",
+                pcmk__readable_interval(scheduler->priv->fence_timeout_ms));
 
     set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
                     pcmk__sched_fencing_enabled);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-        crm_debug("STONITH of failed nodes is enabled");
+        pcmk__debug("STONITH of failed nodes is enabled");
     } else {
-        crm_debug("STONITH of failed nodes is disabled");
+        pcmk__debug("STONITH of failed nodes is disabled");
     }
 
     scheduler->priv->fence_action =
@@ -274,9 +274,9 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
                     pcmk__sched_concurrent_fencing);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_concurrent_fencing)) {
-        crm_debug("Concurrent fencing is enabled");
+        pcmk__debug("Concurrent fencing is enabled");
     } else {
-        crm_debug("Concurrent fencing is disabled");
+        pcmk__debug("Concurrent fencing is disabled");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
@@ -289,13 +289,14 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     set_config_flag(scheduler, PCMK_OPT_STOP_ALL_RESOURCES,
                     pcmk__sched_stop_all);
-    crm_debug("Stop all active resources: %s",
-              pcmk__flag_text(scheduler->flags, pcmk__sched_stop_all));
+    pcmk__debug("Stop all active resources: %s",
+                pcmk__flag_text(scheduler->flags, pcmk__sched_stop_all));
 
     set_config_flag(scheduler, PCMK_OPT_SYMMETRIC_CLUSTER,
                     pcmk__sched_symmetric_cluster);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
-        crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
+        pcmk__debug("Cluster is symmetric" " - resources can run anywhere by "
+                    "default");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
@@ -337,16 +338,16 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     switch (scheduler->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
-            crm_debug("On loss of quorum: "
-                      "Freeze resources that require quorum");
+            pcmk__debug("On loss of quorum: Freeze resources that require "
+                        "quorum");
             break;
         case pcmk_no_quorum_stop:
-            crm_debug("On loss of quorum: "
-                      "Stop resources that require quorum");
+            pcmk__debug("On loss of quorum: Stop resources that require "
+                        "quorum");
             break;
         case pcmk_no_quorum_demote:
-            crm_debug("On loss of quorum: "
-                      "Demote promotable resources and stop other resources");
+            pcmk__debug("On loss of quorum: Demote promotable resources and "
+                        "stop other resources");
             break;
         case pcmk_no_quorum_fence:
             pcmk__notice("On loss of quorum: Fence all remaining nodes");
@@ -1596,8 +1597,8 @@ determine_online_status_no_fencing(pcmk_scheduler_t *scheduler,
         if (pcmk__str_eq(join, CRMD_JOINSTATE_MEMBER, pcmk__str_casei)) {
             online = TRUE;
         } else {
-            crm_debug("Node %s is not ready to run resources: %s",
-                      pcmk__node_name(this_node), join);
+            pcmk__debug("Node %s is not ready to run resources: %s",
+                        pcmk__node_name(this_node), join);
         }
 
     } else if (!pcmk__is_set(this_node->priv->flags,
@@ -1686,7 +1687,7 @@ determine_online_status_fencing(pcmk_scheduler_t *scheduler,
               (termination_requested? " (termination requested)" : ""));
 
     if (this_node->details->shutdown) {
-        crm_debug("%s is shutting down", pcmk__node_name(this_node));
+        pcmk__debug("%s is shutting down", pcmk__node_name(this_node));
 
         /* Slightly different criteria since we can't shut down a dead peer */
         return (when_online > 0);
@@ -2003,7 +2004,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     if (xml_contains_remote_node(xml_rsc)) {
         pcmk_node_t *node;
 
-        crm_debug("Detected orphaned remote node %s", rsc_id);
+        pcmk__debug("Detected orphaned remote node %s", rsc_id);
         node = pcmk_find_node(scheduler, rsc_id);
         if (node == NULL) {
             node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, 0,
@@ -2279,8 +2280,8 @@ process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
     pcmk_resource_t *rsc = NULL;
     const char *rsc_id = pcmk__xe_get(rsc_entry, PCMK_XA_ID);
 
-    crm_debug("Detected orphan resource %s on %s",
-              rsc_id, pcmk__node_name(node));
+    pcmk__debug("Detected orphan resource %s on %s", rsc_id,
+                pcmk__node_name(node));
     rsc = create_fake_resource(rsc_id, rsc_entry, scheduler);
     if (rsc == NULL) {
         return NULL;

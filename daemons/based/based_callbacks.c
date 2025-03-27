@@ -175,10 +175,11 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
 
     client_obj = pcmk__find_client_by_id(client_id);
     if (client_obj == NULL) {
-        crm_debug("Could not notify client %s%s %s of call %d result: "
-                  "client no longer exists", client_id,
-                  (from_peer? " (originator of delegated request)" : ""),
-                  (sync_reply? "synchronously" : "asynchronously"), msg_id);
+        pcmk__debug("Could not notify client %s%s %s of call %d result: "
+                    "client no longer exists",
+                    client_id,
+                    (from_peer? " (originator of delegated request)" : ""),
+                    (sync_reply? "synchronously" : "asynchronously"), msg_id);
         return;
     }
 
@@ -260,8 +261,8 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 
         pcmk__xe_get_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE, &on_off);
 
-        crm_debug("Setting %s callbacks %s for client %s",
-                  type, (on_off? "on" : "off"), pcmk__client_name(cib_client));
+        pcmk__debug("Setting %s callbacks %s for client %s", type,
+                    (on_off? "on" : "off"), pcmk__client_name(cib_client));
 
         if (pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY, pcmk__str_none)) {
             bit = cib_notify_post;
@@ -410,7 +411,7 @@ process_ping_reply(xmlNode *reply)
     const char *digest = pcmk__xe_get(pong, PCMK__XA_DIGEST);
 
     if (seq_s == NULL) {
-        crm_debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
+        pcmk__debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
         return;
 
     } else {
@@ -418,8 +419,9 @@ process_ping_reply(xmlNode *reply)
         int rc = pcmk__scan_ll(seq_s, &seq_ll, 0LL);
 
         if (rc != pcmk_rc_ok) {
-            crm_debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID
-                      " '%s': %s", seq_s, pcmk_rc_str(rc));
+            pcmk__debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID
+                        " '%s': %s",
+                        seq_s, pcmk_rc_str(rc));
             return;
         }
         seq = (uint64_t) seq_ll;
@@ -630,8 +632,8 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         if (reply_to == NULL) {
             *process = TRUE;
         } else { // Not possible?
-            crm_debug("Ignoring shutdown request from %s because reply_to=%s",
-                      originator, reply_to);
+            pcmk__debug("Ignoring shutdown request from %s because reply_to=%s",
+                        originator, reply_to);
         }
         return *process;
     }
@@ -1292,7 +1294,7 @@ cib_shutdown(int nsig)
 
             c = qb_ipcs_connection_next_get(ipcs_rw, last);
 
-            crm_debug("Disconnecting r/w client %p...", last);
+            pcmk__debug("Disconnecting r/w client %p...", last);
             qb_ipcs_disconnect(last);
             qb_ipcs_connection_unref(last);
             disconnects++;
@@ -1304,7 +1306,7 @@ cib_shutdown(int nsig)
 
             c = qb_ipcs_connection_next_get(ipcs_ro, last);
 
-            crm_debug("Disconnecting r/o client %p...", last);
+            pcmk__debug("Disconnecting r/o client %p...", last);
             qb_ipcs_disconnect(last);
             qb_ipcs_connection_unref(last);
             disconnects++;
@@ -1316,7 +1318,7 @@ cib_shutdown(int nsig)
 
             c = qb_ipcs_connection_next_get(ipcs_shm, last);
 
-            crm_debug("Disconnecting non-blocking r/w client %p...", last);
+            pcmk__debug("Disconnecting non-blocking r/w client %p...", last);
             qb_ipcs_disconnect(last);
             qb_ipcs_connection_unref(last);
             disconnects++;
@@ -1324,7 +1326,8 @@ cib_shutdown(int nsig)
 
         disconnects += pcmk__ipc_client_count();
 
-        crm_debug("Disconnecting %d remote clients", pcmk__ipc_client_count());
+        pcmk__debug("Disconnecting %d remote clients",
+                    pcmk__ipc_client_count());
         pcmk__foreach_ipc_client(disconnect_remote_client, NULL);
         pcmk__info("Disconnected %d clients", disconnects);
     }

@@ -266,7 +266,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         if (!pcmk__result_ok(&request.result)) {
             pcmk__warn("%s", log_msg);
         } else {
-            crm_debug("%s", log_msg);
+            pcmk__debug("%s", log_msg);
         }
 
         free(log_msg);
