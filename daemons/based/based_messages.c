@@ -273,7 +273,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
                 pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
                 if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
-                    crm_warn("Could not send CIB upgrade result to %s", host);
+                    pcmk__warn("Could not send CIB upgrade result to %s", host);
                 }
                 pcmk__xml_free(up);
             }
@@ -338,7 +338,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     } else if (rc == -pcmk_err_diff_resync) {
         rc = -pcmk_err_diff_failed;
         if (options & cib_force_diff) {
-            crm_warn("Not requesting full refresh in R/W mode");
+            pcmk__warn("Not requesting full refresh in R/W mode");
         }
     }
 
@@ -497,13 +497,13 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
     wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
     data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     if (data == NULL) {
-        crm_warn("No data specified in request");
+        pcmk__warn("No data specified in request");
         return -EPROTO;
     }
 
     after_ver = pcmk__xe_get(data, PCMK_XA_VERSION);
     if (after_ver == NULL) {
-        crm_warn("No version specified in request");
+        pcmk__warn("No version specified in request");
         return -EPROTO;
     }
 

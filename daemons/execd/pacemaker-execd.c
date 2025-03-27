@@ -424,8 +424,9 @@ main(int argc, char **argv)
         int rc = pcmk__build_path(PCMK__OCF_TMP_DIR, 0755);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Could not create resource agent temporary directory "
-                     PCMK__OCF_TMP_DIR ": %s", pcmk_rc_str(rc));
+            pcmk__warn("Could not create resource agent temporary directory "
+                       PCMK__OCF_TMP_DIR ": %s",
+                       pcmk_rc_str(rc));
         }
     }
 

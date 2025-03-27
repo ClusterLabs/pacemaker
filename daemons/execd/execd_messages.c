@@ -47,8 +47,8 @@ handle_ipc_fwd_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -107,8 +107,8 @@ handle_alert_exec_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -142,8 +142,8 @@ handle_check_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -180,8 +180,8 @@ handle_get_recurring_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -226,8 +226,8 @@ handle_rsc_cancel_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -261,8 +261,8 @@ handle_rsc_exec_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -301,8 +301,8 @@ handle_rsc_info_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -337,8 +337,8 @@ handle_rsc_reg_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -366,8 +366,8 @@ handle_rsc_unreg_request(pcmk__request_t *request)
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_ERROR, NULL);
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 request->op, pcmk__client_name(request->ipc_client));
+        pcmk__warn("Rejecting IPC request '%s' from unprivileged client %s",
+                   request->op, pcmk__client_name(request->ipc_client));
         return NULL;
     }
 
@@ -620,8 +620,8 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
 
             rc = lrmd_server_send_reply(c, id, reply);
             if (rc != pcmk_rc_ok) {
-                crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
-                         pcmk__client_name(c), pcmk_rc_str(rc), rc);
+                pcmk__warn("Reply to client %s failed: %s " QB_XS " rc=%d",
+                           pcmk__client_name(c), pcmk_rc_str(rc), rc);
             }
 
             pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &reply_rc);
@@ -646,7 +646,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
                                         ((reason == NULL)? "" : ")"));
 
         if (!pcmk__result_ok(&request.result)) {
-            crm_warn("%s", log_msg);
+            pcmk__warn("%s", log_msg);
         } else {
             crm_debug("%s", log_msg);
         }

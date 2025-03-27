@@ -42,8 +42,8 @@ attrd_create_attribute(xmlNode *xml)
     if (!is_private && !pcmk__str_any_of(set_type,
                                          PCMK_XE_INSTANCE_ATTRIBUTES,
                                          PCMK_XE_UTILIZATION, NULL)) {
-        crm_warn("Ignoring attribute %s with invalid set type %s",
-                 pcmk__s(name, "(unidentified)"), set_type);
+        pcmk__warn("Ignoring attribute %s with invalid set type %s",
+                   pcmk__s(name, "(unidentified)"), set_type);
         return NULL;
     }
 
@@ -61,8 +61,8 @@ attrd_create_attribute(xmlNode *xml)
 
     if (dampen_s != NULL) {
         if ((pcmk__parse_ms(dampen_s, &dampen) != pcmk_rc_ok) || (dampen < 0)) {
-            crm_warn("Ignoring invalid delay %s for attribute %s", dampen_s,
-                     a->id);
+            pcmk__warn("Ignoring invalid delay %s for attribute %s", dampen_s,
+                       a->id);
 
         } else if (dampen > 0) {
             a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
@@ -86,14 +86,14 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
     long long dampen = 0;
 
     if (dvalue == NULL) {
-        crm_warn("Could not update %s: peer did not specify value for delay",
-                 attr);
+        pcmk__warn("Could not update %s: peer did not specify value for delay",
+                   attr);
         return EINVAL;
     }
 
     if ((pcmk__parse_ms(dvalue, &dampen) != pcmk_rc_ok) || (dampen < 0)) {
-        crm_warn("Could not update %s: invalid delay value %dms (%s)",
-                 attr, dampen, dvalue);
+        pcmk__warn("Could not update %s: invalid delay value %dms (%s)", attr,
+                   dampen, dvalue);
         return EINVAL;
     }
 
@@ -203,7 +203,7 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
             }
 
         } else {
-            crm_warn("Could not update %s: attribute not found", attr);
+            pcmk__warn("Could not update %s: attribute not found", attr);
             return NULL;
         }
     }

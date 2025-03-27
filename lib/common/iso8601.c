@@ -2043,10 +2043,10 @@ pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec)
             size_t nbytes = 0;
 
             // @COMPAT Drop this fallback
-            crm_warn("Could not format time using format string '%s' with "
-                     "g_date_time_format(); trying strftime(). In a future "
-                     "release, use of strftime() as a fallback will be removed",
-                     format);
+            pcmk__warn("Could not format time using format string '%s' with "
+                       "g_date_time_format(); trying strftime(). In a future "
+                       "release, use of strftime() as a fallback will be "
+                       "removed", format);
 
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push

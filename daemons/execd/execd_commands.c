@@ -482,10 +482,10 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
      */
-    crm_warn("Duplicate recurring op entry detected (" PCMK__OP_FMT
-             "), merging with previous op entry",
-             rsc->rsc_id, normalize_action_name(rsc, dup->action),
-             dup->interval_ms);
+    pcmk__warn("Duplicate recurring op entry detected (" PCMK__OP_FMT "), "
+               "merging with previous op entry",
+               rsc->rsc_id, normalize_action_name(rsc, dup->action),
+               dup->interval_ms);
 
     // Merge new action's call ID and user data into existing action
     dup->first_notify_sent = false;
@@ -1119,8 +1119,8 @@ execd_fencer_connection_failed(void)
     GHashTableIter iter;
     lrmd_rsc_t *rsc = NULL;
 
-    crm_warn("Connection to fencer lost (any pending operations for "
-             "fence devices will be considered failed)");
+    pcmk__warn("Connection to fencer lost (any pending operations for fence "
+               "devices will be considered failed)");
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &rsc)) {

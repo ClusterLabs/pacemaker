@@ -43,7 +43,8 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
         } else if (!AM_I_DC
                    && pcmk__str_eq(node->name, controld_globals.dc_name,
                                    pcmk__str_casei)) {
-            crm_warn("Our DC node (%s) left the cluster", node->name);
+
+            pcmk__warn("Our DC node (%s) left the cluster", node->name);
             controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
         }
     }

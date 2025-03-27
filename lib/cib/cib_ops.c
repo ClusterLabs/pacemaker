@@ -569,8 +569,8 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         pcmk__xe_set(xml_node, PCMK_XA_OPERATION, operation);
         pcmk__xe_set(xml_node, PCMK_XA_REASON, error_msg);
 
-        crm_warn("Action %s failed: %s (cde=%d)",
-                 operation, error_msg, return_code);
+        pcmk__warn("Action %s failed: %s (cde=%d)", operation, error_msg,
+                   return_code);
     }
 
     return was_error;
@@ -739,7 +739,9 @@ cib_process_xpath(const char *op, int options, const char *section,
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
             if (match == *result_cib) {
                 /* Attempting to delete the whole "/cib" */
-                crm_warn("Cannot perform %s for %s: The xpath is addressing the whole /cib", op, section);
+                pcmk__warn("Cannot perform %s for %s: The xpath is addressing "
+                           "the whole /cib",
+                           op, section);
                 rc = -EINVAL;
                 break;
             }

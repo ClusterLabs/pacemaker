@@ -49,7 +49,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     struct cib_notification_s *update = user_data;
 
     if (client->ipcs == NULL && client->remote == NULL) {
-        crm_warn("Skipping client with NULL channel");
+        pcmk__warn("Skipping client with NULL channel");
         return;
     }
 
@@ -92,9 +92,9 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
              * is called, or when crm_ipcs_flush_events_cb happens.
              */
             if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
-                crm_warn("Could not notify client %s: %s " QB_XS " id=%s",
-                         pcmk__client_name(client), pcmk_rc_str(rc),
-                         client->id);
+                pcmk__warn("Could not notify client %s: %s " QB_XS " id=%s",
+                           pcmk__client_name(client), pcmk_rc_str(rc),
+                           client->id);
             }
             break;
 
