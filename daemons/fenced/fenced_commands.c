@@ -2653,7 +2653,7 @@ log_async_result(const async_command_t *cmd,
                  int pid, const char *next, bool op_merged)
 {
     int log_level = LOG_ERR;
-    int output_log_level = LOG_NEVER;
+    int output_log_level = PCMK__LOG_NEVER;
     guint devices_remaining = g_list_length(cmd->next_device_iter);
 
     GString *msg = g_string_sized_new(80); // Reasonable starting size
@@ -2717,7 +2717,7 @@ log_async_result(const async_command_t *cmd,
     g_string_free(msg, TRUE);
 
     // Log the output (which may have multiple lines), if appropriate
-    if (output_log_level != LOG_NEVER) {
+    if (output_log_level != PCMK__LOG_NEVER) {
         char *prefix = pcmk__assert_asprintf("%s[%d]", cmd->device, pid);
 
         crm_log_output(output_log_level, prefix, result->action_stdout);
@@ -3353,7 +3353,7 @@ handle_query_request(pcmk__request_t *request)
 
     dev = pcmk__xpath_find_one(request->xml->doc,
                                "//*[@" PCMK__XA_ST_DEVICE_ACTION "]",
-                               LOG_NEVER);
+                               PCMK__LOG_NEVER);
     if (dev != NULL) {
         const char *device = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ID);
 

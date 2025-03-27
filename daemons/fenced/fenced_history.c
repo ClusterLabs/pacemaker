@@ -481,7 +481,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     const char *target = NULL;
     xmlNode *dev = pcmk__xpath_find_one(msg->doc,
                                         "//*[@" PCMK__XA_ST_TARGET "]",
-                                        LOG_NEVER);
+                                        PCMK__LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
@@ -531,7 +531,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                  pcmk__str_casei)) {
             xmlNode *history = pcmk__xpath_find_one(msg->doc,
                                                     "//" PCMK__XE_ST_HISTORY,
-                                                    LOG_NEVER);
+                                                    PCMK__LOG_NEVER);
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing

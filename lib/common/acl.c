@@ -333,7 +333,7 @@ pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
 
     } else if (docpriv->acls == NULL) {
         xmlNode *acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
-                                             LOG_NEVER);
+                                             PCMK__LOG_NEVER);
 
         pcmk__str_update(&(docpriv->acl_user), user);
 

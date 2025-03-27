@@ -183,7 +183,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
     if (pcmk__xpath_find_one(msg->doc, "//" PCMK__XE_ST_REPLY,
-                             LOG_NEVER) != NULL) {
+                             PCMK__LOG_NEVER) != NULL) {
         handle_ipc_reply(client, msg);
 
     } else {

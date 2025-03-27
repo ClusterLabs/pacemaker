@@ -1385,7 +1385,7 @@ void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
     xmlNode *maint = pcmk__xpath_find_one(xml->doc, XPATH_PSEUDO_MAINTENANCE,
-                                          LOG_NEVER);
+                                          PCMK__LOG_NEVER);
 
     for (xmlNode *node = pcmk__xe_first_child(maint, PCMK_XE_NODE, NULL, NULL);
          node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {

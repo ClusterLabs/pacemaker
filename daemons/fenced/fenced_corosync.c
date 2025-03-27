@@ -58,7 +58,7 @@ fenced_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
     }
 
     if (pcmk__xpath_find_one(xml->doc, "//" PCMK__XE_ST_REPLY,
-                             LOG_NEVER) != NULL) {
+                             PCMK__LOG_NEVER) != NULL) {
         handle_cpg_reply(peer->name, xml);
 
     } else {
