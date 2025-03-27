@@ -637,9 +637,9 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
                     && (node->cluster_layer_id != nodeid)
                     && pcmk__str_eq(node->name, name, pcmk__str_casei)) {
 
-                    crm_crit("Nodes %" PRIu32 " and %" PRIu32 " share the "
-                             "same name '%s': shutting down",
-                             node->cluster_layer_id, nodeid, name);
+                    pcmk__crit("Nodes %" PRIu32 " and %" PRIu32 " share the "
+                               "same name '%s': shutting down",
+                               node->cluster_layer_id, nodeid, name);
                     crm_exit(CRM_EX_FATAL);
                 }
             }

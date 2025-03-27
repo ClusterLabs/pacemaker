@@ -739,8 +739,8 @@ search_cluster_member_cache(unsigned int id, const char *uname,
 
         if (id && by_name->cluster_layer_id) {
             dump_peer_hash(LOG_WARNING, __func__);
-            crm_crit("Nodes %u and %" PRIu32 " share the same name '%s'",
-                     id, by_name->cluster_layer_id, uname);
+            pcmk__crit("Nodes %u and %" PRIu32 " share the same name '%s'",
+                       id, by_name->cluster_layer_id, uname);
             node = NULL; /* Create a new one */
 
         } else {
@@ -752,9 +752,9 @@ search_cluster_member_cache(unsigned int id, const char *uname,
 
         if ((uname != NULL) && (by_id->name != NULL)) {
             dump_peer_hash(LOG_WARNING, __func__);
-            crm_crit("Nodes '%s' and '%s' share the same cluster nodeid %u: "
-                     "assuming '%s' is correct",
-                     uname, by_id->name, id, uname);
+            pcmk__crit("Nodes '%s' and '%s' share the same cluster nodeid %u: "
+                       "assuming '%s' is correct",
+                       uname, by_id->name, id, uname);
         }
 
     } else if ((uname != NULL) && (by_id->name != NULL)) {
