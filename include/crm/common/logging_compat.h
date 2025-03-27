@@ -63,6 +63,10 @@ extern "C" {
 //! \deprecated Do not use
 #define crm_err(fmt, args...) qb_log(LOG_ERR, fmt, ##args)
 
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define crm_warn(fmt, args...) qb_log(LOG_WARNING, fmt, ##args)
+
 #ifdef __cplusplus
 }
 #endif
