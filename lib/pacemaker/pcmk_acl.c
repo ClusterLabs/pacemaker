@@ -334,7 +334,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
 
     xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
     if (xslt == NULL) {
-        crm_crit("Problem in parsing %s", sfile);
+        pcmk__crit("Problem in parsing %s", sfile);
         rc = EINVAL;
         goto done;
     }

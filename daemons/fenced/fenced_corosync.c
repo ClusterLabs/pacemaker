@@ -168,7 +168,7 @@ fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
 static void
 fenced_cpg_destroy(gpointer unused)
 {
-    crm_crit("Lost connection to cluster layer, shutting down");
+    pcmk__crit("Lost connection to cluster layer, shutting down");
     stonith_shutdown(0);
 }
 #endif // SUPPORT_COROSYNC

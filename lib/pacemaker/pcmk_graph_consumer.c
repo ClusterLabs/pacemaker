@@ -569,7 +569,8 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
      */
     action = calloc(1, sizeof(pcmk__graph_action_t));
     if (action == NULL) {
-        crm_crit("Cannot unpack transition graph action: %s", strerror(errno));
+        pcmk__crit("Cannot unpack transition graph action: %s",
+                   strerror(errno));
         crm_log_xml_trace(xml_action, "lost");
         return NULL;
     }

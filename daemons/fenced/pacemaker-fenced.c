@@ -409,7 +409,7 @@ main(int argc, char **argv)
         exit_code = CRM_EX_OK;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Aborting start-up because a fencer instance is already active");
-        crm_crit("%s", error->message);
+        pcmk__crit("%s", error->message);
         goto done;
     }
 

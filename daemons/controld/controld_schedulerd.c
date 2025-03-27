@@ -76,10 +76,10 @@ handle_disconnect(void)
         int rc = pcmk_ok;
         char *uuid_str = pcmk__generate_uuid();
 
-        crm_crit("Lost connection to the scheduler "
-                 QB_XS " CIB will be saved to "
-                 PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2",
-                 uuid_str);
+        pcmk__crit("Lost connection to the scheduler "
+                   QB_XS " CIB will be saved to "
+                   PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2",
+                   uuid_str);
 
         /* Save the current CIB so that we have a chance of figuring out what
          * killed the scheduler.

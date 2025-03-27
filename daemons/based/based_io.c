@@ -312,7 +312,8 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
     if (the_cib) {
         crm_warn("Reverting to last known CIB");
     } else {
-        crm_crit("Could not write out new CIB and no saved version to revert to");
+        pcmk__crit("Could not write out new CIB and no saved version to revert "
+                   "to");
     }
     return -ENODATA;
 }

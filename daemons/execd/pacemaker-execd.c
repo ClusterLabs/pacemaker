@@ -223,7 +223,7 @@ lrmd_shutdown(int nsig)
 
         crm_info("Sending shutdown request to cluster");
         if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
-            crm_crit("Shutdown request failed, exiting immediately");
+            pcmk__crit("Shutdown request failed, exiting immediately");
 
         } else {
             /* We requested a shutdown. Now, we need to wait for an

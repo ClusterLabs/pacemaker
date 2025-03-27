@@ -169,10 +169,10 @@ check_next_subdaemon(gpointer user_data)
 
             } else if (++(child->check_count) >= PCMK_PROCESS_CHECK_RETRIES) {
                 // cts-lab looks for this message
-                crm_crit("Subdaemon %s[%lld] is unresponsive to IPC "
-                         "after %d attempt%s and will now be killed",
-                         name, pid, child->check_count,
-                         pcmk__plural_s(child->check_count));
+                pcmk__crit("Subdaemon %s[%lld] is unresponsive to IPC "
+                           "after %d attempt%s and will now be killed",
+                           name, pid, child->check_count,
+                           pcmk__plural_s(child->check_count));
                 stop_child(child, SIGKILL);
                 if (pcmk__is_set(child->flags, child_respawn)) {
                     // Respawn limit hasn't been reached, so retry another round
@@ -537,7 +537,7 @@ start_child(pcmkd_child_t * child)
     }
 
     free(path);
-    crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
+    pcmk__crit("Could not execute subdaemon %s: %s", name, strerror(errno));
     crm_exit(CRM_EX_FATAL);
     return pcmk_rc_ok;  // Never reached
 }
@@ -659,8 +659,9 @@ child_up_but_no_ipc(pcmkd_child_t *child)
     const char *ipc_name = pcmk__server_ipc_name(child->server);
 
     if (child->respawn_count == WAIT_TRIES) {
-        crm_crit("%s IPC endpoint for existing process %lld did not (re)appear",
-                 ipc_name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
+        pcmk__crit("%s IPC endpoint for existing process %lld did not "
+                   "(re)appear",
+                   ipc_name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
         return pcmk_rc_ipc_pid_only;
     }
 
@@ -678,9 +679,9 @@ child_alive(pcmkd_child_t *child)
 
     if (child->pid == PCMK__SPECIAL_PID) {
         if (pcmk__is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
-            crm_crit("Cannot track pre-existing process for %s IPC on this "
-                     "platform and PCMK_" PCMK__ENV_FAIL_FAST " requested",
-                     name);
+            pcmk__crit("Cannot track pre-existing process for %s IPC on this "
+                       "platform and PCMK_" PCMK__ENV_FAIL_FAST " requested",
+                       name);
             return EOPNOTSUPP;
 
         } else if (child->respawn_count == WAIT_TRIES) {
@@ -746,8 +747,8 @@ find_and_track_child(pcmkd_child_t *child, int rounds, bool *wait_in_progress)
         }
 
     } else {
-        crm_crit("Checked liveness of %s: %s " QB_XS " rc=%d", name,
-                 pcmk_rc_str(rc), rc);
+        pcmk__crit("Checked liveness of %s: %s " QB_XS " rc=%d", name,
+                   pcmk_rc_str(rc), rc);
     }
 
     return rc;

@@ -141,7 +141,7 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
                     "Aborting start-up because an attribute manager "
                     "instance is already active");
-        crm_crit("%s", error->message);
+        pcmk__crit("%s", error->message);
         goto done;
     }
 
