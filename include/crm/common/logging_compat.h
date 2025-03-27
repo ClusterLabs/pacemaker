@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,9 @@ extern "C" {
 
 //! \deprecated Use qb_log_ctl() directly instead
 #define crm_extended_logging(t, e) qb_log_ctl((t), QB_LOG_CONF_EXTENDED, (e))
+
+//! \deprecated Do not use
+#define crm_emerg(fmt, args...) qb_log(LOG_EMERG, fmt, ##args)
 
 #ifdef __cplusplus
 }

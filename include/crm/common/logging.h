@@ -346,7 +346,6 @@ pcmk__clip_log_level(int level)
         }                                                                   \
     } while (0)
 
-#define crm_emerg(fmt, args...)   qb_log(LOG_EMERG, fmt, ##args)
 #define crm_crit(fmt, args...)    qb_log(LOG_CRIT, fmt, ##args)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
