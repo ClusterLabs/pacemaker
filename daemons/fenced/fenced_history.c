@@ -253,7 +253,7 @@ stonith_xml_history_to_list(const xmlNode *history)
         int execution_status = PCMK_EXEC_DONE;
 
         if (!id) {
-            crm_warn("Malformed fencing history received from peer");
+            pcmk__warn("Malformed fencing history received from peer");
             continue;
         }
 
@@ -402,8 +402,9 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 pcmk__str_eq(op->originator, fenced_get_local_node(),
                              pcmk__str_casei)) {
 
-                crm_warn("Failing pending operation %.8s originated by us but "
-                         "known only from peer history", op->id);
+                pcmk__warn("Failing pending operation %.8s originated by us "
+                           "but known only from peer history",
+                           op->id);
                 op->state = st_failed;
                 set_fencing_completed(op);
 

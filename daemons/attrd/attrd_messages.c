@@ -46,8 +46,9 @@ remove_unsupported_sync_points(pcmk__request_t *request)
 {
     if (request->xml->children != NULL && !ATTRD_SUPPORTS_MULTI_MESSAGE(minimum_protocol_version) &&
         attrd_request_has_sync_point(request->xml)) {
-        crm_warn("Ignoring sync point in request from %s because not all nodes support it",
-                 pcmk__request_origin(request));
+        pcmk__warn("Ignoring sync point in request from %s because not all "
+                   "nodes support it",
+                   pcmk__request_origin(request));
         remove_sync_point_attribute(request->xml, NULL);
     }
 }
@@ -302,7 +303,7 @@ attrd_handle_request(pcmk__request_t *request)
                                     (reason == NULL)? "" : ")");
 
     if (!pcmk__result_ok(&request->result)) {
-        crm_warn("%s", log_msg);
+        pcmk__warn("%s", log_msg);
     } else {
         crm_debug("%s", log_msg);
     }

@@ -93,7 +93,7 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
 
     file = pcmk__xe_get(xml, PCMK_XA_PATH);
     if (file == NULL) {
-        crm_warn("No destination path given in schema request");
+        pcmk__warn("No destination path given in schema request");
         return;
     }
 
@@ -112,12 +112,14 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
 
         stream = fopen(path, "w+");
         if (stream == NULL) {
-            crm_warn("Could not write schema file %s: %s", path, strerror(errno));
+            pcmk__warn("Could not write schema file %s: %s", path,
+                       strerror(errno));
         } else {
             rc = fprintf(stream, "%s", child->content);
 
             if (rc < 0) {
-                crm_warn("Could not write schema file %s: %s", path, strerror(errno));
+                pcmk__warn("Could not write schema file %s: %s", path,
+                           strerror(errno));
             }
 
             fclose(stream);
@@ -246,7 +248,7 @@ remoted_request_cib_schema_files(void)
      */
     if (schema_fetch_pid != 0) {
         if (mainloop_child_kill(schema_fetch_pid) == FALSE) {
-            crm_warn("Unable to kill pre-existing schema-fetch process");
+            pcmk__warn("Unable to kill pre-existing schema-fetch process");
             return;
         }
 
@@ -271,7 +273,8 @@ remoted_request_cib_schema_files(void)
     switch (pid) {
         case -1: {
             rc = errno;
-            crm_warn("Could not spawn process to get schema files: %s", pcmk_rc_str(rc));
+            pcmk__warn("Could not spawn process to get schema files: %s",
+                       pcmk_rc_str(rc));
             break;
         }
 

@@ -132,8 +132,9 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         } while (retries < 5 && rc != CS_OK);
 
         if (rc != CS_OK) {
-            crm_warn("Could not connect to Cluster Configuration Database API, error %s",
-                     pcmk_rc_str(pcmk__corosync2rc(rc)));
+            pcmk__warn("Could not connect to Cluster Configuration Database "
+                       "API, error %s",
+                       pcmk_rc_str(pcmk__corosync2rc(rc)));
             local_handle = 0;
         }
     }
@@ -283,8 +284,9 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
         pcmk__cluster_set_quorum(true);
 
     } else if (!is_quorate && was_quorate) {
-        crm_warn("Quorum lost " QB_XS " membership=%" PRIu64 " members=" PRIu32,
-                 ring_id, view_list_entries);
+        pcmk__warn("Quorum lost " QB_XS " membership=%" PRIu64
+                   " members=%" PRIu32,
+                   ring_id, view_list_entries);
         pcmk__cluster_set_quorum(false);
 
     } else {
@@ -426,7 +428,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
     if (quorate) {
         crm_notice("Quorum acquired");
     } else {
-        crm_warn("No quorum");
+        pcmk__warn("No quorum");
     }
     quorum_app_callback = dispatch;
     pcmk__cluster_set_quorum(quorate != 0);
@@ -585,7 +587,9 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
     } while (retries < 5 && rc != CS_OK);
 
     if (rc != CS_OK) {
-        crm_warn("Could not connect to Cluster Configuration Database API, error %d", rc);
+        pcmk__warn("Could not connect to Cluster Configuration Database API, "
+                   "error %d",
+                   rc);
         return false;
     }
 
@@ -766,18 +770,18 @@ pcmk__corosync_has_nodelist(void)
         }
     } while ((retries < 5) && (cs_rc != CS_OK));
     if (cs_rc != CS_OK) {
-        crm_warn("Assuming Corosync does not have node list: "
-                 "CMAP connection failed (%s) " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
+        pcmk__warn("Assuming Corosync does not have node list: CMAP connection "
+                   "failed (%s) " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         return false;
     }
 
     // Get CMAP connection file descriptor
     cs_rc = cmap_fd_get(cmap_handle, &fd);
     if (cs_rc != CS_OK) {
-        crm_warn("Assuming Corosync does not have node list: "
-                 "CMAP unusable (%s) " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
+        pcmk__warn("Assuming Corosync does not have node list: CMAP unusable "
+                   "(%s) " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         goto bail;
     }
 
@@ -785,25 +789,25 @@ pcmk__corosync_has_nodelist(void)
     rc = crm_ipc_is_authentic_process(fd, (uid_t) 0, (gid_t) 0,
                                       &found_pid, &found_uid, &found_gid);
     if (rc == 0) {
-        crm_warn("Assuming Corosync does not have node list: "
-                 "CMAP provider is inauthentic "
-                 QB_XS " pid=%lld uid=%lld gid=%lld",
-                 (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                 (long long) found_uid, (long long) found_gid);
+        pcmk__warn("Assuming Corosync does not have node list: CMAP provider "
+                   "is inauthentic "
+                   QB_XS " pid=%lld uid=%lld gid=%lld",
+                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                   (long long) found_uid, (long long) found_gid);
         goto bail;
     } else if (rc < 0) {
-        crm_warn("Assuming Corosync does not have node list: "
-                 "Could not verify CMAP authenticity (%s) " QB_XS " rc=%d",
-                  pcmk_strerror(rc), rc);
+        pcmk__warn("Assuming Corosync does not have node list: Could not "
+                   "verify CMAP authenticity (%s) " QB_XS " rc=%d",
+                   pcmk_strerror(rc), rc);
         goto bail;
     }
 
     // Check whether nodelist section is presetn
     cs_rc = cmap_iter_init(cmap_handle, "nodelist", &iter_handle);
     if (cs_rc != CS_OK) {
-        crm_warn("Assuming Corosync does not have node list: "
-                 "CMAP not readable (%s) " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
+        pcmk__warn("Assuming Corosync does not have node list: CMAP not "
+                   "readable (%s) " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         goto bail;
     }
 

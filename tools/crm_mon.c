@@ -1191,13 +1191,13 @@ avoid_zombies(void)
 
     memset(&sa, 0, sizeof(struct sigaction));
     if (sigemptyset(&sa.sa_mask) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
+        pcmk__warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
         return;
     }
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
     if (sigaction(SIGCHLD, &sa, NULL) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
+        pcmk__warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
     }
 }
 
@@ -1808,11 +1808,11 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     } else if (status == PCMK_EXEC_DONE) {
         desc = crm_exit_str(rc);
-        crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
+        pcmk__warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {
         desc = pcmk_exec_status_str(status);
-        crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
+        pcmk__warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
     if (notify && (options.external_agent != NULL)) {

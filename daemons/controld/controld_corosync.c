@@ -56,9 +56,9 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
         /* If we can still talk to our peer process on that node, then it must
          * be part of the corosync membership
          */
-        crm_warn("Receiving messages from a node we think is dead: "
-                 "%s[%" PRIu32 "]",
-                 peer->name, peer->cluster_layer_id);
+        pcmk__warn("Receiving messages from a node we think is dead: "
+                   "%s[%" PRIu32 "]",
+                   peer->name, peer->cluster_layer_id);
         crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
     }
 

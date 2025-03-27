@@ -537,8 +537,9 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
             remote_proxy_ack_shutdown(lrmd);
 
-            crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
-                    lrm_state->node_name);
+            pcmk__warn("Reconnection attempts to %s may result in failures "
+                       "that must be cleared",
+                       lrm_state->node_name);
         } else {
             remote_proxy_nack_shutdown(lrmd);
 
@@ -583,8 +584,9 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Couldn't parse controller flags from remote request: %s",
-                     pcmk_rc_str(rc));
+            pcmk__warn("Couldn't parse controller flags from remote request: "
+                       "%s",
+                       pcmk_rc_str(rc));
         }
         if (pcmk__is_set(flags, crm_ipc_client_response)) {
             int msg_id = 0;
@@ -617,8 +619,9 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
 
         rc = lrmd__new(&api, lrm_state->node_name, server, port);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
-                     QB_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+            pcmk__warn("Pacemaker Remote connection to %s:%s failed: %s "
+                       QB_XS " rc=%d",
+                       server, port, pcmk_rc_str(rc), rc);
 
             return rc;
         }

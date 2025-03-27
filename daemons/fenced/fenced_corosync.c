@@ -75,7 +75,8 @@ fenced_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
         rc = pcmk__xe_get_flags(xml, PCMK__XA_ST_CALLOPT,
                                 (uint32_t *) &request.call_options, st_opt_none);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+            pcmk__warn("Couldn't parse options from request: %s",
+                       pcmk_rc_str(rc));
         }
 
         request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_ST_OP);

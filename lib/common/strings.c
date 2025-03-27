@@ -122,11 +122,12 @@ pcmk__scan_min_int(const char *text, int *result, int minimum)
     rc = pcmk__scan_ll(text, &result_ll, (long long) minimum);
 
     if (result_ll < (long long) minimum) {
-        crm_warn("Clipped '%s' to minimum acceptable value %d", text, minimum);
+        pcmk__warn("Clipped '%s' to minimum acceptable value %d", text,
+                   minimum);
         result_ll = (long long) minimum;
 
     } else if (result_ll > INT_MAX) {
-        crm_warn("Clipped '%s' to maximum integer %d", text, INT_MAX);
+        pcmk__warn("Clipped '%s' to maximum integer %d", text, INT_MAX);
         result_ll = (long long) INT_MAX;
         rc = EOVERFLOW;
     }
@@ -154,12 +155,13 @@ pcmk__scan_port(const char *text, int *port)
     int rc = pcmk__scan_ll(text, &port_ll, -1LL);
 
     if (rc != pcmk_rc_ok) {
-        crm_warn("'%s' is not a valid port: %s", text, pcmk_rc_str(rc));
+        pcmk__warn("'%s' is not a valid port: %s", text, pcmk_rc_str(rc));
 
     } else if ((text != NULL) // wasn't default or invalid
         && ((port_ll < 0LL) || (port_ll > 65535LL))) {
-        crm_warn("Ignoring port specification '%s' "
-                 "not in valid range (0-65535)", text);
+        pcmk__warn("Ignoring port specification '%s' not in valid range "
+                   "(0-65535)",
+                   text);
         rc = (port_ll < 0LL)? pcmk_rc_before_range : pcmk_rc_after_range;
         port_ll = -1LL;
     }
@@ -321,14 +323,16 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 
     rc = pcmk__scan_ll(value, &value_ll, 0LL);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Using default (%u) for %s because '%s' is not a "
-                 "valid integer: %s", default_val, key, value, pcmk_rc_str(rc));
+        pcmk__warn("Using default (%u) for %s because '%s' is not a valid "
+                   "integer: %s",
+                   default_val, key, value, pcmk_rc_str(rc));
         return rc;
     }
 
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
-        crm_warn("Using default (%u) for %s because '%s' is not in valid range",
-                 default_val, key, value);
+        pcmk__warn("Using default (%u) for %s because '%s' is not in valid "
+                   "range",
+                   default_val, key, value);
         return ERANGE;
     }
 
@@ -376,8 +380,8 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
     }
 
     if (msec < 0) {
-        crm_warn("Using 0 instead of invalid interval specification '%s'",
-                 input);
+        pcmk__warn("Using 0 instead of invalid interval specification '%s'",
+                   input);
         msec = 0;
 
         if (rc == pcmk_rc_ok) {
@@ -883,7 +887,7 @@ pcmk__parse_ms(const char *input, long long *result)
     }
 
     if (rc == ERANGE) {
-        crm_warn("'%s' will be clipped to %lld", input, local_result);
+        pcmk__warn("'%s' will be clipped to %lld", input, local_result);
 
         /* Continue through rest of body before returning ERANGE
          *
@@ -892,8 +896,8 @@ pcmk__parse_ms(const char *input, long long *result)
          */
 
     } else if (rc != pcmk_rc_ok) {
-        crm_warn("'%s' is not a valid time duration: %s", input,
-                 pcmk_rc_str(rc));
+        pcmk__warn("'%s' is not a valid time duration: %s", input,
+                   pcmk_rc_str(rc));
         return rc;
     }
 
@@ -1366,11 +1370,11 @@ crm_get_msec(const char *input)
     rc = scan_ll(input, &msec, PCMK__PARSE_INT_DEFAULT, &units);
 
     if ((rc == ERANGE) && (msec > 0)) {
-        crm_warn("'%s' will be clipped to %lld", input, msec);
+        pcmk__warn("'%s' will be clipped to %lld", input, msec);
 
     } else if ((rc != pcmk_rc_ok) || (msec < 0)) {
-        crm_warn("'%s' is not a valid time duration: %s",
-                 input, ((rc == pcmk_rc_ok)? "Negative" : pcmk_rc_str(rc)));
+        pcmk__warn("'%s' is not a valid time duration: %s", input,
+                   ((rc == pcmk_rc_ok)? "Negative" : pcmk_rc_str(rc)));
         return PCMK__PARSE_INT_DEFAULT;
     }
 

@@ -297,10 +297,10 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
         int rc = pcmk_parse_score(value, &score, 0);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ignoring %s for %s "
-                     "because '%s' is not a valid fail count: %s",
-                     (const char *) key, pcmk__node_name(fc_data->node),
-                     value, pcmk_rc_str(rc));
+            pcmk__warn("Ignoring %s for %s because '%s' is not a valid fail "
+                       "count: %s",
+                       (const char *) key, pcmk__node_name(fc_data->node),
+                       value, pcmk_rc_str(rc));
             return;
         }
         fc_data->failcount = pcmk__add_scores(fc_data->failcount, score);

@@ -155,7 +155,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
         default:
             if (!pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
-                crm_warn("Call failed: %s", pcmk_strerror(rc));
+                pcmk__warn("Call failed: %s", pcmk_strerror(rc));
             }
     }
 
@@ -189,7 +189,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
     msg = pcmk__xml_parse(buffer);
 
     if (msg == NULL) {
-        crm_warn("Received a NULL message from the CIB manager");
+        pcmk__warn("Received a NULL message from the CIB manager");
         return 0;
     }
 

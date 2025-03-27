@@ -164,7 +164,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     rc = pcmk__xe_get_flags(msg, PCMK__XA_ST_CALLOPT, &call_options,
                             st_opt_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32

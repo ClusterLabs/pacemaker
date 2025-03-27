@@ -263,7 +263,7 @@ schedulerd_handle_request(pcmk__request_t *request)
                                     (reason == NULL)? "" : ")");
 
     if (!pcmk__result_ok(&request->result)) {
-        crm_warn("%s", log_msg);
+        pcmk__warn("%s", log_msg);
     } else {
         crm_debug("%s", log_msg);
     }

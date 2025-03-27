@@ -91,9 +91,10 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
         int rc = pcmk_parse_score((const char *) value, &score, 0);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ignoring %s for %s because '%s' is not a valid value: %s",
-                     (const char *) key, pcmk__node_name(health_sum->node),
-                     (const char *) value, pcmk_rc_str(rc));
+            pcmk__warn("Ignoring %s for %s because '%s' is not a valid value: "
+                       "%s",
+                       (const char *) key, pcmk__node_name(health_sum->node),
+                       (const char *) value, pcmk_rc_str(rc));
             return;
         }
 
@@ -169,10 +170,10 @@ pe__node_health(pcmk_node_t *node)
 
             parse_rc = pcmk_parse_score(value, &score, 0);
             if (parse_rc != pcmk_rc_ok) {
-                crm_warn("Ignoring %s for %s "
-                         "because '%s' is not a valid value: %s",
-                         name, pcmk__node_name(node), value,
-                         pcmk_rc_str(parse_rc));
+                pcmk__warn("Ignoring %s for %s because '%s' is not a valid "
+                           "value: %s",
+                           name, pcmk__node_name(node), value,
+                           pcmk_rc_str(parse_rc));
                 continue;
             }
 

@@ -208,8 +208,8 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
                 if (rc == -ENODEV) {
                     crm_notice("Cluster does not have watchdog fencing device");
                 } else {
-                    crm_warn("Could not check for watchdog fencing device: %s",
-                             pcmk_strerror(rc));
+                    pcmk__warn("Could not check for watchdog fencing device: %s",
+                               pcmk_strerror(rc));
                 }
             } else if (list[0] == '\0') {
                 rv = TRUE;
@@ -991,11 +991,12 @@ invoke_registered_callbacks(stonith_t *stonith, const xmlNode *msg, int call_id)
                                      cb_info->user_data, cb_info->callback);
 
     } else if ((private->op_callback == NULL) && !pcmk__result_ok(&result)) {
-        crm_warn("Fencing action without registered callback failed: %d (%s%s%s)",
-                 result.exit_status,
-                 pcmk_exec_status_str(result.execution_status),
-                 ((result.exit_reason == NULL)? "" : ": "),
-                 ((result.exit_reason == NULL)? "" : result.exit_reason));
+        pcmk__warn("Fencing action without registered callback failed: %d "
+                   "(%s%s%s)",
+                   result.exit_status,
+                   pcmk_exec_status_str(result.execution_status),
+                   ((result.exit_reason != NULL)? ": " : ""),
+                   pcmk__s(result.exit_reason, ""));
         crm_log_xml_debug(msg, "Failed fence update");
     }
 
@@ -1085,7 +1086,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     blob.stonith = st;
     blob.xml = pcmk__xml_parse(buffer);
     if (blob.xml == NULL) {
-        crm_warn("Received malformed message from fencer: %s", buffer);
+        pcmk__warn("Received malformed message from fencer: %s", buffer);
         return 0;
     }
 
@@ -1266,7 +1267,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     list_item = g_list_find_custom(private->notify_list, new_client, stonithlib_GCompareFunc);
 
     if (list_item != NULL) {
-        crm_warn("Callback already present");
+        pcmk__warn("Callback already present");
         free(new_client);
         return -ENOTUNIQ;
 
@@ -1361,7 +1362,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
             invoke_fence_action_callback(stonith, call_id, &result,
                                          user_data, callback);
         } else {
-            crm_warn("Fencer call failed: %s", pcmk_strerror(call_id));
+            pcmk__warn("Fencer call failed: %s", pcmk_strerror(call_id));
         }
         return FALSE;
     }
@@ -1502,14 +1503,14 @@ stonith_send_notification(gpointer data, gpointer user_data)
     const char *event = NULL;
 
     if (blob->xml == NULL) {
-        crm_warn("Skipping callback - NULL message");
+        pcmk__warn("Skipping callback - NULL message");
         return;
     }
 
     event = pcmk__xe_get(blob->xml, PCMK__XA_SUBT);
 
     if (entry == NULL) {
-        crm_warn("Skipping callback - NULL callback client");
+        pcmk__warn("Skipping callback - NULL callback client");
         return;
 
     } else if (entry->delete) {
@@ -1517,7 +1518,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
 
     } else if (entry->notify == NULL) {
-        crm_warn("Skipping callback - NULL callback");
+        pcmk__warn("Skipping callback - NULL callback");
         return;
 
     } else if (!pcmk__str_eq(entry->event, event, pcmk__str_none)) {
@@ -1776,8 +1777,9 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
 #if PCMK__ENABLE_CIBSECRETS
     rc = pcmk__substitute_secrets(rsc_id, params);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not replace secret parameters for validation of %s: %s",
-                 agent, pcmk_rc_str(rc));
+        pcmk__warn("Could not replace secret parameters for validation of %s: "
+                   "%s",
+                   agent, pcmk_rc_str(rc));
         // rc is standard return value, don't return it in this function
     }
 #endif
@@ -2265,9 +2267,9 @@ parse_list_line(const char *line, int len, GList **output)
              */
             rc = sscanf(line + entry_start, "%[a-zA-Z0-9_-.]", entry);
             if (rc != 1) {
-                crm_warn("Could not parse list output entry: %s "
-                         QB_XS " entry_start=%d position=%d",
-                         line + entry_start, entry_start, i);
+                pcmk__warn("Could not parse list output entry: %s "
+                           QB_XS " entry_start=%d position=%d",
+                           (line + entry_start), entry_start, i);
                 free(entry);
 
             } else if (pcmk__strcase_any_of(entry, PCMK_ACTION_ON,

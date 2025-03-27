@@ -170,8 +170,8 @@ load_env_var_line(const char *line)
 
 done:
     if (reason != NULL) {
-        crm_warn("Failed to perform environment variable assignment '%s': %s",
-                 line, reason);
+        pcmk__warn("Failed to perform environment variable assignment '%s': %s",
+                   line, reason);
     }
     g_strfreev(argv);
     g_clear_error(&error);

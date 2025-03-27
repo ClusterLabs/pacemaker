@@ -771,9 +771,9 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     rc = pcmk_parse_score(attr_value, &score, 0);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Using 0 as promotion score for %s on %s "
-                 "because '%s' is not a valid score",
-                 rsc->id, pcmk__node_name(node), attr_value);
+        pcmk__warn("Using 0 as promotion score for %s on %s because '%s' is "
+                   "not a valid score",
+                   rsc->id, pcmk__node_name(node), attr_value);
     }
     return score;
 }

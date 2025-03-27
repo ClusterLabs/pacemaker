@@ -50,8 +50,8 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 
     allowed_node = pcmk__top_allowed_node(instance, node);
     if (allowed_node == NULL) {
-        crm_warn("%s cannot run on %s: node not allowed",
-                 instance->id, pcmk__node_name(node));
+        pcmk__warn("%s cannot run on %s: node not allowed", instance->id,
+                   pcmk__node_name(node));
         return false;
     }
 

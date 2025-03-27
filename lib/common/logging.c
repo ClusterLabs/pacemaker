@@ -240,8 +240,9 @@ chown_logfile(const char *filename, int logfd)
 
     rc = pcmk__daemon_user(&pcmk_uid, &pcmk_gid);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not changing '%s' ownership because user information "
-                 "unavailable: %s", filename, pcmk_rc_str(rc));
+        pcmk__warn("Not changing '%s' ownership because user information "
+                   "unavailable: %s",
+                   filename, pcmk_rc_str(rc));
         return pcmk_rc_ok;
     }
     if ((st.st_gid == pcmk_gid)
@@ -249,8 +250,8 @@ chown_logfile(const char *filename, int logfd)
         return pcmk_rc_ok;
     }
     if (fchown(logfd, pcmk_uid, pcmk_gid) < 0) {
-        crm_warn("Couldn't change '%s' ownership to user %s gid %d: %s",
-             filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
+        pcmk__warn("Couldn't change '%s' ownership to user %s gid %d: %s",
+                   filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
     }
     return pcmk_rc_ok;
 }
@@ -270,8 +271,8 @@ chmod_logfile(const char *filename, int logfd)
         }
     }
     if ((filemode != 0) && (fchmod(logfd, filemode) < 0)) {
-        crm_warn("Couldn't change '%s' mode to %04o: %s",
-                 filename, filemode, strerror(errno));
+        pcmk__warn("Couldn't change '%s' mode to %04o: %s", filename, filemode,
+                   strerror(errno));
     }
 }
 
@@ -369,15 +370,15 @@ pcmk__add_logfile(const char *filename)
     logfile = fopen(filename, "a");
     if (logfile == NULL) {
         rc = errno;
-        crm_warn("Logging to '%s' is disabled: %s " QB_XS " uid=%u gid=%u",
-                 filename, strerror(rc), geteuid(), getegid());
+        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " uid=%u gid=%u",
+                   filename, strerror(rc), geteuid(), getegid());
         return rc;
     }
 
     rc = set_logfile_permissions(filename, logfile);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Logging to '%s' is disabled: %s " QB_XS " permissions",
-                 filename, strerror(rc));
+        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " permissions",
+                   filename, strerror(rc));
         fclose(logfile);
         return rc;
     }
@@ -386,8 +387,8 @@ pcmk__add_logfile(const char *filename)
     fclose(logfile);
     fd = qb_log_file_open(filename);
     if (fd < 0) {
-        crm_warn("Logging to '%s' is disabled: %s " QB_XS " qb_log_file_open",
-                 filename, strerror(-fd));
+        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " qb_log_file_open",
+                   filename, strerror(-fd));
         return -fd; // == +errno
     }
 

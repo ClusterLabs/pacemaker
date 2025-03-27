@@ -816,7 +816,7 @@ main(int argc, char **argv)
     }
 
     if (options.inhibit) {
-        crm_warn("Inhibiting notifications for this update");
+        pcmk__warn("Inhibiting notifications for this update");
         cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 

@@ -144,8 +144,9 @@ pacemakerd_chown(const char *path, uid_t uid, gid_t gid)
     int rc = chown(path, uid, gid);
 
     if (rc < 0) {
-        crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
-                 path, CRM_DAEMON_USER, gid, pcmk_rc_str(errno));
+        pcmk__warn("Cannot change the ownership of %s to user " CRM_DAEMON_USER
+                   " and gid %d: %s",
+                   path, gid, pcmk_rc_str(errno));
     }
 }
 
@@ -173,8 +174,8 @@ create_pcmk_dirs(void)
 
     // Used by some resource agents
     if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
-        crm_warn("Could not create directory " CRM_STATE_DIR ": %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not create directory " CRM_STATE_DIR ": %s",
+                   pcmk_rc_str(errno));
     } else {
         pacemakerd_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
     }
@@ -183,8 +184,8 @@ create_pcmk_dirs(void)
         int rc = pcmk__build_path(dirs[i], 0750);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Could not create directory %s: %s",
-                     dirs[i], pcmk_rc_str(rc));
+            pcmk__warn("Could not create directory %s: %s", dirs[i],
+                       pcmk_rc_str(rc));
         } else {
             pacemakerd_chown(dirs[i], pcmk_uid, pcmk_gid);
         }
@@ -463,9 +464,9 @@ main(int argc, char **argv)
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
         if (running_with_sbd) {
-            crm_warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
-                     "by your SBD version) improve reliability of "
-                     "interworking between SBD & pacemaker.");
+            pcmk__warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
+                       "by your SBD version) improve reliability of "
+                       "interworking between SBD & pacemaker.");
         }
         pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
         init_children_processes(NULL);

@@ -398,7 +398,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
+        pcmk__warn("Unknown patch format: %d", format);
         return;
     }
 
@@ -523,7 +523,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
                 local_cib = NULL;
                 break;
             default:
-                crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
+                           rc);
                 pcmk__xml_free(local_cib);
                 local_cib = NULL;
         }

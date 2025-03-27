@@ -146,7 +146,8 @@ pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
     }
 
     if (type == NULL) {
-        crm_warn("Cannot reply to invalid message: No message type specified");
+        pcmk__warn("Cannot reply to invalid message: No message type "
+                   "specified");
         return NULL;
     }
 

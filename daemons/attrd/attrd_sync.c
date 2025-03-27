@@ -241,7 +241,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
     }
 
     if (pcmk__xe_get_int(xml, PCMK__XA_CALL_ID, &callid) != pcmk_rc_ok) {
-        crm_warn("Could not get callid from request XML");
+        pcmk__warn("Could not get callid from request XML");
         return;
     }
 

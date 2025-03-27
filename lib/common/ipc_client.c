@@ -317,15 +317,15 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
     xmlNode *msg;
 
     if (buffer == NULL) {
-        crm_warn("Empty message received from %s IPC",
-                 pcmk_ipc_name(api, true));
+        pcmk__warn("Empty message received from %s IPC",
+                   pcmk_ipc_name(api, true));
         return ENOMSG;
     }
 
     msg = pcmk__xml_parse(buffer);
     if (msg == NULL) {
-        crm_warn("Malformed message received from %s IPC",
-                 pcmk_ipc_name(api, true));
+        pcmk__warn("Malformed message received from %s IPC",
+                   pcmk_ipc_name(api, true));
         return EPROTO;
     }
 
@@ -1313,8 +1313,8 @@ discard_old_replies(crm_ipc_t *client, int32_t ms_timeout)
                          ms_timeout);
 
     if (qb_rc < 0) {
-        crm_warn("Sending %s IPC disabled until pending reply received",
-                 client->server_name);
+        pcmk__warn("Sending %s IPC disabled until pending reply received",
+                   client->server_name);
         rc = EALREADY;
         goto done;
     }
@@ -1331,8 +1331,8 @@ discard_old_replies(crm_ipc_t *client, int32_t ms_timeout)
         client->need_reply = FALSE;
 
     } else {
-        crm_warn("Sending %s IPC disabled until multipart IPC message "
-                 "reply received", client->server_name);
+        pcmk__warn("Sending %s IPC disabled until multipart IPC message reply "
+                   "received", client->server_name);
         rc = EALREADY;
     }
 
@@ -1408,8 +1408,8 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         rc = pcmk__ipc_prepare_iov(id, iov_buffer, index, &iov, &bytes);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-            crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
-                     client->server_name, pcmk_rc_str(rc), rc);
+            pcmk__warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
+                       client->server_name, pcmk_rc_str(rc), rc);
             g_string_free(iov_buffer, TRUE);
             return pcmk_rc2legacy(rc);
         }
@@ -1512,15 +1512,15 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
                    QB_XS " rc=%d", client->server_name, header->qb.id, rc);
 
     } else if (rc == -ETIMEDOUT) {
-        crm_warn("%s IPC request %d failed: %s after %dms " QB_XS " rc=%d",
-                 client->server_name, header->qb.id, pcmk_strerror(rc),
-                 ms_timeout, rc);
+        pcmk__warn("%s IPC request %d failed: %s after %dms " QB_XS " rc=%d",
+                   client->server_name, header->qb.id, pcmk_strerror(rc),
+                   ms_timeout, rc);
         crm_write_blackbox(0, NULL);
 
     } else if (rc <= 0) {
-        crm_warn("%s IPC request %d failed: %s " QB_XS " rc=%d",
-                 client->server_name, header->qb.id,
-                 ((rc == 0)? "No bytes sent" : pcmk_strerror(rc)), rc);
+        pcmk__warn("%s IPC request %d failed: %s " QB_XS " rc=%d",
+                   client->server_name, header->qb.id,
+                   ((rc == 0)? "No bytes sent" : pcmk_strerror(rc)), rc);
     }
 
     g_string_free(iov_buffer, TRUE);
@@ -1743,10 +1743,10 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     if ((found_uid != refuid || found_gid != refgid)
             && strncmp(last_asked_name, name, sizeof(last_asked_name))) {
         if ((found_uid == 0) && (refuid != 0)) {
-            crm_warn("Daemon (IPC %s) runs as root, whereas the expected"
-                     " credentials are %lld:%lld, hazard of violating"
-                     " the least privilege principle",
-                     name, (long long) refuid, (long long) refgid);
+            pcmk__warn("Daemon (IPC %s) runs as root, whereas the expected "
+                       "credentials are %lld:%lld, hazard of violating the "
+                       "least privilege principle",
+                       name, (long long) refuid, (long long) refgid);
         } else {
             crm_notice("Daemon (IPC %s) runs as %lld:%lld, whereas the"
                        " expected credentials are %lld:%lld, which may"

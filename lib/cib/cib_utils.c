@@ -86,8 +86,8 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     if ((pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok)
         || (rc != pcmk_ok)) {
 
-        crm_warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
-                 pcmk_strerror(rc), rc);
+        pcmk__warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
+                   pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
         return pcmk_legacy2rc(rc);
     }
@@ -705,7 +705,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         blob->callback(msg, call_id, rc, output, blob->user_data);
 
     } else if ((cib != NULL) && (rc != pcmk_ok)) {
-        crm_warn("CIB command failed: %s", pcmk_strerror(rc));
+        pcmk__warn("CIB command failed: %s", pcmk_strerror(rc));
         crm_log_xml_debug(msg, "Failed CIB Update");
     }
 
@@ -725,18 +725,18 @@ cib_native_notify(gpointer data, gpointer user_data)
     const char *event = NULL;
 
     if (msg == NULL) {
-        crm_warn("Skipping callback - NULL message");
+        pcmk__warn("Skipping callback - NULL message");
         return;
     }
 
     event = pcmk__xe_get(msg, PCMK__XA_SUBT);
 
     if (entry == NULL) {
-        crm_warn("Skipping callback - NULL callback client");
+        pcmk__warn("Skipping callback - NULL callback client");
         return;
 
     } else if (entry->callback == NULL) {
-        crm_warn("Skipping callback - NULL callback");
+        pcmk__warn("Skipping callback - NULL callback");
         return;
 
     } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {

@@ -77,8 +77,8 @@ retrieveCib(const char *filename, const char *sigfile)
     if (rc == pcmk_ok) {
         crm_info("Loaded CIB from %s (with digest %s)", filename, sigfile);
     } else {
-        crm_warn("Continuing but NOT using CIB from %s (with digest %s): %s",
-                 filename, sigfile, pcmk_strerror(rc));
+        pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
+                   filename, sigfile, pcmk_strerror(rc));
         if (rc == -pcmk_err_cib_modified) {
             // Archive the original files so the contents are not lost
             cib_rename(filename);
@@ -206,9 +206,9 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
             crm_notice("Loaded CIB from last valid backup %s (with digest %s)",
                        filename, sigfile);
         } else {
-            crm_warn("Not using next most recent CIB backup from %s "
-                     "(with digest %s): %s",
-                     filename, sigfile, pcmk_strerror(rc));
+            pcmk__warn("Not using next most recent CIB backup from %s (with "
+                       "digest %s): %s",
+                       filename, sigfile, pcmk_strerror(rc));
         }
 
         free(namelist[lpc]);
@@ -219,7 +219,7 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
 
     if (root == NULL) {
         root = createEmptyCib(0);
-        crm_warn("Continuing with an empty configuration");
+        pcmk__warn("Continuing with an empty configuration");
     }
 
     if (cib_writes_enabled
@@ -245,9 +245,9 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     /* fill in some defaults */
     value = pcmk__xe_get(root, PCMK_XA_ADMIN_EPOCH);
     if (value == NULL) { // Not possible with schema validation enabled
-        crm_warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
-                 "cluster may get confused about which node's configuration "
-                 "is most recent");
+        pcmk__warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
+                   "cluster may get confused about which node's configuration "
+                   "is most recent");
         pcmk__xe_set_int(root, PCMK_XA_ADMIN_EPOCH, 0);
     }
 
@@ -311,7 +311,7 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
 
     pcmk__err("Ignoring invalid CIB");
     if (the_cib) {
-        crm_warn("Reverting to last known CIB");
+        pcmk__warn("Reverting to last known CIB");
     } else {
         pcmk__crit("Could not write out new CIB and no saved version to revert "
                    "to");

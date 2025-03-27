@@ -104,8 +104,8 @@ cluster_reconnect_cb(gpointer data)
 static void
 cfg_connection_destroy(gpointer user_data)
 {
-    crm_warn("Lost connection to cluster layer "
-             "(connection will be reattempted once per second)");
+    pcmk__warn("Lost connection to cluster layer (connection will be "
+               "reattempted once per second)");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
     reconnect_timer = mainloop_timer_add("corosync reconnect", 1000, TRUE, cluster_reconnect_cb, NULL);
@@ -214,7 +214,7 @@ pcmkd_shutdown_corosync(void)
     cs_error_t rc;
 
     if (cfg_handle == 0) {
-        crm_warn("Unable to shut down Corosync: No connection");
+        pcmk__warn("Unable to shut down Corosync: No connection");
         return;
     }
     crm_info("Asking Corosync to shut down");
@@ -223,8 +223,8 @@ pcmkd_shutdown_corosync(void)
     if (rc == CS_OK) {
         close_cfg();
     } else {
-        crm_warn("Corosync shutdown failed: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__warn("Corosync shutdown failed: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
     }
 }
 
@@ -361,8 +361,8 @@ pacemakerd_read_config(void)
     if(local_handle){
         gid_t gid = 0;
         if (pcmk__daemon_user(NULL, &gid) != pcmk_rc_ok) {
-            crm_warn("Could not authorize group with Corosync " QB_XS
-                     " No group found for user %s", CRM_DAEMON_USER);
+            pcmk__warn("Could not authorize group with Corosync "
+                       QB_XS " No group found for user " CRM_DAEMON_USER);
 
         } else {
             char *key = pcmk__assert_asprintf("uidgid.gid.%lld",
@@ -372,9 +372,9 @@ pacemakerd_read_config(void)
             free(key);
 
             if (rc != CS_OK) {
-                crm_warn("Could not authorize group with Corosync: %s " QB_XS
-                         " group=%u rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)),
-                         gid, rc);
+                pcmk__warn("Could not authorize group with Corosync: %s "
+                           QB_XS " group=%u rc=%d",
+                           pcmk_rc_str(pcmk__corosync2rc(rc)), gid, rc);
             }
         }
     }

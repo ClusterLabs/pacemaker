@@ -136,7 +136,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 
     xml = pcmk__xml_parse(buffer);
     if (xml == NULL) {
-        crm_warn("Received a NULL msg from IPC service.");
+        pcmk__warn("Received a NULL msg from IPC service.");
         return 1;
     }
 
@@ -264,8 +264,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
         rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Couldn't parse controller flags from remote request: %s",
-                     pcmk_rc_str(rc));
+            pcmk__warn("Couldn't parse controller flags from remote request: "
+                       "%s",
+                       pcmk_rc_str(rc));
         }
 
         pcmk__assert(node_name != NULL);

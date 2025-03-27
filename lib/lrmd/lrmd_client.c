@@ -1194,8 +1194,8 @@ read_gnutls_key(const char *location, gnutls_datum_t *key)
 
         if (next == EOF) {
             if (!feof(stream)) {
-                crm_warn("Pacemaker Remote key read was partially successful "
-                         "(copy in memory may be corrupted)");
+                pcmk__warn("Pacemaker Remote key read was partially successful "
+                           "(copy in memory may be corrupted)");
             }
             break;
         }
@@ -1336,8 +1336,8 @@ lrmd__init_remote_key(gnutls_datum_t *key)
             return pcmk_rc_ok;
         }
 
-        crm_warn("Could not read Pacemaker Remote key from %s: %s",
-                 env_location, pcmk_rc_str(rc));
+        pcmk__warn("Could not read Pacemaker Remote key from %s: %s",
+                   env_location, pcmk_rc_str(rc));
         return ENOKEY;
     }
 
@@ -1347,8 +1347,9 @@ lrmd__init_remote_key(gnutls_datum_t *key)
         return pcmk_rc_ok;
     }
 
-    crm_warn("Could not read Pacemaker Remote key from default location %s: %s",
-             DEFAULT_REMOTE_KEY_LOCATION, pcmk_rc_str(rc));
+    pcmk__warn("Could not read Pacemaker Remote key from default location "
+               DEFAULT_REMOTE_KEY_LOCATION ": %s",
+               pcmk_rc_str(rc));
     return ENOKEY;
 }
 
@@ -1371,10 +1372,10 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    crm_warn("Disconnecting after TLS handshake with "
-             "Pacemaker Remote server %s:%d failed: %s",
-             native->server, native->port,
-             (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
+    pcmk__warn("Disconnecting after TLS handshake with Pacemaker Remote server "
+               "%s:%d failed: %s",
+               native->server, native->port,
+               ((rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc)));
     report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
 
     gnutls_deinit(native->remote->tls_session);
@@ -1609,9 +1610,9 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
     rc = pcmk__connect_remote(native->server, native->port, timeout, &timer_id,
                               &(native->sock), lrmd, lrmd_tcp_connect_cb);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
-                 QB_XS " rc=%d",
-                 native->server, native->port, pcmk_rc_str(rc), rc);
+        pcmk__warn("Pacemaker Remote connection to %s:%d failed: %s "
+                   QB_XS " rc=%d",
+                   native->server, native->port, pcmk_rc_str(rc), rc);
         return rc;
     }
     native->async_timer = timer_id;
@@ -1629,9 +1630,9 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     rc = pcmk__connect_remote(native->server, native->port, 0, NULL,
                               &(native->sock), NULL, NULL);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Pacemaker Remote connection to %s:%d failed: %s "
-                 QB_XS " rc=%d",
-                 native->server, native->port, pcmk_rc_str(rc), rc);
+        pcmk__warn("Pacemaker Remote connection to %s:%d failed: %s "
+                   QB_XS " rc=%d",
+                   native->server, native->port, pcmk_rc_str(rc), rc);
         lrmd_tls_connection_destroy(lrmd);
         return ENOTCONN;
     }

@@ -122,8 +122,8 @@ handle_shutdown_request(pcmk__request_t *request)
                    pcmk__xe_get(msg, PCMK_XA_ORIGIN));
         pcmk__xe_set_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_OK);
     } else {
-        crm_warn("Ignoring shutdown request from unprivileged client %s",
-                 pcmk__client_name(request->ipc_client));
+        pcmk__warn("Ignoring shutdown request from unprivileged client %s",
+                   pcmk__client_name(request->ipc_client));
         pcmk__xe_set_int(shutdown, PCMK__XA_OP_STATUS,
                          CRM_EX_INSUFFICIENT_PRIV);
     }
@@ -215,7 +215,7 @@ pacemakerd_handle_request(pcmk__request_t *request)
                                     (reason == NULL)? "" : ")");
 
     if (!pcmk__result_ok(&request->result)) {
-        crm_warn("%s", log_msg);
+        pcmk__warn("%s", log_msg);
     } else {
         crm_debug("%s", log_msg);
     }

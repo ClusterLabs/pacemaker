@@ -239,7 +239,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
@@ -715,7 +715,7 @@ cib_file_verify_digest(xmlNode *root, const char *sigfile)
             }
             break;
         case ENOENT:
-            crm_warn("No on-disk digest present at %s", sigfile);
+            pcmk__warn("No on-disk digest present at %s", sigfile);
             return TRUE;
         default:
             pcmk__err("Could not read on-disk digest from %s: %s", sigfile,
@@ -758,19 +758,22 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     /* Verify that file exists and its size is nonzero */
     s_res = stat(filename, &buf);
     if (s_res < 0) {
-        crm_warn("Could not verify cluster configuration file %s: "
-                 "stat() failed: %s",
-                 filename, strerror(errno));
+        pcmk__warn("Could not verify cluster configuration file %s: "
+                   "stat() failed: %s",
+                   filename, strerror(errno));
         return -errno;
     } else if (buf.st_size == 0) {
-        crm_warn("Cluster configuration file %s is corrupt (size is zero)", filename);
+        pcmk__warn("Cluster configuration file %s is corrupt (size is zero)",
+                   filename);
         return -pcmk_err_cib_corrupt;
     }
 
     /* Parse XML */
     local_root = pcmk__xml_read(filename);
     if (local_root == NULL) {
-        crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
+        pcmk__warn("Cluster configuration file %s is corrupt (unparseable as "
+                   "XML)",
+                   filename);
         return -pcmk_err_cib_corrupt;
     }
 

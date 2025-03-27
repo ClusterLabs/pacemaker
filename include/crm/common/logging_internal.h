@@ -48,6 +48,15 @@ extern "C" {
  */
 #define pcmk__err(fmt, args...) qb_log(LOG_ERR, fmt, ##args)
 
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_WARN level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__warn(fmt, args...) qb_log(LOG_WARNING, fmt, ##args)
+
 /* Some warnings are too noisy when logged every time a given function is called
  * (for example, using a deprecated feature). As an alternative, we allow
  * warnings to be logged once per invocation of the calling program. Each of
@@ -83,7 +92,7 @@ enum pcmk__warnings {
 #define pcmk__warn_once(wo_flag, fmt...) do {                           \
         if (!pcmk__is_set(pcmk__warnings, wo_flag)) {                   \
             if (wo_flag == pcmk__wo_blind) {                            \
-                crm_warn(fmt);                                          \
+                pcmk__warn(fmt);                                        \
             } else {                                                    \
                 pcmk__config_warn(fmt);                                 \
             }                                                           \
@@ -143,7 +152,7 @@ extern bool pcmk__config_has_warning;
 #define pcmk__config_warn(fmt...) do {                                      \
         pcmk__config_has_warning = true;                                    \
         if (pcmk__config_warning_handler == NULL) {                         \
-            crm_warn(fmt);                                                  \
+            pcmk__warn(fmt);                                                \
         } else {                                                            \
             pcmk__config_warning_handler(pcmk__config_warning_context, fmt);\
         }                                                                   \

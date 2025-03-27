@@ -213,12 +213,12 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
                   (from_peer? " (originator of delegated request)" : ""),
                   (sync_reply? "synchronously" : "asynchronously"), msg_id);
     } else {
-        crm_warn("Could not notify %s client %s%s %s of call %d result: %s",
-                 pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
-                 pcmk__client_name(client_obj),
-                 (from_peer? " (originator of delegated request)" : ""),
-                 (sync_reply? "synchronously" : "asynchronously"), msg_id,
-                 pcmk_rc_str(rc));
+        pcmk__warn("Could not notify %s client %s%s %s of call %d result: %s",
+                   pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
+                   pcmk__client_name(client_obj),
+                   (from_peer? " (originator of delegated request)" : ""),
+                   (sync_reply? "synchronously" : "asynchronously"), msg_id,
+                   pcmk_rc_str(rc));
     }
 }
 
@@ -233,7 +233,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
     rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     /* Requests with cib_transaction set should not be sent to based directly
@@ -350,8 +350,8 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privi
         rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
                                 cib_none);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Couldn't parse options from request: %s",
-                     pcmk_rc_str(rc));
+            pcmk__warn("Couldn't parse options from request: %s",
+                       pcmk_rc_str(rc));
         }
     }
 
@@ -529,9 +529,9 @@ parse_local_options(const pcmk__client_t *cib_client,
         if (!pcmk__str_eq(host, OUR_NODENAME,
                           pcmk__str_casei|pcmk__str_null_matches)) {
 
-            crm_warn("Operation '%s' is always local but its target host is "
-                     "set to '%s'",
-                     op, host);
+            pcmk__warn("Operation '%s' is always local but its target host is "
+                       "set to '%s'",
+                       op, host);
         }
         return;
     }
@@ -798,7 +798,7 @@ cib_process_request(xmlNode *request, bool privileged,
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     if ((host != NULL) && (*host == '\0')) {
@@ -1049,7 +1049,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     if (!privileged
@@ -1219,7 +1219,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     if (reason) {
         const char *op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
-        crm_warn("Discarding %s message from %s: %s", op, originator, reason);
+        pcmk__warn("Discarding %s message from %s: %s", op, originator, reason);
     }
 }
 

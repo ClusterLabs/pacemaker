@@ -385,7 +385,8 @@ load_transforms_from_dir(const char *dir)
     if (num_matches < 0) {
         int rc = errno;
 
-        crm_warn("Could not load transforms from %s: %s", dir, pcmk_rc_str(rc));
+        pcmk__warn("Could not load transforms from %s: %s", dir,
+                   pcmk_rc_str(rc));
         goto done;
     }
 
@@ -440,7 +441,7 @@ pcmk__load_schemas_from_dir(const char *dir)
     if (max < 0) {
         int rc = errno;
 
-        crm_warn("Could not load schemas from %s: %s", dir, pcmk_rc_str(rc));
+        pcmk__warn("Could not load schemas from %s: %s", dir, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -472,8 +473,8 @@ pcmk__load_schemas_from_dir(const char *dir)
 
         } else {
             // Shouldn't be possible, but makes static analysis happy
-            crm_warn("Skipping schema '%s': could not parse version",
-                     namelist[lpc]->d_name);
+            pcmk__warn("Skipping schema '%s': could not parse version",
+                       namelist[lpc]->d_name);
         }
     }
 
@@ -1461,7 +1462,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
 
     rc = read_file_contents(path, &contents);
     if (rc != pcmk_rc_ok || contents == NULL) {
-        crm_warn("Could not read schema file %s: %s", file, pcmk_rc_str(rc));
+        pcmk__warn("Could not read schema file %s: %s", file, pcmk_rc_str(rc));
         free(path);
         return;
     }
