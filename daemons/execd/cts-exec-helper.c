@@ -169,7 +169,7 @@ test_exit(crm_exit_t exit_code)
 
 #define print_result(fmt, args...)  \
     if (!options.quiet) {           \
-        printf(fmt "\n" , ##args);  \
+        printf(fmt "\n", ##args);   \
     }
 
 static void
