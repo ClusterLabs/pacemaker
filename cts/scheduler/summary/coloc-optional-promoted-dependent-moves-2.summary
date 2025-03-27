@@ -10,21 +10,21 @@ Current cluster status:
 
 Transition Summary:
   * Move       coloc_primary         (  fastvm-fedora39-22 -> fastvm-fedora39-23 )
-  * Demote     coloc_dependent:0     ( Promoted -> Unpromoted fastvm-fedora39-22 )
   * Promote    coloc_dependent:1     ( Unpromoted -> Promoted fastvm-fedora39-23 )
+  * Demote     coloc_dependent:0     ( Promoted -> Unpromoted fastvm-fedora39-22 )
 
 Executing Cluster Transition:
   * Resource action: coloc_primary   stop on fastvm-fedora39-22
-  * Resource action: coloc_dependent cancel=10000 on fastvm-fedora39-22
   * Resource action: coloc_dependent cancel=11000 on fastvm-fedora39-23
+  * Resource action: coloc_dependent cancel=10000 on fastvm-fedora39-22
   * Pseudo action:   coloc_dependent-clone_demote_0
   * Resource action: coloc_primary   start on fastvm-fedora39-23
   * Resource action: coloc_dependent demote on fastvm-fedora39-22
   * Pseudo action:   coloc_dependent-clone_demoted_0
   * Pseudo action:   coloc_dependent-clone_promote_0
   * Resource action: coloc_primary   monitor=10000 on fastvm-fedora39-23
-  * Resource action: coloc_dependent monitor=11000 on fastvm-fedora39-22
   * Resource action: coloc_dependent promote on fastvm-fedora39-23
+  * Resource action: coloc_dependent monitor=11000 on fastvm-fedora39-22
   * Pseudo action:   coloc_dependent-clone_promoted_0
   * Resource action: coloc_dependent monitor=10000 on fastvm-fedora39-23
 
