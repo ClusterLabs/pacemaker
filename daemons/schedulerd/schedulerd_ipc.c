@@ -115,13 +115,13 @@ schedulerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
                      pcmk__str_none)) {
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
-        crm_info("Ignoring IPC reply from %s", pcmk__client_name(client));
+        pcmk__info("Ignoring IPC reply from %s", pcmk__client_name(client));
 
     } else if (!pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
-        crm_info("Ignoring invalid IPC message: to '%s' not "
-                 CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
+        pcmk__info("Ignoring invalid IPC message: to '%s' not "
+                   CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
 
     } else {
         pcmk__request_t request = {

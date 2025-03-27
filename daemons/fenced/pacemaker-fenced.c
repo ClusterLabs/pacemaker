@@ -266,7 +266,7 @@ node_does_watchdog_fencing(const char *node)
 void
 stonith_shutdown(int nsig)
 {
-    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
+    pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
     stonith_shutdown_flag = TRUE;
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
@@ -433,7 +433,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_info("Cluster connection active");
+    pcmk__info("Cluster connection active");
 
     fenced_set_local_node(fenced_cluster->priv->node_name);
 

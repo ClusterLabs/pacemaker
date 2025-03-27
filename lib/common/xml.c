@@ -567,8 +567,8 @@ pcmk__xml_is_name_start_char(const char *utf8, int *len)
         for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
             g_string_append_printf(buf, " 0x%.2X", utf8[i]);
         }
-        crm_info("Invalid UTF-8 character (bytes:%s)",
-                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        pcmk__info("Invalid UTF-8 character (bytes:%s)",
+                   (pcmk__str_empty(buf->str)? " <none>" : buf->str));
         g_string_free(buf, TRUE);
         return false;
     }
@@ -628,8 +628,8 @@ pcmk__xml_is_name_char(const char *utf8, int *len)
         for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
             g_string_append_printf(buf, " 0x%.2X", utf8[i]);
         }
-        crm_info("Invalid UTF-8 character (bytes:%s)",
-                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        pcmk__info("Invalid UTF-8 character (bytes:%s)",
+                   (pcmk__str_empty(buf->str)? " <none>" : buf->str));
         g_string_free(buf, TRUE);
         return false;
     }

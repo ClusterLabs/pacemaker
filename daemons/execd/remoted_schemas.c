@@ -213,7 +213,7 @@ get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, i
          */
         pcmk__load_schemas_from_dir(remote_schema_dir);
         pcmk__sort_schemas();
-        crm_info("Fetching extra schema files completed successfully");
+        pcmk__info("Fetching extra schema files completed successfully");
 
     } else {
         if (signo == 0) {
@@ -267,7 +267,7 @@ remoted_request_cib_schema_files(void)
     pcmk__schema_cleanup();
     pcmk__schema_init();
 
-    crm_info("Fetching extra schema files from cluster");
+    pcmk__info("Fetching extra schema files from cluster");
     pid = fork();
 
     switch (pid) {

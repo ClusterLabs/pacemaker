@@ -240,8 +240,8 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     pcmk__assert(member != NULL);
     if (!pcmk__cluster_is_node_active(member)) {
-        crm_info("Not making join-%d offer to inactive node %s",
-                 current_join_id, pcmk__s(member->name, "with unknown name"));
+        pcmk__info("Not making join-%d offer to inactive node %s",
+                   current_join_id, pcmk__s(member->name, "with unknown name"));
         if ((member->expected == NULL)
             && pcmk__str_eq(member->state, PCMK__VALUE_LOST, pcmk__str_none)) {
             /* You would think this unsafe, but in fact this plus an
@@ -259,23 +259,23 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (member->name == NULL) {
-        crm_info("Not making join-%d offer to node uuid %s with unknown name",
-                 current_join_id, member->xml_id);
+        pcmk__info("Not making join-%d offer to node uuid %s with unknown name",
+                   current_join_id, member->xml_id);
         return;
     }
 
     if (controld_globals.membership_id != controld_globals.peer_seq) {
         controld_globals.membership_id = controld_globals.peer_seq;
-        crm_info("Making join-%d offers based on membership event %llu",
-                 current_join_id, controld_globals.peer_seq);
+        pcmk__info("Making join-%d offers based on membership event %llu",
+                   current_join_id, controld_globals.peer_seq);
     }
 
     if (user_data != NULL) {
         enum controld_join_phase phase = controld_get_join_phase(member);
 
         if (phase > controld_join_none) {
-            crm_info("Not making join-%d offer to already known node %s (%s)",
-                     current_join_id, member->name, join_phase_text(phase));
+            pcmk__info("Not making join-%d offer to already known node %s (%s)",
+                       current_join_id, member->name, join_phase_text(phase));
             return;
         }
     }
@@ -288,7 +288,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     // Advertise our feature set so the joining node can bail if not compatible
     pcmk__xe_set(offer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
-    crm_info("Sending join-%d offer to %s", current_join_id, member->name);
+    pcmk__info("Sending join-%d offer to %s", current_join_id, member->name);
     pcmk__cluster_send_message(member, pcmk_ipc_controld, offer);
     pcmk__xml_free(offer);
 
@@ -304,7 +304,7 @@ do_dc_join_offer_all(long long action, enum crmd_fsa_cause cause,
     int count = 0;
 
     if ((cause == C_HA_MESSAGE) && (current_input == I_NODE_JOIN)) {
-        crm_info("A new node joined the cluster");
+        pcmk__info("A new node joined the cluster");
     }
 
     current_join_id++;
@@ -324,8 +324,8 @@ do_dc_join_offer_all(long long action, enum crmd_fsa_cause cause,
     g_hash_table_foreach(pcmk__peer_cache, join_make_offer, NULL);
 
     count = crmd_join_phase_count(controld_join_welcomed);
-    crm_info("Waiting on join-%d requests from %d outstanding node%s",
-             current_join_id, count, pcmk__plural_s(count));
+    pcmk__info("Waiting on join-%d requests from %d outstanding node%s",
+               current_join_id, count, pcmk__plural_s(count));
 
     // Don't waste time by invoking the scheduler yet
 }
@@ -345,8 +345,8 @@ do_dc_join_offer_one(long long action, enum crmd_fsa_cause cause,
 
     welcome = msg_data->data;
     if (welcome == NULL) {
-        crm_info("Making join-%d offers to any unconfirmed nodes "
-                 "because an unknown node joined", current_join_id);
+        pcmk__info("Making join-%d offers to any unconfirmed nodes because an "
+                   "unknown node joined", current_join_id);
         g_hash_table_foreach(pcmk__peer_cache, join_make_offer, &member);
         check_join_state(cur_state, __func__);
         return;
@@ -381,8 +381,8 @@ do_dc_join_offer_one(long long action, enum crmd_fsa_cause cause,
                      NULL);
 
     count = crmd_join_phase_count(controld_join_welcomed);
-    crm_info("Waiting on join-%d requests from %d outstanding node%s",
-             current_join_id, count, pcmk__plural_s(count));
+    pcmk__info("Waiting on join-%d requests from %d outstanding node%s",
+               current_join_id, count, pcmk__plural_s(count));
 
     // Don't waste time by invoking the scheduler yet
 }
@@ -802,10 +802,10 @@ do_dc_join_ack(long long action, enum crmd_fsa_cause cause,
     peer = pcmk__get_node(0, join_from, NULL, pcmk__node_search_cluster_member);
     phase = controld_get_join_phase(peer);
     if (phase != controld_join_finalized) {
-        crm_info("Ignoring out-of-sequence join-%d confirmation from %s "
-                 "(currently %s not %s)",
-                 join_id, join_from, join_phase_text(phase),
-                 join_phase_text(controld_join_finalized));
+        pcmk__info("Ignoring out-of-sequence join-%d confirmation from %s "
+                   "(currently %s not %s)",
+                   join_id, join_from, join_phase_text(phase),
+                   join_phase_text(controld_join_finalized));
         goto done;
     }
 

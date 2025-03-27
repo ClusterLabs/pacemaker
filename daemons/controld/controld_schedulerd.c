@@ -140,7 +140,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
         pcmk__xml_free(fsa_input.msg);
 
     } else {
-        crm_info("%s calculation %s is obsolete", CRM_OP_PECALC, msg_ref);
+        pcmk__info("%s calculation %s is obsolete", CRM_OP_PECALC, msg_ref);
     }
 }
 
@@ -226,8 +226,8 @@ do_pe_control(long long action, enum crmd_fsa_cause cause,
         && !pcmk__is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
 
         if (cur_state == S_STOPPING) {
-            crm_info("Ignoring request to connect to scheduler while shutting "
-                     "down");
+            pcmk__info("Ignoring request to connect to scheduler while "
+                       "shutting down");
 
         } else if (!new_schedulerd_ipc_connection()) {
             pcmk__warn("Could not connect to scheduler");
@@ -338,7 +338,7 @@ do_pe_invoke(long long action, enum crmd_fsa_cause cause,
             controld_fsa_prepend(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
         } else {
-            crm_info("Waiting for the scheduler to connect");
+            pcmk__info("Waiting for the scheduler to connect");
             controld_fsa_stall(msg_data, action);
             controld_set_fsa_action_flags(A_PE_START);
             controld_trigger_fsa();

@@ -317,9 +317,9 @@ pcmk__valid_fencing_watchdog_timeout(const char *value)
             crm_exit(CRM_EX_FATAL);
             return false;
         }
-        crm_info("Watchdog configured with " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
-                 " %s and SBD timeout %ldms",
-                 value, sbd_timeout);
+        pcmk__info("Watchdog configured with " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
+                   " %s and SBD timeout %ldms",
+                   value, sbd_timeout);
     }
     return true;
 }

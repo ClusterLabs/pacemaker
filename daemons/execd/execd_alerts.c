@@ -126,7 +126,7 @@ execd_process_alert_exec(pcmk__client_t *client, xmlNode *request)
 
     pcmk__xe_get_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
 
-    crm_info("Executing alert %s for %s", alert_id, client->id);
+    pcmk__info("Executing alert %s for %s", alert_id, client->id);
 
     params = xml2list(alert_xml);
     pcmk__add_alert_key_int(params, PCMK__alert_key_node_sequence,

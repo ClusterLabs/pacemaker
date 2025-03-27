@@ -348,6 +348,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
     int level = LOG_INFO;
     const xmlNode *diff = NULL;
     const xmlNode *change = NULL;
+    const bool complete = controld_globals.transition_graph->complete;
 
     CRM_CHECK(controld_globals.transition_graph != NULL, return);
 
@@ -357,9 +358,9 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         case S_NOT_DC:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_info("Abort %s suppressed: state=%s (%scomplete)",
-                     abort_text, fsa_state2string(controld_globals.fsa_state),
-                     (controld_globals.transition_graph->complete? "" : "in"));
+            pcmk__info("Abort %s suppressed: state=%s (%scomplete)",
+                       abort_text, fsa_state2string(controld_globals.fsa_state),
+                       (complete? "" : "in"));
             return;
         default:
             break;

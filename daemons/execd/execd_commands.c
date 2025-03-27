@@ -974,8 +974,9 @@ action_complete(svc_action_t * action)
                       cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
 
         } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
-            crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                     cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
+            pcmk__info("%s %s is still in progress: re-scheduling "
+                       "(elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                       cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
         } else {
             pcmk__notice("%s %s failed: %s: Re-scheduling (remaining timeout "
@@ -1595,7 +1596,7 @@ execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request
     }
 
     g_hash_table_replace(rsc_list, rsc->rsc_id, rsc);
-    crm_info("Cached agent information for '%s'", rsc->rsc_id);
+    pcmk__info("Cached agent information for '%s'", rsc->rsc_id);
 }
 
 int
@@ -1613,7 +1614,7 @@ execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
     } else {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Agent information for '%s' not in cache", rsc_id);
+            pcmk__info("Agent information for '%s' not in cache", rsc_id);
             rc = ENODEV;
         }
     }
@@ -1647,8 +1648,8 @@ execd_process_rsc_unregister(pcmk__client_t *client, xmlNode *request)
 
     rsc = g_hash_table_lookup(rsc_list, rsc_id);
     if (rsc == NULL) {
-        crm_info("Ignoring unregistration of resource '%s', which is not registered",
-                 rsc_id);
+        pcmk__info("Ignoring unregistration of resource '%s', which is not "
+                   "registered", rsc_id);
         return pcmk_rc_ok;
     }
 
@@ -1679,8 +1680,8 @@ execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request)
     }
 
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
-        crm_info("Resource '%s' not found (%d active resources)",
-                 rsc_id, g_hash_table_size(rsc_list));
+        pcmk__info("Resource '%s' not found (%d active resources)", rsc_id,
+                   g_hash_table_size(rsc_list));
         return ENODEV;
     }
 
@@ -1848,8 +1849,8 @@ execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
     if (rsc_id != NULL) {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Resource '%s' not found (%d active resources)",
-                     rsc_id, g_hash_table_size(rsc_list));
+            pcmk__info("Resource '%s' not found (%d active resources)", rsc_id,
+                       g_hash_table_size(rsc_list));
             rc = ENODEV;
         }
     }

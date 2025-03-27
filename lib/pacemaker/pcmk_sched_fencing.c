@@ -173,9 +173,9 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *fencing)
                          rsc->id, (order_implicit? "after" : "because"),
                          pcmk__node_name(target));
         } else {
-            crm_info("%s is implicit %s %s is fenced",
-                     action->uuid, (order_implicit? "after" : "because"),
-                     pcmk__node_name(target));
+            pcmk__info("%s is implicit %s %s is fenced", action->uuid,
+                       (order_implicit? "after" : "because"),
+                       pcmk__node_name(target));
         }
 
         if (pcmk__is_set(rsc->flags, pcmk__rsc_notify)) {
@@ -201,8 +201,8 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *fencing)
          * pcmk__update_action_for_orderings() and use this block for healthy
          * resources instead of the above.
          */
-         crm_info("Moving healthy resource %s off %s before fencing",
-                  rsc->id, pcmk__node_name(node));
+         pcmk__info("Moving healthy resource %s off %s before fencing",
+                    rsc->id, pcmk__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
                             strdup(PCMK_ACTION_STONITH), fencing,
                             pcmk__ar_ordered, rsc->private->scheduler);
@@ -400,9 +400,9 @@ pcmk__fence_guest(pcmk_node_t *node)
                                                        NULL, false,
                                                        node->priv->scheduler);
 
-        crm_info("Implying guest %s is down (action %d) after %s fencing",
-                 pcmk__node_name(node), fencing->id,
-                 pcmk__node_name(stop->node));
+        pcmk__info("Implying guest %s is down (action %d) after %s fencing",
+                   pcmk__node_name(node), fencing->id,
+                   pcmk__node_name(stop->node));
         order_actions(parent_fencing_op, fencing,
                       pcmk__ar_unrunnable_first_blocks
                       |pcmk__ar_first_implies_then);
@@ -411,10 +411,10 @@ pcmk__fence_guest(pcmk_node_t *node)
         order_actions(stop, fencing,
                       pcmk__ar_unrunnable_first_blocks
                       |pcmk__ar_first_implies_then);
-        crm_info("Implying guest %s is down (action %d) "
-                 "after launcher %s is stopped (action %d)",
-                 pcmk__node_name(node), fencing->id,
-                 launcher->id, stop->id);
+        pcmk__info("Implying guest %s is down (action %d) after launcher %s is "
+                   "stopped (action %d)",
+                   pcmk__node_name(node), fencing->id, launcher->id, stop->id);
+
     } else {
         /* If we're fencing the guest node but there's no stop for the guest
          * resource, we must think the guest is already stopped. However, we may
@@ -428,15 +428,16 @@ pcmk__fence_guest(pcmk_node_t *node)
 
         if (stop) {
             order_actions(stop, fencing, pcmk__ar_ordered);
-            crm_info("Implying guest %s is down (action %d) "
-                     "after connection is stopped (action %d)",
-                     pcmk__node_name(node), fencing->id, stop->id);
+            pcmk__info("Implying guest %s is down (action %d) after connection "
+                       "is stopped (action %d)",
+                       pcmk__node_name(node), fencing->id, stop->id);
+
         } else {
             /* Not sure why we're fencing, but everything must already be
              * cleanly stopped.
              */
-            crm_info("Implying guest %s is down (action %d) ",
-                     pcmk__node_name(node), fencing->id);
+            pcmk__info("Implying guest %s is down (action %d)",
+                       pcmk__node_name(node), fencing->id);
         }
     }
 

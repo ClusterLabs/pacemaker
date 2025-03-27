@@ -179,9 +179,10 @@ exit_executor(void)
 {
     const guint nclients = pcmk__ipc_client_count();
 
-    crm_info("Terminating with %d client%s",
-             nclients, pcmk__plural_s(nclients));
+    pcmk__info("Terminating with %d client%s", nclients,
+               pcmk__plural_s(nclients));
     stonith__api_free(fencer_api);
+
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
@@ -226,7 +227,7 @@ lrmd_shutdown(int nsig)
             return;
         }
 
-        crm_info("Sending shutdown request to cluster");
+        pcmk__info("Sending shutdown request to cluster");
         if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
             pcmk__crit("Shutdown request failed, exiting immediately");
 
@@ -262,7 +263,7 @@ handle_shutdown_ack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
-        crm_info("IPC proxy provider acknowledged shutdown request");
+        pcmk__info("IPC proxy provider acknowledged shutdown request");
         return;
     }
 #endif
@@ -279,8 +280,8 @@ handle_shutdown_nack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
-        crm_info("Exiting immediately after IPC proxy provider "
-                 "indicated no resources will be stopped");
+        pcmk__info("Exiting immediately after IPC proxy provider indicated no "
+                   "resources will be stopped");
         exit_executor();
         return;
     }

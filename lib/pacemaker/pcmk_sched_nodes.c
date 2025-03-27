@@ -377,7 +377,7 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
     if (strategy == pcmk__health_strategy_none) {
         return;
     }
-    crm_info("Applying node health strategy '%s'", strategy_str);
+    pcmk__info("Applying node health strategy '%s'", strategy_str);
 
     // The progressive strategy can use a base health score
     if (strategy == pcmk__health_strategy_progressive) {
@@ -392,8 +392,8 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
         if (health == 0) {
             continue;
         }
-        crm_info("Overall system health of %s is %d",
-                 pcmk__node_name(node), health);
+        pcmk__info("Overall system health of %s is %d", pcmk__node_name(node),
+                   health);
 
         // Use node health as a location score for each resource on the node
         for (GList *r = scheduler->priv->resources; r != NULL; r = r->next) {

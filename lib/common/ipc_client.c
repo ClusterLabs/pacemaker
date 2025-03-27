@@ -162,7 +162,7 @@ ipc_post_disconnect(gpointer user_data)
 {
     pcmk_ipc_api_t *api = user_data;
 
-    crm_info("Disconnected from %s", pcmk_ipc_name(api, true));
+    pcmk__info("Disconnected from %s", pcmk_ipc_name(api, true));
 
     // Perform any daemon-specific handling needed
     if ((api->cmds != NULL) && (api->cmds->post_disconnect != NULL)) {
@@ -944,12 +944,13 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
                                   &found_pid, &found_uid, &found_gid);
     if (rc != pcmk_rc_ok) {
         if (rc == pcmk_rc_ipc_unauthorized) {
-            crm_info("%s IPC provider authentication failed: process %lld has "
-                     "uid %lld (expected %lld) and gid %lld (expected %lld)",
-                     ipc->server_name,
-                     (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                     (long long) found_uid, (long long) cl_uid,
-                     (long long) found_gid, (long long) cl_gid);
+            pcmk__info("%s IPC provider authentication failed: process %lld "
+                       "has uid %lld (expected %lld) and gid %lld (expected "
+                       "%lld)",
+                       ipc->server_name,
+                       (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                       (long long) found_uid, (long long) cl_uid,
+                       (long long) found_gid, (long long) cl_gid);
         }
         crm_ipc_close(ipc);
         return rc;
@@ -1686,7 +1687,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     c = qb_ipcc_connect(name, 0);
 #endif
     if (c == NULL) {
-        crm_info("Could not connect to %s IPC: %s", name, strerror(errno));
+        pcmk__info("Could not connect to %s IPC: %s", name, strerror(errno));
         rc = pcmk_rc_ipc_unresponsive;
         goto bail;
     }
@@ -1702,8 +1703,8 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
      * for us.
      */
     if (qb_ipcc_connect_continue(c) != 0) {
-        crm_info("Could not connect to %s IPC: %s", name,
-                 (poll_rc == 0)?"timeout":strerror(errno));
+        pcmk__info("Could not connect to %s IPC: %s", name,
+                   ((poll_rc == 0)? "timeout" :strerror(errno)));
         rc = pcmk_rc_ipc_unresponsive;
         c = NULL; // qb_ipcc_connect_continue cleaned up for us
         goto bail;

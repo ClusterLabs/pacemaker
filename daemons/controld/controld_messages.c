@@ -56,7 +56,7 @@ register_fsa_error_adv(enum crmd_fsa_input input, fsa_data_t *cur_data,
                                controld_globals.fsa_actions, TRUE, __func__);
     }
 
-    crm_info("Resetting the current action list");
+    pcmk__info("Resetting the current action list");
     fsa_dump_actions(controld_globals.fsa_actions, "Drop");
     controld_globals.fsa_actions = A_NOTHING;
 
@@ -722,9 +722,9 @@ handle_lrm_delete(xmlNode *stored_msg)
                 transition = pcmk__xe_get(stored_msg, PCMK__XA_TRANSITION_KEY);
             }
 
-            crm_info("Notifying %s on %s that %s was%s deleted",
-                     from_sys, (from_host? from_host : "local node"), rsc_id,
-                     ((rc == pcmk_rc_ok)? "" : " not"));
+            pcmk__info("Notifying %s on %s that %s was%s deleted", from_sys,
+                       pcmk__s(from_host, "local node"), rsc_id,
+                       ((rc == pcmk_rc_ok)? "" : " not"));
             op = lrmd_new_event(rsc_id, PCMK_ACTION_DELETE, 0);
             op->type = lrmd_event_exec_complete;
             op->user_data = pcmk__str_copy(pcmk__s(transition, FAKE_TE_ID));
@@ -961,7 +961,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
-        crm_info("Shutting down controller");
+        pcmk__info("Shutting down controller");
         return I_STOP;
     }
 
@@ -1001,8 +1001,8 @@ handle_shutdown_ack(xmlNode *stored_msg)
                      pcmk__str_null_matches|pcmk__str_casei)) {
 
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-            crm_info("Shutting down controller after confirmation from %s",
-                     host_from);
+            pcmk__info("Shutting down controller after confirmation from %s",
+                       host_from);
         } else {
             pcmk__err("Shutting down controller after unexpected "
                       "shutdown request from %s",
@@ -1210,7 +1210,7 @@ handle_response(xmlNode *stored_msg)
             controld_fsa_append(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         } else {
-            crm_info("%s calculation %s is obsolete", op, msg_ref);
+            pcmk__info("%s calculation %s is obsolete", op, msg_ref);
         }
 
     } else if (strcmp(op, CRM_OP_VOTE) == 0
@@ -1242,8 +1242,8 @@ handle_shutdown_request(xmlNode * stored_msg)
         host_from = controld_globals.cluster->priv->node_name;
     }
 
-    crm_info("Creating shutdown request for %s (state=%s)", host_from,
-             fsa_state2string(controld_globals.fsa_state));
+    pcmk__info("Creating shutdown request for %s (state=%s)", host_from,
+               fsa_state2string(controld_globals.fsa_state));
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
@@ -1301,7 +1301,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src)
         crmd_proxy_send(sys, msg);
 
     } else {
-        crm_info("Received invalid request: unknown subsystem '%s'", sys);
+        pcmk__info("Received invalid request: unknown subsystem '%s'", sys);
     }
 }
 
@@ -1329,8 +1329,8 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
                                      CRM_SYSTEM_CRMD, CRM_OP_REMOTE_STATE,
                                      NULL);
 
-    crm_info("Notifying cluster of Pacemaker Remote node %s %s",
-             node_name, node_up? "coming up" : "going down");
+    pcmk__info("Notifying cluster of Pacemaker Remote node %s %s", node_name,
+               (node_up? "coming up" : "going down"));
 
     pcmk__xe_set(msg, PCMK_XA_ID, node_name);
     pcmk__xe_set_bool(msg, PCMK__XA_IN_CCM, node_up);

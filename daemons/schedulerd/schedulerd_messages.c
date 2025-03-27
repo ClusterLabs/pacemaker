@@ -164,7 +164,7 @@ handle_pecalc_request(pcmk__request_t *request)
         crm_debug("Not saving input to disk (disabled by configuration)");
 
     } else if (is_repoke) {
-        crm_info("Input has not changed since last time, not saving to disk");
+        pcmk__info("Input has not changed since last time, not saving to disk");
 
     } else {
         unlink(filename);

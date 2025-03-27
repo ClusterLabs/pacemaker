@@ -26,7 +26,7 @@ attrd_lrmd_callback(lrmd_event_data_t * op)
     CRM_CHECK(op != NULL, return);
     switch (op->type) {
         case lrmd_event_disconnect:
-            crm_info("Lost connection to executor");
+            pcmk__info("Lost connection to executor");
             attrd_lrmd_disconnect();
             break;
         default:

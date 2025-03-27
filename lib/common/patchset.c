@@ -473,11 +473,11 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
             return pcmk_rc_diff_resync;
         }
         if (current[i] > source[i]) {
-            crm_info("Current %s is too high "
-                     "(%d.%d.%d > %d.%d.%d --> %d.%d.%d)",
-                     vfields[i], current[0], current[1], current[2],
-                     source[0], source[1], source[2],
-                     target[0], target[1], target[2]);
+            pcmk__info("Current %s is too high "
+                       "(%d.%d.%d > %d.%d.%d --> %d.%d.%d)",
+                       vfields[i], current[0], current[1], current[2],
+                       source[0], source[1], source[2],
+                       target[0], target[1], target[2]);
             crm_log_xml_info(patchset, "OldPatch");
             return pcmk_rc_old_data;
         }
@@ -879,8 +879,8 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
 
         new_digest = pcmk__digest_xml(xml, true);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
-            crm_info("v%d digest mis-match: expected %s, calculated %s",
-                     format, digest, new_digest);
+            pcmk__info("v%d digest mis-match: expected %s, calculated %s",
+                       format, digest, new_digest);
             rc = -pcmk_err_diff_failed;
             pcmk__if_tracing(
                 {

@@ -119,7 +119,7 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    crm_info("Disconnecting from %s cluster layer", cluster_layer_s);
+    pcmk__info("Disconnecting from %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
@@ -395,7 +395,7 @@ pcmk_get_cluster_layer(void)
     cluster = pcmk__env_option(PCMK__ENV_CLUSTER_TYPE);
 
     if (cluster != NULL) {
-        crm_info("Verifying configured cluster layer '%s'", cluster);
+        pcmk__info("Verifying configured cluster layer '%s'", cluster);
         cluster_layer = pcmk_cluster_layer_invalid;
 
 #if SUPPORT_COROSYNC
@@ -410,7 +410,7 @@ pcmk_get_cluster_layer(void)
                          cluster);
             crm_exit(CRM_EX_FATAL);
         }
-        crm_info("Assuming an active '%s' cluster", cluster);
+        pcmk__info("Assuming an active '%s' cluster", cluster);
 
     } else {
         // Nothing configured, so test supported cluster layers
@@ -424,8 +424,8 @@ pcmk_get_cluster_layer(void)
         if (cluster_layer == pcmk_cluster_layer_unknown) {
             pcmk__notice("Could not determine the current cluster layer");
         } else {
-            crm_info("Detected an active '%s' cluster",
-                     pcmk_cluster_layer_text(cluster_layer));
+            pcmk__info("Detected an active '%s' cluster",
+                       pcmk_cluster_layer_text(cluster_layer));
         }
     }
 

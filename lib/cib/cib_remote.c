@@ -225,8 +225,8 @@ cib_remote_callback_dispatch(gpointer user_data)
         case EAGAIN:
             /* Have we timed out? */
             if (time(NULL) >= private->start_time + private->timeout_sec) {
-                crm_info("Error reading from CIB manager connection: %s",
-                         pcmk_rc_str(ETIME));
+                pcmk__info("Error reading from CIB manager connection: %s",
+                           pcmk_rc_str(ETIME));
                 return -1;
             }
 
@@ -235,8 +235,8 @@ cib_remote_callback_dispatch(gpointer user_data)
 
         default:
             /* Error */
-            crm_info("Error reading from CIB manager connection: %s",
-                     pcmk_rc_str(rc));
+            pcmk__info("Error reading from CIB manager connection: %s",
+                       pcmk_rc_str(rc));
             return -1;
     }
 
@@ -280,8 +280,8 @@ cib_remote_command_dispatch(gpointer user_data)
     if (rc == EAGAIN) {
         /* Have we timed out? */
         if (time(NULL) >= private->start_time + private->timeout_sec) {
-            crm_info("Error reading from CIB manager connection: %s",
-                     pcmk_rc_str(ETIME));
+            pcmk__info("Error reading from CIB manager connection: %s",
+                       pcmk_rc_str(ETIME));
             return -1;
         }
 
@@ -294,8 +294,8 @@ cib_remote_command_dispatch(gpointer user_data)
     pcmk__err("Received late reply for remote cib connection, discarding");
 
     if (rc != pcmk_rc_ok) {
-        crm_info("Error reading from CIB manager connection: %s",
-                 pcmk_rc_str(rc));
+        pcmk__info("Error reading from CIB manager connection: %s",
+                   pcmk_rc_str(rc));
         return -1;
     }
 
@@ -371,8 +371,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     rc = pcmk__connect_remote(private->server, private->port, 0, NULL,
                               &(connection->tcp_socket), NULL, NULL);
     if (rc != pcmk_rc_ok) {
-        crm_info("Remote connection to %s:%d failed: %s " QB_XS " rc=%d",
-                 private->server, private->port, pcmk_rc_str(rc), rc);
+        pcmk__info("Remote connection to %s:%d failed: %s " QB_XS " rc=%d",
+                   private->server, private->port, pcmk_rc_str(rc), rc);
         return -ENOTCONN;
     }
 
@@ -502,14 +502,14 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
 done:
     if (rc == pcmk_ok) {
-        crm_info("Opened connection to %s:%d for %s",
-                 private->server, private->port, name);
+        pcmk__info("Opened connection to %s:%d for %s", private->server,
+                   private->port, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 
     } else {
-        crm_info("Connection to %s:%d for %s failed: %s\n",
-                 private->server, private->port, name, pcmk_strerror(rc));
+        pcmk__info("Connection to %s:%d for %s failed: %s\n", private->server,
+                   private->port, name, pcmk_strerror(rc));
     }
 
     return rc;

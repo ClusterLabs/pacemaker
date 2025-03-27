@@ -104,9 +104,10 @@ log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
                    ra_key, ra_ocf_version);
 
     } else if (pcmk__compare_versions(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
-        crm_info("%s supports OCF version %s (this Pacemaker version supports "
-                 PCMK_OCF_VERSION " and might not use all agent features)",
-                 ra_key, ra_ocf_version);
+        pcmk__info("%s supports OCF version %s (this Pacemaker version "
+                   "supports " PCMK_OCF_VERSION " and might not use all agent "
+                   "features)",
+                   ra_key, ra_ocf_version);
 
     } else {
         crm_debug("%s supports OCF version %s", ra_key, ra_ocf_version);

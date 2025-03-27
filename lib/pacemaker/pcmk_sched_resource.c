@@ -545,9 +545,9 @@ pcmk__unassign_resource(pcmk_resource_t *rsc)
     pcmk_node_t *old = rsc->priv->assigned_node;
 
     if (old == NULL) {
-        crm_info("Unassigning %s", rsc->id);
+        pcmk__info("Unassigning %s", rsc->id);
     } else {
-        crm_info("Unassigning %s from %s", rsc->id, pcmk__node_name(old));
+        pcmk__info("Unassigning %s from %s", rsc->id, pcmk__node_name(old));
     }
 
     pcmk__set_rsc_flags(rsc, pcmk__rsc_unassigned);
@@ -633,10 +633,10 @@ pcmk__threshold_reached(pcmk_resource_t *rsc, const pcmk_node_t *node,
         return true;
     }
 
-    crm_info("%s can fail %d more time%s on "
-             "%s before reaching migration threshold (%d)",
-             rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
-             pcmk__node_name(node), rsc->priv->ban_after_failures);
+    pcmk__info("%s can fail %d more time%s on %s before reaching migration "
+               "threshold (%d)",
+               rsc_to_ban->id, remaining_tries, pcmk__plural_s(remaining_tries),
+               pcmk__node_name(node), rsc->priv->ban_after_failures);
     return false;
 }
 

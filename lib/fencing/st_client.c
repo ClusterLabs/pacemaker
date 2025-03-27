@@ -583,7 +583,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
                 const char *match_id = pcmk__xe_get(match, PCMK_XA_ID);
                 xmlChar *match_path = xmlGetNodePath(match);
 
-                crm_info("//*[@" PCMK_XA_AGENT "][%d] = %s", lpc, match_path);
+                pcmk__info("//*[@" PCMK_XA_AGENT "][%d] = %s", lpc, match_path);
                 free(match_path);
                 *devices = stonith__key_value_add(*devices, NULL, match_id);
             }

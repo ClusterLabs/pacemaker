@@ -367,9 +367,9 @@ pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not set IPC threshold for client %s[%u] to %s: %s",
-                  pcmk__client_name(client), client->pid,
-                  pcmk__s(qmax, "default"), pcmk_rc_str(rc));
+        pcmk__info("Could not set IPC threshold for client %s[%u] to %s: %s",
+                   pcmk__client_name(client), client->pid,
+                   pcmk__s(qmax, "default"), pcmk_rc_str(rc));
 
     } else if (client->queue_max != orig_value) {
         crm_debug("IPC threshold for client %s[%u] is now %u (was %u)",

@@ -48,7 +48,7 @@ do_ha_control(long long action, enum crmd_fsa_cause cause,
     if (pcmk__is_set(action, A_HA_DISCONNECT)) {
         pcmk_cluster_disconnect(controld_globals.cluster);
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);
-        crm_info("Disconnected from the cluster");
+        pcmk__info("Disconnected from the cluster");
     }
 
     if (pcmk__is_set(action, A_HA_CONNECT)) {
@@ -83,7 +83,7 @@ do_ha_control(long long action, enum crmd_fsa_cause cause,
 
         populate_cib_nodes(controld_node_update_none, __func__);
         controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
-        crm_info("Connected to the cluster");
+        pcmk__info("Connected to the cluster");
     }
 
     if ((action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) != 0) {
@@ -111,8 +111,8 @@ do_shutdown_req(long long action, enum crmd_fsa_cause cause,
 {
     xmlNode *msg = NULL;
 
-    crm_info("Sending shutdown request to all peers (DC is %s)",
-             pcmk__s(controld_globals.dc_name, "not set"));
+    pcmk__info("Sending shutdown request to all peers (DC is %s)",
+               pcmk__s(controld_globals.dc_name, "not set"));
 
     controld_set_fsa_input_flags(R_SHUTDOWN);
     msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
@@ -474,36 +474,37 @@ do_started(long long action, enum crmd_fsa_cause cause,
     }
 
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_MEMBERSHIP)) {
-        crm_info("Delaying start: no membership data (%.16" PRIx64 ")",
-                 R_MEMBERSHIP);
+        pcmk__info("Delaying start: no membership data (%.16" PRIx64 ")",
+                   R_MEMBERSHIP);
         controld_fsa_stall(NULL, action);
         return;
     }
 
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
-        crm_info("Delaying start: not connected to executor (%.16" PRIx64 ")",
-                 R_LRM_CONNECTED);
+        pcmk__info("Delaying start: not connected to executor (%.16" PRIx64 ")",
+                   R_LRM_CONNECTED);
         controld_fsa_stall(NULL, action);
         return;
     }
 
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
-        crm_info("Delaying start: not connected to CIB manager "
-                 "(%.16" PRIx64 ")",
-                 R_CIB_CONNECTED);
+        pcmk__info("Delaying start: not connected to CIB manager "
+                   "(%.16" PRIx64 ")",
+                   R_CIB_CONNECTED);
         controld_fsa_stall(NULL, action);
         return;
     }
 
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_READ_CONFIG)) {
-        crm_info("Delaying start: config not read (%.16" PRIx64 ")",
-                 R_READ_CONFIG);
+        pcmk__info("Delaying start: config not read (%.16" PRIx64 ")",
+                   R_READ_CONFIG);
         controld_fsa_stall(NULL, action);
         return;
     }
 
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_PEER_DATA)) {
-        crm_info("Delaying start: no peer data (%.16" PRIx64 ")", R_PEER_DATA);
+        pcmk__info("Delaying start: no peer data (%.16" PRIx64 ")",
+                   R_PEER_DATA);
         controld_fsa_stall(NULL, action);
         return;
     }

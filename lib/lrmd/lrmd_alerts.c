@@ -140,8 +140,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
             }
         }
 
-        crm_info("Sending %s alert via %s to %s",
-                 kind_s, entry->id, entry->recipient);
+        pcmk__info("Sending %s alert via %s to %s", kind_s, entry->id,
+                   entry->recipient);
 
         /* Make a copy of the parameters, because each alert will be unique */
         for (const lrmd_key_value_t *param = params; param != NULL;

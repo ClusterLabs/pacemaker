@@ -270,8 +270,8 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 
     switch(exitcode) {
         case CRM_EX_OK:
-            crm_info("%s[%d] exited with status %d (%s)",
-                     name, pid, exitcode, crm_exit_str(exitcode));
+            pcmk__info("%s[%d] exited with status %d (%s)", name, pid, exitcode,
+                       crm_exit_str(exitcode));
             break;
 
         case CRM_EX_FATAL:
@@ -480,10 +480,10 @@ start_child(pcmkd_child_t * child)
 
         mainloop_child_add(child->pid, 0, name, child, pcmk_child_exit);
 
-        crm_info("Forked process %lld using user %lld (%s) and group %lld "
-                 "for subdaemon %s%s",
-                 (long long) child->pid, (long long) uid, user, (long long) gid,
-                 name, valgrind_s);
+        pcmk__info("Forked process %lld using user %lld (%s) and group %lld "
+                   "for subdaemon %s%s",
+                   (long long) child->pid, (long long) uid, user,
+                   (long long) gid, name, valgrind_s);
 
         return pcmk_rc_ok;
     }

@@ -75,7 +75,7 @@ retrieveCib(const char *filename, const char *sigfile)
     int rc = cib_file_read_and_verify(filename, sigfile, &root);
 
     if (rc == pcmk_ok) {
-        crm_info("Loaded CIB from %s (with digest %s)", filename, sigfile);
+        pcmk__info("Loaded CIB from %s (with digest %s)", filename, sigfile);
     } else {
         pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
                    filename, sigfile, pcmk_strerror(rc));

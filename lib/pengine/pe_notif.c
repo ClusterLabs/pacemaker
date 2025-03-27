@@ -1014,9 +1014,10 @@ pe__order_notifs_after_fencing(const pcmk_action_t *stop, pcmk_resource_t *rsc,
 {
     notify_data_t *n_data;
 
-    crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
-    n_data = pe__action_notif_pseudo_ops(rsc, PCMK_ACTION_STOP, NULL, fencing);
+    pcmk__info("Ordering notifications for implied %s after fencing",
+               stop->uuid);
 
+    n_data = pe__action_notif_pseudo_ops(rsc, PCMK_ACTION_STOP, NULL, fencing);
     if (n_data != NULL) {
         collect_resource_data(rsc, false, n_data);
         add_notify_env(n_data, "notify_stop_resource", rsc->id);

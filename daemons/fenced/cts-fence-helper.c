@@ -87,7 +87,7 @@ static void
 mainloop_test_done(const char *origin, bool pass)
 {
     if (pass) {
-        crm_info("SUCCESS - %s", origin);
+        pcmk__info("SUCCESS - %s", origin);
         mainloop_iter++;
         mainloop_set_trigger(trig);
         result.execution_status = PCMK_EXEC_DONE;
@@ -166,7 +166,7 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
         crm_exit(CRM_EX_ERROR); \
     } else { \
         if (verbose) {                   \
-            crm_info("SUCCESS - %s: %d", str, rc);    \
+            pcmk__info("SUCCESS - %s: %d", str, rc);                        \
         } else {   \
             crm_debug("SUCCESS - %s: %d", str, rc);    \
         }                          \
@@ -309,11 +309,11 @@ sanity_tests(void)
     st->cmds->register_callback(st, 0, 120, st_opt_timeout_updates, NULL, "st_global_callback",
                                 st_global_callback);
 
-    crm_info("Starting API Sanity Tests");
+    pcmk__info("Starting API Sanity Tests");
     run_standard_test();
     run_fence_failure_test();
     run_fence_failure_rollover_test();
-    crm_info("Sanity Tests Passed");
+    pcmk__info("Sanity Tests Passed");
 }
 
 static void
@@ -558,7 +558,7 @@ iterate_mainloop_tests(gboolean event_ready)
 
     if (mainloop_iter == (sizeof(callbacks) / sizeof(mainloop_test_iteration_cb))) {
         /* all tests ran, everything passed */
-        crm_info("ALL MAINLOOP TESTS PASSED!");
+        pcmk__info("ALL MAINLOOP TESTS PASSED!");
         crm_exit(CRM_EX_OK);
     }
 
@@ -579,7 +579,7 @@ test_shutdown(int nsig)
 
     if (st) {
         rc = st->cmds->disconnect(st);
-        crm_info("Disconnect: %d", rc);
+        pcmk__info("Disconnect: %d", rc);
 
         crm_debug("Destroy");
         stonith__api_free(st);
@@ -597,7 +597,7 @@ mainloop_tests(void)
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
-    crm_info("Starting");
+    pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 }

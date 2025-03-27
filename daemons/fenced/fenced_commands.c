@@ -729,7 +729,7 @@ stonith_device_execute(fenced_device_t *device)
                 goto done;
             }
         } else {
-            crm_info("Faking success for %s watchdog operation", cmd->action);
+            pcmk__info("Faking success for %s watchdog operation", cmd->action);
             report_internal_result(cmd, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             goto done;
         }
@@ -739,9 +739,9 @@ stonith_device_execute(fenced_device_t *device)
     exec_rc = pcmk__substitute_secrets(device->id, device->params);
     if (exec_rc != pcmk_rc_ok) {
         if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_none)) {
-            crm_info("Proceeding with stop operation for %s "
-                     "despite being unable to load CIB secrets (%s)",
-                     device->id, pcmk_rc_str(exec_rc));
+            pcmk__info("Proceeding with stop operation for %s despite being "
+                       "unable to load CIB secrets (%s)",
+                       device->id, pcmk_rc_str(exec_rc));
         } else {
             pcmk__err("Considering %s unconfigured because unable to load CIB "
                       "secrets: %s",
@@ -1219,14 +1219,14 @@ build_device_from_xml(const xmlNode *dev)
     }
 
     if (is_action_required(PCMK_ACTION_ON, device)) {
-        crm_info("Fencing device '%s' requires unfencing", device->id);
+        pcmk__info("Fencing device '%s' requires unfencing", device->id);
     }
 
     if (device->on_target_actions != NULL) {
         gchar *on_target_actions = g_strjoinv(" ", device->on_target_actions);
 
-        crm_info("Fencing device '%s' requires actions (%s) to be executed "
-                 "on target", device->id, on_target_actions);
+        pcmk__info("Fencing device '%s' requires actions (%s) to be executed "
+                   "on target", device->id, on_target_actions);
         g_free(on_target_actions);
     }
 
@@ -1345,23 +1345,24 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
     mainloop_set_trigger(dev->work);
 
     if (pcmk__result_ok(result)) {
-        crm_info("Refreshing target list for %s", dev->id);
+        pcmk__info("Refreshing target list for %s", dev->id);
         g_list_free_full(dev->targets, free);
         dev->targets = stonith__parse_targets(result->action_stdout);
         dev->targets_age = time(NULL);
 
     } else if (dev->targets != NULL) {
         if (result->execution_status == PCMK_EXEC_DONE) {
-            crm_info("Reusing most recent target list for %s "
-                     "because list returned error code %d",
-                     dev->id, result->exit_status);
+            pcmk__info("Reusing most recent target list for %s because list "
+                       "returned error code %d",
+                       dev->id, result->exit_status);
         } else {
-            crm_info("Reusing most recent target list for %s "
-                     "because list could not be executed: %s%s%s%s",
-                     dev->id, pcmk_exec_status_str(result->execution_status),
-                     ((result->exit_reason == NULL)? "" : " ("),
-                     ((result->exit_reason == NULL)? "" : result->exit_reason),
-                     ((result->exit_reason == NULL)? "" : ")"));
+            const char *reason = result->exit_reason;
+
+            pcmk__info("Reusing most recent target list for %s because list "
+                       "could not be executed: %s%s%s%s",
+                       dev->id, pcmk_exec_status_str(result->execution_status),
+                       ((reason != NULL)? " (" : ""), pcmk__s(reason, ""),
+                       ((reason != NULL)? ")" : ""));
         }
 
     } else { // We have never successfully executed list
@@ -1547,7 +1548,8 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
              * entry to the new one. Otherwise the pending ops will be reported
              * as failures.
              */
-            crm_info("Overwriting existing entry for %s from CIB", device->id);
+            pcmk__info("Overwriting existing entry for %s from CIB",
+                       device->id);
             device->pending_ops = old->pending_ops;
             fenced_device_set_flags(device, fenced_df_api_registered);
             old->pending_ops = NULL;
@@ -1583,8 +1585,8 @@ stonith_device_remove(const char *id, bool from_cib)
 
     if (device == NULL) {
         ndevices = g_hash_table_size(device_table);
-        crm_info("Device '%s' not found (%u active device%s)", id, ndevices,
-                 pcmk__plural_s(ndevices));
+        pcmk__info("Device '%s' not found (%u active device%s)", id, ndevices,
+                   pcmk__plural_s(ndevices));
         return;
     }
 
@@ -1598,10 +1600,12 @@ stonith_device_remove(const char *id, bool from_cib)
     if (!pcmk__any_flags_set(device->flags,
                              fenced_df_api_registered
                              |fenced_df_cib_registered)) {
+
         g_hash_table_remove(device_table, id);
         ndevices = g_hash_table_size(device_table);
-        crm_info("Removed '%s' from device list (%u active device%s)",
-                 id, ndevices, pcmk__plural_s(ndevices));
+        pcmk__info("Removed '%s' from device list (%u active device%s)", id,
+                   ndevices, pcmk__plural_s(ndevices));
+
     } else {
         // Exactly one is true at this point
         const bool cib_registered = pcmk__is_set(device->flags,
@@ -1864,8 +1868,8 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
     }
 
     if (tp->levels[id] != NULL) {
-        crm_info("Adding to the existing %s[%d] topology entry",
-                 tp->target, id);
+        pcmk__info("Adding to the existing %s[%d] topology entry", tp->target,
+                   id);
     }
 
     value = pcmk__xe_get(level, PCMK_XA_DEVICES);
@@ -1885,8 +1889,8 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
 
     nlevels = count_active_levels(tp);
 
-    crm_info("Target %s has %d active fencing level%s", tp->target, nlevels,
-             pcmk__plural_s(nlevels));
+    pcmk__info("Target %s has %d active fencing level%s", tp->target, nlevels,
+               pcmk__plural_s(nlevels));
 
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
@@ -1937,16 +1941,16 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
     if (tp == NULL) {
         guint nentries = g_hash_table_size(topology);
 
-        crm_info("No fencing topology found for %s (%d active %s)",
-                 target, nentries,
-                 pcmk__plural_alt(nentries, "entry", "entries"));
+        pcmk__info("No fencing topology found for %s (%d active %s)", target,
+                   nentries, pcmk__plural_alt(nentries, "entry", "entries"));
 
     } else if (id == 0 && g_hash_table_remove(topology, target)) {
         guint nentries = g_hash_table_size(topology);
 
-        crm_info("Removed all fencing topology entries related to %s "
-                 "(%d active %s remaining)", target, nentries,
-                 pcmk__plural_alt(nentries, "entry", "entries"));
+        pcmk__info("Removed all fencing topology entries related to %s (%d "
+                   "active %s remaining)",
+                   target, nentries,
+                   pcmk__plural_alt(nentries, "entry", "entries"));
 
     } else if (tp->levels[id] != NULL) {
         guint nlevels;
@@ -1955,9 +1959,9 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
         tp->levels[id] = NULL;
 
         nlevels = count_active_levels(tp);
-        crm_info("Removed level %d from fencing topology for %s "
-                 "(%d active level%s remaining)",
-                 id, target, nlevels, pcmk__plural_s(nlevels));
+        pcmk__info("Removed level %d from fencing topology for %s (%d "
+                   "active level%s remaining)",
+                   id, target, nlevels, pcmk__plural_s(nlevels));
     }
 
     free(target);
@@ -2027,9 +2031,9 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
     fenced_device_t *device = NULL;
 
     if ((id == NULL) || (action == NULL)) {
-        crm_info("Malformed API action request: device %s, action %s",
-                 (id? id : "not specified"),
-                 (action? action : "not specified"));
+        pcmk__info("Malformed API action request: device %s, action %s",
+                   pcmk__s(id, "not specified"),
+                   pcmk__s(action, "not specified"));
         set_bad_request_result(result);
         return;
     }
@@ -2057,8 +2061,9 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 
     device = g_hash_table_lookup(device_table, id);
     if (device == NULL) {
-        crm_info("Ignoring API '%s' action request because device %s not found",
-                 action, id);
+        pcmk__info("Ignoring API '%s' action request because device %s not "
+                   "found",
+                   action, id);
         pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                             "'%s' not found", id);
         return;
@@ -2066,8 +2071,9 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
     } else if (!pcmk__is_set(device->flags, fenced_df_api_registered)
                && (strcmp(action, PCMK_ACTION_MONITOR) == 0)) {
         // Monitors may run only on "started" (API-registered) devices
-        crm_info("Ignoring API '%s' action request because device %s not active",
-                 action, id);
+        pcmk__info("Ignoring API '%s' action request because device %s not "
+                   "active",
+                   action, id);
         pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                             "'%s' not active", id);
         return;
@@ -2318,11 +2324,12 @@ can_fence_host_with_device(fenced_device_t *dev,
     }
 
   search_report_results:
-    crm_info("%s is%s eligible to fence (%s) %s%s%s%s: %s",
-             dev_id, (can? "" : " not"), pcmk__s(action, "unspecified action"),
-             pcmk__s(target, "unspecified target"),
-             (alias == NULL)? "" : " (as '", pcmk__s(alias, ""),
-             (alias == NULL)? "" : "')", check_type);
+    pcmk__info("%s is%s eligible to fence (%s) %s%s%s%s: %s",
+               dev_id, (can? "" : " not"),
+               pcmk__s(action, "unspecified action"),
+               pcmk__s(target, "unspecified target"),
+               ((alias != NULL)? " (as '" : ""), pcmk__s(alias, ""),
+               ((alias != NULL)? "')" : ""), check_type);
     search_devices_record_result(search, ((dev == NULL)? NULL : dev_id), can);
 }
 
@@ -2934,8 +2941,8 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
     fenced_device_t *device = NULL;
     guint ndevices = g_list_length(devices);
 
-    crm_info("Found %d matching device%s for target '%s'",
-             ndevices, pcmk__plural_s(ndevices), cmd->target);
+    pcmk__info("Found %d matching device%s for target '%s'", ndevices,
+               pcmk__plural_s(ndevices), cmd->target);
 
     if (devices != NULL) {
         device = g_hash_table_lookup(device_table, devices->data);
