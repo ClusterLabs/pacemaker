@@ -53,6 +53,9 @@ extern "C" {
         }                                                                   \
     } while (0)
 
+//! \deprecated Do not use
+#define crm_emerg(fmt, args...) qb_log(LOG_EMERG, fmt, ##args)
+
 #ifdef __cplusplus
 }
 #endif
