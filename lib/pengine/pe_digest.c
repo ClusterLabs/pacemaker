@@ -56,8 +56,8 @@ attr_not_in_string(xmlAttrPtr a, void *user_data)
     char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
 
     if (strstr((const char *) user_data, name) == NULL) {
-        crm_trace("Filtering %s (not found in '%s')",
-                  (const char *) a->name, (const char *) user_data);
+        pcmk__trace("Filtering %s (not found in '%s')",
+                    (const char *) a->name, (const char *) user_data);
         filter = true;
     }
     free(name);
@@ -72,8 +72,8 @@ attr_in_string(xmlAttrPtr a, void *user_data)
     char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
 
     if (strstr((const char *) user_data, name) != NULL) {
-        crm_trace("Filtering %s (found in '%s')",
-                  (const char *) a->name, (const char *) user_data);
+        pcmk__trace("Filtering %s (found in '%s')",
+                    (const char *) a->name, (const char *) user_data);
         filter = true;
     }
     free(name);
@@ -521,8 +521,8 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
          * so there is no risk of collision using strstr().
          */
         matches = (strstr(node_summary, search_secure) != NULL);
-        crm_trace("Calculated unfencing digest '%s' %sfound in '%s'",
-                  search_secure, matches? "" : "not ", node_summary);
+        pcmk__trace("Calculated unfencing digest '%s' %sfound in '%s'",
+                    search_secure, (matches? "" : "not "), node_summary);
         free(search_secure);
     }
     return matches;

@@ -277,8 +277,9 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
             }
 
         } else {
-            crm_trace("Floating-point value parsed successfully from "
-                      "'%s': %g", text, *result);
+            pcmk__trace("Floating-point value parsed successfully from '%s': "
+                        "%g",
+                        text, *result);
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
@@ -756,13 +757,13 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &after_t);
 
-    crm_trace("Compressed %d bytes into %d (ratio %d:1) in %.0fms",
-             length, *result_len, length / (*result_len),
-             (after_t.tv_sec - before_t.tv_sec) * 1000 +
-             (after_t.tv_nsec - before_t.tv_nsec) / 1e6);
+    pcmk__trace("Compressed %d bytes into %d (ratio %d:1) in %.0fms", length,
+                *result_len, (length / *result_len),
+                (((after_t.tv_sec - before_t.tv_sec) * 1000)
+                 + ((after_t.tv_nsec - before_t.tv_nsec) / 1e6)));
 #else
-    crm_trace("Compressed %d bytes into %d (ratio %d:1)",
-             length, *result_len, length / (*result_len));
+    pcmk__trace("Compressed %d bytes into %d (ratio %d:1)", length, *result_len,
+                (length / *result_len));
 #endif
 
     *result = compressed;
@@ -822,7 +823,7 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     // cppcheck-suppress ctunullpointer
     *end = PCMK__PARSE_INT_DEFAULT;
 
-    crm_trace("Attempting to decode: [%s]", srcstring);
+    pcmk__trace("Attempting to decode: [%s]", srcstring);
     if (pcmk__str_eq(srcstring, "", pcmk__str_null_matches)) {
         return ENODATA;
     } else if (pcmk__str_eq(srcstring, "-", pcmk__str_none)) {

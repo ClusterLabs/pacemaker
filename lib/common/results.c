@@ -201,11 +201,12 @@ fail_assert_as(const char *file, const char *function, int line,
             } while (errno == EINTR);
             if (errno == ECHILD) {
                 // crm_mon ignores SIGCHLD
-                crm_trace("Cannot wait on forked child [%d] "
-                          "(SIGCHLD is probably ignored)", pid);
+                pcmk__trace("Cannot wait on forked child [%lld] (SIGCHLD is "
+                            "probably ignored)",
+                            (long long) pid);
             } else {
-                pcmk__err("Cannot wait on forked child [%d]: %s", pid,
-                          pcmk_rc_str(errno));
+                pcmk__err("Cannot wait on forked child [%lld]: %s",
+                          (long long) pid, pcmk_rc_str(errno));
             }
             break;
     }

@@ -115,7 +115,7 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
         int callback_rc = callback(trig->user_data);
 
         if (callback_rc < 0) {
-            crm_trace("Trigger handler %p not yet complete", trig);
+            pcmk__trace("Trigger handler %p not yet complete", trig);
             trig->running = TRUE;
         } else if (callback_rc == 0) {
             rc = G_SOURCE_REMOVE;
@@ -127,7 +127,7 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
 static void
 crm_trigger_finalize(GSource * source)
 {
-    crm_trace("Trigger %p destroyed", source);
+    pcmk__trace("Trigger %p destroyed", source);
 }
 
 static GSourceFuncs crm_trigger_funcs = {
@@ -163,7 +163,7 @@ mainloop_setup_trigger(GSource * source, int priority, int (*dispatch) (gpointer
 void
 mainloop_trigger_complete(crm_trigger_t * trig)
 {
-    crm_trace("Trigger handler %p complete", trig);
+    pcmk__trace("Trigger handler %p complete", trig);
     trig->running = FALSE;
 }
 
@@ -333,7 +333,7 @@ mainloop_destroy_signal_entry(int sig)
 
     if (tmp != NULL) {
         crm_signals[sig] = NULL;
-        crm_trace("Unregistering mainloop handler for signal %d", sig);
+        pcmk__trace("Unregistering mainloop handler for signal %d", sig);
         mainloop_destroy_trigger((crm_trigger_t *) tmp);
     }
 }
@@ -368,7 +368,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
         return FALSE;
 
     } else if (crm_signals[sig] != NULL && crm_signals[sig]->handler == dispatch) {
-        crm_trace("Signal handler for %d is already installed", sig);
+        pcmk__trace("Signal handler for %d is already installed", sig);
         return TRUE;
 
     } else if (crm_signals[sig] != NULL) {
@@ -444,7 +444,7 @@ gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
     gint fd = g_io_channel_unix_get_fd(gio);
 
-    crm_trace("%p.%d %d", data, fd, condition);
+    pcmk__trace("%p.%d %d", data, fd, condition);
 
     /* if this assert get's hit, then there is a race condition between
      * when we destroy a fd and when mainloop actually gives it up */
@@ -462,7 +462,7 @@ gio_poll_destroy(gpointer data)
     pcmk__assert(adaptor->is_used >= 0);
 
     if (adaptor->is_used == 0) {
-        crm_trace("Marking adaptor %p unused", adaptor);
+        pcmk__trace("Marking adaptor %p unused", adaptor);
         adaptor->source = 0;
     }
 }
@@ -518,7 +518,7 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
         return res;
     }
 
-    crm_trace("Adding fd=%d to mainloop as adaptor %p", fd, adaptor);
+    pcmk__trace("Adding fd=%d to mainloop as adaptor %p", fd, adaptor);
 
     if (add && adaptor->source) {
         pcmk__err("Adaptor for descriptor %d is still in-use", fd);
@@ -564,7 +564,7 @@ gio_poll_dispatch_update(enum qb_loop_priority p, int32_t fd, int32_t evts,
      */
     g_io_channel_unref(channel);
 
-    crm_trace("Added to mainloop with gsource id=%d", adaptor->source);
+    pcmk__trace("Added to mainloop with gsource id=%d", adaptor->source);
     if (adaptor->source > 0) {
         return 0;
     }
@@ -591,7 +591,7 @@ gio_poll_dispatch_del(int32_t fd)
 {
     struct gio_to_qb_poll *adaptor;
 
-    crm_trace("Looking for fd=%d", fd);
+    pcmk__trace("Looking for fd=%d", fd);
     if (qb_array_index(gio_map, fd, (void **)&adaptor) == 0) {
         if (adaptor->source) {
             g_source_remove(adaptor->source);
@@ -727,17 +727,18 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
             do {
                 read_rc = crm_ipc_read(client->ipc);
                 if (read_rc <= 0) {
-                    crm_trace("Could not read IPC message from %s: %s (%ld)",
-                              client->name, pcmk_strerror(read_rc), read_rc);
+                    pcmk__trace("Could not read IPC message from %s: %s (%ld)",
+                                client->name, pcmk_strerror(read_rc), read_rc);
 
                 } else if (client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
 
-                    crm_trace("New %ld-byte IPC message from %s "
-                              "after I/O condition %d",
-                              read_rc, client->name, (int) condition);
+                    pcmk__trace("New %ld-byte IPC message from %s after I/O "
+                                "condition %d",
+                                read_rc, client->name, (int) condition);
                     if (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0) {
-                        crm_trace("Connection to %s no longer required", client->name);
+                        pcmk__trace("Connection to %s no longer required",
+                                    client->name);
                         rc = G_SOURCE_REMOVE;
                     }
                 }
@@ -745,11 +746,12 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
             } while ((rc == G_SOURCE_CONTINUE) && (read_rc > 0) && --max > 0);
 
         } else {
-            crm_trace("New I/O event for %s after I/O condition %d",
-                      client->name, (int) condition);
+            pcmk__trace("New I/O event for %s after I/O condition %d",
+                        client->name, (int) condition);
             if (client->dispatch_fn_io) {
                 if (client->dispatch_fn_io(client->userdata) < 0) {
-                    crm_trace("Connection to %s no longer required", client->name);
+                    pcmk__trace("Connection to %s no longer required",
+                                client->name);
                     rc = G_SOURCE_REMOVE;
                 }
             }
@@ -762,8 +764,8 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
         rc = G_SOURCE_REMOVE;
 
     } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
-        crm_trace("The connection %s[%p] has been closed (I/O condition=%d)",
-                  client->name, client, condition);
+        pcmk__trace("The connection %s[%p] has been closed (I/O condition=%d)",
+                    client->name, client, condition);
         rc = G_SOURCE_REMOVE;
 
     } else if ((condition & G_IO_IN) == 0) {
@@ -812,7 +814,7 @@ mainloop_gio_destroy(gpointer c)
     /* client->source is valid but about to be destroyed (ref_count == 0) in gmain.c
      * client->channel will still have ref_count > 0... should be == 1
      */
-    crm_trace("Destroying client %s[%p]", c_name, c);
+    pcmk__trace("Destroying client %s[%p]", c_name, c);
 
     if (client->ipc) {
         crm_ipc_close(client->ipc);
@@ -832,7 +834,7 @@ mainloop_gio_destroy(gpointer c)
         crm_ipc_destroy(ipc);
     }
 
-    crm_trace("Destroyed client %s[%p]", c_name, c);
+    pcmk__trace("Destroyed client %s[%p]", c_name, c);
 
     free(client->name); client->name = NULL;
     free(client);
@@ -989,7 +991,8 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
          * shortly after mainloop_gio_destroy() completes
          */
         g_io_channel_unref(client->channel);
-        crm_trace("Added connection %d for %s[%p].%d", client->source, client->name, client, fd);
+        pcmk__trace("Added connection %d for %s[%p].%d", client->source,
+                    client->name, client, fd);
     } else {
         errno = EINVAL;
     }
@@ -1001,7 +1004,7 @@ void
 mainloop_del_fd(mainloop_io_t * client)
 {
     if (client != NULL) {
-        crm_trace("Removing client %s[%p]", client->name, client);
+        pcmk__trace("Removing client %s[%p]", client->name, client);
         if (client->source) {
             /* Results in mainloop_gio_destroy() being called just
              * before the source is removed from mainloop
@@ -1048,7 +1051,7 @@ static void
 child_free(mainloop_child_t *child)
 {
     if (child->timerid != 0) {
-        crm_trace("Removing timer %d", child->timerid);
+        pcmk__trace("Removing timer %d", child->timerid);
         g_source_remove(child->timerid);
         child->timerid = 0;
     }
@@ -1118,8 +1121,8 @@ child_waitpid(mainloop_child_t *child, int flags)
 
     rc = waitpid(child->pid, &status, flags);
     if (rc == 0) { // WNOHANG in flags, and child status is not available
-        crm_trace("Child process %d (%s) still active",
-                  child->pid, child->desc);
+        pcmk__trace("Child process %lld (%s) still active",
+                    (long long) child->pid, child->desc);
         callback_needed = false;
 
     } else if (rc != child->pid) {
@@ -1139,13 +1142,14 @@ child_waitpid(mainloop_child_t *child, int flags)
 
     } else if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
-        crm_trace("Child process %d (%s) exited with status %d",
-                  child->pid, child->desc, exitcode);
+        pcmk__trace("Child process %lld (%s) exited with status %d",
+                    (long long) child->pid, child->desc, exitcode);
 
     } else if (WIFSIGNALED(status)) {
         signo = WTERMSIG(status);
-        crm_trace("Child process %d (%s) exited with signal %d (%s)",
-                  child->pid, child->desc, signo, strsignal(signo));
+        pcmk__trace("Child process %lld (%s) exited with signal %d (%s)",
+                    (long long) child->pid, child->desc, signo,
+                    strsignal(signo));
 
 #ifdef WCOREDUMP // AIX, SunOS, maybe others
     } else if (WCOREDUMP(status)) {
@@ -1154,8 +1158,8 @@ child_waitpid(mainloop_child_t *child, int flags)
 #endif
 
     } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this
-        crm_trace("Child process %d (%s) stopped or continued",
-                  child->pid, child->desc);
+        pcmk__trace("Child process %lld (%s) stopped or continued",
+                    (long long) child->pid, child->desc);
         callback_needed = false;
     }
 
@@ -1174,8 +1178,8 @@ child_death_dispatch(int signal)
 
         iter = iter->next;
         if (child_waitpid(child, WNOHANG)) {
-            crm_trace("Removing completed process %d from child list",
-                      child->pid);
+            pcmk__trace("Removing completed process %lld from child list",
+                        (long long) child->pid);
             child_list = g_list_remove_link(child_list, saved);
             g_list_free(saved);
             child_free(child);
@@ -1186,7 +1190,7 @@ child_death_dispatch(int signal)
 static gboolean
 child_signal_init(gpointer p)
 {
-    crm_trace("Installed SIGCHLD handler");
+    pcmk__trace("Installed SIGCHLD handler");
     /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
     mainloop_add_signal(SIGCHLD, child_death_dispatch);
 
@@ -1223,8 +1227,8 @@ mainloop_child_kill(pid_t pid)
          * return code/status). The blocking alternative would be to call
          * child_waitpid(match, 0).
          */
-        crm_trace("Waiting for signal that child process %d completed",
-                  match->pid);
+        pcmk__trace("Waiting for signal that child process %lld completed",
+                    (long long) match->pid);
         return TRUE;
 
     } else if(rc != 0) {
@@ -1304,10 +1308,10 @@ mainloop_timer_cb(gpointer user_data)
                 */
 
     if(t->cb) {
-        crm_trace("Invoking callbacks for timer %s", t->name);
+        pcmk__trace("Invoking callbacks for timer %s", t->name);
         repeat = t->repeat;
         if(t->cb(t->userdata) == FALSE) {
-            crm_trace("Timer %s complete", t->name);
+            pcmk__trace("Timer %s complete", t->name);
             repeat = FALSE;
         }
     }
@@ -1334,7 +1338,7 @@ mainloop_timer_start(mainloop_timer_t *t)
 {
     mainloop_timer_stop(t);
     if(t && t->period_ms > 0) {
-        crm_trace("Starting timer %s", t->name);
+        pcmk__trace("Starting timer %s", t->name);
         t->id = pcmk__create_timer(t->period_ms, mainloop_timer_cb, t);
     }
 }
@@ -1343,7 +1347,7 @@ void
 mainloop_timer_stop(mainloop_timer_t *t)
 {
     if(t && t->id != 0) {
-        crm_trace("Stopping timer %s", t->name);
+        pcmk__trace("Stopping timer %s", t->name);
         g_source_remove(t->id);
         t->id = 0;
     }
@@ -1380,7 +1384,7 @@ mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc c
     t->repeat = repeat;
     t->cb = cb;
     t->userdata = userdata;
-    crm_trace("Created timer %s with %p %p", t->name, userdata, t->userdata);
+    pcmk__trace("Created timer %s with %p %p", t->name, userdata, t->userdata);
     return t;
 }
 
@@ -1388,7 +1392,7 @@ void
 mainloop_timer_del(mainloop_timer_t *t)
 {
     if(t) {
-        crm_trace("Destroying timer %s", t->name);
+        pcmk__trace("Destroying timer %s", t->name);
         mainloop_timer_stop(t);
         free(t->name);
         free(t);

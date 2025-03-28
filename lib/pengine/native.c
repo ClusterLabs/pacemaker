@@ -661,7 +661,7 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
                                           PCMK__META_INTERNAL_RSC))
         && !pcmk__is_set(show_opts, pcmk_show_implicit_rscs)) {
 
-        crm_trace("skipping print of internal resource %s", rsc->id);
+        pcmk__trace("skipping print of internal resource %s", rsc->id);
         return pcmk_rc_no_output;
     }
     target_role = g_hash_table_lookup(rsc->priv->meta,
@@ -710,7 +710,7 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
                                           PCMK__META_INTERNAL_RSC))
         && !pcmk__is_set(show_opts, pcmk_show_implicit_rscs)) {
 
-        crm_trace("skipping print of internal resource %s", rsc->id);
+        pcmk__trace("skipping print of internal resource %s", rsc->id);
         return pcmk_rc_no_output;
     }
     target_role = g_hash_table_lookup(rsc->priv->meta,

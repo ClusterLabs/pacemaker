@@ -755,14 +755,15 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                                  pcmk_strerror(op->connection_rc));
 
             } else if (remaining > 3) {
-                crm_trace("Rescheduling start (%ds remains before timeout)",
-                          remaining);
+                pcmk__trace("Rescheduling start (%ds remains before timeout)",
+                            remaining);
                 pcmk__create_timer(1000, retry_start_cmd_cb, lrm_state);
                 return;
 
             } else {
-                crm_trace("Not enough time before timeout (%ds) "
-                          "to reschedule start", remaining);
+                pcmk__trace("Not enough time before timeout (%ds) to "
+                            "reschedule start",
+                            remaining);
                 pcmk__format_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                                     PCMK_EXEC_TIMEOUT,
                                     "%s without enough time to retry",
@@ -1119,8 +1120,8 @@ fail_all_monitor_cmds(GList * list)
 
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_ERROR, "Lost connection to remote executor");
-        crm_trace("Pre-emptively failing %s %s (interval=%u, %s)",
-                  cmd->action, cmd->rsc_id, cmd->interval_ms, cmd->userdata);
+        pcmk__trace("Pre-emptively failing %s %s (interval=%u, %s)",
+                    cmd->action, cmd->rsc_id, cmd->interval_ms, cmd->userdata);
         report_remote_ra_result(cmd);
 
         list = g_list_remove(list, cmd);
@@ -1230,8 +1231,8 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
 
 handle_dup:
 
-    crm_trace("merging duplicate monitor cmd " PCMK__OP_FMT,
-              cmd->rsc_id, PCMK_ACTION_MONITOR, interval_ms);
+    pcmk__trace("merging duplicate monitor cmd " PCMK__OP_FMT, cmd->rsc_id,
+                PCMK_ACTION_MONITOR, interval_ms);
 
     /* update the userdata */
     if (userdata) {
@@ -1489,9 +1490,9 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
                 remote_ra_maintenance(lrm_state, in_maint);
             }
         }
-        crm_trace("Action holds %d nodes (%d remotes found) adjusting "
-                  PCMK_OPT_MAINTENANCE_MODE,
-                  cnt, cnt_remote);
+        pcmk__trace("Action holds %d nodes (%d remotes found) adjusting "
+                    PCMK_OPT_MAINTENANCE_MODE,
+                    cnt, cnt_remote);
     }
     xmlXPathFreeObject(search);
 }

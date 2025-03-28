@@ -134,8 +134,9 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
                    pcmk_rc_str(rc));
     }
 
-    crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
-              " from client %s", flags, call_options, id, pcmk__client_name(c));
+    pcmk__trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
+                " from client %s",
+                flags, call_options, id, pcmk__client_name(c));
 
     if (pcmk__is_set(call_options, st_opt_sync_call)) {
         pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
@@ -164,7 +165,7 @@ st_ipc_closed(qb_ipcs_connection_t * c)
         return 0;
     }
 
-    crm_trace("Connection %p closed", c);
+    pcmk__trace("Connection %p closed", c);
     pcmk__free_client(client);
 
     /* 0 means: yes, go ahead and destroy the connection */
@@ -174,7 +175,7 @@ st_ipc_closed(qb_ipcs_connection_t * c)
 static void
 st_ipc_destroy(qb_ipcs_connection_t * c)
 {
-    crm_trace("Connection %p destroyed", c);
+    pcmk__trace("Connection %p destroyed", c);
     st_ipc_closed(c);
 }
 
@@ -244,8 +245,8 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
 
     local_rc = pcmk__ipc_send_xml(client, rid, notify_src, ipc_flags);
     if (local_rc == pcmk_rc_ok) {
-        crm_trace("Sent response %d to client %s",
-                  rid, pcmk__client_name(client));
+        pcmk__trace("Sent response %d to client %s", rid,
+                    pcmk__client_name(client));
     } else {
         pcmk__warn("%synchronous reply to client %s failed: %s",
                    (pcmk__is_set(call_options, st_opt_sync_call)? "S" : "As"),
@@ -292,7 +293,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
     if (client->ipcs == NULL) {
-        crm_trace("Skipping client with NULL channel");
+        pcmk__trace("Skipping client with NULL channel");
         return;
     }
 
@@ -306,8 +307,8 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
                        type, pcmk__client_name(client), pcmk_rc_str(rc),
                        client->id, rc);
         } else {
-            crm_trace("Sent %s notification to client %s",
-                      type, pcmk__client_name(client));
+            pcmk__trace("Sent %s notification to client %s", type,
+                        pcmk__client_name(client));
         }
     }
 }
@@ -332,7 +333,8 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
     pcmk__xe_set(notify_data, PCMK__XA_ST_CALLID, call_id);
     pcmk__xe_set_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
 
-    crm_trace("timeout update is %d for client %s and call id %s", timeout, client_id, call_id);
+    pcmk__trace("timeout update is %d for client %s and call id %s", timeout,
+                client_id, call_id);
 
     if (client) {
         pcmk__ipc_send_xml(client, 0, notify_data, crm_ipc_server_event);
@@ -369,10 +371,10 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
         pcmk__xml_copy(wrapper, data);
     }
 
-    crm_trace("Notifying clients");
+    pcmk__trace("Notifying clients");
     pcmk__foreach_ipc_client(stonith_notify_client, update_msg);
     pcmk__xml_free(update_msg);
-    crm_trace("Notify complete");
+    pcmk__trace("Notify complete");
 }
 
 /*!

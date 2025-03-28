@@ -124,8 +124,8 @@ handle_pecalc_request(pcmk__request_t *request)
         // @TODO maybe handle errors better ...
         seq = 0U;
     }
-    crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
-              series[series_id].name, series_wrap, seq, value);
+    pcmk__trace("Series %s: wrap=%d, seq=%u, pref=%s", series[series_id].name,
+                series_wrap, seq, value);
 
     reply = pcmk__new_reply(msg, scheduler->priv->graph);
 
@@ -191,7 +191,8 @@ handle_hello_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    crm_trace("Received IPC hello from %s", pcmk__client_name(request->ipc_client));
+    pcmk__trace("Received IPC hello from %s",
+                pcmk__client_name(request->ipc_client));
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
@@ -212,7 +213,7 @@ schedulerd_register_handlers(void)
 static int32_t
 pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -317,7 +318,7 @@ pe_ipc_closed(qb_ipcs_connection_t * c)
     if (client == NULL) {
         return 0;
     }
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     pcmk__free_client(client);
     return 0;
 }
@@ -325,7 +326,7 @@ pe_ipc_closed(qb_ipcs_connection_t * c)
 static void
 pe_ipc_destroy(qb_ipcs_connection_t * c)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     pe_ipc_closed(c);
 }
 

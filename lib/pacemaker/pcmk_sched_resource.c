@@ -765,15 +765,15 @@ cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
     }
 
 done:
-    crm_trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
-              resource1->id, r1_score,
-              ((r1_node == NULL)? "" : " on "),
-              ((r1_node == NULL)? "" : r1_node->priv->id),
-              ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
-              resource2->id, r2_score,
-              ((r2_node == NULL)? "" : " on "),
-              ((r2_node == NULL)? "" : r2_node->priv->id),
-              reason);
+    pcmk__trace("%s (%d)%s%s %c %s (%d)%s%s: %s",
+                resource1->id, r1_score,
+                ((r1_node == NULL)? "" : " on "),
+                ((r1_node == NULL)? "" : r1_node->priv->id),
+                ((rc < 0)? '>' : ((rc > 0)? '<' : '=')),
+                resource2->id, r2_score,
+                ((r2_node == NULL)? "" : " on "),
+                ((r2_node == NULL)? "" : r2_node->priv->id),
+                reason);
     if (r1_nodes != NULL) {
         g_hash_table_destroy(r1_nodes);
     }

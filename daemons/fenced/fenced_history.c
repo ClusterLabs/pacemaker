@@ -211,8 +211,9 @@ stonith_fence_history_trim(void)
     if (g_hash_table_size(stonith_remote_op_list) > MAX_STONITH_HISTORY) {
         GList *ops = g_hash_table_get_values(stonith_remote_op_list);
 
-        crm_trace("More than %d entries in fencing history, purging oldest "
-                  "completed operations", MAX_STONITH_HISTORY);
+        pcmk__trace("More than %d entries in fencing history, purging oldest "
+                    "completed operations",
+                    MAX_STONITH_HISTORY);
 
         ops = g_list_sort(ops, cmp_op_by_completion);
 
@@ -257,7 +258,7 @@ stonith_xml_history_to_list(const xmlNode *history)
             continue;
         }
 
-        crm_trace("Attaching op %s to hashtable", id);
+        pcmk__trace("Attaching op %s to hashtable", id);
 
         op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
@@ -374,7 +375,7 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 }
 
                 cnt++;
-                crm_trace("Attaching op %s", op->id);
+                pcmk__trace("Attaching op %s", op->id);
                 entry = pcmk__xe_create(history, STONITH_OP_EXEC);
                 if (add_id) {
                     pcmk__xe_set(entry, PCMK__XA_ST_REMOTE_OP, op->id);
@@ -500,8 +501,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     if (options & st_opt_cleanup) {
         const char *call_id = pcmk__xe_get(msg, PCMK__XA_ST_CALLID);
 
-        crm_trace("Cleaning up operations on %s in %p", target,
-                  stonith_remote_op_list);
+        pcmk__trace("Cleaning up operations on %s in %p", target,
+                    stonith_remote_op_list);
         stonith_fence_history_cleanup(target, (call_id != NULL));
 
     } else if (options & st_opt_broadcast) {
@@ -519,7 +520,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             * what it has on top
             */
             out_history = stonith_local_history(TRUE, NULL);
-            crm_trace("Broadcasting history to peers");
+            pcmk__trace("Broadcasting history to peers");
             stonith_send_broadcast_history(out_history,
                                         st_opt_broadcast | st_opt_discard_reply,
                                         NULL);
@@ -550,26 +551,26 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                 out_history =
                     stonith_local_history_diff_and_merge(received_history, TRUE, NULL);
                 if (out_history) {
-                    crm_trace("Broadcasting history-diff to peers");
+                    pcmk__trace("Broadcasting history-diff to peers");
                     pcmk__xe_set_bool_attr(out_history,
                                            PCMK__XA_ST_DIFFERENTIAL, true);
                     stonith_send_broadcast_history(out_history,
                         st_opt_broadcast | st_opt_discard_reply,
                         NULL);
                 } else {
-                    crm_trace("History-diff is empty - skip broadcast");
+                    pcmk__trace("History-diff is empty - skip broadcast");
                 }
             }
         } else {
-            crm_trace("Skipping history-query-broadcast (%s%s)"
-                      " we sent ourselves",
-                      remote_peer?"remote-peer=":"local-ipc",
-                      remote_peer?remote_peer:"");
+            pcmk__trace("Skipping history-query-broadcast (%s%s) we sent "
+                        "ourselves",
+                        ((remote_peer != NULL)? "remote-peer=" : "local-ipc"),
+                        pcmk__s(remote_peer, ""));
         }
     } else {
         /* plain history request */
-        crm_trace("Looking for operations on %s in %p", target,
-                  stonith_remote_op_list);
+        pcmk__trace("Looking for operations on %s in %p", target,
+                    stonith_remote_op_list);
         *output = stonith_local_history(FALSE, target);
     }
     pcmk__xml_free(out_history);

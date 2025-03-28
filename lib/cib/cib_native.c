@@ -76,7 +76,8 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         goto done;
     }
 
-    crm_trace("Sending %s message to the CIB manager (timeout=%ds)", op, cib->call_timeout);
+    pcmk__trace("Sending %s message to the CIB manager (timeout=%ds)", op,
+                cib->call_timeout);
     rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, cib->call_timeout * 1000, &op_reply);
 
     if (rc < 0) {
@@ -89,7 +90,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     crm_log_xml_trace(op_reply, "Reply");
 
     if (!(call_options & cib_sync_call)) {
-        crm_trace("Async call, returning %d", cib->call_id);
+        pcmk__trace("Async call, returning %d", cib->call_id);
         CRM_CHECK(cib->call_id != 0,
                   rc = -ENOMSG; goto done);
         rc = cib->call_id;
@@ -103,13 +104,13 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
                                                 NULL, NULL);
         xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-        crm_trace("Synchronous reply %d received", reply_id);
+        pcmk__trace("Synchronous reply %d received", reply_id);
         if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
             rc = -EPROTO;
         }
 
         if (output_data == NULL || (call_options & cib_discard_reply)) {
-            crm_trace("Discarding reply");
+            pcmk__trace("Discarding reply");
         } else {
             *output_data = pcmk__xml_copy(NULL, tmp);
         }
@@ -179,7 +180,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
 
     cib_t *cib = userdata;
 
-    crm_trace("dispatching %p", userdata);
+    pcmk__trace("dispatching %p", userdata);
 
     if (cib == NULL) {
         pcmk__err("No CIB!");
@@ -195,7 +196,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length,
 
     /* do callbacks */
     type = pcmk__xe_get(msg, PCMK__XA_T);
-    crm_trace("Activating %s callbacks...", type);
+    pcmk__trace("Activating %s callbacks...", type);
     crm_log_xml_explicit(msg, "cib-reply");
 
     if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
@@ -218,7 +219,7 @@ cib_native_destroy(void *userdata)
     cib_t *cib = userdata;
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    crm_trace("destroying %p", userdata);
+    pcmk__trace("destroying %p", userdata);
     cib->state = cib_disconnected;
     native->source = NULL;
     native->ipc = NULL;
@@ -295,7 +296,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
         return -ENOTCONN;
     }
 
-    crm_trace("Connecting %s channel", channel);
+    pcmk__trace("Connecting %s channel", channel);
 
     native->source = mainloop_add_ipc_client(channel, G_PRIORITY_HIGH,
                                              512 * 1024, cib, &cib_callbacks);
@@ -387,7 +388,7 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
                           1000 * cib->call_timeout, NULL);
         if (rc <= 0) {
-            crm_trace("Notification not registered: %d", rc);
+            pcmk__trace("Notification not registered: %d", rc);
             rc = -ECOMM;
         }
     }

@@ -94,8 +94,8 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
         }
 
         health_sum->sum = pcmk__add_scores(score, health_sum->sum);
-        crm_trace("Combined '%s' into node health score (now %s)",
-                  (const char *) value, pcmk_readable_score(health_sum->sum));
+        pcmk__trace("Combined '%s' into node health score (now %s)",
+                    (const char *) value, pcmk_readable_score(health_sum->sum));
     }
 }
 

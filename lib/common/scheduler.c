@@ -303,7 +303,7 @@ pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler)
         return time(NULL);
     }
     if (scheduler->priv->now == NULL) {
-        crm_trace("Scheduler 'now' set to current time");
+        pcmk__trace("Scheduler 'now' set to current time");
         scheduler->priv->now = crm_time_new(NULL);
     }
     return crm_time_get_seconds_since_epoch(scheduler->priv->now);
@@ -364,8 +364,8 @@ pcmk__add_param_check(const xmlNode *rsc_history, pcmk_resource_t *rsc,
 
     CRM_CHECK((rsc_history != NULL) && (rsc != NULL) && (node != NULL), return);
 
-    crm_trace("Deferring checks of %s until after assignment",
-              pcmk__xe_id(rsc_history));
+    pcmk__trace("Deferring checks of %s until after assignment",
+                pcmk__xe_id(rsc_history));
     param_check = pcmk__assert_alloc(1, sizeof(struct param_check));
     param_check->rsc_history = rsc_history;
     param_check->rsc = rsc;

@@ -140,7 +140,7 @@ verify_peer_cert(gnutls_session_t session)
 static void
 _gnutls_log_func(int level, const char *msg)
 {
-    crm_trace("%s", msg);
+    pcmk__trace("%s", msg);
 }
 
 void

@@ -48,7 +48,7 @@ pcmk__add_idref(GHashTable *table, const char *id, const char *referrer)
         }
     }
     idref->refs = g_list_append(idref->refs, pcmk__str_copy(referrer));
-    crm_trace("Added ID %s referrer %s", id, referrer);
+    pcmk__trace("Added ID %s referrer %s", id, referrer);
 }
 
 /*!

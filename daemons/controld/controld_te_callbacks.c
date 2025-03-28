@@ -85,7 +85,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
     for (rsc = pcmk__xe_first_child(xml, NULL, NULL, NULL); rsc != NULL;
          rsc = pcmk__xe_next(rsc, NULL)) {
-        crm_trace("Processing %s", pcmk__xe_id(rsc));
+        pcmk__trace("Processing %s", pcmk__xe_id(rsc));
         process_lrm_resource_diff(rsc, node);
     }
 }
@@ -139,11 +139,11 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
 
     down = match_down_event(node_uuid);
     if (down == NULL) {
-        crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
+        pcmk__trace("Not expecting %s to be down (%s)", node_uuid, xpath);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart, reason,
                          change);
     } else {
-        crm_trace("Expecting changes to %s (%s)", node_uuid, xpath);
+        pcmk__trace("Expecting changes to %s (%s)", node_uuid, xpath);
     }
     free(node_uuid);
 }
@@ -191,7 +191,7 @@ process_delete_diff(const char *xpath, const char *op, xmlNode *change)
         abort_unless_down(xpath, op, change, "Node state removal");
 
     } else {
-        crm_trace("Ignoring delete of %s", xpath);
+        pcmk__trace("Ignoring delete of %s", xpath);
     }
 }
 
@@ -247,7 +247,7 @@ te_update_diff_element(xmlNode *change, void *userdata)
         return pcmk_rc_ok;
 
     } else if (xpath == NULL) {
-        crm_trace("Ignoring %s change for version field", op);
+        pcmk__trace("Ignoring %s change for version field", op);
         return pcmk_rc_ok;
 
     } else if ((strcmp(op, PCMK_VALUE_MOVE) == 0)
@@ -257,7 +257,7 @@ te_update_diff_element(xmlNode *change, void *userdata)
         /* We still need to consider moves within the resources section,
          * since they affect placement order.
          */
-        crm_trace("Ignoring move change at %s", xpath);
+        pcmk__trace("Ignoring move change at %s", xpath);
         return pcmk_rc_ok;
     }
 
@@ -282,15 +282,14 @@ te_update_diff_element(xmlNode *change, void *userdata)
 
     if (match) {
         if (match->type == XML_COMMENT_NODE) {
-            crm_trace("Ignoring %s operation for comment at %s", op, xpath);
+            pcmk__trace("Ignoring %s operation for comment at %s", op, xpath);
             return pcmk_rc_ok;
         }
         name = (const char *)match->name;
     }
 
-    crm_trace("Handling %s operation for %s%s%s",
-              op, (xpath? xpath : "CIB"),
-              (name? " matched by " : ""), (name? name : ""));
+    pcmk__trace("Handling %s operation for %s%s%s", op, pcmk__s(xpath, "CIB"),
+                ((name != NULL)? " matched by " : ""), pcmk__s(name, ""));
 
     if (strstr(xpath, "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION)) {
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
@@ -371,19 +370,19 @@ te_update_diff(const char *event, xmlNode * msg)
     pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
 
     if (controld_globals.transition_graph == NULL) {
-        crm_trace("No graph");
+        pcmk__trace("No graph");
         return;
 
     } else if (rc < pcmk_ok) {
-        crm_trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
+        pcmk__trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
         return;
 
     } else if (controld_globals.transition_graph->complete
                && (controld_globals.fsa_state != S_IDLE)
                && (controld_globals.fsa_state != S_TRANSITION_ENGINE)
                && (controld_globals.fsa_state != S_POLICY_ENGINE)) {
-        crm_trace("Filter state=%s (complete)",
-                  fsa_state2string(controld_globals.fsa_state));
+        pcmk__trace("Filter state=%s (complete)",
+                    fsa_state2string(controld_globals.fsa_state));
         return;
     }
 

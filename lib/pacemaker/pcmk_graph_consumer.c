@@ -117,18 +117,18 @@ update_synapse_ready(pcmk__graph_synapse_t *synapse, int action_id)
         pcmk__graph_action_t *prereq = (pcmk__graph_action_t *) lpc->data;
 
         if (prereq->id == action_id) {
-            crm_trace("Confirming input %d of synapse %d",
-                      action_id, synapse->id);
+            pcmk__trace("Confirming input %d of synapse %d", action_id,
+                        synapse->id);
             pcmk__set_graph_action_flags(prereq, pcmk__graph_action_confirmed);
 
         } else if (!pcmk__is_set(prereq->flags, pcmk__graph_action_confirmed)) {
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
-            crm_trace("Synapse %d still not ready after action %d",
-                      synapse->id, action_id);
+            pcmk__trace("Synapse %d still not ready after action %d",
+                        synapse->id, action_id);
         }
     }
     if (pcmk__is_set(synapse->flags, pcmk__synapse_ready)) {
-        crm_trace("Synapse %d is now ready to execute", synapse->id);
+        pcmk__trace("Synapse %d is now ready to execute", synapse->id);
     }
 }
 
@@ -148,22 +148,22 @@ update_synapse_confirmed(pcmk__graph_synapse_t *synapse, int action_id)
         pcmk__graph_action_t *action = (pcmk__graph_action_t *) lpc->data;
 
         if (action->id == action_id) {
-            crm_trace("Confirmed action %d of synapse %d",
-                      action_id, synapse->id);
+            pcmk__trace("Confirmed action %d of synapse %d", action_id,
+                        synapse->id);
             pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
 
         } else if (all_confirmed
                    && !pcmk__is_set(action->flags,
                                     pcmk__graph_action_confirmed)) {
             all_confirmed = false;
-            crm_trace("Synapse %d still not confirmed after action %d",
-                      synapse->id, action_id);
+            pcmk__trace("Synapse %d still not confirmed after action %d",
+                        synapse->id, action_id);
         }
     }
 
     if (all_confirmed
         && !pcmk__is_set(synapse->flags, pcmk__synapse_confirmed)) {
-        crm_trace("Confirmed synapse %d", synapse->id);
+        pcmk__trace("Confirmed synapse %d", synapse->id);
         pcmk__set_synapse_flags(synapse, pcmk__synapse_confirmed);
     }
 }
@@ -241,20 +241,20 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
         pcmk__graph_action_t *prereq = (pcmk__graph_action_t *) lpc->data;
 
         if (!(pcmk__is_set(prereq->flags, pcmk__graph_action_confirmed))) {
-            crm_trace("Input %d for synapse %d not yet confirmed",
-                      prereq->id, synapse->id);
+            pcmk__trace("Input %d for synapse %d not yet confirmed", prereq->id,
+                        synapse->id);
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
 
         } else if (pcmk__is_set(prereq->flags, pcmk__graph_action_failed)) {
-            crm_trace("Input %d for synapse %d confirmed but failed",
-                      prereq->id, synapse->id);
+            pcmk__trace("Input %d for synapse %d confirmed but failed",
+                        prereq->id, synapse->id);
             pcmk__clear_synapse_flags(synapse, pcmk__synapse_ready);
             break;
         }
     }
     if (pcmk__is_set(synapse->flags, pcmk__synapse_ready)) {
-        crm_trace("Synapse %d is ready to execute", synapse->id);
+        pcmk__trace("Synapse %d is ready to execute", synapse->id);
     } else {
         return false;
     }
@@ -266,14 +266,14 @@ should_fire_synapse(pcmk__graph_t *graph, pcmk__graph_synapse_t *synapse)
             /* None of the below applies to pseudo ops */
 
         } else if (synapse->priority < graph->abort_priority) {
-            crm_trace("Skipping synapse %d: priority %d is less than "
-                      "abort priority %d",
-                      synapse->id, synapse->priority, graph->abort_priority);
+            pcmk__trace("Skipping synapse %d: priority %d is less than abort "
+                        "priority %d",
+                        synapse->id, synapse->priority, graph->abort_priority);
             graph->skipped++;
             return false;
 
         } else if (graph_fns->allowed && !(graph_fns->allowed(graph, a))) {
-            crm_trace("Deferring synapse %d: not allowed", synapse->id);
+            pcmk__trace("Deferring synapse %d: not allowed", synapse->id);
             return false;
         }
     }
@@ -302,21 +302,20 @@ initiate_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__set_graph_action_flags(action, pcmk__graph_action_executed);
     switch (action->type) {
         case pcmk__pseudo_graph_action:
-            crm_trace("Executing pseudo-action %d (%s)", action->id, id);
+            pcmk__trace("Executing pseudo-action %d (%s)", action->id, id);
             return graph_fns->pseudo(graph, action);
 
         case pcmk__rsc_graph_action:
-            crm_trace("Executing resource action %d (%s)", action->id, id);
+            pcmk__trace("Executing resource action %d (%s)", action->id, id);
             return graph_fns->rsc(graph, action);
 
         case pcmk__cluster_graph_action:
             if (pcmk__str_eq(pcmk__xe_get(action->xml, PCMK_XA_OPERATION),
                              PCMK_ACTION_STONITH, pcmk__str_none)) {
-                crm_trace("Executing fencing action %d (%s)",
-                          action->id, id);
+                pcmk__trace("Executing fencing action %d (%s)", action->id, id);
                 return graph_fns->fence(graph, action);
             }
-            crm_trace("Executing cluster action %d (%s)", action->id, id);
+            pcmk__trace("Executing cluster action %d (%s)", action->id, id);
             return graph_fns->cluster(graph, action);
 
         default:
@@ -392,7 +391,7 @@ pseudo_action_dummy(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
         graph->abort_priority = PCMK_SCORE_INFINITY;
     } else {
-        crm_trace("Dummy event handler: action %d initiated", action->id);
+        pcmk__trace("Dummy event handler: action %d initiated", action->id);
     }
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     pcmk__update_graph(graph, action);
@@ -447,8 +446,9 @@ pcmk__execute_graph(pcmk__graph_t *graph)
             graph->pending++;
         }
     }
-    crm_trace("Executing graph %d (%d synapses already completed, %d pending)",
-              graph->id, graph->completed, graph->pending);
+    pcmk__trace("Executing graph %d (%d synapses already completed, %d "
+                "pending)",
+                graph->id, graph->completed, graph->pending);
 
     // Execute any synapses that are ready
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
@@ -485,7 +485,7 @@ pcmk__execute_graph(pcmk__graph_t *graph)
             }
 
         } else {
-            crm_trace("Synapse %d cannot fire", synapse->id);
+            pcmk__trace("Synapse %d cannot fire", synapse->id);
             graph->incomplete++;
         }
     }
@@ -600,7 +600,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         action->interval_ms = 0;
     }
 
-    crm_trace("Action %d has timer set to %dms", action->id, action->timeout);
+    pcmk__trace("Action %d has timer set to %dms", action->id, action->timeout);
 
     return action;
 }
@@ -621,7 +621,7 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     xmlNode *action_set = NULL;
     pcmk__graph_synapse_t *new_synapse = NULL;
 
-    crm_trace("Unpacking synapse %s", pcmk__xe_id(xml_synapse));
+    pcmk__trace("Unpacking synapse %s", pcmk__xe_id(xml_synapse));
 
     new_synapse = calloc(1, sizeof(pcmk__graph_synapse_t));
     if (new_synapse == NULL) {
@@ -638,8 +638,8 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
 
     new_graph->num_synapses++;
 
-    crm_trace("Unpacking synapse %s action sets",
-              pcmk__xe_get(xml_synapse, PCMK_XA_ID));
+    pcmk__trace("Unpacking synapse %s action sets",
+                pcmk__xe_get(xml_synapse, PCMK_XA_ID));
 
     for (action_set = pcmk__xe_first_child(xml_synapse, PCMK__XE_ACTION_SET,
                                            NULL, NULL);
@@ -657,15 +657,15 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
                 continue;
             }
 
-            crm_trace("Adding action %d to synapse %d",
-                      new_action->id, new_synapse->id);
+            pcmk__trace("Adding action %d to synapse %d", new_action->id,
+                        new_synapse->id);
             new_graph->num_actions++;
             new_synapse->actions = g_list_append(new_synapse->actions,
                                                  new_action);
         }
     }
 
-    crm_trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
+    pcmk__trace("Unpacking synapse %s inputs", pcmk__xe_id(xml_synapse));
 
     for (xmlNode *inputs = pcmk__xe_first_child(xml_synapse, PCMK__XE_INPUTS,
                                                 NULL, NULL);
@@ -687,8 +687,8 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
                     continue;
                 }
 
-                crm_trace("Adding input %d to synapse %d",
-                           new_input->id, new_synapse->id);
+                pcmk__trace("Adding input %d to synapse %d", new_input->id,
+                            new_synapse->id);
 
                 new_synapse->inputs = g_list_append(new_synapse->inputs,
                                                     new_input);

@@ -278,7 +278,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         return;
     } else if (!native->callback) {
         /* no callback set */
-        crm_trace("notify event received but client has not set callback");
+        pcmk__trace("notify event received but client has not set callback");
         return;
     }
 
@@ -336,7 +336,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         return;
     }
 
-    crm_trace("op %s notify event received", type);
+    pcmk__trace("op %s notify event received", type);
     native->callback(&event);
 
     if (event.params) {
@@ -426,7 +426,7 @@ process_pending_notifies(gpointer userdata)
         return G_SOURCE_CONTINUE;
     }
 
-    crm_trace("Processing pending notifies");
+    pcmk__trace("Processing pending notifies");
     g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
     g_list_free_full(native->pending_notify, lrmd_free_xml);
     native->pending_notify = NULL;
@@ -451,11 +451,11 @@ lrmd_tls_dispatch(gpointer userdata)
     int rc = pcmk_rc_ok;
 
     if (!remote_executor_connected(lrmd)) {
-        crm_trace("TLS dispatch triggered after disconnect");
+        pcmk__trace("TLS dispatch triggered after disconnect");
         return -1;
     }
 
-    crm_trace("TLS dispatch triggered");
+    pcmk__trace("TLS dispatch triggered");
 
     rc = pcmk__remote_ready(native->remote, 0);
     if (rc == pcmk_rc_ok) {
@@ -570,8 +570,8 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
         pcmk__xml_copy(wrapper, data);
     }
 
-    crm_trace("Created executor %s command with call options %.8lx (%d)",
-              op, (long)options, options);
+    pcmk__trace("Created executor %s command with call options %.8lx (%d)",
+                op, (long) options, options);
     return op_msg;
 }
 
@@ -909,7 +909,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     }
 
     CRM_LOG_ASSERT(native->token != NULL);
-    crm_trace("Sending %s op to executor", op);
+    pcmk__trace("Sending %s op to executor", op);
 
     op_msg = lrmd_create_op(native->token, op, data, timeout, options);
 
@@ -934,7 +934,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     }
 
     rc = pcmk_ok;
-    crm_trace("%s op reply received", op);
+    pcmk__trace("%s op reply received", op);
     if (pcmk__xe_get_int(op_reply, PCMK__XA_LRMD_RC, &rc) != pcmk_rc_ok) {
         rc = -ENOMSG;
         goto done;
@@ -1050,7 +1050,7 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
         crm_log_xml_err(reply, "Bad reply");
         rc = EPROTO;
     } else {
-        crm_trace("Obtained registration token: %s", tmp_ticket);
+        pcmk__trace("Obtained registration token: %s", tmp_ticket);
         native->token = strdup(tmp_ticket);
         native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
         rc = pcmk_rc_ok;

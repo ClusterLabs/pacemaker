@@ -117,12 +117,12 @@ do_cl_join_offer_respond(long long action,
 
     welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
     join_id = pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID);
-    crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
-              welcome_from, pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID));
+    pcmk__trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
+                welcome_from, pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID));
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
-        crm_trace("Cancelling previous join query: %d", query_call_id);
+        pcmk__trace("Cancelling previous join query: %d", query_call_id);
         remove_cib_op_callback(query_call_id, FALSE);
         query_call_id = 0;
     }
@@ -139,7 +139,7 @@ do_cl_join_offer_respond(long long action,
                                           cib_no_children);
     fsa_register_cib_callback(query_call_id, pcmk__str_copy(join_id),
                               join_query_callback);
-    crm_trace("Registered join query callback: %d", query_call_id);
+    pcmk__trace("Registered join query callback: %d", query_call_id);
 
     controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     controld_trigger_fsa();
@@ -154,7 +154,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     CRM_LOG_ASSERT(join_id != NULL);
 
     if (query_call_id != call_id) {
-        crm_trace("Query %d superseded", call_id);
+        pcmk__trace("Query %d superseded", call_id);
         goto done;
     }
 
@@ -272,7 +272,7 @@ do_cl_join_finalize_respond(long long action,
     const char *welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
-        crm_trace("Ignoring op=%s message", op);
+        pcmk__trace("Ignoring op=%s message", op);
         return;
     }
 

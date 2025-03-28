@@ -23,7 +23,7 @@ void
 controld_close_attrd_ipc(void)
 {
     if (attrd_api != NULL) {
-        crm_trace("Closing connection to " PCMK__SERVER_ATTRD);
+        pcmk__trace("Closing connection to " PCMK__SERVER_ATTRD);
         pcmk_disconnect_ipc(attrd_api);
         pcmk_free_ipc_api(attrd_api);
         attrd_api = NULL;
@@ -115,8 +115,9 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
         rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
     }
     if (rc == pcmk_rc_ok) {
-        crm_trace("Asking attribute manager to purge Pacemaker Remote node %s",
-                  host);
+        pcmk__trace("Asking attribute manager to purge Pacemaker Remote node "
+                    "%s",
+                    host);
         rc = pcmk__attrd_api_purge(attrd_api, host, true);
     }
     if (rc != pcmk_rc_ok) {

@@ -324,7 +324,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath|cib_sync_call);
-        crm_trace("Injecting node state for %s (rc=%d)", node, rc);
+        pcmk__trace("Injecting node state for %s (rc=%d)", node, rc);
     }
 
 done:

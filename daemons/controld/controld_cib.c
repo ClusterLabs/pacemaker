@@ -221,8 +221,8 @@ cib_op_timeout(void)
                                              + 1U);
 
     calculated_timeout = QB_MAX(calculated_timeout, MIN_CIB_OP_TIMEOUT);
-    crm_trace("Calculated timeout: %s",
-              pcmk__readable_interval(calculated_timeout * 1000));
+    pcmk__trace("Calculated timeout: %s",
+                pcmk__readable_interval(calculated_timeout * 1000));
 
     if (controld_globals.cib_conn) {
         controld_globals.cib_conn->call_timeout = calculated_timeout;
@@ -517,7 +517,8 @@ build_parameter_list(const lrmd_event_data_t *op,
         }
 
         if (accept_for_list) {
-            crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
+            pcmk__trace("Attr %s is %s", param->rap_name,
+                        ra_param_flag2text(param_type));
 
             if (list == NULL) {
                 // We will later search for " WORD ", so start list with a space
@@ -526,19 +527,22 @@ build_parameter_list(const lrmd_event_data_t *op,
             pcmk__add_word(&list, 0, param->rap_name);
 
         } else {
-            crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
+            pcmk__trace("Rejecting %s for %s", param->rap_name,
+                        ra_param_flag2text(param_type));
         }
 
         if (accept_for_xml) {
             const char *v = g_hash_table_lookup(op->params, param->rap_name);
 
             if (v != NULL) {
-                crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
+                pcmk__trace("Adding attr %s=%s to the xml result",
+                            param->rap_name, v);
                 pcmk__xe_set(*result, param->rap_name, v);
             }
 
         } else {
-            crm_trace("Removing attr %s from the xml result", param->rap_name);
+            pcmk__trace("Removing attr %s from the xml result",
+                        param->rap_name);
             pcmk__xe_remove_attr(*result, param->rap_name);
         }
     }
@@ -596,9 +600,9 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     pcmk__xe_set(update, PCMK__XA_OP_RESTART_DIGEST, digest);
 
     if ((list != NULL) && (list->len > 0)) {
-        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        pcmk__trace("%s: %s, %s", op->rsc_id, digest, list->str);
     } else {
-        crm_trace("%s: %s", op->rsc_id, digest);
+        pcmk__trace("%s: %s", op->rsc_id, digest);
     }
 
     if (list != NULL) {
@@ -629,10 +633,10 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
                      (const char *) list->str);
         pcmk__xe_set(update, PCMK__XA_OP_SECURE_DIGEST, digest);
 
-        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        pcmk__trace("%s: %s, %s", op->rsc_id, digest, list->str);
         g_string_free(list, TRUE);
     } else {
-        crm_trace("%s: no secure parameters", op->rsc_id);
+        pcmk__trace("%s: no secure parameters", op->rsc_id);
     }
 
     pcmk__xml_free(secure);
@@ -680,8 +684,8 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
     if ((rsc == NULL) || (op->params == NULL)
         || !crm_op_needs_metadata(rsc->standard, op->op_type)) {
 
-        crm_trace("No digests needed for %s action on %s (params=%p rsc=%p)",
-                  op->op_type, op->rsc_id, op->params, rsc);
+        pcmk__trace("No digests needed for %s action on %s (params=%p rsc=%p)",
+                    op->op_type, op->rsc_id, op->params, rsc);
         return;
     }
 
@@ -705,8 +709,8 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
         return;
     }
 
-    crm_trace("Including additional digests for %s:%s:%s",
-              rsc->standard, rsc->provider, rsc->type);
+    pcmk__trace("Including additional digests for %s:%s:%s", rsc->standard,
+                rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
@@ -769,8 +773,8 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
         case pcmk_ok:
         case -pcmk_err_diff_failed:
         case -pcmk_err_diff_resync:
-            crm_trace("Resource history update completed (call=%d rc=%d)",
-                      call_id, rc);
+            pcmk__trace("Resource history update completed (call=%d rc=%d)",
+                        call_id, rc);
             break;
         default:
             if (call_id > 0) {
@@ -932,8 +936,8 @@ controld_update_resource_history(const char *node_name,
         container = g_hash_table_lookup(op->params,
                                         CRM_META "_" PCMK__META_CONTAINER);
         if (container != NULL) {
-            crm_trace("Resource %s is a part of container resource %s",
-                      op->rsc_id, container);
+            pcmk__trace("Resource %s is a part of container resource %s",
+                        op->rsc_id, container);
             pcmk__xe_set(xml, PCMK__META_CONTAINER, container);
         }
     }

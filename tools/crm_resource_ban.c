@@ -484,9 +484,9 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
          */
         rc = pcmk__xe_get_datetime(date_expr_node, PCMK_XA_END, &end);
         if (rc != pcmk_rc_ok) {
-            crm_trace("Date expression %s has invalid " PCMK_XA_END ": %s",
-                      pcmk__s(pcmk__xe_id(date_expr_node), "without ID"),
-                      pcmk_rc_str(rc));
+            pcmk__trace("Date expression %s has invalid " PCMK_XA_END ": %s",
+                        pcmk__s(pcmk__xe_id(date_expr_node), "without ID"),
+                        pcmk_rc_str(rc));
             continue; // Treat as unexpired
         }
 

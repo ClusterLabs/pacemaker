@@ -295,8 +295,8 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
 
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {
-            crm_trace("Delaying write of %s %s for dampening",
-                      attr, pcmk__readable_interval(a->timeout_ms));
+            pcmk__trace("Delaying write of %s %s for dampening", attr,
+                        pcmk__readable_interval(a->timeout_ms));
             mainloop_timer_start(a->timer);
         } else {
             attrd_write_or_elect_attribute(a);
@@ -310,12 +310,12 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
             /* The actual attribute is written by Writer after election. */
-            crm_trace("%s[%s] from %s is unchanged (%s), forcing write",
-                      attr, host, peer->name, pcmk__s(value, "unset"));
+            pcmk__trace("%s[%s] from %s is unchanged (%s), forcing write", attr,
+                        host, peer->name, pcmk__s(value, "unset"));
             attrd_set_attr_flags(a, attrd_attr_force_write);
         } else {
-            crm_trace("%s[%s] from %s is unchanged (%s)",
-                      attr, host, peer->name, pcmk__s(value, "unset"));
+            pcmk__trace("%s[%s] from %s is unchanged (%s)", attr, host,
+                        peer->name, pcmk__s(value, "unset"));
         }
     }
 
@@ -325,9 +325,8 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     // Remember node's XML ID if we're just learning it
     if ((node_xml_id != NULL)
         && !pcmk__str_eq(node_xml_id, prev_xml_id, pcmk__str_none)) {
-        crm_trace("Learned %s[%s] node XML ID is %s (was %s)",
-                  a->id, v->nodename, node_xml_id,
-                  pcmk__s(prev_xml_id, "unknown"));
+        pcmk__trace("Learned %s[%s] node XML ID is %s (was %s)", a->id,
+                    v->nodename, node_xml_id, pcmk__s(prev_xml_id, "unknown"));
         attrd_set_node_xml_id(v->nodename, node_xml_id);
         if (attrd_election_won()) {
             // In case we couldn't write a value missing the XML ID before
@@ -398,8 +397,8 @@ broadcast_unseen_local_values(void)
             if (!pcmk__is_set(v->flags, attrd_value_from_peer)
                 && pcmk__str_eq(v->nodename, attrd_cluster->priv->node_name,
                                 pcmk__str_casei)) {
-                crm_trace("* %s[%s]='%s' is local-only",
-                          a->id, v->nodename, readable_value(v));
+                pcmk__trace("* %s[%s]='%s' is local-only", a->id, v->nodename,
+                            readable_value(v));
                 if (sync == NULL) {
                     sync = pcmk__xe_create(NULL, __func__);
                     pcmk__xe_set(sync, PCMK_XA_TASK,
@@ -472,8 +471,8 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
         if (regexec(&regex, attr, 0, NULL, 0) == 0) {
-            crm_trace("Matched %s when clearing %s",
-                      attr, pcmk__s(rsc, "all resources"));
+            pcmk__trace("Matched %s when clearing %s", attr,
+                        pcmk__s(rsc, "all resources"));
             pcmk__xe_set(xml, PCMK__XA_ATTR_NAME, attr);
             attrd_peer_update(peer, xml, host, false);
         }
@@ -615,7 +614,7 @@ attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
      * point, process that now.
      */
     if (handle_sync_point) {
-        crm_trace("Hit local sync point for attribute update");
+        pcmk__trace("Hit local sync point for attribute update");
         attrd_ack_waitlist_clients(attrd_sync_point_local, xml);
     }
 }

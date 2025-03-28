@@ -141,7 +141,7 @@ stonith__list_lha_agents(stonith_key_value_t **devices)
     }
 
     for (entry = type_list; entry != NULL && *entry; ++entry) {
-        crm_trace("Added: %s", *entry);
+        pcmk__trace("Added: %s", *entry);
         *devices = stonith_key_value_add(*devices, NULL, *entry);
         count++;
     }

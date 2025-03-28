@@ -837,7 +837,7 @@ main(int argc, char **argv)
         print_xml_output(output);
     }
 
-    crm_trace("%s exiting normally", crm_system_name);
+    pcmk__trace("%s exiting normally", crm_system_name);
 
 done:
     g_strfreev(processed_args);
@@ -877,7 +877,7 @@ do_work(xmlNode *input, xmlNode **output)
         }
     }
 
-    crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
+    pcmk__trace("Passing \"%s\" to variant_op...", options.cib_action);
     return cib_internal_op(the_cib, options.cib_action, options.dest_node,
                            options.cib_section, input, output,
                            options.cmd_options, options.cib_user);

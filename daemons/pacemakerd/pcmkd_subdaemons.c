@@ -139,8 +139,8 @@ check_next_subdaemon(gpointer user_data)
     const long long pid = PCMK__SPECIAL_PID_AS_0(child->pid);
     int rc = child_liveness(child);
 
-    crm_trace("Checked subdaemon %s[%lld]: %s (%d)",
-              name, pid, pcmk_rc_str(rc), rc);
+    pcmk__trace("Checked subdaemon %s[%lld]: %s (%d)", name, pid,
+                pcmk_rc_str(rc), rc);
 
     switch (rc) {
         case pcmk_rc_ok:
@@ -191,7 +191,7 @@ check_next_subdaemon(gpointer user_data)
                 }
             }
             if (!pcmk__is_set(child->flags, child_active_before_startup)) {
-                crm_trace("Subdaemon %s[%lld] terminated", name, pid);
+                pcmk__trace("Subdaemon %s[%lld] terminated", name, pid);
                 break;
             }
             if (pcmk__is_set(child->flags, child_respawn)) {
@@ -888,7 +888,7 @@ stop_child(pcmkd_child_t *child, int signal)
     }
 
     if (child->pid <= 0) {
-        crm_trace("Nothing to do to stop subdaemon %s: Not running", name);
+        pcmk__trace("Nothing to do to stop subdaemon %s: Not running", name);
         return TRUE;
     }
 

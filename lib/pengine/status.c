@@ -89,7 +89,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
         return FALSE;
     }
 
-    crm_trace("Beginning unpack");
+    pcmk__trace("Beginning unpack");
 
     pcmk__xml_free(scheduler->priv->failed);
     scheduler->priv->failed = pcmk__xe_create(NULL, "failed-ops");
@@ -159,10 +159,10 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
             rsc->priv->fns->count(item->data);
         }
-        crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
-                  scheduler->priv->ninstances,
-                  scheduler->priv->disabled_resources,
-                  scheduler->priv->blocked_resources);
+        pcmk__trace("Cluster resource count: %d (%d disabled, %d blocked)",
+                    scheduler->priv->ninstances,
+                    scheduler->priv->disabled_resources,
+                    scheduler->priv->blocked_resources);
     }
 
     if ((scheduler->priv->local_node_name != NULL)
@@ -198,7 +198,7 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
             return match;
         }
     }
-    crm_trace("No match for %s", id);
+    pcmk__trace("No match for %s", id);
     return NULL;
 }
 
@@ -300,13 +300,13 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->tags);
     }
 
-    crm_trace("deleting resources");
+    pcmk__trace("deleting resources");
     g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
 
-    crm_trace("deleting actions");
+    pcmk__trace("deleting actions");
     g_list_free_full(scheduler->priv->actions, pcmk__free_action);
 
-    crm_trace("deleting nodes");
+    pcmk__trace("deleting nodes");
     g_list_free_full(scheduler->nodes, pcmk__free_node);
     scheduler->nodes = NULL;
 

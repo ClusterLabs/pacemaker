@@ -889,9 +889,9 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
         }
 
         if (!pcmk__is_set(member->flags, pcmk__rsc_managed)) {
-            crm_trace("Adding mandatory '%s with' colocations to list for "
-                      "member %s because earlier member %s is unmanaged",
-                      rsc->id, orig_rsc->id, member->id);
+            pcmk__trace("Adding mandatory '%s with' colocations to list for "
+                        "member %s because earlier member %s is unmanaged",
+                        rsc->id, orig_rsc->id, member->id);
             for (const GList *cons_iter = rsc->priv->this_with_colocations;
                  cons_iter != NULL; cons_iter = cons_iter->next) {
                 const pcmk__colocation_t *colocation = NULL;

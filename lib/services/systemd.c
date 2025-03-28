@@ -71,7 +71,7 @@ services__systemd2ocf(int exit_status)
 static inline DBusMessage *
 systemd_new_method(const char *method)
 {
-    crm_trace("Calling: %s on " BUS_NAME_MANAGER, method);
+    pcmk__trace("Calling: %s on " BUS_NAME_MANAGER, method);
     return dbus_message_new_method_call(BUS_NAME, BUS_PATH, BUS_NAME_MANAGER,
                                         method);
 }
@@ -317,7 +317,7 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
         dbus_error_free(&error);
 
     } else {
-        crm_trace("Reload %d complete", reload_count);
+        pcmk__trace("Reload %d complete", reload_count);
     }
 
     if(pending) {
@@ -361,9 +361,9 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         || strstr(error->name, "org.freedesktop.systemd1.NoSuchUnit")) {
 
         if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-            crm_trace("Masking systemd stop failure (%s) for %s "
-                      "because unknown service can be considered stopped",
-                      error->name, pcmk__s(op->rsc, "unknown resource"));
+            pcmk__trace("Masking systemd stop failure (%s) for %s "
+                        "because unknown service can be considered stopped",
+                        error->name, pcmk__s(op->rsc, "unknown resource"));
             services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -451,7 +451,7 @@ loadunit_completed(DBusPendingCall *pending, void *user_data)
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    crm_trace("LoadUnit result for %s arrived", op->id);
+    pcmk__trace("LoadUnit result for %s arrived", op->id);
 
     // Grab the reply
     if (pending != NULL) {
@@ -656,7 +656,7 @@ systemd_unit_listall(void)
             pcmk__debug("ListUnitFiles reply did not provide a string");
             continue;
         }
-        crm_trace("DBus ListUnitFiles listed: %s", value.str);
+        pcmk__trace("DBus ListUnitFiles listed: %s", value.str);
 
         match = systemd_unit_extension(value.str);
         if (match == NULL) {
@@ -687,7 +687,7 @@ systemd_unit_listall(void)
 
     dbus_message_unref(reply);
 
-    crm_trace("Found %d manageable systemd unit files", nfiles);
+    pcmk__trace("Found %d manageable systemd unit files", nfiles);
     units = g_list_sort(units, sort_str);
     return units;
 }
@@ -907,8 +907,9 @@ job_removed_filter(DBusConnection *connection, DBusMessage *message,
 
     action_name = pcmk__s(action->action, "(unknown)");
 
-    crm_trace("Setting %s result for %s (JobRemoved id=%" PRIu32 ", result=%s",
-              action_name, unit_name, job_id, result);
+    pcmk__trace("Setting %s result for %s (JobRemoved id=%" PRIu32
+                ", result=%s",
+                action_name, unit_name, job_id, result);
 
     if (pcmk__str_eq(result, "done", pcmk__str_none)) {
         services__set_result(action, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
@@ -958,7 +959,7 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    crm_trace("Result for %s arrived", op->id);
+    pcmk__trace("Result for %s arrived", op->id);
 
     // Grab the reply
     if (pending != NULL) {
@@ -1187,9 +1188,8 @@ parse_status_result(const char *name, const char *state, void *userdata)
 {
     svc_action_t *op = userdata;
 
-    crm_trace("Resource %s has %s='%s'",
-              pcmk__s(op->rsc, "(unspecified)"), name,
-              pcmk__s(state, "<null>"));
+    pcmk__trace("Resource %s has %s='%s'", pcmk__s(op->rsc, "(unspecified)"),
+                name, pcmk__s(state, "<null>"));
 
     if (pcmk__str_eq(state, "active", pcmk__str_none)) {
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
@@ -1286,9 +1286,9 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         return;
     }
 
-    crm_trace("Calling %s for unit path %s%s%s",
-              method, unit,
-              ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
+    pcmk__trace("Calling %s for unit path %s%s%s", method, unit,
+                ((op->rsc != NULL)? " for resource " : ""),
+                pcmk__s(op->rsc, ""));
 
     msg = systemd_new_method(method);
     pcmk__assert(msg != NULL);

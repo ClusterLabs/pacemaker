@@ -97,7 +97,7 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     fsa_data_t *msg_data = NULL;
 
     if (rc == pcmk_ok) {
-        crm_trace("Node update %d complete", call_id);
+        pcmk__trace("Node update %d complete", call_id);
 
     } else if(call_id < pcmk_ok) {
         pcmk__err("Node update failed: %s (%d)", pcmk_strerror(call_id),
@@ -339,8 +339,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             xmlNode *new_node = NULL;
 
             if ((node->xml_id != NULL) && (node->name != NULL)) {
-                crm_trace("Creating node entry for %s/%s",
-                          node->name, node->xml_id);
+                pcmk__trace("Creating node entry for %s/%s", node->name,
+                            node->xml_id);
                 if (xpath == NULL) {
                     xpath = g_string_sized_new(512);
                 } else {
@@ -372,7 +372,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         }
     }
 
-    crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
+    pcmk__trace("Populating <nodes> section from %s",
+                (from_hashtable? "hashtable" : "cluster"));
 
     if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
                              node_list_update_callback) == pcmk_rc_ok)
@@ -411,7 +412,7 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
     fsa_data_t *msg_data = NULL;
 
     if (rc == pcmk_ok) {
-        crm_trace("Quorum update %d complete", call_id);
+        pcmk__trace("Quorum update %d complete", call_id);
 
     } else {
         pcmk__err("Quorum update %d failed: %s (%d)", call_id,

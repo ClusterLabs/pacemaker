@@ -203,8 +203,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 /* Peer status did not change. This should not be possible,
                  * since we don't track process flags other than peer status.
                  */
-                crm_trace("Process flag %#7x did not change from %#7x to %#7x",
-                          crm_get_cluster_proc(), old, node->processes);
+                pcmk__trace("Process flag %#7x did not change from %#7x to "
+                            "%#7x",
+                            crm_get_cluster_proc(), old, node->processes);
                 return;
 
             }
@@ -217,11 +218,12 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
             if (!pcmk__is_set(controld_globals.fsa_input_register,
                               R_CIB_CONNECTED)) {
-                crm_trace("Ignoring peer status change because not connected to CIB");
+                pcmk__trace("Ignoring peer status change because not connected "
+                            "to CIB");
                 return;
 
             } else if (controld_globals.fsa_state == S_STOPPING) {
-                crm_trace("Ignoring peer status change because stopping");
+                pcmk__trace("Ignoring peer status change because stopping");
                 return;
             }
 
@@ -272,8 +274,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         int alive = node_alive(node);
         pcmk__graph_action_t *down = match_down_event(node->xml_id);
 
-        crm_trace("Alive=%d, appeared=%d, down=%d",
-                  alive, appeared, (down? down->id : -1));
+        pcmk__trace("Alive=%d, appeared=%d, down=%d", alive, appeared,
+                    ((down != NULL)? down->id : -1));
 
         if (appeared && (alive > 0) && !is_remote) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
@@ -287,8 +289,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     pcmk__is_set(down->flags, pcmk__graph_action_confirmed);
 
                 /* tengine_stonith_callback() confirms fence actions */
-                crm_trace("Updating CIB %s fencer reported fencing of %s complete",
-                          (confirmed? "after" : "before"), node->name);
+                pcmk__trace("Updating CIB %s fencer reported fencing of %s "
+                            "complete",
+                            (confirmed? "after" : "before"), node->name);
 
             } else if (!appeared && pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN,
                                                  pcmk__str_casei)) {
@@ -321,8 +324,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     liveness = "dead";
                 }
 
-                crm_trace("Node %s is %s, was expected to %s (op %d)",
-                          node->name, liveness, task, down->id);
+                pcmk__trace("Node %s is %s, was expected to %s (op %d)",
+                            node->name, liveness, task, down->id);
             }
 
         } else if (appeared == FALSE) {
@@ -345,8 +348,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                                        node->xml_id);
 
         } else {
-            crm_trace("Node %s came up, was not expected to be down",
-                      node->name);
+            pcmk__trace("Node %s came up, was not expected to be down",
+                        node->name);
         }
 
         if (is_remote) {
@@ -391,10 +394,10 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {
-    crm_trace("Invoked (queue len: %d)",
-              g_list_length(controld_globals.fsa_message_queue));
+    pcmk__trace("Invoked (queue len: %u)",
+                g_list_length(controld_globals.fsa_message_queue));
     s_crmd_fsa(C_FSA_INTERNAL);
-    crm_trace("Exited  (queue len: %d)",
-              g_list_length(controld_globals.fsa_message_queue));
+    pcmk__trace("Exited (queue len: %u)",
+                g_list_length(controld_globals.fsa_message_queue));
     return TRUE;
 }

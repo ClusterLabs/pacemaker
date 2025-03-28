@@ -65,7 +65,7 @@ decompress_file(const char *filename)
         read_len = BZ2_bzRead(&rc, bz_file, buffer + length, PCMK__BUFFER_SIZE);
 
         if ((rc == BZ_OK) || (rc == BZ_STREAM_END)) {
-            crm_trace("Read %ld bytes from file: %d", (long) read_len, rc);
+            pcmk__trace("Read %ld bytes from file: %d", (long) read_len, rc);
             length += read_len;
         }
     } while (rc == BZ_OK);
@@ -371,7 +371,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
     if (data == NULL) {
-        crm_trace("Nothing to dump");
+        pcmk__trace("Nothing to dump");
         return;
     }
 
@@ -449,8 +449,8 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
         goto done;
     }
 
-    crm_trace("Compressed XML for %s from %u bytes to %u",
-              filename, bytes_in, *bytes_out);
+    pcmk__trace("Compressed XML for %s from %u bytes to %u", filename, bytes_in,
+                *bytes_out);
 
 done:
     if (bz_file != NULL) {
@@ -515,7 +515,7 @@ done:
     }
 
     fclose(stream);
-    crm_trace("Saved %u bytes to %s as XML", bytes_out, filename);
+    pcmk__trace("Saved %u bytes to %s as XML", bytes_out, filename);
 
     g_string_free(buffer, TRUE);
     return rc;

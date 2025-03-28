@@ -227,8 +227,9 @@ get_action_timeout(const stonith_device_t *device, const char *action,
          */
         if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)
             && !pcmk__is_set(device->flags, st_device_supports_reboot)) {
-            crm_trace("%s doesn't support reboot, using timeout for off instead",
-                      device->id);
+            pcmk__trace("%s doesn't support reboot, using timeout for off "
+                        "instead",
+                        device->id);
             action = PCMK_ACTION_OFF;
         }
 
@@ -523,9 +524,9 @@ stonith_device_execute(stonith_device_t * device)
     active_cmds = get_active_cmds(device);
     action_limit = get_action_limit(device);
     if (action_limit > -1 && active_cmds >= action_limit) {
-        crm_trace("%s is over its action limit of %d (%u active action%s)",
-                  device->id, action_limit, active_cmds,
-                  pcmk__plural_s(active_cmds));
+        pcmk__trace("%s is over its action limit of %d (%u active action%s)",
+                    device->id, action_limit, active_cmds,
+                    pcmk__plural_s(active_cmds));
         return TRUE;
     }
 
@@ -535,12 +536,12 @@ stonith_device_execute(stonith_device_t * device)
         gIterNext = gIter->next;
 
         if (pending_op && pending_op->delay_id) {
-            crm_trace("Operation '%s'%s%s using %s was asked to run too early, "
-                      "waiting for start delay of %ds",
-                      pending_op->action,
-                      ((pending_op->target == NULL)? "" : " targeting "),
-                      pcmk__s(pending_op->target, ""),
-                      device->id, pending_op->start_delay);
+            pcmk__trace("Operation '%s'%s%s using %s was asked to run too "
+                        "early, waiting for start delay of %ds",
+                        pending_op->action,
+                        ((pending_op->target != NULL)? " targeting ": ""),
+                        pcmk__s(pending_op->target, ""), device->id,
+                        pending_op->start_delay);
             continue;
         }
 
@@ -552,7 +553,7 @@ stonith_device_execute(stonith_device_t * device)
     }
 
     if (cmd == NULL) {
-        crm_trace("No actions using %s are needed", device->id);
+        pcmk__trace("No actions using %s are needed", device->id);
         return TRUE;
     }
 
@@ -1181,12 +1182,13 @@ status_search_cb(int pid, const pcmk__action_result_t *result, void *user_data)
 
     switch (result->exit_status) {
         case fence_status_unknown:
-            crm_trace("%s reported it cannot fence %s", dev->id, search->host);
+            pcmk__trace("%s reported it cannot fence %s", dev->id,
+                        search->host);
             break;
 
         case fence_status_active:
         case fence_status_inactive:
-            crm_trace("%s reported it can fence %s", dev->id, search->host);
+            pcmk__trace("%s reported it can fence %s", dev->id, search->host);
             can = TRUE;
             break;
 
@@ -1304,7 +1306,8 @@ device_params_diff(GHashTable *first, GHashTable *second) {
             char *other_value = g_hash_table_lookup(second, key);
 
             if (!other_value || !pcmk__str_eq(other_value, value, pcmk__str_casei)) {
-                crm_trace("Different value for %s: %s != %s", key, other_value, value);
+                pcmk__trace("Different value for %s: %s != %s", key,
+                            other_value, value);
                 return 1;
             }
         }
@@ -1323,11 +1326,11 @@ device_has_duplicate(const stonith_device_t *device)
     stonith_device_t *dup = g_hash_table_lookup(device_list, device->id);
 
     if (!dup) {
-        crm_trace("No match for %s", device->id);
+        pcmk__trace("No match for %s", device->id);
         return NULL;
 
     } else if (!pcmk__str_eq(dup->agent, device->agent, pcmk__str_casei)) {
-        crm_trace("Different agent: %s != %s", dup->agent, device->agent);
+        pcmk__trace("Different agent: %s != %s", dup->agent, device->agent);
         return NULL;
     }
 
@@ -1337,7 +1340,7 @@ device_has_duplicate(const stonith_device_t *device)
         return NULL;
     }
 
-    crm_trace("Match");
+    pcmk__trace("Match");
     return dup;
 }
 
@@ -1471,14 +1474,14 @@ stonith_device_remove(const char *id, bool from_cib)
     if (!device->cib_registered && !device->api_registered) {
         g_hash_table_remove(device_list, id);
         ndevices = g_hash_table_size(device_list);
-        pcmk__info("Removed '%s' from device list (%d active device%s)", id,
+        pcmk__info("Removed '%s' from device list (%u active device%s)", id,
                    ndevices, pcmk__plural_s(ndevices));
     } else {
-        crm_trace("Not removing '%s' from device list (%d active) because "
-                  "still registered via:%s%s",
-                  id, g_hash_table_size(device_list),
-                  (device->cib_registered? " cib" : ""),
-                  (device->api_registered? " api" : ""));
+        pcmk__trace("Not removing '%s' from device list (%u active) because "
+                    "still registered via:%s%s",
+                    id, g_hash_table_size(device_list),
+                    (device->cib_registered? " cib" : ""),
+                    (device->api_registered? " api" : ""));
     }
 }
 
@@ -1758,8 +1761,8 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
         tp->target_attribute = pcmk__xe_get_copy(level, PCMK_XA_TARGET_ATTRIBUTE);
 
         g_hash_table_replace(topology, tp->target, tp);
-        crm_trace("Added %s (%d) to the topology (%d active entries)",
-                  target, (int) mode, g_hash_table_size(topology));
+        pcmk__trace("Added %s (%d) to the topology (%u active entries)", target,
+                    (int) mode, g_hash_table_size(topology));
     } else {
         free(target);
     }
@@ -1773,7 +1776,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
     for (dIter = devices; dIter; dIter = dIter->next) {
         const char *device = dIter->value;
 
-        crm_trace("Adding device '%s' for %s[%d]", device, tp->target, id);
+        pcmk__trace("Adding device '%s' for %s[%d]", device, tp->target, id);
         tp->levels[id] = g_list_append(tp->levels[id], pcmk__str_copy(device));
     }
     stonith_key_value_freeall(devices, 1, 1);
@@ -2044,13 +2047,14 @@ localhost_is_eligible(const stonith_device_t *device, const char *action,
                    action) != NULL)) {
 
         if (!localhost_is_target) {
-            crm_trace("Operation '%s' using %s can only be executed for local "
-                      "host, not %s", action, device->id, target);
+            pcmk__trace("Operation '%s' using %s can only be executed for "
+                        "local host, not %s",
+                        action, device->id, target);
             return FALSE;
         }
 
     } else if (localhost_is_target && !allow_self) {
-        crm_trace("'%s' operation does not support self-fencing", action);
+        pcmk__trace("'%s' operation does not support self-fencing", action);
         return FALSE;
     }
     return TRUE;
@@ -2178,8 +2182,9 @@ can_fence_host_with_device(stonith_device_t *dev,
                              search->per_device_timeout);
             }
 
-            crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                      check_type, dev_id, target, action);
+            pcmk__trace("Running '%s' to check whether %s is eligible to fence "
+                        "%s (%s)",
+                        check_type, dev_id, target, action);
 
             schedule_internal_command(__func__, dev, PCMK_ACTION_LIST, NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
@@ -2203,8 +2208,9 @@ can_fence_host_with_device(stonith_device_t *dev,
                          device_timeout, dev_id, search->per_device_timeout);
         }
 
-        crm_trace("Running '%s' to check whether %s is eligible to fence %s (%s)",
-                  check_type, dev_id, target, action);
+        pcmk__trace("Running '%s' to check whether %s is eligible to fence %s "
+                    "(%s)",
+                    check_type, dev_id, target, action);
         schedule_internal_command(__func__, dev, PCMK_ACTION_STATUS, target,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
@@ -2303,23 +2309,23 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
 
     // PCMK__XA_ST_REQUIRED is currently used only for unfencing
     if (is_action_required(action, device)) {
-        crm_trace("Action '%s' is required using %s", action, device->id);
+        pcmk__trace("Action '%s' is required using %s", action, device->id);
         pcmk__xe_set_int(xml, PCMK__XA_ST_REQUIRED, 1);
     }
 
     // pcmk_<action>_timeout if configured
     action_specific_timeout = get_action_timeout(device, action, 0);
     if (action_specific_timeout) {
-        crm_trace("Action '%s' has timeout %ds using %s",
-                  action, action_specific_timeout, device->id);
+        pcmk__trace("Action '%s' has timeout %ds using %s", action,
+                    action_specific_timeout, device->id);
         pcmk__xe_set_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
                          action_specific_timeout);
     }
 
     delay_max = get_action_delay_max(device, action);
     if (delay_max > 0) {
-        crm_trace("Action '%s' has maximum random delay %ds using %s",
-                  action, delay_max, device->id);
+        pcmk__trace("Action '%s' has maximum random delay %ds using %s", action,
+                    delay_max, device->id);
         pcmk__xe_set_int(xml, PCMK__XA_ST_DELAY_MAX, delay_max);
     }
 
@@ -2329,15 +2335,15 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     }
 
     if ((delay_max > 0) && (delay_base == 0)) {
-        crm_trace("Action '%s' has maximum random delay %ds using %s",
-                  action, delay_max, device->id);
+        pcmk__trace("Action '%s' has maximum random delay %ds using %s", action,
+                    delay_max, device->id);
     } else if ((delay_max == 0) && (delay_base > 0)) {
-        crm_trace("Action '%s' has a static delay of %ds using %s",
-                  action, delay_base, device->id);
+        pcmk__trace("Action '%s' has a static delay of %ds using %s", action,
+                    delay_base, device->id);
     } else if ((delay_max > 0) && (delay_base > 0)) {
-        crm_trace("Action '%s' has a minimum delay of %ds and a randomly chosen "
-                  "maximum delay of %ds using %s",
-                  action, delay_base, delay_max, device->id);
+        pcmk__trace("Action '%s' has a minimum delay of %ds and a randomly "
+                    "chosen maximum delay of %ds using %s",
+                    action, delay_base, delay_max, device->id);
     }
 }
 
@@ -2356,8 +2362,8 @@ add_disallowed(xmlNode *xml, const char *action, const stonith_device_t *device,
                const char *target, gboolean allow_self)
 {
     if (!localhost_is_eligible(device, action, target, allow_self)) {
-        crm_trace("Action '%s' using %s is disallowed for local host",
-                  action, device->id);
+        pcmk__trace("Action '%s' using %s is disallowed for local host", action,
+                    device->id);
         pcmk__xe_set_bool_attr(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
     }
 }
@@ -2424,8 +2430,8 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     if (query->client_id != NULL) {
         client = pcmk__find_client_by_id(query->client_id);
         if ((client == NULL) && (query->remote_peer == NULL)) {
-            crm_trace("Skipping reply to %s: no longer a client",
-                      query->client_id);
+            pcmk__trace("Skipping reply to %s: no longer a client",
+                        query->client_id);
             goto done;
         }
     }
@@ -2464,8 +2470,9 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         if (!pcmk__is_set(device->flags, st_device_supports_reboot)
             && pcmk__str_eq(query->action, PCMK_ACTION_REBOOT,
                             pcmk__str_none)) {
-            crm_trace("%s doesn't support reboot, using values for off instead",
-                      device->id);
+            pcmk__trace("%s doesn't support reboot, using values for off "
+                        "instead",
+                        device->id);
             action = PCMK_ACTION_OFF;
         }
 
@@ -2636,7 +2643,8 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
     if (cmd->client != NULL) {
         client = pcmk__find_client_by_id(cmd->client);
         if ((client == NULL) && (cmd->origin == NULL)) {
-            crm_trace("Skipping reply to %s: no longer a client", cmd->client);
+            pcmk__trace("Skipping reply to %s: no longer a client",
+                        cmd->client);
             return;
         }
     }
@@ -2651,8 +2659,8 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         /* The target was also the originator, so broadcast the result on its
          * behalf (since it will be unable to).
          */
-        crm_trace("Broadcast '%s' result for %s (target was also originator)",
-                  cmd->action, cmd->target);
+        pcmk__trace("Broadcast '%s' result for %s (target was also originator)",
+                    cmd->action, cmd->target);
         pcmk__xe_set(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
         pcmk__xe_set(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
         pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, reply);
@@ -2671,8 +2679,8 @@ cancel_stonith_command(async_command_t * cmd)
     stonith_device_t *device = cmd_device(cmd);
 
     if (device) {
-        crm_trace("Cancel scheduled '%s' action using %s",
-                  cmd->action, device->id);
+        pcmk__trace("Cancel scheduled '%s' action using %s", cmd->action,
+                    device->id);
         device->pending_ops = g_list_remove(device->pending_ops, cmd);
     }
 }

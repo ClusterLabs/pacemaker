@@ -521,7 +521,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(rsc != NULL, return);
 
-    crm_trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
+    pcmk__trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
 
     if (merge_recurring_duplicate(rsc, cmd)) {
         // Equivalent of cmd has already been scheduled
@@ -568,7 +568,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
 
     CRM_CHECK(client != NULL, return);
     if (client->name == NULL) {
-        crm_trace("Skipping notification to client without name");
+        pcmk__trace("Skipping notification to client without name");
         return;
     }
     if (pcmk__is_set(client->flags, pcmk__client_to_proxy)) {
@@ -576,8 +576,8 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
          * running as Pacemaker Remote, we may have clients proxied to other
          * IPC services in the cluster, so skip those.
          */
-        crm_trace("Skipping executor API notification to client %s",
-                  pcmk__client_name(client));
+        pcmk__trace("Skipping executor API notification to client %s",
+                    pcmk__client_name(client));
         return;
     }
 
@@ -737,8 +737,9 @@ cmd_reset(lrmd_cmd_t * cmd)
 static void
 cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 {
-    crm_trace("Resource operation rsc:%s action:%s completed (%p %p)", cmd->rsc_id, cmd->action,
-              rsc ? rsc->active : NULL, cmd);
+    pcmk__trace("Resource operation rsc:%s action:%s completed (%p %p)",
+                cmd->rsc_id, cmd->action, ((rsc != NULL)? rsc->active : NULL),
+                cmd);
 
     if (rsc && (rsc->active == cmd)) {
         rsc->active = NULL;
@@ -1347,8 +1348,9 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 
     pcmk__assert((rsc != NULL) && (cmd != NULL));
 
-    crm_trace("Creating action, resource:%s action:%s class:%s provider:%s agent:%s",
-              rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
+    pcmk__trace("Creating action, resource:%s action:%s class:%s provider:%s "
+                "agent:%s",
+                rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
 
     params_copy = pcmk__str_table_dup(cmd->params);
 
@@ -1405,7 +1407,7 @@ execute_resource_action(gpointer user_data)
     CRM_CHECK(rsc != NULL, return FALSE);
 
     if (rsc->active) {
-        crm_trace("%s is still active", rsc->rsc_id);
+        pcmk__trace("%s is still active", rsc->rsc_id);
         return TRUE;
     }
 
@@ -1414,9 +1416,9 @@ execute_resource_action(gpointer user_data)
 
         cmd = first->data;
         if (cmd->delay_id) {
-            crm_trace
-                ("Command %s %s was asked to run too early, waiting for start_delay timeout of %dms",
-                 cmd->rsc_id, cmd->action, cmd->start_delay);
+            pcmk__trace("Command %s %s was asked to run too early, waiting for "
+                        "start_delay timeout of %dms",
+                        cmd->rsc_id, cmd->action, cmd->start_delay);
             return TRUE;
         }
         rsc->pending_ops = g_list_remove_link(rsc->pending_ops, first);
@@ -1429,7 +1431,7 @@ execute_resource_action(gpointer user_data)
     }
 
     if (!cmd) {
-        crm_trace("Nothing further to do for %s", rsc->rsc_id);
+        pcmk__trace("Nothing further to do for %s", rsc->rsc_id);
         return TRUE;
     }
 
@@ -1652,8 +1654,9 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
-        crm_trace("Operation (%p) still in progress for unregistered resource %s",
-                  rsc->active, rsc_id);
+        pcmk__trace("Operation (%p) still in progress for unregistered "
+                    "resource %s",
+                    rsc->active, rsc_id);
         rc = -EINPROGRESS;
     }
 
@@ -1888,7 +1891,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
      */
     bool allowed = pcmk__is_set(client->flags, pcmk__client_privileged);
 
-    crm_trace("Processing %s operation from %s", op, client->id);
+    pcmk__trace("Processing %s operation from %s", op, client->id);
     pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {

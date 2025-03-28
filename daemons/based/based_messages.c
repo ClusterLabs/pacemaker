@@ -69,7 +69,7 @@ cib_process_noop(const char *op, int options, const char *section, xmlNode *req,
                  xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
                  xmlNode **answer)
 {
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
     *answer = NULL;
     return pcmk_ok;
 }
@@ -81,7 +81,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 {
     int result = pcmk_ok;
 
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
 
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
@@ -144,7 +144,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
     xmlNode *wrapper = NULL;
 
-    crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
+    pcmk__trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
     pcmk__xe_set(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
@@ -215,7 +215,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
         const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
 
-        crm_trace("Processing \"%s\" event", op);
+        pcmk__trace("Processing \"%s\" event", op);
         original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
         if (original_schema == NULL) {
             pcmk__info("Rejecting upgrade request from %s: No "
@@ -329,8 +329,8 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     }
 
     rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
-    crm_trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
-              (based_is_primary? "primary": "secondary"));
+    pcmk__trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
+                (based_is_primary? "primary": "secondary"));
 
     if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
         pcmk__xml_free(*result_cib);

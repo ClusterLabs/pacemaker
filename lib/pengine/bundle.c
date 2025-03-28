@@ -937,12 +937,13 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
     }
 
     if(node == NULL) {
-        crm_trace("Cannot determine address for bundle connection %s", rsc->id);
+        pcmk__trace("Cannot determine address for bundle connection %s",
+                    rsc->id);
         return NULL;
     }
 
-    crm_trace("Setting address for bundle connection %s to bundle host %s",
-              rsc->id, pcmk__node_name(node));
+    pcmk__trace("Setting address for bundle connection %s to bundle host %s",
+                rsc->id, pcmk__node_name(node));
     if(xml != NULL && field != NULL) {
         pcmk__xe_set(xml, field, node->priv->name);
     }

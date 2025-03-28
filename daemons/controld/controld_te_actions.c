@@ -314,8 +314,9 @@ controld_record_action_event(pcmk__graph_action_t *action,
     fsa_register_cib_callback(rc, NULL, cib_action_updated);
     pcmk__xml_free(state);
 
-    crm_trace("Sent CIB update (call ID %d) for synthesized event of action %d (%s on %s)",
-              rc, action->id, task_uuid, target);
+    pcmk__trace("Sent CIB update (call ID %d) for synthesized event of action "
+                "%d (%s on %s)",
+                rc, action->id, task_uuid, target);
     pcmk__set_graph_action_flags(action, pcmk__graph_action_sent_update);
 }
 
@@ -522,7 +523,7 @@ te_update_job_count_on(const char *target, int offset, bool migrate)
     if(migrate) {
         r->migrate_jobs += offset;
     }
-    crm_trace("jobs[%s] = %d", target, r->jobs);
+    pcmk__trace("jobs[%s] = %d", target, r->jobs);
 }
 
 static void
@@ -598,20 +599,23 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
     }
 
     if(limit <= r->jobs) {
-        crm_trace("Peer %s is over their job limit of %d (%d): deferring %s",
-                  target, limit, r->jobs, id);
+        pcmk__trace("Peer %s is over their job limit of %d (%d): deferring %s",
+                    target, limit, r->jobs, id);
         return false;
 
     } else if(graph->migration_limit > 0 && r->migrate_jobs >= graph->migration_limit) {
         if (pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
                                  PCMK_ACTION_MIGRATE_FROM, NULL)) {
-            crm_trace("Peer %s is over their migration job limit of %d (%d): deferring %s",
-                      target, graph->migration_limit, r->migrate_jobs, id);
+            pcmk__trace("Peer %s is over their migration job limit of %d (%d): "
+                        "deferring %s",
+                        target, graph->migration_limit, r->migrate_jobs, id);
             return false;
         }
     }
 
-    crm_trace("Peer %s has not hit their limit yet. current jobs = %d limit= %d limit", target, r->jobs, limit);
+    pcmk__trace("Peer %s has not hit their limit yet. current jobs = %d "
+                "limit= %d limit",
+                target, r->jobs, limit);
 
     return true;
 }

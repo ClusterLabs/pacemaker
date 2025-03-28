@@ -172,13 +172,13 @@ schema_filter(const struct dirent *a)
     pcmk__schema_version_t version = SCHEMA_ZERO;
 
     if (strstr(a->d_name, "pacemaker-") != a->d_name) {
-        /* crm_trace("%s - wrong prefix", a->d_name); */
+        // pcmk__trace("%s - wrong prefix", a->d_name);
 
     } else if (!pcmk__ends_with_ext(a->d_name, ".rng")) {
-        /* crm_trace("%s - wrong suffix", a->d_name); */
+        // pcmk__trace("%s - wrong suffix", a->d_name);
 
     } else if (!version_from_filename(a->d_name, &version)) {
-        /* crm_trace("%s - wrong format", a->d_name); */
+        // pcmk__trace("%s - wrong format", a->d_name);
 
     } else {
         // pcmk__debug("%s - candidate", a->d_name);
@@ -764,8 +764,8 @@ validate_with(xmlNode *xml, pcmk__schema_t *schema,
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
                                    schema->name);
 
-    crm_trace("Validating with %s (type=%d)",
-              pcmk__s(file, "missing schema"), schema->validator);
+    pcmk__trace("Validating with %s (type=%d)",pcmk__s(file, "missing schema"),
+                schema->validator);
     switch (schema->validator) {
         case pcmk__schema_validator_rng:
             cache = (relaxng_ctx_cache_t **) &(schema->cache);

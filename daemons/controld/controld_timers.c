@@ -93,16 +93,17 @@ controld_stop_timer(fsa_timer_t *timer)
     CRM_CHECK(timer != NULL, return false);
 
     if (timer->source_id != 0) {
-        crm_trace("Stopping %s (would inject %s if popped after %ums, src=%d)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
+        pcmk__trace("Stopping %s (would inject %s if popped after %ums, "
+                    "src=%d)",
+                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                    timer->period_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
 
     } else {
-        crm_trace("%s already stopped (would inject %s if popped after %ums)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms);
+        pcmk__trace("%s already stopped (would inject %s if popped after %ums)",
+                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                    timer->period_ms);
         return false;
     }
     return true;

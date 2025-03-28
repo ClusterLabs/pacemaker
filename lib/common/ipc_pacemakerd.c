@@ -220,9 +220,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
          * so we can't enforce this check until we no longer support
          * Pacemaker Remote nodes connecting to cluster nodes older than that.
          */
-        crm_trace("Message from %s has unexpected message type '%s' "
-                  "(bug if not from pacemakerd <3.0.0)",
-                  pcmk_ipc_name(api, true), pcmk__s(value, ""));
+        pcmk__trace("Message from %s has unexpected message type '%s' (bug if "
+                    "not from pacemakerd <3.0.0)",
+                    pcmk_ipc_name(api, true), pcmk__s(value, ""));
     }
 
     value = pcmk__xe_get(reply, PCMK__XA_SUBT);

@@ -65,9 +65,9 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     lrm_state_t *lrm_state = user_data;
     active_op_t *op = value;
 
-    crm_trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
-              op->rsc_id, op->op_type, op->interval_ms,
-              lrm_state->node_name, (char*)key, op->user_data);
+    pcmk__trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
+                op->rsc_id, op->op_type, op->interval_ms,
+                lrm_state->node_name, (const char *) key, op->user_data);
 
     event.type = lrmd_event_exec_complete;
     event.rsc_id = op->rsc_id;
@@ -194,31 +194,31 @@ internal_lrm_state_destroy(gpointer data)
      */
     remote_proxy_disconnect_by_node(lrm_state->node_name);
 
-    crm_trace("Destroying proxy table %s with %u members",
-              lrm_state->node_name, g_hash_table_size(proxy_table));
+    pcmk__trace("Destroying proxy table %s with %u members",
+                lrm_state->node_name, g_hash_table_size(proxy_table));
     // Just in case there's still any leftovers in proxy_table
     g_hash_table_foreach_remove(proxy_table, remote_proxy_remove_by_node, (char *) lrm_state->node_name);
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 
     if (lrm_state->rsc_info_cache) {
-        crm_trace("Destroying rsc info cache with %u members",
-                  g_hash_table_size(lrm_state->rsc_info_cache));
+        pcmk__trace("Destroying rsc info cache with %u members",
+                    g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_destroy(lrm_state->rsc_info_cache);
     }
     if (lrm_state->resource_history) {
-        crm_trace("Destroying history op cache with %u members",
-                  g_hash_table_size(lrm_state->resource_history));
+        pcmk__trace("Destroying history op cache with %u members",
+                    g_hash_table_size(lrm_state->resource_history));
         g_hash_table_destroy(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
-        crm_trace("Destroying deletion op cache with %u members",
-                  g_hash_table_size(lrm_state->deletion_ops));
+        pcmk__trace("Destroying deletion op cache with %u members",
+                    g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_destroy(lrm_state->deletion_ops);
     }
     if (lrm_state->active_ops != NULL) {
-        crm_trace("Destroying pending op cache with %u members",
-                  g_hash_table_size(lrm_state->active_ops));
+        pcmk__trace("Destroying pending op cache with %u members",
+                    g_hash_table_size(lrm_state->active_ops));
         g_hash_table_destroy(lrm_state->active_ops);
     }
     metadata_cache_free(lrm_state->metadata_cache);
@@ -231,23 +231,23 @@ void
 lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 {
     if (lrm_state->resource_history) {
-        crm_trace("Resetting resource history cache with %u members",
-                  g_hash_table_size(lrm_state->resource_history));
+        pcmk__trace("Resetting resource history cache with %u members",
+                    g_hash_table_size(lrm_state->resource_history));
         g_hash_table_remove_all(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
-        crm_trace("Resetting deletion operations cache with %u members",
-                  g_hash_table_size(lrm_state->deletion_ops));
+        pcmk__trace("Resetting deletion operations cache with %u members",
+                    g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_remove_all(lrm_state->deletion_ops);
     }
     if (lrm_state->active_ops != NULL) {
-        crm_trace("Resetting active operations cache with %u members",
-                  g_hash_table_size(lrm_state->active_ops));
+        pcmk__trace("Resetting active operations cache with %u members",
+                    g_hash_table_size(lrm_state->active_ops));
         g_hash_table_remove_all(lrm_state->active_ops);
     }
     if (lrm_state->rsc_info_cache) {
-        crm_trace("Resetting resource information cache with %u members",
-                  g_hash_table_size(lrm_state->rsc_info_cache));
+        pcmk__trace("Resetting resource information cache with %u members",
+                    g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_remove_all(lrm_state->rsc_info_cache);
     }
     if (reset_metadata) {
@@ -281,13 +281,13 @@ void
 lrm_state_destroy_all(void)
 {
     if (lrm_state_table) {
-        crm_trace("Destroying state table with %u members",
-                  g_hash_table_size(lrm_state_table));
+        pcmk__trace("Destroying state table with %u members",
+                    g_hash_table_size(lrm_state_table));
         g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
     }
     if(proxy_table) {
-        crm_trace("Destroying proxy table with %u members",
-                  g_hash_table_size(proxy_table));
+        pcmk__trace("Destroying proxy table with %u members",
+                    g_hash_table_size(proxy_table));
         g_hash_table_destroy(proxy_table); proxy_table = NULL;
     }
 }
@@ -335,12 +335,12 @@ lrm_state_get_list(void)
 void
 lrm_state_disconnect_only(lrm_state_t * lrm_state)
 {
-    int removed = 0;
+    guint removed = 0;
 
     if (!lrm_state->conn) {
         return;
     }
-    crm_trace("Disconnecting %s", lrm_state->node_name);
+    pcmk__trace("Disconnecting %s", lrm_state->node_name);
 
     remote_proxy_disconnect_by_node(lrm_state->node_name);
 
@@ -349,7 +349,8 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->active_ops,
                                               fail_pending_op, lrm_state);
-        crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
+        pcmk__trace("Synthesized %u operation failures for %s", removed,
+                    lrm_state->node_name);
     }
 }
 
@@ -444,7 +445,8 @@ crmd_proxy_send(const char *session, xmlNode *msg)
     crm_log_xml_trace(msg, "to-proxy");
     lrm_state = controld_get_executor_state(proxy->node_name, false);
     if (lrm_state) {
-        crm_trace("Sending event to %.8s on %s", proxy->session_id, proxy->node_name);
+        pcmk__trace("Sending event to %.8s on %s", proxy->session_id,
+                    proxy->node_name);
         remote_proxy_relay_event(proxy, msg);
     }
 }
@@ -452,7 +454,7 @@ crmd_proxy_send(const char *session, xmlNode *msg)
 static void
 crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
-    crm_trace("Processing proxied IPC message from session %s", session);
+    pcmk__trace("Processing proxied IPC message from session %s", session);
     crm_log_xml_trace(msg, "controller[inbound]");
     pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, session);
     if (controld_authorize_ipc_message(msg, NULL, session)) {
@@ -632,8 +634,8 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
         lrmd_internal_set_proxy_callback(api, lrm_state, crmd_remote_proxy_cb);
     }
 
-    crm_trace("Initiating remote connection to %s:%d with timeout %dms",
-              server, port, timeout_ms);
+    pcmk__trace("Initiating remote connection to %s:%d with timeout %dms",
+                server, port, timeout_ms);
     rc = ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn,
                                                            lrm_state->node_name,
                                                            timeout_ms);

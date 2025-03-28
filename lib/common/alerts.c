@@ -110,11 +110,11 @@ pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
     pcmk__assert((table != NULL) && (name >= 0)
                  && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
     if (value == NULL) {
-        crm_trace("Removing alert key %s", pcmk__alert_keys[name]);
+        pcmk__trace("Removing alert key %s", pcmk__alert_keys[name]);
         g_hash_table_remove(table, pcmk__alert_keys[name]);
     } else {
-        crm_trace("Inserting alert key %s = '%s'",
-                  pcmk__alert_keys[name], value);
+        pcmk__trace("Inserting alert key %s = '%s'", pcmk__alert_keys[name],
+                    value);
         pcmk__insert_dup(table, pcmk__alert_keys[name], value);
     }
 }
@@ -125,7 +125,7 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
 {
     pcmk__assert((table != NULL) && (name >= 0)
                  && (name < PCMK__ALERT_INTERNAL_KEY_MAX));
-    crm_trace("Inserting alert key %s = %d", pcmk__alert_keys[name], value);
+    pcmk__trace("Inserting alert key %s = %d", pcmk__alert_keys[name], value);
     g_hash_table_insert(table, pcmk__str_copy(pcmk__alert_keys[name]),
                         pcmk__itoa(value));
 }
@@ -176,8 +176,8 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
             entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
 
             if (timeout_ms == 0) {
-                crm_trace("Alert %s uses default timeout (%s)",
-                          entry->id, READABLE_DEFAULT);
+                pcmk__trace("Alert %s uses default timeout (%s)", entry->id,
+                            READABLE_DEFAULT);
             } else {
                 pcmk__config_warn("Using default timeout (%s) for alert %s "
                                   "because '%s' is not a valid timeout",
@@ -186,8 +186,8 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
 
         } else {
             entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
-            crm_trace("Alert %s uses timeout of %s",
-                      entry->id, pcmk__readable_interval(entry->timeout));
+            pcmk__trace("Alert %s uses timeout of %s", entry->id,
+                        pcmk__readable_interval(entry->timeout));
         }
         if (entry->timeout > *max_timeout) {
             *max_timeout = entry->timeout;
@@ -199,8 +199,8 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
          * can be a valid time-format-string
          */
         entry->tstamp_format = strdup(value);
-        crm_trace("Alert %s uses timestamp format '%s'",
-                  entry->id, entry->tstamp_format);
+        pcmk__trace("Alert %s uses timestamp format '%s'", entry->id,
+                    entry->tstamp_format);
     }
 
 done:
@@ -245,8 +245,8 @@ unpack_alert_parameters(const xmlNode *xml, pcmk__alert_t *entry)
             value = "";
         }
         pcmk__insert_dup(entry->envvars, name, value);
-        crm_trace("Alert %s: added environment variable %s='%s'",
-                  entry->id, name, value);
+        pcmk__trace("Alert %s: added environment variable %s='%s'", entry->id,
+                    name, value);
     }
 }
 

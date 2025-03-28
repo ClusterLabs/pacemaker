@@ -62,7 +62,7 @@ pcmk__find_client(const qb_ipcs_connection_t *c)
         return g_hash_table_lookup(client_connections, c);
     }
 
-    crm_trace("No client found for %p", c);
+    pcmk__trace("No client found for %p", c);
     return NULL;
 }
 
@@ -81,7 +81,7 @@ pcmk__find_client_by_id(const char *id)
             }
         }
     }
-    crm_trace("No client found with id='%s'", pcmk__s(id, ""));
+    pcmk__trace("No client found with id='%s'", pcmk__s(id, ""));
     return NULL;
 }
 
@@ -186,7 +186,7 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         key = client->id;
     }
     if (client_connections == NULL) {
-        crm_trace("Creating IPC client table");
+        pcmk__trace("Creating IPC client table");
         client_connections = g_hash_table_new(g_direct_hash, g_direct_equal);
     }
     g_hash_table_insert(client_connections, key, client);
@@ -227,7 +227,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
     }
 
     if (uid_client != 0) {
-        crm_trace("Giving group %u access to new IPC connection", gid_cluster);
+        pcmk__trace("Giving group %u access to new IPC connection",
+                    gid_cluster);
         /* Passing -1 to chown(2) means don't change */
         qb_ipcs_connection_auth_set(c, -1, gid_cluster, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
@@ -290,13 +291,13 @@ pcmk__free_client(pcmk__client_t *c)
 
     if (client_connections) {
         if (c->ipcs) {
-            crm_trace("Destroying %p/%p (%d remaining)",
-                      c, c->ipcs, g_hash_table_size(client_connections) - 1);
+            pcmk__trace("Destroying %p/%p (%u remaining)", c, c->ipcs,
+                        (g_hash_table_size(client_connections) - 1));
             g_hash_table_remove(client_connections, c->ipcs);
 
         } else {
-            crm_trace("Destroying remote connection %p (%d remaining)",
-                      c, g_hash_table_size(client_connections) - 1);
+            pcmk__trace("Destroying remote connection %p (%u remaining)", c,
+                        (g_hash_table_size(client_connections) - 1));
             g_hash_table_remove(client_connections, c->id);
         }
     }
@@ -426,8 +427,8 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         unsigned int size_u = 1 + header->size_uncompressed;
         uncompressed = pcmk__assert_alloc(1, size_u);
 
-        crm_trace("Decompressing message data %u bytes into %u bytes",
-                  header->size_compressed, size_u);
+        pcmk__trace("Decompressing message data %u bytes into %u bytes",
+                    header->size_compressed, size_u);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &size_u, text, header->size_compressed, 1, 0);
         text = uncompressed;
@@ -500,7 +501,7 @@ crm_ipcs_flush_events(pcmk__client_t *c)
 
     } else if (c->event_timer) {
         /* There is already a timer, wait until it goes off */
-        crm_trace("Timer active for %p - %d", c->ipcs, c->event_timer);
+        pcmk__trace("Timer active for %p - %d", c->ipcs, c->event_timer);
         return rc;
     }
 
@@ -529,20 +530,21 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         sent++;
         header = event[0].iov_base;
         if (header->size_compressed) {
-            crm_trace("Event %" PRId32 " to %p[%u] (%zd compressed bytes) sent",
-                      header->qb.id, c->ipcs, c->pid, qb_rc);
+            pcmk__trace("Event %" PRId32 " to %p[%u] (%zd compressed bytes) "
+                        "sent",
+                        header->qb.id, c->ipcs, c->pid, qb_rc);
         } else {
-            crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
-                      header->qb.id, c->ipcs, c->pid, qb_rc,
-                      (char *) (event[1].iov_base));
+            pcmk__trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
+                        header->qb.id, c->ipcs, c->pid, qb_rc,
+                        (const char *) event[1].iov_base);
         }
         pcmk_free_ipc_event(event);
     }
 
     queue_len -= sent;
     if (sent > 0 || queue_len) {
-        crm_trace("Sent %u events (%u remaining) for %p[%d]: %s (%zd)",
-                  sent, queue_len, c->ipcs, c->pid, pcmk_rc_str(rc), qb_rc);
+        pcmk__trace("Sent %u events (%u remaining) for %p[%d]: %s (%zd)", sent,
+                    queue_len, c->ipcs, c->pid, pcmk_rc_str(rc), qb_rc);
     }
 
     if (queue_len) {
@@ -708,13 +710,13 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
 
         if (flags & crm_ipc_server_free) {
-            crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
+            pcmk__trace("Sending the original to %p[%d]", c->ipcs, c->pid);
             add_event(c, iov);
 
         } else {
             struct iovec *iov_copy = pcmk__new_ipc_event();
 
-            crm_trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
+            pcmk__trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
             iov_copy[0].iov_len = iov[0].iov_len;
             iov_copy[0].iov_base = malloc(iov[0].iov_len);
             memcpy(iov_copy[0].iov_base, iov[0].iov_base, iov[0].iov_len);
@@ -742,8 +744,8 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
                          header->qb.size, qb_rc, c->ipcs);
 
         } else {
-            crm_trace("Response %" PRId32 " sent, %zd bytes to %p[%u]",
-                      header->qb.id, qb_rc, c->ipcs, c->pid);
+            pcmk__trace("Response %" PRId32 " sent, %zd bytes to %p[%u]",
+                        header->qb.id, qb_rc, c->ipcs, c->pid);
         }
 
         if (flags & crm_ipc_server_free) {
@@ -758,7 +760,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     }
 
     if ((rc == EPIPE) || (rc == ENOTCONN)) {
-        crm_trace("Client %p disconnected", c->ipcs);
+        pcmk__trace("Client %p disconnected", c->ipcs);
     }
     return rc;
 }
@@ -842,8 +844,8 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, tag, ver, status);
 
     if (ack != NULL) {
-        crm_trace("Ack'ing IPC message from client %s as <%s status=%d>",
-                  pcmk__client_name(c), tag, status);
+        pcmk__trace("Ack'ing IPC message from client %s as <%s status=%d>",
+                    pcmk__client_name(c), tag, status);
         crm_log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);

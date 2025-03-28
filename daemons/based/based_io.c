@@ -96,18 +96,19 @@ static int cib_archive_filter(const struct dirent * a)
 
     if(stat(a_path, &s) != 0) {
         rc = errno;
-        crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc), rc);
+        pcmk__trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc),
+                    rc);
         rc = 0;
 
     } else if (!S_ISREG(s.st_mode)) {
-        crm_trace("%s - wrong type (%#o)",
-                  a->d_name, (unsigned int) (s.st_mode & S_IFMT));
+        pcmk__trace("%s - wrong type (%#o)", a->d_name,
+                    (unsigned int) (s.st_mode & S_IFMT));
 
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
-        crm_trace("%s - wrong prefix", a->d_name);
+        pcmk__trace("%s - wrong prefix", a->d_name);
 
     } else if (pcmk__ends_with_ext(a->d_name, ".sig")) {
-        crm_trace("%s - wrong suffix", a->d_name);
+        pcmk__trace("%s - wrong suffix", a->d_name);
 
     } else {
         pcmk__debug("%s - candidate", a->d_name);
@@ -146,7 +147,7 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
         rc = -1;
     }
 
-    crm_trace("%s (%lu) vs. %s (%lu) : %d",
+    pcmk__trace("%s (%lu) vs. %s (%lu) : %d",
 	a[0]->d_name, (unsigned long)a_age,
 	b[0]->d_name, (unsigned long)b_age, rc);
     return rc;
@@ -331,7 +332,7 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
     }
 
     if ((signo == 0) && (exitcode == 0)) {
-        crm_trace("Disk write [%d] succeeded", (int) pid);
+        pcmk__trace("Disk write [%d] succeeded", (int) pid);
 
     } else if (signo == 0) {
         pcmk__err("%s: process %d exited %d", errmsg, (int) pid, exitcode);

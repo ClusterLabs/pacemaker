@@ -139,7 +139,7 @@ pcmk__read_pidfile(const char *filename, pid_t *pid)
         } else {
             rc = pcmk_rc_ok;
             *pid = (pid_t) pid_read;
-            crm_trace("Read pid %lld from %s", pid_read, filename);
+            pcmk__trace("Read pid %lld from %s", pid_read, filename);
         }
     } else if (rc == 0) {
         rc = ENODATA;

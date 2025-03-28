@@ -168,7 +168,7 @@ do_election_count_vote(long long action,
             break;
 
         default:
-            crm_trace("Election message resulted in state %d", rc);
+            pcmk__trace("Election message resulted in state %d", rc);
     }
 }
 
@@ -277,5 +277,5 @@ do_dc_release(long long action,
         pcmk__err("Unknown DC action %s", fsa_action2string(action));
     }
 
-    crm_trace("Am I still the DC? %s", pcmk__btoa(AM_I_DC));
+    pcmk__trace("Am I still the DC? %s", pcmk__btoa(AM_I_DC));
 }

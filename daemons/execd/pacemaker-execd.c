@@ -101,7 +101,7 @@ get_stonith_connection(void)
 static int32_t
 lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -113,7 +113,7 @@ lrmd_ipc_created(qb_ipcs_connection_t * c)
 {
     pcmk__client_t *new_client = pcmk__find_client(c);
 
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     pcmk__assert(new_client != NULL);
     /* Now that the connection is offically established, alert
      * the other clients a new connection exists. */
@@ -201,7 +201,7 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
         return 0;
     }
 
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     client_disconnect_cleanup(client->id);
 #ifdef PCMK__COMPILE_REMOTE
     ipc_proxy_remove_provider(client);
@@ -214,7 +214,7 @@ static void
 lrmd_ipc_destroy(qb_ipcs_connection_t * c)
 {
     lrmd_ipc_closed(c);
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
 }
 
 static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
@@ -229,7 +229,7 @@ static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
 int
 lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 {
-    crm_trace("Sending reply (%d) to client (%s)", id, client->id);
+    pcmk__trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
             return pcmk__ipc_send_xml(client, id, reply, FALSE);
@@ -249,18 +249,18 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 int
 lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 {
-    crm_trace("Sending notification to client (%s)", client->id);
+    pcmk__trace("Sending notification to client (%s)", client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
             if (client->ipcs == NULL) {
-                crm_trace("Could not notify local client: disconnected");
+                pcmk__trace("Could not notify local client: disconnected");
                 return ENOTCONN;
             }
             return pcmk__ipc_send_xml(client, 0, msg, crm_ipc_server_event);
 #ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
             if (client->remote == NULL) {
-                crm_trace("Could not notify remote client: disconnected");
+                pcmk__trace("Could not notify remote client: disconnected");
                 return ENOTCONN;
             } else {
                 return lrmd__remote_send_xml(client->remote, msg, 0, "notify");

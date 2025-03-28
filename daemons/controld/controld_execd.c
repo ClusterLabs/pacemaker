@@ -195,14 +195,14 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
     target_rc = rsc_op_expected_rc(op);
     if (op->op_status == PCMK_EXEC_CANCELLED) {
         if (op->interval_ms > 0) {
-            crm_trace("Removing cancelled recurring op: " PCMK__OP_FMT,
-                      op->rsc_id, op->op_type, op->interval_ms);
+            pcmk__trace("Removing cancelled recurring op: " PCMK__OP_FMT,
+                        op->rsc_id, op->op_type, op->interval_ms);
             history_remove_recurring_op(entry, op);
             return;
         } else {
-            crm_trace("Skipping " PCMK__OP_FMT " rc=%d, status=%d",
-                      op->rsc_id, op->op_type, op->interval_ms, op->rc,
-                      op->op_status);
+            pcmk__trace("Skipping " PCMK__OP_FMT " rc=%d, status=%d",
+                        op->rsc_id, op->op_type, op->interval_ms, op->rc,
+                        op->op_status);
         }
 
     } else if (did_rsc_op_fail(op, target_rc)) {
@@ -237,16 +237,16 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         /* Ensure there are no duplicates */
         history_remove_recurring_op(entry, op);
 
-        crm_trace("Adding recurring op: " PCMK__OP_FMT,
-                  op->rsc_id, op->op_type, op->interval_ms);
+        pcmk__trace("Adding recurring op: " PCMK__OP_FMT, op->rsc_id,
+                    op->op_type, op->interval_ms);
         entry->recurring_op_list = g_list_prepend(entry->recurring_op_list, lrmd_copy_event(op));
 
     } else if ((entry->recurring_op_list != NULL)
                 && !pcmk__str_eq(op->op_type, PCMK_ACTION_MONITOR,
                                  pcmk__str_casei)) {
-        crm_trace("Dropping %d recurring ops because of: " PCMK__OP_FMT,
-                  g_list_length(entry->recurring_op_list), op->rsc_id,
-                  op->op_type, op->interval_ms);
+        pcmk__trace("Dropping %u recurring ops because of: " PCMK__OP_FMT,
+                    g_list_length(entry->recurring_op_list), op->rsc_id,
+                    op->op_type, op->interval_ms);
         history_free_recurring_ops(entry);
     }
 }
@@ -476,7 +476,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         if (log_level == LOG_ERR) {
             pcmk__info("Found %s active at %s", entry->id, when);
         } else {
-            crm_trace("Found %s active at %s", entry->id, when);
+            pcmk__trace("Found %s active at %s", entry->id, when);
         }
         if (lrm_state->active_ops != NULL) {
             GHashTableIter hIter;
@@ -512,8 +512,8 @@ is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
         return FALSE;
     }
 
-    crm_trace("Processing %s: %s.%d=%d", rsc_id, entry->last->op_type,
-              entry->last->interval_ms, entry->last->rc);
+    pcmk__trace("Processing %s: %s.%d=%d", rsc_id, entry->last->op_type,
+                entry->last->interval_ms, entry->last->rc);
     if ((entry->last->rc == PCMK_OCF_OK)
         && pcmk__str_eq(entry->last->op_type, PCMK_ACTION_STOP,
                         pcmk__str_casei)) {
@@ -560,7 +560,8 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
                                                         name);
 
             if (container) {
-                crm_trace("Resource %s is a part of container resource %s", entry->id, container);
+                pcmk__trace("Resource %s is a part of container resource %s",
+                            entry->id, container);
                 pcmk__xe_set(xml_rsc, PCMK__META_CONTAINER, container);
             }
         }
@@ -893,8 +894,8 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
 
     removed = g_hash_table_foreach_remove(lrm_state->active_ops,
                                           cancel_action_by_key, &data);
-    crm_trace("Removed %u op cache entries, new size: %u",
-              removed, g_hash_table_size(lrm_state->active_ops));
+    pcmk__trace("Removed %u op cache entries, new size: %u",
+                removed, g_hash_table_size(lrm_state->active_ops));
     return data.done;
 }
 
@@ -928,7 +929,8 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
         return -ENOTCONN;
     }
 
-    crm_trace("Retrieving resource information for %s from the executor", id);
+    pcmk__trace("Retrieving resource information for %s from the executor",
+                id);
     *rsc_info = lrm_state_get_rsc_info(lrm_state, id, 0);
 
     // If resource isn't known by ID, try clone name, if provided
@@ -946,7 +948,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
         const char *type = pcmk__xe_get(rsc_xml, PCMK_XA_TYPE);
         int rc;
 
-        crm_trace("Registering resource %s with the executor", id);
+        pcmk__trace("Registering resource %s with the executor", id);
         rc = lrm_state_register_rsc(lrm_state, id, class, provider, type,
                                     lrmd_opt_drop_recurring);
         if (rc != pcmk_ok) {
@@ -986,7 +988,7 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
     }
 
     if (rc == pcmk_ok) {
-        crm_trace("Resource %s deleted from executor", id);
+        pcmk__trace("Resource %s deleted from executor", id);
     } else if (rc == -EINPROGRESS) {
         pcmk__info("Deletion of resource '%s' from executor is pending", id);
         if (request) {
@@ -1449,10 +1451,10 @@ do_lrm_invoke(long long action,
 
     CRM_CHECK(!pcmk__str_empty(crm_op) || !pcmk__str_empty(operation), return);
 
-    crm_trace("'%s' execution request from %s as %s user",
-              pcmk__s(crm_op, operation),
-              pcmk__s(from_sys, "unknown subsystem"),
-              pcmk__s(user_name, "current"));
+    pcmk__trace("'%s' execution request from %s as %s user",
+                pcmk__s(crm_op, operation),
+                pcmk__s(from_sys, "unknown subsystem"),
+                pcmk__s(user_name, "current"));
 
     if (pcmk__str_eq(crm_op, CRM_OP_LRM_FAIL, pcmk__str_none)) {
         fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
@@ -1620,7 +1622,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
 
         pcmk__insert_dup(op->params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
-        crm_trace("Constructed %s op for %s", operation, rsc_id);
+        pcmk__trace("Constructed %s op for %s", operation, rsc_id);
         return op;
     }
 
@@ -1707,8 +1709,8 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
         }
     }
 
-    crm_trace("Constructed %s op for %s: interval=%u",
-              operation, rsc_id, op->interval_ms);
+    pcmk__trace("Constructed %s op for %s: interval=%u", operation, rsc_id,
+                op->interval_ms);
 
     return op;
 }
@@ -2015,7 +2017,8 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         active_op_t *pending = NULL;
 
         pending = pcmk__assert_alloc(1, sizeof(active_op_t));
-        crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
+        pcmk__trace("Recording pending op: %d - %s %s", call_id, op_id,
+                    call_id_s);
 
         pending->call_id = call_id;
         pending->interval_ms = op->interval_ms;
@@ -2391,9 +2394,9 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
             removed = TRUE;
         } else if (found) {
             removed = TRUE;
-            crm_trace("Op %s (call=%d, stop-id=%s, remaining=%u): Confirmed",
-                      op_key, op->call_id, op_id,
-                      g_hash_table_size(lrm_state->active_ops));
+            pcmk__trace("Op %s (call=%d, stop-id=%s, remaining=%u): Confirmed",
+                        op_key, op->call_id, op_id,
+                        g_hash_table_size(lrm_state->active_ops));
         }
     }
 

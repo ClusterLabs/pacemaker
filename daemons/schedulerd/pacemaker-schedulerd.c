@@ -184,7 +184,7 @@ void
 pengine_shutdown(int nsig)
 {
     if (ipcs != NULL) {
-        crm_trace("Closing IPC server");
+        pcmk__trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;
     }

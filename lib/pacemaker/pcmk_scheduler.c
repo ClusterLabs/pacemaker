@@ -61,9 +61,9 @@ check_params(pcmk_resource_t *rsc, pcmk_node_t *node, const xmlNode *rsc_op,
                                                 rsc->priv->scheduler);
             switch (digest_data->rc) {
                 case pcmk__digest_unknown:
-                    crm_trace("Resource %s history entry %s on %s has "
-                              "no digest to compare",
-                              rsc->id, pcmk__xe_id(rsc_op), node->priv->id);
+                    pcmk__trace("Resource %s history entry %s on %s has "
+                                "no digest to compare",
+                                rsc->id, pcmk__xe_id(rsc_op), node->priv->id);
                     break;
                 case pcmk__digest_match:
                     break;
@@ -266,7 +266,7 @@ apply_shutdown_locks(pcmk_scheduler_t *scheduler)
 static void
 apply_node_criteria(pcmk_scheduler_t *scheduler)
 {
-    crm_trace("Applying node-specific scheduling criteria");
+    pcmk__trace("Applying node-specific scheduling criteria");
     apply_shutdown_locks(scheduler);
     pcmk__apply_locations(scheduler);
     g_list_foreach(scheduler->priv->resources, apply_stickiness, NULL);
@@ -294,7 +294,7 @@ assign_resources(pcmk_scheduler_t *scheduler)
 {
     GList *iter = NULL;
 
-    crm_trace("Assigning resources to nodes");
+    pcmk__trace("Assigning resources to nodes");
 
     if (!pcmk__str_eq(scheduler->priv->placement_strategy, PCMK_VALUE_DEFAULT,
                       pcmk__str_casei)) {
@@ -350,7 +350,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
     if (!pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
         return;
     }
-    crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
+    pcmk__trace("Clear fail counts for orphaned resource %s", rsc->id);
 
     /* There's no need to recurse into rsc->private->children because those
      * should just be unassigned clone instances.
@@ -394,7 +394,7 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
     pcmk__free_param_checks(scheduler);
 
     if (pcmk__is_set(scheduler->flags, pcmk__sched_probe_resources)) {
-        crm_trace("Scheduling probes");
+        pcmk__trace("Scheduling probes");
         pcmk__schedule_probes(scheduler);
     }
 
@@ -403,7 +403,7 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
                        NULL);
     }
 
-    crm_trace("Scheduling resource actions");
+    pcmk__trace("Scheduling resource actions");
     for (GList *iter = scheduler->priv->resources;
          iter != NULL; iter = iter->next) {
 
@@ -552,7 +552,7 @@ schedule_fencing_and_shutdowns(pcmk_scheduler_t *scheduler)
     GList *fencing_ops = NULL;
     GList *shutdown_ops = NULL;
 
-    crm_trace("Scheduling fencing and shutdowns as needed");
+    pcmk__trace("Scheduling fencing and shutdowns as needed");
     if (!have_managed) {
         pcmk__notice("No fencing will be done until there are resources to "
                      "manage");
@@ -719,7 +719,7 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
                            |pcmk__action_runnable
                            |pcmk__action_pseudo;
 
-    crm_trace("Required but unrunnable actions:");
+    pcmk__trace("Required but unrunnable actions:");
     for (const GList *iter = scheduler->priv->actions;
          iter != NULL; iter = iter->next) {
 

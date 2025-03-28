@@ -54,8 +54,8 @@ pcmk__xa_remove(xmlAttr *attr, bool force)
 
     if (!force && !pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
         // ACLs apply to element, not to particular attributes
-        crm_trace("ACLs prevent removal of attributes from %s element",
-                  (const char *) element->name);
+        pcmk__trace("ACLs prevent removal of attributes from %s element",
+                    element->name);
         return EPERM;
     }
 

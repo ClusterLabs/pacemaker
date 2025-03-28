@@ -225,11 +225,10 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
         {
             char *trace_file = pcmk__assert_asprintf("digest-%s", digest);
 
-            crm_trace("Saving %s.%s.%s to %s",
-                      pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
-                      pcmk__xe_get(xml, PCMK_XA_EPOCH),
-                      pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES),
-                      trace_file);
+            pcmk__trace("Saving %s.%s.%s to %s",
+                        pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
+                        pcmk__xe_get(xml, PCMK_XA_EPOCH),
+                        pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES), trace_file);
             pcmk__xml_write_temp_file(xml, "digest input", trace_file);
             free(trace_file);
         },
@@ -266,7 +265,7 @@ pcmk__verify_digest(const xmlNode *input, const char *expected)
     }
     passed = pcmk__str_eq(expected, calculated, pcmk__str_casei);
     if (passed) {
-        crm_trace("Digest comparison passed: %s", calculated);
+        pcmk__trace("Digest comparison passed: %s", calculated);
     } else {
         pcmk__err("Digest comparison failed: expected %s, calculated %s",
                   expected, calculated);
@@ -398,15 +397,15 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
             input = sorted;
         }
 
-        crm_trace("Using v1 digest algorithm for %s",
-                  pcmk__s(version, "unknown feature set"));
+        pcmk__trace("Using v1 digest algorithm for %s",
+                    pcmk__s(version, "unknown feature set"));
 
         digest = calculate_xml_digest_v1(input);
 
         pcmk__xml_free(sorted);
         return digest;
     }
-    crm_trace("Using v2 digest algorithm for %s", version);
+    pcmk__trace("Using v2 digest algorithm for %s", version);
     return pcmk__digest_xml(input, do_filter);
 }
 
@@ -430,7 +429,7 @@ crm_md5sum(const char *buffer)
     digest = pcmk__str_copy(raw_digest);
     g_free(raw_digest);
 
-    crm_trace("Digest %s.", digest);
+    pcmk__trace("Digest %s.", digest);
     return digest;
 }
 

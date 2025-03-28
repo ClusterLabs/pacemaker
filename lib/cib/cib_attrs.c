@@ -137,10 +137,10 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_trace("Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
-                  attr_name, section, pcmk__s(node_uuid, "<null>"),
-                  pcmk__s(set_name, "<null>"), (const char *) xpath->str,
-                  pcmk_rc_str(rc));
+        pcmk__trace("Query failed for attribute %s (section=%s, node=%s, "
+                    "set=%s, xpath=%s): %s",
+                    attr_name, section, pcmk__s(node_uuid, "<null>"),
+                    pcmk__s(set_name, "<null>"), xpath->str, pcmk_rc_str(rc));
     } else {
         crm_log_xml_debug(xml_search, "Match");
     }
@@ -203,7 +203,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
     } else {
         pcmk__xml_free(xml_search);
-        crm_trace("%s does not exist, create it", attr_name);
+        pcmk__trace("%s does not exist, create it", attr_name);
         if (pcmk__str_eq(section, PCMK_XE_TICKETS, pcmk__str_casei)) {
             node_uuid = NULL;
             section = PCMK_XE_STATUS;
@@ -280,7 +280,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             attr_name = attr_id;
         }
 
-        crm_trace("Creating %s/%s", section, tag);
+        pcmk__trace("Creating %s/%s", section, tag);
         if (tag != NULL) {
             xml_obj = pcmk__xe_create(xml_obj, tag);
             pcmk__xe_set(xml_obj, PCMK_XA_ID, node_uuid);
@@ -361,10 +361,11 @@ cib__get_node_attrs(pcmk__output_t *out, cib_t *cib, const char *section,
                    user_name, result);
 
     if (rc != pcmk_rc_ok) {
-        crm_trace("Query failed for attribute %s (section=%s node=%s set=%s): %s",
-                  pcmk__s(attr_name, "with unspecified name"),
-                  section, pcmk__s(set_name, "<null>"),
-                  pcmk__s(node_uuid, "<null>"), pcmk_rc_str(rc));
+        pcmk__trace("Query failed for attribute %s (section=%s node=%s "
+                    "set=%s): %s",
+                    pcmk__s(attr_name, "with unspecified name"), section,
+                    pcmk__s(set_name, "<null>"), pcmk__s(node_uuid, "<null>"),
+                    pcmk_rc_str(rc));
     }
 
     return rc;
