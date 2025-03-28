@@ -446,7 +446,7 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
     pcmk__assert(text[header->size_uncompressed - 1] == 0);
 
     xml = pcmk__xml_parse(text);
-    crm_log_xml_trace(xml, "[IPC received]");
+    pcmk__log_xml_trace(xml, "[IPC received]");
 
     free(uncompressed);
     return xml;
@@ -655,7 +655,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
             biggest = QB_MAX(header->size_compressed, biggest);
 
         } else {
-            crm_log_xml_trace(message, "EMSGSIZE");
+            pcmk__log_xml_trace(message, "EMSGSIZE");
             biggest = QB_MAX(header->size_uncompressed, biggest);
 
             pcmk__err("Could not compress %u-byte message into less than IPC "
@@ -846,7 +846,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     if (ack != NULL) {
         pcmk__trace("Ack'ing IPC message from client %s as <%s status=%d>",
                     pcmk__client_name(c), tag, status);
-        crm_log_xml_trace(ack, "sent-ack");
+        pcmk__log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);
         pcmk__xml_free(ack);

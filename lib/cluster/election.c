@@ -446,7 +446,7 @@ parse_election_message(const xmlNode *message, struct vote *vote)
 
         pcmk__warn("Invalid %s message from %s", pcmk__s(vote->op, "election"),
                    pcmk__s(vote->from, "unspecified node"));
-        crm_log_xml_trace(message, "bad-vote");
+        pcmk__log_xml_trace(message, "bad-vote");
         return FALSE;
     }
 

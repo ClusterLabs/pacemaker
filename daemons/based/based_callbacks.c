@@ -1231,7 +1231,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
         pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
     }
 
-    /* crm_log_xml_trace(msg, "Peer[inbound]"); */
+    // pcmk__log_xml_trace(msg, "Peer[inbound]");
     cib_process_request(msg, TRUE, NULL);
     return;
 

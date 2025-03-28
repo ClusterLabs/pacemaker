@@ -132,12 +132,12 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
         } else if (reply_id < msg_id) {
             pcmk__debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml_trace(op_reply, "Old reply");
+            pcmk__log_xml_trace(op_reply, "Old reply");
 
         } else if ((reply_id - 10000) > msg_id) {
             /* wrap-around case */
             pcmk__debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml_trace(op_reply, "Old reply");
+            pcmk__log_xml_trace(op_reply, "Old reply");
         } else {
             pcmk__err("Received a __future__ reply:" " %d (wanted %d)",
                       reply_id, msg_id);
@@ -431,7 +431,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     answer = pcmk__remote_message_xml(connection);
 
-    crm_log_xml_trace(answer, "Reply");
+    pcmk__log_xml_trace(answer, "Reply");
     if (answer == NULL) {
         rc = -EPROTO;
 

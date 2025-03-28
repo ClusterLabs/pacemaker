@@ -354,7 +354,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
                   remote->buffer + header->payload_offset);
     }
 
-    crm_log_xml_trace(xml, "[remote msg]");
+    pcmk__log_xml_trace(xml, "[remote msg]");
     return xml;
 }
 

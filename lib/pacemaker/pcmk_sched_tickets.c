@@ -363,7 +363,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded rsc_ticket");
+        pcmk__log_xml_trace(*expanded_xml, "Expanded rsc_ticket");
         return pcmk_rc_ok;
     }
 

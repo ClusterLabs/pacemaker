@@ -940,7 +940,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         goto done;
     }
 
-    crm_log_xml_trace(op_reply, "Reply");
+    pcmk__log_xml_trace(op_reply, "Reply");
 
     if (output_data) {
         *output_data = op_reply;
@@ -2037,7 +2037,7 @@ lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     if (native->proxy_callback) {
-        crm_log_xml_trace(msg, "PROXY_INBOUND");
+        pcmk__log_xml_trace(msg, "PROXY_INBOUND");
         native->proxy_callback(lrmd, native->proxy_callback_userdata, msg);
     }
 }
@@ -2050,7 +2050,7 @@ lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
     }
     pcmk__xe_set(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
 
-    crm_log_xml_trace(msg, "PROXY_OUTBOUND");
+    pcmk__log_xml_trace(msg, "PROXY_OUTBOUND");
     return lrmd_send_xml_no_reply(lrmd, msg);
 }
 

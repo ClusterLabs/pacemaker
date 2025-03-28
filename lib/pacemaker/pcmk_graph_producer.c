@@ -1091,5 +1091,5 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
         add_action_to_graph((gpointer) action, (gpointer) scheduler);
     }
 
-    crm_log_xml_trace(scheduler->priv->graph, "graph");
+    pcmk__log_xml_trace(scheduler->priv->graph, "graph");
 }

@@ -367,7 +367,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     if (pcmk__str_eq(task, CRM_OP_HELLO, pcmk__str_casei)) {
         pcmk__trace("Received hello %s from %s (no processing needed)", ref,
                     pcmk__s(sys_from, "unidentified source"));
-        crm_log_xml_trace(msg, "hello");
+        pcmk__log_xml_trace(msg, "hello");
         return TRUE;
     }
 
@@ -376,7 +376,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         pcmk__warn("Ignoring invalid message %s with type '%s' "
                    "(not '" PCMK__VALUE_CRMD "')",
                    ref, pcmk__s(type, ""));
-        crm_log_xml_trace(msg, "ignored");
+        pcmk__log_xml_trace(msg, "ignored");
         return TRUE;
     }
 
@@ -384,7 +384,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     if (sys_to == NULL) {
         pcmk__warn("Ignoring invalid message %s with no " PCMK__XA_CRM_SYS_TO,
                    ref);
-        crm_log_xml_trace(msg, "ignored");
+        pcmk__log_xml_trace(msg, "ignored");
         return TRUE;
     }
 
@@ -463,7 +463,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             if (is_for_te) {
                 pcmk__trace("Route message %s locally as transition request",
                             ref);
-                crm_log_xml_trace(msg, sys_to);
+                pcmk__log_xml_trace(msg, sys_to);
                 send_msg_via_ipc(msg, sys_to, controld_globals.cluster->priv->node_name);
 
                 return TRUE; // No further processing of message is needed
@@ -477,7 +477,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
                                      CRM_SYSTEM_TENGINE, NULL)) {
             pcmk__trace("Relay message %s to DC (via %s)", ref,
                         pcmk__s(host_to, "broadcast"));
-            crm_log_xml_trace(msg, "relayed");
+            pcmk__log_xml_trace(msg, "relayed");
             if (!broadcast) {
                 node_to = pcmk__get_node(0, host_to, NULL,
                                          pcmk__node_search_cluster_member);
@@ -490,7 +490,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
          * the same node. If we are no longer the DC, discard this message.
          */
         pcmk__trace("Ignoring message %s because we are no longer DC", ref);
-        crm_log_xml_trace(msg, "ignored");
+        pcmk__log_xml_trace(msg, "ignored");
         return TRUE; // No further processing of message is needed
     }
 
@@ -500,7 +500,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             return FALSE; // More to be done by caller
         }
         pcmk__trace("Relay message %s locally to %s", ref, sys_to);
-        crm_log_xml_trace(msg, "IPC-relay");
+        pcmk__log_xml_trace(msg, "IPC-relay");
         send_msg_via_ipc(msg, sys_to, controld_globals.cluster->priv->node_name);
         return TRUE;
     }
@@ -511,13 +511,13 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         if (node_to == NULL) {
             pcmk__warn("Ignoring message %s because node %s is unknown",
                        ref, host_to);
-            crm_log_xml_trace(msg, "ignored");
+            pcmk__log_xml_trace(msg, "ignored");
             return TRUE;
         }
     }
 
     pcmk__trace("Relay message %s to %s", ref, pcmk__s(host_to, "all peers"));
-    crm_log_xml_trace(msg, "relayed");
+    pcmk__log_xml_trace(msg, "relayed");
     pcmk__cluster_send_message(node_to, dest, msg);
     return TRUE;
 }
@@ -600,7 +600,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     }
 
     pcmk__trace("Validated IPC hello from client %s", client_name);
-    crm_log_xml_trace(client_msg, "hello");
+    pcmk__log_xml_trace(client_msg, "hello");
     if (curr_client) {
         curr_client->userdata = pcmk__str_copy(client_name);
     }
@@ -608,7 +608,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
     return false;
 
 rejected:
-    crm_log_xml_trace(client_msg, "rejected");
+    pcmk__log_xml_trace(client_msg, "rejected");
     if (curr_client) {
         qb_ipcs_disconnect(curr_client->ipcs);
     }
@@ -634,7 +634,7 @@ handle_message(xmlNode *msg, enum crmd_fsa_cause cause)
 
     pcmk__warn("Ignoring message with unknown " PCMK__XA_SUBT" '%s'",
                pcmk__s(type, ""));
-    crm_log_xml_trace(msg, "bad");
+    pcmk__log_xml_trace(msg, "bad");
     return I_NULL;
 }
 
@@ -1068,7 +1068,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
 
     /* Optimize this for the DC - it has the most to do */
 
-    crm_log_xml_trace(stored_msg, "request");
+    pcmk__log_xml_trace(stored_msg, "request");
     if (op == NULL) {
         pcmk__warn("Ignoring request without " PCMK__XA_CRM_TASK);
         return I_NULL;
@@ -1239,7 +1239,7 @@ handle_response(xmlNode *stored_msg)
 {
     const char *op = pcmk__xe_get(stored_msg, PCMK__XA_CRM_TASK);
 
-    crm_log_xml_trace(stored_msg, "reply");
+    pcmk__log_xml_trace(stored_msg, "reply");
     if (op == NULL) {
         pcmk__warn("Ignoring reply without " PCMK__XA_CRM_TASK);
 
@@ -1293,7 +1293,7 @@ handle_shutdown_request(xmlNode * stored_msg)
 
     pcmk__info("Creating shutdown request for %s (state=%s)", host_from,
                fsa_state2string(controld_globals.fsa_state));
-    crm_log_xml_trace(stored_msg, "message");
+    pcmk__log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
     update_attrd(host_from, PCMK__NODE_ATTR_SHUTDOWN, now_s, NULL, FALSE);

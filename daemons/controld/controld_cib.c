@@ -949,7 +949,7 @@ controld_update_resource_history(const char *node_name,
      * discovered during the next election. Worst case, the node is wrongly
      * fenced for running a resource it isn't.
      */
-    crm_log_xml_trace(update, __func__);
+    pcmk__log_xml_trace(update, __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, cib_rsc_callback);
     pcmk__xml_free(update);
 }
@@ -985,7 +985,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             PCMK_XE_STATUS, xml_top, cib_none);
-    crm_log_xml_trace(xml_top, "op:cancel");
+    pcmk__log_xml_trace(xml_top, "op:cancel");
     pcmk__xml_free(xml_top);
 }
 

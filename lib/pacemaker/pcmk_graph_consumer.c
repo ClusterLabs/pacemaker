@@ -546,7 +546,7 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
     if (value == NULL) {
         pcmk__err("Ignoring transition graph action without " PCMK_XA_ID
                   " (bug?)");
-        crm_log_xml_trace(xml_action, "invalid");
+        pcmk__log_xml_trace(xml_action, "invalid");
         return NULL;
     }
 
@@ -563,14 +563,14 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         pcmk__err("Ignoring transition graph action of unknown type '%s' "
                   "(bug?)",
                   xml_action->name);
-        crm_log_xml_trace(xml_action, "invalid");
+        pcmk__log_xml_trace(xml_action, "invalid");
         return NULL;
     }
 
     action = calloc(1, sizeof(pcmk__graph_action_t));
     if (action == NULL) {
         crm_perror(LOG_CRIT, "Cannot unpack transition graph action");
-        crm_log_xml_trace(xml_action, "lost");
+        pcmk__log_xml_trace(xml_action, "lost");
         return NULL;
     }
 

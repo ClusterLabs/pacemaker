@@ -148,7 +148,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     pcmk__xe_set(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
     pcmk__xe_set(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-    crm_log_xml_trace(request, "ipc-received");
+    pcmk__log_xml_trace(request, "ipc-received");
     stonith_command(c, id, flags, request, NULL);
 
     pcmk__xml_free(request);
@@ -189,7 +189,7 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
         return;
     }
 
-    crm_log_xml_trace(msg, "Peer[inbound]");
+    pcmk__log_xml_trace(msg, "Peer[inbound]");
     stonith_command(NULL, 0, 0, msg, remote_peer);
 }
 

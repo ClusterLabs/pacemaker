@@ -487,7 +487,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
+        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
         return pcmk_rc_ok;
     }
 
@@ -528,7 +528,7 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             pcmk__xe_set(rsc_set, PCMK_XA_ROLE, state);
             pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
         }
-        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
+        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
 
     } else {
         // No sets

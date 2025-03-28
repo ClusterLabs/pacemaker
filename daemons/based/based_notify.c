@@ -192,7 +192,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);
 
-    crm_log_xml_trace(update_msg, "diff-notify");
+    pcmk__log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);
     pcmk__xml_free(update_msg);
 }

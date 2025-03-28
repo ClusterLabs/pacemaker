@@ -271,7 +271,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                 return -EACCES;
             }
             cib_ro = cib_filtered;
-            crm_log_xml_trace(cib_ro, "filtered");
+            pcmk__log_xml_trace(cib_ro, "filtered");
         }
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
@@ -437,7 +437,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             pcmk__xml_patchset_add_digest(local_diff, scratch);
         }
         pcmk__log_xml_patchset(LOG_INFO, local_diff);
-        crm_log_xml_trace(local_diff, "raw patch");
+        pcmk__log_xml_trace(local_diff, "raw patch");
     }
 
     if (make_copy && (local_diff != NULL)) {

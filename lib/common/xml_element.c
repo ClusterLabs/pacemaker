@@ -575,8 +575,8 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     const char *update_id_val = NULL;
     char *trace_s = NULL;
 
-    crm_log_xml_trace(update, "update");
-    crm_log_xml_trace(target, "target");
+    pcmk__log_xml_trace(update, "update");
+    pcmk__log_xml_trace(target, "target");
 
     CRM_CHECK(update != NULL, goto done);
 
@@ -687,8 +687,8 @@ delete_xe_if_matching(xmlNode *xml, void *user_data)
         }
     }
 
-    crm_log_xml_trace(xml, "delete-match");
-    crm_log_xml_trace(search, "delete-search");
+    pcmk__log_xml_trace(xml, "delete-match");
+    pcmk__log_xml_trace(search, "delete-search");
     pcmk__xml_free(xml);
 
     // Found a match and deleted it; stop traversing tree
@@ -803,8 +803,8 @@ replace_xe_if_matching(xmlNode *xml, void *user_data)
         return true;
     }
 
-    crm_log_xml_trace(xml, "replace-match");
-    crm_log_xml_trace(replace, "replace-with");
+    pcmk__log_xml_trace(xml, "replace-match");
+    pcmk__log_xml_trace(replace, "replace-with");
     replace_node(xml, replace);
 
     // Found a match and replaced it; stop traversing tree
@@ -895,8 +895,8 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
         return true;
     }
 
-    crm_log_xml_trace(xml, "update-match");
-    crm_log_xml_trace(update, "update-with");
+    pcmk__log_xml_trace(xml, "update-match");
+    pcmk__log_xml_trace(update, "update-with");
     update_xe(NULL, xml, update, data->flags);
 
     // Found a match and replaced it; stop traversing tree

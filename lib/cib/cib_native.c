@@ -87,7 +87,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         goto done;
     }
 
-    crm_log_xml_trace(op_reply, "Reply");
+    pcmk__log_xml_trace(op_reply, "Reply");
 
     if (!(call_options & cib_sync_call)) {
         pcmk__trace("Async call, returning %d", cib->call_id);
@@ -319,7 +319,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
                          &reply) > 0) {
             const char *msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
 
-            crm_log_xml_trace(reply, "reg-reply");
+            pcmk__log_xml_trace(reply, "reg-reply");
 
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
                 pcmk__info("Reply to CIB registration message has unknown type "

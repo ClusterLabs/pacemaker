@@ -442,7 +442,7 @@ crmd_proxy_send(const char *session, xmlNode *msg)
     if (!proxy) {
         return;
     }
-    crm_log_xml_trace(msg, "to-proxy");
+    pcmk__log_xml_trace(msg, "to-proxy");
     lrm_state = controld_get_executor_state(proxy->node_name, false);
     if (lrm_state) {
         pcmk__trace("Sending event to %.8s on %s", proxy->session_id,
@@ -455,7 +455,7 @@ static void
 crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
     pcmk__trace("Processing proxied IPC message from session %s", session);
-    crm_log_xml_trace(msg, "controller[inbound]");
+    pcmk__log_xml_trace(msg, "controller[inbound]");
     pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, session);
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);

@@ -480,7 +480,7 @@ log_fsa_input(fsa_data_t * stored_msg)
                                                       __func__);
 
         pcmk__trace("FSA processing XML message from %s", stored_msg->origin);
-        crm_log_xml_trace(ha_input->xml, "FSA message data");
+        pcmk__log_xml_trace(ha_input->xml, "FSA message data");
     }
 }
 

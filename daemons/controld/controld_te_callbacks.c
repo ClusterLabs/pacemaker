@@ -77,7 +77,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
     if ((controld_globals.transition_graph->pending == 0)
         && (xml->children != NULL) && (xml->children->next != NULL)) {
 
-        crm_log_xml_trace(change, "lrm-refresh");
+        pcmk__log_xml_trace(change, "lrm-refresh");
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "History refresh", NULL);
         return;
@@ -399,7 +399,7 @@ te_update_diff(const char *event, xmlNode * msg)
     pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
     if (format == 2) {
-        crm_log_xml_trace(diff, "patch");
+        pcmk__log_xml_trace(diff, "patch");
         pcmk__xe_foreach_child(diff, NULL, te_update_diff_element, NULL);
 
     } else {
