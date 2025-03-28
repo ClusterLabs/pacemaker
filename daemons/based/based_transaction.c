@@ -83,7 +83,7 @@ process_transaction_requests(xmlNodePtr transaction,
             pcmk__err("Aborting CIB transaction for %s due to failed %s "
                       "request: %s",
                       source, op, pcmk_rc_str(rc));
-            crm_log_xml_info(request, "Failed request");
+            pcmk__log_xml_info(request, "Failed request");
             return rc;
         }
 

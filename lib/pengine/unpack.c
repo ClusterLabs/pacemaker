@@ -1236,7 +1236,7 @@ unpack_node_state(const xmlNode *state, pcmk_scheduler_t *scheduler)
     if (id == NULL) {
         pcmk__config_err("Ignoring invalid " PCMK__XE_NODE_STATE " entry without "
                          PCMK_XA_ID);
-        crm_log_xml_info(state, "missing-id");
+        pcmk__log_xml_info(state, "missing-id");
         return;
     }
 
@@ -2809,7 +2809,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     if (rsc_id == NULL) {
         pcmk__config_err("Ignoring invalid " PCMK__XE_LRM_RESOURCE
                          " entry: No " PCMK_XA_ID);
-        crm_log_xml_info(lrm_resource, "missing-id");
+        pcmk__log_xml_info(lrm_resource, "missing-id");
         return NULL;
     }
     pcmk__trace("Unpacking " PCMK__XE_LRM_RESOURCE " for %s on %s", rsc_id,
