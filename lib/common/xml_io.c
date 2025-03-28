@@ -482,7 +482,7 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
 
     pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
     CRM_CHECK(!pcmk__str_empty(buffer->str),
-              crm_log_xml_info(xml, "dump-failed");
+              pcmk__log_xml_info(xml, "dump-failed");
               rc = pcmk_rc_error;
               goto done);
 
