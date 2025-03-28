@@ -278,7 +278,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     rsc_id = pcmk__xe_id(action_rsc);
     CRM_CHECK(rsc_id != NULL,
-              crm_log_xml_err(action->xml, "Bad:action"); return);
+              pcmk__log_xml_err(action->xml, "Bad:action"); return);
 
 /*
   update the CIB
