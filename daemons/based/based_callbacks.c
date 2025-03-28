@@ -1177,7 +1177,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         pcmk__assert(result_cib != the_cib);
 
         if (output != NULL) {
-            crm_log_xml_info(output, "cib:output");
+            pcmk__log_xml_info(output, "cib:output");
             pcmk__xml_free(output);
         }
 

@@ -334,7 +334,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         out->err(out, "Error setting %s=%s (section=%s, set=%s): %s",
                  attr_name, attr_value, section, pcmk__s(set_name, "<null>"),
                  pcmk_rc_str(rc));
-        crm_log_xml_info(xml_top, "Update");
+        pcmk__log_xml_info(xml_top, "Update");
     }
 
     free(local_set_name);

@@ -1084,7 +1084,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
             pcmk__err("Aborting transaction for CIB file client (%s) on file "
                       "'%s' due to failed %s request: %s",
                       private->id, private->filename, op, pcmk_rc_str(rc));
-            crm_log_xml_info(request, "Failed request");
+            pcmk__log_xml_info(request, "Failed request");
             return rc;
         }
 

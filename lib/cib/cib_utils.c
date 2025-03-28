@@ -667,7 +667,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
         pcmk__err("Failed to add '%s' operation to transaction for client %s: "
                   "%s",
                   op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
-        crm_log_xml_info(request, "failed");
+        pcmk__log_xml_info(request, "failed");
     }
     return pcmk_rc2legacy(rc);
 }
