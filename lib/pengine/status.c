@@ -167,10 +167,25 @@ cluster_status(pcmk_scheduler_t * scheduler)
     if ((scheduler->priv->local_node_name != NULL)
         && (pcmk_find_node(scheduler,
                            scheduler->priv->local_node_name) == NULL)) {
-        crm_info("Creating a fake local node for %s",
-                 scheduler->priv->local_node_name);
-        pe_create_node(scheduler->priv->local_node_name,
-                       scheduler->priv->local_node_name, NULL, 0, scheduler);
+        const char *local_node_name = scheduler->priv->local_node_name;
+        pcmk_node_t *node = NULL;
+
+        crm_info("Creating a fake local node for %s", local_node_name);
+        node = pe_create_node(local_node_name, local_node_name, NULL, 0,
+                              scheduler);
+
+        for (GList *iter = scheduler->priv->resources; iter != NULL;
+             iter = iter->next) {
+            pcmk_resource_t *rsc = iter->data;
+            pcmk_node_t *local = g_hash_table_lookup(rsc->priv->allowed_nodes,
+                                                     local_node_name);
+
+            if (local == NULL) {
+                local = pe__copy_node(node);
+                g_hash_table_insert(rsc->priv->allowed_nodes,
+                                    (gpointer) local->priv->id, local);
+            }
+        }
     }
 
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);
