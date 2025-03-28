@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,8 +19,6 @@
 #include <crm/common/roles.h>               // enum rsc_role_e
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_node_t
 #include <crm/common/strings_internal.h>    // pcmk__str_eq()
-
-#include <crm/common/strings_internal.h>    // pcmk__str_any_of()
 
 #ifdef __cplusplus
 extern "C" {
