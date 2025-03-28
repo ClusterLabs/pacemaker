@@ -74,7 +74,7 @@ do_log(long long action, enum crmd_fsa_cause cause,
                fsa_state2string(cur_state), msg_data->origin);
 
     if (msg_data->data != NULL) {
-        crm_log_xml_debug(msg_data->data->msg, __func__);
+        pcmk__log_xml_debug(msg_data->data->msg, __func__);
     }
 }
 

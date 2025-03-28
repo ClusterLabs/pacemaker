@@ -141,7 +141,7 @@ find_attr(cib_t *cib, const char *section, const char *node_uuid,
                     attr_name, section, pcmk__s(node_uuid, "<null>"),
                     pcmk__s(set_name, "<null>"), xpath->str, pcmk_rc_str(rc));
     } else {
-        crm_log_xml_debug(xml_search, "Match");
+        pcmk__log_xml_debug(xml_search, "Match");
     }
 
     g_string_free(xpath, TRUE);

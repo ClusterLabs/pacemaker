@@ -563,8 +563,8 @@ do_dc_join_filter_offer(long long action, enum crmd_fsa_cause cause,
             pcmk__debug("Accepting join-%d request from %s (with better CIB "
                         "generation than current best from %s) " QB_XS " ref=%s",
                         join_id, join_from, max_generation_from, ref);
-            crm_log_xml_debug(max_generation_xml, "Old max generation");
-            crm_log_xml_debug(generation, "New max generation");
+            pcmk__log_xml_debug(max_generation_xml, "Old max generation");
+            pcmk__log_xml_debug(generation, "New max generation");
 
             pcmk__xml_free(max_generation_xml);
             max_generation_xml = pcmk__xml_copy(NULL, join_ack->xml);
@@ -740,7 +740,7 @@ join_node_state_commit_callback(xmlNode *msg, int call_id, int rc,
         pcmk__crit("join-%d node history update (via CIB call %d) for node %s "
                    "failed: %s",
                    current_join_id, call_id, node, pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "failed");
+        pcmk__log_xml_debug(msg, "failed");
         register_fsa_error(I_ERROR, NULL);
     }
 

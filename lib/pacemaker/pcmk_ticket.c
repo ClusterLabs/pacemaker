@@ -101,7 +101,7 @@ pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
-        crm_log_xml_debug(xml_search, "Match");
+        pcmk__log_xml_debug(xml_search, "Match");
 
         if (xml_search->children != NULL && ticket_id != NULL) {
             rc = pcmk_rc_duplicate_id;
@@ -222,7 +222,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
         return rc;
     }
 
-    crm_log_xml_debug(state, "Delete");
+    pcmk__log_xml_debug(state, "Delete");
 
     if (rc == pcmk_rc_duplicate_id) {
         rc = pcmk__xe_foreach_child(state, NULL, delete_single_ticket, cib);
@@ -416,7 +416,7 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
         pcmk__xe_remove_attr(ticket_state_xml, key);
     }
 
-    crm_log_xml_debug(xml_top, "Replace");
+    pcmk__log_xml_debug(xml_top, "Replace");
     rc = cib->cmds->replace(cib, PCMK_XE_STATUS, ticket_state_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
@@ -484,7 +484,7 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
 
     add_attribute_xml(scheduler, ticket_id, attr_set, &ticket_state_xml);
 
-    crm_log_xml_debug(xml_top, "Update");
+    pcmk__log_xml_debug(xml_top, "Update");
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
