@@ -537,7 +537,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
 
     // Add the attribute to the ticket state
     pcmk__xe_set_bool(ticket_state_xml, attr_name, attr_value);
-    crm_log_xml_debug(xml_top, "Update");
+    pcmk__log_xml_debug(xml_top, "Update");
 
     // Commit the change to the CIB
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_sync_call);

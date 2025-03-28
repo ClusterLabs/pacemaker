@@ -171,7 +171,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
 
     if (rc == pcmk_ok || rc == -EPERM) {
-        crm_log_xml_debug(op_reply, "passed");
+        pcmk__log_xml_debug(op_reply, "passed");
 
     } else {
         pcmk__err("Call failed: %s", pcmk_strerror(rc));

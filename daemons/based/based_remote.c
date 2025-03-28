@@ -205,7 +205,7 @@ cib_remote_auth(xmlNode * login)
         pcmk__warn("Rejecting remote client: Unrecognizable message (element "
                    "'%s' not '" PCMK__XE_CIB_COMMAND "')",
                    login->name);
-        crm_log_xml_debug(login, "bad");
+        pcmk__log_xml_debug(login, "bad");
         return false;
     }
 
@@ -214,7 +214,7 @@ cib_remote_auth(xmlNode * login)
         pcmk__warn("Rejecting remote client: Unrecognizable message (operation "
                    "'%s' not 'authenticate')",
                    tmp);
-        crm_log_xml_debug(login, "bad");
+        pcmk__log_xml_debug(login, "bad");
         return false;
     }
 
@@ -223,11 +223,11 @@ cib_remote_auth(xmlNode * login)
     if (!user || !pass) {
         pcmk__warn("Rejecting remote client: No %s given",
                    ((user == NULL)? "username" : "password"));
-        crm_log_xml_debug(login, "bad");
+        pcmk__log_xml_debug(login, "bad");
         return false;
     }
 
-    crm_log_xml_debug(login, "auth");
+    pcmk__log_xml_debug(login, "auth");
 
     return is_daemon_group_member(user) && authenticate_user(user, pass);
 }

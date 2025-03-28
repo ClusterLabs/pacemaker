@@ -541,7 +541,7 @@ process_graph_event(xmlNode *event, const char *event_node)
              * history record, which would otherwise result in incorrectly
              * bumping the fail count twice.
              */
-            crm_log_xml_debug(event, "Event already confirmed:");
+            pcmk__log_xml_debug(event, "Event already confirmed:");
             goto bail;
 
         } else {
