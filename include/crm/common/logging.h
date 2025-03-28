@@ -293,8 +293,6 @@ pcmk__clip_log_level(int level)
         }                                                                   \
     } while (0)
 
-#define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
-
 #define crm_log_xml_explicit(xml, text)  do {                   \
         static struct qb_log_callsite *digest_cs = NULL;        \
         digest_cs = qb_log_callsite_get(                        \
