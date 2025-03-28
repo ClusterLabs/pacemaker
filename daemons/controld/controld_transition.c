@@ -132,7 +132,7 @@ do_te_invoke(long long action,
                                                PCMK__XA_CRM_TGRAPH_IN);
 
         if (graph_data == NULL) {
-            crm_log_xml_err(input->msg, "Bad command");
+            pcmk__log_xml_err(input->msg, "Bad command");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
             return;
         }
@@ -161,7 +161,7 @@ do_te_invoke(long long action,
 
         CRM_CHECK(graph_data != NULL,
                   pcmk__err("Input raised by %s is invalid", msg_data->origin);
-                  crm_log_xml_err(input->msg, "Bad command");
+                  pcmk__log_xml_err(input->msg, "Bad command");
                   return);
 
         pcmk__free_graph(controld_globals.transition_graph);

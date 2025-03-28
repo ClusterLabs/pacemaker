@@ -1241,7 +1241,7 @@ handle_reprobe_op(lrm_state_t *lrm_state, xmlNode *msg, const char *from_sys,
         pcmk__debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
 
         if (relay_message(reply, TRUE) == FALSE) {
-            crm_log_xml_err(reply, "Unable to route reply");
+            pcmk__log_xml_err(reply, "Unable to route reply");
         }
         pcmk__xml_free(reply);
     }
@@ -1777,7 +1777,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
                 pcmk__xe_get(reply, PCMK_XA_REFERENCE));
 
     if (relay_message(reply, TRUE) == FALSE) {
-        crm_log_xml_err(reply, "Unable to route reply");
+        pcmk__log_xml_err(reply, "Unable to route reply");
     }
 
     pcmk__xml_free(update);
@@ -1925,7 +1925,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     transition = pcmk__xe_get(msg, PCMK__XA_TRANSITION_KEY);
     if (pcmk__str_empty(transition)) {
-        crm_log_xml_err(msg, "Missing transition number");
+        pcmk__log_xml_err(msg, "Missing transition number");
     }
 
     if (lrm_state == NULL) {

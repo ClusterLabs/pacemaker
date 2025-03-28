@@ -1040,14 +1040,14 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
         pcmk__err("Executor protocol version mismatch between client "
                   "(" LRMD_PROTOCOL_VERSION ") and server (%s)",
                   version);
-        crm_log_xml_err(reply, "Protocol Error");
+        pcmk__log_xml_err(reply, "Protocol Error");
     } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
         pcmk__err("Invalid registration message: %s", msg_type);
-        crm_log_xml_err(reply, "Bad reply");
+        pcmk__log_xml_err(reply, "Bad reply");
         rc = EPROTO;
     } else if (tmp_ticket == NULL) {
         pcmk__err("No registration token provided");
-        crm_log_xml_err(reply, "Bad reply");
+        pcmk__log_xml_err(reply, "Bad reply");
         rc = EPROTO;
     } else {
         pcmk__trace("Obtained registration token: %s", tmp_ticket);

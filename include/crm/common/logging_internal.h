@@ -136,6 +136,15 @@ extern "C" {
  */
 #define pcmk__trace(fmt, args...) do_crm_log_unlikely(LOG_TRACE, fmt, ##args)
 
+/*!
+ * \internal
+ * \brief Log XML line-by-line in a formatted fashion at \c LOG_ERR level
+ *
+ * \param[in] prefix  Prefix for each line
+ * \param[in] xml     XML to log
+ */
+#define pcmk__log_xml_err(xml, prefix) do_crm_log_xml(LOG_ERR, prefix, xml)
+
 /* Some warnings are too noisy when logged every time a given function is called
  * (for example, using a deprecated feature). As an alternative, we allow
  * warnings to be logged once per invocation of the calling program. Each of
