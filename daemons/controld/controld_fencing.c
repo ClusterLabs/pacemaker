@@ -202,7 +202,7 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
     if (rc < pcmk_ok) {
         pcmk__err("Fencing update %d for %s: failed - %s (%d)",
                   call_id, (char *)user_data, pcmk_strerror(rc), rc);
-        crm_log_xml_warn(msg, "Failed update");
+        pcmk__log_xml_warn(msg, "Failed update");
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_shutdown,
                          "CIB update failed", NULL);
 
@@ -983,7 +983,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     CRM_CHECK(target != NULL, invalid_action = TRUE);
 
     if (invalid_action) {
-        crm_log_xml_warn(action->xml, "BadAction");
+        pcmk__log_xml_warn(action->xml, "BadAction");
         return EPROTO;
     }
 

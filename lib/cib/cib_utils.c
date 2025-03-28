@@ -396,8 +396,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         if (old > new) {
             pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
                       PCMK_XA_ADMIN_EPOCH, old, new, call_options);
-            crm_log_xml_warn(req, "Bad Op");
-            crm_log_xml_warn(input, "Bad Data");
+            pcmk__log_xml_warn(req, "Bad Op");
+            pcmk__log_xml_warn(input, "Bad Data");
             rc = -pcmk_err_old_data;
 
         } else if (old == new) {
@@ -406,8 +406,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             if (old > new) {
                 pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
                           PCMK_XA_EPOCH, old, new, call_options);
-                crm_log_xml_warn(req, "Bad Op");
-                crm_log_xml_warn(input, "Bad Data");
+                pcmk__log_xml_warn(req, "Bad Op");
+                pcmk__log_xml_warn(input, "Bad Data");
                 rc = -pcmk_err_old_data;
             }
         }

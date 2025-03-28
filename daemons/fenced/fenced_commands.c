@@ -1982,7 +1982,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
-        crm_log_xml_warn(msg, "invalid");
+        pcmk__log_xml_warn(msg, "invalid");
         fenced_set_protocol_error(result);
         return;
     }
@@ -2897,7 +2897,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
-        crm_log_xml_warn(msg, "invalid");
+        pcmk__log_xml_warn(msg, "invalid");
         fenced_set_protocol_error(result);
         return;
     }
@@ -3624,7 +3624,7 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
         pcmk__err("Ignoring unknown %s reply from %s %s",
                   pcmk__s(op, "untyped"), ((client != NULL)? "client" : "peer"),
                   ((client != NULL)? pcmk__client_name(client) : remote_peer));
-        crm_log_xml_warn(request, "UnknownOp");
+        pcmk__log_xml_warn(request, "UnknownOp");
         free(op);
         return;
     }

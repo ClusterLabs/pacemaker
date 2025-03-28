@@ -1216,7 +1216,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 
     } else {
         pcmk__info("Cannot find/create resource in order to fail it...");
-        crm_log_xml_warn(xml, "bad input");
+        pcmk__log_xml_warn(xml, "bad input");
         fake_op_status(lrm_state, op, PCMK_EXEC_ERROR, PCMK_OCF_UNKNOWN_ERROR,
                        "Cannot fail unknown resource");
     }
@@ -1506,7 +1506,7 @@ do_lrm_invoke(long long action,
             // Resource operation on malformed resource
             pcmk__err("Invalid resource definition for %s",
                       pcmk__xe_id(xml_rsc));
-            crm_log_xml_warn(input->msg, "invalid resource");
+            pcmk__log_xml_warn(input->msg, "invalid resource");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
                                     PCMK_OCF_NOT_CONFIGURED, // fatal error
                                     "Invalid resource definition");
@@ -1517,7 +1517,7 @@ do_lrm_invoke(long long action,
             pcmk__err("Could not register resource '%s' with executor: %s "
                       QB_XS " rc=%d",
                       pcmk__xe_id(xml_rsc), pcmk_strerror(rc), rc);
-            crm_log_xml_warn(input->msg, "failed registration");
+            pcmk__log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
                                     PCMK_OCF_INVALID_PARAM, // hard error
                                     "Could not register resource with executor");
@@ -1526,7 +1526,7 @@ do_lrm_invoke(long long action,
 
         if (pcmk__str_eq(operation, PCMK_ACTION_CANCEL, pcmk__str_none)) {
             if (!do_lrm_cancel(input, lrm_state, rsc, from_host, from_sys)) {
-                crm_log_xml_warn(input->xml, "Bad command");
+                pcmk__log_xml_warn(input->xml, "Bad command");
             }
 
         } else if (pcmk__str_eq(operation, PCMK_ACTION_DELETE,

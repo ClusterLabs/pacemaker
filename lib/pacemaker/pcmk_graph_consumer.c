@@ -837,8 +837,8 @@ pcmk__event_from_graph_action(const xmlNode *resource,
 
     action_resource = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE, NULL,
                                            NULL);
-    CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "invalid");
-                                       return NULL);
+    CRM_CHECK(action_resource != NULL,
+              pcmk__log_xml_warn(action->xml, "invalid"); return NULL);
 
     op = lrmd_new_event(pcmk__xe_id(action_resource),
                         pcmk__xe_get(action->xml, PCMK_XA_OPERATION),

@@ -956,7 +956,7 @@ invoke_registered_callbacks(stonith_t *stonith, const xmlNode *msg, int call_id)
         // We have the fencer reply
         if ((pcmk__xe_get_int(msg, PCMK__XA_ST_CALLID, &call_id) != pcmk_rc_ok)
             || (call_id <= 0)) {
-            crm_log_xml_warn(msg, "Bad fencer reply");
+            pcmk__log_xml_warn(msg, "Bad fencer reply");
         }
         stonith__xe_get_result(msg, &result);
     }
@@ -1094,7 +1094,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
         update_callback_timeout(call_id, timeout, st);
     } else {
         pcmk__err("Unknown message type: %s", type);
-        crm_log_xml_warn(blob.xml, "BadReply");
+        pcmk__log_xml_warn(blob.xml, "BadReply");
     }
 
     pcmk__xml_free(blob.xml);
