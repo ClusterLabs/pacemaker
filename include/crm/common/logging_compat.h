@@ -68,6 +68,9 @@ extern "C" {
 //! \deprecated Do not use
 #define crm_log_xml_debug(xml, text) do_crm_log_xml(LOG_DEBUG, text, xml)
 
+//! \deprecated Do not use
+#define crm_log_xml_trace(xml, text) do_crm_log_xml(LOG_TRACE, text, xml)
+
 #ifdef __cplusplus
 }
 #endif
