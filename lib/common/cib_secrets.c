@@ -97,7 +97,7 @@ validate_hash(const char *filename, const char *secret_value,
         goto done;
     }
 
-    crm_trace("Stored hash: %s, calculated hash: %s", stored, calculated);
+    pcmk__trace("Stored hash: %s, calculated hash: %s", stored, calculated);
 
     if (!pcmk__str_eq(stored, calculated, pcmk__str_casei)) {
         pcmk__err("Calculated md5 sum for resource %s parameter '%s' does not "

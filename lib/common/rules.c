@@ -133,9 +133,9 @@ check_range(const xmlNode *date_spec, const char *id, const char *attr,
         rc = pcmk_rc_after_range;
     }
 
-    crm_trace(PCMK_XE_DATE_EXPRESSION " %s: " PCMK_XE_DATE_SPEC
-              " %s='%s' for %" PRIu32 ": %s",
-              id, attr, pcmk__s(range, ""), value, pcmk_rc_str(rc));
+    pcmk__trace(PCMK_XE_DATE_EXPRESSION " %s: " PCMK_XE_DATE_SPEC
+                " %s='%s' for %" PRIu32 ": %s",
+                id, attr, pcmk__s(range, ""), value, pcmk_rc_str(rc));
     return rc;
 }
 
@@ -520,8 +520,8 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
         return pcmk_rc_unpack_error;
     }
 
-    crm_trace(PCMK_XE_DATE_EXPRESSION " %s (%s): %s (%d)",
-              id, op, pcmk_rc_str(rc), rc);
+    pcmk__trace(PCMK_XE_DATE_EXPRESSION " %s (%s): %s (%d)", id, op,
+                pcmk_rc_str(rc), rc);
     return rc;
 }
 
@@ -1081,15 +1081,17 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     switch (comparison) {
         case pcmk__comparison_defined:
         case pcmk__comparison_undefined:
-            crm_trace(PCMK_XE_EXPRESSION " %s result: %s (for attribute %s %s)",
-                      id, pcmk_rc_str(rc), attr, op);
+            pcmk__trace(PCMK_XE_EXPRESSION " %s result: %s (for attribute %s "
+                        "%s)",
+                        id, pcmk_rc_str(rc), attr, op);
             break;
 
         default:
-            crm_trace(PCMK_XE_EXPRESSION " %s result: "
-                      "%s (attribute %s %s '%s' via %s source as %s type)",
-                      id, pcmk_rc_str(rc), attr, op, pcmk__s(reference, ""),
-                      pcmk__s(source_s, "default"), pcmk__s(type_s, "default"));
+            pcmk__trace(PCMK_XE_EXPRESSION " %s result: %s (attribute %s %s "
+                        "'%s' via %s source as %s type)",
+                        id, pcmk_rc_str(rc), attr, op, pcmk__s(reference, ""),
+                        pcmk__s(source_s, "default"),
+                        pcmk__s(type_s, "default"));
             break;
     }
 
@@ -1134,9 +1136,9 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     standard = pcmk__xe_get(rsc_expression, PCMK_XA_CLASS);
     if ((standard != NULL)
         && !pcmk__str_eq(standard, rule_input->rsc_standard, pcmk__str_none)) {
-        crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
-                  "actual standard '%s' doesn't match '%s'",
-                  id, pcmk__s(rule_input->rsc_standard, ""), standard);
+        pcmk__trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because actual "
+                    "standard '%s' doesn't match '%s'",
+                    id, pcmk__s(rule_input->rsc_standard, ""), standard);
         return pcmk_rc_op_unsatisfied;
     }
 
@@ -1144,9 +1146,9 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     provider = pcmk__xe_get(rsc_expression, PCMK_XA_PROVIDER);
     if ((provider != NULL)
         && !pcmk__str_eq(provider, rule_input->rsc_provider, pcmk__str_none)) {
-        crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
-                  "actual provider '%s' doesn't match '%s'",
-                  id, pcmk__s(rule_input->rsc_provider, ""), provider);
+        pcmk__trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because actual "
+                    "provider '%s' doesn't match '%s'",
+                    id, pcmk__s(rule_input->rsc_provider, ""), provider);
         return pcmk_rc_op_unsatisfied;
     }
 
@@ -1154,16 +1156,16 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     type = pcmk__xe_get(rsc_expression, PCMK_XA_TYPE);
     if ((type != NULL)
         && !pcmk__str_eq(type, rule_input->rsc_agent, pcmk__str_none)) {
-        crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
-                  "actual agent '%s' doesn't match '%s'",
-                  id, pcmk__s(rule_input->rsc_agent, ""), type);
+        pcmk__trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because actual "
+                    "agent '%s' doesn't match '%s'",
+                    id, pcmk__s(rule_input->rsc_agent, ""), type);
         return pcmk_rc_op_unsatisfied;
     }
 
-    crm_trace(PCMK_XE_RSC_EXPRESSION " %s is satisfied by %s%s%s:%s",
-              id, pcmk__s(standard, ""),
-              ((provider == NULL)? "" : ":"), pcmk__s(provider, ""),
-              pcmk__s(type, ""));
+    pcmk__trace(PCMK_XE_RSC_EXPRESSION " %s is satisfied by %s%s%s:%s", id,
+                pcmk__s(standard, ""),
+                ((provider != NULL)? ":" : ""), pcmk__s(provider, ""),
+                pcmk__s(type, ""));
     return pcmk_rc_ok;
 }
 
@@ -1218,23 +1220,23 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
 
     // Compare operation name
     if (!pcmk__str_eq(name, rule_input->op_name, pcmk__str_none)) {
-        crm_trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because "
-                  "actual name '%s' doesn't match '%s'",
-                  id, pcmk__s(rule_input->op_name, ""), name);
+        pcmk__trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because actual "
+                    "name '%s' doesn't match '%s'",
+                    id, pcmk__s(rule_input->op_name, ""), name);
         return pcmk_rc_op_unsatisfied;
     }
 
     // Compare operation interval (unspecified interval matches all)
     if ((interval_s != NULL) && (interval_ms != rule_input->op_interval_ms)) {
-        crm_trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because "
-                  "actual interval %s doesn't match %s",
-                  id, pcmk__readable_interval(rule_input->op_interval_ms),
-                  pcmk__readable_interval(interval_ms));
+        pcmk__trace(PCMK_XE_OP_EXPRESSION " %s is unsatisfied because actual "
+                    "interval %s doesn't match %s",
+                    id, pcmk__readable_interval(rule_input->op_interval_ms),
+                    pcmk__readable_interval(interval_ms));
         return pcmk_rc_op_unsatisfied;
     }
 
-    crm_trace(PCMK_XE_OP_EXPRESSION " %s is satisfied (name %s, interval %s)",
-              id, name, pcmk__readable_interval(rule_input->op_interval_ms));
+    pcmk__trace(PCMK_XE_OP_EXPRESSION " %s is satisfied (name %s, interval %s)",
+                id, name, pcmk__readable_interval(rule_input->op_interval_ms));
     return pcmk_rc_ok;
 }
 
@@ -1372,6 +1374,7 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
         rc = pcmk_rc_ok;
     }
 
-    crm_trace("Rule %s is %ssatisfied", id, ((rc == pcmk_rc_ok)? "" : "not "));
+    pcmk__trace("Rule %s is %ssatisfied", id,
+                ((rc == pcmk_rc_ok)? "" : "not "));
     return rc;
 }

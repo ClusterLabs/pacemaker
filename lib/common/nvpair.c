@@ -217,10 +217,10 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
 
     } else if (pcmk__xe_get(xml_node, name) == NULL) {
         pcmk__xe_set(xml_node, name, s_value);
-        crm_trace("dumped: %s=%s", name, s_value);
+        pcmk__trace("dumped: %s=%s", name, s_value);
 
     } else {
-        crm_trace("duplicate: %s=%s", name, s_value);
+        pcmk__trace("duplicate: %s=%s", name, s_value);
     }
 }
 
@@ -247,7 +247,7 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
         pcmk__xe_set(xml_node, name, s_value);
 
     } else {
-        crm_trace("duplicate: %s=%s", name, s_value);
+        pcmk__trace("duplicate: %s=%s", name, s_value);
     }
 }
 
@@ -348,7 +348,7 @@ xml2list(const xmlNode *parent)
 
     nvpair_list = pcmk__xe_first_child(parent, PCMK__XE_ATTRIBUTES, NULL, NULL);
     if (nvpair_list == NULL) {
-        crm_trace("No attributes in %s", parent->name);
+        pcmk__trace("No attributes in %s", parent->name);
         crm_log_xml_trace(parent, "No attributes for resource op");
     }
 
@@ -360,7 +360,7 @@ xml2list(const xmlNode *parent)
         const char *p_name = (const char *)pIter->name;
         const char *p_value = pcmk__xml_attr_value(pIter);
 
-        crm_trace("Added %s=%s", p_name, p_value);
+        pcmk__trace("Added %s=%s", p_name, p_value);
 
         pcmk__insert_dup(nvpair_hash, p_name, p_value);
     }
@@ -371,7 +371,7 @@ xml2list(const xmlNode *parent)
         const char *key = pcmk__xe_get(child, PCMK_XA_NAME);
         const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
-        crm_trace("Added %s=%s", key, value);
+        pcmk__trace("Added %s=%s", key, value);
         if (key != NULL && value != NULL) {
             pcmk__insert_dup(nvpair_hash, key, value);
         }
@@ -425,8 +425,8 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
         }
 
     } else if ((old_value == NULL) || unpack_data->overwrite) {
-        crm_trace("Setting %s=\"%s\" (was %s)",
-                  name, value, pcmk__s(old_value, "unset"));
+        pcmk__trace("Setting %s=\"%s\" (was %s)", name, value,
+                    pcmk__s(old_value, "unset"));
         pcmk__insert_dup(unpack_data->values, name, value);
     }
     return pcmk_rc_ok;
@@ -460,8 +460,9 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
         return;
     }
 
-    crm_trace("Adding name/value pairs from %s %s overwrite",
-              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
+    pcmk__trace("Adding name/value pairs from %s %s overwrite",
+                pcmk__xe_id(pair),
+                (unpack_data->overwrite? "with" : "without"));
     if (pcmk__xe_is(pair->children, PCMK__XE_ATTRIBUTES)) {
         pair = pair->children;
     }
@@ -720,7 +721,7 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
     xmlNode *xml_node = user_data;
 
     crm_create_nvpair_xml(xml_node, name, name, s_value);
-    crm_trace("dumped: name=%s value=%s", name, s_value);
+    pcmk__trace("dumped: name=%s value=%s", name, s_value);
 }
 
 // LCOV_EXCL_STOP

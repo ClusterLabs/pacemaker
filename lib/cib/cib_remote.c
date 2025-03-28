@@ -91,7 +91,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return rc;
     }
 
-    crm_trace("Sending %s message to the CIB manager", op);
+    pcmk__trace("Sending %s message to the CIB manager", op);
     if (!(call_options & cib_sync_call)) {
         pcmk__remote_send_xml(&private->callback, op_msg);
     } else {
@@ -100,14 +100,14 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     pcmk__xml_free(op_msg);
 
     if ((call_options & cib_discard_reply)) {
-        crm_trace("Discarding reply");
+        pcmk__trace("Discarding reply");
         return pcmk_ok;
 
     } else if (!(call_options & cib_sync_call)) {
         return cib->call_id;
     }
 
-    crm_trace("Waiting for a synchronous reply");
+    pcmk__trace("Waiting for a synchronous reply");
 
     start_time = time(NULL);
     remaining_time = cib->call_timeout ? cib->call_timeout : 60;
@@ -158,7 +158,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return -ENOMSG;
     }
 
-    crm_trace("Synchronous reply received");
+    pcmk__trace("Synchronous reply received");
 
     /* Start processing the reply... */
     if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
@@ -187,7 +187,8 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         if (tmp == NULL) {
-            crm_trace("No output in reply to \"%s\" command %d", op, cib->call_id - 1);
+            pcmk__trace("No output in reply to \"%s\" command %d", op,
+                        (cib->call_id - 1));
         } else {
             *output_data = pcmk__xml_copy(NULL, tmp);
         }
@@ -249,7 +250,7 @@ cib_remote_callback_dispatch(gpointer user_data)
 
     type = pcmk__xe_get(msg, PCMK__XA_T);
 
-    crm_trace("Activating %s callbacks...", type);
+    pcmk__trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
         cib_native_callback(cib, msg, 0, 0);
@@ -459,7 +460,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         return rc;
     }
 
-    crm_trace("remote client connection established");
+    pcmk__trace("remote client connection established");
     private->timeout_sec = 60;
     connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH,
                                          connection->tcp_socket, cib,

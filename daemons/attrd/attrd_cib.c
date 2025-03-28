@@ -239,7 +239,7 @@ static gboolean
 attribute_timer_cb(gpointer data)
 {
     attribute_t *a = data;
-    crm_trace("Dampen interval expired for %s", a->id);
+    pcmk__trace("Dampen interval expired for %s", a->id);
     attrd_write_or_elect_attribute(a);
     return FALSE;
 }
@@ -322,8 +322,8 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
         } else if (a->timer) {
             // Attribute has a dampening value, so use that as delay
             if (!mainloop_timer_running(a->timer)) {
-                crm_trace("Delayed re-attempted write for %s by %s",
-                          name, pcmk__readable_interval(a->timeout_ms));
+                pcmk__trace("Delayed re-attempted write for %s by %s",
+                            name, pcmk__readable_interval(a->timeout_ms));
                 mainloop_timer_start(a->timer);
             }
         } else {
@@ -454,11 +454,11 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
 
         rc = attrd_send_attribute_alert(at->nodename, node_xml_id,
                                         a->id, at->current);
-        crm_trace("Sent alerts for %s[%s]=%s with node XML ID %s "
-                  "(%s agents failed)",
-                  a->id, at->nodename, at->current,
-                  pcmk__s(node_xml_id, "unknown"),
-                  ((rc == 0)? "no" : ((rc == -1)? "some" : "all")));
+        pcmk__trace("Sent alerts for %s[%s]=%s with node XML ID %s (%s agents "
+                    "failed)",
+                    a->id, at->nodename, at->current,
+                    pcmk__s(node_xml_id, "unknown"),
+                    ((rc == 0)? "no" : ((rc == -1)? "some" : "all")));
     }
 }
 
@@ -599,9 +599,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
         }
 
         if (!pcmk__str_eq(prev_xml_id, node_xml_id, pcmk__str_none)) {
-            crm_trace("Setting %s[%s] node XML ID to %s (was %s)",
-                      a->id, v->nodename, node_xml_id,
-                      pcmk__s(prev_xml_id, "unknown"));
+            pcmk__trace("Setting %s[%s] node XML ID to %s (was %s)", a->id,
+                        v->nodename, node_xml_id,
+                        pcmk__s(prev_xml_id, "unknown"));
             attrd_set_node_xml_id(v->nodename, node_xml_id);
         }
 
@@ -699,7 +699,7 @@ attrd_write_attributes(uint32_t options)
             }
             write_attribute(a, ignore_delay);
         } else {
-            crm_trace("Skipping unchanged attribute %s", a->id);
+            pcmk__trace("Skipping unchanged attribute %s", a->id);
         }
     }
 }

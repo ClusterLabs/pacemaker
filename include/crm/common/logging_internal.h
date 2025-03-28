@@ -11,7 +11,9 @@
 #define PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 
 #include <stdint.h>                     // UINT32_C
+
 #include <glib.h>
+#include <qb/qblog.h>                   // LOG_TRACE, qb_*
 
 #include <crm/common/internal.h>        // pcmk__is_set()
 #include <crm/common/logging.h>
@@ -111,6 +113,15 @@ extern "C" {
  * \param[in] args  Format string arguments
  */
 #define pcmk__debug(fmt, args...) do_crm_log_unlikely(LOG_DEBUG, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_TRACE level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__trace(fmt, args...) do_crm_log_unlikely(LOG_TRACE, fmt, ##args)
 
 /* Some warnings are too noisy when logged every time a given function is called
  * (for example, using a deprecated feature). As an alternative, we allow

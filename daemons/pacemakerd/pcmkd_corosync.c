@@ -269,10 +269,11 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
 
     cs_repeat(retries, 5, rc = cmap_get_string(object_handle, key, value));
     if (rc != CS_OK) {
-        crm_trace("Search for %s failed %d, defaulting to %s", key, rc, fallback);
+        pcmk__trace("Search for %s failed %d, defaulting to %s", key, rc,
+                    fallback);
         pcmk__str_update(value, fallback);
     }
-    crm_trace("%s: %s", key, *value);
+    pcmk__trace("%s: %s", key, *value);
     return rc;
 }
 

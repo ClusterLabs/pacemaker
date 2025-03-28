@@ -387,7 +387,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
         }
 
         ticks_per_s = sysconf(_SC_CLK_TCK);
-        crm_trace("Found %s", loadfile);
+        pcmk__trace("Found %s", loadfile);
     }
 
     stream = fopen(loadfile, "r");

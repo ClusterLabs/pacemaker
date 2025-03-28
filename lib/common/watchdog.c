@@ -190,8 +190,8 @@ pcmk__locate_sbd(void)
          *
          * @TODO Make sure that's what we want to do.
          */
-        crm_trace("SBD detected at pid %lld (via PID file " PIDFILE ")",
-                  pid_read);
+        pcmk__trace("SBD detected at pid %lld (via PID file " PIDFILE ")",
+                    pid_read);
         sbd_pid = (pid_t) pid_read;
 
     } else {
@@ -200,14 +200,14 @@ pcmk__locate_sbd(void)
         // Fall back to /proc for systems that support it
         sbd_pid = pcmk__procfs_pid_of("sbd");
         if (sbd_pid != 0) {
-            crm_trace("SBD detected at pid %lld (via procfs)",
-                      (long long) sbd_pid);
+            pcmk__trace("SBD detected at pid %lld (via procfs)",
+                        (long long) sbd_pid);
         }
     }
 
     if (sbd_pid <= 0) {
         sbd_pid = 0;
-        crm_trace("SBD not detected");
+        pcmk__trace("SBD not detected");
     }
     g_free(contents);
     return sbd_pid;
@@ -246,8 +246,8 @@ pcmk__get_sbd_sync_resource_startup(void)
         const char *sync_env = getenv("SBD_SYNC_RESOURCE_STARTUP");
 
         if (sync_env == NULL) {
-            crm_trace("Defaulting to %sstart-up synchronization with sbd",
-                      (PCMK__SBD_SYNC_DEFAULT? "" : "no "));
+            pcmk__trace("Defaulting to %sstart-up synchronization with sbd",
+                        (PCMK__SBD_SYNC_DEFAULT? "" : "no "));
 
         } else if (pcmk__parse_bool(sync_env,
                                     &sync_resource_startup) != pcmk_rc_ok) {

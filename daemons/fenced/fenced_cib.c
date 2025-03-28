@@ -131,7 +131,7 @@ fencing_topology_init(void)
     xmlXPathObject *xpathObj = NULL;
     const char *xpath = "//" PCMK_XE_FENCING_LEVEL;
 
-    crm_trace("Full topology refresh");
+    pcmk__trace("Full topology refresh");
     free_topology_list();
     init_topology_list();
 
@@ -318,7 +318,7 @@ update_cib_stonith_devices(const xmlNode *patchset)
         cib_devices_update();
         free(reason);
     } else {
-        crm_trace("No updates for device list found in CIB");
+        pcmk__trace("No updates for device list found in CIB");
     }
 }
 
@@ -370,7 +370,7 @@ fenced_query_cib(void)
 {
     int rc = pcmk_ok;
 
-    crm_trace("Re-requesting full CIB");
+    pcmk__trace("Re-requesting full CIB");
     rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
@@ -416,8 +416,8 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
         if (strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
             // Change to a specific entry
-            crm_trace("Handling %s operation %d.%d.%d for %s",
-                      op, add[0], add[1], add[2], xpath);
+            pcmk__trace("Handling %s operation %d.%d.%d for %s", op,
+                        add[0], add[1], add[2], xpath);
 
             if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
                 /* We have only path and ID, which is not enough info to remove
@@ -469,8 +469,8 @@ update_fencing_topology(const char *event, xmlNode *msg)
             return;
         }
 
-        crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
-                  op, add[0], add[1], add[2], xpath);
+        pcmk__trace("Nothing for us in %s operation %d.%d.%d for %s", op,
+                    add[0], add[1], add[2], xpath);
     }
 }
 
@@ -482,11 +482,11 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     bool need_full_refresh = false;
 
     if(!have_cib_devices) {
-        crm_trace("Skipping updates until we get a full dump");
+        pcmk__trace("Skipping updates until we get a full dump");
         return;
 
     } else if(msg == NULL) {
-        crm_trace("Missing %s update", event);
+        pcmk__trace("Missing %s update", event);
         return;
     }
 

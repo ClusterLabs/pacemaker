@@ -481,8 +481,9 @@ crm_control_blackbox(int nsig, bool enable)
 
         blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
         qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
-        crm_trace("Trigger: %d is %d %d", blackbox_trigger,
-                  qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0), QB_LOG_STATE_ENABLED);
+        pcmk__trace("Trigger: %d is %d %d", blackbox_trigger,
+                    qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0),
+                    QB_LOG_STATE_ENABLED);
 
         crm_update_callsites();
 
@@ -1060,7 +1061,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     /* Summary */
-    crm_trace("Quiet: %d, facility %s", quiet, f_copy);
+    pcmk__trace("Quiet: %d, facility %s", quiet, f_copy);
     pcmk__env_option(PCMK__ENV_LOGFILE);
     pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
@@ -1073,7 +1074,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         const char *user = getenv("USER");
 
         if (user != NULL && !pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
-            crm_trace("Not switching to corefile directory for %s", user);
+            pcmk__trace("Not switching to corefile directory for %s", user);
             pcmk__is_daemon = false;
         }
     }
@@ -1085,8 +1086,8 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
             // Error already logged
 
         } else if (!pcmk__str_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
-            crm_trace("Don't change active directory for regular user %s",
-                      user);
+            pcmk__trace("Don't change active directory for regular user %s",
+                        user);
 
         } else if (chdir(CRM_CORE_DIR) < 0) {
             pcmk__info("Cannot change active directory to " CRM_CORE_DIR ": %s",
@@ -1129,7 +1130,7 @@ set_crm_log_level(unsigned int level)
     }
     crm_log_level = level;
     crm_update_callsites();
-    crm_trace("New log level: %d", level);
+    pcmk__trace("New log level: %d", level);
     return old;
 }
 

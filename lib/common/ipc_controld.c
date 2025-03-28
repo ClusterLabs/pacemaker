@@ -229,8 +229,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
          * connecting to cluster nodes <3.0.0, or rolling upgrades from <3.0.0,
          * we can drop this check.
          */
-        crm_trace("Received a reply that was marked as a request "
-                  "(bug unless sent by a controller <3.0.0)");
+        pcmk__trace("Received a reply that was marked as a request (bug unless "
+                    "sent by a controller <3.0.0)");
 
     } else if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         pcmk__info("Unrecognizable message from controller: invalid message "
@@ -670,6 +670,6 @@ create_hello_message(const char *uuid, const char *client_name,
         return NULL;
     }
 
-    crm_trace("Created hello message from %s (UUID %s)", client_name, uuid);
+    pcmk__trace("Created hello message from %s (UUID %s)", client_name, uuid);
     return hello;
 }

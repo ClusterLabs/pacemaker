@@ -105,7 +105,7 @@ join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     CRM_LOG_ASSERT(join_id != NULL);
 
     if (query_call_id != call_id) {
-        crm_trace("Query %d superseded", call_id);
+        pcmk__trace("Query %d superseded", call_id);
         return;
     }
 
@@ -165,7 +165,7 @@ do_cl_join_offer_respond(long long action, enum crmd_fsa_cause cause,
     join_id = pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID);
 
     if (query_call_id > 0) {
-        crm_trace("Cancelling previous join query: %d", query_call_id);
+        pcmk__trace("Cancelling previous join query: %d", query_call_id);
         remove_cib_op_callback(query_call_id, false);
         query_call_id = 0;
     }
@@ -176,8 +176,8 @@ do_cl_join_offer_respond(long long action, enum crmd_fsa_cause cause,
         return;
     }
 
-    crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
-              welcome_from, join_id);
+    pcmk__trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
+                welcome_from, join_id);
 
     update_dc_expected_if_leaving(input->msg);
 
@@ -278,7 +278,7 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
     op = pcmk__xe_get(input->msg, PCMK__XA_CRM_TASK);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_none)) {
-        crm_trace("Ignoring op=%s message", pcmk__s(op, "(unspecified)"));
+        pcmk__trace("Ignoring op=%s message", pcmk__s(op, "(unspecified)"));
         return;
     }
 

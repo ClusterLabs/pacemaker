@@ -30,7 +30,7 @@ alert_key2param(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
     if (value == NULL) {
         value = "";
     }
-    crm_trace("Setting alert key %s = '%s'", pcmk__alert_keys[name], value);
+    pcmk__trace("Setting alert key %s = '%s'", pcmk__alert_keys[name], value);
     return lrmd_key_value_add(head, pcmk__alert_keys[name], value);
 }
 
@@ -62,8 +62,8 @@ set_ev_kv(gpointer key, gpointer value, gpointer user_data)
     lrmd_key_value_t **head = (lrmd_key_value_t **) user_data;
 
     if (value) {
-        crm_trace("Setting environment variable %s='%s'",
-                  (char*)key, (char*)value);
+        pcmk__trace("Setting environment variable %s='%s'", (const char*) key,
+                    (const char *) value);
         *head = lrmd_key_value_add(*head, key, value);
     }
 }
@@ -119,8 +119,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         int rc = pcmk_ok;
 
         if (!pcmk__is_set(entry->flags, kind)) {
-            crm_trace("Filtering unwanted %s alert to %s via %s",
-                      kind_s, entry->recipient, entry->id);
+            pcmk__trace("Filtering unwanted %s alert to %s via %s", kind_s,
+                        entry->recipient, entry->id);
             continue;
         }
 
@@ -134,8 +134,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
                 && !pcmk__g_strv_contains(entry->select_attribute_name,
                                           attr_name)) {
 
-                crm_trace("Filtering unwanted attribute '%s' alert to %s via "
-                          "%s", attr_name, entry->recipient, entry->id);
+                pcmk__trace("Filtering unwanted attribute '%s' alert to %s via "
+                            "%s", attr_name, entry->recipient, entry->id);
                 continue;
             }
         }

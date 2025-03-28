@@ -98,7 +98,7 @@ static void
 crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     if (rc == pcmk_ok) {
-        crm_trace("Node update %d complete", call_id);
+        pcmk__trace("Node update %d complete", call_id);
 
     } else if(call_id < pcmk_ok) {
         pcmk__err("Node update failed: %s (%d)", pcmk_strerror(call_id),
@@ -324,7 +324,7 @@ populate_cib_nodes_from_cache(xmlNode *nodes_xml)
             continue;
         }
 
-        crm_trace("Creating node entry for %s/%s", node->name, node->xml_id);
+        pcmk__trace("Creating node entry for %s/%s", node->name, node->xml_id);
 
         new_node = pcmk__xe_create(nodes_xml, PCMK_XE_NODE);
         pcmk__xe_set(new_node, PCMK_XA_ID, node->xml_id);
@@ -387,8 +387,8 @@ populate_cib_nodes(uint32_t flags, const char *source)
     }
 #endif
 
-    crm_trace("Populating <" PCMK_XE_NODES "> section of CIB from %s",
-              (from_cache? "peer cache" : "cluster"));
+    pcmk__trace("Populating <" PCMK_XE_NODES "> section of CIB from %s",
+                (from_cache? "peer cache" : "cluster"));
 
     if (from_cache) {
         populate_cib_nodes_from_cache(node_list);
@@ -434,7 +434,7 @@ static void
 cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     if (rc == pcmk_ok) {
-        crm_trace("Quorum update %d complete", call_id);
+        pcmk__trace("Quorum update %d complete", call_id);
 
     } else {
         pcmk__err("Quorum update %d failed: %s (%d)", call_id,

@@ -440,7 +440,7 @@ execd_unregister_handlers(void)
 static int32_t
 lrmd_ipc_accept(qb_ipcs_connection_t *qbc, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", qbc);
+    pcmk__trace("Connection %p", qbc);
     if (pcmk__new_client(qbc, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -452,7 +452,7 @@ lrmd_ipc_created(qb_ipcs_connection_t *qbc)
 {
     pcmk__client_t *new_client = pcmk__find_client(qbc);
 
-    crm_trace("Connection %p", qbc);
+    pcmk__trace("Connection %p", qbc);
     pcmk__assert(new_client != NULL);
     /* Now that the connection is offically established, alert
      * the other clients a new connection exists. */
@@ -526,7 +526,7 @@ lrmd_ipc_closed(qb_ipcs_connection_t *qbc)
         return 0;
     }
 
-    crm_trace("Connection %p", qbc);
+    pcmk__trace("Connection %p", qbc);
     client_disconnect_cleanup(client->id);
 #ifdef PCMK__COMPILE_REMOTE
     ipc_proxy_remove_provider(client);
@@ -539,7 +539,7 @@ static void
 lrmd_ipc_destroy(qb_ipcs_connection_t *qbc)
 {
     lrmd_ipc_closed(qbc);
-    crm_trace("Connection %p", qbc);
+    pcmk__trace("Connection %p", qbc);
 }
 
 struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
@@ -611,7 +611,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
         request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
         CRM_CHECK(request.op != NULL, return);
 
-        crm_trace("Processing %s operation from %s", request.op, c->id);
+        pcmk__trace("Processing %s operation from %s", request.op, c->id);
 
         reply = pcmk__process_request(&request, execd_handlers);
 

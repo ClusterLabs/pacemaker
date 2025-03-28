@@ -304,22 +304,22 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     static const size_t buf_read_len = sizeof(buf) - 1;
 
     if (fd < 0) {
-        crm_trace("No fd for %s", op->id);
+        pcmk__trace("No fd for %s", op->id);
         return FALSE;
     }
 
     if (is_stderr && op->stderr_data) {
         len = strlen(op->stderr_data);
         data = op->stderr_data;
-        crm_trace("Reading %s stderr into offset %zu", op->id, len);
+        pcmk__trace("Reading %s stderr into offset %zu", op->id, len);
 
     } else if (is_stderr == FALSE && op->stdout_data) {
         len = strlen(op->stdout_data);
         data = op->stdout_data;
-        crm_trace("Reading %s stdout into offset %zu", op->id, len);
+        pcmk__trace("Reading %s stdout into offset %zu", op->id, len);
 
     } else {
-        crm_trace("Reading %s %s", op->id, out_type(is_stderr));
+        pcmk__trace("Reading %s %s", op->id, out_type(is_stderr));
     }
 
     do {
@@ -328,8 +328,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         if (rc > 0) {
             if (len < MAX_OUTPUT) {
                 buf[rc] = 0;
-                crm_trace("Received %zd bytes of %s %s: %.80s",
-                          rc, op->id, out_type(is_stderr), buf);
+                pcmk__trace("Received %zd bytes of %s %s: %.80s", rc, op->id,
+                            out_type(is_stderr), buf);
                 data = pcmk__realloc(data, len + rc + 1);
                 strcpy(data + len, buf);
                 len += rc;
@@ -378,7 +378,7 @@ pipe_out_done(gpointer user_data)
 {
     svc_action_t *op = (svc_action_t *) user_data;
 
-    crm_trace("%p", op);
+    pcmk__trace("%p", op);
 
     op->opaque->stdout_gsource = NULL;
     if (op->opaque->stdout_fd > STDOUT_FILENO) {
@@ -462,9 +462,10 @@ set_alert_env(gpointer key, gpointer value, gpointer user_data)
 
     } else {
         if (value != NULL) {
-            crm_trace("setenv %s='%s'", (const char *) key, (const char *) value);
+            pcmk__trace("setenv %s='%s'", (const char *) key,
+                        (const char *) value);
         } else {
-            crm_trace("unsetenv %s", (const char *) key);
+            pcmk__trace("unsetenv %s", (const char *) key);
         }
     }
 }
@@ -641,8 +642,8 @@ finish_op_output(svc_action_t *op, bool is_stderr)
     }
 
     if (op->synchronous || *source) {
-        crm_trace("Finish reading %s[%d] %s",
-                  op->id, op->pid, (is_stderr? "stderr" : "stdout"));
+        pcmk__trace("Finish reading %s[%d] %s", op->id, op->pid,
+                    (is_stderr? "stderr" : "stdout"));
         svc_read_output(fd, op, is_stderr);
         if (op->synchronous) {
             close(fd);
@@ -1090,7 +1091,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     fds[2].events = POLLIN;
     fds[2].revents = 0;
 
-    crm_trace("Waiting for %s[%d]", op->id, op->pid);
+    pcmk__trace("Waiting for %s[%d]", op->id, op->pid);
     do {
         int poll_rc = poll(fds, 3, timeout);
 
@@ -1150,7 +1151,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
     } while ((op->timeout < 0 || timeout > 0));
 
-    crm_trace("Stopped waiting for %s[%d]", op->id, op->pid);
+    pcmk__trace("Stopped waiting for %s[%d]", op->id, op->pid);
     finish_op_output(op, true);
     finish_op_output(op, false);
     close_op_input(op);
@@ -1397,7 +1398,7 @@ services__execute_file(svc_action_t *op)
         goto done;
     }
 
-    crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
+    pcmk__trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
     if (pcmk__is_set(op->flags, SVC_ACTION_LEAVE_GROUP)) {
         mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
                                       mainloop_leave_pid_group,

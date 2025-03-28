@@ -101,8 +101,8 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
         && !g_str_has_prefix(key, CRM_META "_")
         && !pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_none)) {
 
-        crm_trace("Passing %s=%s with fence action",
-                  (const char *) key, (const char *) (value? value : ""));
+        pcmk__trace("Passing %s=%s with fence action", (const char *) key,
+                    pcmk__s((const char *) value, ""));
         pcmk__insert_dup((GHashTable *) user_data, key, pcmk__s(value, ""));
     }
 }
@@ -563,8 +563,8 @@ stonith_action_async_forked(svc_action_t *svc_action)
     pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING,
                      NULL);
 
-    crm_trace("Child process %d performing action '%s' successfully forked",
-              action->pid, action->action);
+    pcmk__trace("Child process %d performing action '%s' successfully forked",
+                action->pid, action->action);
 }
 
 /*!

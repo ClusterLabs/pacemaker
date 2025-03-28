@@ -166,10 +166,10 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
     }
 
     if (phase == last) {
-        crm_trace("Node %s join-%d phase is still %s "
-                  QB_XS " nodeid=%" PRIu32 " source=%s",
-                  node->name, current_join_id, join_phase_text(last),
-                  node->cluster_layer_id, source);
+        pcmk__trace("Node %s join-%d phase is still %s "
+                    QB_XS " nodeid=%" PRIu32 " source=%s",
+                    node->name, current_join_id, join_phase_text(last),
+                    node->cluster_layer_id, source);
         return;
     }
 
@@ -183,11 +183,11 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
         data = node->user_data;
         data->join_phase = phase;
 
-        crm_trace("Node %s join-%d phase is now %s (was %s) "
-                  QB_XS " nodeid=%" PRIu32 " source=%s",
-                  node->name, current_join_id, join_phase_text(phase),
-                  join_phase_text(last), node->cluster_layer_id,
-                  source);
+        pcmk__trace("Node %s join-%d phase is now %s (was %s) "
+                    QB_XS " nodeid=%" PRIu32 " source=%s",
+                    node->name, current_join_id, join_phase_text(phase),
+                    join_phase_text(last), node->cluster_layer_id,
+                    source);
         return;
     }
 
@@ -907,16 +907,16 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
         case controld_join_nack:
             break;
         default:
-            crm_trace("Not updating non-integrated and non-nacked node %s (%s) "
-                      "for join-%d",
-                      join_to, join_phase_text(phase), current_join_id);
+            pcmk__trace("Not updating non-integrated and non-nacked node %s "
+                        "(%s) for join-%d",
+                        join_to, join_phase_text(phase), current_join_id);
             return;
     }
 
     /* Update the <node> element with the node's name and UUID, in case they
      * weren't known before
      */
-    crm_trace("Updating node name and UUID in CIB for %s", join_to);
+    pcmk__trace("Updating node name and UUID in CIB for %s", join_to);
     tmp1 = pcmk__xe_create(NULL, PCMK_XE_NODE);
     pcmk__xe_set(tmp1, PCMK_XA_ID, pcmk__cluster_get_xml_id(join_node));
     pcmk__xe_set(tmp1, PCMK_XA_UNAME, join_to);

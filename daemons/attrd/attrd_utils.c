@@ -189,7 +189,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     }
 
     /* Compile pattern into regular expression */
-    crm_trace("Clearing attributes matching %s", pattern);
+    pcmk__trace("Clearing attributes matching %s", pattern);
     rc = regcomp(regex, pattern, REG_EXTENDED|REG_NOSUB);
     free(pattern);
 
@@ -271,8 +271,8 @@ attrd_update_minimum_protocol_ver(const char *host, const char *value)
         /* If the protocol version is a new minimum, record it as such. */
         if (minimum_protocol_version == -1 || ver < minimum_protocol_version) {
             minimum_protocol_version = ver;
-            crm_trace("Set minimum attrd protocol version to %d",
-                      minimum_protocol_version);
+            pcmk__trace("Set minimum attrd protocol version to %d",
+                        minimum_protocol_version);
         }
     }
 }

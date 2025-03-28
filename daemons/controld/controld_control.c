@@ -169,8 +169,8 @@ crmd_exit(crm_exit_t exit_code)
     }
 
     in_progress = TRUE;
-    crm_trace("Preparing to exit with status %d (%s)",
-              exit_code, crm_exit_str(exit_code));
+    pcmk__trace("Preparing to exit with status %d (%s)", exit_code,
+                crm_exit_str(exit_code));
 
     /* Suppress secondary errors resulting from us disconnecting everything */
     controld_set_fsa_input_flags(R_HA_DISCONNECTED);
@@ -178,7 +178,7 @@ crmd_exit(crm_exit_t exit_code)
 /* Close all IPC servers and clients to ensure any and all shared memory files are cleaned up */
 
     if(ipcs) {
-        crm_trace("Closing IPC server");
+        pcmk__trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;
     }
@@ -273,19 +273,21 @@ crmd_exit(crm_exit_t exit_code)
         /* no signals on final draining anymore */
         mainloop_destroy_signal(SIGCHLD);
 
-        crm_trace("Draining mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
+        pcmk__trace("Draining mainloop %d %d", g_main_loop_is_running(mloop),
+                    g_main_context_pending(ctx));
 
         {
             int lpc = 0;
 
             while((g_main_context_pending(ctx) && lpc < 10)) {
                 lpc++;
-                crm_trace("Iteration %d", lpc);
+                pcmk__trace("Iteration %d", lpc);
                 g_main_context_dispatch(ctx);
             }
         }
 
-        crm_trace("Closing mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
+        pcmk__trace("Closing mainloop %d %d", g_main_loop_is_running(mloop),
+                    g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
 
         /* Won't do anything yet, since we're inside it now */
@@ -303,8 +305,8 @@ crmd_exit(crm_exit_t exit_code)
     controld_globals.cluster = NULL;
 
     /* Graceful */
-    crm_trace("Done preparing for exit with status %d (%s)",
-              exit_code, crm_exit_str(exit_code));
+    pcmk__trace("Done preparing for exit with status %d (%s)", exit_code,
+                crm_exit_str(exit_code));
     return exit_code;
 }
 
@@ -350,7 +352,7 @@ do_startup(long long action, enum crmd_fsa_cause cause,
 static int32_t
 accept_controller_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Accepting new IPC client connection");
+    pcmk__trace("Accepting new IPC client connection");
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -408,8 +410,8 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
 
     pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, client->id);
     if (controld_authorize_ipc_message(msg, client, NULL)) {
-        crm_trace("Processing IPC message from client %s",
-                  pcmk__client_name(client));
+        pcmk__trace("Processing IPC message from client %s",
+                    pcmk__client_name(client));
         route_message(C_IPC_MESSAGE, msg);
     }
 
@@ -424,9 +426,9 @@ ipc_client_disconnected(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client) {
-        crm_trace("Disconnecting %sregistered client %s (%p/%p)",
-                  (client->userdata? "" : "un"), pcmk__client_name(client),
-                  c, client);
+        pcmk__trace("Disconnecting %sregistered client %s (%p/%p)",
+                    (client->userdata? "" : "un"), pcmk__client_name(client),
+                    c, client);
         free(client->userdata);
         pcmk__free_client(client);
         controld_trigger_fsa();
@@ -437,7 +439,7 @@ ipc_client_disconnected(qb_ipcs_connection_t *c)
 static void
 ipc_connection_destroyed(qb_ipcs_connection_t *c)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     ipc_client_disconnected(c);
 }
 
@@ -447,7 +449,7 @@ do_stop(long long action, enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
         fsa_data_t *msg_data)
 {
-    crm_trace("Stopping IPC server");
+    pcmk__trace("Stopping IPC server");
     mainloop_del_ipc_server(ipcs);
     ipcs = NULL;
     controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
@@ -649,7 +651,7 @@ void
 controld_trigger_config_as(const char *fn, int line)
 {
     if (config_read_trigger != NULL) {
-        crm_trace("%s:%d - Triggered config processing", fn, line);
+        pcmk__trace("%s:%d - Triggered config processing", fn, line);
         mainloop_set_trigger(config_read_trigger);
     }
 }
@@ -664,7 +666,7 @@ crm_read_options(gpointer user_data)
                                         NULL, cib_xpath);
 
     fsa_register_cib_callback(call_id, NULL, config_query_callback);
-    crm_trace("Querying the CIB... call %d", call_id);
+    pcmk__trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }
 

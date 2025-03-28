@@ -154,7 +154,7 @@ do_election_count_vote(long long action, enum crmd_fsa_cause cause,
             break;
 
         default:
-            crm_trace("Election message resulted in state %d", rc);
+            pcmk__trace("Election message resulted in state %d", rc);
             break;
     }
 }
@@ -269,5 +269,5 @@ do_dc_release(long long action, enum crmd_fsa_cause cause,
                   fsa_action2string(action));
     }
 
-    crm_trace("Local node is%s the DC", (AM_I_DC? "" : " not"));
+    pcmk__trace("Local node is%s the DC", (AM_I_DC? "" : " not"));
 }

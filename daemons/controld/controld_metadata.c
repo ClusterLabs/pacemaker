@@ -52,7 +52,8 @@ void
 metadata_cache_free(GHashTable *mdc)
 {
     if (mdc) {
-        crm_trace("Destroying metadata cache with %d members", g_hash_table_size(mdc));
+        pcmk__trace("Destroying metadata cache with %u members",
+                    g_hash_table_size(mdc));
         g_hash_table_destroy(mdc);
     }
 }
@@ -61,8 +62,8 @@ void
 metadata_cache_reset(GHashTable *mdc)
 {
     if (mdc) {
-        crm_trace("Resetting metadata cache with %d members",
-                  g_hash_table_size(mdc));
+        pcmk__trace("Resetting metadata cache with %u members",
+                    g_hash_table_size(mdc));
         g_hash_table_remove_all(mdc);
     }
 }

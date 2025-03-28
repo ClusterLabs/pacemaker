@@ -598,7 +598,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     }
 
     if (pcmk__list_of_1(resources)) {
-        crm_trace("Single set: %s", id);
+        pcmk__trace("Single set: %s", id);
         goto done;
     }
 
@@ -1389,7 +1389,7 @@ update_action_for_orderings(gpointer data, gpointer user_data)
 void
 pcmk__apply_orderings(pcmk_scheduler_t *sched)
 {
-    crm_trace("Applying ordering constraints");
+    pcmk__trace("Applying ordering constraints");
 
     /* Ordering constraints need to be processed in the order they were created.
      * rsc_order_first() and order_resource_actions_after() require the relevant
@@ -1422,18 +1422,19 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
             order_resource_actions_after(order->action1, rsc, order);
 
         } else {
-            crm_trace("Applying ordering constraint %d (non-resource actions)",
-                      order->id);
+            pcmk__trace("Applying ordering constraint %d (non-resource "
+                        "actions)",
+                        order->id);
             order_actions(order->action1, order->action2, order->flags);
         }
     }
 
     g_list_foreach(sched->priv->actions, block_colocation_dependents, NULL);
 
-    crm_trace("Ordering probes");
+    pcmk__trace("Ordering probes");
     pcmk__order_probes(sched);
 
-    crm_trace("Updating %d actions", g_list_length(sched->priv->actions));
+    pcmk__trace("Updating %u actions", g_list_length(sched->priv->actions));
     g_list_foreach(sched->priv->actions, update_action_for_orderings, sched);
 
     pcmk__disable_invalid_orderings(sched);

@@ -125,7 +125,7 @@ lrmd_client_destroy(pcmk__client_t *client)
 int
 lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 {
-    crm_trace("Sending reply (%d) to client (%s)", id, client->id);
+    pcmk__trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
             return pcmk__ipc_send_xml(client, id, reply, crm_ipc_flags_none);
@@ -145,18 +145,18 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 int
 lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 {
-    crm_trace("Sending notification to client (%s)", client->id);
+    pcmk__trace("Sending notification to client (%s)", client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
             if (client->ipcs == NULL) {
-                crm_trace("Could not notify local client: disconnected");
+                pcmk__trace("Could not notify local client: disconnected");
                 return ENOTCONN;
             }
             return pcmk__ipc_send_xml(client, 0, msg, crm_ipc_server_event);
 #ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
             if (client->remote == NULL) {
-                crm_trace("Could not notify remote client: disconnected");
+                pcmk__trace("Could not notify remote client: disconnected");
                 return ENOTCONN;
             } else {
                 return lrmd__remote_send_xml(client->remote, msg, 0, "notify");

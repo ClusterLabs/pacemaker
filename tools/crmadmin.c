@@ -103,7 +103,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 {
     if (!strcmp(option_name, "--status") || !strcmp(option_name, "-S")) {
         command = cmd_health;
-        crm_trace("Option %c => %s", 'S', optarg);
+        pcmk__trace("Option %c => %s", 'S', optarg);
     }
 
     if (!strcmp(option_name, "--pacemakerd") || !strcmp(option_name, "-P")) {

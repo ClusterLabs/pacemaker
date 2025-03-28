@@ -778,7 +778,7 @@ free_xml_with_position(xmlNode *node, int position)
         if (xpath != NULL) {
             pcmk__deleted_xml_t *deleted_obj = NULL;
 
-            crm_trace("Deleting %s %p from %p", xpath->str, node, doc);
+            pcmk__trace("Deleting %s %p from %p", xpath->str, node, doc);
 
             deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
             deleted_obj->path = g_string_free(xpath, FALSE);
@@ -1124,8 +1124,8 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     // Check ACLs and mark restored value for later removal
     pcmk__xa_remove(attr, false);
 
-    crm_trace("XML attribute %s=%s was removed from %s",
-              attr_name, old_value, element);
+    pcmk__trace("XML attribute %s=%s was removed from %s", attr_name, old_value,
+                element);
 }
 
 /*
@@ -1139,8 +1139,8 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
     xml_doc_private_t *docpriv = new_xml->doc->_private;
     char *vcopy = pcmk__xe_get_copy(new_xml, attr_name);
 
-    crm_trace("XML attribute %s was changed from '%s' to '%s' in %s",
-              attr_name, old_value, vcopy, element);
+    pcmk__trace("XML attribute %s was changed from '%s' to '%s' in %s",
+                attr_name, old_value, vcopy, element);
 
     // Restore the original value (without checking ACLs)
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
@@ -1169,8 +1169,8 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
 {
     xml_node_private_t *nodepriv = new_attr->_private;
 
-    crm_trace("XML attribute %s moved from position %d to %d in %s",
-              old_attr->name, p_old, p_new, element);
+    pcmk__trace("XML attribute %s moved from position %d to %d in %s",
+                old_attr->name, p_old, p_new, element);
 
     // Mark document, element, and all element's parents as changed
     pcmk__mark_xml_node_dirty(new_xml);
@@ -1257,9 +1257,8 @@ mark_created_attrs(xmlNode *new_xml)
         if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
             const char *attr_name = (const char *) new_attr->name;
 
-            crm_trace("Created new attribute %s=%s in %s",
-                      attr_name, pcmk__xml_attr_value(new_attr),
-                      new_xml->name);
+            pcmk__trace("Created new attribute %s=%s in %s", attr_name,
+                        pcmk__xml_attr_value(new_attr), new_xml->name);
 
             /* Check ACLs (we can't use the remove-then-create trick because it
              * would modify the attribute position).
@@ -1363,9 +1362,9 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_child, int old_pos,
     xmlNode *new_parent = new_child->parent;
     xml_node_private_t *nodepriv = new_child->_private;
 
-    crm_trace("Child element %s with " PCMK_XA_ID "='%s' moved from position "
-              "%d to %d under %s",
-              new_child->name, id_s, old_pos, new_pos, new_parent->name);
+    pcmk__trace("Child element %s with " PCMK_XA_ID "='%s' moved from position "
+                "%d to %d under %s",
+                new_child->name, id_s, old_pos, new_pos, new_parent->name);
     pcmk__mark_xml_node_dirty(new_parent);
     pcmk__set_xml_flags(nodepriv, pcmk__xf_moved);
 
@@ -1804,8 +1803,8 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
     }
 
     pcmk__xml_commit_changes(xml->doc);
-    crm_trace("Tracking changes%s to %p",
-              (enforce_acls? " with ACLs" : ""), xml);
+    pcmk__trace("Tracking changes%s to %p", (enforce_acls? " with ACLs" : ""),
+                xml);
     pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
     if (enforce_acls) {
         if (acl_source == NULL) {

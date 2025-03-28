@@ -71,18 +71,18 @@ node_name_is_valid(const char *key, const char *name)
     int octet;
 
     if (name == NULL) {
-        crm_trace("%s is empty", key);
+        pcmk__trace("%s is empty", key);
         return false;
 
     } else if (sscanf(name, "%d.%d.%d.%d", &octet, &octet, &octet, &octet) == 4) {
-        crm_trace("%s contains an IPv4 address (%s), ignoring", key, name);
+        pcmk__trace("%s contains an IPv4 address (%s), ignoring", key, name);
         return false;
 
     } else if (strchr(name, ':') != NULL) {
-        crm_trace("%s contains an IPv6 address (%s), ignoring", key, name);
+        pcmk__trace("%s contains an IPv6 address (%s), ignoring", key, name);
         return false;
     }
-    crm_trace("'%s: %s' is valid", key, name);
+    pcmk__trace("'%s: %s' is valid", key, name);
     return true;
 }
 
@@ -120,7 +120,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 
     if (cmap_handle == 0 && local_handle == 0) {
         retries = 0;
-        crm_trace("Initializing CMAP connection");
+        pcmk__trace("Initializing CMAP connection");
         do {
             rc = pcmk__init_cmap(&local_handle);
             if (rc != CS_OK) {
@@ -171,7 +171,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 
         key = pcmk__assert_asprintf("nodelist.node.%d.nodeid", lpc);
         rc = cmap_get_uint32(cmap_handle, key, &id);
-        crm_trace("Checking %u vs %u from %s", nodeid, id, key);
+        pcmk__trace("Checking %u vs %u from %s", nodeid, id, key);
         free(key);
 
         if (rc != CS_OK) {
@@ -179,18 +179,18 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         }
 
         if (nodeid == id) {
-            crm_trace("Searching for node name for %u in nodelist.node.%d %s",
-                      nodeid, lpc, pcmk__s(name, "<null>"));
+            pcmk__trace("Searching for node name for %u in nodelist.node.%d %s",
+                        nodeid, lpc, pcmk__s(name, "<null>"));
             if (name == NULL) {
                 key = pcmk__assert_asprintf("nodelist.node.%d.name", lpc);
                 cmap_get_string(cmap_handle, key, &name);
-                crm_trace("%s = %s", key, pcmk__s(name, "<null>"));
+                pcmk__trace("%s = %s", key, pcmk__s(name, "<null>"));
                 free(key);
             }
             if (name == NULL) {
                 key = pcmk__assert_asprintf("nodelist.node.%d.ring0_addr", lpc);
                 cmap_get_string(cmap_handle, key, &name);
-                crm_trace("%s = %s", key, pcmk__s(name, "<null>"));
+                pcmk__trace("%s = %s", key, pcmk__s(name, "<null>"));
 
                 if (!node_name_is_valid(key, name)) {
                     free(name);
@@ -539,17 +539,17 @@ bool
 pcmk__corosync_is_peer_active(const pcmk__node_status_t *node)
 {
     if (node == NULL) {
-        crm_trace("Corosync peer inactive: NULL");
+        pcmk__trace("Corosync peer inactive: NULL");
         return false;
     }
     if (!pcmk__str_eq(node->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
-        crm_trace("Corosync peer %s inactive: state=%s",
-                  node->name, node->state);
+        pcmk__trace("Corosync peer %s inactive: state=%s", node->name,
+                    node->state);
         return false;
     }
     if (!pcmk__is_set(node->processes, crm_proc_cpg)) {
-        crm_trace("Corosync peer %s inactive " QB_XS " processes=%.16" PRIx32,
-                  node->name, node->processes);
+        pcmk__trace("Corosync peer %s inactive " QB_XS " processes=%.16" PRIx32,
+                    node->name, node->processes);
         return false;
     }
     return true;
@@ -617,7 +617,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
     }
 
     pcmk__cluster_init_node_caches();
-    crm_trace("Initializing Corosync node list");
+    pcmk__trace("Initializing Corosync node list");
     for (lpc = 0; TRUE; lpc++) {
         uint32_t nodeid = 0;
         char *name = NULL;
@@ -652,7 +652,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         }
 
         if (nodeid > 0 || name != NULL) {
-            crm_trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
+            pcmk__trace("Initializing node[%d] %u = %s", lpc, nodeid, name);
             pcmk__get_node(nodeid, name, NULL, pcmk__node_search_cluster_member);
         }
 

@@ -64,7 +64,7 @@ handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
 static int32_t
 fenced_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("New client connection %p", c);
+    pcmk__trace("New client connection %p", c);
     if (stonith_shutdown_flag) {
         pcmk__info("Ignoring new connection from pid %d during shutdown",
                    pcmk__client_pid(c));
@@ -167,8 +167,9 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
-              " from client %s", flags, call_options, id, pcmk__client_name(client));
+    pcmk__trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
+                " from client %s",
+                flags, call_options, id, pcmk__client_name(client));
 
     if (pcmk__is_set(call_options, st_opt_sync_call)) {
         pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
@@ -225,9 +226,9 @@ fenced_ipc_closed(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        crm_trace("Ignoring request to clean up unknown connection %p", c);
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
     } else {
-        crm_trace("Cleaning up closed client connection %p", c);
+        pcmk__trace("Cleaning up closed client connection %p", c);
         pcmk__free_client(client);
     }
 
@@ -246,7 +247,7 @@ fenced_ipc_closed(qb_ipcs_connection_t *c)
 static void
 fenced_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Destroying client connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     fenced_ipc_closed(c);
 }
 

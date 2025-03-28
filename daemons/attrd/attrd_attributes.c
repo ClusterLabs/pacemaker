@@ -70,10 +70,10 @@ attrd_create_attribute(xmlNode *xml)
         }
     }
 
-    crm_trace("Created attribute %s with %s write delay and %s CIB user",
-              a->id,
-              ((dampen > 0)? pcmk__readable_interval(a->timeout_ms) : "no"),
-              pcmk__s(a->user, "default"));
+    pcmk__trace("Created attribute %s with %s write delay and %s CIB user",
+                a->id,
+                ((dampen > 0)? pcmk__readable_interval(a->timeout_ms) : "no"),
+                pcmk__s(a->user, "default"));
 
     g_hash_table_replace(attributes, a->id, a);
     return a;

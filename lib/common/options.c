@@ -1078,14 +1078,14 @@ pcmk__env_option(const char *option)
         const char *value = getenv(env_name);
 
         if (value != NULL) {
-            crm_trace("Found %s = %s", env_name, value);
+            pcmk__trace("Found %s = %s", env_name, value);
             free(env_name);
             return value;
         }
         free(env_name);
     }
 
-    crm_trace("Nothing found for %s", option);
+    pcmk__trace("Nothing found for %s", option);
     return NULL;
 }
 
@@ -1119,10 +1119,10 @@ pcmk__set_env_option(const char *option, const char *value, bool compat)
         int rc = 0;
 
         if (value != NULL) {
-            crm_trace("Setting %s to %s", env_name, value);
+            pcmk__trace("Setting %s to %s", env_name, value);
             rc = setenv(env_name, value, 1);
         } else {
-            crm_trace("Unsetting %s", env_name);
+            pcmk__trace("Unsetting %s", env_name);
             rc = unsetenv(env_name);
         }
 
@@ -1366,8 +1366,8 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
     value = option->default_value;
 
     if (value == NULL) {
-        crm_trace("No value or default provided for cluster option '%s'",
-                  option->name);
+        pcmk__trace("No value or default provided for cluster option '%s'",
+                    option->name);
         return NULL;
     }
 
@@ -1376,8 +1376,8 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
                         option->name);
               return NULL);
 
-    crm_trace("Using default value '%s' for cluster option '%s'",
-              value, option->name);
+    pcmk__trace("Using default value '%s' for cluster option '%s'", value,
+                option->name);
     if (table != NULL) {
         pcmk__insert_dup(table, option->name, value);
     }
