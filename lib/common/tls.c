@@ -100,7 +100,7 @@ tls_load_x509_data(pcmk__tls_t *tls)
 static void
 _gnutls_log_func(int level, const char *msg)
 {
-    crm_trace("%s", msg);
+    pcmk__trace("%s", msg);
 }
 
 void

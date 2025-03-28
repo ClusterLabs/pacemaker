@@ -327,7 +327,7 @@ controld_remove_fencing_cleanup(const char *target)
 
         iter = iter->next;
         if (pcmk__str_eq(target, iter_name, pcmk__str_casei)) {
-            crm_trace("Removing %s from the cleanup list", iter_name);
+            pcmk__trace("Removing %s from the cleanup list", iter_name);
             fencing_cleanup_list = g_list_delete_link(fencing_cleanup_list,
                                                       tmp);
             free(iter_name);
@@ -659,7 +659,7 @@ controld_timer_fencer_connect(gpointer user_data)
     }
 
     if (fencer_api->state != stonith_disconnected) {
-        crm_trace("Already connected to fencer, no need to retry");
+        pcmk__trace("Already connected to fencer, no need to retry");
         return G_SOURCE_REMOVE;
     }
 

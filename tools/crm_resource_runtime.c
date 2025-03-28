@@ -834,11 +834,11 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
         return rc;
     }
 
-    crm_trace("Processing %d mainloop inputs",
-              pcmk_controld_api_replies_expected(controld_api));
+    pcmk__trace("Processing %d mainloop inputs",
+                pcmk_controld_api_replies_expected(controld_api));
     while (g_main_context_iteration(NULL, FALSE)) {
-        crm_trace("Processed mainloop input, %d still remaining",
-                  pcmk_controld_api_replies_expected(controld_api));
+        pcmk__trace("Processed mainloop input, %d still remaining",
+                    pcmk_controld_api_replies_expected(controld_api));
     }
     return rc;
 }
@@ -1330,17 +1330,17 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
 
         if (pcmk__strcase_any_of(host, node->priv->name, node->priv->id,
                                  NULL)) {
-            crm_trace("Resource %s is running on %s\n", rsc->id, host);
+            pcmk__trace("Resource %s is running on %s\n", rsc->id, host);
             goto done;
         }
     }
 
     if (host != NULL) {
-        crm_trace("Resource %s is not running on: %s\n", rsc->id, host);
+        pcmk__trace("Resource %s is not running on: %s\n", rsc->id, host);
         found = false;
 
     } else if(host == NULL && hosts == NULL) {
-        crm_trace("Resource %s is not running\n", rsc->id);
+        pcmk__trace("Resource %s is not running\n", rsc->id);
         found = false;
     }
 
@@ -1389,7 +1389,7 @@ static void dump_list(GList *items, const char *tag)
     GList *item = NULL;
 
     for (item = items; item != NULL; item = item->next) {
-        crm_trace("%s[%d]: %s", tag, lpc, (char*)item->data);
+        pcmk__trace("%s[%d]: %s", tag, lpc, (char*)item->data);
         lpc++;
     }
 }
@@ -1863,7 +1863,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
-                crm_trace("%us remaining", timeout);
+                pcmk__trace("%us remaining", timeout);
             }
             rc = update_dataset(cib, scheduler, &cib_xml_orig, false);
             if(rc != pcmk_rc_ok) {
@@ -1884,8 +1884,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             dump_list(list_delta, "Delta");
         }
 
-        crm_trace("%u (was %u) resources remaining", g_list_length(list_delta),
-                  before);
+        pcmk__trace("%u (was %u) resources remaining",
+                    g_list_length(list_delta), before);
+
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
             out->err(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
@@ -1947,7 +1948,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
-                crm_trace("%ds remaining", timeout);
+                pcmk__trace("%ds remaining", timeout);
             }
 
             rc = update_dataset(cib, scheduler, &cib_xml_orig, false);
@@ -2549,9 +2550,9 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
     rc = cli_resource_prefer(out, rsc_id, dest->priv->name, move_lifetime,
                              cib, promoted_role_only, PCMK_ROLE_PROMOTED);
 
-    crm_trace("%s%s now prefers %s%s",
-              rsc->id, (promoted_role_only? " (promoted)" : ""),
-              pcmk__node_name(dest), (force? " (forced)" : ""));
+    pcmk__trace("%s%s now prefers %s%s",
+                rsc->id, (promoted_role_only? " (promoted)" : ""),
+                pcmk__node_name(dest), (force? " (forced)" : ""));
 
     /* Ban the current location if force is set and the current location is not
      * the destination. It is possible to use move to enforce a location without
@@ -2574,8 +2575,8 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
                       rsc_id, active_s);
 
         } else {
-            crm_trace("Not banning %s from its current location: not active",
-                      rsc_id);
+            pcmk__trace("Not banning %s from its current location: not active",
+                        rsc_id);
         }
     }
 

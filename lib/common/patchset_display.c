@@ -204,7 +204,7 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
     int format = 1;
 
     if (patchset == NULL) {
-        crm_trace("Empty patch");
+        pcmk__trace("Empty patch");
         return pcmk_rc_no_output;
     }
 
@@ -248,7 +248,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
     }
 
     if (patchset == NULL) {
-        crm_trace("Empty patch");
+        pcmk__trace("Empty patch");
         return pcmk_rc_no_output;
     }
 
@@ -303,7 +303,7 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
         g_string_free(buf, TRUE);
         return pcmk_rc_ok;
     }
-    crm_trace("Empty patch");
+    pcmk__trace("Empty patch");
     return pcmk_rc_no_output;
 }
 

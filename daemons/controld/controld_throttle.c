@@ -93,7 +93,7 @@ throttle_check_thresholds(float load, const char *desc,
         return throttle_low;
     }
 
-    crm_trace("Negligible %s detected: %f", desc, load);
+    pcmk__trace("Negligible %s detected: %f", desc, load);
     return throttle_none;
 }
 
@@ -333,10 +333,11 @@ throttle_get_total_job_limit(int l)
     if(limit == l) {
 
     } else if(l == 0) {
-        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d", limit);
+        pcmk__trace("Using " PCMK_OPT_BATCH_LIMIT "=%d", limit);
 
     } else {
-        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d instead of %d", limit, l);
+        pcmk__trace("Using " PCMK_OPT_BATCH_LIMIT "=%d instead of %d", limit,
+                    l);
     }
     return limit;
 }
@@ -353,7 +354,7 @@ throttle_get_job_limit(const char *node)
         r->node = pcmk__str_copy(node);
         r->mode = throttle_low;
         r->max = throttle_job_max;
-        crm_trace("Defaulting to local values for unknown node %s", node);
+        pcmk__trace("Defaulting to local values for unknown node %s", node);
 
         g_hash_table_insert(throttle_records, r->node, r);
     }

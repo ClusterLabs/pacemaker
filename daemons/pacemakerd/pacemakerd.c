@@ -226,10 +226,10 @@ remove_core_file_limit(void)
     }
 
     if (cores.rlim_cur == RLIM_INFINITY) {
-        crm_trace("Core file size is unlimited");
+        pcmk__trace("Core file size is unlimited");
     } else {
-        crm_trace("Core file size is limited to %llu bytes",
-                  (unsigned long long) cores.rlim_cur);
+        pcmk__trace("Core file size is limited to %llu bytes",
+                    (unsigned long long) cores.rlim_cur);
     }
 }
 

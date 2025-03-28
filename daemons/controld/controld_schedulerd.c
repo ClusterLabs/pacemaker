@@ -273,8 +273,8 @@ controld_stop_sched_timer(void)
 {
     if ((controld_sched_timer != NULL)
         && (controld_globals.fsa_pe_ref != NULL)) {
-        crm_trace("Stopping timer for scheduler reply %s",
-                  controld_globals.fsa_pe_ref);
+        pcmk__trace("Stopping timer for scheduler reply %s",
+                    controld_globals.fsa_pe_ref);
     }
     mainloop_timer_stop(controld_sched_timer);
 }
@@ -403,8 +403,8 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         if (match == NULL) {
             continue;
         }
-        crm_trace("Forcing %s/%s = %s",
-                  pcmk__xe_id(match), attr_name, attr_value);
+        pcmk__trace("Forcing %s/%s = %s", pcmk__xe_id(match), attr_name,
+                    attr_value);
         pcmk__xe_set(match, PCMK_XA_VALUE, attr_value);
     }
 
@@ -413,9 +413,9 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
         xmlNode *crm_config = NULL;
         xmlNode *cluster_property_set = NULL;
 
-        crm_trace("Creating %s-%s for %s=%s",
-                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, attr_name, attr_name,
-                  attr_value);
+        pcmk__trace("Creating " PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS "-%s for "
+                    "%s=%s",
+                    attr_name, attr_name, attr_value);
 
         configuration = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
                                              NULL);
@@ -472,7 +472,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
 
     } else if (call_id != fsa_pe_query) {
-        crm_trace("Skipping superseded CIB query: %d (current=%d)", call_id, fsa_pe_query);
+        pcmk__trace("Skipping superseded CIB query: %d (current=%d)", call_id,
+                    fsa_pe_query);
         return;
 
     } else if (!AM_I_DC

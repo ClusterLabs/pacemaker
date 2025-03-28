@@ -25,7 +25,7 @@ void
 controld_close_attrd_ipc(void)
 {
     if (attrd_api != NULL) {
-        crm_trace("Closing connection to " PCMK__SERVER_ATTRD);
+        pcmk__trace("Closing connection to " PCMK__SERVER_ATTRD);
         pcmk_disconnect_ipc(attrd_api);
         pcmk_free_ipc_api(attrd_api);
         attrd_api = NULL;

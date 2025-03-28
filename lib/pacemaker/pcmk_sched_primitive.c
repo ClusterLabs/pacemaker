@@ -354,8 +354,8 @@ remote_connection_assigned(const pcmk_resource_t *connection)
     if ((connection->priv->assigned_node != NULL)
         && (connection->priv->next_role != pcmk_role_stopped)) {
 
-        crm_trace("Pacemaker Remote node %s will be online",
-                  remote_node->priv->id);
+        pcmk__trace("Pacemaker Remote node %s will be online",
+                    remote_node->priv->id);
         remote_node->details->online = TRUE;
         if (!pcmk__is_set(remote_node->priv->flags, pcmk__node_seen)) {
             // Avoid unnecessary fence, since we will attempt connection
@@ -363,11 +363,11 @@ remote_connection_assigned(const pcmk_resource_t *connection)
         }
 
     } else {
-        crm_trace("Pacemaker Remote node %s will be shut down "
-                  "(%sassigned connection's next role is %s)",
-                  remote_node->priv->id,
-                  ((connection->priv->assigned_node == NULL)? "un" : ""),
-                  pcmk_role_text(connection->priv->next_role));
+        pcmk__trace("Pacemaker Remote node %s will be shut down (%sassigned "
+                    "connection's next role is %s)",
+                    remote_node->priv->id,
+                    ((connection->priv->assigned_node == NULL)? "un" : ""),
+                    pcmk_role_text(connection->priv->next_role));
         remote_node->details->shutdown = TRUE;
     }
 }
@@ -1057,8 +1057,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
              */
             int score;
 
-            crm_trace("Order and colocate %s relative to its launcher %s",
-                      rsc->id, rsc->priv->launcher->id);
+            pcmk__trace("Order and colocate %s relative to its launcher %s",
+                        rsc->id, rsc->priv->launcher->id);
 
             pcmk__new_ordering(rsc->priv->launcher,
                                pcmk__op_key(rsc->priv->launcher->id,

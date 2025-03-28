@@ -39,12 +39,12 @@ ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
         if (a_client->callback == b_client->callback) {
             return 0;
         } else if (((long)a_client->callback) < ((long)b_client->callback)) {
-            crm_trace("callbacks for %s are not equal: %p < %p",
-                      a_client->event, a_client->callback, b_client->callback);
+            pcmk__trace("callbacks for %s are not equal: %p < %p",
+                        a_client->event, a_client->callback, b_client->callback);
             return -1;
         }
-        crm_trace("callbacks for %s are not equal: %p > %p",
-                  a_client->event, a_client->callback, b_client->callback);
+        pcmk__trace("callbacks for %s are not equal: %p > %p", a_client->event,
+                    a_client->callback, b_client->callback);
         return 1;
     }
     return rc;
@@ -62,8 +62,8 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
         return -EPROTONOSUPPORT;
     }
 
-    crm_trace("Adding callback for %s events (%d)",
-              event, g_list_length(cib->notify_list));
+    pcmk__trace("Adding callback for %s events (%u)", event,
+                g_list_length(cib->notify_list));
 
     new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
@@ -82,7 +82,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
 
         cib->cmds->register_notification(cib, event, 1);
 
-        crm_trace("Callback added (%d)", g_list_length(cib->notify_list));
+        pcmk__trace("Callback added (%d)", g_list_length(cib->notify_list));
     }
     return pcmk_ok;
 }
@@ -100,7 +100,7 @@ get_notify_list_event_count(cib_t *cib, const char *event)
             count++;
         }
     }
-    crm_trace("event(%s) count : %d", event, count);
+    pcmk__trace("event(%s) count : %d", event, count);
     return count;
 }
 
@@ -135,10 +135,10 @@ cib_client_del_notify_callback(cib_t *cib, const char *event,
         cib->notify_list = g_list_remove(cib->notify_list, list_client);
         free(list_client);
 
-        crm_trace("Removed callback");
+        pcmk__trace("Removed callback");
 
     } else {
-        crm_trace("Callback not present");
+        pcmk__trace("Callback not present");
     }
 
     if (get_notify_list_event_count(cib, event) == 0) {
@@ -206,7 +206,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
                                               async_timer);
     }
 
-    crm_trace("Adding callback %s for call %d", callback_name, call_id);
+    pcmk__trace("Adding callback %s for call %d", callback_name, call_id);
     pcmk__intkey_table_insert(cib_op_callback_table, call_id, blob);
 
     return TRUE;
@@ -383,9 +383,9 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
     } else {
         // Discard always succeeds
         if (cib->transaction != NULL) {
-            crm_trace("Discarded transaction for CIB client %s", client_id);
+            pcmk__trace("Discarded transaction for CIB client %s", client_id);
         } else {
-            crm_trace("No transaction found for CIB client %s", client_id);
+            pcmk__trace("No transaction found for CIB client %s", client_id);
         }
     }
     pcmk__xml_free(cib->transaction);

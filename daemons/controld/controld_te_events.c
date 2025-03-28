@@ -337,11 +337,11 @@ get_cancel_action(const char *id, const char *node)
 
             target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
             if (node && !pcmk__str_eq(target, node, pcmk__str_casei)) {
-                crm_trace("Wrong node %s for %s on %s", target, id, node);
+                pcmk__trace("Wrong node %s for %s on %s", target, id, node);
                 continue;
             }
 
-            crm_trace("Found %s on %s", id, node);
+            pcmk__trace("Found %s on %s", id, node);
             return action;
         }
     }

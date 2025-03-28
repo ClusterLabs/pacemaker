@@ -119,7 +119,7 @@ attrd_read_options(gpointer user_data)
                                           "config_query_callback",
                                           config_query_callback, free);
 
-    crm_trace("Querying the CIB... call %d", call_id);
+    pcmk__trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }
 

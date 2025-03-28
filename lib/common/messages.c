@@ -155,7 +155,7 @@ pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
         /* Replies should only be generated for request messages, but it's possible
          * we expect replies to other messages right now so this can't be enforced.
          */
-        crm_trace("Creating a reply for a non-request original message");
+        pcmk__trace("Creating a reply for a non-request original message");
     }
 
     // Since this is a reply, we reverse the sender and recipient info

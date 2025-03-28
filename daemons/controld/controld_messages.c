@@ -123,10 +123,10 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     last_data_id++;
-    crm_trace("%s %s FSA input %llu (%s) due to %s, %s data",
-              raised_from, (prepend? "prepended" : "appended"), last_data_id,
-              fsa_input2string(input), fsa_cause2string(cause),
-              (data? "with" : "without"));
+    pcmk__trace("%s %s FSA input %llu (%s) due to %s, %s data",
+                raised_from, (prepend? "prepended" : "appended"), last_data_id,
+                fsa_input2string(input), fsa_cause2string(cause),
+                (data? "with" : "without"));
 
     fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
     fsa_data->id = last_data_id;
@@ -137,7 +137,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
-        crm_trace("Adding actions %.16" PRIx64 " to input", with_actions);
+        pcmk__trace("Adding actions %.16" PRIx64 " to input", with_actions);
     }
 
     if (data != NULL) {
@@ -149,8 +149,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 CRM_CHECK(data->msg != NULL,
                           pcmk__err("Bogus data from %s", raised_from));
 
-                crm_trace("Copying %s data from %s as cluster message data",
-                          fsa_cause2string(cause), raised_from);
+                pcmk__trace("Copying %s data from %s as cluster message data",
+                            fsa_cause2string(cause), raised_from);
                 fsa_data->data = copy_ha_msg_input(data);
                 break;
 
@@ -175,8 +175,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         g_queue_push_tail(controld_globals.fsa_message_queue, fsa_data);
     }
 
-    crm_trace("FSA message queue length is %u",
-              controld_fsa_message_queue_length());
+    pcmk__trace("FSA message queue length is %u",
+                controld_fsa_message_queue_length());
 
     if (input != I_WAIT_FOR_EVENT) {
         controld_trigger_fsa();
@@ -218,11 +218,11 @@ delete_fsa_input(fsa_data_t * fsa_data)
     if (fsa_data == NULL) {
         return;
     }
-    crm_trace("About to free %s data", fsa_cause2string(fsa_data->fsa_cause));
+    pcmk__trace("About to free %s data", fsa_cause2string(fsa_data->fsa_cause));
 
     if (fsa_data->data != NULL) {
         delete_ha_msg_input(fsa_data->data);
-        crm_trace("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
+        pcmk__trace("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
     }
 
     free(fsa_data);
@@ -323,8 +323,8 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     }
 
     if (pcmk__str_eq(task, CRM_OP_HELLO, pcmk__str_casei)) {
-        crm_trace("Received hello %s from %s (no processing needed)",
-                  ref, pcmk__s(sys_from, "unidentified source"));
+        pcmk__trace("Received hello %s from %s (no processing needed)", ref,
+                    pcmk__s(sys_from, "unidentified source"));
         crm_log_xml_trace(msg, "hello");
         return TRUE;
     }
@@ -419,22 +419,22 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     if (is_for_dc || is_for_dcib || is_for_te) {
         if (AM_I_DC) {
             if (is_for_te) {
-                crm_trace("Route message %s locally as transition request",
-                          ref);
+                pcmk__trace("Route message %s locally as transition request",
+                            ref);
                 crm_log_xml_trace(msg, sys_to);
                 send_msg_via_ipc(msg, sys_to, controld_globals.cluster->priv->node_name);
 
                 return TRUE; // No further processing of message is needed
             }
-            crm_trace("Route message %s locally as DC request", ref);
+            pcmk__trace("Route message %s locally as DC request", ref);
             return FALSE; // More to be done by caller
         }
 
         if (originated_locally
             && !pcmk__strcase_any_of(sys_from, CRM_SYSTEM_PENGINE,
                                      CRM_SYSTEM_TENGINE, NULL)) {
-            crm_trace("Relay message %s to DC (via %s)",
-                      ref, pcmk__s(host_to, "broadcast"));
+            pcmk__trace("Relay message %s to DC (via %s)", ref,
+                        pcmk__s(host_to, "broadcast"));
             crm_log_xml_trace(msg, "relayed");
             if (!broadcast) {
                 node_to = pcmk__get_node(0, host_to, NULL,
@@ -447,17 +447,17 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         /* Transition engine and scheduler messages are sent only to the DC on
          * the same node. If we are no longer the DC, discard this message.
          */
-        crm_trace("Ignoring message %s because we are no longer DC", ref);
+        pcmk__trace("Ignoring message %s because we are no longer DC", ref);
         crm_log_xml_trace(msg, "ignored");
         return TRUE; // No further processing of message is needed
     }
 
     if (is_local) {
         if (is_for_crm || is_for_cib) {
-            crm_trace("Route message %s locally as controller request", ref);
+            pcmk__trace("Route message %s locally as controller request", ref);
             return FALSE; // More to be done by caller
         }
-        crm_trace("Relay message %s locally to %s", ref, sys_to);
+        pcmk__trace("Relay message %s locally to %s", ref, sys_to);
         crm_log_xml_trace(msg, "IPC-relay");
         send_msg_via_ipc(msg, sys_to, controld_globals.cluster->priv->node_name);
         return TRUE;
@@ -474,8 +474,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         }
     }
 
-    crm_trace("Relay message %s to %s",
-              ref, pcmk__s(host_to, "all peers"));
+    pcmk__trace("Relay message %s to %s", ref, pcmk__s(host_to, "all peers"));
     crm_log_xml_trace(msg, "relayed");
     pcmk__cluster_send_message(node_to, dest, msg);
     return TRUE;
@@ -558,7 +557,7 @@ controld_authorize_ipc_message(const xmlNode *client_msg, pcmk__client_t *curr_c
         goto rejected;
     }
 
-    crm_trace("Validated IPC hello from client %s", client_name);
+    pcmk__trace("Validated IPC hello from client %s", client_name);
     crm_log_xml_trace(client_msg, "hello");
     if (curr_client) {
         curr_client->userdata = pcmk__str_copy(client_name);
@@ -942,8 +941,8 @@ verify_feature_set(xmlNode *msg)
     }
 
     if (feature_set_compatible(dc_version, CRM_FEATURE_SET)) {
-        crm_trace("Local feature set (%s) is compatible with DC's (%s)",
-                  CRM_FEATURE_SET, dc_version);
+        pcmk__trace("Local feature set (%s) is compatible with DC's (%s)",
+                    CRM_FEATURE_SET, dc_version);
     } else {
         pcmk__err("Local feature set (%s) is incompatible with DC's (%s)",
                   CRM_FEATURE_SET, dc_version);
