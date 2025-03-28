@@ -630,7 +630,7 @@ handle_failcount_op(xmlNode * stored_msg)
     uname = pcmk__xe_get(xml_op, PCMK__META_ON_NODE);
 
     if ((rsc == NULL) || (uname == NULL)) {
-        crm_log_xml_warn(stored_msg, "invalid failcount op");
+        pcmk__log_xml_warn(stored_msg, "invalid failcount op");
         return I_NULL;
     }
 
