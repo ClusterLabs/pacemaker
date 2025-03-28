@@ -1261,12 +1261,12 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
         if (reply_id < request_id) {
             pcmk__err("Discarding old reply %d (need %d)", reply_id,
                       request_id);
-            crm_log_xml_notice(xml, "OldIpcReply");
+            pcmk__log_xml_notice(xml, "OldIpcReply");
 
         } else if (reply_id > request_id) {
             pcmk__err("Discarding newer reply %d (need %d)", reply_id,
                       request_id);
-            crm_log_xml_notice(xml, "ImpossibleReply");
+            pcmk__log_xml_notice(xml, "ImpossibleReply");
             pcmk__assert(hdr->qb.id <= request_id);
         }
     } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));

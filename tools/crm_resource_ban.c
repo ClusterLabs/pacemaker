@@ -124,7 +124,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         pcmk__xe_set(expr, PCMK_XA_END, later_s);
     }
 
-    crm_log_xml_notice(fragment, "Modify");
+    pcmk__log_xml_notice(fragment, "Modify");
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_sync_call);
     rc = pcmk_legacy2rc(rc);
