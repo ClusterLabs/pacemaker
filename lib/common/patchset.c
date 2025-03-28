@@ -476,7 +476,7 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
                        vfields[i], current[0], current[1], current[2],
                        source[0], source[1], source[2],
                        target[0], target[1], target[2]);
-            crm_log_xml_info(patchset, "OldPatch");
+            pcmk__log_xml_info(patchset, "OldPatch");
             return pcmk_rc_old_data;
         }
     }
