@@ -81,6 +81,9 @@ extern "C" {
 //! \deprecated Do not use
 #define crm_trace(fmt, args...) do_crm_log_unlikely(LOG_TRACE, fmt, ##args)
 
+//! \deprecated Do not use
+#define crm_log_xml_crit(xml, text) do_crm_log_xml(LOG_CRIT, text, xml)
+
 #ifdef __cplusplus
 }
 #endif
