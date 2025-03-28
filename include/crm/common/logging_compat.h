@@ -62,6 +62,9 @@ extern "C" {
 //! \deprecated Do not use
 #define crm_log_xml_notice(xml, text) do_crm_log_xml(LOG_NOTICE, text, xml)
 
+//! \deprecated Do not use
+#define crm_log_xml_info(xml, text) do_crm_log_xml(LOG_INFO, text, xml)
+
 #ifdef __cplusplus
 }
 #endif
