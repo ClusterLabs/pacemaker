@@ -40,7 +40,7 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
     } else {
         pcmk__err("Ignoring unknown %s reply from peer %s",
                   pcmk__s(op, "untyped"), remote_peer);
-        crm_log_xml_warn(request, "UnknownOp");
+        pcmk__log_xml_warn(request, "UnknownOp");
         return;
     }
 

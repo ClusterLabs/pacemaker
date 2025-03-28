@@ -175,7 +175,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
     } else {
         pcmk__err("Call failed: %s", pcmk_strerror(rc));
-        crm_log_xml_warn(op_reply, "failed");
+        pcmk__log_xml_warn(op_reply, "failed");
     }
 
     if (output_data == NULL) {

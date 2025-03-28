@@ -43,7 +43,7 @@ handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
     } else {
         pcmk__err("Ignoring unknown %s reply from client %s",
                   pcmk__s(op, "untyped"), pcmk__client_name(client));
-        crm_log_xml_warn(request, "UnknownOp");
+        pcmk__log_xml_warn(request, "UnknownOp");
         return;
     }
 

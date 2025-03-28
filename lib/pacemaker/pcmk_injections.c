@@ -331,7 +331,7 @@ done:
     free(xpath);
 
     if (duplicate) {
-        crm_log_xml_warn(cib_object, "Duplicates");
+        pcmk__log_xml_warn(cib_object, "Duplicates");
         crm_exit(CRM_EX_SOFTWARE);
         return NULL; // not reached, but makes static analysis happy
     }

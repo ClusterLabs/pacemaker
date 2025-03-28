@@ -2084,7 +2084,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
-        crm_log_xml_warn(msg, "invalid");
+        pcmk__log_xml_warn(msg, "invalid");
         set_bad_request_result(result);
         return;
     }
@@ -3001,7 +3001,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 
     cmd = create_async_command(msg);
     if (cmd == NULL) {
-        crm_log_xml_warn(msg, "invalid");
+        pcmk__log_xml_warn(msg, "invalid");
         set_bad_request_result(result);
         return;
     }
