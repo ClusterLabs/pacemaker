@@ -90,7 +90,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
 
         pcmk__warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
                    pcmk_strerror(rc), rc);
-        crm_log_xml_debug(msg, "failed");
+        pcmk__log_xml_debug(msg, "failed");
         return pcmk_legacy2rc(rc);
     }
 
@@ -709,7 +709,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
 
     } else if ((cib != NULL) && (rc != pcmk_ok)) {
         pcmk__warn("CIB command failed: %s", pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "Failed CIB Update");
+        pcmk__log_xml_debug(msg, "Failed CIB Update");
     }
 
     /* This may free user_data, so do it after the callback */

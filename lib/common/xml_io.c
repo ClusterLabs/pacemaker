@@ -146,7 +146,7 @@ pcmk__xml_read(const char *filename)
 
     last_error = xmlCtxtGetLastError(ctxt);
     if ((last_error != NULL) && (xml != NULL)) {
-        crm_log_xml_debug(xml, "partial");
+        pcmk__log_xml_debug(xml, "partial");
         pcmk__xml_free(xml);
         xml = NULL;
     }
@@ -192,7 +192,7 @@ pcmk__xml_parse(const char *input)
 
     last_error = xmlCtxtGetLastError(ctxt);
     if ((last_error != NULL) && (xml != NULL)) {
-        crm_log_xml_debug(xml, "partial");
+        pcmk__log_xml_debug(xml, "partial");
         pcmk__xml_free(xml);
         xml = NULL;
     }

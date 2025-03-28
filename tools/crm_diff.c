@@ -158,7 +158,7 @@ generate_patch(pcmk__output_t *out, xmlNode *source, xmlNode *target,
         pcmk__xml_doc_set_flags(target->doc, pcmk__xf_ignore_attr_pos);
     }
     pcmk__xml_mark_changes(source, target);
-    crm_log_xml_debug(target, "target");
+    pcmk__log_xml_debug(target, "target");
 
     patchset = xml_create_patchset(0, source, target, NULL, false);
 

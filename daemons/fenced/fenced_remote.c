@@ -248,7 +248,7 @@ free_remote_op(gpointer data)
 {
     remote_fencing_op_t *op = data;
 
-    crm_log_xml_debug(op->request, "Destroying");
+    pcmk__log_xml_debug(op->request, "Destroying");
 
     clear_remote_op_timers(op);
 

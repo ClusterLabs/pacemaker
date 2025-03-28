@@ -165,7 +165,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
-        crm_log_xml_debug(xml_search, "Match");
+        pcmk__log_xml_debug(xml_search, "Match");
         if (xml_search->children != NULL) {
             rc = ENOTUNIQ;
             pcmk__warn_multiple_name_matches(out, xml_search, attr_name);
@@ -504,7 +504,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             xml_top = xml_obj;
         }
 
-        crm_log_xml_debug(xml_top, "Update");
+        pcmk__log_xml_debug(xml_top, "Update");
 
         rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
@@ -702,7 +702,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         }
 
         xml_obj = crm_create_nvpair_xml(NULL, rsc_attr_id, attr_name, NULL);
-        crm_log_xml_debug(xml_obj, "Delete");
+        pcmk__log_xml_debug(xml_obj, "Delete");
 
         rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_sync_call);
         rc = pcmk_legacy2rc(rc);

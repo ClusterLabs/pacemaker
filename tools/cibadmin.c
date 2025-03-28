@@ -713,7 +713,7 @@ main(int argc, char **argv)
     }
 
     if (input != NULL) {
-        crm_log_xml_debug(input, "[admin input]");
+        pcmk__log_xml_debug(input, "[admin input]");
 
     } else if (source != NULL) {
         exit_code = CRM_EX_CONFIG;

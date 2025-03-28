@@ -74,12 +74,12 @@ do_log(long long action, enum crmd_fsa_cause cause,
     if (msg_data->data_type == fsa_dt_ha_msg) {
         ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
 
-        crm_log_xml_debug(input->msg, __func__);
+        pcmk__log_xml_debug(input->msg, __func__);
 
     } else if (msg_data->data_type == fsa_dt_xml) {
         xmlNode *input = fsa_typed_data(msg_data->data_type);
 
-        crm_log_xml_debug(input, __func__);
+        pcmk__log_xml_debug(input, __func__);
 
     } else if (msg_data->data_type == fsa_dt_lrm) {
         lrmd_event_data_t *input = fsa_typed_data(msg_data->data_type);

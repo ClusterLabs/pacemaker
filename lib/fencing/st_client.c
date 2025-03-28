@@ -980,7 +980,7 @@ invoke_registered_callbacks(stonith_t *stonith, const xmlNode *msg, int call_id)
                    pcmk_exec_status_str(result.execution_status),
                    ((result.exit_reason != NULL)? ": " : ""),
                    pcmk__s(result.exit_reason, ""));
-        crm_log_xml_debug(msg, "Failed fence update");
+        pcmk__log_xml_debug(msg, "Failed fence update");
     }
 
     if (private->op_callback != NULL) {
@@ -1176,13 +1176,13 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
                 pcmk__debug("Couldn't register with the fencer: invalid reply "
                             "type '%s'",
                             pcmk__s(msg_type, "(missing)"));
-                crm_log_xml_debug(reply, "Invalid fencer reply");
+                pcmk__log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
             } else if (native->token == NULL) {
                 pcmk__debug("Couldn't register with the fencer: no token in "
                             "reply");
-                crm_log_xml_debug(reply, "Invalid fencer reply");
+                pcmk__log_xml_debug(reply, "Invalid fencer reply");
                 rc = -EPROTO;
 
             } else {

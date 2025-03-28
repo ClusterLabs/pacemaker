@@ -1697,7 +1697,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     switch (digest_data->rc) {
         case pcmk__digest_restart:
-            crm_log_xml_debug(digest_data->params_restart, "params:restart");
+            pcmk__log_xml_debug(digest_data->params_restart, "params:restart");
             force_restart(rsc, task, interval_ms, node);
             return true;
 
@@ -1710,7 +1710,8 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * re-scheduled so the next run uses the new parameters.
                  * The old instance will be cancelled automatically.
                  */
-                crm_log_xml_debug(digest_data->params_all, "params:reschedule");
+                pcmk__log_xml_debug(digest_data->params_all,
+                                    "params:reschedule");
                 pcmk__reschedule_recurring(rsc, task, interval_ms, node);
 
             } else if (pcmk__xe_get(xml_op,
@@ -1719,7 +1720,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 trigger_unfencing(rsc, node,
                                   "Device parameters changed (reload)", NULL,
                                   rsc->priv->scheduler);
-                crm_log_xml_debug(digest_data->params_all, "params:reload");
+                pcmk__log_xml_debug(digest_data->params_all, "params:reload");
                 schedule_reload((gpointer) rsc, (gpointer) node);
 
             } else {
@@ -1727,8 +1728,8 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                 "Restarting %s "
                                 "because agent doesn't support reload",
                                 rsc->id);
-                crm_log_xml_debug(digest_data->params_restart,
-                                  "params:restart");
+                pcmk__log_xml_debug(digest_data->params_restart,
+                                    "params:restart");
                 force_restart(rsc, task, interval_ms, node);
             }
             return true;

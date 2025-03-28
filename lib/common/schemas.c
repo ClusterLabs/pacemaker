@@ -1068,7 +1068,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
         pcmk__err("Schema upgrade from %s to %s failed: XSL transform pipeline "
                   "produced an invalid configuration",
                   schema->name, upgraded_schema->name);
-        crm_log_xml_debug(new_xml, "bad-transform-result");
+        pcmk__log_xml_debug(new_xml, "bad-transform-result");
         pcmk__xml_free(new_xml);
         return NULL;
     }

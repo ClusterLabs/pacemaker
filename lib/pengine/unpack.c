@@ -2010,7 +2010,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
 
     pcmk__xe_copy_attrs(xml_rsc, rsc_entry, pcmk__xaf_none);
     pcmk__xe_set(xml_rsc, PCMK_XA_ID, rsc_id);
-    crm_log_xml_debug(xml_rsc, "Orphan resource");
+    pcmk__log_xml_debug(xml_rsc, "Orphan resource");
 
     if (pe__unpack_resource(xml_rsc, &rsc, NULL, scheduler) != pcmk_rc_ok) {
         return NULL;
