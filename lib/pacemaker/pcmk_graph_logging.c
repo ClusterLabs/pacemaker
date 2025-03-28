@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -87,16 +87,16 @@ find_graph_action_by_id(const pcmk__graph_t *graph, int id)
 static const char *
 synapse_state_str(pcmk__graph_synapse_t *synapse)
 {
-    if (pcmk_is_set(synapse->flags, pcmk__synapse_failed)) {
+    if (pcmk__is_set(synapse->flags, pcmk__synapse_failed)) {
         return "Failed";
 
-    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_confirmed)) {
+    } else if (pcmk__is_set(synapse->flags, pcmk__synapse_confirmed)) {
         return "Completed";
 
-    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+    } else if (pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
         return "In-flight";
 
-    } else if (pcmk_is_set(synapse->flags, pcmk__synapse_ready)) {
+    } else if (pcmk__is_set(synapse->flags, pcmk__synapse_ready)) {
         return "Ready";
     }
     return "Pending";
@@ -124,10 +124,10 @@ synapse_pending_inputs(const pcmk__graph_t *graph,
     for (const GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         const pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
 
-        if (pcmk_is_set(input->flags, pcmk__graph_action_failed)) {
+        if (pcmk__is_set(input->flags, pcmk__graph_action_failed)) {
             pcmk__add_word(&pending, 1024, pcmk__xe_id(input->xml));
 
-        } else if (pcmk_is_set(input->flags, pcmk__graph_action_confirmed)) {
+        } else if (pcmk__is_set(input->flags, pcmk__graph_action_confirmed)) {
             // Confirmed successful inputs are not pending
 
         } else if (find_graph_action_by_id(graph, input->id) != NULL) {
@@ -145,8 +145,8 @@ log_unresolved_inputs(unsigned int log_level, pcmk__graph_t *graph,
 {
     for (GList *lpc = synapse->inputs; lpc != NULL; lpc = lpc->next) {
         pcmk__graph_action_t *input = (pcmk__graph_action_t *) lpc->data;
-        const char *key = crm_element_value(input->xml, PCMK__XA_OPERATION_KEY);
-        const char *host = crm_element_value(input->xml, PCMK__META_ON_NODE);
+        const char *key = pcmk__xe_get(input->xml, PCMK__XA_OPERATION_KEY);
+        const char *host = pcmk__xe_get(input->xml, PCMK__META_ON_NODE);
 
         if (find_graph_action_by_id(graph, input->id) == NULL) {
             do_crm_log(log_level,
@@ -161,11 +161,11 @@ static void
 log_synapse_action(unsigned int log_level, pcmk__graph_synapse_t *synapse,
                    pcmk__graph_action_t *action, const char *pending_inputs)
 {
-    const char *key = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
-    const char *host = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    char *desc = crm_strdup_printf("%s %s op %s",
-                                   synapse_state_str(synapse),
-                                   actiontype2text(action->type), key);
+    const char *key = pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY);
+    const char *host = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
+    char *desc = pcmk__assert_asprintf("%s %s op %s",
+                                       synapse_state_str(synapse),
+                                       actiontype2text(action->type), key);
 
     do_crm_log(log_level,
                "[Action %4d]: %-50s%s%s (priority: %d, waiting: %s)",
@@ -181,7 +181,7 @@ log_synapse(unsigned int log_level, pcmk__graph_t *graph,
     GString *g_pending = NULL;
     const char *pending = "none";
 
-    if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+    if (!pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
         g_pending = synapse_pending_inputs(graph, synapse);
 
         if (g_pending != NULL) {
@@ -198,7 +198,7 @@ log_synapse(unsigned int log_level, pcmk__graph_t *graph,
         g_string_free(g_pending, TRUE);
     }
 
-    if (!pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+    if (!pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
         log_unresolved_inputs(log_level, graph, synapse);
     }
 }
@@ -213,8 +213,8 @@ void
 pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph)
 {
     if ((graph == NULL) || (graph->num_actions == 0)) {
-        if (log_level == LOG_TRACE) {
-            crm_debug("Empty transition graph");
+        if (log_level == PCMK__LOG_TRACE) {
+            pcmk__debug("Empty transition graph");
         }
         return;
     }

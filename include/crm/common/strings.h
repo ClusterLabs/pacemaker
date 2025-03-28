@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_COMMON_STRINGS__H
 #define PCMK__CRM_COMMON_STRINGS__H
 
-#include <glib.h>                    // gboolean, guint, G_GNUC_PRINTF
+#include <glib.h>                    // guint
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,18 +22,11 @@ extern "C" {
  * \ingroup core
  */
 
-// NOTE: sbd (as of at least 1.5.2) uses this
-long long crm_get_msec(const char *input);
-
 int pcmk_parse_interval_spec(const char *input, guint *result_ms);
 
-// NOTE: sbd (as of at least 1.5.2) uses this
-gboolean crm_is_true(const char *s);
-
-int crm_str_to_boolean(const char *s, int *ret);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-char *crm_strdup_printf(char const *format, ...) G_GNUC_PRINTF(1, 2);
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/strings_compat.h>
+#endif
 
 #ifdef __cplusplus
 }

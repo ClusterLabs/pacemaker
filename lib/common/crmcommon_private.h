@@ -25,12 +25,11 @@
 
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
-#include <crm/common/logging.h>         // LOG_NEVER
 #include <crm/common/mainloop.h>        // mainloop_io_t
 #include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/results.h>         // crm_exit_t
 #include <crm/common/rules.h>           // pcmk_rule_input_t
-#include <crm/common/xml_internal.h>    // enum xml_private_flags
+#include <crm/common/xml_internal.h>    // enum pcmk__xml_flags
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,7 +69,8 @@ typedef struct pcmk__deleted_xml_s {
  */
 typedef struct xml_node_private_s {
     uint32_t check;         //!< Magic number for checking integrity
-    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
+    uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
+    xmlNode *match;         //!< Pointer to matching node (defined by caller)
 } xml_node_private_t;
 
 /*!
@@ -79,7 +79,7 @@ typedef struct xml_node_private_s {
  */
 typedef struct xml_doc_private_s {
     uint32_t check;         //!< Magic number for checking integrity
-    uint32_t flags;         //!< Group of <tt>enum xml_private_flags</tt>
+    uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
     char *acl_user;         //!< User affected by \c acls (for logging)
 
     //! ACLs to check requested changes against (list of \c xml_acl_t)
@@ -101,13 +101,13 @@ typedef struct xml_doc_private_s {
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
-            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            PCMK__LOG_NEVER, "XML", "XML node", (xml_priv)->flags,          \
             (flags_to_set), #flags_to_set);                                 \
     } while (0)
 
 #define pcmk__clear_xml_flags(xml_priv, flags_to_clear) do {                \
         (xml_priv)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
-            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            PCMK__LOG_NEVER, "XML", "XML node", (xml_priv)->flags,          \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
 
@@ -133,16 +133,10 @@ G_GNUC_INTERNAL
 xmlDoc *pcmk__xml_new_doc(void);
 
 G_GNUC_INTERNAL
-int pcmk__xml_position(const xmlNode *xml,
-                       enum xml_private_flags ignore_if_set);
+int pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set);
 
 G_GNUC_INTERNAL
-xmlNode *pcmk__xml_match(const xmlNode *haystack, const xmlNode *needle,
-                         bool exact);
-
-G_GNUC_INTERNAL
-xmlNode *pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment,
-                        bool exact);
+bool pcmk__xc_matches(const xmlNode *comment1, const xmlNode *comment2);
 
 G_GNUC_INTERNAL
 void pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update);
@@ -219,6 +213,11 @@ int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
 G_GNUC_INTERNAL
 void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
 
+/*
+ * Digests
+ */
+
+char *pcmk__md5sum(const char *input);
 
 /*
  * IPC
@@ -443,12 +442,6 @@ int pcmk__evaluate_rsc_expression(const xmlNode *expr,
 G_GNUC_INTERNAL
 int pcmk__evaluate_op_expression(const xmlNode *expr,
                                  const pcmk_rule_input_t *rule_input);
-
-
-/*
- * Utils
- */
-#define PCMK__PW_BUFFER_LEN 500
 
 
 /*

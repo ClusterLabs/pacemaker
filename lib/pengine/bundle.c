@@ -15,6 +15,8 @@
 
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
+#include <crm/common/nvpair.h>          // crm_create_nvpair_xml()
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
 #include <crm/common/xml_internal.h>
@@ -61,7 +63,7 @@ typedef struct pe__bundle_variant_data_s {
         char *control_port;
         char *container_network;
         char *ip_range_start;
-        gboolean add_host;
+        bool add_host;
         gchar *container_host_options;
         char *container_command;
         char *launcher_options;
@@ -272,7 +274,7 @@ next_ip(const char *last_ip)
         ++oct4;
     }
 
-    return crm_strdup_printf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
+    return pcmk__assert_asprintf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
 }
 
 static void
@@ -314,10 +316,10 @@ create_resource(const char *name, const char *provider, const char *kind)
 {
     xmlNode *rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
-    crm_xml_add(rsc, PCMK_XA_ID, name);
-    crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(rsc, PCMK_XA_PROVIDER, provider);
-    crm_xml_add(rsc, PCMK_XA_TYPE, kind);
+    pcmk__xe_set(rsc, PCMK_XA_ID, name);
+    pcmk__xe_set(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    pcmk__xe_set(rsc, PCMK_XA_PROVIDER, provider);
+    pcmk__xe_set(rsc, PCMK_XA_TYPE, kind);
 
     return rsc;
 }
@@ -363,7 +365,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xmlNode *xml_ip = NULL;
         xmlNode *xml_obj = NULL;
 
-        id = crm_strdup_printf("%s-ip-%s", data->prefix, replica->ipaddr);
+        id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
         pcmk__xml_sanitize_id(id);
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
@@ -445,8 +447,8 @@ create_container_resource(pcmk_resource_t *parent,
 
     buffer = g_string_sized_new(4096);
 
-    id = crm_strdup_printf("%s-%s-%d", data->prefix, agent_str,
-                           replica->offset);
+    id = pcmk__assert_asprintf("%s-%s-%d", data->prefix, agent_str,
+                               replica->offset);
     pcmk__xml_sanitize_id(id);
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
@@ -490,9 +492,9 @@ create_container_resource(pcmk_resource_t *parent,
         pe__bundle_mount_t *mount = (pe__bundle_mount_t *) iter->data;
         char *source = NULL;
 
-        if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
-            source = crm_strdup_printf("%s/%s-%d", mount->source, data->prefix,
-                                       replica->offset);
+        if (pcmk__is_set(mount->flags, pe__bundle_mount_subdir)) {
+            source = pcmk__assert_asprintf("%s/%s-%d", mount->source,
+                                           data->prefix, replica->offset);
             pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
@@ -652,7 +654,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         GHashTableIter gIter;
         pcmk_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
-        char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
+        char *id = pcmk__assert_asprintf("%s-%d", data->prefix,
+                                         replica->offset);
         char *port_s = NULL;
         const char *uname = NULL;
         const char *connect_name = NULL;
@@ -661,8 +664,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
             free(id);
             // The biggest hammer we have
-            id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
-                                   replica->child->id, replica->offset);
+            id = pcmk__assert_asprintf("pcmk-internal-%s-remote-%d",
+                                       replica->child->id, replica->offset);
             //@TODO return error instead of asserting?
             pcmk__assert(pe_find_resource(scheduler->priv->resources,
                                           id) == NULL);
@@ -934,21 +937,22 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
     }
 
     if(node == NULL) {
-        crm_trace("Cannot determine address for bundle connection %s", rsc->id);
+        pcmk__trace("Cannot determine address for bundle connection %s",
+                    rsc->id);
         return NULL;
     }
 
-    crm_trace("Setting address for bundle connection %s to bundle host %s",
-              rsc->id, pcmk__node_name(node));
+    pcmk__trace("Setting address for bundle connection %s to bundle host %s",
+                rsc->id, pcmk__node_name(node));
     if(xml != NULL && field != NULL) {
-        crm_xml_add(xml, field, node->priv->name);
+        pcmk__xe_set(xml, field, node->priv->name);
     }
 
     return node->priv->name;
 }
 
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
-        flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
+        flags = pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,     \
                                    "Bundle mount", pcmk__xe_id(mount_xml),  \
                                    flags, (flags_to_set), #flags_to_set);   \
     } while (0)
@@ -989,13 +993,13 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
     }
 
     // Use 0 for default, minimum, and invalid PCMK_XA_PROMOTED_MAX
-    value = crm_element_value(xml_obj, PCMK_XA_PROMOTED_MAX);
+    value = pcmk__xe_get(xml_obj, PCMK_XA_PROMOTED_MAX);
     pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
 
     /* Default replicas to PCMK_XA_PROMOTED_MAX if it was specified and 1
      * otherwise
      */
-    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS);
+    value = pcmk__xe_get(xml_obj, PCMK_XA_REPLICAS);
     if ((value == NULL) && (bundle_data->promoted_max > 0)) {
         bundle_data->nreplicas = bundle_data->promoted_max;
     } else {
@@ -1007,34 +1011,38 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
      * floating IPs only works if the container is started with:
      *   --userland-proxy=false --ip-masq=false
      */
-    value = crm_element_value(xml_obj, PCMK_XA_REPLICAS_PER_HOST);
+    value = pcmk__xe_get(xml_obj, PCMK_XA_REPLICAS_PER_HOST);
     pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
     if (bundle_data->nreplicas_per_host == 1) {
         pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     }
 
-    bundle_data->container_command =
-        crm_element_value_copy(xml_obj, PCMK_XA_RUN_COMMAND);
-    bundle_data->launcher_options = crm_element_value_copy(xml_obj,
-                                                           PCMK_XA_OPTIONS);
-    bundle_data->image = crm_element_value_copy(xml_obj, PCMK_XA_IMAGE);
-    bundle_data->container_network = crm_element_value_copy(xml_obj,
-                                                            PCMK_XA_NETWORK);
+    bundle_data->container_command = pcmk__xe_get_copy(xml_obj,
+                                                       PCMK_XA_RUN_COMMAND);
+    bundle_data->launcher_options = pcmk__xe_get_copy(xml_obj, PCMK_XA_OPTIONS);
+    bundle_data->image = pcmk__xe_get_copy(xml_obj, PCMK_XA_IMAGE);
+    bundle_data->container_network = pcmk__xe_get_copy(xml_obj,
+                                                       PCMK_XA_NETWORK);
 
     xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_NETWORK, NULL,
                                    NULL);
     if(xml_obj) {
-        bundle_data->ip_range_start =
-            crm_element_value_copy(xml_obj, PCMK_XA_IP_RANGE_START);
-        bundle_data->host_netmask =
-            crm_element_value_copy(xml_obj, PCMK_XA_HOST_NETMASK);
-        bundle_data->host_network =
-            crm_element_value_copy(xml_obj, PCMK_XA_HOST_INTERFACE);
-        bundle_data->control_port =
-            crm_element_value_copy(xml_obj, PCMK_XA_CONTROL_PORT);
-        value = crm_element_value(xml_obj, PCMK_XA_ADD_HOST);
-        if (crm_str_to_boolean(value, &bundle_data->add_host) != 1) {
-            bundle_data->add_host = TRUE;
+        bundle_data->ip_range_start = pcmk__xe_get_copy(xml_obj,
+                                                        PCMK_XA_IP_RANGE_START);
+        bundle_data->host_netmask = pcmk__xe_get_copy(xml_obj,
+                                                      PCMK_XA_HOST_NETMASK);
+        bundle_data->host_network = pcmk__xe_get_copy(xml_obj,
+                                                      PCMK_XA_HOST_INTERFACE);
+        bundle_data->control_port = pcmk__xe_get_copy(xml_obj,
+                                                      PCMK_XA_CONTROL_PORT);
+
+        value = pcmk__xe_get(xml_obj, PCMK_XA_ADD_HOST);
+        if ((value == NULL)
+            || (pcmk__parse_bool(value,
+                                 &bundle_data->add_host) != pcmk_rc_ok)) {
+
+            // Default to true if unset or invaid
+            bundle_data->add_host = true;
         }
 
         for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_PORT_MAPPING,
@@ -1045,13 +1053,13 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
             pe__bundle_port_t *port =
                 pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
 
-            port->source = crm_element_value_copy(xml_child, PCMK_XA_PORT);
+            port->source = pcmk__xe_get_copy(xml_child, PCMK_XA_PORT);
 
             if(port->source == NULL) {
-                port->source = crm_element_value_copy(xml_child, PCMK_XA_RANGE);
+                port->source = pcmk__xe_get_copy(xml_child, PCMK_XA_RANGE);
             } else {
-                port->target = crm_element_value_copy(xml_child,
-                                                      PCMK_XA_INTERNAL_PORT);
+                port->target = pcmk__xe_get_copy(xml_child,
+                                                 PCMK_XA_INTERNAL_PORT);
             }
 
             if(port->source != NULL && strlen(port->source) > 0) {
@@ -1075,13 +1083,13 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
          xml_child != NULL;
          xml_child = pcmk__xe_next(xml_child, PCMK_XE_STORAGE_MAPPING)) {
 
-        const char *source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR);
-        const char *target = crm_element_value(xml_child, PCMK_XA_TARGET_DIR);
-        const char *options = crm_element_value(xml_child, PCMK_XA_OPTIONS);
+        const char *source = pcmk__xe_get(xml_child, PCMK_XA_SOURCE_DIR);
+        const char *target = pcmk__xe_get(xml_child, PCMK_XA_TARGET_DIR);
+        const char *options = pcmk__xe_get(xml_child, PCMK_XA_OPTIONS);
         int flags = pe__bundle_mount_none;
 
         if (source == NULL) {
-            source = crm_element_value(xml_child, PCMK_XA_SOURCE_DIR_ROOT);
+            source = pcmk__xe_get(xml_child, PCMK_XA_SOURCE_DIR_ROOT);
             pe__set_bundle_mount_flags(xml_child, flags,
                                        pe__bundle_mount_subdir);
         }
@@ -1144,7 +1152,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
             free(value);
         }
 
-        //crm_xml_add(xml_obj, PCMK_XA_ID, bundle_data->prefix);
+        //pcmk__xe_set(xml_obj, PCMK_XA_ID, bundle_data->prefix);
         pcmk__xml_copy(xml_resource, xml_obj);
 
     } else if(xml_obj) {
@@ -1224,7 +1232,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
-            if (pcmk_is_set(replica->child->flags, pcmk__rsc_notify)) {
+            if (pcmk__is_set(replica->child->flags, pcmk__rsc_notify)) {
                 pcmk__set_rsc_flags(bundle_data->child, pcmk__rsc_notify);
             }
 
@@ -1550,10 +1558,10 @@ pe__bundle_replica_output_html(pcmk__output_t *out,
 static const char *
 get_unmanaged_str(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)) {
         return " (maintenance)";
     }
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         return " (unmanaged)";
     }
     return "";
@@ -1612,18 +1620,24 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                        && !remote->priv->fns->is_filtered(remote, only_rsc,
                                                           print_everything);
 
-        if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs) ||
-            (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
+        if (pcmk__is_set(show_opts, pcmk_show_implicit_rscs)
+            || (!print_everything
+                && (print_ip || print_child || print_ctnr || print_remote))) {
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+            const uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1656,11 +1670,17 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_html(out, replica,
@@ -1755,18 +1775,24 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                        && !remote->priv->fns->is_filtered(remote, only_rsc,
                                                           print_everything);
 
-        if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs) ||
-            (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
+        if (pcmk__is_set(show_opts, pcmk_show_implicit_rscs)
+            || (!print_everything
+                && (print_ip || print_child || print_ctnr || print_remote))) {
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+            const uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1799,11 +1825,17 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_text(out, replica,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -575,7 +575,7 @@ main(int argc, char **argv)
                 const char *value = NULL;
 
                 value = g_hash_table_lookup(attr_set, PCMK__XA_GRANTED);
-                if (crm_is_true(value)) {
+                if (pcmk__is_true(value)) {
                     ticket_grant_warning(options.ticket_id);
                 } else {
                     ticket_revoke_warning(options.ticket_id);

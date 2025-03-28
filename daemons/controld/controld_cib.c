@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 #include <unistd.h>  /* sleep */
 
 #include <crm/common/alerts_internal.h>
+#include <crm/common/nvpair.h>          // crm_meta_value()
 #include <crm/common/xml.h>
 #include <crm/crm.h>
 #include <crm/lrmd_internal.h>
@@ -35,14 +36,14 @@ handle_cib_disconnect(gpointer user_data)
     controld_trigger_fsa();
     controld_globals.cib_conn->state = cib_disconnected;
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         // @TODO This should trigger a reconnect, not a shutdown
-        crm_crit("Lost connection to the CIB manager, shutting down");
+        pcmk__crit("Lost connection to the CIB manager, shutting down");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
     } else { // Expected
-        crm_info("Disconnected from the CIB manager");
+        pcmk__info("Disconnected from the CIB manager");
     }
 }
 
@@ -52,7 +53,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     const xmlNode *patchset = NULL;
     const char *client_name = NULL;
 
-    crm_debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
+    pcmk__debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
 
     if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
         return;
@@ -69,7 +70,7 @@ do_cib_updated(const char *event, xmlNode * msg)
         return;
     }
 
-    client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTNAME);
+    client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
         // The CIB is still accurate
         return;
@@ -83,11 +84,11 @@ do_cib_updated(const char *event, xmlNode * msg)
          * process again so we get everyone's current resource history.
          */
         if (client_name == NULL) {
-            client_name = crm_element_value(msg, PCMK__XA_CIB_CLIENTID);
+            client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTID);
         }
-        crm_notice("Populating nodes and starting an election after %s event "
-                   "triggered by %s",
-                   event, pcmk__s(client_name, "(unidentified client)"));
+        pcmk__notice("Populating nodes and starting an election after %s event "
+                     "triggered by %s",
+                     event, pcmk__s(client_name, "(unidentified client)"));
 
         populate_cib_nodes(node_update_quick|node_update_all, __func__);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
@@ -101,7 +102,7 @@ controld_disconnect_cib_manager(void)
 
     pcmk__assert(cib_conn != NULL);
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
@@ -133,25 +134,25 @@ do_cib_control(long long action,
 
     pcmk__assert(cib_conn != NULL);
 
-    if (pcmk_is_set(action, A_CIB_STOP)) {
+    if (pcmk__is_set(action, A_CIB_STOP)) {
         if ((cib_conn->state != cib_disconnected)
             && (pending_rsc_update != 0)) {
 
-            crm_info("Waiting for resource update %d to complete",
-                     pending_rsc_update);
+            pcmk__info("Waiting for resource update %d to complete",
+                       pending_rsc_update);
             crmd_fsa_stall(FALSE);
             return;
         }
         controld_disconnect_cib_manager();
     }
 
-    if (!pcmk_is_set(action, A_CIB_START)) {
+    if (!pcmk__is_set(action, A_CIB_START)) {
         return;
     }
 
     if (cur_state == S_STOPPING) {
-        crm_err("Ignoring request to connect to the CIB manager after "
-                "shutdown");
+        pcmk__err("Ignoring request to connect to the CIB manager after "
+                  "shutdown");
         return;
     }
 
@@ -166,34 +167,37 @@ do_cib_control(long long action,
     }
 
     if (rc != pcmk_ok) {
-        crm_info("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
+        pcmk__info("Could not connect to the CIB manager: %s",
+                   pcmk_strerror(rc));
 
     } else if (cib_conn->cmds->set_connection_dnotify(cib_conn,
                                                       dnotify_fn) != pcmk_ok) {
-        crm_err("Could not set dnotify callback");
+        pcmk__err("Could not set dnotify callback");
 
     } else if (cib_conn->cmds->add_notify_callback(cib_conn,
                                                    PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                    update_cb) != pcmk_ok) {
-        crm_err("Could not set CIB notification callback (update)");
+        pcmk__err("Could not set CIB notification callback (update)");
 
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
         cib_retries = 0;
     }
 
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         cib_retries++;
 
         if (cib_retries < 30) {
-            crm_warn("Couldn't complete CIB registration %d times... "
-                     "pause and retry", cib_retries);
+            pcmk__warn("Couldn't complete CIB registration %d times... pause "
+                       "and retry",
+                       cib_retries);
             controld_start_wait_timer();
             crmd_fsa_stall(FALSE);
 
         } else {
-            crm_err("Could not complete CIB registration %d times... "
-                    "hard error", cib_retries);
+            pcmk__err("Could not complete CIB registration %d times... hard "
+                      "error",
+                      cib_retries);
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         }
     }
@@ -217,8 +221,8 @@ cib_op_timeout(void)
                                              + 1U);
 
     calculated_timeout = QB_MAX(calculated_timeout, MIN_CIB_OP_TIMEOUT);
-    crm_trace("Calculated timeout: %s",
-              pcmk__readable_interval(calculated_timeout * 1000));
+    pcmk__trace("Calculated timeout: %s",
+                pcmk__readable_interval(calculated_timeout * 1000));
 
     if (controld_globals.cib_conn) {
         controld_globals.cib_conn->call_timeout = calculated_timeout;
@@ -239,8 +243,8 @@ crmd_cib_smart_opt(void)
 
     if ((controld_globals.fsa_state == S_ELECTION)
         || (controld_globals.fsa_state == S_PENDING)) {
-        crm_info("Sending update to local CIB in state: %s",
-                 fsa_state2string(controld_globals.fsa_state));
+        pcmk__info("Sending update to local CIB in state: %s",
+                   fsa_state2string(controld_globals.fsa_state));
         cib__set_call_options(call_opt, "update", cib_none);
     }
     return call_opt;
@@ -253,10 +257,12 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     char *desc = user_data;
 
     if (rc == 0) {
-        crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
+        pcmk__debug("Deletion of %s (via CIB call %d) succeeded", desc,
+                    call_id);
     } else {
-        crm_warn("Deletion of %s (via CIB call %d) failed: %s " QB_XS " rc=%d",
-                 desc, call_id, pcmk_strerror(rc), rc);
+        pcmk__warn("Deletion of %s (via CIB call %d) failed: %s "
+                   QB_XS " rc=%d",
+                   desc, call_id, pcmk_strerror(rc), rc);
     }
 }
 
@@ -311,25 +317,25 @@ controld_node_state_deletion_strings(const char *uname,
 
     switch (section) {
         case controld_section_lrm:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_LRM, uname);
             desc_pre = "resource history";
             break;
         case controld_section_lrm_unlocked:
-            *xpath = crm_strdup_printf(XPATH_NODE_LRM_UNLOCKED,
-                                       uname, uname, expire);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_LRM_UNLOCKED, uname,
+                                           uname, expire);
             desc_pre = "resource history (other than shutdown locks)";
             break;
         case controld_section_attrs:
-            *xpath = crm_strdup_printf(XPATH_NODE_ATTRS, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_ATTRS, uname);
             desc_pre = "transient attributes";
             break;
         case controld_section_all:
-            *xpath = crm_strdup_printf(XPATH_NODE_ALL, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_ALL, uname);
             desc_pre = "all state";
             break;
         case controld_section_all_unlocked:
-            *xpath = crm_strdup_printf(XPATH_NODE_ALL_UNLOCKED,
-                                       uname, uname, expire, uname);
+            *xpath = pcmk__assert_asprintf(XPATH_NODE_ALL_UNLOCKED, uname,
+                                           uname, expire, uname);
             desc_pre = "all state (other than shutdown locks)";
             break;
         default:
@@ -339,7 +345,7 @@ controld_node_state_deletion_strings(const char *uname,
     }
 
     if (desc != NULL) {
-        *desc = crm_strdup_printf("%s for node %s", desc_pre, uname);
+        *desc = pcmk__assert_asprintf("%s for node %s", desc_pre, uname);
     }
 }
 
@@ -368,8 +374,8 @@ controld_delete_node_state(const char *uname, enum controld_section_e section,
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
     fsa_register_cib_callback(cib_rc, desc, cib_delete_callback);
-    crm_info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s",
-             desc, cib_rc, xpath);
+    pcmk__info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s", desc, cib_rc,
+               xpath);
 
     // CIB library handles freeing desc
     free(xpath);
@@ -405,15 +411,15 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     CRM_CHECK((rsc_id != NULL) && (node != NULL), return EINVAL);
 
-    desc = crm_strdup_printf("resource history for %s on %s", rsc_id, node);
+    desc = pcmk__assert_asprintf("resource history for %s on %s", rsc_id, node);
     if (cib == NULL) {
-        crm_err("Unable to clear %s: no CIB connection", desc);
+        pcmk__err("Unable to clear %s: no CIB connection", desc);
         free(desc);
         return ENOTCONN;
     }
 
     // Ask CIB to delete the entry
-    xpath = crm_strdup_printf(XPATH_RESOURCE_HISTORY, node, rsc_id);
+    xpath = pcmk__assert_asprintf(XPATH_RESOURCE_HISTORY, node, rsc_id);
 
     cib->cmds->set_user(cib, user_name);
     rc = cib->cmds->remove(cib, xpath, NULL, call_options|cib_xpath);
@@ -421,26 +427,26 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Could not delete resource status of %s on %s%s%s: %s "
-                QB_XS " rc=%d", rsc_id, node,
-                (user_name? " for user " : ""), (user_name? user_name : ""),
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not delete resource status of %s on %s%s%s: %s "
+                  QB_XS " rc=%d",
+                  rsc_id, node, ((user_name != NULL)? " for user " : ""),
+                  pcmk__s(user_name, ""), pcmk_rc_str(rc), rc);
         free(desc);
         free(xpath);
         return rc;
     }
 
-    if (pcmk_is_set(call_options, cib_sync_call)) {
-        if (pcmk_is_set(call_options, cib_dryrun)) {
-            crm_debug("Deletion of %s would succeed", desc);
+    if (pcmk__is_set(call_options, cib_sync_call)) {
+        if (pcmk__is_set(call_options, cib_dryrun)) {
+            pcmk__debug("Deletion of %s would succeed", desc);
         } else {
-            crm_debug("Deletion of %s succeeded", desc);
+            pcmk__debug("Deletion of %s succeeded", desc);
         }
         free(desc);
 
     } else {
-        crm_info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s",
-                 desc, rc, xpath);
+        pcmk__info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s", desc, rc,
+                   xpath);
         fsa_register_cib_callback(rc, desc, cib_delete_callback);
         // CIB library handles freeing desc
     }
@@ -480,8 +486,9 @@ build_parameter_list(const lrmd_event_data_t *op,
     /* Consider all parameters only except private ones to be consistent with
      * what scheduler does with calculate_secure_digest().
      */
-    if (param_type == ra_param_private
-        && compare_version(controld_globals.dc_version, "3.16.0") >= 0) {
+    if ((param_type == ra_param_private)
+        && (pcmk__compare_versions(controld_globals.dc_version,
+                                   "3.16.0") >= 0)) {
         g_hash_table_foreach(op->params, hash2field, *result);
         pcmk__filter_op_for_digest(*result);
     }
@@ -494,23 +501,24 @@ build_parameter_list(const lrmd_event_data_t *op,
 
         switch (param_type) {
             case ra_param_reloadable:
-                accept_for_list = !pcmk_is_set(param->rap_flags, param_type);
+                accept_for_list = !pcmk__is_set(param->rap_flags, param_type);
                 accept_for_xml = accept_for_list;
                 break;
 
             case ra_param_unique:
-                accept_for_list = pcmk_is_set(param->rap_flags, param_type);
+                accept_for_list = pcmk__is_set(param->rap_flags, param_type);
                 accept_for_xml = accept_for_list;
                 break;
 
             case ra_param_private:
-                accept_for_list = pcmk_is_set(param->rap_flags, param_type);
+                accept_for_list = pcmk__is_set(param->rap_flags, param_type);
                 accept_for_xml = !accept_for_list;
                 break;
         }
 
         if (accept_for_list) {
-            crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
+            pcmk__trace("Attr %s is %s", param->rap_name,
+                        ra_param_flag2text(param_type));
 
             if (list == NULL) {
                 // We will later search for " WORD ", so start list with a space
@@ -519,19 +527,22 @@ build_parameter_list(const lrmd_event_data_t *op,
             pcmk__add_word(&list, 0, param->rap_name);
 
         } else {
-            crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
+            pcmk__trace("Rejecting %s for %s", param->rap_name,
+                        ra_param_flag2text(param_type));
         }
 
         if (accept_for_xml) {
             const char *v = g_hash_table_lookup(op->params, param->rap_name);
 
             if (v != NULL) {
-                crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
-                crm_xml_add(*result, param->rap_name, v);
+                pcmk__trace("Adding attr %s=%s to the xml result",
+                            param->rap_name, v);
+                pcmk__xe_set(*result, param->rap_name, v);
             }
 
         } else {
-            crm_trace("Removing attr %s from the xml result", param->rap_name);
+            pcmk__trace("Removing attr %s from the xml result",
+                        param->rap_name);
             pcmk__xe_remove_attr(*result, param->rap_name);
         }
     }
@@ -558,14 +569,14 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    if (pcmk_is_set(metadata->ra_flags, ra_supports_reload_agent)) {
+    if (pcmk__is_set(metadata->ra_flags, ra_supports_reload_agent)) {
         /* Add parameters not marked reloadable to the PCMK__XA_OP_FORCE_RESTART
          * list
          */
         list = build_parameter_list(op, metadata, ra_param_reloadable,
                                     &restart);
 
-    } else if (pcmk_is_set(metadata->ra_flags, ra_supports_legacy_reload)) {
+    } else if (pcmk__is_set(metadata->ra_flags, ra_supports_legacy_reload)) {
         /* @COMPAT pre-OCF-1.1 resource agents
          *
          * Before OCF 1.1, Pacemaker abused "unique=0" to indicate
@@ -584,14 +595,14 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
      * the resource supports reload, no matter if it actually supports any
      * reloadable parameters
      */
-    crm_xml_add(update, PCMK__XA_OP_FORCE_RESTART,
-                (list == NULL)? "" : (const char *) list->str);
-    crm_xml_add(update, PCMK__XA_OP_RESTART_DIGEST, digest);
+    pcmk__xe_set(update, PCMK__XA_OP_FORCE_RESTART,
+                 (list == NULL)? "" : (const char *) list->str);
+    pcmk__xe_set(update, PCMK__XA_OP_RESTART_DIGEST, digest);
 
     if ((list != NULL) && (list->len > 0)) {
-        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        pcmk__trace("%s: %s, %s", op->rsc_id, digest, list->str);
     } else {
-        crm_trace("%s: %s", op->rsc_id, digest);
+        pcmk__trace("%s: %s", op->rsc_id, digest);
     }
 
     if (list != NULL) {
@@ -618,14 +629,14 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     if (list != NULL) {
         digest = pcmk__digest_operation(secure);
-        crm_xml_add(update, PCMK__XA_OP_SECURE_PARAMS,
-                    (const char *) list->str);
-        crm_xml_add(update, PCMK__XA_OP_SECURE_DIGEST, digest);
+        pcmk__xe_set(update, PCMK__XA_OP_SECURE_PARAMS,
+                     (const char *) list->str);
+        pcmk__xe_set(update, PCMK__XA_OP_SECURE_DIGEST, digest);
 
-        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        pcmk__trace("%s: %s, %s", op->rsc_id, digest, list->str);
         g_string_free(list, TRUE);
     } else {
-        crm_trace("%s: no secure parameters", op->rsc_id);
+        pcmk__trace("%s: no secure parameters", op->rsc_id);
     }
 
     pcmk__xml_free(secure);
@@ -673,16 +684,16 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
     if ((rsc == NULL) || (op->params == NULL)
         || !crm_op_needs_metadata(rsc->standard, op->op_type)) {
 
-        crm_trace("No digests needed for %s action on %s (params=%p rsc=%p)",
-                  op->op_type, op->rsc_id, op->params, rsc);
+        pcmk__trace("No digests needed for %s action on %s (params=%p rsc=%p)",
+                    op->op_type, op->rsc_id, op->params, rsc);
         return;
     }
 
     lrm_state = controld_get_executor_state(node_name, false);
     if (lrm_state == NULL) {
-        crm_warn("Cannot calculate digests for operation " PCMK__OP_FMT
-                 " because we have no connection to executor for %s",
-                 op->rsc_id, op->op_type, op->interval_ms, node_name);
+        pcmk__warn("Cannot calculate digests for operation " PCMK__OP_FMT
+                   " because we have no connection to executor for %s",
+                   op->rsc_id, op->op_type, op->interval_ms, node_name);
         return;
     }
 
@@ -698,8 +709,8 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
         return;
     }
 
-    crm_trace("Including additional digests for %s:%s:%s",
-              rsc->standard, rsc->provider, rsc->type);
+    pcmk__trace("Including additional digests for %s:%s:%s", rsc->standard,
+                rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
@@ -733,7 +744,7 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
 
     // Check action's PCMK_META_RECORD_PENDING meta-attribute (defaults to true)
     record_pending = crm_meta_value(op->params, PCMK_META_RECORD_PENDING);
-    if ((record_pending != NULL) && !crm_is_true(record_pending)) {
+    if ((record_pending != NULL) && !pcmk__is_true(record_pending)) {
         pcmk__warn_once(pcmk__wo_record_pending,
                         "The " PCMK_META_RECORD_PENDING " option (for example, "
                         "for the %s resource's %s operation) is deprecated and "
@@ -748,9 +759,9 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
 
     lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
-    crm_debug("Recording pending %s-interval %s for %s on %s in the CIB",
-              pcmk__readable_interval(op->interval_ms), op->op_type, op->rsc_id,
-              node_name);
+    pcmk__debug("Recording pending %s-interval %s for %s on %s in the CIB",
+                pcmk__readable_interval(op->interval_ms), op->op_type,
+                op->rsc_id, node_name);
     controld_update_resource_history(node_name, rsc, op, 0);
     return true;
 }
@@ -762,16 +773,17 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
         case pcmk_ok:
         case -pcmk_err_diff_failed:
         case -pcmk_err_diff_resync:
-            crm_trace("Resource history update completed (call=%d rc=%d)",
-                      call_id, rc);
+            pcmk__trace("Resource history update completed (call=%d rc=%d)",
+                        call_id, rc);
             break;
         default:
             if (call_id > 0) {
-                crm_warn("Resource history update %d failed: %s "
-                         QB_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
+                pcmk__warn("Resource history update %d failed: %s "
+                           QB_XS " rc=%d",
+                           call_id, pcmk_strerror(rc), rc);
             } else {
-                crm_warn("Resource history update failed: %s " QB_XS " rc=%d",
-                         pcmk_strerror(rc), rc);
+                pcmk__warn("Resource history update failed: %s " QB_XS " rc=%d",
+                           pcmk_strerror(rc), rc);
             }
     }
 
@@ -788,7 +800,7 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
 static bool
 should_preserve_lock(lrmd_event_data_t *op)
 {
-    if (!pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+    if (!pcmk__is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         return false;
     }
     if (!strcmp(op->op_type, PCMK_ACTION_STOP) && (op->rc == PCMK_OCF_OK)) {
@@ -827,15 +839,15 @@ controld_update_cib(const char *section, xmlNode *data, int options,
     if (cib != NULL) {
         cib_rc = cib->cmds->modify(cib, section, data, options);
         if (cib_rc >= 0) {
-            crm_debug("Submitted CIB update %d for %s section",
-                      cib_rc, section);
+            pcmk__debug("Submitted CIB update %d for %s section", cib_rc,
+                        section);
         }
     }
 
     if (callback == NULL) {
         if (cib_rc < 0) {
-            crm_err("Failed to update CIB %s section: %s",
-                    section, pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
+            pcmk__err("Failed to update CIB %s section: %s", section,
+                      pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
         }
 
     } else {
@@ -878,7 +890,7 @@ controld_update_resource_history(const char *node_name,
     CRM_CHECK((node_name != NULL) && (op != NULL), return);
 
     if (rsc == NULL) {
-        crm_warn("Resource %s no longer exists in the executor", op->rsc_id);
+        pcmk__warn("Resource %s no longer exists in the executor", op->rsc_id);
         controld_ack_event_directly(NULL, NULL, rsc, op, op->rsc_id);
         return;
     }
@@ -894,23 +906,23 @@ controld_update_resource_history(const char *node_name,
         node_id = node_name;
         pcmk__xe_set_bool_attr(xml, PCMK_XA_REMOTE_NODE, true);
     }
-    crm_xml_add(xml, PCMK_XA_ID, node_id);
-    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
-    crm_xml_add(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
+    pcmk__xe_set(xml, PCMK_XA_ID, node_id);
+    pcmk__xe_set(xml, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(xml, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
 
     //     <lrm ...>
     xml = pcmk__xe_create(xml, PCMK__XE_LRM);
-    crm_xml_add(xml, PCMK_XA_ID, node_id);
+    pcmk__xe_set(xml, PCMK_XA_ID, node_id);
 
     //       <lrm_resources>
     xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCES);
 
     //         <lrm_resource ...>
     xml = pcmk__xe_create(xml, PCMK__XE_LRM_RESOURCE);
-    crm_xml_add(xml, PCMK_XA_ID, op->rsc_id);
-    crm_xml_add(xml, PCMK_XA_CLASS, rsc->standard);
-    crm_xml_add(xml, PCMK_XA_PROVIDER, rsc->provider);
-    crm_xml_add(xml, PCMK_XA_TYPE, rsc->type);
+    pcmk__xe_set(xml, PCMK_XA_ID, op->rsc_id);
+    pcmk__xe_set(xml, PCMK_XA_CLASS, rsc->standard);
+    pcmk__xe_set(xml, PCMK_XA_PROVIDER, rsc->provider);
+    pcmk__xe_set(xml, PCMK_XA_TYPE, rsc->type);
     if (lock_time != 0) {
         /* Actions on a locked resource should either preserve the lock by
          * recording it with the action result, or clear it.
@@ -918,15 +930,15 @@ controld_update_resource_history(const char *node_name,
         if (!should_preserve_lock(op)) {
             lock_time = 0;
         }
-        crm_xml_add_ll(xml, PCMK_OPT_SHUTDOWN_LOCK, (long long) lock_time);
+        pcmk__xe_set_time(xml, PCMK_OPT_SHUTDOWN_LOCK, lock_time);
     }
     if (op->params != NULL) {
         container = g_hash_table_lookup(op->params,
                                         CRM_META "_" PCMK__META_CONTAINER);
         if (container != NULL) {
-            crm_trace("Resource %s is a part of container resource %s",
-                      op->rsc_id, container);
-            crm_xml_add(xml, PCMK__META_CONTAINER, container);
+            pcmk__trace("Resource %s is a part of container resource %s",
+                        op->rsc_id, container);
+            pcmk__xe_set(xml, PCMK__META_CONTAINER, container);
         }
     }
 
@@ -937,7 +949,7 @@ controld_update_resource_history(const char *node_name,
      * discovered during the next election. Worst case, the node is wrongly
      * fenced for running a resource it isn't.
      */
-    crm_log_xml_trace(update, __func__);
+    pcmk__log_xml_trace(update, __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, cib_rsc_callback);
     pcmk__xml_free(update);
 }
@@ -956,23 +968,24 @@ controld_delete_action_history(const lrmd_event_data_t *op)
     CRM_CHECK(op != NULL, return);
 
     xml_top = pcmk__xe_create(NULL, PCMK__XE_LRM_RSC_OP);
-    crm_xml_add_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
-    crm_xml_add(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
+    pcmk__xe_set_int(xml_top, PCMK__XA_CALL_ID, op->call_id);
+    pcmk__xe_set(xml_top, PCMK__XA_TRANSITION_KEY, op->user_data);
 
     if (op->interval_ms > 0) {
         char *op_id = pcmk__op_key(op->rsc_id, op->op_type, op->interval_ms);
 
         /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
-        crm_xml_add(xml_top, PCMK_XA_ID, op_id);
+        pcmk__xe_set(xml_top, PCMK_XA_ID, op_id);
         free(op_id);
     }
 
-    crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
-              op->rsc_id, op->op_type, op->interval_ms, op->call_id);
+    pcmk__debug("Erasing resource operation history for " PCMK__OP_FMT
+                " (call=%d)",
+                op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             PCMK_XE_STATUS, xml_top, cib_none);
-    crm_log_xml_trace(xml_top, "op:cancel");
+    pcmk__log_xml_trace(xml_top, "op:cancel");
     pcmk__xml_free(xml_top);
 }
 
@@ -1015,13 +1028,13 @@ controld_cib_delete_last_failure(const char *rsc_id, const char *node,
     // Generate XPath to match desired entry
     last_failure_key = pcmk__op_key(rsc_id, "last_failure", 0);
     if (action == NULL) {
-        xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id,
-                                  last_failure_key);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_ID, node, rsc_id,
+                                      last_failure_key);
     } else {
         char *action_key = pcmk__op_key(rsc_id, action, interval_ms);
 
-        xpath = crm_strdup_printf(XPATH_HISTORY_ORIG, node, rsc_id,
-                                  last_failure_key, action_key);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_ORIG, node, rsc_id,
+                                      last_failure_key, action_key);
         free(action_key);
     }
     free(last_failure_key);
@@ -1049,10 +1062,10 @@ controld_delete_action_history_by_key(const char *rsc_id, const char *node,
     CRM_CHECK((rsc_id != NULL) && (node != NULL) && (key != NULL), return);
 
     if (call_id > 0) {
-        xpath = crm_strdup_printf(XPATH_HISTORY_CALL, node, rsc_id, key,
-                                  call_id);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_CALL, node, rsc_id, key,
+                                     call_id);
     } else {
-        xpath = crm_strdup_printf(XPATH_HISTORY_ID, node, rsc_id, key);
+        xpath = pcmk__assert_asprintf(XPATH_HISTORY_ID, node, rsc_id, key);
     }
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn, xpath,
                                             NULL, cib_xpath);

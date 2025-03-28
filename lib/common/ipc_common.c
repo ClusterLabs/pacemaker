@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,30 +39,30 @@ pcmk__ipc_buffer_size(unsigned int max)
         if (rc != pcmk_rc_ok) {
             env_value = MAX_MSG_SIZE;
             max = QB_MAX(max, env_value);
-            crm_warn("Using %u as IPC buffer size because '%s' is not "
-                     "a valid value for PCMK_" PCMK__ENV_IPC_BUFFER ": %s",
-                     max, env_value_s, pcmk_rc_str(rc));
+            pcmk__warn("Using %u as IPC buffer size because '%s' is not "
+                       "a valid value for PCMK_" PCMK__ENV_IPC_BUFFER ": %s",
+                       max, env_value_s, pcmk_rc_str(rc));
 
         } else if (env_value <= 0LL) {
             env_value = MAX_MSG_SIZE;
             max = QB_MAX(max, env_value);
-            crm_warn("Using %u as IPC buffer size because PCMK_"
-                     PCMK__ENV_IPC_BUFFER " (%s) is not a positive integer",
-                     max, env_value_s);
+            pcmk__warn("Using %u as IPC buffer size because PCMK_"
+                       PCMK__ENV_IPC_BUFFER " (%s) is not a positive integer",
+                       max, env_value_s);
 
         } else if (env_value < MIN_MSG_SIZE) {
             env_value = MIN_MSG_SIZE;
             max = QB_MAX(max, env_value);
-            crm_debug("Using %u as IPC buffer size because PCMK_"
-                      PCMK__ENV_IPC_BUFFER " (%s) is too small",
-                      max, env_value_s);
+            pcmk__debug("Using %u as IPC buffer size because PCMK_"
+                        PCMK__ENV_IPC_BUFFER " (%s) is too small",
+                        max, env_value_s);
 
         } else if (env_value > UINT_MAX) {
             env_value = UINT_MAX;
             max = UINT_MAX;
-            crm_debug("Using %u as IPC buffer size because PCMK_"
-                      PCMK__ENV_IPC_BUFFER " (%s) is too big",
-                      max, env_value_s);
+            pcmk__debug("Using %u as IPC buffer size because PCMK_"
+                        PCMK__ENV_IPC_BUFFER " (%s) is too big",
+                        max, env_value_s);
         }
     }
 
@@ -72,8 +72,8 @@ pcmk__ipc_buffer_size(unsigned int max)
         if (env_value == MAX_MSG_SIZE) {
             source = "default";
         }
-        crm_debug("Using IPC buffer size %lld from %s (not %u)",
-                  env_value, source, max);
+        pcmk__debug("Using IPC buffer size %lld from %s (not %u)", env_value,
+                    source, max);
         max = env_value;
     }
     return max;
@@ -107,12 +107,13 @@ bool
 pcmk__valid_ipc_header(const pcmk__ipc_header_t *header)
 {
     if (header == NULL) {
-        crm_err("IPC message without header");
+        pcmk__err("IPC message without header");
         return false;
 
     } else if (header->version > PCMK__IPC_VERSION) {
-        crm_err("Filtering incompatible v%d IPC message (only versions <= %d supported)",
-                header->version, PCMK__IPC_VERSION);
+        pcmk__err("Filtering incompatible v%d IPC message (only versions <= %d "
+                  "supported)",
+                  header->version, PCMK__IPC_VERSION);
         return false;
     }
     return true;

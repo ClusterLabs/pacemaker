@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/scores.h>      // pcmk_parse_score(), etc.
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
@@ -54,11 +55,11 @@ pe__unpack_node_health_scores(pcmk_scheduler_t *scheduler)
 
     if ((pcmk__score_red != 0) || (pcmk__score_yellow != 0)
         || (pcmk__score_green != 0)) {
-        crm_debug("Values of node health scores: "
-                  PCMK_VALUE_RED "=%d "
-                  PCMK_VALUE_YELLOW "=%d "
-                  PCMK_VALUE_GREEN "=%d",
-                  pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
+        pcmk__debug("Values of node health scores: "
+                    PCMK_VALUE_RED "=%d "
+                    PCMK_VALUE_YELLOW "=%d "
+                    PCMK_VALUE_GREEN "=%d",
+                    pcmk__score_red, pcmk__score_yellow, pcmk__score_green);
     }
 }
 
@@ -85,15 +86,16 @@ add_node_health_value(gpointer key, gpointer value, gpointer user_data)
         int rc = pcmk_parse_score((const char *) value, &score, 0);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ignoring %s for %s because '%s' is not a valid value: %s",
-                     (const char *) key, pcmk__node_name(health_sum->node),
-                     (const char *) value, pcmk_rc_str(rc));
+            pcmk__warn("Ignoring %s for %s because '%s' is not a valid value: "
+                       "%s",
+                       (const char *) key, pcmk__node_name(health_sum->node),
+                       (const char *) value, pcmk_rc_str(rc));
             return;
         }
 
         health_sum->sum = pcmk__add_scores(score, health_sum->sum);
-        crm_trace("Combined '%s' into node health score (now %s)",
-                  (const char *) value, pcmk_readable_score(health_sum->sum));
+        pcmk__trace("Combined '%s' into node health score (now %s)",
+                    (const char *) value, pcmk_readable_score(health_sum->sum));
     }
 }
 
@@ -163,10 +165,10 @@ pe__node_health(pcmk_node_t *node)
 
             parse_rc = pcmk_parse_score(value, &score, 0);
             if (parse_rc != pcmk_rc_ok) {
-                crm_warn("Ignoring %s for %s "
-                         "because '%s' is not a valid value: %s",
-                         name, pcmk__node_name(node), value,
-                         pcmk_rc_str(parse_rc));
+                pcmk__warn("Ignoring %s for %s because '%s' is not a valid "
+                           "value: %s",
+                           name, pcmk__node_name(node), value,
+                           pcmk_rc_str(parse_rc));
                 continue;
             }
 

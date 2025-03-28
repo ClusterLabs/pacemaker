@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>  // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
 #include <crm/cib.h>
@@ -30,14 +31,14 @@ void
 crmd_ha_msg_filter(xmlNode * msg)
 {
     if (AM_I_DC) {
-        const char *sys_from = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
+        const char *sys_from = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_FROM);
 
         if (pcmk__str_eq(sys_from, CRM_SYSTEM_DC, pcmk__str_casei)) {
-            const char *from = crm_element_value(msg, PCMK__XA_SRC);
+            const char *from = pcmk__xe_get(msg, PCMK__XA_SRC);
 
             if (!controld_is_local_node(from)) {
                 int level = LOG_INFO;
-                const char *op = crm_element_value(msg, PCMK__XA_CRM_TASK);
+                const char *op = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
 
                 /* make sure the election happens NOW */
                 if (controld_globals.fsa_state != S_ELECTION) {
@@ -55,14 +56,14 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
 
     } else {
-        const char *sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+        const char *sys_to = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
 
         if (pcmk__str_eq(sys_to, CRM_SYSTEM_DC, pcmk__str_casei)) {
             return;
         }
     }
 
-    /* crm_log_xml_trace(msg, "HA[inbound]"); */
+    // pcmk__log_xml_trace(msg, "HA[inbound]");
     route_message(C_HA_MESSAGE, msg);
 
   done:
@@ -82,7 +83,7 @@ crmd_ha_msg_filter(xmlNode * msg)
 static int
 node_alive(const pcmk__node_status_t *node)
 {
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         // Pacemaker Remote nodes can't be partially alive
         if (pcmk__str_eq(node->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
             return 1;
@@ -93,7 +94,7 @@ node_alive(const pcmk__node_status_t *node)
         // Completely up cluster node: both cluster member and peer
         return 1;
 
-    } else if (!pcmk_is_set(node->processes, crm_get_cluster_proc())
+    } else if (!pcmk__is_set(node->processes, crm_get_cluster_proc())
                && !pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
                                 pcmk__str_none)) {
         // Completely down cluster node: neither cluster member nor peer
@@ -113,7 +114,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 {
     uint32_t old = 0;
     bool appeared = FALSE;
-    bool is_remote = pcmk_is_set(node->flags, pcmk__node_status_remote);
+    bool is_remote = pcmk__is_set(node->flags, pcmk__node_status_remote);
 
     controld_node_pending_timer(node);
 
@@ -126,7 +127,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
     }
 
     if ((type == pcmk__node_update_processes)
-        && pcmk_is_set(node->processes, crm_get_cluster_proc())
+        && pcmk__is_set(node->processes, crm_get_cluster_proc())
         && !AM_I_DC
         && !is_remote) {
         /* relay_message() on the recipient ignores these messages, but
@@ -136,9 +137,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                                            NULL, CRM_SYSTEM_CRMD, CRM_OP_HELLO,
                                            NULL);
 
-        crm_debug("Sending hello to node %" PRIu32 " so that it learns our "
-                  "node name",
-                  node->cluster_layer_id);
+        pcmk__debug("Sending hello to node %" PRIu32 " so that it learns our "
+                    "node name",
+                    node->cluster_layer_id);
         pcmk__cluster_send_message(node, pcmk_ipc_controld, query);
         pcmk__xml_free(query);
     }
@@ -150,9 +151,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
     switch (type) {
         case pcmk__node_update_name:
             /* If we've never seen the node, then it also won't be in the status section */
-            crm_info("%s node %s is now %s",
-                     (is_remote? "Remote" : "Cluster"),
-                     node->name, state_text(node->state));
+            pcmk__info("%s node %s is now %s",
+                       (is_remote? "Remote" : "Cluster"), node->name,
+                       state_text(node->state));
             return;
 
         case pcmk__node_update_state:
@@ -162,9 +163,9 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             CRM_CHECK(!pcmk__str_eq(data, node->state, pcmk__str_casei),
                       return);
 
-            crm_info("%s node %s is now %s (was %s)",
-                     (is_remote? "Remote" : "Cluster"),
-                     node->name, state_text(node->state), state_text(data));
+            pcmk__info("%s node %s is now %s (was %s)",
+                       (is_remote? "Remote" : "Cluster"), node->name,
+                       state_text(node->state), state_text(data));
 
             if (pcmk__str_eq(PCMK_VALUE_MEMBER, node->state, pcmk__str_none)) {
                 appeared = TRUE;
@@ -182,7 +183,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         case pcmk__node_update_processes:
             CRM_CHECK(data != NULL, return);
             old = *(const uint32_t *)data;
-            appeared = pcmk_is_set(node->processes, crm_get_cluster_proc());
+            appeared = pcmk__is_set(node->processes, crm_get_cluster_proc());
 
             {
                 const char *dc_s = controld_globals.dc_name;
@@ -191,18 +192,20 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     dc_s = PCMK_VALUE_TRUE;
                 }
 
-                crm_info("Node %s is %s a peer " QB_XS
-                         " DC=%s old=%#07x new=%#07x",
-                         node->name, (appeared? "now" : "no longer"),
-                         pcmk__s(dc_s, "<none>"), old, node->processes);
+                pcmk__info("Node %s is %s a peer " QB_XS
+                           " DC=%s old=%#07x new=%#07x",
+                           node->name, (appeared? "now" : "no longer"),
+                           pcmk__s(dc_s, "<none>"), old, node->processes);
             }
 
-            if (!pcmk_is_set((node->processes ^ old), crm_get_cluster_proc())) {
+            if (!pcmk__is_set((node->processes ^ old),
+                              crm_get_cluster_proc())) {
                 /* Peer status did not change. This should not be possible,
                  * since we don't track process flags other than peer status.
                  */
-                crm_trace("Process flag %#7x did not change from %#7x to %#7x",
-                          crm_get_cluster_proc(), old, node->processes);
+                pcmk__trace("Process flag %#7x did not change from %#7x to "
+                            "%#7x",
+                            crm_get_cluster_proc(), old, node->processes);
                 return;
 
             }
@@ -213,19 +216,20 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 controld_remove_voter(node->name);
             }
 
-            if (!pcmk_is_set(controld_globals.fsa_input_register,
-                             R_CIB_CONNECTED)) {
-                crm_trace("Ignoring peer status change because not connected to CIB");
+            if (!pcmk__is_set(controld_globals.fsa_input_register,
+                              R_CIB_CONNECTED)) {
+                pcmk__trace("Ignoring peer status change because not connected "
+                            "to CIB");
                 return;
 
             } else if (controld_globals.fsa_state == S_STOPPING) {
-                crm_trace("Ignoring peer status change because stopping");
+                pcmk__trace("Ignoring peer status change because stopping");
                 return;
             }
 
             if (!appeared && controld_is_local_node(node->name)) {
                 /* Did we get evicted? */
-                crm_notice("Our peer connection failed");
+                pcmk__notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
 
             } else if (pcmk__str_eq(node->name, controld_globals.dc_name,
@@ -239,15 +243,15 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                  * DC's expected state to down. This avoids fencing upon
                  * deletion of its transient attributes.
                  */
-                crm_notice("Our peer on the DC (%s) is dead",
-                           controld_globals.dc_name);
+                pcmk__notice("Our peer on the DC (%s) is dead",
+                             controld_globals.dc_name);
 
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
                 controld_delete_node_state(node->name, controld_section_attrs,
                                            cib_none);
 
             } else if (AM_I_DC
-                       || pcmk_is_set(controld_globals.flags, controld_dc_left)
+                       || pcmk__is_set(controld_globals.flags, controld_dc_left)
                        || (controld_globals.dc_name == NULL)) {
                 /* This only needs to be done once, so normally the DC should do
                  * it. However if there is no DC, every node must do it, since
@@ -270,23 +274,24 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         int alive = node_alive(node);
         pcmk__graph_action_t *down = match_down_event(node->xml_id);
 
-        crm_trace("Alive=%d, appeared=%d, down=%d",
-                  alive, appeared, (down? down->id : -1));
+        pcmk__trace("Alive=%d, appeared=%d, down=%d", alive, appeared,
+                    ((down != NULL)? down->id : -1));
 
         if (appeared && (alive > 0) && !is_remote) {
             register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
         if (down) {
-            const char *task = crm_element_value(down->xml, PCMK_XA_OPERATION);
+            const char *task = pcmk__xe_get(down->xml, PCMK_XA_OPERATION);
 
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                 const bool confirmed =
-                    pcmk_is_set(down->flags, pcmk__graph_action_confirmed);
+                    pcmk__is_set(down->flags, pcmk__graph_action_confirmed);
 
                 /* tengine_stonith_callback() confirms fence actions */
-                crm_trace("Updating CIB %s fencer reported fencing of %s complete",
-                          (confirmed? "after" : "before"), node->name);
+                pcmk__trace("Updating CIB %s fencer reported fencing of %s "
+                            "complete",
+                            (confirmed? "after" : "before"), node->name);
 
             } else if (!appeared && pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN,
                                                  pcmk__str_casei)) {
@@ -298,11 +303,13 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     check_join_state(controld_globals.fsa_state, __func__);
                 }
                 if (alive >= 0) {
-                    crm_info("%s of peer %s is in progress " QB_XS " action=%d",
-                             task, node->name, down->id);
-                } else {
-                    crm_notice("%s of peer %s is complete " QB_XS " action=%d",
+                    pcmk__info("%s of peer %s is in progress "
+                               QB_XS " action=%d",
                                task, node->name, down->id);
+                } else {
+                    pcmk__notice("%s of peer %s is complete "
+                                 QB_XS " action=%d",
+                                 task, node->name, down->id);
                     pcmk__update_graph(controld_globals.transition_graph, down);
                     trigger_graph();
                 }
@@ -317,18 +324,19 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                     liveness = "dead";
                 }
 
-                crm_trace("Node %s is %s, was expected to %s (op %d)",
-                          node->name, liveness, task, down->id);
+                pcmk__trace("Node %s is %s, was expected to %s (op %d)",
+                            node->name, liveness, task, down->id);
             }
 
         } else if (appeared == FALSE) {
             if ((controld_globals.transition_graph == NULL)
                 || (controld_globals.transition_graph->id <= 0)) {
-                crm_info("Stonith/shutdown of node %s is unknown to the "
-                         "current DC", node->name);
+                pcmk__info("Stonith/shutdown of node %s is unknown to the "
+                           "current DC",
+                           node->name);
             } else {
-                crm_warn("Stonith/shutdown of node %s was not expected",
-                         node->name);
+                pcmk__warn("Stonith/shutdown of node %s was not expected",
+                           node->name);
             }
             if (!is_remote) {
                 crm_update_peer_join(__func__, node, controld_join_none);
@@ -340,8 +348,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                                        node->xml_id);
 
         } else {
-            crm_trace("Node %s came up, was not expected to be down",
-                      node->name);
+            pcmk__trace("Node %s came up, was not expected to be down",
+                        node->name);
         }
 
         if (is_remote) {
@@ -372,7 +380,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         /* Update the CIB node state */
         update = create_node_state_update(node, flags, NULL, __func__);
         if (update == NULL) {
-            crm_debug("Node state update not yet possible for %s", node->name);
+            pcmk__debug("Node state update not yet possible for %s",
+                        node->name);
         } else {
             fsa_cib_anon_update(PCMK_XE_STATUS, update);
         }
@@ -385,10 +394,10 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {
-    crm_trace("Invoked (queue len: %d)",
-              g_list_length(controld_globals.fsa_message_queue));
+    pcmk__trace("Invoked (queue len: %u)",
+                g_list_length(controld_globals.fsa_message_queue));
     s_crmd_fsa(C_FSA_INTERNAL);
-    crm_trace("Exited  (queue len: %d)",
-              g_list_length(controld_globals.fsa_message_queue));
+    pcmk__trace("Exited (queue len: %u)",
+                g_list_length(controld_globals.fsa_message_queue));
     return TRUE;
 }

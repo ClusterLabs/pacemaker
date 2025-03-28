@@ -12,6 +12,7 @@
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/pengine/internal.h>
+#include <crm/common/scores.h>              // pcmk_parse_score()
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/scheduler_internal.h>
@@ -174,9 +175,9 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
 {
     const pcmk_rule_input_t rule_input = {
         .now = scheduler->priv->now,
-        .rsc_standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
-        .rsc_provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
-        .rsc_agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE)
+        .rsc_standard = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS),
+        .rsc_provider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER),
+        .rsc_agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE)
     };
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->priv->xml);
@@ -249,8 +250,8 @@ get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
 static char *
 template_op_key(xmlNode * op)
 {
-    const char *name = crm_element_value(op, PCMK_XA_NAME);
-    const char *role = crm_element_value(op, PCMK_XA_ROLE);
+    const char *name = pcmk__xe_get(op, PCMK_XA_NAME);
+    const char *role = pcmk__xe_get(op, PCMK_XA_ROLE);
     char *key = NULL;
 
     if ((role == NULL)
@@ -259,7 +260,7 @@ template_op_key(xmlNode * op)
         role = PCMK__ROLE_UNKNOWN;
     }
 
-    key = crm_strdup_printf("%s-%s", name, role);
+    key = pcmk__assert_asprintf("%s-%s", name, role);
     return key;
 }
 
@@ -281,7 +282,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
+    template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
@@ -299,7 +300,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
-                                         "//" PCMK_XE_RESOURCES, LOG_TRACE);
+                                         "//" PCMK_XE_RESOURCES,
+                                         PCMK__LOG_TRACE);
     if (cib_resources == NULL) {
         pcmk__config_err("No resources configured");
         return FALSE;
@@ -314,9 +316,9 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     new_xml = pcmk__xml_copy(NULL, template);
     xmlNodeSetName(new_xml, xml_obj->name);
-    crm_xml_add(new_xml, PCMK_XA_ID, id);
-    crm_xml_add(new_xml, PCMK__META_CLONE,
-                crm_element_value(xml_obj, PCMK__META_CLONE));
+    pcmk__xe_set(new_xml, PCMK_XA_ID, id);
+    pcmk__xe_set(new_xml, PCMK__META_CLONE,
+                 pcmk__xe_get(xml_obj, PCMK__META_CLONE));
 
     template_ops = pcmk__xe_first_child(new_xml, PCMK_XE_OPERATIONS, NULL,
                                         NULL);
@@ -388,7 +390,7 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
+    template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
@@ -437,7 +439,7 @@ detect_unique(const pcmk_resource_t *rsc)
         }
         return false;
     }
-    return crm_is_true(value);
+    return pcmk__is_true(value);
 }
 
 static void
@@ -517,45 +519,47 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCING, pcmk__str_casei)) {
         pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_fencing);
-        if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        if (!pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
             unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
+        }
 
-        } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        if (!pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing is "
                               "disabled", rsc->id);
             unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
-
-        } else {
-            pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_fencing
-                                     |pcmk__rsc_needs_unfencing);
         }
+
+        pcmk__set_rsc_flags(rsc,
+                            pcmk__rsc_needs_fencing|pcmk__rsc_needs_unfencing);
 
     } else {
         const char *orig_value = value;
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
             value = PCMK_VALUE_QUORUM;
 
         } else if (pcmk__is_primitive(rsc)
                    && xml_contains_remote_node(rsc->priv->xml)) {
             value = PCMK_VALUE_QUORUM;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
+        } else if (pcmk__is_set(scheduler->flags,
+                                pcmk__sched_enable_unfencing)) {
             value = PCMK_VALUE_UNFENCING;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        } else if (pcmk__is_set(scheduler->flags,
+                                pcmk__sched_fencing_enabled)) {
             value = PCMK_VALUE_FENCING;
 
         } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
@@ -705,9 +709,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     rule_input.now = scheduler->priv->now;
 
-    crm_log_xml_trace(xml_obj, "[raw XML]");
+    pcmk__log_xml_trace(xml_obj, "[raw XML]");
 
-    id = crm_element_value(xml_obj, PCMK_XA_ID);
+    id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> configuration without " PCMK_XA_ID,
                          xml_obj->name);
@@ -737,7 +741,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     rsc_private->scheduler = scheduler;
 
     if (expanded_xml) {
-        crm_log_xml_trace(expanded_xml, "[expanded XML]");
+        pcmk__log_xml_trace(expanded_xml, "[expanded XML]");
         rsc_private->xml = expanded_xml;
         rsc_private->orig_xml = xml_obj;
 
@@ -769,9 +773,9 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     rsc_private->probed_nodes = pcmk__strkey_table(NULL, pcmk__free_node_copy);
     rsc_private->allowed_nodes = pcmk__strkey_table(NULL, pcmk__free_node_copy);
 
-    value = crm_element_value(rsc_private->xml, PCMK__META_CLONE);
+    value = pcmk__xe_get(rsc_private->xml, PCMK__META_CLONE);
     if (value) {
-        (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
+        (*rsc)->id = pcmk__assert_asprintf("%s:%s", id, value);
         pcmk__insert_meta(rsc_private, PCMK__META_CLONE, value);
 
     } else {
@@ -785,7 +789,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->flags = 0;
     pcmk__set_rsc_flags(*rsc, pcmk__rsc_unassigned);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
     }
 
@@ -795,12 +799,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     unpack_priority(*rsc);
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_CRITICAL);
-    if ((value == NULL) || crm_is_true(value)) {
+    if ((value == NULL) || pcmk__is_true(value)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_critical);
     }
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_NOTIFY);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_notify);
     }
 
@@ -814,7 +818,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_ALLOW_MIGRATE);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_migratable);
     } else if ((value == NULL) && remote_node) {
         /* By default, we want remote nodes to be able
@@ -835,7 +839,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                               " to the explicit value '" PCMK_VALUE_DEFAULT
                               "' is deprecated and will be removed in a "
                               "future release (just leave it unset)");
-        } else if (crm_is_true(value)) {
+        } else if (pcmk__is_true(value)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
         } else {
             pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
@@ -843,11 +847,11 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     }
 
     value = g_hash_table_lookup(rsc_private->meta, PCMK_META_MAINTENANCE);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
         pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
@@ -856,8 +860,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         if (detect_unique(*rsc)) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_unique);
         }
-        if (crm_is_true(g_hash_table_lookup((*rsc)->priv->meta,
-                                            PCMK_META_PROMOTABLE))) {
+        if (pcmk__is_true(g_hash_table_lookup((*rsc)->priv->meta,
+                                              PCMK_META_PROMOTABLE))) {
             pcmk__set_rsc_flags(*rsc, pcmk__rsc_promotable);
         }
     } else {
@@ -901,7 +905,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     unpack_stickiness(*rsc);
     unpack_migration_threshold(*rsc);
 
-    if (pcmk__str_eq(crm_element_value(rsc_private->xml, PCMK_XA_CLASS),
+    if (pcmk__str_eq(pcmk__xe_get(rsc_private->xml, PCMK_XA_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_fencing);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_fence_device);
@@ -950,7 +954,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         return pcmk_rc_unpack_error;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", scheduler);
     } else if (guest_node) {
@@ -961,8 +965,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                           scheduler);
     }
 
-    pcmk__rsc_trace(*rsc, "%s action notification: %s", (*rsc)->id,
-                    pcmk_is_set((*rsc)->flags, pcmk__rsc_notify)? "required" : "not required");
+    if (pcmk__is_set((*rsc)->flags, pcmk__rsc_notify)) {
+        pcmk__rsc_trace(*rsc, "%s action notification: required", (*rsc)->id);
+    } else {
+        pcmk__rsc_trace(*rsc, "%s action notification: not required",
+                        (*rsc)->id);
+    }
 
     pe__unpack_dataset_nvpairs(rsc_private->xml, PCMK_XE_UTILIZATION,
                                &rule_input, rsc_private->utilization, NULL,
@@ -1052,7 +1060,7 @@ common_free(pcmk_resource_t * rsc)
     }
 
     if ((rsc->priv->parent == NULL)
-        && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+        && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
 
         pcmk__xml_free(rsc->priv->xml);
         rsc->priv->xml = NULL;
@@ -1141,7 +1149,7 @@ pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
         } else {
             keep_looking = true;
         }
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         if (is_happy && ((*active == NULL) || !(*active)->details->online
                          || (*active)->details->unclean)) {
             *active = node; // This is the first clean node
@@ -1205,7 +1213,7 @@ pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
         return NULL;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         return rsc->priv->fns->active_node(rsc, count, NULL);
     } else {
         return rsc->priv->fns->active_node(rsc, NULL, count);
@@ -1223,13 +1231,13 @@ pe__count_common(pcmk_resource_t *rsc)
             child->priv->fns->count(item->data);
         }
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_removed)
                || (rsc->priv->orig_role > pcmk_role_stopped)) {
         rsc->priv->scheduler->priv->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->priv->scheduler->priv->disabled_resources++;
         }
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_blocked)) {
             rsc->priv->scheduler->priv->blocked_resources++;
         }
     }

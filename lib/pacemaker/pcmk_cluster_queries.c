@@ -368,9 +368,9 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
                 /* EREMOTEIO may be expected and acceptable for some callers
                  * on a Pacemaker Remote node
                  */
-                crm_debug("Ignoring %s connection failure: No "
-                          "Pacemaker Remote connection",
-                          pcmk_ipc_name(api, true));
+                pcmk__debug("Ignoring %s connection failure: No Pacemaker "
+                            "Remote connection",
+                            pcmk_ipc_name(api, true));
                 rc = pcmk_rc_ok;
             } else {
                 out->err(out, "error: Could not connect to %s: %s",
@@ -814,8 +814,8 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 {
     struct node_data *data = user_data;
     pcmk__output_t *out = data->out;
-    const char *name = crm_element_value(result, PCMK_XA_UNAME);
-    const char *id = crm_element_value(result, data->field);
+    const char *name = pcmk__xe_get(result, PCMK_XA_UNAME);
+    const char *id = pcmk__xe_get(result, data->field);
 
     // node name and node id are the same for remote/guest nodes
     out->message(out, "crmadmin-node", data->type,

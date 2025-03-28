@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,11 +29,11 @@ char *
 based_transaction_source_str(const pcmk__client_t *client, const char *origin)
 {
     if (client != NULL) {
-        return crm_strdup_printf("client %s (%s)%s%s",
-                                 pcmk__client_name(client),
-                                 pcmk__s(client->id, "unidentified"),
-                                 ((origin != NULL)? " on " : ""),
-                                 pcmk__s(origin, ""));
+        return pcmk__assert_asprintf("client %s (%s)%s%s",
+                                     pcmk__client_name(client),
+                                     pcmk__s(client->id, "unidentified"),
+                                     ((origin != NULL)? " on " : ""),
+                                     pcmk__s(origin, ""));
     } else {
         return pcmk__str_copy(pcmk__s(origin, "unknown source"));
     }
@@ -61,13 +61,13 @@ process_transaction_requests(xmlNodePtr transaction,
          request != NULL;
          request = pcmk__xe_next(request, PCMK__XE_CIB_COMMAND)) {
 
-        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-        const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
+        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+        const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
         const cib__operation_t *operation = NULL;
         int rc = cib__get_operation(op, &operation);
 
         if (rc == pcmk_rc_ok) {
-            if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)
+            if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)
                 || (host != NULL)) {
 
                 rc = EOPNOTSUPP;
@@ -81,16 +81,16 @@ process_transaction_requests(xmlNodePtr transaction,
         }
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Aborting CIB transaction for %s due to failed %s request: "
-                    "%s",
-                    source, op, pcmk_rc_str(rc));
-            crm_log_xml_info(request, "Failed request");
+            pcmk__err("Aborting CIB transaction for %s due to failed %s "
+                      "request: %s",
+                      source, op, pcmk_rc_str(rc));
+            pcmk__log_xml_info(request, "Failed request");
             return rc;
         }
 
-        crm_trace("Applied %s request to transaction working CIB for %s",
-                  op, source);
-        crm_log_xml_trace(request, "Successful request");
+        pcmk__trace("Applied %s request to transaction working CIB for %s", op,
+                    source);
+        pcmk__log_xml_trace(request, "Successful request");
     }
 
     return pcmk_rc_ok;
@@ -138,15 +138,15 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
               *result_cib = pcmk__xml_copy(NULL, the_cib));
 
     source = based_transaction_source_str(client, origin);
-    crm_trace("Committing transaction for %s to working CIB", source);
+    pcmk__trace("Committing transaction for %s to working CIB", source);
 
     // Apply all changes to a working copy of the CIB
     the_cib = *result_cib;
 
     rc = process_transaction_requests(transaction, client, origin);
 
-    crm_trace("Transaction commit %s for %s",
-              ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
+    pcmk__trace("Transaction commit %s for %s",
+                ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
 
     /* Some request types (for example, erase) may have freed the_cib (the
      * working copy) and pointed it at a new XML object. In that case, it

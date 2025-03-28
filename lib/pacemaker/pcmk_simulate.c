@@ -9,8 +9,10 @@
 
 #include <crm_internal.h>
 #include <crm/cib/internal.h>
+#include <crm/common/nvpair.h>      // crm_meta_value()
 #include <crm/common/output.h>
 #include <crm/common/results.h>
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/scheduler.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
@@ -52,7 +54,7 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
     if (action->node != NULL) {
         action_host = action->node->priv->name;
-    } else if (!pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+    } else if (!pcmk__is_set(action->flags, pcmk__action_pseudo)) {
         action_host = "<none>";
     }
 
@@ -88,10 +90,10 @@ create_action_name(const pcmk_action_t *action, bool verbose)
         }
 
         if (action_host != NULL) {
-            action_name = crm_strdup_printf("%s%s %s",
-                                            prefix, key, action_host);
+            action_name = pcmk__assert_asprintf("%s%s %s",
+                                                prefix, key, action_host);
         } else {
-            action_name = crm_strdup_printf("%s%s", prefix, key);
+            action_name = pcmk__assert_asprintf("%s%s", prefix, key);
         }
         free(key);
 
@@ -100,23 +102,25 @@ create_action_name(const pcmk_action_t *action, bool verbose)
         const char *op = g_hash_table_lookup(action->meta,
                                              PCMK__META_STONITH_ACTION);
 
-        action_name = crm_strdup_printf("%s%s '%s' %s",
-                                        prefix, action->task, op, action_host);
+        action_name = pcmk__assert_asprintf("%s%s '%s' %s",
+                                            prefix, action->task, op,
+                                            action_host);
 
     } else if (action->rsc && action_host) {
-        action_name = crm_strdup_printf("%s%s %s",
-                                        prefix, action->uuid, action_host);
+        action_name = pcmk__assert_asprintf("%s%s %s",
+                                            prefix, action->uuid, action_host);
 
     } else if (action_host) {
-        action_name = crm_strdup_printf("%s%s %s",
-                                        prefix, action->task, action_host);
+        action_name = pcmk__assert_asprintf("%s%s %s",
+                                            prefix, action->task, action_host);
 
     } else {
-        action_name = crm_strdup_printf("%s", action->uuid);
+        action_name = pcmk__assert_asprintf("%s", action->uuid);
     }
 
     if (verbose) {
-        char *with_id = crm_strdup_printf("%s (%d)", action_name, action->id);
+        char *with_id = pcmk__assert_asprintf("%s (%d)", action_name,
+                                              action->id);
 
         free(action_name);
         action_name = with_id;
@@ -197,13 +201,13 @@ reset(pcmk_scheduler_t *scheduler, xmlNodePtr input, pcmk__output_t *out,
     scheduler->input = input;
     scheduler->priv->out = out;
     set_effective_date(scheduler, true, use_date);
-    if (pcmk_is_set(flags, pcmk_sim_sanitized)) {
+    if (pcmk__is_set(flags, pcmk_sim_sanitized)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_sanitized);
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_scores)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
     cluster_status(scheduler);
@@ -241,23 +245,23 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         const char *color = "black";
         char *action_name = create_action_name(action, verbose);
 
-        if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
+        if (pcmk__is_set(action->flags, pcmk__action_pseudo)) {
             font = "orange";
         }
 
-        if (pcmk_is_set(action->flags, pcmk__action_added_to_graph)) {
+        if (pcmk__is_set(action->flags, pcmk__action_added_to_graph)) {
             style = PCMK__VALUE_BOLD;
             color = "green";
 
         } else if ((action->rsc != NULL)
-                   && !pcmk_is_set(action->rsc->flags, pcmk__rsc_managed)) {
+                   && !pcmk__is_set(action->rsc->flags, pcmk__rsc_managed)) {
             color = "red";
             font = "purple";
             if (!all_actions) {
                 goto do_not_write;
             }
 
-        } else if (pcmk_is_set(action->flags, pcmk__action_optional)) {
+        } else if (pcmk__is_set(action->flags, pcmk__action_optional)) {
             color = "blue";
             if (!all_actions) {
                 goto do_not_write;
@@ -265,7 +269,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
 
         } else {
             color = "red";
-            CRM_LOG_ASSERT(!pcmk_is_set(action->flags, pcmk__action_runnable));
+            CRM_LOG_ASSERT(!pcmk__is_set(action->flags, pcmk__action_runnable));
         }
 
         pcmk__set_action_flags(action, pcmk__action_added_to_graph);
@@ -293,9 +297,10 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
                 style = PCMK__VALUE_BOLD;
             } else if (before->flags == pcmk__ar_none) {
                 continue;
-            } else if (pcmk_is_set(before->action->flags,
-                                   pcmk__action_added_to_graph)
-                       && pcmk_is_set(action->flags, pcmk__action_added_to_graph)
+            } else if (pcmk__is_set(before->action->flags,
+                                    pcmk__action_added_to_graph)
+                       && pcmk__is_set(action->flags,
+                                       pcmk__action_added_to_graph)
                        && before->flags != pcmk__ar_if_on_same_node_or_target) {
                 optional = false;
             }
@@ -340,17 +345,18 @@ profile_filter(const struct dirent *entry)
         goto done;
     }
     if (filename[0] == '.') {
-        crm_trace("Not profiling hidden file '%s'", filename);
+        pcmk__trace("Not profiling hidden file '%s'", filename);
         goto done;
     }
     if (!pcmk__ends_with_ext(filename, ".xml")) {
-        crm_trace("Not profiling file '%s' without '.xml' extension", filename);
+        pcmk__trace("Not profiling file '%s' without '.xml' extension",
+                    filename);
         goto done;
     }
 
-    buf = crm_strdup_printf("%s/%s", profiling_dir, filename);
+    buf = pcmk__assert_asprintf("%s/%s", profiling_dir, filename);
     if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
-        crm_trace("Not profiling file '%s': not a regular file", filename);
+        pcmk__trace("Not profiling file '%s': not a regular file", filename);
         goto done;
     }
 
@@ -440,10 +446,10 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
     }
 
     scheduler->priv->out = out;
-    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_scores)) {
         scheduler_flags |= pcmk__sched_output_scores;
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_utilization)) {
         scheduler_flags |= pcmk__sched_show_utilization;
     }
 
@@ -464,7 +470,7 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
 
     for (int i = 0; i < num_files; i++) {
         // glibc doesn't enforce PATH_MAX, so don't limit the buffer size
-        char *path = crm_strdup_printf("%s/%s", dir, namelist[i]->d_name);
+        char *path = pcmk__assert_asprintf("%s/%s", dir, namelist[i]->d_name);
 
         profile_file(path, repeat, scheduler, scheduler_flags, use_date);
         free(path);
@@ -500,8 +506,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 
     pcmk__assert(out != NULL);
 
-    crm_element_value_epoch(scheduler->input, PCMK_XA_EXECUTION_DATE,
-                            &original_date);
+    pcmk__xe_get_time(scheduler->input, PCMK_XA_EXECUTION_DATE,
+                      &original_date);
 
     if (use_date) {
         scheduler->priv->now = crm_time_new(use_date);
@@ -535,8 +541,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
 static int
 simulate_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    const char *task = crm_element_value(action->xml, PCMK__XA_OPERATION_KEY);
+    const char *node = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
+    const char *task = pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY);
 
     pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
     out->message(out, "inject-pseudo-action", node, task);
@@ -566,7 +572,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     const char *resource = NULL;
     const char *rprovider = NULL;
     const char *resource_config_name = NULL;
-    const char *operation = crm_element_value(action->xml, PCMK_XA_OPERATION);
+    const char *operation = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
     const char *target_rc_s = crm_meta_value(action->params,
                                              PCMK__META_OP_TARGET_RC);
 
@@ -575,19 +581,18 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     xmlNode *action_rsc = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE,
                                                NULL, NULL);
 
-    char *node = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
+    char *node = pcmk__xe_get_copy(action->xml, PCMK__META_ON_NODE);
     char *uuid = NULL;
-    const char *router_node = crm_element_value(action->xml,
-                                                PCMK__XA_ROUTER_NODE);
+    const char *router_node = pcmk__xe_get(action->xml, PCMK__XA_ROUTER_NODE);
 
     // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
-        crm_debug("No history injection for %s op on %s", operation, node);
+        pcmk__debug("No history injection for %s op on %s", operation, node);
         goto done; // Confirm action and update graph
     }
 
     if (action_rsc == NULL) { // Shouldn't be possible
-        crm_log_xml_err(action->xml, "Bad");
+        pcmk__log_xml_err(action->xml, "Bad");
         free(node);
         return EPROTO;
     }
@@ -597,15 +602,15 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      * (which is preferred when writing history), and if necessary, the instance
      * name.
      */
-    resource_config_name = crm_element_value(action_rsc, PCMK_XA_ID);
+    resource_config_name = pcmk__xe_get(action_rsc, PCMK_XA_ID);
     if (resource_config_name == NULL) { // Shouldn't be possible
-        crm_log_xml_err(action->xml, "No ID");
+        pcmk__log_xml_err(action->xml, "No ID");
         free(node);
         return EPROTO;
     }
     resource = resource_config_name;
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
-        const char *longname = crm_element_value(action_rsc, PCMK__XA_LONG_ID);
+        const char *longname = pcmk__xe_get(action_rsc, PCMK__XA_LONG_ID);
 
         if ((longname != NULL)
             && (pe_find_resource(fake_resource_list, longname) != NULL)) {
@@ -621,9 +626,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         goto done; // Confirm action and update graph
     }
 
-    rclass = crm_element_value(action_rsc, PCMK_XA_CLASS);
-    rtype = crm_element_value(action_rsc, PCMK_XA_TYPE);
-    rprovider = crm_element_value(action_rsc, PCMK_XA_PROVIDER);
+    rclass = pcmk__xe_get(action_rsc, PCMK_XA_CLASS);
+    rtype = pcmk__xe_get(action_rsc, PCMK_XA_TYPE);
+    rprovider = pcmk__xe_get(action_rsc, PCMK_XA_PROVIDER);
 
     pcmk__scan_min_int(target_rc_s, &target_outcome, 0);
 
@@ -631,7 +636,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                        cib_sync_call) == pcmk_ok);
 
     // Ensure the action node is in the CIB
-    uuid = crm_element_value_copy(action->xml, PCMK__META_ON_NODE_UUID);
+    uuid = pcmk__xe_get_copy(action->xml, PCMK__META_ON_NODE_UUID);
     cib_node = pcmk__inject_node(fake_cib, node,
                                  ((router_node == NULL)? uuid: node));
     free(uuid);
@@ -642,8 +647,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                  resource_config_name,
                                                  rclass, rtype, rprovider);
     if (cib_resource == NULL) {
-        crm_err("Could not simulate action %d history for resource %s",
-                action->id, resource);
+        pcmk__err("Could not simulate action %d history for resource %s",
+                  action->id, resource);
         free(node);
         pcmk__xml_free(cib_node);
         return EINVAL;
@@ -664,8 +669,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         const char *offset = NULL;
 
         // Allow user to specify anonymous clone with or without instance number
-        key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource, op->op_type,
-                                op->interval_ms, node);
+        key = pcmk__assert_asprintf(PCMK__OP_FMT "@%s=", resource, op->op_type,
+                                    op->interval_ms, node);
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             match_name = resource;
         }
@@ -675,8 +680,9 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         if ((match_name == NULL)
             && (strcmp(resource, resource_config_name) != 0)) {
 
-            key = crm_strdup_printf(PCMK__OP_FMT "@%s=", resource_config_name,
-                                    op->op_type, op->interval_ms, node);
+            key = pcmk__assert_asprintf(PCMK__OP_FMT "@%s=",
+                                        resource_config_name, op->op_type,
+                                        op->interval_ms, node);
             if (strncasecmp(key, spec, strlen(key)) == 0) {
                 match_name = resource_config_name;
             }
@@ -740,8 +746,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 static int
 simulate_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
-    const char *node = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    const char *task = crm_element_value(action->xml, PCMK_XA_OPERATION);
+    const char *node = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
+    const char *task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
     xmlNode *rsc = pcmk__xe_first_child(action->xml, PCMK_XE_PRIMITIVE, NULL,
                                         NULL);
 
@@ -764,7 +770,7 @@ static int
 simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 {
     const char *op = crm_meta_value(action->params, PCMK__META_STONITH_ACTION);
-    char *target = crm_element_value_copy(action->xml, PCMK__META_ON_NODE);
+    char *target = pcmk__xe_get_copy(action->xml, PCMK__META_ON_NODE);
 
     out->message(out, "inject-fencing-action", target, op);
 
@@ -777,7 +783,7 @@ simulate_fencing_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                            false);
 
         pcmk__assert(cib_node != NULL);
-        crm_xml_add(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
+        pcmk__xe_set(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, __func__);
         rc = fake_cib->cmds->replace(fake_cib, PCMK_XE_STATUS, cib_node,
                                      cib_sync_call);
         pcmk__assert(rc == pcmk_ok);
@@ -883,9 +889,9 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     reset(scheduler, input, out, use_date, flags);
 
     if (!out->is_quiet(out)) {
-        const bool show_pending = pcmk_is_set(flags, pcmk_sim_show_pending);
+        const bool show_pending = pcmk__is_set(flags, pcmk_sim_show_pending);
 
-        if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+        if (pcmk__is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
             printed = out->message(out, "maint-mode", scheduler->flags);
         }
 
@@ -941,23 +947,24 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         }
     }
 
-    if (pcmk_any_flags_set(flags, pcmk_sim_process | pcmk_sim_simulate)) {
+    if (pcmk__any_flags_set(flags, pcmk_sim_process|pcmk_sim_simulate)) {
         pcmk__output_t *logger_out = NULL;
 
-        if (pcmk_all_flags_set(scheduler->flags,
-                               pcmk__sched_output_scores
-                               |pcmk__sched_show_utilization)) {
+        if (pcmk__all_flags_set(scheduler->flags,
+                                pcmk__sched_output_scores
+                                |pcmk__sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL,
                             "Assignment Scores and Utilization Information");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_output_scores)) {
+        } else if (pcmk__is_set(scheduler->flags, pcmk__sched_output_scores)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Assignment Scores");
             printed = pcmk_rc_ok;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
+        } else if (pcmk__is_set(scheduler->flags,
+                                pcmk__sched_show_utilization)) {
             PCMK__OUTPUT_SPACER_IF(out, printed == pcmk_rc_ok);
             out->begin_list(out, NULL, NULL, "Utilization Information");
             printed = pcmk_rc_ok;
@@ -995,8 +1002,8 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
         if (dot_file != NULL) {
             rc = write_sim_dotfile(scheduler, dot_file,
-                                   pcmk_is_set(flags, pcmk_sim_all_actions),
-                                   pcmk_is_set(flags, pcmk_sim_verbose));
+                                   pcmk__is_set(flags, pcmk_sim_all_actions),
+                                   pcmk__is_set(flags, pcmk_sim_verbose));
             if (rc != pcmk_rc_ok) {
                 rc = pcmk_rc_dot_error;
                 goto simulate_done;
@@ -1010,7 +1017,7 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     rc = pcmk_rc_ok;
 
-    if (!pcmk_is_set(flags, pcmk_sim_simulate)) {
+    if (!pcmk__is_set(flags, pcmk_sim_simulate)) {
         goto simulate_done;
     }
 
@@ -1026,10 +1033,10 @@ pcmk__simulate(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
 
     set_effective_date(scheduler, true, use_date);
 
-    if (pcmk_is_set(flags, pcmk_sim_show_scores)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_scores)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_output_scores);
     }
-    if (pcmk_is_set(flags, pcmk_sim_show_utilization)) {
+    if (pcmk__is_set(flags, pcmk_sim_show_utilization)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_show_utilization);
     }
 

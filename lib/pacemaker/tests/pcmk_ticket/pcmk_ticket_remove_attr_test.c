@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -90,7 +90,7 @@ no_attrs(void **state)
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
                      &xml_search, cib_xpath);
-    assert_string_equal("1", crm_element_value(xml_search, "owner"));
+    assert_string_equal("1", pcmk__xe_get(xml_search, "owner"));
     pcmk__xml_free(xml_search);
 
     /* Another way of specifying no attributes */
@@ -126,8 +126,8 @@ remove_missing_attrs(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("1", crm_element_value(xml_search, "owner"));
-    assert_null(crm_element_value(xml_search, "XYZ"));
+    assert_string_equal("1", pcmk__xe_get(xml_search, "owner"));
+    assert_null(pcmk__xe_get(xml_search, "XYZ"));
 
     pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);
@@ -153,7 +153,7 @@ remove_existing_attr(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
                      &xml_search, cib_xpath);
 
-    assert_null(crm_element_value(xml_search, "owner"));
+    assert_null(pcmk__xe_get(xml_search, "owner"));
 
     pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);
@@ -179,7 +179,7 @@ remove_granted_without_force(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
+    assert_string_equal("true", pcmk__xe_get(xml_search, PCMK__XA_GRANTED));
 
     pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);
@@ -205,7 +205,7 @@ remove_granted_with_force(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
                      &xml_search, cib_xpath);
 
-    assert_null(crm_element_value(xml_search, PCMK__XA_GRANTED));
+    assert_null(pcmk__xe_get(xml_search, PCMK__XA_GRANTED));
 
     pcmk__xml_free(xml_search);
     g_list_free_full(attrs, free);

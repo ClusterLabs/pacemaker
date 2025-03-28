@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,7 +43,7 @@ attrd_start_election_if_needed(void)
         && (election_state(attrd_cluster) != election_in_progress)
         && !attrd_shutting_down(false)) {
 
-        crm_info("Starting an election to determine the writer");
+        pcmk__info("Starting an election to determine the writer");
         election_vote(attrd_cluster);
     }
 }
@@ -60,15 +60,15 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
     enum election_result rc = 0;
     enum election_result previous = election_state(attrd_cluster);
 
-    crm_xml_add(xml, PCMK__XA_SRC, peer->name);
+    pcmk__xe_set(xml, PCMK__XA_SRC, peer->name);
 
     // Don't become writer if we're shutting down
     rc = election_count_vote(attrd_cluster, xml, !attrd_shutting_down(false));
 
     switch(rc) {
         case election_start:
-            crm_debug("Unsetting writer (was %s) and starting new election",
-                      peer_writer? peer_writer : "unset");
+            pcmk__debug("Unsetting writer (was %s) and starting new election",
+                        pcmk__s(peer_writer, "unset"));
             free(peer_writer);
             peer_writer = NULL;
             election_vote(attrd_cluster);
@@ -88,8 +88,8 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
              */
             if ((peer_writer == NULL) || (previous != election_lost)) {
                 pcmk__str_update(&peer_writer, peer->name);
-                crm_debug("Election lost, presuming %s is writer for now",
-                          peer_writer);
+                pcmk__debug("Election lost, presuming %s is writer for now",
+                            peer_writer);
             }
             break;
 
@@ -98,7 +98,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
             break;
 
         default:
-            crm_info("Ignoring election op from %s due to error", peer->name);
+            pcmk__info("Ignoring election op from %s due to error", peer->name);
             break;
     }
 }
@@ -108,19 +108,19 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
 {
     int peer_state = 0;
 
-    crm_element_value_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_WRITER, &peer_state);
     if (peer_state == election_won) {
         if ((election_state(attrd_cluster) == election_won)
             && !pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
                              pcmk__str_casei)) {
-            crm_notice("Detected another attribute writer (%s), starting new "
-                       "election",
-                       peer->name);
+            pcmk__notice("Detected another attribute writer (%s), starting new "
+                         "election",
+                         peer->name);
             election_vote(attrd_cluster);
 
         } else if (!pcmk__str_eq(peer->name, peer_writer, pcmk__str_casei)) {
-            crm_notice("Recorded new attribute writer: %s (was %s)",
-                       peer->name, pcmk__s(peer_writer, "unset"));
+            pcmk__notice("Recorded new attribute writer: %s (was %s)",
+                         peer->name, pcmk__s(peer_writer, "unset"));
             pcmk__str_update(&peer_writer, peer->name);
         }
     }
@@ -130,8 +130,8 @@ attrd_check_for_new_writer(const pcmk__node_status_t *peer, const xmlNode *xml)
 void
 attrd_declare_winner(void)
 {
-    crm_notice("Recorded local node as attribute writer (was %s)",
-               (peer_writer? peer_writer : "unset"));
+    pcmk__notice("Recorded local node as attribute writer (was %s)",
+                 pcmk__s(peer_writer, "unset"));
     pcmk__str_update(&peer_writer, attrd_cluster->priv->node_name);
 }
 
@@ -144,7 +144,7 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
 
         free(peer_writer);
         peer_writer = NULL;
-        crm_notice("Lost attribute writer %s", peer->name);
+        pcmk__notice("Lost attribute writer %s", peer->name);
 
         /* Clear any election dampening in effect. Otherwise, if the lost writer
          * had just won, the election could fizzle out with no new writer.
@@ -164,7 +164,8 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
      * would be pending until it's timed out.
      */
     } else if (election_state(attrd_cluster) == election_in_progress) {
-       crm_debug("Checking election status upon loss of voter %s", peer->name);
+       pcmk__debug("Checking election status upon loss of voter %s",
+                   peer->name);
        election_check(attrd_cluster);
     }
 }
@@ -172,5 +173,5 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
 void
 attrd_xml_add_writer(xmlNode *xml)
 {
-    crm_xml_add_int(xml, PCMK__XA_ATTR_WRITER, election_state(attrd_cluster));
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_WRITER, election_state(attrd_cluster));
 }

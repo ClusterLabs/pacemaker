@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #include <glib.h>                       // guint, GList, GHashTable
 #include <libxml/tree.h>                // xmlNode
 
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/scheduler_types.h> // pcmk_scheduler_t
 #include <crm/lrmd_events.h>            // lrmd_event_data_t
 
@@ -50,18 +51,21 @@ typedef struct {
     GList *inputs;            /* pcmk__graph_action_t* */
 } pcmk__graph_synapse_t;
 
-#define pcmk__set_synapse_flags(synapse, flags_to_set) do {             \
-        (synapse)->flags = pcmk__set_flags_as(__func__, __LINE__,       \
-            LOG_TRACE,                                                  \
-            "Synapse", "synapse",                       \
-            (synapse)->flags, (flags_to_set), #flags_to_set);           \
+#define pcmk__set_synapse_flags(synapse, flags_to_set) do {                 \
+        (synapse)->flags = pcmk__set_flags_as(__func__, __LINE__,           \
+                                              PCMK__LOG_TRACE, "Synapse",   \
+                                              "synapse", (synapse)->flags,  \
+                                              (flags_to_set),               \
+                                              #flags_to_set);               \
     } while (0)
 
-#define pcmk__clear_synapse_flags(synapse, flags_to_clear) do {         \
-        (synapse)->flags = pcmk__clear_flags_as(__func__, __LINE__,     \
-            LOG_TRACE,                                                  \
-            "Synapse", "synapse",                      \
-            (synapse)->flags, (flags_to_clear), #flags_to_clear);       \
+#define pcmk__clear_synapse_flags(synapse, flags_to_clear) do {             \
+        (synapse)->flags = pcmk__clear_flags_as(__func__, __LINE__,         \
+                                                PCMK__LOG_TRACE, "Synapse", \
+                                                "synapse",                  \
+                                                (synapse)->flags,           \
+                                                (flags_to_clear),           \
+                                                #flags_to_clear);           \
     } while (0)
 
 enum pcmk__graph_action_flags {
@@ -86,18 +90,20 @@ typedef struct {
 
 } pcmk__graph_action_t;
 
-#define pcmk__set_graph_action_flags(action, flags_to_set) do {       \
-        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,      \
-            LOG_TRACE,                                                \
-            "Action", "action",                                       \
-            (action)->flags, (flags_to_set), #flags_to_set);          \
+#define pcmk__set_graph_action_flags(action, flags_to_set) do {         \
+        (action)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
+                                             PCMK__LOG_TRACE, "Action", \
+                                             "action", (action)->flags, \
+                                             (flags_to_set),            \
+                                             #flags_to_set);            \
     } while (0)
 
-#define pcmk__clear_graph_action_flags(action, flags_to_clear) do {   \
-        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
-            LOG_TRACE,                                                \
-            "Action", "action",                                       \
-            (action)->flags, (flags_to_clear), #flags_to_clear);      \
+#define pcmk__clear_graph_action_flags(action, flags_to_clear) do {         \
+        (action)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
+                                               PCMK__LOG_TRACE, "Action",   \
+                                               "action", (action)->flags,   \
+                                               (flags_to_clear),            \
+                                               #flags_to_clear);            \
     } while (0)
 
 // What to do after finished processing a transition graph

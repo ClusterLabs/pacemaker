@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 
 #include <crm/common/scheduler.h>           // pcmk_scheduler_t
 #include <crm/common/scheduler_internal.h>  // pcmk_scheduler_t private data
+#include <crm/common/scores.h>              // pcmk_parse_score(), etc.
 
 /*!
  * \internal
@@ -90,8 +91,8 @@ pcmk__health_score(const char *option, const pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(scheduler->priv->options, option);
     rc = pcmk_parse_score(value, &score, 0);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Using 0 for %s because '%s' is invalid: %s",
-                 option, value, pcmk_rc_str(rc));
+        pcmk__warn("Using 0 for %s because '%s' is invalid: %s",
+                   option, value, pcmk_rc_str(rc));
     }
     return score;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,26 +13,32 @@
 
 static void
 clear_none(void **state) {
-    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                          "test", 0x0f0, 0x00f, NULL), 0x0f0);
-    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                          "test", 0x0f0, 0xf0f, NULL), 0x0f0);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                          "Test", "test", 0x0f0, 0x00f, NULL),
+                     0x0f0);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                          "Test", "test", 0x0f0, 0xf0f, NULL),
+                     0x0f0);
 }
 
 static void
 clear_some(void **state) {
-    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                          "test", 0x0f0, 0x020, NULL), 0x0d0);
-    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                          "test", 0x0f0, 0x030, NULL), 0x0c0);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                          "Test", "test", 0x0f0, 0x020, NULL),
+                     0x0d0);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                          "Test", "test", 0x0f0, 0x030, NULL),
+                     0x0c0);
 }
 
 static void
 clear_all(void **state) {
-    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                          "test", 0x0f0, 0x0f0, NULL), 0x000);
-    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Test",
-                                          "test", 0x0f0, 0xfff, NULL), 0x000);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                          "Test", "test", 0x0f0, 0x0f0, NULL),
+                     0x000);
+    assert_int_equal(pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,
+                                          "Test", "test", 0x0f0, 0xfff, NULL),
+                     0x000);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

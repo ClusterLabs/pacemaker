@@ -102,7 +102,7 @@ nothing_to_sort(void **state)
     pcmk__xml_free(reference_xml);
 
     // Only one attribute
-    crm_xml_add(test_xml, "name", "value");
+    pcmk__xe_set(test_xml, "name", "value");
     reference_xml = pcmk__xml_copy(NULL, test_xml);
     assert_order(test_xml, reference_xml);
     pcmk__xml_free(reference_xml);
@@ -118,9 +118,9 @@ already_sorted(void **state)
 
     xmlAttr *attr = NULL;
 
-    crm_xml_add(test_xml, "admin", "john");
-    crm_xml_add(test_xml, "dummy", "value");
-    crm_xml_add(test_xml, "location", "usa");
+    pcmk__xe_set(test_xml, "admin", "john");
+    pcmk__xe_set(test_xml, "dummy", "value");
+    pcmk__xe_set(test_xml, "location", "usa");
 
     // Set flags in test_xml's attributes for testing flag preservation
     attr = xmlHasProp(test_xml, (const xmlChar *) "admin");
@@ -137,7 +137,7 @@ already_sorted(void **state)
         xml_node_private_t *nodepriv = attr->_private;
 
         if (nodepriv != NULL) {
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_lazy);
+            pcmk__set_xml_flags(nodepriv, pcmk__xf_ignore_attr_pos);
         }
     }
 
@@ -161,9 +161,9 @@ need_sort(void **state)
 
     xmlAttr *attr = NULL;
 
-    crm_xml_add(test_xml, "location", "usa");
-    crm_xml_add(test_xml, "admin", "john");
-    crm_xml_add(test_xml, "dummy", "value");
+    pcmk__xe_set(test_xml, "location", "usa");
+    pcmk__xe_set(test_xml, "admin", "john");
+    pcmk__xe_set(test_xml, "dummy", "value");
 
     // Set flags in test_xml's attributes for testing flag preservation
     attr = xmlHasProp(test_xml, (const xmlChar *) "location");
@@ -171,7 +171,7 @@ need_sort(void **state)
         xml_node_private_t *nodepriv = attr->_private;
 
         if (nodepriv != NULL) {
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_lazy);
+            pcmk__set_xml_flags(nodepriv, pcmk__xf_ignore_attr_pos);
         }
     }
 

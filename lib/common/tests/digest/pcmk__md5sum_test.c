@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,19 +11,21 @@
 
 #include <crm/common/unittest_internal.h>
 
+#include "crmcommon_private.h"              // pcmk__md5sum()
+
 static void
 null_arg_test(void **state)
 {
-    assert_null(crm_md5sum(NULL));
+    assert_null(pcmk__md5sum(NULL));
 }
 
 static void
 basic_usage_test(void **state)
 {
-    char *result = crm_md5sum("abcdefghijklmnopqrstuvwxyz");
+    gchar *result = pcmk__md5sum("abcdefghijklmnopqrstuvwxyz");
 
     assert_string_equal(result, "c3fcd3d76192e4007dfb496cca67e13b");
-    free(result);
+    g_free(result);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

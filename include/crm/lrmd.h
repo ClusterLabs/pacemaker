@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,8 @@
 #include <crm_config.h>
 #include <crm/lrmd_events.h>
 #include <crm/services.h>
+
+#include <crm/common/internal.h>    // pcmk__compare_versions()
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,7 +45,7 @@ typedef struct lrmd_key_value_s {
  */
 #define LRMD_PROTOCOL_VERSION "1.2"
 
-#define LRMD_SUPPORTS_SCHEMA_XFER(x) (compare_version((x), "1.2") >= 0)
+#define LRMD_SUPPORTS_SCHEMA_XFER(x) (pcmk__compare_versions((x), "1.2") >= 0)
 
 /* The major protocol version the client and server both need to support for
  * the connection to be successful.  This should only ever be the major

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,7 +29,7 @@ setup(void **state) {
 
     pcmk__xml_init();
 
-    path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
+    path = pcmk__assert_asprintf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
     input = pcmk__xml_read(path);
     free(path);
 
@@ -96,11 +96,11 @@ bad_args(void **state) {
     assert_null(native_find_rsc(rsc, NULL, NULL, 0));
 
     /* No resources exist with these names. */
-    name = crm_strdup_printf("%sX", rsc->id);
+    name = pcmk__assert_asprintf("%sX", rsc->id);
     assert_null(native_find_rsc(rsc, name, NULL, 0));
     free(name);
 
-    name = crm_strdup_printf("x%s", rsc->id);
+    name = pcmk__assert_asprintf("x%s", rsc->id);
     assert_null(native_find_rsc(rsc, name, NULL, 0));
     free(name);
 

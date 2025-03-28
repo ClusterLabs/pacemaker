@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,7 +59,7 @@ static crm_exit_t exit_code = CRM_EX_OK;
 static void
 cib_enable_writes(int nsig)
 {
-    crm_info("(Re)enabling disk writes");
+    pcmk__info("(Re)enabling disk writes");
     cib_writes_enabled = TRUE;
 }
 
@@ -74,52 +74,50 @@ cib_enable_writes(int nsig)
 static int
 setup_stand_alone(GError **error)
 {
-    int rc = 0;
-    struct passwd *pwentry = NULL;
+    uid_t uid = 0;
+    gid_t gid = 0;
+    int rc = pcmk_rc_ok;
 
     preserve_status = TRUE;
     cib_writes_enabled = FALSE;
 
-    errno = 0;
-    pwentry = getpwnam(CRM_DAEMON_USER);
-    if (pwentry == NULL) {
+    rc = pcmk__daemon_user(&uid, &gid);
+    if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
-        if (errno != 0) {
-            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                        "Error getting password DB entry for %s: %s",
-                        CRM_DAEMON_USER, strerror(errno));
-            return errno;
-        }
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Password DB entry for '%s' not found", CRM_DAEMON_USER);
-        return ENXIO;
+                    "Error getting password DB entry for '%s': %s",
+                    CRM_DAEMON_USER, pcmk_rc_str(rc));
+        return rc;
     }
 
-    rc = setgid(pwentry->pw_gid);
+    rc = setgid(gid);
     if (rc < 0) {
+        rc = errno;
         exit_code = CRM_EX_FATAL;
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not set group to %d: %s",
-                    pwentry->pw_gid, strerror(errno));
-        return errno;
+                    "Could not set group to %lld: %s", (long long) gid,
+                    pcmk_rc_str(rc));
+        return rc;
     }
 
-    rc = initgroups(CRM_DAEMON_USER, pwentry->pw_gid);
+    rc = initgroups(CRM_DAEMON_USER, gid);
     if (rc < 0) {
+        rc = errno;
         exit_code = CRM_EX_FATAL;
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not setup groups for user %d: %s",
-                    pwentry->pw_uid, strerror(errno));
-        return errno;
+                    "Could not set up groups for user %lld: %s",
+                    (long long) uid, pcmk_rc_str(rc));
+        return rc;
     }
 
-    rc = setuid(pwentry->pw_uid);
+    rc = setuid(uid);
     if (rc < 0) {
+        rc = errno;
         exit_code = CRM_EX_FATAL;
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not set user to %d: %s",
-                    pwentry->pw_uid, strerror(errno));
-        return errno;
+                    "Could not set user to %lld: %s", (long long) uid,
+                    pcmk_rc_str(rc));
+        return rc;
     }
     return pcmk_rc_ok;
 }
@@ -228,12 +226,12 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_BASED, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker CIB manager");
+    pcmk__notice("Starting Pacemaker CIB manager");
 
     old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
     if (old_instance == NULL) {
         /* crm_ipc_new() will have already logged an error message with
-         * crm_err()
+         * pcmk__err()
          */
         exit_code = CRM_EX_FATAL;
         goto done;
@@ -243,8 +241,8 @@ main(int argc, char **argv)
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_crit("Aborting start-up because another CIB manager instance is "
-                 "already active");
+        pcmk__crit("Aborting start-up because another CIB manager instance is "
+                   "already active");
         goto done;
     } else {
         /* not up or not authentic, we'll proceed either way */
@@ -262,12 +260,12 @@ main(int argc, char **argv)
     if (cib_root == NULL) {
         cib_root = g_strdup(CRM_CONFIG_DIR);
     } else {
-        crm_notice("Using custom config location: %s", cib_root);
+        pcmk__notice("Using custom config location: %s", cib_root);
     }
 
     if (!pcmk__daemon_can_write(cib_root, NULL)) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Terminating due to bad permissions on %s", cib_root);
+        pcmk__err("Terminating due to bad permissions on %s", cib_root);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Bad permissions on %s (see logs for details)", cib_root);
         goto done;
@@ -280,7 +278,8 @@ main(int argc, char **argv)
 
     // Run the main loop
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker CIB manager successfully started and accepting connections");
+    pcmk__notice("Pacemaker CIB manager successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
@@ -328,11 +327,11 @@ cib_cs_dispatch(cpg_handle_t handle,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Invalid XML: '%.120s'", data);
+        pcmk__err("Invalid XML: '%.120s'", data);
         free(data);
         return;
     }
-    crm_xml_add(xml, PCMK__XA_SRC, from);
+    pcmk__xe_set(xml, PCMK__XA_SRC, from);
     cib_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
@@ -343,10 +342,10 @@ static void
 cib_cs_destroy(gpointer user_data)
 {
     if (cib_shutdown_flag) {
-        crm_info("Corosync disconnection complete");
+        pcmk__info("Corosync disconnection complete");
     } else {
-        crm_crit("Exiting immediately after losing connection "
-                 "to cluster layer");
+        pcmk__crit("Exiting immediately after losing connection to cluster "
+                   "layer");
         terminate_cib(CRM_EX_DISCONNECT);
     }
 }
@@ -362,7 +361,7 @@ cib_peer_update_callback(enum pcmk__node_update type,
             if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 
-                crm_info("Exiting after no more peers or clients remain");
+                pcmk__info("Exiting after no more peers or clients remain");
                 terminate_cib(-1);
             }
             break;
@@ -388,7 +387,7 @@ cib_init(void)
     config_hash = pcmk__strkey_table(free, free);
 
     if (startCib("cib.xml") == FALSE) {
-        crm_crit("Cannot start CIB... terminating");
+        pcmk__crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
 
@@ -396,7 +395,7 @@ cib_init(void)
         pcmk__cluster_set_status_callback(&cib_peer_update_callback);
 
         if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
-            crm_crit("Cannot sign in to the cluster... terminating");
+            pcmk__crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }
     }
@@ -422,13 +421,12 @@ startCib(const char *filename)
 
         cib_read_config(config_hash, cib);
 
-        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
+        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
         if (port >= 0) {
             remote_tls_fd = init_remote_listener(port, TRUE);
         }
 
-        pcmk__scan_port(crm_element_value(cib, PCMK_XA_REMOTE_CLEAR_PORT),
-                        &port);
+        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
         if (port >= 0) {
             remote_fd = init_remote_listener(port, FALSE);
         }

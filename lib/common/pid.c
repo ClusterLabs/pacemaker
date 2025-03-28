@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,8 +37,8 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         }
         rc = errno;
         if (last_asked_pid != pid) {
-            crm_info("Cannot examine PID %lld: %s",
-                     (long long) pid, pcmk_rc_str(rc));
+            pcmk__info("Cannot examine PID %lld: %s", (long long) pid,
+                       pcmk_rc_str(rc));
             last_asked_pid = pid;
         }
         return rc; /* errno != ESRCH */
@@ -59,13 +59,13 @@ pcmk__pid_active(pid_t pid, const char *daemon)
             }
             if (last_asked_pid != pid) {
                 if (rc == EACCES) {
-                    crm_info("Could not get executable for PID %lld: %s "
-                             QB_XS " rc=%d",
-                             (long long) pid, pcmk_rc_str(rc), rc);
+                    pcmk__info("Could not get executable for PID %lld: %s "
+                               QB_XS " rc=%d",
+                               (long long) pid, pcmk_rc_str(rc), rc);
                 } else {
-                    crm_err("Could not get executable for PID %lld: %s "
-                            QB_XS " rc=%d",
-                            (long long) pid, pcmk_rc_str(rc), rc);
+                    pcmk__err("Could not get executable for PID %lld: %s "
+                              QB_XS " rc=%d",
+                              (long long) pid, pcmk_rc_str(rc), rc);
                 }
                 last_asked_pid = pid;
             }
@@ -139,7 +139,7 @@ pcmk__read_pidfile(const char *filename, pid_t *pid)
         } else {
             rc = pcmk_rc_ok;
             *pid = (pid_t) pid_read;
-            crm_trace("Read pid %lld from %s", pid_read, filename);
+            pcmk__trace("Read pid %lld from %s", pid_read, filename);
         }
     } else if (rc == 0) {
         rc = ENODATA;

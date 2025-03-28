@@ -21,10 +21,17 @@
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
+#include <crm/common/acl.h>             // xml_acl_disable()
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  // CRM_XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
+
+static const char *const vfields[] = {
+    PCMK_XA_ADMIN_EPOCH,
+    PCMK_XA_EPOCH,
+    PCMK_XA_NUM_UPDATES,
+};
 
 /* Add changes for specified XML to patchset.
  * For patchset format, refer to diff schema.
@@ -47,7 +54,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // If this XML node is new, just report that
-    if (patchset && pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
         GString *xpath = pcmk__element_xpath(xml->parent);
 
         if (xpath != NULL) {
@@ -55,9 +62,9 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
             change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
-            crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
-            crm_xml_add_int(change, PCMK_XE_POSITION, position);
+            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
+            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
+            pcmk__xe_set_int(change, PCMK_XE_POSITION, position);
             pcmk__xml_copy(change, xml);
             g_string_free(xpath, TRUE);
         }
@@ -71,7 +78,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         xmlNode *attr = NULL;
 
         nodepriv = pIter->_private;
-        if (!pcmk_any_flags_set(nodepriv->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
+        if (!pcmk__any_flags_set(nodepriv->flags,
+                                 pcmk__xf_deleted|pcmk__xf_dirty)) {
             continue;
         }
 
@@ -81,8 +89,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             if (xpath != NULL) {
                 change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-                crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
-                crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
+                pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
+                pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
 
                 change = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
                 g_string_free(xpath, TRUE);
@@ -91,15 +99,15 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
         attr = pcmk__xe_create(change, PCMK_XE_CHANGE_ATTR);
 
-        crm_xml_add(attr, PCMK_XA_NAME, (const char *) pIter->name);
+        pcmk__xe_set(attr, PCMK_XA_NAME, (const char *) pIter->name);
         if (nodepriv->flags & pcmk__xf_deleted) {
-            crm_xml_add(attr, PCMK_XA_OPERATION, "unset");
+            pcmk__xe_set(attr, PCMK_XA_OPERATION, "unset");
 
         } else {
-            crm_xml_add(attr, PCMK_XA_OPERATION, "set");
+            pcmk__xe_set(attr, PCMK_XA_OPERATION, "set");
 
             value = pcmk__xml_attr_value(pIter);
-            crm_xml_add(attr, PCMK_XA_VALUE, value);
+            pcmk__xe_set(attr, PCMK_XA_VALUE, value);
         }
     }
 
@@ -112,9 +120,9 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
              pIter = pIter->next) {
             nodepriv = pIter->_private;
-            if (!pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                value = crm_element_value(xml, (const char *) pIter->name);
-                crm_xml_add(result, (const char *)pIter->name, value);
+            if (!pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+                value = pcmk__xe_get(xml, (const char *) pIter->name);
+                pcmk__xe_set(result, (const char *)pIter->name, value);
             }
         }
     }
@@ -126,20 +134,19 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     nodepriv = xml->_private;
-    if (patchset && pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
+    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
         GString *xpath = pcmk__element_xpath(xml);
 
-        crm_trace("%s.%s moved to position %d",
-                  xml->name, pcmk__xe_id(xml),
-                  pcmk__xml_position(xml, pcmk__xf_skip));
+        pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
+                    pcmk__xml_position(xml, pcmk__xf_skip));
 
         if (xpath != NULL) {
             change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-            crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
-            crm_xml_add(change, PCMK_XA_PATH, (const char *) xpath->str);
-            crm_xml_add_int(change, PCMK_XE_POSITION,
-                            pcmk__xml_position(xml, pcmk__xf_deleted));
+            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
+            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
+            pcmk__xe_set_int(change, PCMK_XE_POSITION,
+                             pcmk__xml_position(xml, pcmk__xf_deleted));
             g_string_free(xpath, TRUE);
         }
     }
@@ -157,7 +164,7 @@ is_config_change(xmlNode *xml)
     if (config) {
         nodepriv = config->_private;
     }
-    if ((nodepriv != NULL) && pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
+    if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
         return TRUE;
     }
 
@@ -185,11 +192,6 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     xmlNode *v = NULL;
     xmlNode *version = NULL;
     xmlNode *patchset = NULL;
-    const char *vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
 
     pcmk__assert(target != NULL);
 
@@ -201,38 +203,38 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     docpriv = target->doc->_private;
 
     patchset = pcmk__xe_create(NULL, PCMK_XE_DIFF);
-    crm_xml_add_int(patchset, PCMK_XA_FORMAT, 2);
+    pcmk__xe_set_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = pcmk__xe_create(patchset, PCMK_XE_VERSION);
 
     v = pcmk__xe_create(version, PCMK_XE_SOURCE);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(source, vfields[lpc]);
+        const char *value = pcmk__xe_get(source, vfields[lpc]);
 
         if (value == NULL) {
             value = "1";
         }
-        crm_xml_add(v, vfields[lpc], value);
+        pcmk__xe_set(v, vfields[lpc], value);
     }
 
     v = pcmk__xe_create(version, PCMK_XE_TARGET);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(target, vfields[lpc]);
+        const char *value = pcmk__xe_get(target, vfields[lpc]);
 
         if (value == NULL) {
             value = "1";
         }
-        crm_xml_add(v, vfields[lpc], value);
+        pcmk__xe_set(v, vfields[lpc], value);
     }
 
     for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
         xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-        crm_xml_add(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
-        crm_xml_add(change, PCMK_XA_PATH, deleted_obj->path);
+        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
+        pcmk__xe_set(change, PCMK_XA_PATH, deleted_obj->path);
         if (deleted_obj->position >= 0) {
-            crm_xml_add_int(change, PCMK_XE_POSITION, deleted_obj->position);
+            pcmk__xe_set_int(change, PCMK_XE_POSITION, deleted_obj->position);
         }
     }
 
@@ -250,7 +252,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         format = 2;
     }
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return NULL;
     }
 
@@ -258,7 +260,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     if ((target == NULL)
         || !pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
 
-        crm_trace("No change %d", format);
+        pcmk__trace("No change %d", format);
         return NULL;
     }
 
@@ -271,158 +273,196 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         int counter = 0;
 
         if (*config_changed) {
-            crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
+            pcmk__xe_set(target, PCMK_XA_NUM_UPDATES, "0");
 
-            crm_element_value_int(target, PCMK_XA_EPOCH, &counter);
-            crm_xml_add_int(target, PCMK_XA_EPOCH, counter + 1);
+            pcmk__xe_get_int(target, PCMK_XA_EPOCH, &counter);
+            pcmk__xe_set_int(target, PCMK_XA_EPOCH, counter + 1);
 
         } else {
-            crm_element_value_int(target, PCMK_XA_NUM_UPDATES, &counter);
-            crm_xml_add_int(target, PCMK_XA_NUM_UPDATES, counter + 1);
+            pcmk__xe_get_int(target, PCMK_XA_NUM_UPDATES, &counter);
+            pcmk__xe_set_int(target, PCMK_XA_NUM_UPDATES, counter + 1);
         }
     }
 
     return xml_create_patchset_v2(source, target);
 }
 
+/*!
+ * \internal
+ * \brief Add a digest of a patchset's target XML to the patchset
+ *
+ * \param[in,out] patchset  XML patchset
+ * \param[in]     target    Target XML
+ */
 void
-patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
-                        bool with_digest)
+pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target)
 {
     char *digest = NULL;
 
-    if ((patch == NULL) || (source == NULL) || (target == NULL)
-        || !with_digest) {
-        return;
-    }
+    CRM_CHECK((patchset != NULL) && (target != NULL), return);
 
-    /* We should always call xml_accept_changes() before calculating a digest.
-     * Otherwise, with an on-tracking dirty target, we could get a wrong digest.
+    /* If tracking is enabled and the document is dirty, we could get an
+     * incorrect digest. Call pcmk__xml_commit_changes() before calling this.
      */
-    CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
+    CRM_CHECK(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty),
+              return);
 
     digest = pcmk__digest_xml(target, true);
 
-    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
+    pcmk__xe_set(patchset, PCMK__XA_DIGEST, digest);
     free(digest);
-
-    return;
 }
 
-// Get CIB versions used for additions and deletions in a patchset
-bool
-xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+/*!
+ * \internal
+ * \brief Get the source and target CIB versions from an XML patchset
+ *
+ * Each output object will contain, in order, the following version fields from
+ * the source and target:
+ * * \c PCMK_XA_ADMIN_EPOCH
+ * * \c PCMK_XA_EPOCH
+ * * \c PCMK_XA_NUM_UPDATES
+ *
+ * \param[in]  patchset  XML patchset
+ * \param[out] source    Where to store versions from source CIB
+ * \param[out] target    Where to store versions from target CIB
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
+                            int target[3])
 {
-    static const char *const vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
-
-    const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
-                                                  NULL, NULL);
-    const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
-                                                 NULL);
-    const xmlNode *target = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL,
-                                                 NULL);
     int format = 1;
+    const xmlNode *version = NULL;
+    const xmlNode *source_xml = NULL;
+    const xmlNode *target_xml = NULL;
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    CRM_CHECK((patchset != NULL) && (source != NULL) && (target != NULL),
+              return EINVAL);
+
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
-        return -EINVAL;
+        pcmk__err("Unknown patch format: %d", format);
+        return EINVAL;
     }
 
-    if (source != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(source, vfields[i], &(del[i]));
-            crm_trace("Got %d for del[%s]", del[i], vfields[i]);
-        }
+    version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION, NULL, NULL);
+    source_xml = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL, NULL);
+    target_xml = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL, NULL);
+
+    if ((source_xml == NULL) || (target_xml == NULL)) {
+        return EINVAL;
     }
 
-    if (target != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(target, vfields[i], &(add[i]));
-            crm_trace("Got %d for add[%s]", add[i], vfields[i]);
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        if (pcmk__xe_get_int(source_xml, vfields[i],
+                             &(source[i])) != pcmk_rc_ok) {
+            return EINVAL;
         }
+        pcmk__trace("Got %d for source[%s]", source[i], vfields[i]);
+
+        if (pcmk__xe_get_int(target_xml, vfields[i], &(target[i]))
+                             != pcmk_rc_ok) {
+            return EINVAL;
+        }
+        pcmk__trace("Got %d for target[%s]", target[i], vfields[i]);
     }
-    return pcmk_ok;
+
+    return pcmk_rc_ok;
 }
 
 /*!
  * \internal
  * \brief Check whether patchset can be applied to current CIB
  *
- * \param[in] xml       Root of current CIB
+ * \param[in] cib_root  Root of current CIB
  * \param[in] patchset  Patchset to check
  *
  * \return Standard Pacemaker return code
  */
 static int
-xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
+check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
 {
-    int lpc = 0;
-    bool changed = FALSE;
+    int current[] = { 0, 0, 0 };
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
+    int rc = pcmk_rc_ok;
 
-    int this[] = { 0, 0, 0 };
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
-
-    const char *vfields[] = {
-        PCMK_XA_ADMIN_EPOCH,
-        PCMK_XA_EPOCH,
-        PCMK_XA_NUM_UPDATES,
-    };
-
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        crm_element_value_int(xml, vfields[lpc], &(this[lpc]));
-        crm_trace("Got %d for this[%s]", this[lpc], vfields[lpc]);
-        if (this[lpc] < 0) {
-            this[lpc] = 0;
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        /* @COMPAT We should probably fail with EINVAL for negative or invalid
+         * valid reason for such values to be present.
+         *
+         * Preserve behavior for xml_apply_patchset(). Use new behavior in
+         * libpacemaker replacement.
+         */
+        if (pcmk__xe_get_int(cib_root, vfields[i],
+                             &(current[i])) == pcmk_rc_ok) {
+            pcmk__trace("Got %d for current[%s]%s", current[i], vfields[i],
+                        ((current[i] < 0)? ", using 0" : ""));
+        } else {
+            pcmk__debug("Failed to get value for current[%s], using 0",
+                        vfields[i]);
+        }
+        if (current[i] < 0) {
+            current[i] = 0;
         }
     }
 
-    /* Set some defaults in case nothing is present */
-    add[0] = this[0];
-    add[1] = this[1];
-    add[2] = this[2] + 1;
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        del[lpc] = this[lpc];
+    /* Set some defaults in case nothing is present.
+     *
+     * @COMPAT We should probably skip this step, and fail immediately below if
+     * target[i] < source[i].
+     *
+     * Preserve behavior for xml_apply_patchset(). Use new behavior in
+     * libpacemaker replacement.
+     */
+    target[0] = current[0];
+    target[1] = current[1];
+    target[2] = current[2] + 1;
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        source[i] = current[i];
     }
 
-    xml_patch_versions(patchset, add, del);
+    rc = pcmk__xml_patchset_versions(patchset, source, target);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
 
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (this[lpc] < del[lpc]) {
-            crm_debug("Current %s is too low (%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
-                      vfields[lpc], this[0], this[1], this[2],
-                      del[0], del[1], del[2], add[0], add[1], add[2]);
+    // Ensure current version matches patchset source version
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        if (current[i] < source[i]) {
+            pcmk__debug("Current %s is too low "
+                        "(%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
+                        vfields[i], current[0], current[1], current[2],
+                        source[0], source[1], source[2],
+                        target[0], target[1], target[2]);
             return pcmk_rc_diff_resync;
-
-        } else if (this[lpc] > del[lpc]) {
-            crm_info("Current %s is too high (%d.%d.%d > %d.%d.%d --> %d.%d.%d) %p",
-                     vfields[lpc], this[0], this[1], this[2],
-                     del[0], del[1], del[2], add[0], add[1], add[2], patchset);
-            crm_log_xml_info(patchset, "OldPatch");
+        }
+        if (current[i] > source[i]) {
+            pcmk__info("Current %s is too high "
+                       "(%d.%d.%d > %d.%d.%d --> %d.%d.%d)",
+                       vfields[i], current[0], current[1], current[2],
+                       source[0], source[1], source[2],
+                       target[0], target[1], target[2]);
+            pcmk__log_xml_info(patchset, "OldPatch");
             return pcmk_rc_old_data;
         }
     }
 
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        if (add[lpc] > del[lpc]) {
-            changed = TRUE;
+    // Ensure target version is newer than source version
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        if (target[i] > source[i]) {
+            pcmk__debug("Can apply patch %d.%d.%d to %d.%d.%d",
+                        target[0], target[1], target[2],
+                        current[0], current[1], current[2]);
+            return pcmk_rc_ok;
         }
     }
 
-    if (!changed) {
-        crm_notice("Versions did not change in patch %d.%d.%d",
-                   add[0], add[1], add[2]);
-        return pcmk_rc_old_data;
-    }
-
-    crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
-              add[0], add[1], add[2], this[0], this[1], this[2]);
-    return pcmk_rc_ok;
+    pcmk__notice("Versions did not change in patch %d.%d.%d",
+                 target[0], target[1], target[2]);
+    return pcmk_rc_old_data;
 }
 
 // Return first child matching element name and optionally id or position
@@ -478,7 +518,6 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
     char *remainder;
     char *id;
     char *tag;
-    char *path = NULL;
     int rc;
     size_t key_len;
 
@@ -530,11 +569,17 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
     } while ((rc == 2) && target);
 
     if (target) {
-        crm_trace("Found %s for %s",
-                  (path = (char *) xmlGetNodePath(target)), key);
-        free(path);
+        pcmk__if_tracing(
+            {
+                char *path = (char *) xmlGetNodePath(target);
+
+                pcmk__trace("Found %s for %s", path, key);
+                free(path);
+            },
+            {}
+        );
     } else {
-        crm_debug("No match for %s", key);
+        pcmk__debug("No match for %s", key);
     }
 
     free(remainder);
@@ -557,8 +602,8 @@ sort_change_obj_by_position(gconstpointer a, gconstpointer b)
     int position_a = -1;
     int position_b = -1;
 
-    crm_element_value_int(change_obj_a->change, PCMK_XE_POSITION, &position_a);
-    crm_element_value_int(change_obj_b->change, PCMK_XE_POSITION, &position_b);
+    pcmk__xe_get_int(change_obj_a->change, PCMK_XE_POSITION, &position_a);
+    pcmk__xe_get_int(change_obj_b->change, PCMK_XE_POSITION, &position_b);
 
     if (position_a < position_b) {
         return -1;
@@ -590,31 +635,31 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
         xmlNode *match = NULL;
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
         int position = -1;
 
         if (op == NULL) {
             continue;
         }
 
-        crm_trace("Processing %s %s", change->name, op);
+        pcmk__trace("Processing %s %s", change->name, op);
 
         /* PCMK_VALUE_DELETE changes for XML comments are generated with
          * PCMK_XE_POSITION
          */
         if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
         }
         match = search_v2_xpath(xml, xpath, position);
-        crm_trace("Performing %s on %s with %p", op, xpath, match);
+        pcmk__trace("Performing %s on %s with %p", op, xpath, match);
 
         if ((match == NULL) && (strcmp(op, PCMK_VALUE_DELETE) == 0)) {
-            crm_debug("No %s match for %s in %p", op, xpath, xml->doc);
+            pcmk__debug("No %s match for %s in %p", op, xpath, xml->doc);
             continue;
 
         } else if (match == NULL) {
-            crm_err("No %s match for %s in %p", op, xpath, xml->doc);
+            pcmk__err("No %s match for %s in %p", op, xpath, xml->doc);
             rc = pcmk_rc_diff_failed;
             continue;
 
@@ -658,11 +703,11 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 const char *name = (const char *) pIter->name;
                 const char *value = pcmk__xml_attr_value(pIter);
 
-                crm_xml_add(match, name, value);
+                pcmk__xe_set(match, name, value);
             }
 
         } else {
-            crm_err("Unknown operation: %s", op);
+            pcmk__err("Unknown operation: %s", op);
             rc = pcmk_rc_diff_failed;
         }
     }
@@ -678,10 +723,10 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         change = change_obj->change;
 
-        op = crm_element_value(change, PCMK_XA_OPERATION);
-        xpath = crm_element_value(change, PCMK_XA_PATH);
+        op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
-        crm_trace("Continue performing %s on %s with %p", op, xpath, match);
+        pcmk__trace("Continue performing %s on %s with %p", op, xpath, match);
 
         if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             int position = 0;
@@ -689,7 +734,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             xmlNode *match_child = NULL;
 
             match_child = match->children;
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
 
             while ((match_child != NULL)
                    && (position != pcmk__xml_position(match_child, pcmk__xf_skip))) {
@@ -699,18 +744,18 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             child = pcmk__xml_copy(match, change->children);
 
             if (match_child != NULL) {
-                crm_trace("Adding %s at position %d", child->name, position);
+                pcmk__trace("Adding %s at position %d", child->name, position);
                 xmlAddPrevSibling(match_child, child);
 
             } else {
-                crm_trace("Adding %s at position %d (end)",
-                          child->name, position);
+                pcmk__trace("Adding %s at position %d (end)", child->name,
+                            position);
             }
 
         } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             int position = 0;
 
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
                 xmlNode *match_child = NULL;
                 int p = position;
@@ -727,11 +772,13 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                     match_child = match_child->next;
                 }
 
-                crm_trace("Moving %s to position %d (was %d, prev %p, %s %p)",
-                          match->name, position,
-                          pcmk__xml_position(match, pcmk__xf_skip),
-                          match->prev, (match_child? "next":"last"),
-                          (match_child? match_child : match->parent->last));
+                pcmk__trace("Moving %s to position %d (was %d, prev %p, %s %p)",
+                            match->name, position,
+                            pcmk__xml_position(match, pcmk__xf_skip),
+                            match->prev,
+                            ((match_child != NULL)? "next" : "last"),
+                            ((match_child != NULL)? match_child
+                                                  : match->parent->last));
 
                 if (match_child) {
                     xmlAddPrevSibling(match_child, match);
@@ -742,15 +789,15 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 }
 
             } else {
-                crm_trace("%s is already in position %d",
-                          match->name, position);
+                pcmk__trace("%s is already in position %d", match->name,
+                            position);
             }
 
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
-                crm_err("Moved %s.%s to position %d instead of %d (%p)",
-                        match->name, pcmk__xe_id(match),
-                        pcmk__xml_position(match, pcmk__xf_skip),
-                        position, match->prev);
+                pcmk__err("Moved %s.%s to position %d instead of %d (%p)",
+                          match->name, pcmk__xe_id(match),
+                          pcmk__xml_position(match, pcmk__xf_skip),
+                          position, match->prev);
                 rc = pcmk_rc_diff_failed;
             }
         }
@@ -761,7 +808,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 }
 
 int
-xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
+xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
 {
     int format = 1;
     int rc = pcmk_ok;
@@ -772,16 +819,16 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
         return rc;
     }
 
-    pcmk__log_xml_patchset(LOG_TRACE, patchset);
+    pcmk__log_xml_patchset(PCMK__LOG_TRACE, patchset);
 
     if (check_version) {
-        rc = pcmk_rc2legacy(xml_patch_version_check(xml, patchset));
+        rc = pcmk_rc2legacy(check_patchset_versions(xml, patchset));
         if (rc != pcmk_ok) {
             return rc;
         }
     }
 
-    digest = crm_element_value(patchset, PCMK__XA_DIGEST);
+    digest = pcmk__xe_get(patchset, PCMK__XA_DIGEST);
     if (digest != NULL) {
         /* Make original XML available for logging in case result doesn't have
          * expected digest
@@ -790,10 +837,10 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     }
 
     if (rc == pcmk_ok) {
-        crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+        pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
 
         if (format != 2) {
-            crm_err("Unknown patch format: %d", format);
+            pcmk__err("Unknown patch format: %d", format);
             rc = -EINVAL;
 
         } else {
@@ -806,21 +853,22 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
 
         new_digest = pcmk__digest_xml(xml, true);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
-            crm_info("v%d digest mis-match: expected %s, calculated %s",
-                     format, digest, new_digest);
+            pcmk__info("v%d digest mis-match: expected %s, calculated %s",
+                       format, digest, new_digest);
             rc = -pcmk_err_diff_failed;
             pcmk__if_tracing(
                 {
-                    save_xml_to_file(old, "PatchDigest:input", NULL);
-                    save_xml_to_file(xml, "PatchDigest:result", NULL);
-                    save_xml_to_file(patchset, "PatchDigest:diff", NULL);
+                    pcmk__xml_write_temp_file(old, "PatchDigest:input", NULL);
+                    pcmk__xml_write_temp_file(xml, "PatchDigest:result", NULL);
+                    pcmk__xml_write_temp_file(patchset, "PatchDigest:diff",
+                                              NULL);
                 },
                 {}
             );
 
         } else {
-            crm_trace("v%d digest matched: expected %s, calculated %s",
-                      format, digest, new_digest);
+            pcmk__trace("v%d digest matched: expected %s, calculated %s",
+                        format, digest, new_digest);
         }
         free(new_digest);
     }
@@ -828,6 +876,18 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \retval \c true if \p element was modified
+ * \retval \c false otherwise
+ */
 bool
 pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 {
@@ -839,9 +899,9 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 
     pcmk__assert(patchset != NULL);
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
+        pcmk__warn("Unknown patch format: %d", format);
         return false;
     }
 
@@ -854,14 +914,14 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
      * @TODO Use POSIX word boundary instead of (/|$), if it works:
      * https://www.regular-expressions.info/wordboundaries.html.
      */
-    element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
+    element_regex = pcmk__assert_asprintf("^%s(/|$)", element_xpath);
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
                                                       NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, PCMK_XE_CHANGE)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *diff_xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
             // Change to an existing element
@@ -882,3 +942,70 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
     free(element_regex);
     return rc;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+// Return value of true means failure; false means success
+bool
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+{
+    const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
+                                                  NULL, NULL);
+    const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
+                                                 NULL);
+    const xmlNode *target = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL,
+                                                 NULL);
+    int format = 1;
+
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        pcmk__err("Unknown patch format: %d", format);
+        return true;
+    }
+
+    if (source != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            pcmk__xe_get_int(source, vfields[i], &(del[i]));
+            pcmk__trace("Got %d for del[%s]", del[i], vfields[i]);
+        }
+    }
+
+    if (target != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            pcmk__xe_get_int(target, vfields[i], &(add[i]));
+            pcmk__trace("Got %d for add[%s]", add[i], vfields[i]);
+        }
+    }
+    return false;
+}
+
+void
+patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                        const xmlNode *target, bool with_digest)
+{
+    char *digest = NULL;
+
+    if ((patch == NULL) || (source == NULL) || (target == NULL)
+        || !with_digest) {
+        return;
+    }
+
+    /* We should always call pcmk__xml_commit_changes() before calculating a
+     * digest. Otherwise, with an on-tracking dirty target, we could get a wrong
+     * digest.
+     */
+    CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
+
+    digest = pcmk__digest_xml(target, true);
+
+    pcmk__xe_set(patch, PCMK__XA_DIGEST, digest);
+    free(digest);
+
+    return;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

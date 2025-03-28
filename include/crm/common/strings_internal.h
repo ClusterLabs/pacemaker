@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@
 #include <glib.h>               // guint, GList, GHashTable
 
 #include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
-#include <crm/common/strings.h> // crm_strdup_printf()
+#include <crm/common/results.h> // pcmk_rc_ok
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +53,28 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
 int pcmk__scan_ll(const char *text, long long *result, long long default_value);
 int pcmk__scan_min_int(const char *text, int *result, int minimum);
 int pcmk__scan_port(const char *text, int *port);
+int pcmk__parse_bool(const char *input, bool *result);
 int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
+int pcmk__parse_ms(const char *input, long long *result);
+
+/*!
+ * \internal
+ * \brief Check whether a string parses to \c true
+ *
+ * \param[in] input  Input string
+ *
+ * \retval \c true   if \p input is not \c NULL and \c pcmk__parse_bool() parses
+ *                   it to \c true
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__is_true(const char *input)
+{
+    bool result = false;
+
+    return (input != NULL) && (pcmk__parse_bool(input, &result) == pcmk_rc_ok)
+           && result;
+}
 
 GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                GDestroyNotify value_destroy_func);
@@ -168,6 +189,8 @@ char *pcmk__str_copy_as(const char *file, const char *function, uint32_t line,
 
 void pcmk__str_update(char **str, const char *value);
 
+char *pcmk__assert_asprintf(const char *format, ...) G_GNUC_PRINTF(1, 2);
+
 void pcmk__g_strcat(GString *buffer, ...) G_GNUC_NULL_TERMINATED;
 
 static inline bool
@@ -187,9 +210,9 @@ pcmk__add_word(GString **list, size_t init_size, const char *word)
  * vs. "2 nodes have". A flexible solution is to pluralize entire strings, e.g.
  *
  * if (a == 1) {
- *     crm_info("singular message"):
+ *     pcmk__info("singular message"):
  * } else {
- *     crm_info("plural message");
+ *     pcmk__info("plural message");
  * }
  *
  * though even that's not sufficient for all languages besides English (if we
@@ -198,12 +221,12 @@ pcmk__add_word(GString **list, size_t init_size, const char *word)
  */
 
 /* Example:
- * crm_info("Found %d %s", nentries,
- *          pcmk__plural_alt(nentries, "entry", "entries"));
+ * pcmk__info("Found %d %s", nentries,
+ *            pcmk__plural_alt(nentries, "entry", "entries"));
  */
 #define pcmk__plural_alt(i, s1, s2) (((i) == 1)? (s1) : (s2))
 
-// Example: crm_info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
+// Example: pcmk__info("Found %d node%s", nnodes, pcmk__plural_s(nnodes));
 #define pcmk__plural_s(i) pcmk__plural_alt(i, "", "s")
 
 static inline int
@@ -215,19 +238,19 @@ pcmk__str_empty(const char *s)
 static inline char *
 pcmk__itoa(int an_int)
 {
-    return crm_strdup_printf("%d", an_int);
+    return pcmk__assert_asprintf("%d", an_int);
 }
 
 static inline char *
 pcmk__ftoa(double a_float)
 {
-    return crm_strdup_printf("%f", a_float);
+    return pcmk__assert_asprintf("%f", a_float);
 }
 
 static inline char *
 pcmk__ttoa(time_t epoch_time)
 {
-    return crm_strdup_printf("%lld", (long long) epoch_time);
+    return pcmk__assert_asprintf("%lld", (long long) epoch_time);
 }
 
 // note this returns const not allocated

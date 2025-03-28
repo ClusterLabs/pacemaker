@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #define PCMK__CRM_COMMON_ATTRS_INTERNAL__H
 
 #include <crm/crm.h>                        // crm_system_name
-#include <crm/common/logging.h>             // LOG_TRACE
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/scheduler_types.h>     // pcmk_node_t
 #include <crm/common/resources_internal.h>  // enum pcmk__rsc_node
 
@@ -36,14 +36,22 @@ enum pcmk__node_attr_opts {
 
 #define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \
         node_attr_flags = pcmk__set_flags_as(__func__, __LINE__,        \
-            LOG_TRACE, "Node attribute", crm_system_name,               \
-            (node_attr_flags), (flags_to_set), #flags_to_set);          \
+                                             PCMK__LOG_TRACE,           \
+                                             "Node attribute",          \
+                                             crm_system_name,           \
+                                             (node_attr_flags),         \
+                                             (flags_to_set),            \
+                                             #flags_to_set);            \
     } while (0)
 
 #define pcmk__clear_node_attr_flags(node_attr_flags, flags_to_clear) do {   \
         node_attr_flags = pcmk__clear_flags_as(__func__, __LINE__,          \
-            LOG_TRACE, "Node attribute", crm_system_name,                   \
-            (node_attr_flags), (flags_to_clear), #flags_to_clear);          \
+                                               PCMK__LOG_TRACE,             \
+                                               "Node attribute",            \
+                                               crm_system_name,             \
+                                               (node_attr_flags),           \
+                                               (flags_to_clear),            \
+                                               #flags_to_clear);            \
     } while (0)
 
 const char *pcmk__node_attr_target(const char *name);

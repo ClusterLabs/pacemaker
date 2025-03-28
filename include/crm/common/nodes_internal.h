@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,8 @@
 #include <stdint.h>     // uint32_t, UINT32_C()
 
 #include <glib.h>       // gpointer, GList, GHashTable
+
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/nodes.h>
 
 #ifdef __cplusplus
@@ -133,10 +135,13 @@ pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
  * \param[in,out] node          Node to set flags for
  * \param[in]     flags_to_set  Group of enum pcmk_node_flags to set
  */
-#define pcmk__set_node_flags(node, flags_to_set) do {                   \
-        (node)->priv->flags = pcmk__set_flags_as(__func__, __LINE__,    \
-            LOG_TRACE, "Node", pcmk__node_name(node),                   \
-            (node)->priv->flags, (flags_to_set), #flags_to_set);        \
+#define pcmk__set_node_flags(node, flags_to_set) do {                       \
+        (node)->priv->flags = pcmk__set_flags_as(__func__, __LINE__,        \
+                                                 PCMK__LOG_TRACE, "Node",   \
+                                                 pcmk__node_name(node),     \
+                                                 (node)->priv->flags,       \
+                                                 (flags_to_set),            \
+                                                 #flags_to_set);            \
     } while (0)
 
 /*!
@@ -148,8 +153,11 @@ pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
  */
 #define pcmk__clear_node_flags(node, flags_to_clear) do {                   \
         (node)->priv->flags = pcmk__clear_flags_as(__func__, __LINE__,      \
-            LOG_TRACE, "Node", pcmk__node_name(node),                       \
-            (node)->priv->flags, (flags_to_clear), #flags_to_clear);        \
+                                                   PCMK__LOG_TRACE, "Node", \
+                                                   pcmk__node_name(node),   \
+                                                   (node)->priv->flags,     \
+                                                   (flags_to_clear),        \
+                                                   #flags_to_clear);        \
     } while (0)
 
 void pcmk__free_node(gpointer user_data);

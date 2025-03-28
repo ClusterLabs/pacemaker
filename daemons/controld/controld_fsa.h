@@ -16,6 +16,7 @@
 #  include <crm/common/mainloop.h>
 #  include <crm/cluster.h>
 #  include <crm/cluster/election_internal.h>
+#  include <crm/common/logging_internal.h>      // PCMK__LOG_TRACE
 #  include <crm/common/ipc_internal.h>
 
 /*! States the controller can be in */
@@ -446,7 +447,7 @@ struct fsa_data_s {
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                 \
         controld_globals.fsa_input_register                             \
-            = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,         \
+            = pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE,   \
                                  "FSA input", "controller",             \
                                  controld_globals.fsa_input_register,   \
                                  (flags_to_set), #flags_to_set);        \
@@ -454,7 +455,7 @@ struct fsa_data_s {
 
 #define controld_clear_fsa_input_flags(flags_to_clear) do {             \
         controld_globals.fsa_input_register                             \
-            = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,       \
+            = pcmk__clear_flags_as(__func__, __LINE__, PCMK__LOG_TRACE, \
                                    "FSA input", "controller",           \
                                    controld_globals.fsa_input_register, \
                                    (flags_to_clear),                    \
@@ -496,8 +497,8 @@ void controld_destroy_fsa_trigger(void);
 
 void free_max_generation(void);
 
-#  define AM_I_DC pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)
-#  define controld_trigger_fsa() controld_trigger_fsa_as(__func__, __LINE__)
+#define AM_I_DC pcmk__is_set(controld_globals.fsa_input_register, R_THE_DC)
+#define controld_trigger_fsa() controld_trigger_fsa_as(__func__, __LINE__)
 
 void controld_trigger_fsa_as(const char *fn, int line);
 

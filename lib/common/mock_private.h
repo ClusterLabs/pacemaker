@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,11 +74,9 @@ struct group * __real_getgrent(void);
 void __wrap_endgrent(void);
 void __real_endgrent(void);
 
-extern bool pcmk__mock_getpwnam_r;
-int __real_getpwnam_r(const char *name, struct passwd *pwd,
-                      char *buf, size_t buflen, struct passwd **result);
-int __wrap_getpwnam_r(const char *name, struct passwd *pwd,
-                      char *buf, size_t buflen, struct passwd **result);
+extern bool pcmk__mock_getpwnam;
+struct passwd *__real_getpwnam(const char *name);
+struct passwd *__wrap_getpwnam(const char *name);
 
 extern bool pcmk__mock_readlink;
 ssize_t __real_readlink(const char *restrict path, char *restrict buf,

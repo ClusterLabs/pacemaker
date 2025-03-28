@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,7 +34,7 @@ build_ticket_modify_xml(cib_t *cib, const char *ticket_id, xmlNode **ticket_stat
         *xml_top = pcmk__xe_create(NULL, PCMK_XE_STATUS);
         xml_obj = pcmk__xe_create(*xml_top, PCMK_XE_TICKETS);
         *ticket_state_xml = pcmk__xe_create(xml_obj, PCMK__XE_TICKET_STATE);
-        crm_xml_add(*ticket_state_xml, PCMK_XA_ID, ticket_id);
+        pcmk__xe_set(*ticket_state_xml, PCMK_XA_ID, ticket_id);
 
         rc = pcmk_rc_ok;
 
@@ -59,16 +59,16 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
                                  ticket_id);
     g_hash_table_iter_init(&hash_iter, attr_set);
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
-        crm_xml_add(*ticket_state_xml, key, value);
+        pcmk__xe_set(*ticket_state_xml, key, value);
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
             && ((ticket == NULL)
-                || !pcmk_is_set(ticket->flags, pcmk__ticket_granted))
-            && crm_is_true(value)) {
+                || !pcmk__is_set(ticket->flags, pcmk__ticket_granted))
+            && pcmk__is_true(value)) {
 
             char *now = pcmk__ttoa(time(NULL));
 
-            crm_xml_add(*ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
+            pcmk__xe_set(*ticket_state_xml, PCMK_XA_LAST_GRANTED, now);
             free(now);
         }
     }
@@ -87,18 +87,21 @@ pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
     *state = NULL;
 
     if (ticket_id != NULL) {
-        xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS
-                                  "/" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"%s\"]",
-                                  ticket_id);
+        xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                                      "/" PCMK_XE_TICKETS
+                                      "/" PCMK__XE_TICKET_STATE
+                                      "[@" PCMK_XA_ID "=\"%s\"]",
+                                      ticket_id);
     } else {
-        xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
+        xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                                      "/" PCMK_XE_TICKETS);
     }
 
     rc = cib->cmds->query(cib, xpath, &xml_search, cib_sync_call|cib_xpath);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
-        crm_log_xml_debug(xml_search, "Match");
+        pcmk__log_xml_debug(xml_search, "Match");
 
         if (xml_search->children != NULL && ticket_id != NULL) {
             rc = pcmk_rc_duplicate_id;
@@ -125,10 +128,11 @@ pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
     pcmk__assert(xpath_base != NULL);
 
     if (ticket_id != NULL) {
-        xpath = crm_strdup_printf("%s/" PCMK_XE_RSC_TICKET "[@" PCMK_XA_TICKET "=\"%s\"]",
-                                  xpath_base, ticket_id);
+        xpath = pcmk__assert_asprintf("%s/" PCMK_XE_RSC_TICKET
+                                      "[@" PCMK_XA_TICKET "=\"%s\"]",
+                                      xpath_base, ticket_id);
     } else {
-        xpath = crm_strdup_printf("%s/" PCMK_XE_RSC_TICKET, xpath_base);
+        xpath = pcmk__assert_asprintf("%s/" PCMK_XE_RSC_TICKET, xpath_base);
     }
 
     rc = cib->cmds->query(cib, xpath, &result, cib_sync_call|cib_xpath);
@@ -200,7 +204,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
             return ENXIO;
         }
 
-        if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
+        if (pcmk__is_set(ticket->flags, pcmk__ticket_granted)) {
             return EACCES;
         }
     }
@@ -218,7 +222,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
         return rc;
     }
 
-    crm_log_xml_debug(state, "Delete");
+    pcmk__log_xml_debug(state, "Delete");
 
     if (rc == pcmk_rc_duplicate_id) {
         rc = pcmk__xe_foreach_child(state, NULL, delete_single_ticket, cib);
@@ -412,7 +416,7 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
         pcmk__xe_remove_attr(ticket_state_xml, key);
     }
 
-    crm_log_xml_debug(xml_top, "Replace");
+    pcmk__log_xml_debug(xml_top, "Replace");
     rc = cib->cmds->replace(cib, PCMK_XE_STATUS, ticket_state_xml, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 
@@ -480,7 +484,7 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
 
     add_attribute_xml(scheduler, ticket_id, attr_set, &ticket_state_xml);
 
-    crm_log_xml_debug(xml_top, "Update");
+    pcmk__log_xml_debug(xml_top, "Update");
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
 

@@ -26,6 +26,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_controld.h>    // pcmk_controld_api_reply
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_{api_reply,state}
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/mainloop.h>    // mainloop_io_t
 
 #ifdef __cplusplus
@@ -186,29 +187,33 @@ struct pcmk__client_s {
 
 #define pcmk__set_client_flags(client, flags_to_set) do {               \
         (client)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
-            LOG_TRACE,                                                  \
-            "Client", pcmk__client_name(client),                        \
-            (client)->flags, (flags_to_set), #flags_to_set);            \
+                                             PCMK__LOG_TRACE, "Client", \
+                                             pcmk__client_name(client), \
+                                             (client)->flags,           \
+                                             (flags_to_set),            \
+                                             #flags_to_set);            \
     } while (0)
 
-#define pcmk__clear_client_flags(client, flags_to_clear) do {           \
-        (client)->flags = pcmk__clear_flags_as(__func__, __LINE__,      \
-            LOG_TRACE,                                                  \
-            "Client", pcmk__client_name(client),                        \
-            (client)->flags, (flags_to_clear), #flags_to_clear);        \
+#define pcmk__clear_client_flags(client, flags_to_clear) do {               \
+        (client)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
+                                               PCMK__LOG_TRACE, "Client",   \
+                                               pcmk__client_name(client),   \
+                                               (client)->flags,             \
+                                               (flags_to_clear),            \
+                                               #flags_to_clear);            \
     } while (0)
 
 #define pcmk__set_ipc_flags(ipc_flags, ipc_name, flags_to_set) do {         \
-        ipc_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,       \
-                                       "IPC", (ipc_name),                   \
-                                       (ipc_flags), (flags_to_set),         \
-                                       #flags_to_set);                      \
+        ipc_flags = pcmk__set_flags_as(__func__, __LINE__, PCMK__LOG_TRACE, \
+                                       "IPC", (ipc_name), (ipc_flags),      \
+                                       (flags_to_set), #flags_to_set);      \
     } while (0)
 
 #define pcmk__clear_ipc_flags(ipc_flags, ipc_name, flags_to_clear) do {     \
-        ipc_flags = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE,     \
-                                         "IPC", (ipc_name),                 \
-                                         (ipc_flags), (flags_to_clear),     \
+        ipc_flags = pcmk__clear_flags_as(__func__, __LINE__,                \
+                                         PCMK__LOG_TRACE, "IPC",            \
+                                         (ipc_name), (ipc_flags),           \
+                                         (flags_to_clear),                  \
                                          #flags_to_clear);                  \
     } while (0)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
@@ -36,13 +37,13 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
 
     if ((node != NULL) && (node->name != NULL)) {
         if (controld_is_local_node(node->name)) {
-            crm_err("We're not part of the cluster anymore");
+            pcmk__err("We're not part of the cluster anymore");
             register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
         } else if (!AM_I_DC
                    && pcmk__str_eq(node->name, controld_globals.dc_name,
                                    pcmk__str_casei)) {
-            crm_warn("Our DC node (%s) left the cluster", node->name);
+            pcmk__warn("Our DC node (%s) left the cluster", node->name);
             register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
         }
     }
@@ -63,7 +64,7 @@ post_cache_update(int instance)
     xmlNode *no_op = NULL;
 
     controld_globals.peer_seq = instance;
-    crm_debug("Updated cache after membership event %d.", instance);
+    pcmk__debug("Updated cache after membership event %d", instance);
 
     g_hash_table_foreach(pcmk__peer_cache, reap_dead_nodes, NULL);
     controld_set_fsa_input_flags(R_MEMBERSHIP);
@@ -96,16 +97,18 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     fsa_data_t *msg_data = NULL;
 
     if (rc == pcmk_ok) {
-        crm_trace("Node update %d complete", call_id);
+        pcmk__trace("Node update %d complete", call_id);
 
     } else if(call_id < pcmk_ok) {
-        crm_err("Node update failed: %s (%d)", pcmk_strerror(call_id), call_id);
-        crm_log_xml_debug(msg, "failed");
+        pcmk__err("Node update failed: %s (%d)", pcmk_strerror(call_id),
+                  call_id);
+        pcmk__log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
     } else {
-        crm_err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
-        crm_log_xml_debug(msg, "failed");
+        pcmk__err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc),
+                  rc);
+        pcmk__log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -126,34 +129,38 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
                          xmlNode *parent, const char *source)
 {
     // @TODO Ensure all callers handle NULL returns
+    const char *id = NULL;
     const char *value = NULL;
     xmlNode *node_state;
 
     if (!node->state) {
-        crm_info("Node update for %s cancelled: no state, not seen yet",
-                 node->name);
+        pcmk__info("Node update for %s cancelled: no state, not seen yet",
+                   node->name);
        return NULL;
     }
 
     node_state = pcmk__xe_create(parent, PCMK__XE_NODE_STATE);
 
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
     }
 
-    if (crm_xml_add(node_state, PCMK_XA_ID,
-                    pcmk__cluster_get_xml_id(node)) == NULL) {
-        crm_info("Node update for %s cancelled: no ID", node->name);
+    id = pcmk__cluster_get_xml_id(node);
+    if ((id == NULL)
+        || (pcmk__xe_set(node_state, PCMK_XA_ID, id) != pcmk_rc_ok)) {
+
+        pcmk__info("Node update for %s cancelled: no ID", node->name);
         pcmk__xml_free(node_state);
         return NULL;
     }
 
-    crm_xml_add(node_state, PCMK_XA_UNAME, node->name);
+    pcmk__xe_set(node_state, PCMK_XA_UNAME, node->name);
 
     if ((flags & node_update_cluster) && node->state) {
-        if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+        if (pcmk__compare_versions(controld_globals.dc_version,
+                                   "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
-            crm_xml_add_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
+            pcmk__xe_set_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
 
         } else {
             pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
@@ -162,19 +169,20 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
         }
     }
 
-    if (!pcmk_is_set(node->flags, pcmk__node_status_remote)) {
+    if (!pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         if (flags & node_update_peer) {
-            if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
+            if (pcmk__compare_versions(controld_globals.dc_version,
+                                       "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
-                crm_xml_add_ll(node_state, PCMK_XA_CRMD, node->when_online);
+                pcmk__xe_set_ll(node_state, PCMK_XA_CRMD, node->when_online);
 
             } else {
                 // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp
                 value = PCMK_VALUE_OFFLINE;
-                if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+                if (pcmk__is_set(node->processes, crm_get_cluster_proc())) {
                     value = PCMK_VALUE_ONLINE;
                 }
-                crm_xml_add(node_state, PCMK_XA_CRMD, value);
+                pcmk__xe_set(node_state, PCMK_XA_CRMD, value);
             }
         }
 
@@ -184,15 +192,15 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
             } else {
                 value = CRMD_JOINSTATE_MEMBER;
             }
-            crm_xml_add(node_state, PCMK__XA_JOIN, value);
+            pcmk__xe_set(node_state, PCMK__XA_JOIN, value);
         }
 
         if (flags & node_update_expected) {
-            crm_xml_add(node_state, PCMK_XA_EXPECTED, node->expected);
+            pcmk__xe_set(node_state, PCMK_XA_EXPECTED, node->expected);
         }
     }
 
-    crm_xml_add(node_state, PCMK_XA_CRM_DEBUG_ORIGIN, source);
+    pcmk__xe_set(node_state, PCMK_XA_CRM_DEBUG_ORIGIN, source);
 
     return node_state;
 }
@@ -217,8 +225,8 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
 
     if (rc != pcmk_ok) {
         if (rc != -ENXIO) {
-            crm_notice("Searching conflicting nodes for %s failed: %s (%d)",
-                       new_node_uuid, pcmk_strerror(rc), rc);
+            pcmk__notice("Searching conflicting nodes for %s failed: %s (%d)",
+                         new_node_uuid, pcmk_strerror(rc), rc);
         }
         return;
 
@@ -240,8 +248,8 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         pcmk__node_status_t *node = NULL;
         gboolean known = FALSE;
 
-        node_uuid = crm_element_value(node_xml, PCMK_XA_ID);
-        node_uname = crm_element_value(node_xml, PCMK_XA_UNAME);
+        node_uuid = pcmk__xe_get(node_xml, PCMK_XA_ID);
+        node_uname = pcmk__xe_get(node_xml, PCMK_XA_UNAME);
 
         if (node_uuid == NULL || node_uname == NULL) {
             continue;
@@ -263,8 +271,9 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             int delete_call_id = 0;
             xmlNode *node_state_xml = NULL;
 
-            crm_notice("Deleting unknown node %s/%s which has conflicting uname with %s",
-                       node_uuid, node_uname, new_node_uuid);
+            pcmk__notice("Deleting unknown node %s/%s which has conflicting "
+                         "uname with %s",
+                         node_uuid, node_uname, new_node_uuid);
 
             delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_NODES,
                                                     node_xml, cib_none);
@@ -272,8 +281,8 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
                                       remove_conflicting_node_callback);
 
             node_state_xml = pcmk__xe_create(NULL, PCMK__XE_NODE_STATE);
-            crm_xml_add(node_state_xml, PCMK_XA_ID, node_uuid);
-            crm_xml_add(node_state_xml, PCMK_XA_UNAME, node_uname);
+            pcmk__xe_set(node_state_xml, PCMK_XA_ID, node_uuid);
+            pcmk__xe_set(node_state_xml, PCMK_XA_UNAME, node_uname);
 
             delete_call_id = cib_conn->cmds->remove(cib_conn, PCMK_XE_STATUS,
                                                     node_state_xml, cib_none);
@@ -290,13 +299,15 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     fsa_data_t *msg_data = NULL;
 
     if(call_id < pcmk_ok) {
-        crm_err("Node list update failed: %s (%d)", pcmk_strerror(call_id), call_id);
-        crm_log_xml_debug(msg, "update:failed");
+        pcmk__err("Node list update failed: %s (%d)", pcmk_strerror(call_id),
+                  call_id);
+        pcmk__log_xml_debug(msg, "update:failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
     } else if(rc < pcmk_ok) {
-        crm_err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
-        crm_log_xml_debug(msg, "update:failed");
+        pcmk__err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc),
+                  rc);
+        pcmk__log_xml_debug(msg, "update:failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -311,7 +322,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
 #if SUPPORT_COROSYNC
-    if (!pcmk_is_set(flags, node_update_quick)
+    if (!pcmk__is_set(flags, node_update_quick)
         && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
 
         from_hashtable = pcmk__corosync_add_nodes(node_list);
@@ -328,8 +339,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
             xmlNode *new_node = NULL;
 
             if ((node->xml_id != NULL) && (node->name != NULL)) {
-                crm_trace("Creating node entry for %s/%s",
-                          node->name, node->xml_id);
+                pcmk__trace("Creating node entry for %s/%s", node->name,
+                            node->xml_id);
                 if (xpath == NULL) {
                     xpath = g_string_sized_new(512);
                 } else {
@@ -338,8 +349,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
 
                 /* We need both to be valid */
                 new_node = pcmk__xe_create(node_list, PCMK_XE_NODE);
-                crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
-                crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
+                pcmk__xe_set(new_node, PCMK_XA_ID, node->xml_id);
+                pcmk__xe_set(new_node, PCMK_XA_UNAME, node->name);
 
                 /* Search and remove unknown nodes with the conflicting uname from CIB */
                 pcmk__g_strcat(xpath,
@@ -361,7 +372,8 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
         }
     }
 
-    crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
+    pcmk__trace("Populating <nodes> section from %s",
+                (from_hashtable? "hashtable" : "cluster"));
 
     if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
                              node_list_update_callback) == pcmk_rc_ok)
@@ -400,11 +412,12 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
     fsa_data_t *msg_data = NULL;
 
     if (rc == pcmk_ok) {
-        crm_trace("Quorum update %d complete", call_id);
+        pcmk__trace("Quorum update %d complete", call_id);
 
     } else {
-        crm_err("Quorum update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
-        crm_log_xml_debug(msg, "failed");
+        pcmk__err("Quorum update %d failed: %s (%d)", call_id,
+                  pcmk_strerror(rc), rc);
+        pcmk__log_xml_debug(msg, "failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
 }
@@ -412,14 +425,14 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 void
 crm_update_quorum(gboolean quorum, gboolean force_update)
 {
-    bool has_quorum = pcmk_is_set(controld_globals.flags, controld_has_quorum);
+    bool has_quorum = pcmk__is_set(controld_globals.flags, controld_has_quorum);
 
     if (quorum) {
         controld_set_global_flags(controld_ever_had_quorum);
 
-    } else if (pcmk_all_flags_set(controld_globals.flags,
-                                  controld_ever_had_quorum
-                                  |controld_no_quorum_panic)) {
+    } else if (pcmk__all_flags_set(controld_globals.flags,
+                                   controld_ever_had_quorum
+                                   |controld_no_quorum_panic)) {
         pcmk__panic("Quorum lost");
     }
 
@@ -429,10 +442,10 @@ crm_update_quorum(gboolean quorum, gboolean force_update)
         xmlNode *update = NULL;
 
         update = pcmk__xe_create(NULL, PCMK_XE_CIB);
-        crm_xml_add_int(update, PCMK_XA_HAVE_QUORUM, quorum);
-        crm_xml_add(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
+        pcmk__xe_set_int(update, PCMK_XA_HAVE_QUORUM, quorum);
+        pcmk__xe_set(update, PCMK_XA_DC_UUID, controld_globals.our_uuid);
 
-        crm_debug("Updating quorum status to %s", pcmk__btoa(quorum));
+        pcmk__debug("Updating quorum status to %s", pcmk__btoa(quorum));
         controld_update_cib(PCMK_XE_CIB, update, cib_none,
                             cib_quorum_update_complete);
         pcmk__xml_free(update);

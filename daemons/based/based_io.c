@@ -43,17 +43,18 @@ static void
 cib_rename(const char *old)
 {
     int new_fd;
-    char *new = crm_strdup_printf("%s/cib.auto.XXXXXX", cib_root);
+    char *new = pcmk__assert_asprintf("%s/cib.auto.XXXXXX", cib_root);
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     new_fd = mkstemp(new);
 
     if ((new_fd < 0) || (rename(old, new) < 0)) {
-        crm_err("Couldn't archive unusable file %s (disabling disk writes and continuing)",
-                old);
+        pcmk__err("Couldn't archive unusable file %s (disabling disk writes "
+                  "and continuing)",
+                  old);
         cib_writes_enabled = FALSE;
     } else {
-        crm_err("Archived unusable file %s as %s", old, new);
+        pcmk__err("Archived unusable file %s as %s", old, new);
     }
 
     if (new_fd > 0) {
@@ -73,10 +74,10 @@ retrieveCib(const char *filename, const char *sigfile)
     int rc = cib_file_read_and_verify(filename, sigfile, &root);
 
     if (rc == pcmk_ok) {
-        crm_info("Loaded CIB from %s (with digest %s)", filename, sigfile);
+        pcmk__info("Loaded CIB from %s (with digest %s)", filename, sigfile);
     } else {
-        crm_warn("Continuing but NOT using CIB from %s (with digest %s): %s",
-                 filename, sigfile, pcmk_strerror(rc));
+        pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
+                   filename, sigfile, pcmk_strerror(rc));
         if (rc == -pcmk_err_cib_modified) {
             // Archive the original files so the contents are not lost
             cib_rename(filename);
@@ -91,25 +92,26 @@ static int cib_archive_filter(const struct dirent * a)
     int rc = 0;
     // Looking for regular files starting with "cib-" and not ending in .sig
     struct stat s;
-    char *a_path = crm_strdup_printf("%s/%s", cib_root, a->d_name);
+    char *a_path = pcmk__assert_asprintf("%s/%s", cib_root, a->d_name);
 
     if(stat(a_path, &s) != 0) {
         rc = errno;
-        crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc), rc);
+        pcmk__trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc),
+                    rc);
         rc = 0;
 
     } else if (!S_ISREG(s.st_mode)) {
-        crm_trace("%s - wrong type (%#o)",
-                  a->d_name, (unsigned int) (s.st_mode & S_IFMT));
+        pcmk__trace("%s - wrong type (%#o)", a->d_name,
+                    (unsigned int) (s.st_mode & S_IFMT));
 
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
-        crm_trace("%s - wrong prefix", a->d_name);
+        pcmk__trace("%s - wrong prefix", a->d_name);
 
     } else if (pcmk__ends_with_ext(a->d_name, ".sig")) {
-        crm_trace("%s - wrong suffix", a->d_name);
+        pcmk__trace("%s - wrong suffix", a->d_name);
 
     } else {
-        crm_debug("%s - candidate", a->d_name);
+        pcmk__debug("%s - candidate", a->d_name);
         rc = 1;
     }
 
@@ -126,8 +128,8 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
     time_t a_age = 0;
     time_t b_age = 0;
 
-    char *a_path = crm_strdup_printf("%s/%s", cib_root, a[0]->d_name);
-    char *b_path = crm_strdup_printf("%s/%s", cib_root, b[0]->d_name);
+    char *a_path = pcmk__assert_asprintf("%s/%s", cib_root, a[0]->d_name);
+    char *b_path = pcmk__assert_asprintf("%s/%s", cib_root, b[0]->d_name);
 
     if(stat(a_path, &buf) == 0) {
         a_age = buf.st_ctime;
@@ -145,7 +147,7 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
         rc = -1;
     }
 
-    crm_trace("%s (%lu) vs. %s (%lu) : %d",
+    pcmk__trace("%s (%lu) vs. %s (%lu) : %d",
 	a[0]->d_name, (unsigned long)a_age,
 	b[0]->d_name, (unsigned long)b_age, rc);
     return rc;
@@ -167,15 +169,15 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    sigfile = crm_strdup_printf("%s.sig", file);
+    sigfile = pcmk__assert_asprintf("%s.sig", file);
     if (pcmk__daemon_can_write(dir, file) == FALSE
             || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
         cib_status = -EACCES;
         return NULL;
     }
 
-    filename = crm_strdup_printf("%s/%s", dir, file);
-    sigfilepath = crm_strdup_printf("%s/%s", dir, sigfile);
+    filename = pcmk__assert_asprintf("%s/%s", dir, file);
+    sigfilepath = pcmk__assert_asprintf("%s/%s", dir, sigfile);
     free(sigfile);
 
     cib_status = pcmk_ok;
@@ -186,8 +188,8 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     if (root == NULL) {
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
         if (lpc < 0) {
-            crm_err("Could not check for CIB backups in %s: %s",
-                    cib_root, pcmk_rc_str(errno));
+            pcmk__err("Could not check for CIB backups in %s: %s", cib_root,
+                      pcmk_rc_str(errno));
         }
     }
 
@@ -196,17 +198,19 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
         lpc--;
 
-        filename = crm_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
-        sigfile = crm_strdup_printf("%s.sig", filename);
+        filename = pcmk__assert_asprintf("%s/%s", cib_root,
+                                         namelist[lpc]->d_name);
+        sigfile = pcmk__assert_asprintf("%s.sig", filename);
 
         rc = cib_file_read_and_verify(filename, sigfile, &root);
         if (rc == pcmk_ok) {
-            crm_notice("Loaded CIB from last valid backup %s (with digest %s)",
-                       filename, sigfile);
+            pcmk__notice("Loaded CIB from last valid backup %s (with digest "
+                         "%s)",
+                         filename, sigfile);
         } else {
-            crm_warn("Not using next most recent CIB backup from %s "
-                     "(with digest %s): %s",
-                     filename, sigfile, pcmk_strerror(rc));
+            pcmk__warn("Not using next most recent CIB backup from %s (with "
+                       "digest %s): %s",
+                       filename, sigfile, pcmk_strerror(rc));
         }
 
         free(namelist[lpc]);
@@ -217,15 +221,15 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
     if (root == NULL) {
         root = createEmptyCib(0);
-        crm_warn("Continuing with an empty configuration");
+        pcmk__warn("Continuing with an empty configuration");
     }
 
     if (cib_writes_enabled && (use_valgrind != NULL)
-        && (crm_is_true(use_valgrind)
+        && (pcmk__is_true(use_valgrind)
             || (strstr(use_valgrind, PCMK__SERVER_BASED) != NULL))) {
 
         cib_writes_enabled = FALSE;
-        crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
+        pcmk__err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
     status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
@@ -241,31 +245,31 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     /* Do this before schema validation happens */
 
     /* fill in some defaults */
-    value = crm_element_value(root, PCMK_XA_ADMIN_EPOCH);
+    value = pcmk__xe_get(root, PCMK_XA_ADMIN_EPOCH);
     if (value == NULL) { // Not possible with schema validation enabled
-        crm_warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
-                 "cluster may get confused about which node's configuration "
-                 "is most recent");
-        crm_xml_add_int(root, PCMK_XA_ADMIN_EPOCH, 0);
+        pcmk__warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
+                   "cluster may get confused about which node's configuration "
+                   "is most recent");
+        pcmk__xe_set_int(root, PCMK_XA_ADMIN_EPOCH, 0);
     }
 
     name = PCMK_XA_EPOCH;
-    value = crm_element_value(root, name);
+    value = pcmk__xe_get(root, name);
     if (value == NULL) {
-        crm_xml_add_int(root, name, 0);
+        pcmk__xe_set_int(root, name, 0);
     }
 
     name = PCMK_XA_NUM_UPDATES;
-    value = crm_element_value(root, name);
+    value = pcmk__xe_get(root, name);
     if (value == NULL) {
-        crm_xml_add_int(root, name, 0);
+        pcmk__xe_set_int(root, name, 0);
     }
 
     // Unset (DC should set appropriate value)
     pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
 
     if (discard_status) {
-        crm_log_xml_trace(root, "[on-disk]");
+        pcmk__log_xml_trace(root, "[on-disk]");
     }
 
     if (!pcmk__configured_schema_validates(root)) {
@@ -301,17 +305,18 @@ activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
         the_cib = new_cib;
         pcmk__xml_free(saved_cib);
         if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
-            crm_debug("Triggering CIB write for %s op", op);
+            pcmk__debug("Triggering CIB write for %s op", op);
             mainloop_set_trigger(cib_writer);
         }
         return pcmk_ok;
     }
 
-    crm_err("Ignoring invalid CIB");
+    pcmk__err("Ignoring invalid CIB");
     if (the_cib) {
-        crm_warn("Reverting to last known CIB");
+        pcmk__warn("Reverting to last known CIB");
     } else {
-        crm_crit("Could not write out new CIB and no saved version to revert to");
+        pcmk__crit("Could not write out new CIB and no saved version to revert "
+                   "to");
     }
     return -ENODATA;
 }
@@ -327,15 +332,15 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
     }
 
     if ((signo == 0) && (exitcode == 0)) {
-        crm_trace("Disk write [%d] succeeded", (int) pid);
+        pcmk__trace("Disk write [%d] succeeded", (int) pid);
 
     } else if (signo == 0) {
-        crm_err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
+        pcmk__err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
 
     } else {
-        crm_err("%s: process %d terminated with signal %d (%s)%s",
-                errmsg, (int) pid, signo, strsignal(signo),
-                (core? " and dumped core" : ""));
+        pcmk__err("%s: process %d terminated with signal %d (%s)%s",
+                  errmsg, (int) pid, signo, strsignal(signo),
+                  ((core != 0)? " and dumped core" : ""));
     }
 
     mainloop_trigger_complete(cib_writer);
@@ -366,7 +371,8 @@ write_cib_contents(gpointer p)
 
         pid = fork();
         if (pid < 0) {
-            crm_err("Disabling disk writes after fork failure: %s", pcmk_rc_str(errno));
+            pcmk__err("Disabling disk writes after fork failure: %s",
+                      pcmk_rc_str(errno));
             cib_writes_enabled = FALSE;
             return FALSE;
         }

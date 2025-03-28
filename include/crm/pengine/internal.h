@@ -17,6 +17,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/remote_internal.h>
 #include <crm/common/internal.h>
+#include <crm/common/health_internal.h>     // pcmk__parse_health_strategy()
 #include <crm/common/options_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/scheduler_internal.h>

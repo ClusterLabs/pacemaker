@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -52,7 +52,8 @@ void
 metadata_cache_free(GHashTable *mdc)
 {
     if (mdc) {
-        crm_trace("Destroying metadata cache with %d members", g_hash_table_size(mdc));
+        pcmk__trace("Destroying metadata cache with %u members",
+                    g_hash_table_size(mdc));
         g_hash_table_destroy(mdc);
     }
 }
@@ -61,8 +62,8 @@ void
 metadata_cache_reset(GHashTable *mdc)
 {
     if (mdc) {
-        crm_trace("Resetting metadata cache with %d members",
-                  g_hash_table_size(mdc));
+        pcmk__trace("Resetting metadata cache with %u members",
+                    g_hash_table_size(mdc));
         g_hash_table_remove_all(mdc);
     }
 }
@@ -70,7 +71,7 @@ metadata_cache_reset(GHashTable *mdc)
 static struct ra_param_s *
 ra_param_from_xml(xmlNode *param_xml)
 {
-    const char *param_name = crm_element_value(param_xml, PCMK_XA_NAME);
+    const char *param_name = pcmk__xe_get(param_xml, PCMK_XA_NAME);
     struct ra_param_s *p;
 
     p = pcmk__assert_alloc(1, sizeof(struct ra_param_s));
@@ -95,20 +96,22 @@ static void
 log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
 {
     if (pcmk__str_empty(ra_ocf_version)) {
-        crm_warn("%s does not advertise OCF version supported", ra_key);
+        pcmk__warn("%s does not advertise OCF version supported", ra_key);
 
-    } else if (compare_version(ra_ocf_version, "2") >= 0) {
-        crm_warn("%s supports OCF version %s (this Pacemaker version supports "
-                 PCMK_OCF_VERSION " and might not work properly with agent)",
-                 ra_key, ra_ocf_version);
+    } else if (pcmk__compare_versions(ra_ocf_version, "2") >= 0) {
+        pcmk__warn("%s supports OCF version %s (this Pacemaker version "
+                   "supports " PCMK_OCF_VERSION " and might not work properly "
+                   "with agent)",
+                   ra_key, ra_ocf_version);
 
-    } else if (compare_version(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
-        crm_info("%s supports OCF version %s (this Pacemaker version supports "
-                 PCMK_OCF_VERSION " and might not use all agent features)",
-                 ra_key, ra_ocf_version);
+    } else if (pcmk__compare_versions(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
+        pcmk__info("%s supports OCF version %s (this Pacemaker version "
+                   "supports " PCMK_OCF_VERSION " and might not use all agent "
+                   "features)",
+                   ra_key, ra_ocf_version);
 
     } else {
-        crm_debug("%s supports OCF version %s", ra_key, ra_ocf_version);
+        pcmk__debug("%s supports OCF version %s", ra_key, ra_ocf_version);
     }
 }
 
@@ -151,7 +154,8 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         }
         log_ra_ocf_version(key, (const char *) content);
         if (content != NULL) {
-            ocf1_1 = (compare_version((const char *) content, "1.1") >= 0);
+            ocf1_1 = (pcmk__compare_versions((const char *) content,
+                                             "1.1") >= 0);
             xmlFree(content);
         }
     }
@@ -161,15 +165,16 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     for (match = pcmk__xe_first_child(match, PCMK_XE_ACTION, NULL, NULL);
          match != NULL; match = pcmk__xe_next(match, PCMK_XE_ACTION)) {
 
-        const char *action_name = crm_element_value(match, PCMK_XA_NAME);
+        const char *action_name = pcmk__xe_get(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(action_name, PCMK_ACTION_RELOAD_AGENT,
                          pcmk__str_none)) {
             if (ocf1_1) {
                 controld_set_ra_flags(md, key, ra_supports_reload_agent);
             } else {
-                crm_notice("reload-agent action will not be used with %s "
-                           "because it does not support OCF 1.1 or later", key);
+                pcmk__notice("reload-agent action will not be used with %s "
+                             "because it does not support OCF 1.1 or later",
+                             key);
             }
 
         } else if (!ocf1_1 && pcmk__str_eq(action_name, PCMK_ACTION_RELOAD,
@@ -183,11 +188,12 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     for (match = pcmk__xe_first_child(match, PCMK_XE_PARAMETER, NULL, NULL);
          match != NULL; match = pcmk__xe_next(match, PCMK_XE_PARAMETER)) {
 
-        const char *param_name = crm_element_value(match, PCMK_XA_NAME);
+        const char *param_name = pcmk__xe_get(match, PCMK_XA_NAME);
 
         if (param_name == NULL) {
-            crm_warn("Metadata for %s:%s:%s has parameter without a "
-                     PCMK_XA_NAME, rsc->standard, rsc->provider, rsc->type);
+            pcmk__warn("Metadata for %s:%s:%s has parameter without a "
+                       PCMK_XA_NAME,
+                       rsc->standard, rsc->provider, rsc->type);
         } else {
             struct ra_param_s *p = ra_param_from_xml(match);
 
@@ -195,7 +201,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
                 reason = "Could not allocate memory";
                 goto err;
             }
-            if (pcmk_is_set(p->rap_flags, ra_param_private)) {
+            if (pcmk__is_set(p->rap_flags, ra_param_private)) {
                 any_private_params = true;
             }
             md->ra_params = g_list_prepend(md->ra_params, p);
@@ -223,9 +229,9 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     return md;
 
 err:
-    crm_warn("Unable to update metadata for %s (%s%s%s:%s): %s",
-             rsc->id, rsc->standard, ((rsc->provider == NULL)? "" : ":"),
-             pcmk__s(rsc->provider, ""), rsc->type, reason);
+    pcmk__warn("Unable to update metadata for %s (%s%s%s:%s): %s", rsc->id,
+               rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+               pcmk__s(rsc->provider, ""), rsc->type, reason);
     free(key);
     pcmk__xml_free(metadata);
     metadata_free(md);
@@ -254,23 +260,22 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
 
     CRM_CHECK((lrm_state != NULL) && (rsc != NULL), return NULL);
 
-    if (pcmk_is_set(source, controld_metadata_from_cache)) {
+    if (pcmk__is_set(source, controld_metadata_from_cache)) {
         key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
         if (key != NULL) {
             metadata = g_hash_table_lookup(lrm_state->metadata_cache, key);
             free(key);
         }
         if (metadata != NULL) {
-            crm_debug("Retrieved metadata for %s (%s%s%s:%s) from cache",
-                      rsc->id, rsc->standard,
-                      ((rsc->provider == NULL)? "" : ":"),
-                      ((rsc->provider == NULL)? "" : rsc->provider),
-                      rsc->type);
+            pcmk__debug("Retrieved metadata for %s (%s%s%s:%s) from cache",
+                        rsc->id, rsc->standard,
+                        ((rsc->provider != NULL)? ":" : ""),
+                        pcmk__s(rsc->provider, ""), rsc->type);
             return metadata;
         }
     }
 
-    if (!pcmk_is_set(source, controld_metadata_from_agent)) {
+    if (!pcmk__is_set(source, controld_metadata_from_agent)) {
         return NULL;
     }
 
@@ -288,19 +293,16 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
      * means that if the metadata action tries to contact the controller,
      * everything will hang until the timeout).
      */
-    crm_debug("Retrieving metadata for %s (%s%s%s:%s) synchronously",
-              rsc->id, rsc->standard,
-              ((rsc->provider == NULL)? "" : ":"),
-              ((rsc->provider == NULL)? "" : rsc->provider),
-              rsc->type);
+    pcmk__debug("Retrieving metadata for %s (%s%s%s:%s) synchronously", rsc->id,
+                rsc->standard, ((rsc->provider != NULL)? ":" : ""),
+                pcmk__s(rsc->provider, ""), rsc->type);
     rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
                                 rsc->type, &metadata_str, 0);
     if (rc != pcmk_ok) {
-        crm_warn("Failed to get metadata for %s (%s%s%s:%s): %s",
-                 rsc->id, rsc->standard,
-                 ((rsc->provider == NULL)? "" : ":"),
-                 ((rsc->provider == NULL)? "" : rsc->provider),
-                 rsc->type, pcmk_strerror(rc));
+        pcmk__warn("Failed to get metadata for %s (%s%s%s:%s): %s", rsc->id,
+                   rsc->standard, ((rsc->provider == NULL)? "" : ":"),
+                   ((rsc->provider == NULL)? "" : rsc->provider), rsc->type,
+                   pcmk_strerror(rc));
         return NULL;
     }
 

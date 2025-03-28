@@ -22,6 +22,7 @@ void
 pcmk__free_node(gpointer user_data)
 {
     pcmk_node_t *node = user_data;
+    const bool is_remote = pcmk__is_pacemaker_remote_node(node);
 
     if (node == NULL) {
         return;
@@ -34,8 +35,8 @@ pcmk__free_node(gpointer user_data)
     /* This may be called after freeing resources, which means that we can't
      * use node->private->name for Pacemaker Remote nodes.
      */
-    crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
-              "(guest or remote)" : pcmk__node_name(node)));
+    pcmk__trace("Freeing node %s",
+                (is_remote? "(guest or remote)" : pcmk__node_name(node)));
 
     if (node->priv->attrs != NULL) {
         g_hash_table_destroy(node->priv->attrs);
@@ -228,12 +229,12 @@ const char *
 pcmk_cib_node_shutdown(xmlNode *cib, const char *node)
 {
     if ((cib != NULL) && (node != NULL)) {
-        char *xpath = crm_strdup_printf(XP_SHUTDOWN, node);
-        xmlNode *match = pcmk__xpath_find_one(cib->doc, xpath, LOG_TRACE);
+        char *xpath = pcmk__assert_asprintf(XP_SHUTDOWN, node);
+        xmlNode *match = pcmk__xpath_find_one(cib->doc, xpath, PCMK__LOG_TRACE);
 
         free(xpath);
         if (match != NULL) {
-            return crm_element_value(match, PCMK_XA_VALUE);
+            return pcmk__xe_get(match, PCMK_XA_VALUE);
         }
     }
     return NULL;

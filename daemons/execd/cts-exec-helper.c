@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #include <crm/services.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/nvpair.h>              // crm_meta_name()
 
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
@@ -171,7 +172,7 @@ test_exit(crm_exit_t exit_code)
 
 #define print_result(fmt, args...)  \
     if (!options.quiet) {           \
-        printf(fmt "\n" , ##args);  \
+        printf(fmt "\n", ##args);   \
     }
 
 #define report_event(event)                                             \
@@ -181,7 +182,7 @@ test_exit(crm_exit_t exit_code)
              event->op_type ? event->op_type : "none",                  \
              crm_exit_str((crm_exit_t) event->rc),                      \
              pcmk_exec_status_str(event->op_status));                   \
-    crm_info("%s", event_buf_v0);
+    pcmk__info("%s", event_buf_v0);
 
 static void
 test_shutdown(int nsig)
@@ -235,13 +236,13 @@ connection_events(lrmd_event_data_t * event)
     }
 
     if (!rc) {
-        crm_info("Executor client connection established");
+        pcmk__info("Executor client connection established");
         start_test(NULL);
         return;
     } else {
         sleep(1);
         try_connect();
-        crm_notice("Executor client connection failed");
+        pcmk__notice("Executor client connection failed");
     }
 }
 
@@ -469,7 +470,7 @@ generate_params(void)
     // Calculate cluster status
     scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
-        crm_crit("Could not allocate scheduler data");
+        pcmk__crit("Could not allocate scheduler data");
         return ENOMEM;
     }
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
@@ -483,7 +484,7 @@ generate_params(void)
                                       pcmk_rsc_match_history
                                       |pcmk_rsc_match_basename);
     if (rsc == NULL) {
-        crm_err("Resource does not exist in config");
+        pcmk__err("Resource does not exist in config");
         pcmk_free_scheduler(scheduler);
         return EINVAL;
     }
@@ -610,7 +611,7 @@ main(int argc, char **argv)
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
-    crm_info("Starting");
+    pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 

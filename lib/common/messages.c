@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,9 +73,9 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
 
     if (reply_to == NULL) {
         subtype = PCMK__VALUE_REQUEST;
-        message_id = crm_strdup_printf("%s-%s-%llu-%u", task, sender_system,
-                                       (unsigned long long) time(NULL),
-                                       message_counter++);
+        message_id = pcmk__assert_asprintf("%s-%s-%llu-%u", task, sender_system,
+                                           (unsigned long long) time(NULL),
+                                           message_counter++);
         reply_to = message_id;
     }
 
@@ -123,17 +123,15 @@ xmlNode *
 pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
                    xmlNode *data)
 {
-    const char *message_type = crm_element_value(original_request, PCMK__XA_T);
-    const char *host_from = crm_element_value(original_request, PCMK__XA_SRC);
-    const char *sys_from = crm_element_value(original_request,
-                                             PCMK__XA_CRM_SYS_FROM);
-    const char *sys_to = crm_element_value(original_request,
-                                           PCMK__XA_CRM_SYS_TO);
-    const char *type = crm_element_value(original_request, PCMK__XA_SUBT);
-    const char *operation = crm_element_value(original_request,
-                                              PCMK__XA_CRM_TASK);
-    const char *crm_msg_reference = crm_element_value(original_request,
-                                                      PCMK_XA_REFERENCE);
+    const char *message_type = pcmk__xe_get(original_request, PCMK__XA_T);
+    const char *host_from = pcmk__xe_get(original_request, PCMK__XA_SRC);
+    const char *sys_from = pcmk__xe_get(original_request,
+                                        PCMK__XA_CRM_SYS_FROM);
+    const char *sys_to = pcmk__xe_get(original_request, PCMK__XA_CRM_SYS_TO);
+    const char *type = pcmk__xe_get(original_request, PCMK__XA_SUBT);
+    const char *operation = pcmk__xe_get(original_request, PCMK__XA_CRM_TASK);
+    const char *crm_msg_reference = pcmk__xe_get(original_request,
+                                                 PCMK_XA_REFERENCE);
     enum pcmk_ipc_server server = pcmk__parse_server(message_type);
 
     if (server == pcmk_ipc_unknown) {
@@ -148,7 +146,8 @@ pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
     }
 
     if (type == NULL) {
-        crm_warn("Cannot reply to invalid message: No message type specified");
+        pcmk__warn("Cannot reply to invalid message: No message type "
+                   "specified");
         return NULL;
     }
 
@@ -156,7 +155,7 @@ pcmk__new_reply_as(const char *origin, const xmlNode *original_request,
         /* Replies should only be generated for request messages, but it's possible
          * we expect replies to other messages right now so this can't be enforced.
          */
-        crm_trace("Creating a reply for a non-request original message");
+        pcmk__trace("Creating a reply for a non-request original message");
     }
 
     // Since this is a reply, we reverse the sender and recipient info
@@ -214,7 +213,7 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
     CRM_CHECK((request != NULL) && (request->op != NULL) && (handlers != NULL),
               return NULL);
 
-    if (pcmk_is_set(request->flags, pcmk__request_sync)
+    if (pcmk__is_set(request->flags, pcmk__request_sync)
         && (request->ipc_client != NULL)) {
         CRM_CHECK(request->ipc_client->request_id == request->ipc_id,
                   return NULL);
@@ -224,9 +223,9 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
     if (handler == NULL) {
         handler = g_hash_table_lookup(handlers, ""); // Default handler
         if (handler == NULL) {
-            crm_info("Ignoring %s request from %s %s with no handler",
-                     request->op, pcmk__request_origin_type(request),
-                     pcmk__request_origin(request));
+            pcmk__info("Ignoring %s request from %s %s with no handler",
+                       request->op, pcmk__request_origin_type(request),
+                       pcmk__request_origin(request));
             return NULL;
         }
     }

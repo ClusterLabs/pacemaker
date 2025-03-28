@@ -154,7 +154,7 @@ fsa_input2string(enum crmd_fsa_input input)
     }
 
     if (inputAsText == NULL) {
-        crm_err("Input %d is unknown", input);
+        pcmk__err("Input %d is unknown", input);
         inputAsText = "<UNKNOWN_INPUT>";
     }
 
@@ -215,7 +215,7 @@ fsa_state2string(enum crmd_fsa_state state)
     }
 
     if (stateAsText == NULL) {
-        crm_err("State %d is unknown", state);
+        pcmk__err("State %d is unknown", state);
         stateAsText = "<UNKNOWN_STATE>";
     }
 
@@ -258,7 +258,7 @@ fsa_cause2string(enum crmd_fsa_cause cause)
     }
 
     if (causeAsText == NULL) {
-        crm_err("Cause %d is unknown", cause);
+        pcmk__err("Cause %d is unknown", cause);
         causeAsText = "<UNKNOWN_CAUSE>";
     }
 
@@ -459,7 +459,7 @@ fsa_action2string(long long action)
     }
 
     if (actionAsText == NULL) {
-        crm_err("Action %.16llx is unknown", action);
+        pcmk__err("Action %.16llx is unknown", action);
         actionAsText = "<UNKNOWN_ACTION>";
     }
 
@@ -476,229 +476,248 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
         text = "Input register contents:";
     }
 
-    if (pcmk_is_set(input_register, R_THE_DC)) {
-        crm_trace("%s %.16llx (R_THE_DC)", text, R_THE_DC);
+    if (pcmk__is_set(input_register, R_THE_DC)) {
+        pcmk__trace("%s %.16llx (R_THE_DC)", text, R_THE_DC);
     }
-    if (pcmk_is_set(input_register, R_STARTING)) {
-        crm_trace("%s %.16llx (R_STARTING)", text, R_STARTING);
+    if (pcmk__is_set(input_register, R_STARTING)) {
+        pcmk__trace("%s %.16llx (R_STARTING)", text, R_STARTING);
     }
-    if (pcmk_is_set(input_register, R_SHUTDOWN)) {
-        crm_trace("%s %.16llx (R_SHUTDOWN)", text, R_SHUTDOWN);
+    if (pcmk__is_set(input_register, R_SHUTDOWN)) {
+        pcmk__trace("%s %.16llx (R_SHUTDOWN)", text, R_SHUTDOWN);
     }
-    if (pcmk_is_set(input_register, R_STAYDOWN)) {
-        crm_trace("%s %.16llx (R_STAYDOWN)", text, R_STAYDOWN);
+    if (pcmk__is_set(input_register, R_STAYDOWN)) {
+        pcmk__trace("%s %.16llx (R_STAYDOWN)", text, R_STAYDOWN);
     }
-    if (pcmk_is_set(input_register, R_JOIN_OK)) {
-        crm_trace("%s %.16llx (R_JOIN_OK)", text, R_JOIN_OK);
+    if (pcmk__is_set(input_register, R_JOIN_OK)) {
+        pcmk__trace("%s %.16llx (R_JOIN_OK)", text, R_JOIN_OK);
     }
-    if (pcmk_is_set(input_register, R_READ_CONFIG)) {
-        crm_trace("%s %.16llx (R_READ_CONFIG)", text, R_READ_CONFIG);
+    if (pcmk__is_set(input_register, R_READ_CONFIG)) {
+        pcmk__trace("%s %.16llx (R_READ_CONFIG)", text, R_READ_CONFIG);
     }
-    if (pcmk_is_set(input_register, R_INVOKE_PE)) {
-        crm_trace("%s %.16llx (R_INVOKE_PE)", text, R_INVOKE_PE);
+    if (pcmk__is_set(input_register, R_INVOKE_PE)) {
+        pcmk__trace("%s %.16llx (R_INVOKE_PE)", text, R_INVOKE_PE);
     }
-    if (pcmk_is_set(input_register, R_CIB_CONNECTED)) {
-        crm_trace("%s %.16llx (R_CIB_CONNECTED)", text, R_CIB_CONNECTED);
+    if (pcmk__is_set(input_register, R_CIB_CONNECTED)) {
+        pcmk__trace("%s %.16llx (R_CIB_CONNECTED)", text, R_CIB_CONNECTED);
     }
-    if (pcmk_is_set(input_register, R_PE_CONNECTED)) {
-        crm_trace("%s %.16llx (R_PE_CONNECTED)", text, R_PE_CONNECTED);
+    if (pcmk__is_set(input_register, R_PE_CONNECTED)) {
+        pcmk__trace("%s %.16llx (R_PE_CONNECTED)", text, R_PE_CONNECTED);
     }
-    if (pcmk_is_set(input_register, R_TE_CONNECTED)) {
-        crm_trace("%s %.16llx (R_TE_CONNECTED)", text, R_TE_CONNECTED);
+    if (pcmk__is_set(input_register, R_TE_CONNECTED)) {
+        pcmk__trace("%s %.16llx (R_TE_CONNECTED)", text, R_TE_CONNECTED);
     }
-    if (pcmk_is_set(input_register, R_LRM_CONNECTED)) {
-        crm_trace("%s %.16llx (R_LRM_CONNECTED)", text, R_LRM_CONNECTED);
+    if (pcmk__is_set(input_register, R_LRM_CONNECTED)) {
+        pcmk__trace("%s %.16llx (R_LRM_CONNECTED)", text, R_LRM_CONNECTED);
     }
-    if (pcmk_is_set(input_register, R_CIB_REQUIRED)) {
-        crm_trace("%s %.16llx (R_CIB_REQUIRED)", text, R_CIB_REQUIRED);
+    if (pcmk__is_set(input_register, R_CIB_REQUIRED)) {
+        pcmk__trace("%s %.16llx (R_CIB_REQUIRED)", text, R_CIB_REQUIRED);
     }
-    if (pcmk_is_set(input_register, R_PE_REQUIRED)) {
-        crm_trace("%s %.16llx (R_PE_REQUIRED)", text, R_PE_REQUIRED);
+    if (pcmk__is_set(input_register, R_PE_REQUIRED)) {
+        pcmk__trace("%s %.16llx (R_PE_REQUIRED)", text, R_PE_REQUIRED);
     }
-    if (pcmk_is_set(input_register, R_TE_REQUIRED)) {
-        crm_trace("%s %.16llx (R_TE_REQUIRED)", text, R_TE_REQUIRED);
+    if (pcmk__is_set(input_register, R_TE_REQUIRED)) {
+        pcmk__trace("%s %.16llx (R_TE_REQUIRED)", text, R_TE_REQUIRED);
     }
-    if (pcmk_is_set(input_register, R_REQ_PEND)) {
-        crm_trace("%s %.16llx (R_REQ_PEND)", text, R_REQ_PEND);
+    if (pcmk__is_set(input_register, R_REQ_PEND)) {
+        pcmk__trace("%s %.16llx (R_REQ_PEND)", text, R_REQ_PEND);
     }
-    if (pcmk_is_set(input_register, R_PE_PEND)) {
-        crm_trace("%s %.16llx (R_PE_PEND)", text, R_PE_PEND);
+    if (pcmk__is_set(input_register, R_PE_PEND)) {
+        pcmk__trace("%s %.16llx (R_PE_PEND)", text, R_PE_PEND);
     }
-    if (pcmk_is_set(input_register, R_TE_PEND)) {
-        crm_trace("%s %.16llx (R_TE_PEND)", text, R_TE_PEND);
+    if (pcmk__is_set(input_register, R_TE_PEND)) {
+        pcmk__trace("%s %.16llx (R_TE_PEND)", text, R_TE_PEND);
     }
-    if (pcmk_is_set(input_register, R_RESP_PEND)) {
-        crm_trace("%s %.16llx (R_RESP_PEND)", text, R_RESP_PEND);
+    if (pcmk__is_set(input_register, R_RESP_PEND)) {
+        pcmk__trace("%s %.16llx (R_RESP_PEND)", text, R_RESP_PEND);
     }
-    if (pcmk_is_set(input_register, R_CIB_DONE)) {
-        crm_trace("%s %.16llx (R_CIB_DONE)", text, R_CIB_DONE);
+    if (pcmk__is_set(input_register, R_CIB_DONE)) {
+        pcmk__trace("%s %.16llx (R_CIB_DONE)", text, R_CIB_DONE);
     }
-    if (pcmk_is_set(input_register, R_HAVE_CIB)) {
-        crm_trace("%s %.16llx (R_HAVE_CIB)", text, R_HAVE_CIB);
+    if (pcmk__is_set(input_register, R_HAVE_CIB)) {
+        pcmk__trace("%s %.16llx (R_HAVE_CIB)", text, R_HAVE_CIB);
     }
-    if (pcmk_is_set(input_register, R_MEMBERSHIP)) {
-        crm_trace("%s %.16llx (R_MEMBERSHIP)", text, R_MEMBERSHIP);
+    if (pcmk__is_set(input_register, R_MEMBERSHIP)) {
+        pcmk__trace("%s %.16llx (R_MEMBERSHIP)", text, R_MEMBERSHIP);
     }
-    if (pcmk_is_set(input_register, R_PEER_DATA)) {
-        crm_trace("%s %.16llx (R_PEER_DATA)", text, R_PEER_DATA);
+    if (pcmk__is_set(input_register, R_PEER_DATA)) {
+        pcmk__trace("%s %.16llx (R_PEER_DATA)", text, R_PEER_DATA);
     }
-    if (pcmk_is_set(input_register, R_IN_RECOVERY)) {
-        crm_trace("%s %.16llx (R_IN_RECOVERY)", text, R_IN_RECOVERY);
+    if (pcmk__is_set(input_register, R_IN_RECOVERY)) {
+        pcmk__trace("%s %.16llx (R_IN_RECOVERY)", text, R_IN_RECOVERY);
     }
 }
 
 void
 fsa_dump_actions(uint64_t action, const char *text)
 {
-    if (pcmk_is_set(action, A_READCONFIG)) {
-        crm_trace("Action %.16llx (A_READCONFIG) %s", A_READCONFIG, text);
+    if (pcmk__is_set(action, A_READCONFIG)) {
+        pcmk__trace("Action %.16llx (A_READCONFIG) %s", A_READCONFIG, text);
     }
-    if (pcmk_is_set(action, A_STARTUP)) {
-        crm_trace("Action %.16llx (A_STARTUP) %s", A_STARTUP, text);
+    if (pcmk__is_set(action, A_STARTUP)) {
+        pcmk__trace("Action %.16llx (A_STARTUP) %s", A_STARTUP, text);
     }
-    if (pcmk_is_set(action, A_STARTED)) {
-        crm_trace("Action %.16llx (A_STARTED) %s", A_STARTED, text);
+    if (pcmk__is_set(action, A_STARTED)) {
+        pcmk__trace("Action %.16llx (A_STARTED) %s", A_STARTED, text);
     }
-    if (pcmk_is_set(action, A_HA_CONNECT)) {
-        crm_trace("Action %.16llx (A_CONNECT) %s", A_HA_CONNECT, text);
+    if (pcmk__is_set(action, A_HA_CONNECT)) {
+        pcmk__trace("Action %.16llx (A_CONNECT) %s", A_HA_CONNECT, text);
     }
-    if (pcmk_is_set(action, A_HA_DISCONNECT)) {
-        crm_trace("Action %.16llx (A_DISCONNECT) %s", A_HA_DISCONNECT, text);
+    if (pcmk__is_set(action, A_HA_DISCONNECT)) {
+        pcmk__trace("Action %.16llx (A_DISCONNECT) %s", A_HA_DISCONNECT, text);
     }
-    if (pcmk_is_set(action, A_LRM_CONNECT)) {
-        crm_trace("Action %.16llx (A_LRM_CONNECT) %s", A_LRM_CONNECT, text);
+    if (pcmk__is_set(action, A_LRM_CONNECT)) {
+        pcmk__trace("Action %.16llx (A_LRM_CONNECT) %s", A_LRM_CONNECT, text);
     }
-    if (pcmk_is_set(action, A_LRM_INVOKE)) {
-        crm_trace("Action %.16llx (A_LRM_INVOKE) %s", A_LRM_INVOKE, text);
+    if (pcmk__is_set(action, A_LRM_INVOKE)) {
+        pcmk__trace("Action %.16llx (A_LRM_INVOKE) %s", A_LRM_INVOKE, text);
     }
-    if (pcmk_is_set(action, A_LRM_DISCONNECT)) {
-        crm_trace("Action %.16llx (A_LRM_DISCONNECT) %s", A_LRM_DISCONNECT, text);
+    if (pcmk__is_set(action, A_LRM_DISCONNECT)) {
+        pcmk__trace("Action %.16llx (A_LRM_DISCONNECT) %s", A_LRM_DISCONNECT,
+                    text);
     }
-    if (pcmk_is_set(action, A_DC_TIMER_STOP)) {
-        crm_trace("Action %.16llx (A_DC_TIMER_STOP) %s", A_DC_TIMER_STOP, text);
+    if (pcmk__is_set(action, A_DC_TIMER_STOP)) {
+        pcmk__trace("Action %.16llx (A_DC_TIMER_STOP) %s", A_DC_TIMER_STOP,
+                    text);
     }
-    if (pcmk_is_set(action, A_DC_TIMER_START)) {
-        crm_trace("Action %.16llx (A_DC_TIMER_START) %s", A_DC_TIMER_START, text);
+    if (pcmk__is_set(action, A_DC_TIMER_START)) {
+        pcmk__trace("Action %.16llx (A_DC_TIMER_START) %s", A_DC_TIMER_START,
+                    text);
     }
-    if (pcmk_is_set(action, A_INTEGRATE_TIMER_START)) {
-        crm_trace("Action %.16llx (A_INTEGRATE_TIMER_START) %s", A_INTEGRATE_TIMER_START, text);
+    if (pcmk__is_set(action, A_INTEGRATE_TIMER_START)) {
+        pcmk__trace("Action %.16llx (A_INTEGRATE_TIMER_START) %s",
+                    A_INTEGRATE_TIMER_START, text);
     }
-    if (pcmk_is_set(action, A_INTEGRATE_TIMER_STOP)) {
-        crm_trace("Action %.16llx (A_INTEGRATE_TIMER_STOP) %s", A_INTEGRATE_TIMER_STOP, text);
+    if (pcmk__is_set(action, A_INTEGRATE_TIMER_STOP)) {
+        pcmk__trace("Action %.16llx (A_INTEGRATE_TIMER_STOP) %s",
+                    A_INTEGRATE_TIMER_STOP, text);
     }
-    if (pcmk_is_set(action, A_FINALIZE_TIMER_START)) {
-        crm_trace("Action %.16llx (A_FINALIZE_TIMER_START) %s", A_FINALIZE_TIMER_START, text);
+    if (pcmk__is_set(action, A_FINALIZE_TIMER_START)) {
+        pcmk__trace("Action %.16llx (A_FINALIZE_TIMER_START) %s",
+                    A_FINALIZE_TIMER_START, text);
     }
-    if (pcmk_is_set(action, A_FINALIZE_TIMER_STOP)) {
-        crm_trace("Action %.16llx (A_FINALIZE_TIMER_STOP) %s", A_FINALIZE_TIMER_STOP, text);
+    if (pcmk__is_set(action, A_FINALIZE_TIMER_STOP)) {
+        pcmk__trace("Action %.16llx (A_FINALIZE_TIMER_STOP) %s",
+                    A_FINALIZE_TIMER_STOP, text);
     }
-    if (pcmk_is_set(action, A_ELECTION_COUNT)) {
-        crm_trace("Action %.16llx (A_ELECTION_COUNT) %s", A_ELECTION_COUNT, text);
+    if (pcmk__is_set(action, A_ELECTION_COUNT)) {
+        pcmk__trace("Action %.16llx (A_ELECTION_COUNT) %s", A_ELECTION_COUNT,
+                    text);
     }
-    if (pcmk_is_set(action, A_ELECTION_VOTE)) {
-        crm_trace("Action %.16llx (A_ELECTION_VOTE) %s", A_ELECTION_VOTE, text);
+    if (pcmk__is_set(action, A_ELECTION_VOTE)) {
+        pcmk__trace("Action %.16llx (A_ELECTION_VOTE) %s", A_ELECTION_VOTE,
+                    text);
     }
-    if (pcmk_is_set(action, A_ELECTION_CHECK)) {
-        crm_trace("Action %.16llx (A_ELECTION_CHECK) %s", A_ELECTION_CHECK, text);
+    if (pcmk__is_set(action, A_ELECTION_CHECK)) {
+        pcmk__trace("Action %.16llx (A_ELECTION_CHECK) %s", A_ELECTION_CHECK,
+                    text);
     }
-    if (pcmk_is_set(action, A_CL_JOIN_ANNOUNCE)) {
-        crm_trace("Action %.16llx (A_CL_JOIN_ANNOUNCE) %s", A_CL_JOIN_ANNOUNCE, text);
+    if (pcmk__is_set(action, A_CL_JOIN_ANNOUNCE)) {
+        pcmk__trace("Action %.16llx (A_CL_JOIN_ANNOUNCE) %s",
+                    A_CL_JOIN_ANNOUNCE, text);
     }
-    if (pcmk_is_set(action, A_CL_JOIN_REQUEST)) {
-        crm_trace("Action %.16llx (A_CL_JOIN_REQUEST) %s", A_CL_JOIN_REQUEST, text);
+    if (pcmk__is_set(action, A_CL_JOIN_REQUEST)) {
+        pcmk__trace("Action %.16llx (A_CL_JOIN_REQUEST) %s", A_CL_JOIN_REQUEST,
+                    text);
     }
-    if (pcmk_is_set(action, A_CL_JOIN_RESULT)) {
-        crm_trace("Action %.16llx (A_CL_JOIN_RESULT) %s", A_CL_JOIN_RESULT, text);
+    if (pcmk__is_set(action, A_CL_JOIN_RESULT)) {
+        pcmk__trace("Action %.16llx (A_CL_JOIN_RESULT) %s", A_CL_JOIN_RESULT,
+                    text);
     }
-    if (pcmk_is_set(action, A_DC_JOIN_OFFER_ALL)) {
-        crm_trace("Action %.16llx (A_DC_JOIN_OFFER_ALL) %s", A_DC_JOIN_OFFER_ALL, text);
+    if (pcmk__is_set(action, A_DC_JOIN_OFFER_ALL)) {
+        pcmk__trace("Action %.16llx (A_DC_JOIN_OFFER_ALL) %s",
+                    A_DC_JOIN_OFFER_ALL, text);
     }
-    if (pcmk_is_set(action, A_DC_JOIN_OFFER_ONE)) {
-        crm_trace("Action %.16llx (A_DC_JOIN_OFFER_ONE) %s", A_DC_JOIN_OFFER_ONE, text);
+    if (pcmk__is_set(action, A_DC_JOIN_OFFER_ONE)) {
+        pcmk__trace("Action %.16llx (A_DC_JOIN_OFFER_ONE) %s",
+                    A_DC_JOIN_OFFER_ONE, text);
     }
-    if (pcmk_is_set(action, A_DC_JOIN_PROCESS_REQ)) {
-        crm_trace("Action %.16llx (A_DC_JOIN_PROCESS_REQ) %s", A_DC_JOIN_PROCESS_REQ, text);
+    if (pcmk__is_set(action, A_DC_JOIN_PROCESS_REQ)) {
+        pcmk__trace("Action %.16llx (A_DC_JOIN_PROCESS_REQ) %s",
+                    A_DC_JOIN_PROCESS_REQ, text);
     }
-    if (pcmk_is_set(action, A_DC_JOIN_PROCESS_ACK)) {
-        crm_trace("Action %.16llx (A_DC_JOIN_PROCESS_ACK) %s", A_DC_JOIN_PROCESS_ACK, text);
+    if (pcmk__is_set(action, A_DC_JOIN_PROCESS_ACK)) {
+        pcmk__trace("Action %.16llx (A_DC_JOIN_PROCESS_ACK) %s",
+                    A_DC_JOIN_PROCESS_ACK, text);
     }
-    if (pcmk_is_set(action, A_DC_JOIN_FINALIZE)) {
-        crm_trace("Action %.16llx (A_DC_JOIN_FINALIZE) %s", A_DC_JOIN_FINALIZE, text);
+    if (pcmk__is_set(action, A_DC_JOIN_FINALIZE)) {
+        pcmk__trace("Action %.16llx (A_DC_JOIN_FINALIZE) %s",
+                    A_DC_JOIN_FINALIZE, text);
     }
-    if (pcmk_is_set(action, A_MSG_PROCESS)) {
-        crm_trace("Action %.16llx (A_MSG_PROCESS) %s", A_MSG_PROCESS, text);
+    if (pcmk__is_set(action, A_MSG_PROCESS)) {
+        pcmk__trace("Action %.16llx (A_MSG_PROCESS) %s", A_MSG_PROCESS, text);
     }
-    if (pcmk_is_set(action, A_MSG_ROUTE)) {
-        crm_trace("Action %.16llx (A_MSG_ROUTE) %s", A_MSG_ROUTE, text);
+    if (pcmk__is_set(action, A_MSG_ROUTE)) {
+        pcmk__trace("Action %.16llx (A_MSG_ROUTE) %s", A_MSG_ROUTE, text);
     }
-    if (pcmk_is_set(action, A_RECOVER)) {
-        crm_trace("Action %.16llx (A_RECOVER) %s", A_RECOVER, text);
+    if (pcmk__is_set(action, A_RECOVER)) {
+        pcmk__trace("Action %.16llx (A_RECOVER) %s", A_RECOVER, text);
     }
-    if (pcmk_is_set(action, A_DC_RELEASE)) {
-        crm_trace("Action %.16llx (A_DC_RELEASE) %s", A_DC_RELEASE, text);
+    if (pcmk__is_set(action, A_DC_RELEASE)) {
+        pcmk__trace("Action %.16llx (A_DC_RELEASE) %s", A_DC_RELEASE, text);
     }
-    if (pcmk_is_set(action, A_DC_RELEASED)) {
-        crm_trace("Action %.16llx (A_DC_RELEASED) %s", A_DC_RELEASED, text);
+    if (pcmk__is_set(action, A_DC_RELEASED)) {
+        pcmk__trace("Action %.16llx (A_DC_RELEASED) %s", A_DC_RELEASED, text);
     }
-    if (pcmk_is_set(action, A_DC_TAKEOVER)) {
-        crm_trace("Action %.16llx (A_DC_TAKEOVER) %s", A_DC_TAKEOVER, text);
+    if (pcmk__is_set(action, A_DC_TAKEOVER)) {
+        pcmk__trace("Action %.16llx (A_DC_TAKEOVER) %s", A_DC_TAKEOVER, text);
     }
-    if (pcmk_is_set(action, A_SHUTDOWN)) {
-        crm_trace("Action %.16llx (A_SHUTDOWN) %s", A_SHUTDOWN, text);
+    if (pcmk__is_set(action, A_SHUTDOWN)) {
+        pcmk__trace("Action %.16llx (A_SHUTDOWN) %s", A_SHUTDOWN, text);
     }
-    if (pcmk_is_set(action, A_SHUTDOWN_REQ)) {
-        crm_trace("Action %.16llx (A_SHUTDOWN_REQ) %s", A_SHUTDOWN_REQ, text);
+    if (pcmk__is_set(action, A_SHUTDOWN_REQ)) {
+        pcmk__trace("Action %.16llx (A_SHUTDOWN_REQ) %s", A_SHUTDOWN_REQ, text);
     }
-    if (pcmk_is_set(action, A_STOP)) {
-        crm_trace("Action %.16llx (A_STOP  ) %s", A_STOP, text);
+    if (pcmk__is_set(action, A_STOP)) {
+        pcmk__trace("Action %.16llx (A_STOP  ) %s", A_STOP, text);
     }
-    if (pcmk_is_set(action, A_EXIT_0)) {
-        crm_trace("Action %.16llx (A_EXIT_0) %s", A_EXIT_0, text);
+    if (pcmk__is_set(action, A_EXIT_0)) {
+        pcmk__trace("Action %.16llx (A_EXIT_0) %s", A_EXIT_0, text);
     }
-    if (pcmk_is_set(action, A_EXIT_1)) {
-        crm_trace("Action %.16llx (A_EXIT_1) %s", A_EXIT_1, text);
+    if (pcmk__is_set(action, A_EXIT_1)) {
+        pcmk__trace("Action %.16llx (A_EXIT_1) %s", A_EXIT_1, text);
     }
-    if (pcmk_is_set(action, A_CIB_START)) {
-        crm_trace("Action %.16llx (A_CIB_START) %s", A_CIB_START, text);
+    if (pcmk__is_set(action, A_CIB_START)) {
+        pcmk__trace("Action %.16llx (A_CIB_START) %s", A_CIB_START, text);
     }
-    if (pcmk_is_set(action, A_CIB_STOP)) {
-        crm_trace("Action %.16llx (A_CIB_STOP) %s", A_CIB_STOP, text);
+    if (pcmk__is_set(action, A_CIB_STOP)) {
+        pcmk__trace("Action %.16llx (A_CIB_STOP) %s", A_CIB_STOP, text);
     }
-    if (pcmk_is_set(action, A_TE_INVOKE)) {
-        crm_trace("Action %.16llx (A_TE_INVOKE) %s", A_TE_INVOKE, text);
+    if (pcmk__is_set(action, A_TE_INVOKE)) {
+        pcmk__trace("Action %.16llx (A_TE_INVOKE) %s", A_TE_INVOKE, text);
     }
-    if (pcmk_is_set(action, A_TE_START)) {
-        crm_trace("Action %.16llx (A_TE_START) %s", A_TE_START, text);
+    if (pcmk__is_set(action, A_TE_START)) {
+        pcmk__trace("Action %.16llx (A_TE_START) %s", A_TE_START, text);
     }
-    if (pcmk_is_set(action, A_TE_STOP)) {
-        crm_trace("Action %.16llx (A_TE_STOP) %s", A_TE_STOP, text);
+    if (pcmk__is_set(action, A_TE_STOP)) {
+        pcmk__trace("Action %.16llx (A_TE_STOP) %s", A_TE_STOP, text);
     }
-    if (pcmk_is_set(action, A_TE_CANCEL)) {
-        crm_trace("Action %.16llx (A_TE_CANCEL) %s", A_TE_CANCEL, text);
+    if (pcmk__is_set(action, A_TE_CANCEL)) {
+        pcmk__trace("Action %.16llx (A_TE_CANCEL) %s", A_TE_CANCEL, text);
     }
-    if (pcmk_is_set(action, A_PE_INVOKE)) {
-        crm_trace("Action %.16llx (A_PE_INVOKE) %s", A_PE_INVOKE, text);
+    if (pcmk__is_set(action, A_PE_INVOKE)) {
+        pcmk__trace("Action %.16llx (A_PE_INVOKE) %s", A_PE_INVOKE, text);
     }
-    if (pcmk_is_set(action, A_PE_START)) {
-        crm_trace("Action %.16llx (A_PE_START) %s", A_PE_START, text);
+    if (pcmk__is_set(action, A_PE_START)) {
+        pcmk__trace("Action %.16llx (A_PE_START) %s", A_PE_START, text);
     }
-    if (pcmk_is_set(action, A_PE_STOP)) {
-        crm_trace("Action %.16llx (A_PE_STOP) %s", A_PE_STOP, text);
+    if (pcmk__is_set(action, A_PE_STOP)) {
+        pcmk__trace("Action %.16llx (A_PE_STOP) %s", A_PE_STOP, text);
     }
-    if (pcmk_is_set(action, A_NODE_BLOCK)) {
-        crm_trace("Action %.16llx (A_NODE_BLOCK) %s", A_NODE_BLOCK, text);
+    if (pcmk__is_set(action, A_NODE_BLOCK)) {
+        pcmk__trace("Action %.16llx (A_NODE_BLOCK) %s", A_NODE_BLOCK, text);
     }
-    if (pcmk_is_set(action, A_UPDATE_NODESTATUS)) {
-        crm_trace("Action %.16llx (A_UPDATE_NODESTATUS) %s", A_UPDATE_NODESTATUS, text);
+    if (pcmk__is_set(action, A_UPDATE_NODESTATUS)) {
+        pcmk__trace("Action %.16llx (A_UPDATE_NODESTATUS) %s",
+                    A_UPDATE_NODESTATUS, text);
     }
-    if (pcmk_is_set(action, A_LOG)) {
-        crm_trace("Action %.16llx (A_LOG   ) %s", A_LOG, text);
+    if (pcmk__is_set(action, A_LOG)) {
+        pcmk__trace("Action %.16llx (A_LOG   ) %s", A_LOG, text);
     }
-    if (pcmk_is_set(action, A_ERROR)) {
-        crm_trace("Action %.16llx (A_ERROR ) %s", A_ERROR, text);
+    if (pcmk__is_set(action, A_ERROR)) {
+        pcmk__trace("Action %.16llx (A_ERROR ) %s", A_ERROR, text);
     }
-    if (pcmk_is_set(action, A_WARN)) {
-        crm_trace("Action %.16llx (A_WARN  ) %s", A_WARN, text);
+    if (pcmk__is_set(action, A_WARN)) {
+        pcmk__trace("Action %.16llx (A_WARN  ) %s", A_WARN, text);
     }
 }
 
@@ -712,8 +731,8 @@ update_dc(xmlNode * msg)
     if (msg != NULL) {
         gboolean invalid = FALSE;
 
-        dc_version = crm_element_value(msg, PCMK_XA_VERSION);
-        welcome_from = crm_element_value(msg, PCMK__XA_SRC);
+        dc_version = pcmk__xe_get(msg, PCMK_XA_VERSION);
+        welcome_from = pcmk__xe_get(msg, PCMK__XA_SRC);
 
         CRM_CHECK(dc_version != NULL, return FALSE);
         CRM_CHECK(welcome_from != NULL, return FALSE);
@@ -729,11 +748,11 @@ update_dc(xmlNode * msg)
 
         if (invalid) {
             if (AM_I_DC) {
-                crm_err("Not updating DC to %s (%s): we are also a DC",
-                        welcome_from, dc_version);
+                pcmk__err("Not updating DC to %s (%s): we are also a DC",
+                          welcome_from, dc_version);
             } else {
-                crm_warn("New DC %s is not %s",
-                         welcome_from, controld_globals.dc_name);
+                pcmk__warn("New DC %s is not %s", welcome_from,
+                           controld_globals.dc_name);
             }
 
             controld_set_fsa_action_flags(A_CL_JOIN_QUERY | A_DC_TIMER_START);
@@ -754,13 +773,12 @@ update_dc(xmlNode * msg)
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
-        crm_info("Set DC to %s (%s)",
-                 controld_globals.dc_name,
-                 pcmk__s(controld_globals.dc_version, "unknown version"));
+        pcmk__info("Set DC to %s (%s)", controld_globals.dc_name,
+                   pcmk__s(controld_globals.dc_version, "unknown version"));
         pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_MEMBER);
 
     } else if (last_dc != NULL) {
-        crm_info("Unset DC (was %s)", last_dc);
+        pcmk__info("Unset DC (was %s)", last_dc);
     }
 
     free(last_dc);

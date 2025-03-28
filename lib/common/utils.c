@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,6 +20,7 @@
 #include <pwd.h>
 #include <time.h>
 #include <libgen.h>
+#include <regex.h>                      // regex_t, etc.
 #include <signal.h>
 #include <grp.h>
 
@@ -96,176 +97,176 @@ pcmk__is_user_in_group(const char *user, const char *group)
 }
 
 int
-crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
+pcmk__lookup_user(const char *name, uid_t *uid, gid_t *gid)
 {
-    int rc = pcmk_ok;
-    char *buffer = NULL;
-    struct passwd pwd;
     struct passwd *pwentry = NULL;
 
-    buffer = calloc(1, PCMK__PW_BUFFER_LEN);
-    if (buffer == NULL) {
-        return -ENOMEM;
+    CRM_CHECK(name != NULL, return EINVAL);
+
+    // getpwnam() is not thread-safe, but Pacemaker is single-threaded
+    errno = 0;
+    pwentry = getpwnam(name);
+    if (pwentry == NULL) {
+        /* Either an error occurred or no passwd entry was found.
+         *
+         * The value of errno is implementation-dependent if no passwd entry is
+         * found. The POSIX specification does not consider it an error.
+         * POSIX.1-2008 specifies that errno shall not be changed in this case,
+         * while POSIX.1-2001 does not specify the value of errno in this case.
+         * The man page on Linux notes that a variety of values have been
+         * observed in practice. So an implementation may set errno to an
+         * arbitrary value, despite the POSIX specification.
+         *
+         * However, if pwentry == NULL and errno == 0, then we know that no
+         * matching entry was found and there was no error. So we default to
+         * ENOENT as our return code.
+         */
+        return ((errno != 0)? errno : ENOENT);
     }
 
-    rc = getpwnam_r(name, &pwd, buffer, PCMK__PW_BUFFER_LEN, &pwentry);
-    if (pwentry) {
-        if (uid) {
-            *uid = pwentry->pw_uid;
-        }
-        if (gid) {
-            *gid = pwentry->pw_gid;
-        }
-        crm_trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
-
-    } else {
-        rc = rc? -rc : -EINVAL;
-        crm_info("User %s lookup: %s", name, pcmk_strerror(rc));
+    if (uid != NULL) {
+        *uid = pwentry->pw_uid;
     }
-
-    free(buffer);
-    return rc;
-}
-
-/*!
- * \brief Get user and group IDs of pacemaker daemon user
- *
- * \param[out] uid  If non-NULL, where to store daemon user ID
- * \param[out] gid  If non-NULL, where to store daemon group ID
- *
- * \return pcmk_ok on success, -errno otherwise
- */
-int
-pcmk_daemon_user(uid_t *uid, gid_t *gid)
-{
-    static uid_t daemon_uid;
-    static gid_t daemon_gid;
-    static bool found = false;
-    int rc = pcmk_ok;
-
-    if (!found) {
-        rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
-        if (rc == pcmk_ok) {
-            found = true;
-        }
+    if (gid != NULL) {
+        *gid = pwentry->pw_gid;
     }
-    if (found) {
-        if (uid) {
-            *uid = daemon_uid;
-        }
-        if (gid) {
-            *gid = daemon_gid;
-        }
-    }
-    return rc;
+    pcmk__trace("User %s has uid=%lld gid=%lld", name,
+                (long long) pwentry->pw_uid, (long long) pwentry->pw_gid);
+
+    return pcmk_rc_ok;
 }
 
 /*!
  * \internal
- * \brief Return the integer equivalent of a portion of a string
+ * \brief Get user and group IDs of Pacemaker daemon user
  *
- * \param[in]  text      Pointer to beginning of string portion
- * \param[out] end_text  This will point to next character after integer
- */
-static int
-version_helper(const char *text, const char **end_text)
-{
-    int atoi_result = -1;
-
-    pcmk__assert(end_text != NULL);
-
-    errno = 0;
-
-    if (text != NULL && text[0] != 0) {
-        /* seemingly sacrificing const-correctness -- because while strtol
-           doesn't modify the input, it doesn't want to artificially taint the
-           "end_text" pointer-to-pointer-to-first-char-in-string with constness
-           in case the input wasn't actually constant -- by semantic definition
-           not a single character will get modified so it shall be perfectly
-           safe to make compiler happy with dropping "const" qualifier here */
-        atoi_result = (int) strtol(text, (char **) end_text, 10);
-
-        if (errno == EINVAL) {
-            crm_err("Conversion of '%s' %c failed", text, text[0]);
-            atoi_result = -1;
-        }
-    }
-    return atoi_result;
-}
-
-/*
- * version1 < version2 : -1
- * version1 = version2 :  0
- * version1 > version2 :  1
+ * \param[out] uid  Where to store daemon user ID (can be \c NULL)
+ * \param[out] gid  Where to store daemon group ID (can be \c NULL)
+ *
+ * \return Standard Pacemaker return code
  */
 int
-compare_version(const char *version1, const char *version2)
+pcmk__daemon_user(uid_t *uid, gid_t *gid)
 {
+    static uid_t daemon_uid = 0;
+    static gid_t daemon_gid = 0;
+    static bool found = false;
+
+    if (!found) {
+        int rc = pcmk__lookup_user(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
+
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+        found = true;
+    }
+
+    if (uid != NULL) {
+        *uid = daemon_uid;
+    }
+    if (gid != NULL) {
+        *gid = daemon_gid;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Compare two version strings to determine which one is higher
+ *
+ * A valid version string is of the form specified by the regex
+ * <tt>[0-9]+(\.[0-9]+)*</tt>.
+ *
+ * Leading whitespace and trailing garbage are allowed and ignored.
+ *
+ * For each string, we get all segments until the first invalid character. A
+ * segment is a series of digits, and segments are delimited by a single dot.
+ * The two strings are compared segment by segment, until either we find a
+ * difference or we've processed all segments in both strings.
+ *
+ * If one string runs out of segments to compare before the other string does,
+ * we treat it as if it has enough padding \c "0" segments to finish the
+ * comparisons.
+ *
+ * Segments are compared by calling \c strtoll() to parse them to long long
+ * integers and then performing standard integer comparison.
+ *
+ * \param[in] version1  First version to compare
+ * \param[in] version2  Second version to compare
+ *
+ * \retval -1  if \p version1 evaluates to a lower version than \p version2
+ * \retval  1  if \p version1 evaluates to a higher version than \p version2
+ * \retval  0  if \p version1 and \p version2 evaluate to an equal version
+ *
+ * \note Each version segment's parsed value must fit into a <tt>long long</tt>.
+ */
+int
+pcmk__compare_versions(const char *version1, const char *version2)
+{
+    regex_t regex;
+    regmatch_t pmatch1[1];
+    regmatch_t pmatch2[1];
+    regoff_t off1 = 0;
+    regoff_t off2 = 0;
+
+    bool has_match1 = false;
+    bool has_match2 = false;
     int rc = 0;
-    int lpc = 0;
-    const char *ver1_iter, *ver2_iter;
 
-    if (version1 == NULL && version2 == NULL) {
+    if (version1 == version2) {
         return 0;
-    } else if (version1 == NULL) {
-        return -1;
-    } else if (version2 == NULL) {
-        return 1;
     }
 
-    ver1_iter = version1;
-    ver2_iter = version2;
+    // Parse each version string as digit segments delimited by dots
+    pcmk__assert(regcomp(&regex, "^[[:digit:]]+\\.?", REG_EXTENDED) == 0);
 
-    while (1) {
-        int digit1 = 0;
-        int digit2 = 0;
+    if (version1 != NULL) {
+        // Skip leading whitespace
+        for (; isspace(*version1); version1++);
+        has_match1 = (regexec(&regex, version1, 1, pmatch1, 0) == 0);
+    }
+    if (version2 != NULL) {
+        for (; isspace(*version2); version2++);
+        has_match2 = (regexec(&regex, version2, 1, pmatch2, 0) == 0);
+    }
 
-        lpc++;
+    while (has_match1 || has_match2) {
+        long long value1 = 0;
+        long long value2 = 0;
 
-        if (ver1_iter == ver2_iter) {
-            break;
+        if (has_match1) {
+            value1 = strtoll(version1 + off1 + pmatch1[0].rm_so, NULL, 10);
+        }
+        if (has_match2) {
+            value2 = strtoll(version2 + off2 + pmatch2[0].rm_so, NULL, 10);
         }
 
-        if (ver1_iter != NULL) {
-            digit1 = version_helper(ver1_iter, &ver1_iter);
-        }
-
-        if (ver2_iter != NULL) {
-            digit2 = version_helper(ver2_iter, &ver2_iter);
-        }
-
-        if (digit1 < digit2) {
+        if (value1 < value2) {
+            pcmk__trace("%s < %s", version1, version2);
             rc = -1;
-            break;
-
-        } else if (digit1 > digit2) {
+            goto done;
+        }
+        if (value1 > value2) {
+            pcmk__trace("%s > %s", version1, version2);
             rc = 1;
-            break;
+            goto done;
         }
 
-        if (ver1_iter != NULL && *ver1_iter == '.') {
-            ver1_iter++;
+        // Compare next segments
+        if (has_match1) {
+            off1 += pmatch1[0].rm_eo;
+            has_match1 = (regexec(&regex, version1 + off1, 1, pmatch1, 0) == 0);
         }
-        if (ver1_iter != NULL && *ver1_iter == '\0') {
-            ver1_iter = NULL;
-        }
-
-        if (ver2_iter != NULL && *ver2_iter == '.') {
-            ver2_iter++;
-        }
-        if (ver2_iter != NULL && *ver2_iter == 0) {
-            ver2_iter = NULL;
+        if (has_match2) {
+            off2 += pmatch2[0].rm_eo;
+            has_match2 = (regexec(&regex, version2 + off2, 1, pmatch2, 0) == 0);
         }
     }
 
-    if (rc == 0) {
-        crm_trace("%s == %s (%d)", version1, version2, lpc);
-    } else if (rc < 0) {
-        crm_trace("%s < %s (%d)", version1, version2, lpc);
-    } else if (rc > 0) {
-        crm_trace("%s > %s (%d)", version1, version2, lpc);
-    }
+    pcmk__trace("%s == %s", version1, version2);
 
+done:
+    regfree(&regex);
     return rc;
 }
 
@@ -289,8 +290,8 @@ pcmk__daemonize(const char *name, const char *pidfile)
     /* Check before we even try... */
     rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
     if ((rc != pcmk_rc_ok) && (rc != ENOENT)) {
-        crm_err("%s: already running [pid %lld in %s]",
-                name, (long long) pid, pidfile);
+        pcmk__err("%s: already running [pid %lld in %s]", name, (long long) pid,
+                  pidfile);
         printf("%s: already running [pid %lld in %s]\n",
                name, (long long) pid, pidfile);
         crm_exit(CRM_EX_ERROR);
@@ -308,8 +309,8 @@ pcmk__daemonize(const char *name, const char *pidfile)
 
     rc = pcmk__lock_pidfile(pidfile, name);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not lock '%s' for %s: %s " QB_XS " rc=%d",
-                pidfile, name, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not lock '%s' for %s: %s " QB_XS " rc=%d", pidfile,
+                  name, pcmk_rc_str(rc), rc);
         printf("Could not lock '%s' for %s: %s (%d)\n",
                pidfile, name, pcmk_rc_str(rc), rc);
         crm_exit(CRM_EX_ERROR);
@@ -327,17 +328,37 @@ pcmk__daemonize(const char *name, const char *pidfile)
     pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 }
 
+/* @FIXME uuid.h is an optional header per configure.ac, and we include it
+ * conditionally above. But uuid_generate() and uuid_unparse() depend on it, on
+ * many or perhaps all systems with libuuid. So it's not clear how it would ever
+ * be optional in practice.
+ *
+ * Note that these functions are not POSIX, although there is probably no good
+ * portable alternative.
+ *
+ * We do list libuuid as a build dependency in INSTALL.md already.
+ */
+
 #ifdef HAVE_UUID_UUID_H
-#  include <uuid/uuid.h>
-#endif
+#include <uuid/uuid.h>
+#endif  // HAVE_UUID_UUID_H
 
+/*!
+ * \internal
+ * \brief Generate a 37-byte (36 bytes plus null terminator) UUID string
+ *
+ * \return Newly allocated UUID string
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
 char *
-crm_generate_uuid(void)
+pcmk__generate_uuid(void)
 {
-    unsigned char uuid[16];
-    char *buffer = malloc(37);  /* Including NUL byte */
+    uuid_t uuid;
 
-    pcmk__mem_assert(buffer);
+    // uuid_unparse() converts a UUID to a 37-byte string (including null byte)
+    char *buffer = pcmk__assert_alloc(37, sizeof(char));
+
     uuid_generate(uuid);
     uuid_unparse(uuid, buffer);
     return buffer;
@@ -450,7 +471,7 @@ pcmk__timeout_ms2s(guint timeout_ms)
 static void
 _gnutls_log_func(int level, const char *msg)
 {
-    crm_trace("%s", msg);
+    pcmk__trace("%s", msg);
 }
 
 void
@@ -494,6 +515,169 @@ crm_is_daemon_name(const char *name)
                             "stonith-ng",
                             "stonithd",
                             NULL);
+}
+
+char *
+crm_generate_uuid(void)
+{
+    return pcmk__generate_uuid();
+}
+
+#define PW_BUFFER_LEN 500
+
+int
+crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
+{
+    int rc = pcmk_ok;
+    char *buffer = NULL;
+    struct passwd pwd;
+    struct passwd *pwentry = NULL;
+
+    buffer = calloc(1, PW_BUFFER_LEN);
+    if (buffer == NULL) {
+        return -ENOMEM;
+    }
+
+    rc = getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    if (pwentry) {
+        if (uid) {
+            *uid = pwentry->pw_uid;
+        }
+        if (gid) {
+            *gid = pwentry->pw_gid;
+        }
+        pcmk__trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid,
+                    pwentry->pw_gid);
+
+    } else {
+        rc = rc? -rc : -EINVAL;
+        pcmk__info("User %s lookup: %s", name, pcmk_strerror(rc));
+    }
+
+    free(buffer);
+    return rc;
+}
+
+int
+pcmk_daemon_user(uid_t *uid, gid_t *gid)
+{
+    static uid_t daemon_uid;
+    static gid_t daemon_gid;
+    static bool found = false;
+    int rc = pcmk_ok;
+
+    if (!found) {
+        rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
+        if (rc == pcmk_ok) {
+            found = true;
+        }
+    }
+    if (found) {
+        if (uid) {
+            *uid = daemon_uid;
+        }
+        if (gid) {
+            *gid = daemon_gid;
+        }
+    }
+    return rc;
+}
+
+static int
+version_helper(const char *text, const char **end_text)
+{
+    int atoi_result = -1;
+
+    pcmk__assert(end_text != NULL);
+
+    errno = 0;
+
+    if (text != NULL && text[0] != 0) {
+        /* seemingly sacrificing const-correctness -- because while strtol
+           doesn't modify the input, it doesn't want to artificially taint the
+           "end_text" pointer-to-pointer-to-first-char-in-string with constness
+           in case the input wasn't actually constant -- by semantic definition
+           not a single character will get modified so it shall be perfectly
+           safe to make compiler happy with dropping "const" qualifier here */
+        atoi_result = (int) strtol(text, (char **) end_text, 10);
+
+        if (errno == EINVAL) {
+            pcmk__err("Conversion of '%s' %c failed", text, text[0]);
+            atoi_result = -1;
+        }
+    }
+    return atoi_result;
+}
+
+int
+compare_version(const char *version1, const char *version2)
+{
+    int rc = 0;
+    int lpc = 0;
+    const char *ver1_iter, *ver2_iter;
+
+    if (version1 == NULL && version2 == NULL) {
+        return 0;
+    } else if (version1 == NULL) {
+        return -1;
+    } else if (version2 == NULL) {
+        return 1;
+    }
+
+    ver1_iter = version1;
+    ver2_iter = version2;
+
+    while (1) {
+        int digit1 = 0;
+        int digit2 = 0;
+
+        lpc++;
+
+        if (ver1_iter == ver2_iter) {
+            break;
+        }
+
+        if (ver1_iter != NULL) {
+            digit1 = version_helper(ver1_iter, &ver1_iter);
+        }
+
+        if (ver2_iter != NULL) {
+            digit2 = version_helper(ver2_iter, &ver2_iter);
+        }
+
+        if (digit1 < digit2) {
+            rc = -1;
+            break;
+
+        } else if (digit1 > digit2) {
+            rc = 1;
+            break;
+        }
+
+        if (ver1_iter != NULL && *ver1_iter == '.') {
+            ver1_iter++;
+        }
+        if (ver1_iter != NULL && *ver1_iter == '\0') {
+            ver1_iter = NULL;
+        }
+
+        if (ver2_iter != NULL && *ver2_iter == '.') {
+            ver2_iter++;
+        }
+        if (ver2_iter != NULL && *ver2_iter == 0) {
+            ver2_iter = NULL;
+        }
+    }
+
+    if (rc == 0) {
+        pcmk__trace("%s == %s (%d)", version1, version2, lpc);
+    } else if (rc < 0) {
+        pcmk__trace("%s < %s (%d)", version1, version2, lpc);
+    } else if (rc > 0) {
+        pcmk__trace("%s > %s (%d)", version1, version2, lpc);
+    }
+
+    return rc;
 }
 
 // LCOV_EXCL_STOP
