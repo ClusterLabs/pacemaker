@@ -127,7 +127,7 @@ log_fsa_input(fsa_data_t *stored_msg)
 
     } else {
         pcmk__trace("FSA processing XML message from %s", stored_msg->origin);
-        crm_log_xml_trace(stored_msg->data->xml, "FSA message data");
+        pcmk__log_xml_trace(stored_msg->data->xml, "FSA message data");
     }
 }
 

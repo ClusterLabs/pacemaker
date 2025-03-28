@@ -609,7 +609,7 @@ controld_query_executor_state(void)
     // Build a list of active (not necessarily running) resources
     build_active_RAs(lrm_state, rsc_list);
 
-    crm_log_xml_trace(xml_state, "Current executor state");
+    pcmk__log_xml_trace(xml_state, "Current executor state");
 
     return xml_state;
 }
@@ -1767,7 +1767,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     reply = pcmk__new_message(pcmk_ipc_controld, "direct-ack", CRM_SYSTEM_LRMD,
                               to_host, to_sys, CRM_OP_INVOKE_LRM, update);
 
-    crm_log_xml_trace(update, "[direct ACK]");
+    pcmk__log_xml_trace(update, "[direct ACK]");
 
     pcmk__debug("ACK'ing resource op " PCMK__OP_FMT " from %s: %s", op->rsc_id,
                 op->op_type, op->interval_ms, op->user_data,

@@ -486,7 +486,7 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
               rc = pcmk_rc_error;
               goto done);
 
-    crm_log_xml_trace(xml, "writing");
+    pcmk__log_xml_trace(xml, "writing");
 
     if (compress
         && (write_compressed_stream(buffer->str, filename, stream,
