@@ -137,7 +137,7 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
     input = msg_data->data;
     graph_data = input->xml;
     if (graph_data == NULL) {
-        crm_log_xml_err(input->msg, "Bad command");
+        pcmk__log_xml_err(input->msg, "Bad command");
         register_fsa_error(I_FAIL, msg_data);
         return;
     }
@@ -168,7 +168,7 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
 
     CRM_CHECK(graph_data != NULL,
               pcmk__err("Input raised by %s is invalid", msg_data->origin);
-              crm_log_xml_err(input->msg, "Bad command");
+              pcmk__log_xml_err(input->msg, "Bad command");
               return);
 
     graph_input = pcmk__xe_get(input->msg, PCMK__XA_CRM_TGRAPH_IN);

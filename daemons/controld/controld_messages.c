@@ -1179,7 +1179,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
     } else {
         pcmk__err("Unexpected request (%s) sent to %s", op,
                   (AM_I_DC ? "the DC" : "non-DC node"));
-        crm_log_xml_err(stored_msg, "Unexpected");
+        pcmk__log_xml_err(stored_msg, "Unexpected");
     }
 
     return I_NULL;

@@ -636,7 +636,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (result != pcmk_ok) {
-        crm_log_xml_err(failed, "CIB Update failures");
+        pcmk__log_xml_err(failed, "CIB Update failures");
         *answer = failed;
 
     } else {

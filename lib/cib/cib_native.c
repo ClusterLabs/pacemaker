@@ -117,13 +117,13 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     } else if (reply_id <= 0) {
         pcmk__err("Received bad reply: No id set");
-        crm_log_xml_err(op_reply, "Bad reply");
+        pcmk__log_xml_err(op_reply, "Bad reply");
         rc = -ENOMSG;
         goto done;
 
     } else {
         pcmk__err("Received bad reply: %d (wanted %d)", reply_id, cib->call_id);
-        crm_log_xml_err(op_reply, "Old reply");
+        pcmk__log_xml_err(op_reply, "Old reply");
         rc = -ENOMSG;
         goto done;
     }
@@ -150,7 +150,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         case -ENOMSG:
             pcmk__err("Call failed: %s", pcmk_strerror(rc));
             if (op_reply) {
-                crm_log_xml_err(op_reply, "Invalid reply");
+                pcmk__log_xml_err(op_reply, "Invalid reply");
             }
             break;
 
