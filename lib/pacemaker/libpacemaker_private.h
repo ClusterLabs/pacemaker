@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,7 @@
 
 #include <crm/common/scheduler.h>   // pcmk_action_t, pcmk_node_t, etc.
 #include <crm/common/scheduler_internal.h>  // pcmk__location_t, etc.
+#include <crm/common/xml_internal.h>    // pcmk__idref_t (indirectly)
 #include <crm/cib.h>                // cib_t
 #include <crm/lrmd_events.h>        // lrmd_event_data_t
 #include <crm/pengine/internal.h>   // pe__const_top_resource(), etc.
