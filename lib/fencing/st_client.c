@@ -1456,7 +1456,7 @@ xml_to_event(xmlNode *msg)
 
         if (data == NULL) {
             pcmk__err("No data for %s event", event->operation);
-            crm_log_xml_notice(msg, "BadEvent");
+            pcmk__log_xml_notice(msg, "BadEvent");
         } else {
             event->origin = pcmk__xe_get_copy(data, PCMK__XA_ST_ORIGIN);
             event->action = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ACTION);
@@ -1476,7 +1476,7 @@ xml_to_event(xmlNode *msg)
 
         if (data == NULL) {
             pcmk__err("No data for %s event", event->operation);
-            crm_log_xml_notice(msg, "BadEvent");
+            pcmk__log_xml_notice(msg, "BadEvent");
         } else {
             event->device = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ID);
         }
