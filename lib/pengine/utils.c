@@ -62,10 +62,10 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
         return true;
 
-    } else if(node == NULL) {
+    } else if (node == NULL) {
         return false;
 
-    } else if(node->details->online) {
+    } else if (node->details->online) {
         crm_notice("We can fence %s without quorum because they're in our membership",
                    pcmk__node_name(node));
         return true;
