@@ -346,8 +346,6 @@ pcmk__clip_log_level(int level)
         }                                                                   \
     } while (0)
 
-#define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt ,##args)
-
 #define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
 #define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
 #define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
