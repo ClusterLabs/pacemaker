@@ -136,7 +136,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(update_msg != NULL, return);
 
     type = pcmk__xe_get(update_msg, PCMK__XA_SUBT);
-    CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
+    CRM_CHECK(type != NULL, pcmk__log_xml_err(update_msg, "notify"); return);
 
     if (client->ipcs == NULL) {
         pcmk__trace("Skipping client with NULL channel");

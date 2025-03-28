@@ -588,7 +588,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     if (action_rsc == NULL) { // Shouldn't be possible
-        crm_log_xml_err(action->xml, "Bad");
+        pcmk__log_xml_err(action->xml, "Bad");
         free(node);
         return EPROTO;
     }
@@ -600,7 +600,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      */
     resource_config_name = pcmk__xe_get(action_rsc, PCMK_XA_ID);
     if (resource_config_name == NULL) { // Shouldn't be possible
-        crm_log_xml_err(action->xml, "No ID");
+        pcmk__log_xml_err(action->xml, "No ID");
         free(node);
         return EPROTO;
     }

@@ -939,7 +939,7 @@ cib_process_request(xmlNode *request, bool privileged,
 
         if (op_reply == NULL && (needs_reply || local_notify)) {
             pcmk__err("Unexpected NULL reply to message");
-            crm_log_xml_err(request, "null reply");
+            pcmk__log_xml_err(request, "null reply");
             goto done;
         }
     }
