@@ -195,7 +195,7 @@ pacemakerd_handle_request(pcmk__request_t *request)
     reply = pcmk__process_request(request, pacemakerd_handlers);
 
     if (reply != NULL) {
-        crm_log_xml_trace(reply, "Reply");
+        pcmk__log_xml_trace(reply, "Reply");
 
         pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
                            crm_ipc_server_event);

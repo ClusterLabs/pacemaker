@@ -349,10 +349,10 @@ xml2list(const xmlNode *parent)
     nvpair_list = pcmk__xe_first_child(parent, PCMK__XE_ATTRIBUTES, NULL, NULL);
     if (nvpair_list == NULL) {
         pcmk__trace("No attributes in %s", parent->name);
-        crm_log_xml_trace(parent, "No attributes for resource op");
+        pcmk__log_xml_trace(parent, "No attributes for resource op");
     }
 
-    crm_log_xml_trace(nvpair_list, "Unpacking");
+    pcmk__log_xml_trace(nvpair_list, "Unpacking");
 
     for (pIter = pcmk__xe_first_attr(nvpair_list); pIter != NULL;
          pIter = pIter->next) {

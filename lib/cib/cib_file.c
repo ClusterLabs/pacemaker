@@ -1094,7 +1094,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
         pcmk__trace("Applied %s request to transaction working CIB for CIB "
                     "file client (%s) on file '%s'",
                     op, private->id, private->filename);
-        crm_log_xml_trace(request, "Successful request");
+        pcmk__log_xml_trace(request, "Successful request");
     }
 
     return pcmk_rc_ok;
