@@ -53,6 +53,9 @@ extern "C" {
 //! \deprecated Do not use
 #define crm_log_xml_crit(xml, text) do_crm_log_xml(LOG_CRIT, text, xml)
 
+//! \deprecated Do not use
+#define crm_log_xml_err(xml, text) do_crm_log_xml(LOG_ERR, text, xml)
+
 #ifdef __cplusplus
 }
 #endif
