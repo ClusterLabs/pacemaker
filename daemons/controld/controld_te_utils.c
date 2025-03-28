@@ -25,11 +25,11 @@ stop_te_timer(pcmk__graph_action_t *action)
         return FALSE;
     }
     if (action->timer != 0) {
-        crm_trace("Stopping action timer");
+        pcmk__trace("Stopping action timer");
         g_source_remove(action->timer);
         action->timer = 0;
     } else {
-        crm_trace("Action timer was already stopped");
+        pcmk__trace("Action timer was already stopped");
         return FALSE;
     }
     return TRUE;
@@ -43,9 +43,9 @@ te_graph_trigger(gpointer user_data)
         return TRUE;
     }
 
-    crm_trace("Invoking graph %d in state %s",
-              controld_globals.transition_graph->id,
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__trace("Invoking graph %d in state %s",
+                controld_globals.transition_graph->id,
+                fsa_state2string(controld_globals.fsa_state));
 
     switch (controld_globals.fsa_state) {
         case S_STARTING:
@@ -68,11 +68,11 @@ te_graph_trigger(gpointer user_data)
         controld_globals.transition_graph->batch_limit = orig_limit;
 
         if (graph_rc == pcmk__graph_active) {
-            crm_trace("Transition not yet complete");
+            pcmk__trace("Transition not yet complete");
             return TRUE;
 
         } else if (graph_rc == pcmk__graph_pending) {
-            crm_trace("Transition not yet complete - no actions fired");
+            pcmk__trace("Transition not yet complete - no actions fired");
             return TRUE;
         }
 
@@ -116,7 +116,7 @@ controld_destroy_transition_trigger(void)
 void
 controld_trigger_graph_as(const char *fn, int line)
 {
-    crm_trace("%s:%d - Triggered graph processing", fn, line);
+    pcmk__trace("%s:%d - Triggered graph processing", fn, line);
     mainloop_set_trigger(transition_trigger);
 }
 

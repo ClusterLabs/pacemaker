@@ -1362,8 +1362,9 @@ get_complex_task(const pcmk_resource_t *rsc, const char *name)
             case pcmk__action_started:
             case pcmk__action_demoted:
             case pcmk__action_promoted:
-                crm_trace("Folding %s back into its atomic counterpart for %s",
-                          name, rsc->id);
+                pcmk__trace("Folding %s back into its atomic counterpart for "
+                            "%s",
+                            name, rsc->id);
                 --task;
                 break;
             default:
@@ -1428,18 +1429,19 @@ find_actions(GList *input, const char *key, const pcmk_node_t *on_node)
             continue;
 
         } else if (on_node == NULL) {
-            crm_trace("Action %s matches (ignoring node)", key);
+            pcmk__trace("Action %s matches (ignoring node)", key);
             result = g_list_prepend(result, action);
 
         } else if (action->node == NULL) {
-            crm_trace("Action %s matches (unallocated, assigning to %s)",
-                      key, pcmk__node_name(on_node));
+            pcmk__trace("Action %s matches (unallocated, assigning to %s)", key,
+                        pcmk__node_name(on_node));
 
             action->node = pe__copy_node(on_node);
             result = g_list_prepend(result, action);
 
         } else if (pcmk__same_node(on_node, action->node)) {
-            crm_trace("Action %s on %s matches", key, pcmk__node_name(on_node));
+            pcmk__trace("Action %s on %s matches", key,
+                        pcmk__node_name(on_node));
             result = g_list_prepend(result, action);
         }
     }
@@ -1465,7 +1467,8 @@ find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
             && pcmk__str_eq(key, action->uuid, pcmk__str_casei)
             && pcmk__same_node(on_node, action->node)) {
 
-            crm_trace("Action %s on %s matches", key, pcmk__node_name(on_node));
+            pcmk__trace("Action %s on %s matches", key,
+                        pcmk__node_name(on_node));
             result = g_list_prepend(result, action);
         }
     }
@@ -1571,14 +1574,14 @@ pe__clear_resource_history(pcmk_resource_t *rsc, const pcmk_node_t *node)
                   PCMK_ACTION_LRM_DELETE, node, FALSE, rsc->priv->scheduler);
 }
 
-#define sort_return(an_int, why) do {                                   \
-        free(a_uuid);                                                   \
-        free(b_uuid);                                                   \
-        crm_trace("%s (%d) %c %s (%d) : %s",                            \
-                  a_xml_id, a_call_id,                                  \
-                  (((an_int) > 0)? '>' : (((an_int) < 0)? '<' : '=')),  \
-                  b_xml_id, b_call_id, why);                            \
-        return an_int;                                                  \
+#define sort_return(an_int, why) do {                                       \
+        free(a_uuid);                                                       \
+        free(b_uuid);                                                       \
+        pcmk__trace("%s (%d) %c %s (%d) : %s",                              \
+                    a_xml_id, a_call_id,                                    \
+                    (((an_int) > 0)? '>' : (((an_int) < 0)? '<' : '=')),    \
+                    b_xml_id, b_call_id, why);                              \
+        return an_int;                                                      \
     } while(0)
 
 int
@@ -1634,8 +1637,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
         pcmk__xe_get_time(xml_a, PCMK_XA_LAST_RC_CHANGE, &last_a);
         pcmk__xe_get_time(xml_b, PCMK_XA_LAST_RC_CHANGE, &last_b);
 
-        crm_trace("rc-change: %lld vs %lld",
-                  (long long) last_a, (long long) last_b);
+        pcmk__trace("rc-change: %lld vs %lld",
+                    (long long) last_a, (long long) last_b);
         if (last_a >= 0 && last_a < last_b) {
             sort_return(-1, "rc-change");
 

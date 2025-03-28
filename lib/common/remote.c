@@ -125,13 +125,13 @@ send_tls(gnutls_session_t session, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_trace("Sending TLS message of %zu bytes", unsent_len);
+    pcmk__trace("Sending TLS message of %zu bytes", unsent_len);
 
     while (true) {
         gnutls_rc = gnutls_record_send(session, unsent, unsent_len);
 
         if (gnutls_rc == GNUTLS_E_INTERRUPTED || gnutls_rc == GNUTLS_E_AGAIN) {
-            crm_trace("Retrying to send %zu bytes remaining", unsent_len);
+            pcmk__trace("Retrying to send %zu bytes remaining", unsent_len);
 
         } else if (gnutls_rc < 0) {
             // Caller can log as error if necessary
@@ -140,11 +140,12 @@ send_tls(gnutls_session_t session, struct iovec *iov)
             return ECONNABORTED;
 
         } else if (gnutls_rc < unsent_len) {
-            crm_trace("Sent %zd of %zu bytes remaining", gnutls_rc, unsent_len);
+            pcmk__trace("Sent %zd of %zu bytes remaining", gnutls_rc,
+                        unsent_len);
             unsent_len -= gnutls_rc;
             unsent += gnutls_rc;
         } else {
-            crm_trace("Sent all %zd bytes remaining", gnutls_rc);
+            pcmk__trace("Sent all %zd bytes remaining", gnutls_rc);
             break;
         }
     }
@@ -171,8 +172,8 @@ send_plaintext(int sock, struct iovec *iov)
             int rc = errno;
 
             if ((rc == EINTR) || (rc == EAGAIN) || (rc == EWOULDBLOCK)) {
-                crm_trace("Retrying to send %zu bytes remaining to socket %d",
-                          unsent_len, sock);
+                pcmk__trace("Retrying to send %zu bytes remaining to socket %d",
+                            unsent_len, sock);
                 continue;
             }
 
@@ -182,13 +183,14 @@ send_plaintext(int sock, struct iovec *iov)
             return rc;
 
         } else if (write_rc < unsent_len) {
-            crm_trace("Sent %zd of %zu bytes remaining", write_rc, unsent_len);
+            pcmk__trace("Sent %zd of %zu bytes remaining", write_rc,
+                        unsent_len);
             unsent += write_rc;
             unsent_len -= write_rc;
 
         } else {
-            crm_trace("Sent all %zd bytes remaining: %.100s",
-                      write_rc, (char *) (iov->iov_base));
+            pcmk__trace("Sent all %zd bytes remaining: %.100s", write_rc,
+                        (const char *) iov->iov_base);
             return pcmk_rc_ok;
         }
     }
@@ -295,8 +297,8 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         char *uncompressed =
             pcmk__assert_alloc(header->payload_offset + size_u, sizeof(char));
 
-        crm_trace("Decompressing message data %d bytes into %d bytes",
-                 header->payload_compressed, size_u);
+        pcmk__trace("Decompressing message data %d bytes into %d bytes",
+                    header->payload_compressed, size_u);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset, &size_u,
                                         remote->buffer + header->payload_offset,
@@ -395,7 +397,7 @@ pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms)
 
     sock = get_remote_socket(remote);
     if (sock < 0) {
-        crm_trace("No longer connected");
+        pcmk__trace("No longer connected");
         return ENOTCONN;
     }
 
@@ -452,7 +454,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     /* automatically grow the buffer when needed */
     if(remote->buffer_size < read_len) {
         remote->buffer_size = 2 * read_len;
-        crm_trace("Expanding buffer to %zu bytes", remote->buffer_size);
+        pcmk__trace("Expanding buffer to %zu bytes", remote->buffer_size);
         remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
@@ -486,8 +488,8 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer_offset += read_rc;
         /* always null terminate buffer, the +1 to alloc always allows for this. */
         remote->buffer[remote->buffer_offset] = '\0';
-        crm_trace("Received %zd more bytes (%zu total)",
-                  read_rc, remote->buffer_offset);
+        pcmk__trace("Received %zd more bytes (%zu total)", read_rc,
+                    remote->buffer_offset);
 
     } else if (read_rc == 0) {
         pcmk__debug("End of remote data encountered after %zu bytes",
@@ -495,8 +497,8 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         return ENOTCONN;
 
     } else if ((rc == EINTR) || (rc == EAGAIN) || (rc == EWOULDBLOCK)) {
-        crm_trace("No data available for non-blocking remote read: %s (%d)",
-                  pcmk_rc_str(rc), rc);
+        pcmk__trace("No data available for non-blocking remote read: %s (%d)",
+                    pcmk_rc_str(rc), rc);
 
     } else {
         pcmk__debug("Error receiving remote data after %zu bytes: %s (%d)",
@@ -507,11 +509,12 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     header = localized_remote_header(remote);
     if(header) {
         if(remote->buffer_offset < header->size_total) {
-            crm_trace("Read partial remote message (%zu of %" PRIu32 " bytes)",
-                      remote->buffer_offset, header->size_total);
+            pcmk__trace("Read partial remote message (%zu of %" PRIu32
+                        " bytes)",
+                        remote->buffer_offset, header->size_total);
         } else {
-            crm_trace("Read full remote message of %zu bytes",
-                      remote->buffer_offset);
+            pcmk__trace("Read full remote message of %zu bytes",
+                        remote->buffer_offset);
             return pcmk_rc_ok;
         }
     }
@@ -545,8 +548,9 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
     remaining_timeout = timeout_ms;
     while (remaining_timeout > 0) {
 
-        crm_trace("Waiting for remote data (%d ms of %d ms timeout remaining)",
-                  remaining_timeout, timeout_ms);
+        pcmk__trace("Waiting for remote data (%d ms of %d ms timeout "
+                    "remaining)",
+                    remaining_timeout, timeout_ms);
         rc = pcmk__remote_ready(remote, remaining_timeout);
 
         if (rc == ETIME) {
@@ -564,7 +568,7 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
             if (rc == pcmk_rc_ok) {
                 return rc;
             } else if (rc == EAGAIN) {
-                crm_trace("Waiting for more remote data");
+                pcmk__trace("Waiting for more remote data");
             } else {
                 pcmk__debug("Could not receive remote data: %s " QB_XS " rc=%d",
                             pcmk_rc_str(rc), rc);
@@ -620,8 +624,8 @@ check_connect_finished(gpointer userdata)
                 rc = ETIMEDOUT;
             }
         }
-        crm_trace("Could not check socket %d for connection success: %s (%d)",
-                  cb_data->sock, pcmk_rc_str(rc), rc);
+        pcmk__trace("Could not check socket %d for connection success: %s (%d)",
+                    cb_data->sock, pcmk_rc_str(rc), rc);
 
     } else if (rc == 0) { // select() timeout
         if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
@@ -642,25 +646,27 @@ check_connect_finished(gpointer userdata)
 
         if (getsockopt(cb_data->sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
             rc = errno;
-            crm_trace("Couldn't check socket %d for connection errors: %s (%d)",
-                      cb_data->sock, pcmk_rc_str(rc), rc);
+            pcmk__trace("Couldn't check socket %d for connection errors: %s "
+                        "(%d)",
+                        cb_data->sock, pcmk_rc_str(rc), rc);
         } else if (error != 0) {
             rc = error;
-            crm_trace("Socket %d connected with error: %s (%d)",
-                      cb_data->sock, pcmk_rc_str(rc), rc);
+            pcmk__trace("Socket %d connected with error: %s (%d)",
+                        cb_data->sock, pcmk_rc_str(rc), rc);
         } else {
             rc = pcmk_rc_ok;
         }
 
     } else { // Should not be possible
-        crm_trace("select() succeeded, but socket %d not in resulting "
-                  "read/write sets", cb_data->sock);
+        pcmk__trace("select() succeeded, but socket %d not in resulting "
+                    "read/write sets",
+                    cb_data->sock);
         rc = EAGAIN;
     }
 
   dispatch_done:
     if (rc == pcmk_rc_ok) {
-        crm_trace("Socket %d is connected", cb_data->sock);
+        pcmk__trace("Socket %d is connected", cb_data->sock);
     } else {
         close(cb_data->sock);
         cb_data->sock = -1;
@@ -750,8 +756,9 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
      *       working at the moment though. (See connect(2) regarding EINPROGRESS
      *       for possible new handling needed.)
      */
-    crm_trace("Scheduling check in %dms for whether connect to fd %d finished",
-              interval, sock);
+    pcmk__trace("Scheduling check in %dms for whether connect to fd %d "
+                "finished",
+                interval, sock);
     timer = pcmk__create_timer(interval, check_connect_finished, cb_data);
     if (timer_id) {
         *timer_id = timer;

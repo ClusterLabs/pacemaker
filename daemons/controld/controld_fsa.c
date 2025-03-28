@@ -111,7 +111,7 @@ void
 controld_trigger_fsa_as(const char *fn, int line)
 {
     if (fsa_trigger != NULL) {
-        crm_trace("%s:%d - Triggered FSA invocation", fn, line);
+        pcmk__trace("%s:%d - Triggered FSA invocation", fn, line);
         mainloop_set_trigger(fsa_trigger);
     }
 }
@@ -120,13 +120,13 @@ static void
 log_fsa_input(fsa_data_t *stored_msg)
 {
     pcmk__assert(stored_msg != NULL);
-    crm_trace("Processing queued input %llu", stored_msg->id);
+    pcmk__trace("Processing queued input %llu", stored_msg->id);
 
     if (stored_msg->data == NULL) {
-        crm_trace("FSA processing input from %s", stored_msg->origin);
+        pcmk__trace("FSA processing input from %s", stored_msg->origin);
 
     } else {
-        crm_trace("FSA processing XML message from %s", stored_msg->origin);
+        pcmk__trace("FSA processing XML message from %s", stored_msg->origin);
         crm_log_xml_trace(stored_msg->data->xml, "FSA message data");
     }
 }
@@ -137,10 +137,10 @@ log_fsa_data(gpointer data, gpointer user_data)
     fsa_data_t *fsa_data = data;
     unsigned int *offset = user_data;
 
-    crm_trace("queue[%u.%llu]: input %s submitted by %s (%p) (cause=%s)",
-              (*offset)++, fsa_data->id, fsa_input2string(fsa_data->fsa_input),
-              fsa_data->origin, fsa_data->data,
-              fsa_cause2string(fsa_data->fsa_cause));
+    pcmk__trace("queue[%u.%llu]: input %s submitted by %s (%p) (cause=%s)",
+                (*offset)++, fsa_data->id,
+                fsa_input2string(fsa_data->fsa_input), fsa_data->origin,
+                fsa_data->data, fsa_cause2string(fsa_data->fsa_cause));
 }
 
 enum crmd_fsa_state
@@ -152,9 +152,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     uint64_t new_actions = A_NOTHING;
     enum crmd_fsa_state last_state;
 
-    crm_trace("FSA invoked with Cause: %s\tState: %s",
-              fsa_cause2string(cause),
-              fsa_state2string(globals->fsa_state));
+    pcmk__trace("FSA invoked with Cause: %s\tState: %s",
+                fsa_cause2string(cause),
+                fsa_state2string(globals->fsa_state));
 
     fsa_dump_actions(controld_globals.fsa_actions, "Initial");
 
@@ -190,8 +190,9 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 
     while ((controld_fsa_message_queue_length() > 0)
            && !pcmk__is_set(controld_globals.flags, controld_fsa_is_stalled)) {
-        crm_trace("Checking messages (%u remaining)",
-                  controld_fsa_message_queue_length());
+
+        pcmk__trace("Checking messages (%u remaining)",
+                    controld_fsa_message_queue_length());
 
         fsa_data =
             (fsa_data_t *) g_queue_pop_head(controld_globals.fsa_message_queue);
@@ -266,7 +267,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
                     pcmk__flag_text(controld_globals.flags,
                                     controld_fsa_is_stalled));
     } else {
-        crm_trace("Exiting the FSA");
+        pcmk__trace("Exiting the FSA");
     }
 
     /* cleanup inputs? */

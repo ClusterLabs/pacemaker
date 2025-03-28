@@ -331,11 +331,11 @@ cib_remote_connection_destroy(gpointer user_data)
         return;
     }
 
-    crm_trace("Cleaning up after client %s disconnect",
-              pcmk__client_name(client));
+    pcmk__trace("Cleaning up after client %s disconnect",
+                pcmk__client_name(client));
 
     num_clients--;
-    crm_trace("Num unfree'd clients: %d", num_clients);
+    pcmk__trace("Num unfree'd clients: %d", num_clients);
 
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_tcp:
@@ -365,7 +365,7 @@ cib_remote_connection_destroy(gpointer user_data)
 
     pcmk__free_client(client);
 
-    crm_trace("Freed the cib client");
+    pcmk__trace("Freed the cib client");
 
     if (cib_shutdown_flag) {
         cib_shutdown(0);
@@ -419,8 +419,8 @@ cib_remote_msg(gpointer data)
     int rc;
     const char *client_name = pcmk__client_name(client);
 
-    crm_trace("Remote %s message received for client %s",
-              pcmk__client_type_str(PCMK__CLIENT_TYPE(client)), client_name);
+    pcmk__trace("Remote %s message received for client %s",
+                pcmk__client_type_str(PCMK__CLIENT_TYPE(client)), client_name);
 
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
         && !pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
@@ -468,7 +468,8 @@ cib_remote_msg(gpointer data)
 
         default:
             /* Error */
-            crm_trace("Error reading from remote client: %s", pcmk_rc_str(rc));
+            pcmk__trace("Error reading from remote client: %s",
+                        pcmk_rc_str(rc));
             return -1;
     }
 
@@ -508,7 +509,7 @@ cib_remote_msg(gpointer data)
 
     command = pcmk__remote_message_xml(client->remote);
     if (command != NULL) {
-        crm_trace("Remote message received from client %s", client_name);
+        pcmk__trace("Remote message received from client %s", client_name);
         cib_handle_remote_msg(client, command);
         pcmk__xml_free(command);
     }

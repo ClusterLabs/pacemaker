@@ -344,17 +344,18 @@ profile_filter(const struct dirent *entry)
         goto done;
     }
     if (filename[0] == '.') {
-        crm_trace("Not profiling hidden file '%s'", filename);
+        pcmk__trace("Not profiling hidden file '%s'", filename);
         goto done;
     }
     if (!g_str_has_suffix(filename, ".xml")) {
-        crm_trace("Not profiling file '%s' without '.xml' extension", filename);
+        pcmk__trace("Not profiling file '%s' without '.xml' extension",
+                    filename);
         goto done;
     }
 
     buf = pcmk__assert_asprintf("%s/%s", profiling_dir, filename);
     if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
-        crm_trace("Not profiling file '%s': not a regular file", filename);
+        pcmk__trace("Not profiling file '%s': not a regular file", filename);
         goto done;
     }
 

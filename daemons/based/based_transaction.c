@@ -88,8 +88,8 @@ process_transaction_requests(xmlNodePtr transaction,
             return rc;
         }
 
-        crm_trace("Applied %s request to transaction working CIB for %s",
-                  op, source);
+        pcmk__trace("Applied %s request to transaction working CIB for %s", op,
+                    source);
         crm_log_xml_trace(request, "Successful request");
     }
 
@@ -138,15 +138,15 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
               *result_cib = pcmk__xml_copy(NULL, the_cib));
 
     source = based_transaction_source_str(client, origin);
-    crm_trace("Committing transaction for %s to working CIB", source);
+    pcmk__trace("Committing transaction for %s to working CIB", source);
 
     // Apply all changes to a working copy of the CIB
     the_cib = *result_cib;
 
     rc = process_transaction_requests(transaction, client, origin);
 
-    crm_trace("Transaction commit %s for %s",
-              ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
+    pcmk__trace("Transaction commit %s for %s",
+                ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
 
     /* Some request types (for example, erase) may have freed the_cib (the
      * working copy) and pointed it at a new XML object. In that case, it

@@ -223,7 +223,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     role_spec = pcmk__xe_get(rule_xml, PCMK_XA_ROLE);
 
     if (parse_location_role(role_spec, &role)) {
-        crm_trace("Setting rule %s role filter to %s", rule_id, role_spec);
+        pcmk__trace("Setting rule %s role filter to %s", rule_id, role_spec);
     } else {
         pcmk__config_err("Ignoring location constraint '%s' because rule '%s' "
                          "has invalid " PCMK_XA_ROLE " '%s'",
@@ -292,10 +292,10 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     free(local_score_attr);
 
     if (location_rule->nodes == NULL) {
-        crm_trace("No matching nodes for location constraint rule %s", rule_id);
+        pcmk__trace("No matching nodes for location constraint rule %s", rule_id);
     } else {
-        crm_trace("Location constraint rule %s matched %d nodes",
-                  rule_id, g_list_length(location_rule->nodes));
+        pcmk__trace("Location constraint rule %s matched %u nodes", rule_id,
+                    g_list_length(location_rule->nodes));
     }
     return true;
 }
@@ -346,8 +346,8 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
             role_spec = pcmk__xe_get(xml_obj, PCMK_XA_ROLE);
         }
         if (parse_location_role(role_spec, &role)) {
-            crm_trace("Setting location constraint %s role filter: %s",
-                      id, role_spec);
+            pcmk__trace("Setting location constraint %s role filter: %s", id,
+                        role_spec);
         } else { // Not possible with schema validation enabled
             pcmk__config_err("Ignoring location constraint %s "
                              "because '%s' is not a valid " PCMK_XA_ROLE,
@@ -447,7 +447,8 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
                 unpack_rsc_location(xml_obj, r, NULL, NULL, NULL, 0, NULL);
 
             } else {
-                crm_trace("'%s' does not match '%s' for %s", r->id, value, id);
+                pcmk__trace("'%s' does not match '%s' for %s", r->id, value,
+                            id);
             }
 
             free(pmatch);

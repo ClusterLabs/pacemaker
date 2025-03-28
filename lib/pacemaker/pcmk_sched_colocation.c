@@ -499,8 +499,8 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
         }
     }
     if (local_score == 0) {
-        crm_trace("Ignoring colocation '%s' for set '%s' because score is 0",
-                  coloc_id, set_id);
+        pcmk__trace("Ignoring colocation '%s' for set '%s' because score is 0",
+                    coloc_id, set_id);
         return;
     }
 
@@ -635,9 +635,9 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     uint32_t flags = pcmk__coloc_none;
 
     if (score == 0) {
-        crm_trace("Ignoring colocation '%s' between sets %s and %s "
-                  "because score is 0",
-                  id, pcmk__xe_id(set1), pcmk__xe_id(set2));
+        pcmk__trace("Ignoring colocation '%s' between sets %s and %s because "
+                    "score is 0",
+                    id, pcmk__xe_id(set1), pcmk__xe_id(set2));
         return;
     }
 
@@ -1169,15 +1169,15 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
                                          action->task, NULL);
         if ((child_action == NULL)
             || pcmk__is_set(child_action->flags, pcmk__action_runnable)) {
-            crm_trace("Not blocking %s colocation dependents because "
-                      "at least %s has runnable %s",
-                      rsc->id, child->id, action->task);
+            pcmk__trace("Not blocking %s colocation dependents because at "
+                        "least %s has runnable %s",
+                        rsc->id, child->id, action->task);
             return; // At least one child can reach desired role
         }
     }
 
-    crm_trace("Blocking %s colocation dependents due to unrunnable %s %s",
-              rsc->id, action->rsc->id, action->task);
+    pcmk__trace("Blocking %s colocation dependents due to unrunnable %s %s",
+                rsc->id, action->rsc->id, action->task);
 
     // Check each colocation where this resource is primary
     colocations = pcmk__with_this_colocations(rsc);
@@ -1301,24 +1301,23 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
 
     if ((colocation->dependent_role != pcmk_role_unknown)
         && (colocation->dependent_role != dependent_role_rsc->priv->next_role)) {
-        crm_trace("Skipping %scolocation '%s': dependent limited to %s role "
-
-                  "but %s next role is %s",
-                  ((colocation->score < 0)? "anti-" : ""),
-                  colocation->id, pcmk_role_text(colocation->dependent_role),
-                  dependent_role_rsc->id,
-                  pcmk_role_text(dependent_role_rsc->priv->next_role));
+        pcmk__trace("Skipping %scolocation '%s': dependent limited to %s role "
+                    "but %s next role is %s",
+                    ((colocation->score < 0)? "anti-" : ""),
+                    colocation->id, pcmk_role_text(colocation->dependent_role),
+                    dependent_role_rsc->id,
+                    pcmk_role_text(dependent_role_rsc->priv->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
     if ((colocation->primary_role != pcmk_role_unknown)
         && (colocation->primary_role != primary_role_rsc->priv->next_role)) {
-        crm_trace("Skipping %scolocation '%s': primary limited to %s role "
-                  "but %s next role is %s",
-                  ((colocation->score < 0)? "anti-" : ""),
-                  colocation->id, pcmk_role_text(colocation->primary_role),
-                  primary_role_rsc->id,
-                  pcmk_role_text(primary_role_rsc->priv->next_role));
+        pcmk__trace("Skipping %scolocation '%s': primary limited to %s role "
+                    "but %s next role is %s",
+                    ((colocation->score < 0)? "anti-" : ""),
+                    colocation->id, pcmk_role_text(colocation->primary_role),
+                    primary_role_rsc->id,
+                    pcmk_role_text(primary_role_rsc->priv->next_role));
         return pcmk__coloc_affects_nothing;
     }
 
@@ -1705,18 +1704,18 @@ add_node_scores_matching_attr(GHashTable *nodes,
             if ((colocation->primary->priv->stickiness >= -score)
                 || !pcmk__colocation_has_influence(colocation, NULL)
                 || !allowed_on_one(colocation->dependent)) {
-                crm_trace("%s: Filtering %d + %f * %d "
-                          "(double negative disallowed)",
-                          pcmk__node_name(node), node->assign->score, factor,
-                          score);
+                pcmk__trace("%s: Filtering %d + %f * %d "
+                            "(double negative disallowed)",
+                            pcmk__node_name(node), node->assign->score, factor,
+                            score);
                 continue;
             }
         }
 
         if (node->assign->score == INFINITY_HACK) {
-            crm_trace("%s: Filtering %d + %f * %d (node was marked unusable)",
-                      pcmk__node_name(node), node->assign->score, factor,
-                      score);
+            pcmk__trace("%s: Filtering %d + %f * %d (node was marked unusable)",
+                        pcmk__node_name(node), node->assign->score, factor,
+                        score);
             continue;
         }
 
@@ -1740,23 +1739,23 @@ add_node_scores_matching_attr(GHashTable *nodes,
         new_score = pcmk__add_scores(delta, node->assign->score);
 
         if (only_positive && (new_score < 0) && (node->assign->score > 0)) {
-            crm_trace("%s: Filtering %d + %f * %d = %d "
-                      "(negative disallowed, marking node unusable)",
-                      pcmk__node_name(node), node->assign->score, factor, score,
-                      new_score);
+            pcmk__trace("%s: Filtering %d + %f * %d = %d "
+                        "(negative disallowed, marking node unusable)",
+                        pcmk__node_name(node), node->assign->score, factor,
+                        score, new_score);
             node->assign->score = INFINITY_HACK;
             continue;
         }
 
         if (only_positive && (new_score < 0) && (node->assign->score == 0)) {
-            crm_trace("%s: Filtering %d + %f * %d = %d (negative disallowed)",
-                      pcmk__node_name(node), node->assign->score, factor, score,
-                      new_score);
+            pcmk__trace("%s: Filtering %d + %f * %d = %d (negative disallowed)",
+                        pcmk__node_name(node), node->assign->score, factor,
+                        score, new_score);
             continue;
         }
 
-        crm_trace("%s: %d + %f * %d = %d", pcmk__node_name(node),
-                  node->assign->score, factor, score, new_score);
+        pcmk__trace("%s: %d + %f * %d = %d", pcmk__node_name(node),
+                    node->assign->score, factor, score, new_score);
         node->assign->score = new_score;
     }
 }

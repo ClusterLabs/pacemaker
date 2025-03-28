@@ -676,7 +676,7 @@ cib_file_new(const char *cib_location)
     private->flags = 0;
     if (cib_file_is_live(cib_location)) {
         cib_set_file_flags(private, cib_file_flag_live);
-        crm_trace("File %s detected as live CIB", cib_location);
+        pcmk__trace("File %s detected as live CIB", cib_location);
     }
 
     /* assign variant specific ops */
@@ -945,7 +945,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     char *tmp_digest = pcmk__assert_asprintf("%s/cib.XXXXXX", cib_dirname);
 
     /* Ensure the admin didn't modify the existing CIB underneath us */
-    crm_trace("Reading cluster configuration file %s", cib_path);
+    pcmk__trace("Reading cluster configuration file %s", cib_path);
     rc = cib_file_read_and_verify(cib_path, NULL, NULL);
     if ((rc != pcmk_ok) && (rc != -ENOENT)) {
         pcmk__err("%s was manually modified while the cluster was active!",
@@ -1091,9 +1091,9 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
             return rc;
         }
 
-        crm_trace("Applied %s request to transaction working CIB for CIB file "
-                  "client (%s) on file '%s'",
-                  op, private->id, private->filename);
+        pcmk__trace("Applied %s request to transaction working CIB for CIB "
+                    "file client (%s) on file '%s'",
+                    op, private->id, private->filename);
         crm_log_xml_trace(request, "Successful request");
     }
 
@@ -1135,18 +1135,18 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
               *result_cib = pcmk__xml_copy(NULL, private->cib_xml));
 
-    crm_trace("Committing transaction for CIB file client (%s) on file '%s' to "
-              "working CIB",
-              private->id, private->filename);
+    pcmk__trace("Committing transaction for CIB file client (%s) on file '%s' "
+                "to working CIB",
+                private->id, private->filename);
 
     // Apply all changes to a working copy of the CIB
     private->cib_xml = *result_cib;
 
     rc = cib_file_process_transaction_requests(cib, transaction);
 
-    crm_trace("Transaction commit %s for CIB file client (%s) on file '%s'",
-              ((rc == pcmk_rc_ok)? "succeeded" : "failed"),
-              private->id, private->filename);
+    pcmk__trace("Transaction commit %s for CIB file client (%s) on file '%s'",
+                ((rc == pcmk_rc_ok)? "succeeded" : "failed"),
+                private->id, private->filename);
 
     /* Some request types (for example, erase) may have freed private->cib_xml
      * (the working copy) and pointed it at a new XML object. In that case, it

@@ -200,14 +200,16 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
      */
 
     if (pcmk__str_eq(msg_type, LRMD_IPC_OP_EVENT, pcmk__str_casei)) {
-        crm_trace("Sending event to %s", ipc_client->id);
+        pcmk__trace("Sending event to %s", ipc_client->id);
         rc = pcmk__ipc_send_xml(ipc_client, 0, msg, crm_ipc_server_event);
 
     } else if (pcmk__str_eq(msg_type, LRMD_IPC_OP_RESPONSE, pcmk__str_casei)) {
         int msg_id = 0;
 
         pcmk__xe_get_int(xml, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
-        crm_trace("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
+
+        pcmk__trace("Sending response to %d - %s", ipc_client->request_id,
+                    ipc_client->id);
         rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, crm_ipc_flags_none);
 
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
@@ -360,7 +362,7 @@ ipc_proxy_closed(qb_ipcs_connection_t * c)
 
     ipc_proxy = pcmk__find_client_by_id(client->userdata);
 
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
 
     if (ipc_proxy) {
         xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
@@ -381,7 +383,7 @@ ipc_proxy_closed(qb_ipcs_connection_t * c)
 static void
 ipc_proxy_destroy(qb_ipcs_connection_t * c)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     ipc_proxy_closed(c);
 }
 

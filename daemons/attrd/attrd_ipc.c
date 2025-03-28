@@ -59,7 +59,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         /* Allow caller to use "localhost" to refer to local node */
         if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
             host = attrd_cluster->priv->node_name;
-            crm_trace("Mapped localhost to %s", host);
+            pcmk__trace("Mapped localhost to %s", host);
         }
 
         /* If a specific node was requested, add its value */
@@ -233,9 +233,9 @@ static void
 handle_missing_host(xmlNode *xml)
 {
     if (pcmk__xe_get(xml, PCMK__XA_ATTR_HOST) == NULL) {
-        crm_trace("Inferring local node %s with XML ID %s",
-                  attrd_cluster->priv->node_name,
-                  attrd_cluster->priv->node_xml_id);
+        pcmk__trace("Inferring local node %s with XML ID %s",
+                    attrd_cluster->priv->node_name,
+                    attrd_cluster->priv->node_xml_id);
         pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
         pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID,
                      attrd_cluster->priv->node_xml_id);
@@ -265,7 +265,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
             if (status == 0) {
                 xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
 
-                crm_trace("Matched %s with %s", attr, regex);
+                pcmk__trace("Matched %s with %s", attr, regex);
                 matched = true;
 
                 /* Copy all the non-conflicting attributes from the parent over,
@@ -493,7 +493,7 @@ attrd_client_update(pcmk__request_t *request)
 static int32_t
 attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("New client connection %p", c);
+    pcmk__trace("New client connection %p", c);
     if (attrd_shutting_down()) {
         pcmk__info("Ignoring new connection from pid %d during shutdown",
                    pcmk__client_pid(c));
@@ -520,9 +520,9 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        crm_trace("Ignoring request to clean up unknown connection %p", c);
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
     } else {
-        crm_trace("Cleaning up closed client connection %p", c);
+        pcmk__trace("Cleaning up closed client connection %p", c);
 
         /* Remove the client from the sync point waitlist if it's present. */
         attrd_remove_client_from_waitlist(client);
@@ -548,7 +548,7 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
 static void
 attrd_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Destroying client connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     attrd_ipc_closed(c);
 }
 

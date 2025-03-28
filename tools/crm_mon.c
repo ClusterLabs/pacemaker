@@ -876,7 +876,7 @@ setup_fencer_connection(void)
 
     rc = st->cmds->connect(st, crm_system_name, NULL);
     if (rc == pcmk_ok) {
-        crm_trace("Setting up fencer API callbacks");
+        pcmk__trace("Setting up fencer API callbacks");
         if (options.watch_fencing) {
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
@@ -1728,7 +1728,8 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
         crm_exit(CRM_EX_ERROR);
     }
 
-    crm_trace("Finished running custom notification program '%s'.", options.external_agent);
+    pcmk__trace("Finished running custom notification program '%s'",
+                options.external_agent);
     free(target_rc_s);
     free(status_s);
     free(rc_s);
@@ -1882,7 +1883,7 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         name = (const char *)match->name;
     }
 
-    crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
+    pcmk__trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
     if(xpath == NULL) {
         /* Version field, ignore */
 
@@ -1929,7 +1930,8 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         free(local_node);
 
     } else {
-        crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+        pcmk__trace("Ignoring %s operation for %s %p, %s", op, xpath, match,
+                    name);
     }
 
     return pcmk_rc_ok;
@@ -1968,7 +1970,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     }
 
     if (current_cib == NULL) {
-        crm_trace("Re-requesting the full cib");
+        pcmk__trace("Re-requesting the full cib");
         cib->cmds->query(cib, NULL, &current_cib, cib_sync_call);
     }
 

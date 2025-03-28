@@ -29,9 +29,9 @@ static GHashTable *pacemakerd_handlers = NULL;
 static xmlNode *
 handle_node_cache_request(pcmk__request_t *request)
 {
-    crm_trace("Ignoring request from client %s to purge node "
-              "because peer cache is not used",
-              pcmk__client_name(request->ipc_client));
+    pcmk__trace("Ignoring request from client %s to purge node because peer "
+                "cache is not used",
+                pcmk__client_name(request->ipc_client));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_OK);
@@ -49,10 +49,10 @@ handle_ping_request(pcmk__request_t *request)
     const char *from = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_FROM);
 
     /* Pinged for status */
-    crm_trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
-              PCMK_XA_ORIGIN "='%s'",
-              pcmk__s(from, ""),
-              pcmk__s(pcmk__xe_get(msg, PCMK_XA_ORIGIN), ""));
+    pcmk__trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
+                PCMK_XA_ORIGIN "='%s'",
+                pcmk__s(from, ""),
+                pcmk__s(pcmk__xe_get(msg, PCMK_XA_ORIGIN), ""));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);

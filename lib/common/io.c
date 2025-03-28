@@ -158,8 +158,8 @@ pcmk__read_series_sequence(const char *directory, const char *series,
         return rc;
     }
     fclose(fp);
-    crm_trace("Found last sequence number %u in series file %s",
-              *seq, series_file);
+    pcmk__trace("Found last sequence number %u in series file %s", *seq,
+                series_file);
     free(series_file);
     return pcmk_rc_ok;
 }

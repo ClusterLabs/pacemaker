@@ -114,7 +114,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             return ENOMEM;
         }
     }
-    crm_trace("Created %s API IPC object", pcmk_ipc_name(*api, true));
+    pcmk__trace("Created %s API IPC object", pcmk_ipc_name(*api, true));
     return pcmk_rc_ok;
 }
 
@@ -186,7 +186,7 @@ ipc_post_disconnect(gpointer user_data)
          * or api->cmds because this function needed them. Do that now.
          */
         free_daemon_specific_data(api);
-        crm_trace("Freeing IPC API object after disconnect");
+        pcmk__trace("Freeing IPC API object after disconnect");
         free(api);
     }
 }
@@ -223,7 +223,7 @@ pcmk_free_ipc_api(pcmk_ipc_api_t *api)
     }
     if (!free_on_disconnect) {
         free_daemon_specific_data(api);
-        crm_trace("Freeing IPC API object");
+        pcmk__trace("Freeing IPC API object");
         free(api);
     }
 }
@@ -531,7 +531,7 @@ pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
     }
 
     if (crm_ipc_connected(api->ipc)) {
-        crm_trace("Already connected to %s", pcmk_ipc_name(api, true));
+        pcmk__trace("Already connected to %s", pcmk_ipc_name(api, true));
         return pcmk_rc_ok;
     }
 
@@ -990,8 +990,8 @@ crm_ipc_destroy(crm_ipc_t * client)
              */
             /* crm_ipc_close(client); */
         } else {
-            crm_trace("Destroying inactive %s IPC connection",
-                      client->server_name);
+            pcmk__trace("Destroying inactive %s IPC connection",
+                        client->server_name);
         }
 
         if (client->buffer != NULL) {
@@ -1045,15 +1045,15 @@ crm_ipc_connected(crm_ipc_t * client)
     bool rc = FALSE;
 
     if (client == NULL) {
-        crm_trace("No client");
+        pcmk__trace("No client");
         return FALSE;
 
     } else if (client->ipc == NULL) {
-        crm_trace("No connection");
+        pcmk__trace("No connection");
         return FALSE;
 
     } else if (client->pfd.fd < 0) {
-        crm_trace("Bad descriptor");
+        pcmk__trace("Bad descriptor");
         return FALSE;
     }
 
@@ -1104,8 +1104,8 @@ crm_ipc_read(crm_ipc_t *client)
         header = (pcmk__ipc_header_t *)(void *) buffer;
 
         if (bytes <= 0) {
-            crm_trace("No message received from %s IPC: %s",
-                      client->server_name, strerror(-bytes));
+            pcmk__trace("No message received from %s IPC: %s",
+                        client->server_name, strerror(-bytes));
 
             if (!crm_ipc_connected(client) || bytes == -ENOTCONN) {
                 pcmk__err("Connection to %s IPC failed", client->server_name);
@@ -1126,9 +1126,8 @@ crm_ipc_read(crm_ipc_t *client)
             goto done;
         }
 
-        crm_trace("Received %s IPC event %" PRId32 " size=%" PRIu32 " rc=%zu",
-                  client->server_name, header->qb.id, header->qb.size,
-                  bytes);
+        pcmk__trace("Received %s IPC event %" PRId32 " size=%" PRIu32 " rc=%zu",
+                    client->server_name, header->qb.id, header->qb.size, bytes);
 
         rc = pcmk__ipc_msg_append(&client->buffer, buffer);
 
@@ -1211,8 +1210,8 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     }
 
     /* get the reply */
-    crm_trace("Expecting reply to %s IPC message %d", client->server_name,
-              request_id);
+    pcmk__trace("Expecting reply to %s IPC message %d", client->server_name,
+                request_id);
 
     buffer = g_malloc0(crm_ipc_default_buffer_size());
 
@@ -1274,13 +1273,13 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
 
     if (*bytes < 0) {
         rc = (int) -*bytes; // System errno
-        crm_trace("%s reply to %s IPC %d: %s " QB_XS " rc=%d",
-                  (client->buffer == NULL) ? "No" : "Incomplete",
-                  client->server_name, request_id, pcmk_rc_str(rc), rc);
+        pcmk__trace("%s reply to %s IPC %d: %s " QB_XS " rc=%d",
+                    (client->buffer == NULL) ? "No" : "Incomplete",
+                    client->server_name, request_id, pcmk_rc_str(rc), rc);
     } else if ((client->buffer != NULL) && (client->buffer->len > 0)) {
-        crm_trace("Received %u-byte reply %d to %s IPC %d: %.100s",
-                  client->buffer->len, reply_id, client->server_name,
-                  request_id, crm_ipc_buffer(client));
+        pcmk__trace("Received %u-byte reply %d to %s IPC %d: %.100s",
+                    client->buffer->len, reply_id, client->server_name,
+                    request_id, crm_ipc_buffer(client));
 
         if (reply != NULL) {
             *reply = pcmk__xml_parse(crm_ipc_buffer(client));
@@ -1427,17 +1426,21 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
         if (pcmk__is_set(header->flags, crm_ipc_multipart)) {
             bool is_end = pcmk__is_set(header->flags, crm_ipc_multipart_end);
-            crm_trace("Sending %s IPC request %" PRId32 " (%spart %" PRIu16 ") of "
-                      "%" PRId32 " bytes using %dms timeout",
-                      client->server_name, header->qb.id, is_end ? "final " : "",
-                      index, header->qb.size, ms_timeout);
-            crm_trace("Text = %s", (char *) iov[1].iov_base);
+
+            pcmk__trace("Sending %s IPC request %" PRId32 " "
+                        "(%spart %" PRIu16 ") of %" PRId32 " bytes "
+                        "using %dms timeout",
+                        client->server_name, header->qb.id,
+                        (is_end ? "final " : ""), index, header->qb.size,
+                        ms_timeout);
+            pcmk__trace("Text = %s", (char *) iov[1].iov_base);
+
         } else {
-            crm_trace("Sending %s IPC request %" PRId32 " of %" PRId32 " bytes "
-                      "using %dms timeout",
-                      client->server_name, header->qb.id, header->qb.size,
-                      ms_timeout);
-            crm_trace("Text = %s", (char *) iov[1].iov_base);
+            pcmk__trace("Sending %s IPC request %" PRId32 " "
+                        "of %" PRId32 " bytes using %dms timeout",
+                        client->server_name, header->qb.id, header->qb.size,
+                        ms_timeout);
+            pcmk__trace("Text = %s", (char *) iov[1].iov_base);
         }
 
         /* Send the IPC request, respecting any timeout we were passed */
@@ -1482,8 +1485,8 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     /* If we should not wait for a response, bail now */
     if (!pcmk__is_set(flags, crm_ipc_client_response)) {
-        crm_trace("Not waiting for reply to %s IPC request %d",
-                  client->server_name, header->qb.id);
+        pcmk__trace("Not waiting for reply to %s IPC request %d",
+                    client->server_name, header->qb.id);
         goto send_cleanup;
     }
 

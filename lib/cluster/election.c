@@ -119,7 +119,7 @@ election_remove(pcmk_cluster_t *cluster, const char *uname)
 {
     if ((cluster != NULL) && (cluster->priv->election != NULL)
         && (uname != NULL) && (cluster->priv->election->voted != NULL)) {
-        crm_trace("Discarding (no-)vote from lost peer %s", uname);
+        pcmk__trace("Discarding (no-)vote from lost peer %s", uname);
         g_hash_table_remove(cluster->priv->election->voted, uname);
     }
 }
@@ -134,7 +134,7 @@ void
 election_reset(pcmk_cluster_t *cluster)
 {
     if ((cluster != NULL) && (cluster->priv->election != NULL)) {
-        crm_trace("Resetting election");
+        pcmk__trace("Resetting election");
         mainloop_timer_stop(cluster->priv->election->timeout);
         if (cluster->priv->election->voted != NULL) {
             g_hash_table_destroy(cluster->priv->election->voted);
@@ -157,7 +157,7 @@ election_fini(pcmk_cluster_t *cluster)
 {
     if ((cluster != NULL) && (cluster->priv->election != NULL)) {
         election_reset(cluster);
-        crm_trace("Destroying election");
+        pcmk__trace("Destroying election");
         mainloop_timer_del(cluster->priv->election->timeout);
         free(cluster->priv->election);
         cluster->priv->election = NULL;
@@ -298,7 +298,7 @@ election_vote(pcmk_cluster_t *cluster)
     our_node = pcmk__get_node(0, cluster->priv->node_name, NULL,
                               pcmk__node_search_cluster_member);
     if (!pcmk__cluster_is_node_active(our_node)) {
-        crm_trace("Cannot vote yet: local node not connected to cluster");
+        pcmk__trace("Cannot vote yet: local node not connected to cluster");
         return;
     }
 
@@ -357,7 +357,7 @@ election_check(pcmk_cluster_t *cluster)
               return false);
 
     if (cluster->priv->election->voted == NULL) {
-        crm_trace("Election check requested, but no votes received yet");
+        pcmk__trace("Election check requested, but no votes received yet");
         return FALSE;
     }
 

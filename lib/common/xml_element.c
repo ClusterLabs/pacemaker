@@ -80,12 +80,11 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
     }
 
     if (attr_n == NULL) {
-        crm_trace("%s XML has no child element of %s type",
-                  (const char *) parent->name, pcmk__s(node_name, "any"));
+        pcmk__trace("%s XML has no child element of %s type", parent->name,
+                    pcmk__s(node_name, "any"));
     } else {
-        crm_trace("%s XML has no child element of %s type with %s='%s'",
-                  (const char *) parent->name, pcmk__s(node_name, "any"),
-                  attr_n, attr_v);
+        pcmk__trace("%s XML has no child element of %s type with %s='%s'",
+                    parent->name, pcmk__s(node_name, "any"), attr_n, attr_v);
     }
     return NULL;
 }
@@ -203,8 +202,9 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
                 rc = pcmk_parse_score(old_value, &old_value_i, 0);
                 if (rc != pcmk_rc_ok) {
                     // @TODO This is inconsistent with old_value==NULL
-                    crm_trace("Using 0 before incrementing %s because '%s' "
-                              "is not a score", name, old_value);
+                    pcmk__trace("Using 0 before incrementing %s because '%s' "
+                                "is not a score",
+                                name, old_value);
                 }
             }
 
@@ -215,8 +215,9 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
                 rc = pcmk_parse_score(++v, &add, 0);
                 if (rc != pcmk_rc_ok) {
                     // @TODO We should probably skip expansion instead
-                    crm_trace("Not incrementing %s because '%s' does not have "
-                              "a valid increment", name, value);
+                    pcmk__trace("Not incrementing %s because '%s' does not "
+                                "have a valid increment",
+                                name, value);
                 }
             }
 
@@ -621,11 +622,11 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     if (target == NULL) {
         // Recursive call with no existing matching child
         target = pcmk__xe_create(parent, update_name);
-        crm_trace("Added %s", pcmk__s(trace_s, update_name));
+        pcmk__trace("Added %s", pcmk__s(trace_s, update_name));
 
     } else {
         // Either recursive call with match, or top-level call
-        crm_trace("Found node %s to update", pcmk__s(trace_s, update_name));
+        pcmk__trace("Found node %s to update", pcmk__s(trace_s, update_name));
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
@@ -635,11 +636,11 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     for (xmlNode *child = pcmk__xml_first_child(update); child != NULL;
          child = pcmk__xml_next(child)) {
 
-        crm_trace("Updating child of %s", pcmk__s(trace_s, update_name));
+        pcmk__trace("Updating child of %s", pcmk__s(trace_s, update_name));
         update_xe(target, NULL, child, flags);
     }
 
-    crm_trace("Finished with %s", pcmk__s(trace_s, update_name));
+    pcmk__trace("Finished with %s", pcmk__s(trace_s, update_name));
 
 done:
     free(trace_s);
@@ -1061,8 +1062,7 @@ pcmk__xe_set(xmlNode *xml, const char *attr_name, const char *value)
     }
 
     if (dirty && !pcmk__check_acl(xml, attr_name, pcmk__xf_acl_create)) {
-        crm_trace("Cannot add %s=%s to %s",
-                  attr_name, value, (const char *) xml->name);
+        pcmk__trace("Cannot add %s=%s to %s", attr_name, value, xml->name);
         return EACCES;
     }
 
@@ -1579,7 +1579,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
     }
 
     if (dirty && (pcmk__check_acl(node, name, pcmk__xf_acl_create) == FALSE)) {
-        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
+        pcmk__trace("Cannot add %s=%s to %s", name, value, node->name);
         return NULL;
     }
 

@@ -38,7 +38,7 @@ static qb_ipcs_service_t *ipcs = NULL;
 static int32_t
 schedulerd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("New client connection %p", c);
+    pcmk__trace("New client connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -158,9 +158,9 @@ schedulerd_ipc_closed(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        crm_trace("Ignoring request to clean up unknown connection %p", c);
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
     } else {
-        crm_trace("Cleaning up closed client connection %p", c);
+        pcmk__trace("Cleaning up closed client connection %p", c);
         pcmk__free_client(client);
     }
 
@@ -179,7 +179,7 @@ schedulerd_ipc_closed(qb_ipcs_connection_t *c)
 static void
 schedulerd_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Destroying client connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     schedulerd_ipc_closed(c);
 }
 

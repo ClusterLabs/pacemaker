@@ -108,7 +108,7 @@ remote_proxy_end_session(remote_proxy_t *proxy)
     if (proxy == NULL) {
         return;
     }
-    crm_trace("ending session ID %s", proxy->session_id);
+    pcmk__trace("ending session ID %s", proxy->session_id);
 
     if (proxy->source) {
         mainloop_del_ipc_client(proxy->source);
@@ -120,7 +120,7 @@ remote_proxy_free(gpointer data)
 {
     remote_proxy_t *proxy = data;
 
-    crm_trace("freed proxy session ID %s", proxy->session_id);
+    pcmk__trace("freed proxy session ID %s", proxy->session_id);
     free(proxy->node_name);
     free(proxy->session_id);
     free(proxy);
@@ -142,12 +142,16 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 
     flags = crm_ipc_buffer_flags(proxy->ipc);
     if (flags & crm_ipc_proxied_relay_response) {
-        crm_trace("Passing response back to %.8s on %s: %.200s - request id: %d", proxy->session_id, proxy->node_name, buffer, proxy->last_request_id);
+        pcmk__trace("Passing response back to %.8s on %s: %.200s - request id: "
+                    "%d",
+                    proxy->session_id, proxy->node_name, buffer,
+                    proxy->last_request_id);
         remote_proxy_relay_response(proxy, xml, proxy->last_request_id);
         proxy->last_request_id = 0;
 
     } else {
-        crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
+        pcmk__trace("Passing event back to %.8s on %s: %.200s",
+                    proxy->session_id, proxy->node_name, buffer);
         remote_proxy_relay_event(proxy, xml);
     }
     pcmk__xml_free(xml);
@@ -160,7 +164,7 @@ remote_proxy_disconnected(gpointer userdata)
 {
     remote_proxy_t *proxy = userdata;
 
-    crm_trace("destroying %p", proxy);
+    pcmk__trace("destroying %p", proxy);
 
     proxy->source = NULL;
     proxy->ipc = NULL;
@@ -206,8 +210,9 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
         }
     }
 
-    crm_trace("new remote proxy client established to %s on %s, session id %s",
-              channel, node_name, session_id);
+    pcmk__trace("new remote proxy client established to %s on %s, session id "
+                "%s",
+                channel, node_name, session_id);
     g_hash_table_insert(proxy_table, proxy->session_id, proxy);
 
     return proxy;
@@ -305,8 +310,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                 pcmk__xml_free(op_reply);
 
             } else {
-                crm_trace("Relayed %s request %d from %s to %s for %s",
-                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+                pcmk__trace("Relayed %s request %d from %s to %s for %s", op,
+                            msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                            name);
                 proxy->last_request_id = msg_id;
             }
 
@@ -315,8 +321,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             xmlNode *op_reply = NULL;
             // @COMPAT pacemaker_remoted <= 1.1.10
 
-            crm_trace("Relaying %s request %d from %s to %s for %s",
-                      op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+            pcmk__trace("Relaying %s request %d from %s to %s for %s", op,
+                        msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                        name);
 
             rc = crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
             if(rc < 0) {
@@ -325,8 +332,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                           op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
                           name, pcmk_strerror(rc), rc);
             } else {
-                crm_trace("Relayed %s request %d from %s to %s for %s",
-                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+                pcmk__trace("Relayed %s request %d from %s to %s for %s", op,
+                            msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                            name);
             }
 
             if(op_reply) {

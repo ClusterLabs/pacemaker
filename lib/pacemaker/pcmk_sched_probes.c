@@ -443,11 +443,11 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
             }
         }
 
-        crm_trace("Implying 'probe then' orderings for '%s then %s' "
-                  "(id=%d, type=%.6x)",
-                  ((first == NULL)? order->task1 : first->uuid),
-                  ((then == NULL)? order->task2 : then->uuid),
-                  order->id, order->flags);
+        pcmk__trace("Implying 'probe then' orderings for '%s then %s' "
+                    "(id=%d, type=%.6x)",
+                    ((first != NULL)? first->uuid : order->task1),
+                    ((then != NULL)? then->uuid : order->task2),
+                    order->id, order->flags);
 
         for (GList *probe_iter = probes; probe_iter != NULL;
              probe_iter = probe_iter->next) {
@@ -506,10 +506,10 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
         return;
     }
 
-    crm_trace("Adding probe start orderings for 'unrunnable %s@%s "
-              "then instances of %s@%s'",
-              probe->uuid, pcmk__node_name(probe->node),
-              after->action->uuid, pcmk__node_name(after->action->node));
+    pcmk__trace("Adding probe start orderings for 'unrunnable %s@%s "
+                "then instances of %s@%s'",
+                probe->uuid, pcmk__node_name(probe->node),
+                after->action->uuid, pcmk__node_name(after->action->node));
 
     for (GList *then_iter = after->action->actions_after; then_iter != NULL;
          then_iter = then_iter->next) {
@@ -524,11 +524,11 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
             continue;
         }
 
-        crm_trace("Adding probe start ordering for 'unrunnable %s@%s "
-                  "then %s@%s' (type=%#.6x)",
-                  probe->uuid, pcmk__node_name(probe->node),
-                  then->action->uuid, pcmk__node_name(then->action->node),
-                  flags);
+        pcmk__trace("Adding probe start ordering for 'unrunnable %s@%s "
+                    "then %s@%s' (type=%#.6x)",
+                    probe->uuid, pcmk__node_name(probe->node),
+                    then->action->uuid, pcmk__node_name(then->action->node),
+                    flags);
 
         /* Prevent the instance from starting if the instance can't, but don't
          * cause any other intances to stop if already active.
@@ -570,9 +570,9 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
     }
     pcmk__set_action_flags(after, pcmk__action_detect_loop);
 
-    crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
-              probe->uuid, pcmk__node_name(probe->node),
-              after->uuid, pcmk__node_name(after->node));
+    pcmk__trace("Adding probe restart orderings for '%s@%s then %s@%s'",
+                probe->uuid, pcmk__node_name(probe->node),
+                after->uuid, pcmk__node_name(after->node));
 
     /* Add restart orderings if "then" is for a different primitive.
      * Orderings for collective resources will be added later.
@@ -667,12 +667,12 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
             }
         }
 
-        crm_trace("Recursively adding probe restart orderings for "
-                  "'%s@%s then %s@%s' (type=%#.6x)",
-                  after->uuid, pcmk__node_name(after->node),
-                  after_wrapper->action->uuid,
-                  pcmk__node_name(after_wrapper->action->node),
-                  after_wrapper->flags);
+        pcmk__trace("Recursively adding probe restart orderings for "
+                    "'%s@%s then %s@%s' (type=%#.6x)",
+                    after->uuid, pcmk__node_name(after->node),
+                    after_wrapper->action->uuid,
+                    pcmk__node_name(after_wrapper->action->node),
+                    after_wrapper->flags);
 
         add_restart_orderings_for_probe(probe, after_wrapper->action);
     }
@@ -814,8 +814,8 @@ order_then_probes(pcmk_scheduler_t *scheduler)
 
                     before = clone_actions->data;
 
-                    crm_trace("Testing '%s then %s' for %s",
-                              first->uuid, before->action->uuid, start->uuid);
+                    pcmk__trace("Testing '%s then %s' for %s",
+                                first->uuid, before->action->uuid, start->uuid);
 
                     pcmk__assert(before->action->rsc != NULL);
                     first_rsc = before->action->rsc;
@@ -824,7 +824,8 @@ order_then_probes(pcmk_scheduler_t *scheduler)
 
             } else if (!pcmk__str_eq(first->task, PCMK_ACTION_START,
                                      pcmk__str_none)) {
-                crm_trace("Not a start op %s for %s", first->uuid, start->uuid);
+                pcmk__trace("Not a start op %s for %s", first->uuid,
+                            start->uuid);
             }
 
             if (first_rsc == NULL) {
@@ -832,12 +833,14 @@ order_then_probes(pcmk_scheduler_t *scheduler)
 
             } else if (pe__const_top_resource(first_rsc, false)
                        == pe__const_top_resource(start->rsc, false)) {
-                crm_trace("Same parent %s for %s", first_rsc->id, start->uuid);
+                pcmk__trace("Same parent %s for %s", first_rsc->id,
+                            start->uuid);
                 continue;
 
             } else if (!pcmk__is_clone(pe__const_top_resource(first_rsc,
                                                               false))) {
-                crm_trace("Not a clone %s for %s", first_rsc->id, start->uuid);
+                pcmk__trace("Not a clone %s for %s", first_rsc->id,
+                            start->uuid);
                 continue;
             }
 

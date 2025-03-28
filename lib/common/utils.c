@@ -133,8 +133,8 @@ pcmk__lookup_user(const char *name, uid_t *uid, gid_t *gid)
     if (gid != NULL) {
         *gid = pwentry->pw_gid;
     }
-    crm_trace("User %s has uid=%lld gid=%lld", name,
-              (long long) pwentry->pw_uid, (long long) pwentry->pw_gid);
+    pcmk__trace("User %s has uid=%lld gid=%lld", name,
+                (long long) pwentry->pw_uid, (long long) pwentry->pw_gid);
 
     return pcmk_rc_ok;
 }
@@ -258,18 +258,18 @@ pcmk__compare_versions(const char *version1, const char *version2)
         }
 
         if (value1 < value2) {
-            crm_trace("%s < %s", version1, version2);
+            pcmk__trace("%s < %s", version1, version2);
             rc = -1;
             goto done;
         }
         if (value1 > value2) {
-            crm_trace("%s > %s", version1, version2);
+            pcmk__trace("%s > %s", version1, version2);
             rc = 1;
             goto done;
         }
     }
 
-    crm_trace("%s == %s", version1, version2);
+    pcmk__trace("%s == %s", version1, version2);
 
 done:
     g_free(match1);
@@ -427,7 +427,7 @@ pcmk__timeout_ms2s(guint timeout_ms)
 static void
 _gnutls_log_func(int level, const char *msg)
 {
-    crm_trace("%s", msg);
+    pcmk__trace("%s", msg);
 }
 
 void
@@ -502,7 +502,8 @@ crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
         if (gid) {
             *gid = pwentry->pw_gid;
         }
-        crm_trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
+        pcmk__trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid,
+                    pwentry->pw_gid);
 
     } else {
         rc = rc? -rc : -EINVAL;
@@ -625,11 +626,11 @@ compare_version(const char *version1, const char *version2)
     }
 
     if (rc == 0) {
-        crm_trace("%s == %s (%d)", version1, version2, lpc);
+        pcmk__trace("%s == %s (%d)", version1, version2, lpc);
     } else if (rc < 0) {
-        crm_trace("%s < %s (%d)", version1, version2, lpc);
+        pcmk__trace("%s < %s (%d)", version1, version2, lpc);
     } else if (rc > 0) {
-        crm_trace("%s > %s (%d)", version1, version2, lpc);
+        pcmk__trace("%s > %s (%d)", version1, version2, lpc);
     }
 
     return rc;

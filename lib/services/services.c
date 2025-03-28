@@ -484,15 +484,16 @@ services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
             pcmk__info("Lost pending %s DBus call (%p)", op->id,
                        op->opaque->pending);
         } else {
-            crm_trace("Done with pending %s DBus call (%p)", op->id, op->opaque->pending);
+            pcmk__trace("Done with pending %s DBus call (%p)", op->id,
+                        op->opaque->pending);
         }
         dbus_pending_call_unref(op->opaque->pending);
     }
     op->opaque->pending = pending;
     if (pending) {
-        crm_trace("Updated pending %s DBus call (%p)", op->id, pending);
+        pcmk__trace("Updated pending %s DBus call (%p)", op->id, pending);
     } else {
-        crm_trace("Cleared pending %s DBus call", op->id);
+        pcmk__trace("Cleared pending %s DBus call", op->id);
     }
 }
 #endif
@@ -506,7 +507,7 @@ services_action_cleanup(svc_action_t * op)
 
 #if HAVE_DBUS
     if(op->opaque->timerid != 0) {
-        crm_trace("Removing timer for call %s to %s", op->action, op->rsc);
+        pcmk__trace("Removing timer for call %s to %s", op->action, op->rsc);
         g_source_remove(op->opaque->timerid);
         op->opaque->timerid = 0;
     }
@@ -1008,7 +1009,7 @@ services_action_sync(svc_action_t * op)
     gboolean rc = TRUE;
 
     if (op == NULL) {
-        crm_trace("No operation to execute");
+        pcmk__trace("No operation to execute");
         return FALSE;
     }
 
@@ -1026,13 +1027,13 @@ services_action_sync(svc_action_t * op)
     } else {
         rc = (execute_action(op) == pcmk_rc_ok);
     }
-    crm_trace(" > " PCMK__OP_FMT ": %s = %d",
-              op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
+    pcmk__trace(" > " PCMK__OP_FMT ": %s = %d", op->rsc, op->action,
+                op->interval_ms, op->opaque->exec, op->rc);
     if (op->stdout_data) {
-        crm_trace(" >  stdout: %s", op->stdout_data);
+        pcmk__trace(" >  stdout: %s", op->stdout_data);
     }
     if (op->stderr_data) {
-        crm_trace(" >  stderr: %s", op->stderr_data);
+        pcmk__trace(" >  stderr: %s", op->stderr_data);
     }
     return rc;
 }
