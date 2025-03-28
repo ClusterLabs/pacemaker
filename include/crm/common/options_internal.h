@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2024 the Pacemaker project contributors
+ * Copyright 2006-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -260,5 +260,8 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 
 // @COMPAT Drop when daemon metadata commands are dropped
 #define PCMK__VALUE_TIME                    "time"
+
+// Cluster options
+#define PCMK__OPT_FENCE_REMOTE_WITHOUT_QUORUM    "fence-remote-without-quorum"
 
 #endif // PCMK__OPTIONS_INTERNAL__H
