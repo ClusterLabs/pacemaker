@@ -293,7 +293,6 @@ pcmk__clip_log_level(int level)
         }                                                                   \
     } while (0)
 
-#define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
 #define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
 #define crm_log_xml_notice(xml, text)  do_crm_log_xml(LOG_NOTICE,  text, xml)
 #define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
