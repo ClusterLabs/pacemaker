@@ -269,7 +269,7 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
 
     if (discard_status) {
-        crm_log_xml_trace(root, "[on-disk]");
+        pcmk__log_xml_trace(root, "[on-disk]");
     }
 
     if (!pcmk__configured_schema_validates(root)) {

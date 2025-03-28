@@ -89,7 +89,7 @@ process_transaction_requests(xmlNodePtr transaction,
 
         pcmk__trace("Applied %s request to transaction working CIB for %s", op,
                     source);
-        crm_log_xml_trace(request, "Successful request");
+        pcmk__log_xml_trace(request, "Successful request");
     }
 
     return pcmk_rc_ok;

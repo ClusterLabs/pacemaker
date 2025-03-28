@@ -1439,7 +1439,7 @@ xml_to_event(xmlNode *msg)
     event->opaque = pcmk__assert_alloc(1, sizeof(struct event_private));
     event_private = (struct event_private *) event->opaque;
 
-    crm_log_xml_trace(msg, "stonith_notify");
+    pcmk__log_xml_trace(msg, "stonith_notify");
 
     // All notification types have the operation result and notification subtype
     stonith__xe_get_result(msg, &event_private->result);
@@ -1626,7 +1626,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         goto done;
     }
 
-    crm_log_xml_trace(op_reply, "Reply");
+    pcmk__log_xml_trace(op_reply, "Reply");
 
     if (!(call_options & st_opt_sync_call)) {
         pcmk__trace("Async call %d, returning", stonith->call_id);

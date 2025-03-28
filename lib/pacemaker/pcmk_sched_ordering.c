@@ -894,7 +894,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
+        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
         return pcmk_rc_ok;
     }
 
@@ -973,7 +973,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     if (any_sets) {
-        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
+        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
     } else {
         pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;

@@ -317,7 +317,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         xml_top = xml_obj;
     }
 
-    crm_log_xml_trace(xml_top, "update_attr");
+    pcmk__log_xml_trace(xml_top, "update_attr");
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
                          NULL, call_options, user_name);
 

@@ -287,7 +287,7 @@ pcmk_ipc_is_connected(pcmk_ipc_api_t *api)
 static bool
 call_api_dispatch(pcmk_ipc_api_t *api, xmlNode *message)
 {
-    crm_log_xml_trace(message, "ipc-received");
+    pcmk__log_xml_trace(message, "ipc-received");
     if ((api->cmds != NULL) && (api->cmds->dispatch != NULL)) {
         return api->cmds->dispatch(api, message);
     }
@@ -690,7 +690,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     if ((api == NULL) || (api->ipc == NULL) || (request == NULL)) {
         return EINVAL;
     }
-    crm_log_xml_trace(request, "ipc-sent");
+    pcmk__log_xml_trace(request, "ipc-sent");
 
     // Synchronous dispatch requires waiting for a reply
     if ((api->dispatch_type == pcmk_ipc_dispatch_sync)

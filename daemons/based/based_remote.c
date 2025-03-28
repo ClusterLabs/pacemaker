@@ -377,7 +377,7 @@ static void
 cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
     if (!pcmk__xe_is(command, PCMK__XE_CIB_COMMAND)) {
-        crm_log_xml_trace(command, "bad");
+        pcmk__log_xml_trace(command, "bad");
         return;
     }
 
@@ -407,7 +407,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
         pcmk__xe_set_int(command, PCMK__XA_CIB_CALLOPT, 0);
     }
 
-    crm_log_xml_trace(command, "Remote command: ");
+    pcmk__log_xml_trace(command, "Remote command: ");
     cib_common_callback_worker(0, 0, command, client, true);
 }
 

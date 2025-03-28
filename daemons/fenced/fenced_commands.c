@@ -1819,7 +1819,7 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
     if (pcmk__str_empty(pcmk__xe_id(level))) {
         pcmk__warn("Ignoring registration for topology level without ID");
         free(target);
-        crm_log_xml_trace(level, "Bad level");
+        pcmk__log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Topology level is invalid without ID");
         return;
@@ -1831,7 +1831,7 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
                    "valid target",
                    pcmk__xe_id(level));
         free(target);
-        crm_log_xml_trace(level, "Bad level");
+        pcmk__log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid target for topology level '%s'",
                             pcmk__xe_id(level));
@@ -1844,7 +1844,7 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
                    "%d",
                    target, id);
         free(target);
-        crm_log_xml_trace(level, "Bad level");
+        pcmk__log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level '%s'",
                             pcmk__s(pcmk__xe_get(level, PCMK_XA_INDEX), ""),
@@ -1929,7 +1929,7 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
                    "%d",
                    target, id);
         free(target);
-        crm_log_xml_trace(level, "Bad level");
+        pcmk__log_xml_trace(level, "Bad level");
         pcmk__format_result(result, CRM_EX_INVALID_PARAM, PCMK_EXEC_INVALID,
                             "Invalid level number '%s' for topology level %s",
                             pcmk__s(pcmk__xe_get(level, PCMK_XA_INDEX),
@@ -2626,7 +2626,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
                     pcmk__plural_s(available_devices));
     }
 
-    crm_log_xml_trace(list, "query-result");
+    pcmk__log_xml_trace(list, "query-result");
 
     stonith_send_reply(query->reply, query->call_options, query->remote_peer,
                        client);
@@ -2778,7 +2778,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         stonith_send_reply(reply, cmd->options, cmd->origin, client);
     }
 
-    crm_log_xml_trace(reply, "Reply");
+    pcmk__log_xml_trace(reply, "Reply");
     pcmk__xml_free(reply);
 }
 
@@ -3370,7 +3370,7 @@ handle_query_request(pcmk__request_t *request)
         action = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ACTION);
     }
 
-    crm_log_xml_trace(request->xml, "Query");
+    pcmk__log_xml_trace(request->xml, "Query");
 
     query = pcmk__assert_alloc(1, sizeof(struct st_query_data));
 
@@ -3708,7 +3708,7 @@ fenced_handle_request(pcmk__request_t *request)
     reply = pcmk__process_request(request, fenced_handlers);
 
     if (reply != NULL) {
-        crm_log_xml_trace(reply, "Reply");
+        pcmk__log_xml_trace(reply, "Reply");
 
         if (pcmk__is_set(request->flags, pcmk__request_reuse_options)
             && (request->ipc_client != NULL)) {

@@ -429,7 +429,7 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
     pcmk__assert(text[header->size - 1] == 0);
 
     xml = pcmk__xml_parse(text);
-    crm_log_xml_trace(xml, "[IPC received]");
+    pcmk__log_xml_trace(xml, "[IPC received]");
     return xml;
 }
 
@@ -1008,7 +1008,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     if (ack != NULL) {
         pcmk__trace("Ack'ing IPC message from client %s as <%s status=%d>",
                     pcmk__client_name(c), tag, status);
-        crm_log_xml_trace(ack, "sent-ack");
+        pcmk__log_xml_trace(ack, "sent-ack");
         c->request_id = 0;
         rc = pcmk__ipc_send_xml(c, request, ack, flags);
         pcmk__xml_free(ack);
