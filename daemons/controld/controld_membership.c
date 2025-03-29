@@ -308,33 +308,33 @@ populate_cib_nodes_from_cache(xmlNode *nodes_xml)
         int call_id = 0;
         xmlNode *new_node = NULL;
 
-        if ((node->xml_id != NULL) && (node->name != NULL)) {
-            crm_trace("Creating node entry for %s/%s", node->name,
-                      node->xml_id);
-
-            if (xpath == NULL) {
-                xpath = g_string_sized_new(512);
-            } else {
-                g_string_truncate(xpath, 0);
-            }
-
-            /* We need both to be valid */
-            new_node = pcmk__xe_create(nodes_xml, PCMK_XE_NODE);
-            crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
-            crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
-
-            /* Search and remove unknown nodes with the conflicting uname from CIB */
-            pcmk__g_strcat(xpath,
-                           "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-                           "/" PCMK_XE_NODES "/" PCMK_XE_NODE
-                           "[@" PCMK_XA_UNAME "='", node->name, "']"
-                           "[@" PCMK_XA_ID "!='", node->xml_id, "']", NULL);
-
-            call_id = cib_conn->cmds->query(cib_conn, xpath->str, NULL,
-                                            cib_xpath);
-            fsa_register_cib_callback(call_id, pcmk__str_copy(node->xml_id),
-                                      search_conflicting_node_callback);
+        if ((node->xml_id == NULL) || (node->name == NULL)) {
+            // We need both in order for the node to be valid
+            continue;
         }
+
+        crm_trace("Creating node entry for %s/%s", node->name, node->xml_id);
+
+        new_node = pcmk__xe_create(nodes_xml, PCMK_XE_NODE);
+        crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
+        crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
+
+        if (xpath == NULL) {
+            xpath = g_string_sized_new(512);
+        } else {
+            g_string_truncate(xpath, 0);
+        }
+
+        // Search and remove unknown nodes with the conflicting uname from CIB
+        pcmk__g_strcat(xpath,
+                       "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+                       "/" PCMK_XE_NODES "/" PCMK_XE_NODE
+                       "[@" PCMK_XA_UNAME "='", node->name, "']"
+                       "[@" PCMK_XA_ID "!='", node->xml_id, "']", NULL);
+
+        call_id = cib_conn->cmds->query(cib_conn, xpath->str, NULL, cib_xpath);
+        fsa_register_cib_callback(call_id, pcmk__str_copy(node->xml_id),
+                                  search_conflicting_node_callback);
     }
 
     if (xpath != NULL) {
