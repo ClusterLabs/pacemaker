@@ -310,7 +310,7 @@ populate_cib_nodes(uint32_t flags, const char *source)
     cib_t *cib_conn = controld_globals.cib_conn;
 
     int call_id = 0;
-    gboolean from_hashtable = TRUE;
+    bool from_cache = true;
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
     GHashTableIter iter;
@@ -320,11 +320,14 @@ populate_cib_nodes(uint32_t flags, const char *source)
     if (!pcmk_is_set(flags, controld_node_update_quick)
         && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
 
-        from_hashtable = pcmk__corosync_add_nodes(node_list);
+        from_cache = !pcmk__corosync_add_nodes(node_list);
     }
 #endif
 
-    if (from_hashtable) {
+    crm_trace("Populating <" PCMK_XE_NODES "> section of CIB from %s",
+              (from_cache? "peer cache" : "cluster"));
+
+    if (from_cache) {
         GString *xpath = NULL;
 
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
@@ -364,8 +367,6 @@ populate_cib_nodes(uint32_t flags, const char *source)
             g_string_free(xpath, TRUE);
         }
     }
-
-    crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
     if (controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
                             node_list_update_callback) != pcmk_rc_ok) {
