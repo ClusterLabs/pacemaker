@@ -287,6 +287,61 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
     }
 }
 
+/*!
+ * \internal
+ * \brief Populate a \c PCMK_XE_NODES element from the peer cache
+ *
+ * Create a \c PCMK_XE_NODE element for each node in the cache.
+ *
+ * \param[in,out] nodes_xml  \c PCMK_XE_NODES element to populate
+ */
+static void
+populate_cib_nodes_from_cache(xmlNode *nodes_xml)
+{
+    GString *xpath = NULL;
+    GHashTableIter iter;
+    pcmk__node_status_t *node = NULL;
+
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        cib_t *cib_conn = controld_globals.cib_conn;
+        int call_id = 0;
+        xmlNode *new_node = NULL;
+
+        if ((node->xml_id != NULL) && (node->name != NULL)) {
+            crm_trace("Creating node entry for %s/%s", node->name,
+                      node->xml_id);
+
+            if (xpath == NULL) {
+                xpath = g_string_sized_new(512);
+            } else {
+                g_string_truncate(xpath, 0);
+            }
+
+            /* We need both to be valid */
+            new_node = pcmk__xe_create(nodes_xml, PCMK_XE_NODE);
+            crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
+            crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
+
+            /* Search and remove unknown nodes with the conflicting uname from CIB */
+            pcmk__g_strcat(xpath,
+                           "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+                           "/" PCMK_XE_NODES "/" PCMK_XE_NODE
+                           "[@" PCMK_XA_UNAME "='", node->name, "']"
+                           "[@" PCMK_XA_ID "!='", node->xml_id, "']", NULL);
+
+            call_id = cib_conn->cmds->query(cib_conn, xpath->str, NULL,
+                                            cib_xpath);
+            fsa_register_cib_callback(call_id, pcmk__str_copy(node->xml_id),
+                                      search_conflicting_node_callback);
+        }
+    }
+
+    if (xpath != NULL) {
+        g_string_free(xpath, TRUE);
+    }
+}
+
 static void
 node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -307,9 +362,6 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
 void
 populate_cib_nodes(uint32_t flags, const char *source)
 {
-    cib_t *cib_conn = controld_globals.cib_conn;
-
-    int call_id = 0;
     bool from_cache = true;
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
@@ -328,44 +380,7 @@ populate_cib_nodes(uint32_t flags, const char *source)
               (from_cache? "peer cache" : "cluster"));
 
     if (from_cache) {
-        GString *xpath = NULL;
-
-        g_hash_table_iter_init(&iter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            xmlNode *new_node = NULL;
-
-            if ((node->xml_id != NULL) && (node->name != NULL)) {
-                crm_trace("Creating node entry for %s/%s",
-                          node->name, node->xml_id);
-                if (xpath == NULL) {
-                    xpath = g_string_sized_new(512);
-                } else {
-                    g_string_truncate(xpath, 0);
-                }
-
-                /* We need both to be valid */
-                new_node = pcmk__xe_create(node_list, PCMK_XE_NODE);
-                crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
-                crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
-
-                /* Search and remove unknown nodes with the conflicting uname from CIB */
-                pcmk__g_strcat(xpath,
-                               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-                               "/" PCMK_XE_NODES "/" PCMK_XE_NODE
-                               "[@" PCMK_XA_UNAME "='", node->name, "']"
-                               "[@" PCMK_XA_ID "!='", node->xml_id, "']", NULL);
-
-                call_id = cib_conn->cmds->query(cib_conn,
-                                                (const char *) xpath->str, NULL,
-                                                cib_xpath);
-                fsa_register_cib_callback(call_id, pcmk__str_copy(node->xml_id),
-                                          search_conflicting_node_callback);
-            }
-        }
-
-        if (xpath != NULL) {
-            g_string_free(xpath, TRUE);
-        }
+        populate_cib_nodes_from_cache(node_list);
     }
 
     if (controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
