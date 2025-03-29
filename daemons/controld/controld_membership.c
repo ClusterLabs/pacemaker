@@ -313,6 +313,9 @@ populate_cib_nodes(uint32_t flags, const char *source)
     gboolean from_hashtable = TRUE;
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
+    GHashTableIter iter;
+    pcmk__node_status_t *node = NULL;
+
 #if SUPPORT_COROSYNC
     if (!pcmk_is_set(flags, controld_node_update_quick)
         && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
@@ -322,8 +325,6 @@ populate_cib_nodes(uint32_t flags, const char *source)
 #endif
 
     if (from_hashtable) {
-        GHashTableIter iter;
-        pcmk__node_status_t *node = NULL;
         GString *xpath = NULL;
 
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
@@ -366,34 +367,39 @@ populate_cib_nodes(uint32_t flags, const char *source)
 
     crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
 
-    if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
-                             node_list_update_callback) == pcmk_rc_ok)
-         && (pcmk__peer_cache != NULL) && AM_I_DC) {
-        /*
-         * There is no need to update the local CIB with our values if
-         * we've not seen valid membership data
-         */
-        GHashTableIter iter;
-        pcmk__node_status_t *node = NULL;
+    if (controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
+                            node_list_update_callback) != pcmk_rc_ok) {
+        // Callback logs an error
+        goto done;
+    }
+    if (pcmk__peer_cache == NULL) {
+        // We don't have the necessary info to update the CIB's status section
+        goto done;
+    }
+    if (!AM_I_DC) {
+        // Only the DC populates the status section (@TODO Why only status?)
+        goto done;
+    }
 
-        pcmk__xml_free(node_list);
-        node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
+    pcmk__xml_free(node_list);
+    node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
-        g_hash_table_iter_init(&iter, pcmk__peer_cache);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        create_node_state_update(node, flags, node_list, source);
+    }
+
+    if (pcmk__remote_peer_cache != NULL) {
+        g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             create_node_state_update(node, flags, node_list, source);
         }
-
-        if (pcmk__remote_peer_cache != NULL) {
-            g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
-            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-                create_node_state_update(node, flags, node_list, source);
-            }
-        }
-
-        controld_update_cib(PCMK_XE_STATUS, node_list, cib_none,
-                            crmd_node_update_complete);
     }
+
+    controld_update_cib(PCMK_XE_STATUS, node_list, cib_none,
+                        crmd_node_update_complete);
+
+done:
     pcmk__xml_free(node_list);
 }
 
