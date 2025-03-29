@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 /* put these first so that uuid_t is defined without conflicts */
 #include <crm_internal.h>
 
+#include <stdint.h>                     // uint32_t
 #include <string.h>
 
 #include <crm/crm.h>
@@ -69,8 +70,10 @@ post_cache_update(int instance)
     controld_set_fsa_input_flags(R_MEMBERSHIP);
 
     if (AM_I_DC) {
-        populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
-                           node_update_expected, __func__);
+        populate_cib_nodes(controld_node_update_quick
+                           |controld_node_update_cluster
+                           |controld_node_update_peer
+                           |controld_node_update_expected, __func__);
     }
 
     /*
@@ -115,14 +118,14 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
  * \brief Create an XML node state tag with updates
  *
  * \param[in,out] node    Node whose state will be used for update
- * \param[in]     flags   Bitmask of node_update_flags indicating what to update
+ * \param[in]     flags   Group of <tt>enum controld_node_update_flags</tt>
  * \param[in,out] parent  XML node to contain update (or NULL)
  * \param[in]     source  Who requested the update (only used for logging)
  *
  * \return Pointer to created node state tag
  */
 xmlNode *
-create_node_state_update(pcmk__node_status_t *node, int flags,
+create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
                          xmlNode *parent, const char *source)
 {
     // @TODO Ensure all callers handle NULL returns
@@ -150,7 +153,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
 
     crm_xml_add(node_state, PCMK_XA_UNAME, node->name);
 
-    if ((flags & node_update_cluster) && node->state) {
+    if (pcmk_is_set(flags, controld_node_update_cluster)) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
             crm_xml_add_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
@@ -163,7 +166,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     }
 
     if (!pcmk_is_set(node->flags, pcmk__node_status_remote)) {
-        if (flags & node_update_peer) {
+        if (pcmk_is_set(flags, controld_node_update_peer)) {
             if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
                 crm_xml_add_ll(node_state, PCMK_XA_CRMD, node->when_online);
@@ -178,7 +181,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
             }
         }
 
-        if (flags & node_update_join) {
+        if (pcmk_is_set(flags, controld_node_update_join)) {
             if (controld_get_join_phase(node) <= controld_join_none) {
                 value = CRMD_JOINSTATE_DOWN;
             } else {
@@ -187,7 +190,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
             crm_xml_add(node_state, PCMK__XA_JOIN, value);
         }
 
-        if (flags & node_update_expected) {
+        if (pcmk_is_set(flags, controld_node_update_expected)) {
             crm_xml_add(node_state, PCMK_XA_EXPECTED, node->expected);
         }
     }
@@ -302,7 +305,7 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
 }
 
 void
-populate_cib_nodes(enum node_update_flags flags, const char *source)
+populate_cib_nodes(uint32_t flags, const char *source)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
 
@@ -311,7 +314,7 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
 #if SUPPORT_COROSYNC
-    if (!pcmk_is_set(flags, node_update_quick)
+    if (!pcmk_is_set(flags, controld_node_update_quick)
         && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
 
         from_hashtable = pcmk__corosync_add_nodes(node_list);

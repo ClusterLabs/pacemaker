@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -263,8 +263,9 @@ do_dc_release(long long action,
             pcmk__node_status_t *node = controld_get_local_node_status();
 
             pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
-            update = create_node_state_update(node, node_update_expected, NULL,
-                                              __func__);
+            update = create_node_state_update(node,
+                                              controld_node_update_expected,
+                                              NULL, __func__);
             /* Don't need a based response because controld will stop. */
             fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
             pcmk__xml_free(update);

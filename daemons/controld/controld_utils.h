@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef CRMD_UTILS__H
 #define CRMD_UTILS__H
+
+#include <stdint.h>                 // UINT32_C(), uint32_t
 
 #include <glib.h>                   // gboolean
 #include <libxml/tree.h>            // xmlNode
@@ -20,14 +22,31 @@
 
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-enum node_update_flags {
-    node_update_none = 0x0000,
-    node_update_quick = 0x0001,
-    node_update_cluster = 0x0010,
-    node_update_peer = 0x0020,
-    node_update_join = 0x0040,
-    node_update_expected = 0x0100,
-    node_update_all = node_update_cluster|node_update_peer|node_update_join|node_update_expected,
+//! Flags determining how the controller updates node information in the CIB
+enum controld_node_update_flags {
+    //! This flag has no effect
+    controld_node_update_none     = UINT32_C(0),
+
+    //! Skip loading the node list from the cluster layer
+    controld_node_update_quick    = (UINT32_C(1) << 0),
+
+    //! Update \c PCMK__XA_IN_CCM with the time the node became a cluster member
+    controld_node_update_cluster  = (UINT32_C(1) << 1),
+
+    //! Update \c PCMK_XA_CRMD with the time the node joined the CPG
+    controld_node_update_peer     = (UINT32_C(1) << 2),
+
+    //! Update \c PCMK__XA_JOIN with the node's join state
+    controld_node_update_join     = (UINT32_C(1) << 3),
+
+    //! Update \c PCMK_XA_EXPECTED with the node's expected join state
+    controld_node_update_expected = (UINT32_C(1) << 4),
+
+    //! Convenience alias to update all of the attributes mentioned above
+    controld_node_update_all      = controld_node_update_cluster
+                                    |controld_node_update_peer
+                                    |controld_node_update_join
+                                    |controld_node_update_expected,
 };
 
 crm_exit_t crmd_exit(crm_exit_t exit_code);
@@ -43,9 +62,9 @@ void fsa_dump_inputs(int log_level, const char *text, long long input_register);
 gboolean update_dc(xmlNode * msg);
 void crm_update_peer_join(const char *source, pcmk__node_status_t *node,
                           enum controld_join_phase phase);
-xmlNode *create_node_state_update(pcmk__node_status_t *node, int flags,
+xmlNode *create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
                                   xmlNode *parent, const char *source);
-void populate_cib_nodes(enum node_update_flags flags, const char *source);
+void populate_cib_nodes(uint32_t flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
 void controld_close_attrd_ipc(void);
 void update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node);

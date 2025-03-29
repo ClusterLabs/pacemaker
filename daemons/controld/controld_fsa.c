@@ -578,7 +578,8 @@ do_state_transition(enum crmd_fsa_state cur_state,
     }
 
     if (cur_state == S_FINALIZE_JOIN && next_state == S_POLICY_ENGINE) {
-        populate_cib_nodes(node_update_quick|node_update_all, __func__);
+        populate_cib_nodes(controld_node_update_quick|controld_node_update_all,
+                           __func__);
     }
 
     switch (next_state) {

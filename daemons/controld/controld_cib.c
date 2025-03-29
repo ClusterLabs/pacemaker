@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,7 +89,8 @@ do_cib_updated(const char *event, xmlNode * msg)
                    "triggered by %s",
                    event, pcmk__s(client_name, "(unidentified client)"));
 
-        populate_cib_nodes(node_update_quick|node_update_all, __func__);
+        populate_cib_nodes(controld_node_update_quick|controld_node_update_all,
+                           __func__);
         register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
     }
 }
