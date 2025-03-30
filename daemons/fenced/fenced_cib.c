@@ -258,32 +258,30 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
 
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *primitive_xpath = NULL;
 
         if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
             || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
             continue;
         }
 
-        if (pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)
-            && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
+        primitive_xpath = strstr(xpath, PRIMITIVE_ID_XP_FRAGMENT);
+        if ((primitive_xpath != NULL)
+            && pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)) {
+
             const char *rsc_id = NULL;
             const char *end_quote = NULL;
             char *copy = NULL;
 
-            if ((strstr(xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
-                || (strstr(xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
+            if ((strstr(primitive_xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
+                || (strstr(primitive_xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
 
                 reason = pcmk__str_copy("(meta) attribute deleted from "
                                         "resource");
                 break;
             }
 
-            rsc_id = strstr(xpath, PRIMITIVE_ID_XP_FRAGMENT);
-            if (rsc_id == NULL) {
-                continue;
-            }
-
-            rsc_id += sizeof(PRIMITIVE_ID_XP_FRAGMENT) - 1;
+            rsc_id = primitive_xpath + sizeof(PRIMITIVE_ID_XP_FRAGMENT) - 1;
             end_quote = strchr(rsc_id, '\'');
 
             CRM_LOG_ASSERT(end_quote != NULL);
