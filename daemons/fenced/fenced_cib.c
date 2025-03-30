@@ -232,13 +232,16 @@ cib_devices_update(void)
     }
 }
 
+#define PRIMITIVE_ID_XP_FRAGMENT "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='"
+
 static void
 update_cib_stonith_devices(const char *event, xmlNode * msg)
 {
     int format = 1;
-    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
-                                            NULL, NULL);
-    xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    const xmlNode *wrapper = pcmk__xe_first_child(msg,
+                                                  PCMK__XE_CIB_UPDATE_RESULT,
+                                                  NULL, NULL);
+    const xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     char *reason = NULL;
 
     CRM_CHECK(patchset != NULL, return);
@@ -249,12 +252,12 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
         return;
     }
 
-    for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
+    for (const xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL,
+                                                      NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
-        const char *shortpath = NULL;
 
         if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
             || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
@@ -264,8 +267,8 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
         if (pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)
             && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
             const char *rsc_id = NULL;
-            char *search = NULL;
-            char *mutable = NULL;
+            const char *end_quote = NULL;
+            char *copy = NULL;
 
             if ((strstr(xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
                 || (strstr(xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
@@ -274,28 +277,43 @@ update_cib_stonith_devices(const char *event, xmlNode * msg)
                                         "resource");
                 break;
             }
-            mutable = pcmk__str_copy(xpath);
-            rsc_id = strstr(mutable, PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
-            if (rsc_id != NULL) {
-                rsc_id += strlen(PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
-                search = strchr(rsc_id, '\'');
-            }
-            if (search != NULL) {
-                *search = 0;
-                stonith_device_remove(rsc_id, true);
-                /* watchdog_device_update called afterwards
-                   to fall back to implicit definition if needed */
-            } else {
-                crm_warn("Ignoring malformed CIB update (resource deletion)");
-            }
-            free(mutable);
 
-        } else if (strstr(xpath, "/" PCMK_XE_RESOURCES)
-                   || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
-                   || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
-            shortpath = strrchr(xpath, '/');
-            pcmk__assert(shortpath != NULL);
-            reason = crm_strdup_printf("%s %s", op, shortpath+1);
+            rsc_id = strstr(xpath, PRIMITIVE_ID_XP_FRAGMENT);
+            if (rsc_id == NULL) {
+                continue;
+            }
+
+            rsc_id += sizeof(PRIMITIVE_ID_XP_FRAGMENT) - 1;
+            end_quote = strchr(rsc_id, '\'');
+
+            CRM_LOG_ASSERT(end_quote != NULL);
+            if (end_quote == NULL) {
+                crm_err("Bug: Malformed item in Pacemaker-generated patchset");
+                continue;
+            }
+
+            /* A primitive resource was removed. If it was a fencing resource,
+             * it's faster to remove it directly than to run the scheduler and
+             * update all device registrations.
+             */
+            copy = strndup(rsc_id, end_quote - rsc_id);
+            pcmk__assert(copy != NULL);
+            stonith_device_remove(copy, true);
+
+            /* watchdog_device_update called afterwards
+               to fall back to implicit definition if needed */
+
+            free(copy);
+            continue;
+        }
+
+        if (strstr(xpath, "/" PCMK_XE_RESOURCES)
+            || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
+            || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
+
+            const char *shortpath = strrchr(xpath, '/');
+
+            reason = crm_strdup_printf("%s %s", op, shortpath + 1);
             break;
         }
     }
