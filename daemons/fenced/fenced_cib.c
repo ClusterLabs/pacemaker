@@ -258,7 +258,6 @@ update_cib_stonith_devices(const xmlNode *patchset)
 
             const char *rsc_id = NULL;
             const char *end_quote = NULL;
-            char *copy = NULL;
 
             if ((strstr(primitive_xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
                 || (strstr(primitive_xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
@@ -277,19 +276,22 @@ update_cib_stonith_devices(const xmlNode *patchset)
                 continue;
             }
 
-            /* A primitive resource was removed. If it was a fencing resource,
-             * it's faster to remove it directly than to run the scheduler and
-             * update all device registrations.
-             */
-            copy = strndup(rsc_id, end_quote - rsc_id);
-            pcmk__assert(copy != NULL);
-            stonith_device_remove(copy, true);
+            if (strchr(end_quote, '/') == NULL) {
+                /* The primitive element itself was deleted. If this was a
+                 * fencing resource, it's faster to remove it directly than to
+                 * run the scheduler and update all device registrations.
+                */
+                char *copy = strndup(rsc_id, end_quote - rsc_id);
 
-            /* watchdog_device_update called afterwards
-               to fall back to implicit definition if needed */
+                pcmk__assert(copy != NULL);
+                stonith_device_remove(copy, true);
 
-            free(copy);
-            continue;
+                /* watchdog_device_update called afterwards
+                   to fall back to implicit definition if needed */
+
+                free(copy);
+                continue;
+            }
         }
 
         if (strstr(xpath, "/" PCMK_XE_RESOURCES)
