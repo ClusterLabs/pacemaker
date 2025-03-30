@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,6 +12,8 @@
 #include <crm/cluster.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
+
+const char *fenced_get_local_node(void);
 
 /*!
  * \internal
@@ -296,8 +298,6 @@ void setup_cib(void);
 void fenced_cib_cleanup(void);
 
 int fenced_scheduler_init(void);
-void fenced_set_local_node(const char *node_name);
-const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 

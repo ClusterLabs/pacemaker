@@ -294,7 +294,23 @@ update_cib_stonith_devices(const xmlNode *patchset)
             }
         }
 
-        if (strstr(xpath, "/" PCMK_XE_RESOURCES)
+        /* @FIXME Suppose a node gets deleted in one CIB diff and then re-added
+         * in another. For example, this can happen if a client deletes a node
+         * from the CIB when it's still part of the cluster, and then the
+         * controller's diff callback repopulates the nodes section. If
+         * responding to the deletion here causes a stonith device to get
+         * unregistered, then the next monitor will fail. This is because when
+         * the device gets re-registered after nodes are repopulated, the
+         * api_registered flag doesn't get set. Only the cib_registered flag
+         * gets set.
+         *
+         * See commit message in eaee0fc for some more info.
+         *
+         * The fencer should not refuse to run a monitor action for a resource
+         * that the controller knows is started.
+         */
+        if (strstr(xpath, "/" PCMK_XE_NODES)
+            || strstr(xpath, "/" PCMK_XE_RESOURCES)
             || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
             || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,6 +40,9 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
+//! Local node's name in cluster
+static char *local_node_name = NULL;
+
 // @TODO This should be guint
 long long stonith_watchdog_timeout_ms = 0;
 
@@ -67,6 +70,18 @@ static struct {
 crm_exit_t exit_code = CRM_EX_OK;
 
 static void stonith_cleanup(void);
+
+/*!
+ * \internal
+ * \brief Get the local node name
+ *
+ * \return Local node name
+ */
+const char *
+fenced_get_local_node(void)
+{
+    return local_node_name;
+}
 
 static int32_t
 st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
@@ -628,7 +643,7 @@ main(int argc, char **argv)
         crm_crit("Cannot sign in to the cluster... terminating");
         goto done;
     }
-    fenced_set_local_node(cluster->priv->node_name);
+    local_node_name = pcmk__str_copy(cluster->priv->node_name);
 
     if (!options.stand_alone) {
         setup_cib();
@@ -653,6 +668,8 @@ done:
     stonith_cleanup();
     pcmk_cluster_free(cluster);
     fenced_scheduler_cleanup();
+
+    free(local_node_name);
 
     pcmk__output_and_clear_error(&error, out);
 
