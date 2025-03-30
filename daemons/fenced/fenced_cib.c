@@ -235,22 +235,9 @@ cib_devices_update(void)
 #define PRIMITIVE_ID_XP_FRAGMENT "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='"
 
 static void
-update_cib_stonith_devices(const char *event, xmlNode * msg)
+update_cib_stonith_devices(const xmlNode *patchset)
 {
-    int format = 1;
-    const xmlNode *wrapper = pcmk__xe_first_child(msg,
-                                                  PCMK__XE_CIB_UPDATE_RESULT,
-                                                  NULL, NULL);
-    const xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     char *reason = NULL;
-
-    CRM_CHECK(patchset != NULL, return);
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-
-    if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
-        return;
-    }
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL,
                                                       NULL);
@@ -481,6 +468,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
+    xmlNode *patchset = NULL;
     long long timeout_ms_saved = stonith_watchdog_timeout_ms;
     bool need_full_refresh = false;
 
@@ -499,7 +487,6 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     if (local_cib != NULL) {
         int rc = pcmk_ok;
         xmlNode *wrapper = NULL;
-        xmlNode *patchset = NULL;
 
         crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         if (rc != pcmk_ok) {
@@ -514,6 +501,11 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         switch (rc) {
             case pcmk_ok:
             case -pcmk_err_old_data:
+                /* @TODO Full refresh (with or without query) in case of
+                 * -pcmk_err_old_data? It seems wrong to call
+                 * stonith_device_remove() based on primitive deletion in an
+                 * old diff.
+                 */
                 break;
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
@@ -548,7 +540,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     } else {
         // Partial refresh
         update_fencing_topology(event, msg);
-        update_cib_stonith_devices(event, msg);
+        update_cib_stonith_devices(patchset);
     }
 
     watchdog_device_update();
