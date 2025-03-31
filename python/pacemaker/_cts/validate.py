@@ -36,7 +36,7 @@ def rng_directory():
 
     for path in sys.path:
         if os.path.exists(f"{path}/cts-fencing.in"):
-            return f"{path}/xml"
+            return f"{path}/../xml"
 
     return BuildOptions.SCHEMA_DIR
 
