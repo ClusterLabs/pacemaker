@@ -45,7 +45,8 @@ from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
 tools_tests = ["cibadmin", "crm_attribute", "crm_standby", "crm_resource",
-               "crm_ticket", "crmadmin", "crm_shadow", "crm_verify", "crm_simulate"]
+               "crm_ticket", "crmadmin", "crm_shadow", "crm_verify", "crm_simulate",
+               "crm_diff"]
 # The default list of tests to run, in the order they should be run
 default_tests = ["access_render", "daemons", "dates", "error_codes"] + tools_tests + \
                 ["crm_mon", "acls", "validity", "upgrade", "rules", "feature_set"]
@@ -2409,7 +2410,6 @@ class CrmSimulateRegressionTest(RegressionTest):
     @property
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
-
         good_cib = """
 <cib crm_feature_set="3.20.0" validate-with="pacemaker-1.2" epoch="3" num_updates="0" admin_epoch="0">
   <configuration>
@@ -2477,6 +2477,24 @@ class CrmSimulateRegressionTest(RegressionTest):
         return [
             ShadowTestGroup(basic_tests, create=False,
                             env={"CIB_shadow": None}),
+        ]
+
+
+class CrmDiffRegressionTest(RegressionTest):
+    """A class for testing crm_diff."""
+
+    @property
+    def name(self):
+        """Return the name of this regression test."""
+        return "crm_diff"
+
+    @property
+    def tests(self):
+        """A list of Test instances to be run as part of this regression test."""
+        return [
+            Test("Create an XML patchset",
+                 "crm_diff -o {cts_cli_data}/crm_diff_old.xml -n {cts_cli_data}/crm_diff_new.xml",
+                 expected_rc=ExitStatus.ERROR)
         ]
 
 
@@ -3443,6 +3461,7 @@ regression_classes = [
     CrmShadowRegressionTest,
     CrmVerifyRegressionTest,
     CrmSimulateRegressionTest,
+    CrmDiffRegressionTest,
     CrmMonRegressionTest,
     AclsRegressionTest,
     ValidityRegressionTest,
