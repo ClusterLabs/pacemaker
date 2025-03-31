@@ -14,6 +14,7 @@
 #include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // pcmk_parse_score()
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/pengine/internal.h>
@@ -36,13 +37,13 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
     }
 
     // Get name and interval from configured op
-    conf_op_name = crm_element_value(conf_op_xml, PCMK_XA_NAME);
-    conf_op_interval_spec = crm_element_value(conf_op_xml, PCMK_META_INTERVAL);
+    conf_op_name = pcmk__xe_get(conf_op_xml, PCMK_XA_NAME);
+    conf_op_interval_spec = pcmk__xe_get(conf_op_xml, PCMK_META_INTERVAL);
     pcmk_parse_interval_spec(conf_op_interval_spec, &conf_op_interval_ms);
 
     // Get name and interval from op history entry
-    lrm_op_task = crm_element_value(lrm_op_xml, PCMK_XA_OPERATION);
-    crm_element_value_ms(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
+    lrm_op_task = pcmk__xe_get(lrm_op_xml, PCMK_XA_OPERATION);
+    pcmk__xe_get_guint(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
         || !pcmk__str_eq(conf_op_name, lrm_op_task, pcmk__str_casei)) {
@@ -63,7 +64,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
             int rc = 0;
             int target_rc = pe__target_rc_from_xml(lrm_op_xml);
 
-            crm_element_value_int(lrm_op_xml, PCMK__XA_RC_CODE, &rc);
+            pcmk__xe_get_int(lrm_op_xml, PCMK__XA_RC_CODE, &rc);
             if (rc != target_rc) {
                 matched = TRUE;
             }
@@ -91,12 +92,12 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//" PCMK_XE_PRIMITIVE
-                                    "[@" PCMK_XA_ID "='%s']"
-                                    "//" PCMK_XE_OP
-                                    "[@" PCMK_META_ON_FAIL
-                                        "='" PCMK_VALUE_BLOCK "']",
-                                    xml_name);
+    char *xpath = pcmk__assert_asprintf("//" PCMK_XE_PRIMITIVE
+                                        "[@" PCMK_XA_ID "='%s']"
+                                        "//" PCMK_XE_OP
+                                        "[@" PCMK_META_ON_FAIL
+                                            "='" PCMK_VALUE_BLOCK "']",
+                                        xml_name);
 
     xmlXPathObject *xpathObj = pcmk__xpath_search(rsc->priv->xml->doc, xpath);
     gboolean should_block = FALSE;
@@ -125,9 +126,8 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
                 // Get name and interval from configured op
-                conf_op_name = crm_element_value(pref, PCMK_XA_NAME);
-                conf_op_interval_spec = crm_element_value(pref,
-                                                          PCMK_META_INTERVAL);
+                conf_op_name = pcmk__xe_get(pref, PCMK_XA_NAME);
+                conf_op_interval_spec = pcmk__xe_get(pref, PCMK_META_INTERVAL);
                 pcmk_parse_interval_spec(conf_op_interval_spec,
                                          &conf_op_interval_ms);
 
@@ -136,10 +136,10 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                   "/" PCMK__XE_LRM_RSC_OP "[@" PCMK_XA_OPERATION "='%s']"   \
                   "[@" PCMK_META_INTERVAL "='%u']"
 
-                lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
-                                                 node->priv->name, xml_name,
-                                                 conf_op_name,
-                                                 conf_op_interval_ms);
+                lrm_op_xpath = pcmk__assert_asprintf(XPATH_FMT,
+                                                     node->priv->name, xml_name,
+                                                     conf_op_name,
+                                                     conf_op_interval_ms);
                 lrm_op_xpathObj = pcmk__xpath_search(scheduler->input->doc,
                                                      lrm_op_xpath);
 
@@ -189,7 +189,10 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = pcmk__s(rsc->priv->history_id, rsc->id);
 
-    return pcmk_is_set(rsc->flags, pcmk__rsc_unique)? strdup(name) : clone_strip(name);
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
+        return strdup(name);
+    }
+    return clone_strip(name);
 }
 
 /*!
@@ -218,8 +221,8 @@ generate_fail_regex(const char *prefix, const char *rsc_name, bool is_unique,
      */
     const char *instance_pattern = (is_unique? "" : "(:[0-9]+)?");
 
-    pattern = crm_strdup_printf("^%s-%s%s%s$", prefix, rsc_name,
-                                instance_pattern, op_pattern);
+    pattern = pcmk__assert_asprintf("^%s-%s%s%s$", prefix, rsc_name,
+                                    instance_pattern, op_pattern);
     if (regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) != 0) {
         free(pattern);
         return EINVAL;
@@ -249,12 +252,12 @@ generate_fail_regexes(const pcmk_resource_t *rsc, regex_t *failcount_re,
     char *rsc_name = rsc_fail_name(rsc);
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name,
-                            pcmk_is_set(rsc->flags, pcmk__rsc_unique),
+                            pcmk__is_set(rsc->flags, pcmk__rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
         rc = EINVAL;
 
     } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
-                                   pcmk_is_set(rsc->flags, pcmk__rsc_unique),
+                                   pcmk__is_set(rsc->flags, pcmk__rsc_unique),
                                    lastfailure_re) != pcmk_rc_ok) {
         rc = EINVAL;
         regfree(failcount_re);
@@ -295,10 +298,10 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
         int rc = pcmk_parse_score(value, &score, 0);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ignoring %s for %s "
-                     "because '%s' is not a valid fail count: %s",
-                     (const char *) key, pcmk__node_name(fc_data->node),
-                     value, pcmk_rc_str(rc));
+            pcmk__warn("Ignoring %s for %s because '%s' is not a valid fail "
+                       "count: %s",
+                       (const char *) key, pcmk__node_name(fc_data->node),
+                       value, pcmk_rc_str(rc));
             return;
         }
         fc_data->failcount = pcmk__add_scores(fc_data->failcount, score);
@@ -316,8 +319,9 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
         int rc = pcmk__scan_ll(value, &last_ll, 0LL);
 
         if (rc != pcmk_rc_ok) {
-            crm_info("Ignoring invalid value '%s' for %s: %s",
-                     (const char *) value, (const char *) key, pcmk_rc_str(rc));
+            pcmk__info("Ignoring invalid value '%s' for %s: %s",
+                       (const char *) value, (const char *) key,
+                       pcmk_rc_str(rc));
             return;
         }
         fc_data->last_failure = (time_t) QB_MAX(fc_data->last_failure, last_ll);
@@ -397,7 +401,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     }
 
     // If all failures have expired, ignore fail count
-    if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
+    if (pcmk__is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
         && (fc_data.last_failure > 0)
         && (rsc->priv->failure_expiration_ms > 0)) {
 
@@ -422,7 +426,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-    if (pcmk_is_set(flags, pcmk__fc_launched)
+    if (pcmk__is_set(flags, pcmk__fc_launched)
         && (rsc->priv->launched != NULL) && !pcmk__is_bundled(rsc)) {
 
         g_list_foreach(rsc->priv->launched, update_launched_failcount,
@@ -476,7 +480,7 @@ pe__clear_failcount(pcmk_resource_t *rsc, const pcmk_node_t *node,
     clear = custom_action(rsc, key, PCMK_ACTION_CLEAR_FAILCOUNT, node, FALSE,
                           scheduler);
     pcmk__insert_meta(clear, PCMK__META_OP_NO_WAIT, PCMK_VALUE_TRUE);
-    crm_notice("Clearing failure of %s on %s because %s " QB_XS " %s",
-               rsc->id, pcmk__node_name(node), reason, clear->uuid);
+    pcmk__notice("Clearing failure of %s on %s because %s " QB_XS " %s",
+                 rsc->id, pcmk__node_name(node), reason, clear->uuid);
     return clear;
 }

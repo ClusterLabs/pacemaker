@@ -54,7 +54,7 @@ struct {
     GHashTable *params;
     int fence_level;
     int timeout ;
-    long long tolerance_ms;
+    unsigned int tolerance_ms;
     int delay;
     char *agent;
     char *confirm_host;
@@ -242,7 +242,7 @@ static char *name = NULL;
 
 gboolean
 add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    char *key = crm_strdup_printf("OCF_RESKEY_%s", optarg);
+    char *key = pcmk__assert_asprintf("OCF_RESKEY_%s", optarg);
     const char *env = getenv(key);
     gboolean retval = TRUE;
 
@@ -250,7 +250,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid option: -e %s", optarg);
         retval = FALSE;
     } else {
-        crm_info("Got: '%s'='%s'", optarg, env);
+        pcmk__info("Got: '%s'='%s'", optarg, env);
 
         if (options.params != NULL) {
             options.params = pcmk__strkey_table(free, free);
@@ -272,13 +272,15 @@ add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     // pcmk__request_fencing() expects an unsigned int
-    options.tolerance_ms = crm_get_msec(optarg);
+    long long tolerance_ms = 0;
 
-    if (options.tolerance_ms < 0) {
-        crm_warn("Ignoring invalid tolerance '%s'", optarg);
-        options.tolerance_ms = 0;
+    if ((pcmk__parse_ms(optarg, &tolerance_ms) != pcmk_rc_ok)
+        || (tolerance_ms < 0)) {
+
+        // @COMPAT Treat as an error and return FALSE?
+        pcmk__warn("Ignoring invalid tolerance '%s'", optarg);
     } else {
-        options.tolerance_ms = QB_MIN(options.tolerance_ms, UINT_MAX);
+        options.tolerance_ms = (unsigned int) QB_MIN(tolerance_ms, UINT_MAX);
     }
     return TRUE;
 }
@@ -290,7 +292,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
     int rc = 0;
     gboolean retval = TRUE;
 
-    crm_info("Scanning: -o %s", optarg);
+    pcmk__info("Scanning: -o %s", optarg);
 
     rc = pcmk__scan_nvpair(optarg, &name, &value);
 
@@ -298,7 +300,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
         g_set_error(error, PCMK__RC_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_rc_str(rc));
         retval = FALSE;
     } else {
-        crm_info("Got: '%s'='%s'", name, value);
+        pcmk__info("Got: '%s'='%s'", name, value);
 
         if (options.params == NULL) {
             options.params = pcmk__strkey_table(free, free);
@@ -315,7 +317,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     free(name);
-    name = crm_strdup_printf("%s.%s", crm_system_name, optarg);
+    name = pcmk__assert_asprintf("%s.%s", crm_system_name, optarg);
     return TRUE;
 }
 
@@ -696,7 +698,7 @@ main(int argc, char **argv)
             break;
     }
 
-    crm_info("Command returned: %s (%d)", pcmk_rc_str(rc), rc);
+    pcmk__info("Command returned: %s (%d)", pcmk_rc_str(rc), rc);
     exit_code = pcmk_rc2exitc(rc);
 
   done:

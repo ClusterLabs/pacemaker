@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,6 +34,8 @@ int pcmk__xml2fd(int fd, xmlNode *cur);
 int pcmk__xml_write_fd(const xmlNode *xml, const char *filename, int fd);
 int pcmk__xml_write_file(const xmlNode *xml, const char *filename,
                          bool compress);
+void pcmk__xml_write_temp_file(const xmlNode *xml, const char *desc,
+                               const char *filename);
 
 #ifdef __cplusplus
 }

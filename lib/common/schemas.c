@@ -34,7 +34,7 @@
 #define SCHEMA_ZERO { .v = { 0, 0 } }
 
 #define schema_strdup_printf(prefix, version, suffix) \
-    crm_strdup_printf(prefix "%u.%u" suffix, (version).v[0], (version).v[1])
+    pcmk__assert_asprintf(prefix "%u.%u" suffix, (version).v[0], (version).v[1])
 
 typedef struct {
     xmlRelaxNGPtr rng;
@@ -172,16 +172,16 @@ schema_filter(const struct dirent *a)
     pcmk__schema_version_t version = SCHEMA_ZERO;
 
     if (strstr(a->d_name, "pacemaker-") != a->d_name) {
-        /* crm_trace("%s - wrong prefix", a->d_name); */
+        // pcmk__trace("%s - wrong prefix", a->d_name);
 
     } else if (!pcmk__ends_with_ext(a->d_name, ".rng")) {
-        /* crm_trace("%s - wrong suffix", a->d_name); */
+        // pcmk__trace("%s - wrong suffix", a->d_name);
 
     } else if (!version_from_filename(a->d_name, &version)) {
-        /* crm_trace("%s - wrong format", a->d_name); */
+        // pcmk__trace("%s - wrong format", a->d_name);
 
     } else {
-        /* crm_debug("%s - candidate", a->d_name); */
+        // pcmk__debug("%s - candidate", a->d_name);
         rc = 1;
     }
 
@@ -321,9 +321,6 @@ transform_filter(const struct dirent *entry)
  * \internal
  * \brief Compare transform files based on the version strings in their names
  *
- * This is a crude version comparison that relies on the specific structure of
- * these filenames.
- *
  * \retval -1 if \p entry1 sorts before \p entry2
  * \retval  0 if \p entry1 sorts equal to \p entry2
  * \retval  1 if \p entry1 sorts after \p entry2
@@ -334,38 +331,9 @@ transform_filter(const struct dirent *entry)
 static int
 compare_transforms(const struct dirent **entry1, const struct dirent **entry2)
 {
-    unsigned char major1 = 0;
-    unsigned char major2 = 0;
-    unsigned char minor1 = 0;
-    unsigned char minor2 = 0;
-    unsigned char order1 = 0;
-    unsigned char order2 = 0;
-
-    // If these made it through the filter, they should be of the right format
-    CRM_LOG_ASSERT(sscanf((*entry1)->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
-                          &major1, &minor1, &order1) == 3);
-    CRM_LOG_ASSERT(sscanf((*entry2)->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
-                          &major2, &minor2, &order2) == 3);
-
-    if (major1 < major2) {
-        return -1;
-    } else if (major1 > major2) {
-        return 1;
-    }
-
-    if (minor1 < minor2) {
-        return -1;
-    } else if (minor1 > minor2) {
-        return 1;
-    }
-
-    if (order1 < order2) {
-        return -1;
-    } else if (order1 > order2) {
-        return 1;
-    }
-
-    return 0;
+    // We already validated the format of each filename in transform_filter()
+    return pcmk__compare_versions((*entry1)->d_name + sizeof("upgrade-") - 1,
+                                  (*entry2)->d_name + sizeof("upgrade-") - 1);
 }
 
 /*!
@@ -405,7 +373,8 @@ load_transforms_from_dir(const char *dir)
     if (num_matches < 0) {
         int rc = errno;
 
-        crm_warn("Could not load transforms from %s: %s", dir, pcmk_rc_str(rc));
+        pcmk__warn("Could not load transforms from %s: %s", dir,
+                   pcmk_rc_str(rc));
         goto done;
     }
 
@@ -418,8 +387,8 @@ load_transforms_from_dir(const char *dir)
         if (sscanf(namelist[i]->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
                    &(version.v[0]), &(version.v[1]), &order) == 3) {
 
-            char *version_s = crm_strdup_printf("%hhu.%hhu",
-                                                version.v[0], version.v[1]);
+            char *version_s = pcmk__assert_asprintf("%hhu.%hhu",
+                                                    version.v[0], version.v[1]);
             GList *list = g_hash_table_lookup(transforms, version_s);
 
             if (list == NULL) {
@@ -460,7 +429,7 @@ pcmk__load_schemas_from_dir(const char *dir)
     if (max < 0) {
         int rc = errno;
 
-        crm_warn("Could not load schemas from %s: %s", dir, pcmk_rc_str(rc));
+        pcmk__warn("Could not load schemas from %s: %s", dir, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -471,8 +440,8 @@ pcmk__load_schemas_from_dir(const char *dir)
         pcmk__schema_version_t version = SCHEMA_ZERO;
 
         if (version_from_filename(namelist[lpc]->d_name, &version)) {
-            char *version_s = crm_strdup_printf("%hhu.%hhu",
-                                                version.v[0], version.v[1]);
+            char *version_s = pcmk__assert_asprintf("%hhu.%hhu",
+                                                    version.v[0], version.v[1]);
             char *orig_key = NULL;
             GList *transform_list = NULL;
 
@@ -492,8 +461,8 @@ pcmk__load_schemas_from_dir(const char *dir)
 
         } else {
             // Shouldn't be possible, but makes static analysis happy
-            crm_warn("Skipping schema '%s': could not parse version",
-                     namelist[lpc]->d_name);
+            pcmk__warn("Skipping schema '%s': could not parse version",
+                       namelist[lpc]->d_name);
         }
     }
 
@@ -576,7 +545,7 @@ pcmk__schema_init(void)
         for (GList *iter = known_schemas; iter != NULL; iter = iter->next) {
             pcmk__schema_t *schema = iter->data;
 
-            crm_debug("Loaded schema %d: %s", schema_index, schema->name);
+            pcmk__debug("Loaded schema %d: %s", schema_index, schema->name);
             schema->schema_index = schema_index++;
         }
     }
@@ -598,7 +567,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
         ctx = *cached_ctx;
 
     } else {
-        crm_debug("Creating RNG parser context");
+        pcmk__debug("Creating RNG parser context");
         ctx = pcmk__assert_alloc(1, sizeof(relaxng_ctx_cache_t));
 
         ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
@@ -618,7 +587,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
 
         ctx->rng = xmlRelaxNGParse(ctx->parser);
         CRM_CHECK(ctx->rng != NULL,
-                  crm_err("Could not find/parse %s", relaxng_file);
+                  pcmk__err("Could not find/parse %s", relaxng_file);
                   goto cleanup);
 
         ctx->valid = xmlRelaxNGNewValidCtxt(ctx->rng);
@@ -642,7 +611,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
         valid = false;
 
     } else if (rc < 0) {
-        crm_err("Internal libxml error during validation");
+        pcmk__err("Internal libxml error during validation");
     }
 
   cleanup:
@@ -795,15 +764,15 @@ validate_with(xmlNode *xml, pcmk__schema_t *schema,
     file = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng,
                                    schema->name);
 
-    crm_trace("Validating with %s (type=%d)",
-              pcmk__s(file, "missing schema"), schema->validator);
+    pcmk__trace("Validating with %s (type=%d)",pcmk__s(file, "missing schema"),
+                schema->validator);
     switch (schema->validator) {
         case pcmk__schema_validator_rng:
             cache = (relaxng_ctx_cache_t **) &(schema->cache);
             valid = validate_with_relaxng(xml->doc, error_handler, error_handler_context, file, cache);
             break;
         default:
-            crm_err("Unknown validator type: %d", schema->validator);
+            pcmk__err("Unknown validator type: %d", schema->validator);
             break;
     }
 
@@ -832,7 +801,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return false);
 
     if (validation == NULL) {
-        validation = crm_element_value(xml_blob, PCMK_XA_VALIDATE_WITH);
+        validation = pcmk__xe_get(xml_blob, PCMK_XA_VALIDATE_WITH);
     }
     pcmk__warn_if_schema_deprecated(validation);
 
@@ -1076,14 +1045,14 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
         const struct dirent *entry = iter->data;
         const char *transform = entry->d_name;
 
-        crm_debug("Upgrading schema from %s to %s: applying XSL transform %s",
-                  schema->name, upgraded_schema->name, transform);
+        pcmk__debug("Upgrading schema from %s to %s: applying XSL transform %s",
+                    schema->name, upgraded_schema->name, transform);
 
         new_xml = apply_transformation(input_xml, transform, to_logs);
         pcmk__xml_free(old_xml);
 
         if (new_xml == NULL) {
-            crm_err("XSL transform %s failed, aborting upgrade", transform);
+            pcmk__err("XSL transform %s failed, aborting upgrade", transform);
             return NULL;
         }
         input_xml = new_xml;
@@ -1096,16 +1065,16 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
     // Ensure result validates with its new schema
     if (!validate_with(new_xml, upgraded_schema, error_handler,
                        GUINT_TO_POINTER(LOG_ERR))) {
-        crm_err("Schema upgrade from %s to %s failed: "
-                "XSL transform pipeline produced an invalid configuration",
-                schema->name, upgraded_schema->name);
-        crm_log_xml_debug(new_xml, "bad-transform-result");
+        pcmk__err("Schema upgrade from %s to %s failed: XSL transform pipeline "
+                  "produced an invalid configuration",
+                  schema->name, upgraded_schema->name);
+        pcmk__log_xml_debug(new_xml, "bad-transform-result");
         pcmk__xml_free(new_xml);
         return NULL;
     }
 
-    crm_info("Schema upgrade from %s to %s succeeded",
-             schema->name, upgraded_schema->name);
+    pcmk__info("Schema upgrade from %s to %s succeeded", schema->name,
+               upgraded_schema->name);
     return new_xml;
 }
 
@@ -1120,7 +1089,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
 static GList *
 get_configured_schema(const xmlNode *xml)
 {
-    const char *schema_name = crm_element_value(xml, PCMK_XA_VALIDATE_WITH);
+    const char *schema_name = pcmk__xe_get(xml, PCMK_XA_VALIDATE_WITH);
 
     pcmk__warn_if_schema_deprecated(schema_name);
     return pcmk__get_schema(schema_name);
@@ -1188,7 +1157,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
         if (!validate_with(*xml, current_schema, error_handler,
                            GUINT_TO_POINTER(LOG_ERR))) {
-            crm_debug("Schema %s does not validate", current_schema->name);
+            pcmk__debug("Schema %s does not validate", current_schema->name);
             if (best_schema != NULL) {
                 /* we've satisfied the validation, no need to check further */
                 break;
@@ -1197,7 +1166,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             continue; // Try again with the next higher schema
         }
 
-        crm_debug("Schema %s validates", current_schema->name);
+        pcmk__debug("Schema %s validates", current_schema->name);
         rc = pcmk_rc_ok;
         best_schema = current_schema;
         if (current_schema->schema_index == max_schema_index) {
@@ -1229,10 +1198,9 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
     if ((best_schema != NULL)
         && (best_schema->schema_index > original_schema->schema_index)) {
-        crm_info("%s the configuration schema to %s",
-                 (transform? "Transformed" : "Upgraded"),
-                 best_schema->name);
-        crm_xml_add(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
+        pcmk__info("%s the configuration schema to %s",
+                   (transform? "Transformed" : "Upgraded"), best_schema->name);
+        pcmk__xe_set(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
     return rc;
 }
@@ -1278,8 +1246,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
         entry = NULL;
         converted = pcmk__xml_copy(NULL, *xml);
         if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
-            new_schema_name = crm_element_value(converted,
-                                                PCMK_XA_VALIDATE_WITH);
+            new_schema_name = pcmk__xe_get(converted, PCMK_XA_VALIDATE_WITH);
             entry = pcmk__get_schema(new_schema_name);
         }
         schema = (entry == NULL)? NULL : entry->data;
@@ -1340,9 +1307,9 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
                                       original_schema->name, schema->name);
                 }
             } else if (to_logs) {
-                crm_info("Configuration with %s schema was internally "
-                         "upgraded to latest version %s",
-                         original_schema->name, schema->name);
+                pcmk__info("Configuration with %s schema was internally "
+                           "upgraded to latest version %s",
+                           original_schema->name, schema->name);
             }
         }
 
@@ -1403,7 +1370,8 @@ pcmk__schema_files_later_than(const char *name)
             lst = g_list_prepend(lst, pcmk__str_copy(entry->d_name));
         }
 
-        lst = g_list_prepend(lst, crm_strdup_printf("%s.rng", schema->name));
+        lst = g_list_prepend(lst,
+                             pcmk__assert_asprintf("%s.rng", schema->name));
     }
 
     return lst;
@@ -1413,7 +1381,7 @@ static void
 append_href(xmlNode *xml, void *user_data)
 {
     GList **list = user_data;
-    char *href = crm_element_value_copy(xml, "href");
+    char *href = pcmk__xe_get_copy(xml, "href");
 
     if (href == NULL) {
         return;
@@ -1470,14 +1438,14 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
      * just assume it's an RNG file.
      */
     if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
-        path = crm_strdup_printf("%s.rng", file);
+        path = pcmk__assert_asprintf("%s.rng", file);
     } else {
         path = pcmk__str_copy(file);
     }
 
     rc = read_file_contents(path, &contents);
     if (rc != pcmk_rc_ok || contents == NULL) {
-        crm_warn("Could not read schema file %s: %s", file, pcmk_rc_str(rc));
+        pcmk__warn("Could not read schema file %s: %s", file, pcmk_rc_str(rc));
         free(path);
         return;
     }
@@ -1486,7 +1454,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
      * as a CDATA block underneath it.
      */
     file_node = pcmk__xe_create(parent, PCMK__XE_FILE);
-    crm_xml_add(file_node, PCMK_XA_PATH, path);
+    pcmk__xe_set(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
     xmlAddChild(file_node,
@@ -1528,7 +1496,7 @@ pcmk__build_schema_xml_node(xmlNode *parent, const char *name, GList **already_i
 {
     xmlNode *schema_node = pcmk__xe_create(parent, PCMK__XA_SCHEMA);
 
-    crm_xml_add(schema_node, PCMK_XA_VERSION, name);
+    pcmk__xe_set(schema_node, PCMK_XA_VERSION, name);
     add_schema_file_to_xml(schema_node, name, already_included);
 
     if (schema_node->children == NULL) {
@@ -1585,7 +1553,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
     int rc = pcmk__update_configured_schema(xml, to_logs);
 
     if (best_version != NULL) {
-        const char *name = crm_element_value(*xml, PCMK_XA_VALIDATE_WITH);
+        const char *name = pcmk__xe_get(*xml, PCMK_XA_VALIDATE_WITH);
 
         if (name == NULL) {
             *best_version = -1;

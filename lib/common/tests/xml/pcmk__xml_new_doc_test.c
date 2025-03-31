@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,8 +29,7 @@ create_document_node(void **state) {
     docpriv = doc->_private;
     assert_non_null(docpriv);
     assert_int_equal(docpriv->check, PCMK__XML_DOC_PRIVATE_MAGIC);
-    assert_true(pcmk_all_flags_set(docpriv->flags,
-                                   pcmk__xf_dirty|pcmk__xf_created));
+    assert_int_equal(docpriv->flags, pcmk__xf_none);
 
     pcmk__xml_free_doc(doc);
 }

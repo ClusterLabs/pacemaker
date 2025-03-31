@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -409,7 +409,7 @@ delete_attr_on_node(xmlNode *child, void *userdata)
 {
     struct delete_data_s *dd = (struct delete_data_s *) userdata;
 
-    const char *attr_name = crm_element_value(child, PCMK_XA_NAME);
+    const char *attr_name = pcmk__xe_get(child, PCMK_XA_NAME);
     int rc = pcmk_rc_ok;
 
     if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
@@ -497,7 +497,7 @@ update_attr_on_node(xmlNode *child, void *userdata)
 {
     struct update_data_s *ud = (struct update_data_s *) userdata;
 
-    const char *attr_name = crm_element_value(child, PCMK_XA_NAME);
+    const char *attr_name = pcmk__xe_get(child, PCMK_XA_NAME);
 
     if (!pcmk__str_eq(attr_name, options.attr_pattern, pcmk__str_regex)) {
         return pcmk_rc_ok;
@@ -561,8 +561,8 @@ output_one_attribute(xmlNode *node, void *userdata)
 {
     struct output_data_s *od = (struct output_data_s *) userdata;
 
-    const char *name = crm_element_value(node, PCMK_XA_NAME);
-    const char *value = crm_element_value(node, PCMK_XA_VALUE);
+    const char *name = pcmk__xe_get(node, PCMK_XA_NAME);
+    const char *value = pcmk__xe_get(node, PCMK_XA_VALUE);
 
     const char *type = options.type;
     const char *attr_id = options.attr_id;
@@ -574,9 +574,9 @@ output_one_attribute(xmlNode *node, void *userdata)
     od->out->message(od->out, "attribute", type, attr_id, name, value, NULL,
                      od->out->quiet, true);
     od->did_output = true;
-    crm_info("Read %s='%s' %s%s",
-             pcmk__s(name, "<null>"), pcmk__s(value, ""),
-             options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+    pcmk__info("Read %s='%s' %s%s", pcmk__s(name, "<null>"), pcmk__s(value, ""),
+               ((options.set_name != NULL)? "in " : ""),
+               pcmk__s(options.set_name, ""));
 
     return pcmk_rc_ok;
 }
@@ -816,7 +816,7 @@ main(int argc, char **argv)
     }
 
     if (options.inhibit) {
-        crm_warn("Inhibiting notifications for this update");
+        pcmk__warn("Inhibiting notifications for this update");
         cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
@@ -940,8 +940,8 @@ main(int argc, char **argv)
         if (options.command == attr_cmd_delete) {
             update = "<none>";
         }
-        crm_info("Update %s=%s sent to the attribute manager",
-                 options.attr_name, update);
+        pcmk__info("Update %s=%s sent to the attribute manager",
+                   options.attr_name, update);
 
     } else if (options.command == attr_cmd_delete) {
         rc = command_delete(out, the_cib);

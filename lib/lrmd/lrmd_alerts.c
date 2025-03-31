@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ alert_key2param(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
     if (value == NULL) {
         value = "";
     }
-    crm_trace("Setting alert key %s = '%s'", pcmk__alert_keys[name], value);
+    pcmk__trace("Setting alert key %s = '%s'", pcmk__alert_keys[name], value);
     return lrmd_key_value_add(head, pcmk__alert_keys[name], value);
 }
 
@@ -49,7 +49,7 @@ static lrmd_key_value_t *
 alert_key2param_ms(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                    guint value)
 {
-    char *value_s = crm_strdup_printf("%u", value);
+    char *value_s = pcmk__assert_asprintf("%u", value);
 
     head = alert_key2param(head, name, value_s);
     free(value_s);
@@ -62,8 +62,8 @@ set_ev_kv(gpointer key, gpointer value, gpointer user_data)
     lrmd_key_value_t **head = (lrmd_key_value_t **) user_data;
 
     if (value) {
-        crm_trace("Setting environment variable %s='%s'",
-                  (char*)key, (char*)value);
+        pcmk__trace("Setting environment variable %s='%s'", (const char*) key,
+                    (const char *) value);
         *head = lrmd_key_value_add(*head, key, value);
     }
 }
@@ -141,25 +141,25 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         lrmd_key_value_t *head = NULL;
         int rc;
 
-        if (!pcmk_is_set(entry->flags, kind)) {
-            crm_trace("Filtering unwanted %s alert to %s via %s",
-                      kind_s, entry->recipient, entry->id);
+        if (!pcmk__is_set(entry->flags, kind)) {
+            pcmk__trace("Filtering unwanted %s alert to %s via %s", kind_s,
+                        entry->recipient, entry->id);
             continue;
         }
 
         if ((kind == pcmk__alert_attribute)
             && !is_target_alert(entry->select_attribute_name, attr_name)) {
 
-            crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
-                      attr_name, entry->recipient, entry->id);
+            pcmk__trace("Filtering unwanted attribute '%s' alert to %s via %s",
+                        attr_name, entry->recipient, entry->id);
             continue;
         }
 
         if (now == NULL) {
             now = pcmk__time_hr_now(&epoch);
         }
-        crm_info("Sending %s alert via %s to %s",
-                 kind_s, entry->id, entry->recipient);
+        pcmk__info("Sending %s alert via %s to %s", kind_s, entry->id,
+                   entry->recipient);
 
         /* Make a copy of the parameters, because each alert will be unique */
         for (head = params; head != NULL; head = head->next) {
@@ -195,8 +195,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
                                     entry->timeout, copy_params);
         if (rc < 0) {
-            crm_err("Could not execute alert %s: %s " QB_XS " rc=%d",
-                    entry->id, pcmk_strerror(rc), rc);
+            pcmk__err("Could not execute alert %s: %s " QB_XS " rc=%d",
+                      entry->id, pcmk_strerror(rc), rc);
             any_failure = TRUE;
         } else {
             any_success = TRUE;

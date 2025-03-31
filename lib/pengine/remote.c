@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/common/nvpair.h>              // crm_create_nvpair_xml()
 #include <crm/common/xml.h>
 #include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
@@ -30,14 +31,14 @@ pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
                                  const pcmk_resource_t *rsc)
 {
     if ((rsc != NULL) && (scheduler != NULL)
-        && pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
+        && pcmk__is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
 
         for (GList *gIter = rsc->priv->launched;
              gIter != NULL; gIter = gIter->next) {
 
             pcmk_resource_t *launched = gIter->data;
 
-            if (pcmk_is_set(launched->flags, pcmk__rsc_is_remote_connection)) {
+            if (pcmk__is_set(launched->flags, pcmk__rsc_is_remote_connection)) {
                 return launched;
             }
         }
@@ -54,17 +55,17 @@ xml_contains_remote_node(xmlNode *xml)
         return false;
     }
 
-    value = crm_element_value(xml, PCMK_XA_TYPE);
+    value = pcmk__xe_get(xml, PCMK_XA_TYPE);
     if (!pcmk__str_eq(value, "remote", pcmk__str_casei)) {
         return false;
     }
 
-    value = crm_element_value(xml, PCMK_XA_CLASS);
+    value = pcmk__xe_get(xml, PCMK_XA_CLASS);
     if (!pcmk__str_eq(value, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
         return false;
     }
 
-    value = crm_element_value(xml, PCMK_XA_PROVIDER);
+    value = pcmk__xe_get(xml, PCMK_XA_PROVIDER);
     if (!pcmk__str_eq(value, "pacemaker", pcmk__str_casei)) {
         return false;
     }
@@ -90,13 +91,13 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
     GList *iter;
 
     CRM_CHECK(scheduler && host && host->details && helper, return);
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
         return;
     }
     for (iter = host->details->running_rsc; iter != NULL; iter = iter->next) {
         pcmk_resource_t *rsc = (pcmk_resource_t *) iter->data;
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)
             && (rsc->priv->launcher != NULL)) {
             pcmk_node_t *guest_node = pcmk_find_node(scheduler, rsc->id);
 
@@ -136,10 +137,10 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     remote = pcmk__xe_create(parent, PCMK_XE_PRIMITIVE);
 
     // Add identity
-    crm_xml_add(remote, PCMK_XA_ID, uname);
-    crm_xml_add(remote, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(remote, PCMK_XA_PROVIDER, "pacemaker");
-    crm_xml_add(remote, PCMK_XA_TYPE, "remote");
+    pcmk__xe_set(remote, PCMK_XA_ID, uname);
+    pcmk__xe_set(remote, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    pcmk__xe_set(remote, PCMK_XA_PROVIDER, "pacemaker");
+    pcmk__xe_set(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
     xml_sub = pcmk__xe_create(remote, PCMK_XE_META_ATTRIBUTES);

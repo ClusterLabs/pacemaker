@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,7 @@
 static inline void
 fsa_cib_anon_update(const char *section, xmlNode *data) {
     if (controld_globals.cib_conn == NULL) {
-        crm_err("No CIB connection available");
+        pcmk__err("No CIB connection available");
     } else {
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
                                                 section, data, cib_can_create);
@@ -32,7 +32,7 @@ fsa_cib_anon_update(const char *section, xmlNode *data) {
 static inline void
 fsa_cib_anon_update_discard_reply(const char *section, xmlNode *data) {
     if (controld_globals.cib_conn == NULL) {
-        crm_err("No CIB connection available");
+        pcmk__err("No CIB connection available");
     } else {
         controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
                                                 section, data,

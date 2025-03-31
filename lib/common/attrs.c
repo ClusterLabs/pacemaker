@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 
+#include <crm/common/nvpair.h>              // crm_meta_name()
 #include <crm/common/xml.h>
 #include <crm/common/scheduler.h>
 #include <crm/common/scheduler_internal.h>
@@ -93,7 +94,7 @@ pcmk_promotion_score_name(const char *rsc_id)
             return NULL;
         }
     }
-    return crm_strdup_printf("master-%s", rsc_id);
+    return pcmk__assert_asprintf("master-%s", rsc_id);
 }
 
 /*!
@@ -130,8 +131,8 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
     if (!pcmk__is_guest_or_bundle_node(node)
         || !pcmk__str_eq(target, PCMK_VALUE_HOST, pcmk__str_casei)) {
         value = g_hash_table_lookup(node->priv->attrs, name);
-        crm_trace("%s='%s' on %s",
-                  name, pcmk__s(value, ""), pcmk__node_name(node));
+        pcmk__trace("%s='%s' on %s", name, pcmk__s(value, ""),
+                    pcmk__node_name(node));
         return value;
     }
 
@@ -145,9 +146,9 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
         case pcmk__rsc_node_assigned:
             host = container->priv->assigned_node;
             if (host == NULL) {
-                crm_trace("Skipping %s lookup for %s because "
-                          "its container %s is unassigned",
-                          name, pcmk__node_name(node), container->id);
+                pcmk__trace("Skipping %s lookup for %s because its container "
+                            "%s is unassigned",
+                            name, pcmk__node_name(node), container->id);
                 return NULL;
             }
             node_type_s = "assigned";
@@ -158,9 +159,9 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
                 host = container->priv->active_nodes->data;
             }
             if (host == NULL) {
-                crm_trace("Skipping %s lookup for %s because "
-                          "its container %s is inactive",
-                          name, pcmk__node_name(node), container->id);
+                pcmk__trace("Skipping %s lookup for %s because its container "
+                            "%s is inactive",
+                            name, pcmk__node_name(node), container->id);
                 return NULL;
             }
             node_type_s = "current";
@@ -173,8 +174,8 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
     }
 
     value = g_hash_table_lookup(host->priv->attrs, name);
-    crm_trace("%s='%s' for %s on %s container host %s",
-              name, pcmk__s(value, ""), pcmk__node_name(node), node_type_s,
-              pcmk__node_name(host));
+    pcmk__trace("%s='%s' for %s on %s container host %s", name,
+                pcmk__s(value, ""), pcmk__node_name(node), node_type_s,
+                pcmk__node_name(host));
     return value;
 }

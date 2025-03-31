@@ -76,8 +76,8 @@ handle_pecalc_request(pcmk__request_t *request)
     if (pcmk__update_configured_schema(&converted, true) != pcmk_rc_ok) {
         scheduler->priv->graph = pcmk__xe_create(NULL,
                                                  PCMK__XE_TRANSITION_GRAPH);
-        crm_xml_add_int(scheduler->priv->graph, "transition_id", 0);
-        crm_xml_add_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
+        pcmk__xe_set_int(scheduler->priv->graph, "transition_id", 0);
+        pcmk__xe_set_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
         free(digest);
 
@@ -102,10 +102,10 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     // Get appropriate index into series[] array
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_error)
         || pcmk__config_has_error) {
         series_id = 0;
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
+    } else if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_warning)
                || pcmk__config_has_warning) {
         series_id = 1;
     } else {
@@ -124,8 +124,8 @@ handle_pecalc_request(pcmk__request_t *request)
         // @TODO maybe handle errors better ...
         seq = 0U;
     }
-    crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
-              series[series_id].name, series_wrap, seq, value);
+    pcmk__trace("Series %s: wrap=%d, seq=%u, pref=%s", series[series_id].name,
+                series_wrap, seq, value);
 
     reply = pcmk__new_reply(msg, scheduler->priv->graph);
 
@@ -146,20 +146,19 @@ handle_pecalc_request(pcmk__request_t *request)
                                          series[series_id].name, seq, true);
     }
 
-    crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
+    pcmk__xe_set(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
 
     pcmk__log_transition_summary(scheduler, filename);
 
     if (series_wrap == 0) {
-        crm_debug("Not saving input to disk (disabled by configuration)");
+        pcmk__debug("Not saving input to disk (disabled by configuration)");
 
     } else if (is_repoke) {
-        crm_info("Input has not changed since last time, not saving to disk");
+        pcmk__info("Input has not changed since last time, not saving to disk");
 
     } else {
         unlink(filename);
-        crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
-                       (long long) execution_date);
+        pcmk__xe_set_time(xml_data, PCMK_XA_EXECUTION_DATE, execution_date);
         pcmk__xml_write_file(xml_data, filename, true);
         pcmk__write_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                     ++seq, series_wrap);
@@ -192,7 +191,8 @@ handle_hello_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    crm_trace("Received IPC hello from %s", pcmk__client_name(request->ipc_client));
+    pcmk__trace("Received IPC hello from %s",
+                pcmk__client_name(request->ipc_client));
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
@@ -213,7 +213,7 @@ schedulerd_register_handlers(void)
 static int32_t
 pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -241,22 +241,24 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    sys_to = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    sys_to = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
 
-    if (pcmk__str_eq(crm_element_value(msg, PCMK__XA_SUBT),
-                     PCMK__VALUE_RESPONSE, pcmk__str_none)) {
+    if (pcmk__str_eq(pcmk__xe_get(msg, PCMK__XA_SUBT), PCMK__VALUE_RESPONSE,
+                     pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
-        crm_info("Ignoring IPC reply from %s", pcmk__client_name(c));
+        pcmk__info("Ignoring IPC reply from %s", pcmk__client_name(c));
 
     } else if (!pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_INDETERMINATE);
-        crm_info("Ignoring invalid IPC message: to '%s' not "
-                 CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
+        pcmk__info("Ignoring invalid IPC message: to '%s' not "
+                  CRM_SYSTEM_PENGINE,
+                  pcmk__s(sys_to, ""));
 
     } else {
         char *log_msg = NULL;
+        const char *exec_status_s = NULL;
         const char *reason = NULL;
         xmlNode *reply = NULL;
 
@@ -270,7 +272,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, PCMK__XA_CRM_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CRM_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
         reply = pcmk__process_request(&request, schedulerd_handlers);
@@ -280,20 +282,23 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             pcmk__xml_free(reply);
         }
 
+        exec_status_s = pcmk_exec_status_str(request.result.execution_status);
         reason = request.result.exit_reason;
 
-        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
-                                    request.op, pcmk__request_origin_type(&request),
-                                    pcmk__request_origin(&request),
-                                    pcmk_exec_status_str(request.result.execution_status),
-                                    (reason == NULL)? "" : " (",
-                                    (reason == NULL)? "" : reason,
-                                    (reason == NULL)? "" : ")");
+        log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
+                                        "%s%s%s%s",
+                                        request.op,
+                                        pcmk__request_origin_type(&request),
+                                        pcmk__request_origin(&request),
+                                        exec_status_s,
+                                        (reason == NULL)? "" : " (",
+                                        pcmk__s(reason, ""),
+                                        (reason == NULL)? "" : ")");
 
         if (!pcmk__result_ok(&request.result)) {
-            crm_warn("%s", log_msg);
+            pcmk__warn("%s", log_msg);
         } else {
-            crm_debug("%s", log_msg);
+            pcmk__debug("%s", log_msg);
         }
 
         free(log_msg);
@@ -313,7 +318,7 @@ pe_ipc_closed(qb_ipcs_connection_t * c)
     if (client == NULL) {
         return 0;
     }
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     pcmk__free_client(client);
     return 0;
 }
@@ -321,7 +326,7 @@ pe_ipc_closed(qb_ipcs_connection_t * c)
 static void
 pe_ipc_destroy(qb_ipcs_connection_t * c)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     pe_ipc_closed(c);
 }
 

@@ -47,14 +47,14 @@ stonith_send_broadcast_history(xmlNode *history,
     xmlNode *wrapper = pcmk__xe_create(bcast, PCMK__XE_ST_CALLDATA);
     xmlNode *call_data = pcmk__xe_create(wrapper, __func__);
 
-    crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-    crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
-    crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
-    crm_xml_add_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
+    pcmk__xe_set(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    pcmk__xe_set(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
+    pcmk__xe_set(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
+    pcmk__xe_set_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
 
     pcmk__xml_copy(call_data, history);
     if (target != NULL) {
-        crm_xml_add(call_data, PCMK__XA_ST_TARGET, target);
+        pcmk__xe_set(call_data, PCMK__XA_ST_TARGET, target);
     }
 
     pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, bcast);
@@ -211,8 +211,9 @@ stonith_fence_history_trim(void)
     if (g_hash_table_size(stonith_remote_op_list) > MAX_STONITH_HISTORY) {
         GList *ops = g_hash_table_get_values(stonith_remote_op_list);
 
-        crm_trace("More than %d entries in fencing history, purging oldest "
-                  "completed operations", MAX_STONITH_HISTORY);
+        pcmk__trace("More than %d entries in fencing history, purging oldest "
+                    "completed operations",
+                    MAX_STONITH_HISTORY);
 
         ops = g_list_sort(ops, cmp_op_by_completion);
 
@@ -247,51 +248,46 @@ stonith_xml_history_to_list(const xmlNode *history)
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
         remote_fencing_op_t *op = NULL;
-        char *id = crm_element_value_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
+        char *id = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
         int state;
         int exit_status = CRM_EX_OK;
         int execution_status = PCMK_EXEC_DONE;
-        long long completed;
-        long long completed_nsec = 0L;
 
         if (!id) {
-            crm_warn("Malformed fencing history received from peer");
+            pcmk__warn("Malformed fencing history received from peer");
             continue;
         }
 
-        crm_trace("Attaching op %s to hashtable", id);
+        pcmk__trace("Attaching op %s to hashtable", id);
 
         op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
         op->id = id;
-        op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);
-        op->action = crm_element_value_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
-        op->originator = crm_element_value_copy(xml_op, PCMK__XA_ST_ORIGIN);
-        op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
-        op->client_name = crm_element_value_copy(xml_op,
-                                                 PCMK__XA_ST_CLIENTNAME);
-        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE, &completed);
-        op->completed = (time_t) completed;
-        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
-        op->completed_nsec = completed_nsec;
-        crm_element_value_int(xml_op, PCMK__XA_ST_STATE, &state);
+        op->target = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_TARGET);
+        op->action = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
+        op->originator = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_ORIGIN);
+        op->delegate = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_DELEGATE);
+        op->client_name = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_CLIENTNAME);
+        pcmk__xe_get_time(xml_op, PCMK__XA_ST_DATE, &op->completed);
+        pcmk__xe_get_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &op->completed_nsec);
+        pcmk__xe_get_int(xml_op, PCMK__XA_ST_STATE, &state);
         op->state = (enum op_state) state;
 
         /* @COMPAT We can't use stonith__xe_get_result() here because
          * fencers <2.1.3 didn't include results, leading it to assume an error
          * status. Instead, set an unknown status in that case.
          */
-        if ((crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &exit_status) < 0)
-            || (crm_element_value_int(xml_op, PCMK__XA_OP_STATUS,
-                                      &execution_status) < 0)) {
+        if ((pcmk__xe_get_int(xml_op, PCMK__XA_RC_CODE,
+                              &exit_status) != pcmk_rc_ok)
+            || (pcmk__xe_get_int(xml_op, PCMK__XA_OP_STATUS,
+                                 &execution_status) != pcmk_rc_ok)) {
             exit_status = CRM_EX_INDETERMINATE;
             execution_status = PCMK_EXEC_UNKNOWN;
         }
         pcmk__set_result(&op->result, exit_status, execution_status,
-                         crm_element_value(xml_op, PCMK_XA_EXIT_REASON));
+                         pcmk__xe_get(xml_op, PCMK_XA_EXIT_REASON));
         pcmk__set_result_output(&op->result,
-                                crm_element_value_copy(xml_op,
-                                                       PCMK__XA_ST_OUTPUT),
+                                pcmk__xe_get_copy(xml_op, PCMK__XA_ST_OUTPUT),
                                 NULL);
 
 
@@ -341,11 +337,11 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                         if (stonith__op_state_pending(op->state)
                             && !stonith__op_state_pending(remote_op->state)) {
 
-                            crm_debug("Updating outdated pending operation %.8s "
-                                      "(state=%s) according to the one (state=%s) from "
-                                      "remote peer history",
-                                      op->id, stonith_op_state_str(op->state),
-                                      stonith_op_state_str(remote_op->state));
+                            pcmk__debug("Updating outdated pending operation "
+                                        "%.8s (state=%s) according to the one "
+                                        "(state=%s) from remote peer history",
+                                        op->id, stonith_op_state_str(op->state),
+                                        stonith_op_state_str(remote_op->state));
 
                             g_hash_table_steal(remote_history, op->id);
                             op->id = remote_op->id;
@@ -358,11 +354,12 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                         } else if (!stonith__op_state_pending(op->state)
                                    && stonith__op_state_pending(remote_op->state)) {
 
-                            crm_debug("Broadcasting operation %.8s (state=%s) to "
-                                      "update the outdated pending one "
-                                      "(state=%s) in remote peer history",
-                                      op->id, stonith_op_state_str(op->state),
-                                      stonith_op_state_str(remote_op->state));
+                            pcmk__debug("Broadcasting operation %.8s "
+                                        "(state=%s) to update the outdated "
+                                        "pending one state=%s) in remote peer "
+                                        "history",
+                                        op->id, stonith_op_state_str(op->state),
+                                        stonith_op_state_str(remote_op->state));
 
                             g_hash_table_remove(remote_history, op->id);
 
@@ -378,20 +375,20 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 }
 
                 cnt++;
-                crm_trace("Attaching op %s", op->id);
+                pcmk__trace("Attaching op %s", op->id);
                 entry = pcmk__xe_create(history, STONITH_OP_EXEC);
                 if (add_id) {
-                    crm_xml_add(entry, PCMK__XA_ST_REMOTE_OP, op->id);
+                    pcmk__xe_set(entry, PCMK__XA_ST_REMOTE_OP, op->id);
                 }
-                crm_xml_add(entry, PCMK__XA_ST_TARGET, op->target);
-                crm_xml_add(entry, PCMK__XA_ST_DEVICE_ACTION, op->action);
-                crm_xml_add(entry, PCMK__XA_ST_ORIGIN, op->originator);
-                crm_xml_add(entry, PCMK__XA_ST_DELEGATE, op->delegate);
-                crm_xml_add(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
-                crm_xml_add_ll(entry, PCMK__XA_ST_DATE, op->completed);
-                crm_xml_add_ll(entry, PCMK__XA_ST_DATE_NSEC,
-                               op->completed_nsec);
-                crm_xml_add_int(entry, PCMK__XA_ST_STATE, op->state);
+                pcmk__xe_set(entry, PCMK__XA_ST_TARGET, op->target);
+                pcmk__xe_set(entry, PCMK__XA_ST_DEVICE_ACTION, op->action);
+                pcmk__xe_set(entry, PCMK__XA_ST_ORIGIN, op->originator);
+                pcmk__xe_set(entry, PCMK__XA_ST_DELEGATE, op->delegate);
+                pcmk__xe_set(entry, PCMK__XA_ST_CLIENTNAME, op->client_name);
+                pcmk__xe_set_time(entry, PCMK__XA_ST_DATE, op->completed);
+                pcmk__xe_set_ll(entry, PCMK__XA_ST_DATE_NSEC,
+                                op->completed_nsec);
+                pcmk__xe_set_int(entry, PCMK__XA_ST_STATE, op->state);
                 stonith__xe_set_result(entry, &op->result);
             }
     }
@@ -407,8 +404,9 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                 pcmk__str_eq(op->originator, fenced_get_local_node(),
                              pcmk__str_casei)) {
 
-                crm_warn("Failing pending operation %.8s originated by us but "
-                         "known only from peer history", op->id);
+                pcmk__warn("Failing pending operation %.8s originated by us "
+                           "but known only from peer history",
+                           op->id);
                 op->state = st_failed;
                 set_fencing_completed(op);
 
@@ -481,11 +479,11 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     const char *target = NULL;
     xmlNode *dev = pcmk__xpath_find_one(msg->doc,
                                         "//*[@" PCMK__XA_ST_TARGET "]",
-                                        LOG_NEVER);
+                                        PCMK__LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
-        target = crm_element_value(dev, PCMK__XA_ST_TARGET);
+        target = pcmk__xe_get(dev, PCMK__XA_ST_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid;
             pcmk__node_status_t *node = NULL;
@@ -501,10 +499,10 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     }
 
     if (options & st_opt_cleanup) {
-        const char *call_id = crm_element_value(msg, PCMK__XA_ST_CALLID);
+        const char *call_id = pcmk__xe_get(msg, PCMK__XA_ST_CALLID);
 
-        crm_trace("Cleaning up operations on %s in %p", target,
-                  stonith_remote_op_list);
+        pcmk__trace("Cleaning up operations on %s in %p", target,
+                    stonith_remote_op_list);
         stonith_fence_history_cleanup(target, (call_id != NULL));
 
     } else if (options & st_opt_broadcast) {
@@ -514,7 +512,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
          */
         fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED, NULL,
                                  NULL);
-        if (crm_element_value(msg, PCMK__XA_ST_CALLID) != NULL) {
+        if (pcmk__xe_get(msg, PCMK__XA_ST_CALLID) != NULL) {
             /* this is coming from the stonith-API
             *
             * craft a broadcast with node's history
@@ -522,7 +520,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             * what it has on top
             */
             out_history = stonith_local_history(TRUE, NULL);
-            crm_trace("Broadcasting history to peers");
+            pcmk__trace("Broadcasting history to peers");
             stonith_send_broadcast_history(out_history,
                                         st_opt_broadcast | st_opt_discard_reply,
                                         NULL);
@@ -531,7 +529,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                                  pcmk__str_casei)) {
             xmlNode *history = pcmk__xpath_find_one(msg->doc,
                                                     "//" PCMK__XE_ST_HISTORY,
-                                                    LOG_NEVER);
+                                                    PCMK__LOG_NEVER);
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing
@@ -553,26 +551,26 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                 out_history =
                     stonith_local_history_diff_and_merge(received_history, TRUE, NULL);
                 if (out_history) {
-                    crm_trace("Broadcasting history-diff to peers");
+                    pcmk__trace("Broadcasting history-diff to peers");
                     pcmk__xe_set_bool_attr(out_history,
                                            PCMK__XA_ST_DIFFERENTIAL, true);
                     stonith_send_broadcast_history(out_history,
                         st_opt_broadcast | st_opt_discard_reply,
                         NULL);
                 } else {
-                    crm_trace("History-diff is empty - skip broadcast");
+                    pcmk__trace("History-diff is empty - skip broadcast");
                 }
             }
         } else {
-            crm_trace("Skipping history-query-broadcast (%s%s)"
-                      " we sent ourselves",
-                      remote_peer?"remote-peer=":"local-ipc",
-                      remote_peer?remote_peer:"");
+            pcmk__trace("Skipping history-query-broadcast (%s%s) we sent "
+                        "ourselves",
+                        ((remote_peer != NULL)? "remote-peer=" : "local-ipc"),
+                        pcmk__s(remote_peer, ""));
         }
     } else {
         /* plain history request */
-        crm_trace("Looking for operations on %s in %p", target,
-                  stonith_remote_op_list);
+        pcmk__trace("Looking for operations on %s in %p", target,
+                    stonith_remote_op_list);
         *output = stonith_local_history(FALSE, target);
     }
     pcmk__xml_free(out_history);

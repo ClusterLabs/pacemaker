@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -125,7 +125,7 @@ static GOptionEntry entries[] = {
 static void
 pcmk_ignore(int nsig)
 {
-    crm_info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
+    pcmk__info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
 }
 
 static void
@@ -140,8 +140,9 @@ pacemakerd_chown(const char *path, uid_t uid, gid_t gid)
     int rc = chown(path, uid, gid);
 
     if (rc < 0) {
-        crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
-                 path, CRM_DAEMON_USER, gid, pcmk_rc_str(errno));
+        pcmk__warn("Cannot change the ownership of %s to user " CRM_DAEMON_USER
+                   " and gid %d: %s",
+                   path, gid, pcmk_rc_str(errno));
     }
 }
 
@@ -161,16 +162,16 @@ create_pcmk_dirs(void)
         NULL
     };
 
-    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
-        crm_err("Cluster user %s does not exist, aborting Pacemaker startup",
-                CRM_DAEMON_USER);
+    if (pcmk__daemon_user(&pcmk_uid, &pcmk_gid) != pcmk_rc_ok) {
+        pcmk__err("Cluster user " CRM_DAEMON_USER " does not exist, aborting "
+                  "Pacemaker startup");
         crm_exit(CRM_EX_NOUSER);
     }
 
     // Used by some resource agents
     if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
-        crm_warn("Could not create directory " CRM_STATE_DIR ": %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not create directory " CRM_STATE_DIR ": %s",
+                   pcmk_rc_str(errno));
     } else {
         pacemakerd_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
     }
@@ -179,8 +180,8 @@ create_pcmk_dirs(void)
         int rc = pcmk__build_path(dirs[i], 0750);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Could not create directory %s: %s",
-                     dirs[i], pcmk_rc_str(rc));
+            pcmk__warn("Could not create directory %s: %s", dirs[i],
+                       pcmk_rc_str(rc));
         } else {
             pacemakerd_chown(dirs[i], pcmk_uid, pcmk_gid);
         }
@@ -194,16 +195,16 @@ remove_core_file_limit(void)
 
     // Get current limits
     if (getrlimit(RLIMIT_CORE, &cores) < 0) {
-        crm_notice("Unable to check system core file limits "
-                   "(consider ensuring the size is unlimited): %s",
-                   strerror(errno));
+        pcmk__notice("Unable to check system core file limits (consider "
+                     "ensuring the size is unlimited): %s",
+                     strerror(errno));
         return;
     }
 
     // Check whether core dumps are disabled
     if (cores.rlim_max == 0) {
         if (geteuid() != 0) { // Yes, and there's nothing we can do about it
-            crm_notice("Core dumps are disabled (consider enabling them)");
+            pcmk__notice("Core dumps are disabled (consider enabling them)");
             return;
         }
         cores.rlim_max = RLIM_INFINITY; // Yes, but we're root, so enable them
@@ -213,18 +214,18 @@ remove_core_file_limit(void)
     if (cores.rlim_cur != cores.rlim_max) {
         cores.rlim_cur = cores.rlim_max;
         if (setrlimit(RLIMIT_CORE, &cores) < 0) {
-            crm_notice("Unable to raise system limit on core file size "
-                       "(consider doing so manually): %s",
-                       strerror(errno));
+            pcmk__notice("Unable to raise system limit on core file size "
+                         "(consider doing so manually): %s",
+                         strerror(errno));
             return;
         }
     }
 
     if (cores.rlim_cur == RLIM_INFINITY) {
-        crm_trace("Core file size is unlimited");
+        pcmk__trace("Core file size is unlimited");
     } else {
-        crm_trace("Core file size is limited to %llu bytes",
-                  (unsigned long long) cores.rlim_cur);
+        pcmk__trace("Core file size is limited to %llu bytes",
+                    (unsigned long long) cores.rlim_cur);
     }
 }
 
@@ -322,7 +323,7 @@ main(int argc, char **argv)
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     }
 
-    crm_debug("Checking for existing Pacemaker instance");
+    pcmk__debug("Checking for existing Pacemaker instance");
 
     rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
     if (old_instance == NULL) {
@@ -334,8 +335,8 @@ main(int argc, char **argv)
     pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
     rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s instance found: %s",
-                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
+        pcmk__debug("No existing %s instance found: %s",
+                    pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
     }
     old_instance_connected = pcmk_ipc_is_connected(old_instance);
 
@@ -379,7 +380,7 @@ main(int argc, char **argv)
 
     } else if (old_instance_connected) {
         pcmk_free_ipc_api(old_instance);
-        crm_err("Aborting start-up because active Pacemaker instance found");
+        pcmk__err("Aborting start-up because active Pacemaker instance found");
         exit_code = CRM_EX_FATAL;
         goto done;
     }
@@ -409,8 +410,8 @@ main(int argc, char **argv)
         }
     }
 
-    crm_notice("Starting Pacemaker %s " QB_XS " build=%s features:%s",
-               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+    pcmk__notice("Starting Pacemaker " PACEMAKER_VERSION " "
+                 QB_XS " build=" BUILD_VERSION " features:" CRM_FEATURES);
     mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
@@ -444,24 +445,25 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, pcmk_shutdown);
 
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
-        crm_notice("Waiting for startup-trigger from SBD.");
+        pcmk__notice("Waiting for startup-trigger from SBD");
         pacemakerd_state = PCMK__VALUE_WAIT_FOR_PING;
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
         if (running_with_sbd) {
-            crm_warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
-                     "by your SBD version) improve reliability of "
-                     "interworking between SBD & pacemaker.");
+            pcmk__warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
+                       "by your SBD version) improve reliability of "
+                       "interworking between SBD & pacemaker.");
         }
         pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
         init_children_processes(NULL);
     }
 
-    crm_notice("Pacemaker daemon successfully started and accepting connections");
+    pcmk__notice("Pacemaker daemon successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
     if (ipcs) {
-        crm_trace("Closing IPC server");
+        pcmk__trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;
     }

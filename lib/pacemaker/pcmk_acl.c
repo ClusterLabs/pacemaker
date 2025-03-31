@@ -24,6 +24,7 @@
 #include <libxslt/xsltutils.h>
 
 #include <crm/crm.h>
+#include <crm/common/acl.h>             // pcmk_acl_required()
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <crm/common/internal.h>
@@ -221,8 +222,8 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return pcmk_rc_already;
     }
 
-    validation = crm_element_value(xmlDocGetRootElement(cib_doc),
-                                   PCMK_XA_VALIDATE_WITH);
+    validation = pcmk__xe_get(xmlDocGetRootElement(cib_doc),
+                              PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(PCMK__COMPAT_ACL_2_MIN_INCL,
                                   validation) > 0) {
@@ -239,8 +240,8 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
     ret = annotate_with_siblings(target);
 
     if (ret == pcmk_rc_ok) {
-        char *content = crm_strdup_printf("ACLs as evaluated for user %s",
-                                          cred);
+        char *content = pcmk__assert_asprintf("ACLs as evaluated for user %s",
+                                              cred);
 
         comment = pcmk__xc_create(target->doc, content);
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
@@ -334,7 +335,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
 
     xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
     if (xslt == NULL) {
-        crm_crit("Problem in parsing %s", sfile);
+        pcmk__crit("Problem in parsing %s", sfile);
         rc = EINVAL;
         goto done;
     }

@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <glib.h>
 
+#include <crm/common/scores.h>      // pcmk_readable_score()
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 
@@ -46,7 +47,7 @@ fenced_scheduler_init(void)
 
     pe__register_messages(logger);
     pcmk__register_lib_messages(logger);
-    pcmk__output_set_log_level(logger, LOG_TRACE);
+    pcmk__output_set_log_level(logger, PCMK__LOG_TRACE);
     scheduler->priv->out = logger;
 
     return pcmk_rc_ok;
@@ -164,33 +165,36 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
         return; // Not a fencing device
     }
 
     if (pe__resource_is_disabled(rsc)) {
-        crm_info("Ignoring fencing device %s because it is disabled", rsc->id);
+        pcmk__info("Ignoring fencing device %s because it is disabled",
+                   rsc->id);
         return;
     }
 
     if ((stonith_watchdog_timeout_ms <= 0) &&
         pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
-        crm_info("Ignoring fencing device %s "
-                 "because watchdog fencing is disabled", rsc->id);
+        pcmk__info("Ignoring fencing device %s because watchdog fencing is "
+                   "disabled",
+                   rsc->id);
         return;
     }
 
     // Check whether local node is allowed to run resource
     node = local_node_allowed_for(rsc);
     if (node == NULL) {
-        crm_info("Ignoring fencing device %s "
-                 "because local node is not allowed to run it", rsc->id);
+        pcmk__info("Ignoring fencing device %s because local node is not "
+                   "allowed to run it",
+                   rsc->id);
         return;
     }
     if (node->assign->score < 0) {
-        crm_info("Ignoring fencing device %s "
-                 "because local node has preference %s for it",
-                 rsc->id, pcmk_readable_score(node->assign->score));
+        pcmk__info("Ignoring fencing device %s because local node has "
+                   "preference %s for it",
+                   rsc->id, pcmk_readable_score(node->assign->score));
         return;
     }
 
@@ -199,16 +203,16 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         pcmk_node_t *group_node = local_node_allowed_for(rsc->priv->parent);
 
         if ((group_node != NULL) && (group_node->assign->score < 0)) {
-            crm_info("Ignoring fencing device %s "
-                     "because local node has preference %s for its group",
-                     rsc->id, pcmk_readable_score(group_node->assign->score));
+            pcmk__info("Ignoring fencing device %s because local node has "
+                       "preference %s for its group",
+                       rsc->id, pcmk_readable_score(group_node->assign->score));
             return;
         }
     }
 
-    crm_debug("Reloading configuration of fencing device %s", rsc->id);
+    pcmk__debug("Reloading configuration of fencing device %s", rsc->id);
 
-    agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
+    agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
 
     get_meta_attributes(rsc->priv->meta, rsc, NULL, scheduler);
     rsc_provides = g_hash_table_lookup(rsc->priv->meta,

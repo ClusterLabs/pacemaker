@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2024 the Pacemaker project contributors
+ * Copyright 2006-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ void
 controld_close_attrd_ipc(void)
 {
     if (attrd_api != NULL) {
-        crm_trace("Closing connection to " PCMK__SERVER_ATTRD);
+        pcmk__trace("Closing connection to " PCMK__SERVER_ATTRD);
         pcmk_disconnect_ipc(attrd_api);
         pcmk_free_ipc_api(attrd_api);
         attrd_api = NULL;
@@ -39,8 +39,8 @@ node_type(bool is_remote)
 static inline const char *
 when(void)
 {
-    return pcmk_is_set(controld_globals.fsa_input_register,
-                       R_SHUTDOWN)? " at shutdown" : "";
+    return pcmk__is_set(controld_globals.fsa_input_register,
+                        R_SHUTDOWN)? " at shutdown" : "";
 }
 
 static void
@@ -53,7 +53,7 @@ handle_attr_error(void)
          */
         crmd_exit(CRM_EX_FATAL);
 
-    } else if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    } else if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // Fast-track shutdown since unable to request via attribute
         register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
     }
@@ -115,14 +115,15 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
         rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
     }
     if (rc == pcmk_rc_ok) {
-        crm_trace("Asking attribute manager to purge Pacemaker Remote node %s",
-                  host);
+        pcmk__trace("Asking attribute manager to purge Pacemaker Remote node "
+                    "%s",
+                    host);
         rc = pcmk__attrd_api_purge(attrd_api, host, true);
     }
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not purge Pacemaker Remote node %s "
-                "in attribute manager%s: %s " QB_XS " rc=%d",
-                host, when(), pcmk_rc_str(rc), rc);
+        pcmk__err("Could not purge Pacemaker Remote node %s in attribute "
+                  "manager%s: %s " QB_XS " rc=%d",
+                  host, when(), pcmk_rc_str(rc), rc);
     }
 }
 
@@ -150,9 +151,10 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
         if (op != NULL) {
             interval_desc = pcmk__s(interval_spec, "nonrecurring");
         }
-        crm_err("Could not clear failure of %s %s for %s on %s node %s%s: %s "
-                QB_XS " rc=%d", interval_desc, pcmk__s(op, "operations"),
-                pcmk__s(rsc, "all resources"), node_type(is_remote_node), host,
-                when(), pcmk_rc_str(rc), rc);
+        pcmk__err("Could not clear failure of %s %s for %s on %s node %s%s: %s "
+                  QB_XS " rc=%d",
+                  interval_desc, pcmk__s(op, "operations"),
+                  pcmk__s(rsc, "all resources"), node_type(is_remote_node),
+                  host, when(), pcmk_rc_str(rc), rc);
     }
 }

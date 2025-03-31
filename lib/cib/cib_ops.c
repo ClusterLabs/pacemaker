@@ -159,7 +159,7 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
 
     *operation = g_hash_table_lookup(operation_table, op);
     if (*operation == NULL) {
-        crm_err("Operation %s is invalid", op);
+        pcmk__err("Operation %s is invalid", op);
         return EINVAL;
     }
     return pcmk_rc_ok;
@@ -172,8 +172,8 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     xmlNode *obj_root = NULL;
     int result = pcmk_ok;
 
-    crm_trace("Processing %s for %s section",
-              op, pcmk__s(section, "unspecified"));
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -204,7 +204,7 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     }
 
     if (result == pcmk_ok && *answer == NULL) {
-        crm_err("Error creating query response");
+        pcmk__err("Error creating query response");
         result = -ENOMSG;
     }
 
@@ -218,8 +218,8 @@ update_counter(xmlNode *xml_obj, const char *field, bool reset)
     char *old_value = NULL;
     int int_value = -1;
 
-    if (!reset && crm_element_value(xml_obj, field) != NULL) {
-        old_value = crm_element_value_copy(xml_obj, field);
+    if (!reset && pcmk__xe_get(xml_obj, field) != NULL) {
+        old_value = pcmk__xe_get_copy(xml_obj, field);
     }
     if (old_value != NULL) {
         int_value = atoi(old_value);
@@ -228,9 +228,9 @@ update_counter(xmlNode *xml_obj, const char *field, bool reset)
         new_value = pcmk__str_copy("1");
     }
 
-    crm_trace("Update %s from %s to %s",
-              field, pcmk__s(old_value, "unset"), new_value);
-    crm_xml_add(xml_obj, field, new_value);
+    pcmk__trace("Update %s from %s to %s", field, pcmk__s(old_value, "unset"),
+                new_value);
+    pcmk__xe_set(xml_obj, field, new_value);
 
     free(new_value);
     free(old_value);
@@ -244,7 +244,7 @@ cib_process_erase(const char *op, int options, const char *section, xmlNode * re
 {
     int result = pcmk_ok;
 
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
 
     if (*result_cib != existing_cib) {
         pcmk__xml_free(*result_cib);
@@ -263,18 +263,18 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
                     xmlNode ** answer)
 {
     int rc = 0;
-    const char *max_schema = crm_element_value(req, PCMK__XA_CIB_SCHEMA_MAX);
+    const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
     const char *original_schema = NULL;
     const char *new_schema = NULL;
 
     *answer = NULL;
-    crm_trace("Processing \"%s\" event with max=%s", op, max_schema);
+    pcmk__trace("Processing \"%s\" event with max=%s", op, max_schema);
 
-    original_schema = crm_element_value(existing_cib, PCMK_XA_VALIDATE_WITH);
+    original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
     rc = pcmk__update_schema(result_cib, max_schema, true,
-                             !pcmk_is_set(options, cib_verbose));
+                             !pcmk__is_set(options, cib_verbose));
     rc = pcmk_rc2legacy(rc);
-    new_schema = crm_element_value(*result_cib, PCMK_XA_VALIDATE_WITH);
+    new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
         update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
@@ -292,8 +292,8 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
 {
     int result = pcmk_ok;
 
-    crm_trace("Processing %s for epoch='%s'", op,
-              pcmk__s(crm_element_value(existing_cib, PCMK_XA_EPOCH), ""));
+    pcmk__trace("Processing %s for epoch='%s'", op,
+                pcmk__s(pcmk__xe_get(existing_cib, PCMK_XA_EPOCH), ""));
 
     *answer = NULL;
     update_counter(*result_cib, PCMK_XA_EPOCH, false);
@@ -308,8 +308,8 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
 {
     int result = pcmk_ok;
 
-    crm_trace("Processing %s for %s section",
-              op, pcmk__s(section, "unspecified"));
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -339,24 +339,26 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         int replace_admin_epoch = 0;
 
         const char *reason = NULL;
-        const char *peer = crm_element_value(req, PCMK__XA_SRC);
-        const char *digest = crm_element_value(req, PCMK__XA_DIGEST);
+        const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
+        const char *digest = pcmk__xe_get(req, PCMK__XA_DIGEST);
 
         if (digest) {
             char *digest_verify = pcmk__digest_xml(input, true);
 
             if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
-                crm_err("Digest mis-match on replace from %s: %s vs. %s (expected)", peer,
-                        digest_verify, digest);
+                pcmk__err("Digest mis-match on replace from %s: %s vs. %s "
+                          "(expected)",
+                          peer, digest_verify, digest);
                 reason = "digest mismatch";
 
             } else {
-                crm_info("Digest matched on replace from %s: %s", peer, digest);
+                pcmk__info("Digest matched on replace from %s: %s", peer,
+                           digest);
             }
             free(digest_verify);
 
         } else {
-            crm_trace("No digest to verify");
+            pcmk__trace("No digest to verify");
         }
 
         cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
@@ -379,15 +381,17 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         }
 
         if (reason != NULL) {
-            crm_info("Replacement %d.%d.%d from %s not applied to %d.%d.%d:"
-                     " current %s is greater than the replacement",
-                     replace_admin_epoch, replace_epoch,
-                     replace_updates, peer, admin_epoch, epoch, updates, reason);
+            pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
+                       "current %s is greater than the replacement",
+                       replace_admin_epoch, replace_epoch,
+                       replace_updates, peer, admin_epoch, epoch, updates,
+                       reason);
             result = -pcmk_err_old_data;
         } else {
-            crm_info("Replaced %d.%d.%d with %d.%d.%d from %s",
-                     admin_epoch, epoch, updates,
-                     replace_admin_epoch, replace_epoch, replace_updates, peer);
+            pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
+                       admin_epoch, epoch, updates,
+                       replace_admin_epoch, replace_epoch, replace_updates,
+                       peer);
         }
 
         if (*result_cib != existing_cib) {
@@ -402,7 +406,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
         result = pcmk__xe_replace_match(obj_root, input);
         result = pcmk_rc2legacy(result);
         if (result != pcmk_ok) {
-            crm_trace("No matching object to replace");
+            pcmk__trace("No matching object to replace");
         }
     }
 
@@ -415,8 +419,8 @@ delete_child(xmlNode *child, void *userdata)
     xmlNode *obj_root = userdata;
 
     if (pcmk__xe_delete_match(obj_root, child) != pcmk_rc_ok) {
-        crm_trace("No matching object to delete: %s=%s",
-                  child->name, pcmk__xe_id(child));
+        pcmk__trace("No matching object to delete: %s=%s", child->name,
+                    pcmk__xe_id(child));
     }
 
     return pcmk_rc_ok;
@@ -428,7 +432,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
 {
     xmlNode *obj_root = NULL;
 
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -436,7 +440,7 @@ cib_process_delete(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (input == NULL) {
-        crm_err("Cannot perform modification with no data");
+        pcmk__err("Cannot perform modification with no data");
         return -EINVAL;
     }
 
@@ -457,7 +461,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
     xmlNode *obj_root = NULL;
     uint32_t flags = pcmk__xaf_none;
 
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
 
     if (options & cib_xpath) {
         return cib_process_xpath(op, options, section, req, input,
@@ -465,7 +469,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (input == NULL) {
-        crm_err("Cannot perform modification with no data");
+        pcmk__err("Cannot perform modification with no data");
         return -EINVAL;
     }
 
@@ -488,7 +492,7 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
 
     CRM_CHECK(obj_root != NULL, return -EINVAL);
 
-    if (pcmk_is_set(options, cib_score_update)) {
+    if (pcmk__is_set(options, cib_score_update)) {
         flags |= pcmk__xaf_score_update;
     }
 
@@ -526,10 +530,10 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     }
 
     if (object_id != NULL) {
-        crm_trace("Processing creation of <%s " PCMK_XA_ID "='%s'>",
-                  object_name, object_id);
+        pcmk__trace("Processing creation of <%s " PCMK_XA_ID "='%s'>",
+                    object_name, object_id);
     } else {
-        crm_trace("Processing creation of <%s>", object_name);
+        pcmk__trace("Processing creation of <%s>", object_name);
     }
 
     /* @COMPAT PCMK__XA_REPLACE is deprecated since 2.1.6. Due to a legacy use
@@ -562,13 +566,14 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         xml_node = pcmk__xe_create(failed, PCMK__XE_FAILED_UPDATE);
         pcmk__xml_copy(xml_node, target);
 
-        crm_xml_add(xml_node, PCMK_XA_ID, pcmk__xe_id(target));
-        crm_xml_add(xml_node, PCMK_XA_OBJECT_TYPE, (const char *) target->name);
-        crm_xml_add(xml_node, PCMK_XA_OPERATION, operation);
-        crm_xml_add(xml_node, PCMK_XA_REASON, error_msg);
+        pcmk__xe_set(xml_node, PCMK_XA_ID, pcmk__xe_id(target));
+        pcmk__xe_set(xml_node, PCMK_XA_OBJECT_TYPE,
+                     (const char *) target->name);
+        pcmk__xe_set(xml_node, PCMK_XA_OPERATION, operation);
+        pcmk__xe_set(xml_node, PCMK_XA_REASON, error_msg);
 
-        crm_warn("Action %s failed: %s (cde=%d)",
-                 operation, error_msg, return_code);
+        pcmk__warn("Action %s failed: %s (cde=%d)", operation, error_msg,
+                   return_code);
     }
 
     return was_error;
@@ -582,8 +587,8 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     int result = pcmk_ok;
     xmlNode *update_section = NULL;
 
-    crm_trace("Processing %s for %s section",
-              op, pcmk__s(section, "unspecified"));
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
     if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
 
@@ -597,7 +602,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     CRM_CHECK(strcmp(op, PCMK__CIB_REQUEST_CREATE) == 0, return -EINVAL);
 
     if (input == NULL) {
-        crm_err("Cannot perform modification with no data");
+        pcmk__err("Cannot perform modification with no data");
         return -EINVAL;
     }
 
@@ -631,7 +636,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (result != pcmk_ok) {
-        crm_log_xml_err(failed, "CIB Update failures");
+        pcmk__log_xml_err(failed, "CIB Update failures");
         *answer = failed;
 
     } else {
@@ -645,15 +650,15 @@ int
 cib_process_diff(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
+    const bool force = pcmk__is_set(options, cib_force_diff);
     const char *originator = NULL;
 
     if (req != NULL) {
-        originator = crm_element_value(req, PCMK__XA_SRC);
+        originator = pcmk__xe_get(req, PCMK__XA_SRC);
     }
 
-    crm_trace("Processing \"%s\" event from %s%s",
-              op, originator,
-              (pcmk_is_set(options, cib_force_diff)? " (global update)" : ""));
+    pcmk__trace("Processing \"%s\" event from %s%s", op, originator,
+                (force? " (global update)" : ""));
 
     if (*result_cib != existing_cib) {
         pcmk__xml_free(*result_cib);
@@ -671,12 +676,12 @@ cib_process_xpath(const char *op, int options, const char *section,
     int num_results = 0;
     int rc = pcmk_ok;
     bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
-    bool delete_multiple = pcmk_is_set(options, cib_multiple)
+    bool delete_multiple = pcmk__is_set(options, cib_multiple)
                            && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE,
                                            pcmk__str_none);
     xmlXPathObject *xpathObj = NULL;
 
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
 
     if (is_query) {
         xpathObj = pcmk__xpath_search(existing_cib->doc, section);
@@ -687,10 +692,10 @@ cib_process_xpath(const char *op, int options, const char *section,
     num_results = pcmk__xpath_num_results(xpathObj);
     if (num_results == 0) {
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-            crm_debug("%s was already removed", section);
+            pcmk__debug("%s was already removed", section);
 
         } else {
-            crm_debug("%s: %s does not exist", op, section);
+            pcmk__debug("%s: %s does not exist", op, section);
             rc = -ENXIO;
         }
         goto done;
@@ -731,13 +736,15 @@ cib_process_xpath(const char *op, int options, const char *section,
         }
 
         path = xmlGetNodePath(match);
-        crm_debug("Processing %s op for %s with %s", op, section, path);
+        pcmk__debug("Processing %s op for %s with %s", op, section, path);
         free(path);
 
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
             if (match == *result_cib) {
                 /* Attempting to delete the whole "/cib" */
-                crm_warn("Cannot perform %s for %s: The xpath is addressing the whole /cib", op, section);
+                pcmk__warn("Cannot perform %s for %s: The xpath is addressing "
+                           "the whole /cib",
+                           op, section);
                 rc = -EINVAL;
                 break;
             }
@@ -750,7 +757,7 @@ cib_process_xpath(const char *op, int options, const char *section,
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
             uint32_t flags = pcmk__xaf_none;
 
-            if (pcmk_is_set(options, cib_score_update)) {
+            if (pcmk__is_set(options, cib_score_update)) {
                 flags |= pcmk__xaf_score_update;
             }
 
@@ -781,29 +788,29 @@ cib_process_xpath(const char *op, int options, const char *section,
                 xmlNode *parent = match;
 
                 while (parent && parent->type == XML_ELEMENT_NODE) {
-                    const char *id = crm_element_value(parent, PCMK_XA_ID);
+                    const char *id = pcmk__xe_get(parent, PCMK_XA_ID);
                     char *new_path = NULL;
 
                     if (id) {
-                        new_path = crm_strdup_printf("/%s[@" PCMK_XA_ID "='%s']"
-                                                     "%s",
-                                                     parent->name, id,
-                                                     pcmk__s(path, ""));
+                        new_path =
+                            pcmk__assert_asprintf("/%s[@" PCMK_XA_ID "='%s']%s",
+                                                  parent->name, id,
+                                                  pcmk__s(path, ""));
                     } else {
-                        new_path = crm_strdup_printf("/%s%s", parent->name,
-                                                     pcmk__s(path, ""));
+                        new_path = pcmk__assert_asprintf("/%s%s", parent->name,
+                                                         pcmk__s(path, ""));
                     }
                     free(path);
                     path = new_path;
                     parent = parent->parent;
                 }
-                crm_trace("Got: %s", path);
+                pcmk__trace("Got: %s", path);
 
                 if (*answer == NULL) {
                     *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
                 }
                 parent = pcmk__xe_create(*answer, PCMK__XE_XPATH_QUERY_PATH);
-                crm_xml_add(parent, PCMK_XA_ID, path);
+                pcmk__xe_set(parent, PCMK_XA_ID, path);
                 free(path);
 
             } else if (*answer) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 the Pacemaker project contributors
+ * Copyright 2018-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 #include <stdint.h>                         // uint32_t
 #include <libxml/tree.h>                    // xmlNode
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/results_internal.h>    // pcmk__action_result_t
 #include <crm/common/xml_internal.h>        // pcmk__xml_copy()
 
@@ -67,7 +68,7 @@ typedef struct {
 
 #define pcmk__set_request_flags(request, flags_to_set) do {         \
         (request)->flags = pcmk__set_flags_as(__func__, __LINE__,   \
-        LOG_TRACE, "Request", "message", (request)->flags,          \
+        PCMK__LOG_TRACE, "Request", "message", (request)->flags,    \
         (flags_to_set), #flags_to_set);                             \
     } while (0)
 

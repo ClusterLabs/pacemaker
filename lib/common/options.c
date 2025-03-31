@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // pcmk_str_is_infinity(), etc.
 #include <crm/common/xml.h>
 
 void
@@ -1084,24 +1085,24 @@ pcmk__env_option(const char *option)
         int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
 
         if (rv < 0) {
-            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
-                    strerror(errno));
+            pcmk__err("Failed to write %s%s to buffer: %s", prefixes[i], option,
+                      strerror(errno));
             return NULL;
         }
 
         if (rv >= sizeof(env_name)) {
-            crm_trace("\"%s%s\" is too long", prefixes[i], option);
+            pcmk__trace("\"%s%s\" is too long", prefixes[i], option);
             continue;
         }
 
         value = getenv(env_name);
         if (value != NULL) {
-            crm_trace("Found %s = %s", env_name, value);
+            pcmk__trace("Found %s = %s", env_name, value);
             return value;
         }
     }
 
-    crm_trace("Nothing found for %s", option);
+    pcmk__trace("Nothing found for %s", option);
     return NULL;
 }
 
@@ -1135,27 +1136,27 @@ pcmk__set_env_option(const char *option, const char *value, bool compat)
         int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
 
         if (rv < 0) {
-            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
-                    strerror(errno));
+            pcmk__err("Failed to write %s%s to buffer: %s", prefixes[i], option,
+                      strerror(errno));
             return;
         }
 
         if (rv >= sizeof(env_name)) {
-            crm_trace("\"%s%s\" is too long", prefixes[i], option);
+            pcmk__trace("\"%s%s\" is too long", prefixes[i], option);
             continue;
         }
 
         if (value != NULL) {
-            crm_trace("Setting %s to %s", env_name, value);
+            pcmk__trace("Setting %s to %s", env_name, value);
             rv = setenv(env_name, value, 1);
         } else {
-            crm_trace("Unsetting %s", env_name);
+            pcmk__trace("Unsetting %s", env_name);
             rv = unsetenv(env_name);
         }
 
         if (rv < 0) {
-            crm_err("Failed to %sset %s: %s", (value != NULL)? "" : "un",
-                    env_name, strerror(errno));
+            pcmk__err("Failed to %sset %s: %s", (value != NULL)? "" : "un",
+                      env_name, strerror(errno));
         }
 
         if (!compat && (value != NULL)) {
@@ -1184,8 +1185,8 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
     const char *value = pcmk__env_option(option);
 
     return (value != NULL)
-        && (crm_is_true(value)
-            || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
+            && (pcmk__is_true(value)
+                || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
 }
 
 
@@ -1219,7 +1220,7 @@ pcmk__valid_interval_spec(const char *value)
 bool
 pcmk__valid_boolean(const char *value)
 {
-    return crm_str_to_boolean(value, NULL) == 1;
+    return pcmk__parse_bool(value, NULL) == pcmk_rc_ok;
 }
 
 /*!
@@ -1369,18 +1370,18 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
     value = option->default_value;
 
     if (value == NULL) {
-        crm_trace("No value or default provided for cluster option '%s'",
-                  option->name);
+        pcmk__trace("No value or default provided for cluster option '%s'",
+                    option->name);
         return NULL;
     }
 
     CRM_CHECK((option->is_valid == NULL) || option->is_valid(value),
-              crm_err("Bug: default value for cluster option '%s' is invalid",
-                      option->name);
+              pcmk__err("Bug: default value for cluster option '%s' is invalid",
+                        option->name);
               return NULL);
 
-    crm_trace("Using default value '%s' for cluster option '%s'",
-              value, option->name);
+    pcmk__trace("Using default value '%s' for cluster option '%s'", value,
+                option->name);
     if (table != NULL) {
         pcmk__insert_dup(table, option->name, value);
     }
@@ -1406,7 +1407,7 @@ pcmk__cluster_option(GHashTable *options, const char *name)
             return cluster_option_value(options, option);
         }
     }
-    CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
+    CRM_CHECK(FALSE, pcmk__err("Bug: looking for unknown option '%s'", name));
     return NULL;
 }
 

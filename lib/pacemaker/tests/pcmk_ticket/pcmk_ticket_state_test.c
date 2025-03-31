@@ -111,19 +111,19 @@ multiple_tickets(void **state)
 
     ticket_node = pcmk__xpath_result(xpath_obj, 0);
     assert_non_null(ticket_node);
-    assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketA");
+    assert_string_equal(pcmk__xe_get(ticket_node, PCMK_XA_ID), "ticketA");
 
     ticket_node = pcmk__xpath_result(xpath_obj, 1);
     assert_non_null(ticket_node);
-    assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketB");
+    assert_string_equal(pcmk__xe_get(ticket_node, PCMK_XA_ID), "ticketB");
 
     ticket_node = pcmk__xpath_result(xpath_obj, 2);
     assert_non_null(ticket_node);
-    assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketC");
+    assert_string_equal(pcmk__xe_get(ticket_node, PCMK_XA_ID), "ticketC");
 
     ticket_node = pcmk__xpath_result(xpath_obj, 3);
     assert_non_null(ticket_node);
-    assert_string_equal(crm_element_value(ticket_node, PCMK_XA_ID), "ticketC");
+    assert_string_equal(pcmk__xe_get(ticket_node, PCMK_XA_ID), "ticketC");
 
     xmlXPathFreeObject(xpath_obj);
     pcmk__xml_free(xml);

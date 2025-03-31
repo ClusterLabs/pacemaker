@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,7 +102,7 @@ stonith__history_description(const stonith_history_t *history,
                    stonith_action_str(history->action), " of ", history->target,
                    NULL);
 
-    if (!pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+    if (!pcmk__is_set(show_opts, pcmk_show_failed_detail)) {
         // More human-friendly
         if (((history->state == st_failed) || (history->state == st_done))
             && (history->delegate != NULL)) {
@@ -123,7 +123,7 @@ stonith__history_description(const stonith_history_t *history,
         pcmk__g_strcat(str, " (", history->exit_reason, ")", NULL);
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
+    if (pcmk__is_set(show_opts, pcmk_show_failed_detail)) {
         // More technical
         g_string_append(str, ": ");
 
@@ -190,7 +190,8 @@ failed_history(pcmk__output_t *out, va_list args)
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Failed Fencing Actions");
         out->message(out, "stonith-event", hp,
-                     pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
+                     pcmk__all_flags_set(section_opts,
+                                         pcmk_section_fencing_all),
                      false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
@@ -220,8 +221,8 @@ stonith_history(pcmk__output_t *out, va_list args)
         if (hp->state != st_failed) {
             PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
             out->message(out, "stonith-event", hp,
-                         pcmk_all_flags_set(section_opts,
-                                            pcmk_section_fencing_all),
+                         pcmk__all_flags_set(section_opts,
+                                             pcmk_section_fencing_all),
                          false, stonith__later_succeeded(hp, history), show_opts);
             out->increment_list(out);
         }
@@ -252,7 +253,8 @@ full_history(pcmk__output_t *out, va_list args)
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Fencing History");
         out->message(out, "stonith-event", hp,
-                     pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
+                     pcmk__all_flags_set(section_opts,
+                                         pcmk_section_fencing_all),
                      false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
@@ -283,8 +285,8 @@ full_history_xml(pcmk__output_t *out, va_list args)
 
             PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Fencing History");
             out->message(out, "stonith-event", hp,
-                         pcmk_all_flags_set(section_opts,
-                                            pcmk_section_fencing_all),
+                         pcmk__all_flags_set(section_opts,
+                                             pcmk_section_fencing_all),
                          false, stonith__later_succeeded(hp, history), show_opts);
             out->increment_list(out);
         }
@@ -311,7 +313,8 @@ last_fenced_html(pcmk__output_t *out, va_list args) {
     time_t when = va_arg(args, time_t);
 
     if (when) {
-        char *buf = crm_strdup_printf("Node %s last fenced at: %s", target, ctime(&when));
+        char *buf = pcmk__assert_asprintf("Node %s last fenced at: %s", target,
+                                          ctime(&when));
         pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
         return pcmk_rc_ok;
@@ -381,7 +384,8 @@ pending_actions(pcmk__output_t *out, va_list args)
 
         PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Pending Fencing Actions");
         out->message(out, "stonith-event", hp,
-                     pcmk_all_flags_set(section_opts, pcmk_section_fencing_all),
+                     pcmk__all_flags_set(section_opts,
+                                         pcmk_section_fencing_all),
                      false, stonith__later_succeeded(hp, history), show_opts);
         out->increment_list(out);
     }
@@ -474,7 +478,7 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
             break;
 
         case st_done:
-            crm_xml_add(node, PCMK_XA_STATUS, PCMK_VALUE_SUCCESS);
+            pcmk__xe_set(node, PCMK_XA_STATUS, PCMK_VALUE_SUCCESS);
             break;
 
         default: {
@@ -489,14 +493,14 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     }
 
     if (event->delegate != NULL) {
-        crm_xml_add(node, PCMK_XA_DELEGATE, event->delegate);
+        pcmk__xe_set(node, PCMK_XA_DELEGATE, event->delegate);
     }
 
     if ((event->state == st_failed) || (event->state == st_done)) {
         char *time_s = timespec_string(event->completed, event->completed_nsec,
                                        true);
 
-        crm_xml_add(node, PCMK_XA_COMPLETED, time_s);
+        pcmk__xe_set(node, PCMK_XA_COMPLETED, time_s);
         free(time_s);
     }
 
@@ -512,15 +516,17 @@ validate_agent_html(pcmk__output_t *out, va_list args) {
     const char *output = va_arg(args, const char *);
     const char *error_output = va_arg(args, const char *);
     int rc = va_arg(args, int);
+    const char *rc_s = (rc == pcmk_rc_ok)? "succeeded" : "failed";
 
     if (device) {
-        char *buf = crm_strdup_printf("Validation of %s on %s %s", agent, device,
-                                      rc ? "failed" : "succeeded");
+        char *buf = pcmk__assert_asprintf("Validation of %s on %s %s", agent,
+                                          device, rc_s);
+
         pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     } else {
-        char *buf = crm_strdup_printf("Validation of %s %s", agent,
-                                      rc ? "failed" : "succeeded");
+        char *buf = pcmk__assert_asprintf("Validation of %s %s", agent, rc_s);
+
         pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, buf);
         free(buf);
     }
@@ -568,7 +574,7 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (device != NULL) {
-        crm_xml_add(node, PCMK_XA_DEVICE, device);
+        pcmk__xe_set(node, PCMK_XA_DEVICE, device);
     }
 
     pcmk__output_xml_push_parent(out, node);

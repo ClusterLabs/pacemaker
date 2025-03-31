@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -157,7 +157,7 @@ static int
 node_id_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
@@ -192,7 +192,7 @@ simple_node_list_xml(pcmk__output_t *out, va_list args)
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
-        char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+        char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
         pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                      PCMK_XA_ID, id_s,
@@ -224,7 +224,7 @@ node_name_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
     const char *node_name = va_arg(args, const char *);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
@@ -271,7 +271,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
         pcmk_controld_api_node_t *node = node_iter->data;
 
         if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
-            char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+            char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
             pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                          PCMK_XA_ID, id_s,
@@ -547,9 +547,9 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
     int rc = pcmk_rc_ok;
     xmlNode *xml = pcmk__xe_create(NULL, element);
 
-    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
-        crm_xml_add_ll(xml, PCMK_XA_ID, node_id);
+        pcmk__xe_set_ll(xml, PCMK_XA_ID, (long long) node_id);
     }
 
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
@@ -603,8 +603,8 @@ purge_node_from_cib(const char *node_name, long node_id)
     cib__clean_up_connection(&cib);
 
     if ((rc == pcmk_rc_ok) && (commit_rc == pcmk_ok)) {
-        crm_debug("Purged node %s (%ld) from CIB",
-                  pcmk__s(node_name, "by ID"), node_id);
+        pcmk__debug("Purged node %s (%ld) from CIB",
+                    pcmk__s(node_name, "by ID"), node_id);
     }
     return rc;
 }
@@ -689,15 +689,15 @@ purge_node_from_fencer(const char *node_name, long node_id)
     cmd = pcmk__new_request(pcmk_ipc_fenced, crm_system_name, NULL,
                             PCMK__VALUE_STONITH_NG, CRM_OP_RM_NODE_CACHE, NULL);
     if (node_id > 0) {
-        crm_xml_add_ll(cmd, PCMK_XA_ID, node_id);
+        pcmk__xe_set_ll(cmd, PCMK_XA_ID, (long long) node_id);
     }
-    crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(cmd, PCMK_XA_UNAME, node_name);
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc >= 0) {
         rc = pcmk_rc_ok;
-        crm_debug("Purged node %s (%ld) from fencer",
-                  pcmk__s(node_name, "by ID"), node_id);
+        pcmk__debug("Purged node %s (%ld) from fencer",
+                    pcmk__s(node_name, "by ID"), node_id);
     } else {
         rc = pcmk_legacy2rc(rc);
         fprintf(stderr, "Could not purge node %s from fencer: %s\n",

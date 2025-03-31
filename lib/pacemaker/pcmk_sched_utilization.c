@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2024 the Pacemaker project contributors
+ * Copyright 2014-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 
 #include <limits.h>                 // INT_MIN, INT_MAX
 
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
@@ -233,10 +234,10 @@ check_capacity(gpointer key, gpointer value, gpointer user_data)
     remaining = utilization_value(node_value_s);
 
     if (required > remaining) {
-        crm_debug("Remaining capacity for %s on %s (%d) is insufficient "
-                  "for resource %s usage (%d)",
-                  (const char *) key, pcmk__node_name(data->node), remaining,
-                  data->rsc_id, required);
+        pcmk__debug("Remaining capacity for %s on %s (%d) is insufficient for "
+                    "resource %s usage (%d)",
+                    (const char *) key, pcmk__node_name(data->node), remaining,
+                    data->rsc_id, required);
         data->is_enough = false;
     }
 }
@@ -323,7 +324,7 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
         return NULL;
     }
 
-    rscs_id = crm_strdup_printf("%s and its colocated resources", rsc->id);
+    rscs_id = pcmk__assert_asprintf("%s and its colocated resources", rsc->id);
 
     // If rsc isn't in the list, add it so we include its utilization
     if (g_list_find(colocated_rscs, rsc) == NULL) {
@@ -403,8 +404,9 @@ pcmk__ban_insufficient_capacity(pcmk_resource_t *rsc)
 static pcmk_action_t *
 new_load_stopped_op(pcmk_node_t *node)
 {
-    char *load_stopped_task = crm_strdup_printf(PCMK_ACTION_LOAD_STOPPED "_%s",
-                                                node->priv->name);
+    char *load_stopped_task = pcmk__assert_asprintf(PCMK_ACTION_LOAD_STOPPED
+                                                    "_%s",
+                                                    node->priv->name);
     pcmk_action_t *load_stopped = get_pseudo_op(load_stopped_task,
                                                 node->priv->scheduler);
 
@@ -467,7 +469,7 @@ pcmk__create_utilization_constraints(pcmk_resource_t *rsc,
 void
 pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_show_utilization)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_show_utilization)) {
         return;
     }
     for (const GList *iter = scheduler->nodes;

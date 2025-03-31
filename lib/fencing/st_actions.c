@@ -79,7 +79,8 @@ log_action(stonith_action_t *action, pid_t pid)
      */
     if (action->result.action_stderr != NULL) {
         /* Logging the whole string confuses syslog when the string is xml */
-        char *prefix = crm_strdup_printf("%s[%d] stderr:", action->agent, pid);
+        char *prefix = pcmk__assert_asprintf("%s[%d] stderr:", action->agent,
+                                             pid);
 
         crm_log_output(LOG_WARNING, prefix, action->result.action_stderr);
         free(prefix);
@@ -100,8 +101,8 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
         && (strstr(key, CRM_META) == NULL)
         && !pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_none)) {
 
-        crm_trace("Passing %s=%s with fence action",
-                  (const char *) key, (const char *) (value? value : ""));
+        pcmk__trace("Passing %s=%s with fence action", (const char *) key,
+                    pcmk__s((const char *) value, ""));
         pcmk__insert_dup((GHashTable *) user_data, key, pcmk__s(value, ""));
     }
 }
@@ -139,8 +140,8 @@ make_args(const char *agent, const char *action, const char *target,
         snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
         value = g_hash_table_lookup(device_args, buffer);
         if (value) {
-            crm_debug("Substituting '%s' for fence action %s targeting %s",
-                      value, action, pcmk__s(target, "no node"));
+            pcmk__debug("Substituting '%s' for fence action %s targeting %s",
+                        value, action, pcmk__s(target, "no node"));
             action = value;
         }
     }
@@ -161,11 +162,12 @@ make_args(const char *agent, const char *action, const char *target,
 
         // If the target's node ID was specified, pass it, too
         if (target_nodeid != 0) {
-            char *nodeid = crm_strdup_printf("%" PRIu32, target_nodeid);
+            char *nodeid = pcmk__assert_asprintf("%" PRIu32, target_nodeid);
 
             // cts-fencing looks for this log message
-            crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
-                     nodeid, action, pcmk__s(target, "no node"));
+            pcmk__info("Passing '%s' as nodeid with fence action '%s' "
+                       "targeting %s",
+                       nodeid, action, pcmk__s(target, "no node"));
             g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
         }
 
@@ -193,8 +195,8 @@ make_args(const char *agent, const char *action, const char *target,
                 if (alias == NULL) {
                     alias = target;
                 }
-                crm_debug("Passing %s='%s' with fence action %s targeting %s",
-                          param, alias, action, pcmk__s(target, "no node"));
+                pcmk__debug("Passing %s='%s' with fence action %s targeting %s",
+                            param, alias, action, pcmk__s(target, "no node"));
                 pcmk__insert_dup(arg_list, param, alias);
             }
         }
@@ -271,8 +273,8 @@ stonith__action_create(const char *agent, const char *action_name,
 
     action->args = make_args(agent, action_name, target, target_nodeid,
                              device_args, port_map, host_arg);
-    crm_debug("Preparing '%s' action targeting %s using agent %s",
-              action_name, pcmk__s(target, "no node"), agent);
+    pcmk__debug("Preparing '%s' action targeting %s using agent %s",
+                action_name, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
     action->action = strdup(action_name);
     action->timeout = action->remaining_timeout = timeout_sec;
@@ -302,8 +304,9 @@ update_remaining_timeout(stonith_action_t * action)
     int diff = time(NULL) - action->initial_start_time;
 
     if (action->tries >= action->max_retries) {
-        crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
-                 action->agent, action->action, action->max_retries);
+        pcmk__info("Attempted to execute agent %s (%s) the maximum number of "
+                   "times (%d) allowed",
+                   action->agent, action->action, action->max_retries);
         action->remaining_timeout = 0;
     } else if ((action->result.execution_status != PCMK_EXEC_TIMEOUT)
                && (diff < (action->timeout * 0.7))) {
@@ -447,16 +450,16 @@ stonith__xe_set_result(xmlNode *xml, const pcmk__action_result_t *result)
         rc = pcmk_rc2legacy(stonith__result2rc(result));
     }
 
-    crm_xml_add_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
-    crm_xml_add_int(xml, PCMK__XA_RC_CODE, exit_status);
-    crm_xml_add(xml, PCMK_XA_EXIT_REASON, exit_reason);
-    crm_xml_add(xml, PCMK__XA_ST_OUTPUT, action_stdout);
+    pcmk__xe_set_int(xml, PCMK__XA_OP_STATUS, (int) execution_status);
+    pcmk__xe_set_int(xml, PCMK__XA_RC_CODE, exit_status);
+    pcmk__xe_set(xml, PCMK_XA_EXIT_REASON, exit_reason);
+    pcmk__xe_set(xml, PCMK__XA_ST_OUTPUT, action_stdout);
 
     /* @COMPAT Peers in rolling upgrades, Pacemaker Remote nodes, and external
      * code that use libstonithd <=2.1.2 don't check for the full result, and
      * need a legacy return code instead.
      */
-    crm_xml_add_int(xml, PCMK__XA_ST_RC, rc);
+    pcmk__xe_set_int(xml, PCMK__XA_ST_RC, rc);
 }
 
 /*!
@@ -472,7 +475,7 @@ stonith__find_xe_with_result(xmlNode *xml)
 {
     xmlNode *match = pcmk__xpath_find_one(xml->doc,
                                           "//*[@" PCMK__XA_RC_CODE "]",
-                                          LOG_NEVER);
+                                          PCMK__LOG_NEVER);
 
     if (match == NULL) {
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
@@ -501,20 +504,20 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
 
     CRM_CHECK((xml != NULL) && (result != NULL), return);
 
-    exit_reason = crm_element_value(xml, PCMK_XA_EXIT_REASON);
-    action_stdout = crm_element_value_copy(xml, PCMK__XA_ST_OUTPUT);
+    exit_reason = pcmk__xe_get(xml, PCMK_XA_EXIT_REASON);
+    action_stdout = pcmk__xe_get_copy(xml, PCMK__XA_ST_OUTPUT);
 
     // A result must include an exit status and execution status
-    if ((crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status) < 0)
-        || (crm_element_value_int(xml, PCMK__XA_OP_STATUS,
-                                  &execution_status) < 0)) {
+    if ((pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &exit_status) != pcmk_rc_ok)
+        || (pcmk__xe_get_int(xml, PCMK__XA_OP_STATUS,
+                             &execution_status) != pcmk_rc_ok)) {
         int rc = pcmk_ok;
         exit_status = CRM_EX_ERROR;
 
         /* @COMPAT Peers <=2.1.2 in rolling upgrades provide only a legacy
          * return code, not a full result, so check for that.
          */
-        if (crm_element_value_int(xml, PCMK__XA_ST_RC, &rc) == 0) {
+        if (pcmk__xe_get_int(xml, PCMK__XA_ST_RC, &rc) == pcmk_rc_ok) {
             if ((rc == pcmk_ok) || (rc == -EINPROGRESS)) {
                 exit_status = CRM_EX_OK;
             }
@@ -572,8 +575,8 @@ stonith_action_async_forked(svc_action_t *svc_action)
     pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING,
                      NULL);
 
-    crm_trace("Child process %d performing action '%s' successfully forked",
-              action->pid, action->action);
+    pcmk__trace("Child process %d performing action '%s' successfully forked",
+                action->pid, action->action);
 }
 
 /*!
@@ -590,7 +593,7 @@ stonith_action_to_svc(stonith_action_t *action)
 {
     static int stonith_sequence = 0;
 
-    char *path = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", action->agent);
+    char *path = pcmk__assert_asprintf(PCMK__FENCE_BINDIR "/%s", action->agent);
     svc_action_t *svc_action = services_action_create_generic(path, NULL);
 
     free(path);
@@ -602,15 +605,15 @@ stonith_action_to_svc(stonith_action_t *action)
 
     svc_action->timeout = action->remaining_timeout * 1000;
     svc_action->standard = pcmk__str_copy(PCMK_RESOURCE_CLASS_STONITH);
-    svc_action->id = crm_strdup_printf("%s_%s_%dof%d", action->agent,
-                                       action->action, action->tries,
-                                       action->max_retries);
+    svc_action->id = pcmk__assert_asprintf("%s_%s_%dof%d", action->agent,
+                                           action->action, action->tries,
+                                           action->max_retries);
     svc_action->agent = pcmk__str_copy(action->agent);
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;
     svc_action->cb_data = (void *) action;
     svc_action->flags = pcmk__set_flags_as(__func__, __LINE__,
-                                           LOG_TRACE, "Action",
+                                           PCMK__LOG_TRACE, "Action",
                                            svc_action->id, svc_action->flags,
                                            SVC_ACTION_NON_BLOCKED,
                                            "SVC_ACTION_NON_BLOCKED");
@@ -639,10 +642,10 @@ internal_stonith_action_execute(stonith_action_t * action)
         action->initial_start_time = time(NULL);
     } else {
         // Later attempt after earlier failure
-        crm_info("Attempt %d to execute '%s' action of agent %s "
-                 "(%ds timeout remaining)",
-                 action->tries, action->action, action->agent,
-                 action->remaining_timeout);
+        pcmk__info("Attempt %d to execute '%s' action of agent %s (%ds timeout "
+                   "remaining)",
+                   action->tries, action->action, action->agent,
+                   action->remaining_timeout);
         is_retry = 1;
     }
 

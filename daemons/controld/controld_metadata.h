@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2022 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
 
 #include <stdint.h>             // uint32_t
 #include <glib.h>               // GList, GHashTable
+
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include "controld_lrm.h"       // lrm_state_t, lrm_rsc_info_t
 
 /*
@@ -57,14 +59,21 @@ struct ra_metadata_s {
 
 #define controld_set_ra_flags(ra_md, ra_key, flags_to_set) do {             \
         (ra_md)->ra_flags = pcmk__set_flags_as(__func__, __LINE__,          \
-            LOG_TRACE, "Resource agent", ra_key,                            \
-            (ra_md)->ra_flags, (flags_to_set), #flags_to_set);              \
+                                               PCMK__LOG_TRACE,             \
+                                               "Resource agent", ra_key,    \
+                                               (ra_md)->ra_flags,           \
+                                               (flags_to_set),              \
+                                               #flags_to_set);              \
     } while (0)
 
-#define controld_set_ra_param_flags(ra_param, flags_to_set) do {            \
-        (ra_param)->rap_flags = pcmk__set_flags_as(__func__, __LINE__,      \
-            LOG_TRACE, "Resource agent parameter", (ra_param)->rap_name,    \
-            (ra_param)->rap_flags, (flags_to_set), #flags_to_set);          \
+#define controld_set_ra_param_flags(ra_param, flags_to_set) do {               \
+        (ra_param)->rap_flags = pcmk__set_flags_as(__func__, __LINE__,         \
+                                                   PCMK__LOG_TRACE,            \
+                                                   "Resource agent parameter", \
+                                                   (ra_param)->rap_name,       \
+                                                   (ra_param)->rap_flags,      \
+                                                   (flags_to_set),             \
+                                                   #flags_to_set);             \
     } while (0)
 
 GHashTable *metadata_cache_new(void);

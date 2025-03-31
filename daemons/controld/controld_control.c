@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
+#include <crm/common/nvpair.h>              // pcmk_unpack_nvpair_blocks()
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
@@ -47,7 +48,7 @@ do_ha_control(long long action,
 
     if (action & A_HA_DISCONNECT) {
         pcmk_cluster_disconnect(controld_globals.cluster);
-        crm_info("Disconnected from the cluster");
+        pcmk__info("Disconnected from the cluster");
 
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);
     }
@@ -72,7 +73,7 @@ do_ha_control(long long action,
                 pcmk__str_copy(pcmk__cluster_get_xml_id(node));
 
             if (controld_globals.our_uuid == NULL) {
-                crm_err("Could not obtain local uuid");
+                pcmk__err("Could not obtain local uuid");
                 registered = FALSE;
             }
         }
@@ -85,12 +86,12 @@ do_ha_control(long long action,
 
         populate_cib_nodes(node_update_none, __func__);
         controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
-        crm_info("Connected to the cluster");
+        pcmk__info("Connected to the cluster");
     }
 
     if (action & ~(A_HA_CONNECT | A_HA_DISCONNECT)) {
-        crm_err("Unexpected action %s in %s", fsa_action2string(action),
-                __func__);
+        pcmk__err("Unexpected action %s in %s", fsa_action2string(action),
+                  __func__);
     }
 }
 
@@ -116,8 +117,8 @@ do_shutdown_req(long long action,
 
     controld_set_fsa_input_flags(R_SHUTDOWN);
     //controld_set_fsa_input_flags(R_STAYDOWN);
-    crm_info("Sending shutdown request to all peers (DC is %s)",
-             pcmk__s(controld_globals.dc_name, "not set"));
+    pcmk__info("Sending shutdown request to all peers (DC is %s)",
+               pcmk__s(controld_globals.dc_name, "not set"));
     msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
@@ -130,15 +131,15 @@ do_shutdown_req(long long action,
 void
 crmd_fast_exit(crm_exit_t exit_code)
 {
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
-        crm_warn("Inhibiting respawn " QB_XS " remapping exit code %d to %d",
-                 exit_code, CRM_EX_FATAL);
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
+        pcmk__warn("Inhibiting respawn " QB_XS " remapping exit code %d to %d",
+                   exit_code, CRM_EX_FATAL);
         exit_code = CRM_EX_FATAL;
 
     } else if ((exit_code == CRM_EX_OK)
-               && pcmk_is_set(controld_globals.fsa_input_register,
-                              R_IN_RECOVERY)) {
-        crm_err("Could not recover from internal error");
+               && pcmk__is_set(controld_globals.fsa_input_register,
+                               R_IN_RECOVERY)) {
+        pcmk__err("Could not recover from internal error");
         exit_code = CRM_EX_ERROR;
     }
 
@@ -160,19 +161,20 @@ crmd_exit(crm_exit_t exit_code)
     static bool in_progress = FALSE;
 
     if (in_progress && (exit_code == CRM_EX_OK)) {
-        crm_debug("Exit is already in progress");
+        pcmk__debug("Exit is already in progress");
         return exit_code;
 
     } else if(in_progress) {
-        crm_notice("Error during shutdown process, exiting now with status %d (%s)",
-                   exit_code, crm_exit_str(exit_code));
+        pcmk__notice("Error during shutdown process, exiting now with status "
+                     "%d (%s)",
+                     exit_code, crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
         crmd_fast_exit(exit_code);
     }
 
     in_progress = TRUE;
-    crm_trace("Preparing to exit with status %d (%s)",
-              exit_code, crm_exit_str(exit_code));
+    pcmk__trace("Preparing to exit with status %d (%s)", exit_code,
+                crm_exit_str(exit_code));
 
     /* Suppress secondary errors resulting from us disconnecting everything */
     controld_set_fsa_input_flags(R_HA_DISCONNECTED);
@@ -180,7 +182,7 @@ crmd_exit(crm_exit_t exit_code)
 /* Close all IPC servers and clients to ensure any and all shared memory files are cleaned up */
 
     if(ipcs) {
-        crm_trace("Closing IPC server");
+        pcmk__trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;
     }
@@ -190,7 +192,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_disconnect_fencer(TRUE);
 
     if ((exit_code == CRM_EX_OK) && (controld_globals.mainloop == NULL)) {
-        crm_debug("No mainloop detected");
+        pcmk__debug("No mainloop detected");
         exit_code = CRM_EX_ERROR;
     }
 
@@ -201,8 +203,8 @@ crmd_exit(crm_exit_t exit_code)
      * to report on - allowing real errors stand out
      */
     if (exit_code != CRM_EX_OK) {
-        crm_notice("Forcing immediate exit with status %d (%s)",
-                   exit_code, crm_exit_str(exit_code));
+        pcmk__notice("Forcing immediate exit with status %d (%s)", exit_code,
+                     crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
         crmd_fast_exit(exit_code);
     }
@@ -213,10 +215,10 @@ crmd_exit(crm_exit_t exit_code)
          iter = iter->next) {
         fsa_data_t *fsa_data = (fsa_data_t *) iter->data;
 
-        crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
-                 fsa_input2string(fsa_data->fsa_input),
-                 fsa_state2string(controld_globals.fsa_state),
-                 fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
+        pcmk__info("Dropping %s: [ state=%s cause=%s origin=%s ]",
+                   fsa_input2string(fsa_data->fsa_input),
+                   fsa_state2string(controld_globals.fsa_state),
+                   fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
         delete_fsa_input(fsa_data);
     }
 
@@ -285,19 +287,21 @@ crmd_exit(crm_exit_t exit_code)
         /* no signals on final draining anymore */
         mainloop_destroy_signal(SIGCHLD);
 
-        crm_trace("Draining mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
+        pcmk__trace("Draining mainloop %d %d", g_main_loop_is_running(mloop),
+                    g_main_context_pending(ctx));
 
         {
             int lpc = 0;
 
             while((g_main_context_pending(ctx) && lpc < 10)) {
                 lpc++;
-                crm_trace("Iteration %d", lpc);
+                pcmk__trace("Iteration %d", lpc);
                 g_main_context_dispatch(ctx);
             }
         }
 
-        crm_trace("Closing mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
+        pcmk__trace("Closing mainloop %d %d", g_main_loop_is_running(mloop),
+                    g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
 
         /* Won't do anything yet, since we're inside it now */
@@ -315,8 +319,8 @@ crmd_exit(crm_exit_t exit_code)
     controld_globals.cluster = NULL;
 
     /* Graceful */
-    crm_trace("Done preparing for exit with status %d (%s)",
-              exit_code, crm_exit_str(exit_code));
+    pcmk__trace("Done preparing for exit with status %d (%s)", exit_code,
+                crm_exit_str(exit_code));
     return exit_code;
 }
 
@@ -328,9 +332,9 @@ do_exit(long long action,
 {
     crm_exit_t exit_code = CRM_EX_OK;
 
-    if (pcmk_is_set(action, A_EXIT_1)) {
+    if (pcmk__is_set(action, A_EXIT_1)) {
         exit_code = CRM_EX_ERROR;
-        crm_err("Exiting now due to errors");
+        pcmk__err("Exiting now due to errors");
     }
     verify_stopped(cur_state, LOG_ERR);
     crmd_exit(exit_code);
@@ -344,7 +348,7 @@ do_startup(long long action,
            enum crmd_fsa_cause cause,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    crm_debug("Registering Signal Handlers");
+    pcmk__debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, sigpipe_ignore);
 
@@ -354,7 +358,7 @@ do_startup(long long action,
     controld_init_fsa_trigger();
     controld_init_transition_trigger();
 
-    crm_debug("Creating CIB manager and executor objects");
+    pcmk__debug("Creating CIB manager and executor objects");
     controld_globals.cib_conn = cib_new();
 
     lrm_state_init_local();
@@ -367,7 +371,7 @@ do_startup(long long action,
 static int32_t
 accept_controller_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Accepting new IPC client connection");
+    pcmk__trace("Accepting new IPC client connection");
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -395,10 +399,10 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     pcmk__assert(client->user != NULL);
     pcmk__update_acl_user(msg, PCMK__XA_CRM_USER, client->user);
 
-    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, client->id);
+    pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, client->id);
     if (controld_authorize_ipc_message(msg, client, NULL)) {
-        crm_trace("Processing IPC message from client %s",
-                  pcmk__client_name(client));
+        pcmk__trace("Processing IPC message from client %s",
+                    pcmk__client_name(client));
         route_message(C_IPC_MESSAGE, msg);
     }
 
@@ -413,9 +417,9 @@ ipc_client_disconnected(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client) {
-        crm_trace("Disconnecting %sregistered client %s (%p/%p)",
-                  (client->userdata? "" : "un"), pcmk__client_name(client),
-                  c, client);
+        pcmk__trace("Disconnecting %sregistered client %s (%p/%p)",
+                    (client->userdata? "" : "un"), pcmk__client_name(client),
+                    c, client);
         free(client->userdata);
         pcmk__free_client(client);
         controld_trigger_fsa();
@@ -426,7 +430,7 @@ ipc_client_disconnected(qb_ipcs_connection_t *c)
 static void
 ipc_connection_destroyed(qb_ipcs_connection_t *c)
 {
-    crm_trace("Connection %p", c);
+    pcmk__trace("Connection %p", c);
     ipc_client_disconnected(c);
 }
 
@@ -436,7 +440,7 @@ do_stop(long long action,
         enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    crm_trace("Closing IPC server");
+    pcmk__trace("Closing IPC server");
     mainloop_del_ipc_server(ipcs); ipcs = NULL;
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
@@ -456,51 +460,56 @@ do_started(long long action,
     };
 
     if (cur_state != S_STARTING) {
-        crm_err("Start cancelled... %s", fsa_state2string(cur_state));
+        pcmk__err("Start cancelled... %s", fsa_state2string(cur_state));
         return;
 
-    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
-                            R_MEMBERSHIP)) {
-        crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
+    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
+                             R_MEMBERSHIP)) {
+        pcmk__info("Delaying start, no membership data (%.16llx)",
+                   R_MEMBERSHIP);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
-                            R_LRM_CONNECTED)) {
-        crm_info("Delaying start, not connected to executor (%.16llx)", R_LRM_CONNECTED);
+    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
+                             R_LRM_CONNECTED)) {
+        pcmk__info("Delaying start, not connected to executor (%.16llx)",
+                   R_LRM_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
-                            R_CIB_CONNECTED)) {
-        crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
+    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
+                             R_CIB_CONNECTED)) {
+        pcmk__info("Delaying start, CIB not connected (%.16llx)",
+                   R_CIB_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(controld_globals.fsa_input_register,
-                            R_READ_CONFIG)) {
-        crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
+    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
+                             R_READ_CONFIG)) {
+        pcmk__info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
         crmd_fsa_stall(TRUE);
         return;
 
-    } else if (!pcmk_is_set(controld_globals.fsa_input_register, R_PEER_DATA)) {
-
-        crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
+    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
+                             R_PEER_DATA)) {
+        pcmk__info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
         crmd_fsa_stall(TRUE);
         return;
     }
 
-    crm_debug("Init server comms");
+    pcmk__debug("Init server comms");
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
     if (ipcs == NULL) {
-        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        pcmk__err("Failed to create IPC server: shutting down and inhibiting "
+                  "respawn");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     } else {
-        crm_notice("Pacemaker controller successfully started and accepting connections");
+        pcmk__notice("Pacemaker controller successfully started and accepting "
+                     "connections");
     }
     controld_set_fsa_input_flags(R_ST_REQUIRED);
     controld_timer_fencer_connect(GINT_TO_POINTER(TRUE));
@@ -516,7 +525,7 @@ do_recover(long long action,
            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     controld_set_fsa_input_flags(R_IN_RECOVERY);
-    crm_warn("Fast-tracking shutdown in response to errors");
+    pcmk__warn("Fast-tracking shutdown in response to errors");
 
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
@@ -536,11 +545,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
+        pcmk__err("Local CIB query resulted in an error: %s",
+                  pcmk_strerror(rc));
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
-            crm_err("The cluster is mis-configured - shutting down and staying down");
+            pcmk__err("The cluster is mis-configured - shutting down and "
+                      "staying down");
             controld_set_fsa_input_flags(R_STAYDOWN);
         }
         goto bail;
@@ -554,12 +565,12 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (!crmconfig) {
         fsa_data_t *msg_data = NULL;
 
-        crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
+        pcmk__err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
         goto bail;
     }
 
-    crm_debug("Call %d : Parsing CIB options", call_id);
+    pcmk__debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
     pcmk_unpack_nvpair_blocks(crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET,
                               PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
@@ -589,7 +600,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_SHUTDOWN_LOCK);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         controld_set_global_flags(controld_shutdown_lock_enabled);
     } else {
         controld_clear_global_flags(controld_shutdown_lock_enabled);
@@ -634,7 +645,7 @@ void
 controld_trigger_config_as(const char *fn, int line)
 {
     if (config_read_trigger != NULL) {
-        crm_trace("%s:%d - Triggered config processing", fn, line);
+        pcmk__trace("%s:%d - Triggered config processing", fn, line);
         mainloop_set_trigger(config_read_trigger);
     }
 }
@@ -649,7 +660,7 @@ crm_read_options(gpointer user_data)
                                         NULL, cib_xpath);
 
     fsa_register_cib_callback(call_id, NULL, config_query_callback);
-    crm_trace("Querying the CIB... call %d", call_id);
+    pcmk__trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }
 
@@ -676,8 +687,8 @@ crm_shutdown(int nsig)
         return;
     }
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-        crm_err("Escalating shutdown");
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+        pcmk__err("Escalating shutdown");
         register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
         return;
     }

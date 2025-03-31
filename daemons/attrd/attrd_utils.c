@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,7 @@
 #include <crm/crm.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/scores.h>          // pcmk_parse_score(), etc.
 #include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
@@ -211,13 +212,14 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     if (rsc == NULL) {
         pattern = pcmk__str_copy(ATTRD_RE_CLEAR_ALL);
     } else if (op == NULL) {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+        pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP, rsc, op, interval_ms);
+        pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_OP, rsc, op,
+                                        interval_ms);
     }
 
     /* Compile pattern into regular expression */
-    crm_trace("Clearing attributes matching %s", pattern);
+    pcmk__trace("Clearing attributes matching %s", pattern);
     rc = regcomp(regex, pattern, REG_EXTENDED|REG_NOSUB);
     free(pattern);
 
@@ -299,8 +301,8 @@ attrd_update_minimum_protocol_ver(const char *host, const char *value)
         /* If the protocol version is a new minimum, record it as such. */
         if (minimum_protocol_version == -1 || ver < minimum_protocol_version) {
             minimum_protocol_version = ver;
-            crm_trace("Set minimum attrd protocol version to %d",
-                      minimum_protocol_version);
+            pcmk__trace("Set minimum attrd protocol version to %d",
+                        minimum_protocol_version);
         }
     }
 }

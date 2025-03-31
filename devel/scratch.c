@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,7 @@ main(int argc, char **argv)
     xmlNode *top = NULL;
     const char *xml_file = NULL;
 
-    crm_log_init(NULL, LOG_TRACE, FALSE, TRUE, argc, argv, FALSE);
+    crm_log_init(NULL, PCMK__LOG_TRACE, FALSE, TRUE, argc, argv, FALSE);
     while (1) {
         flag = getopt(argc, argv, OPTARGS);
         if (flag == -1)

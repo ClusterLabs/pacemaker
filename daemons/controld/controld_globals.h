@@ -134,18 +134,20 @@ enum controld_flags {
 
 #  define controld_set_global_flags(flags_to_set) do {                      \
         controld_globals.flags = pcmk__set_flags_as(__func__, __LINE__,     \
-                                                    LOG_TRACE,              \
+                                                    PCMK__LOG_TRACE,        \
                                                     "Global", "controller", \
                                                     controld_globals.flags, \
                                                     (flags_to_set),         \
                                                     #flags_to_set);         \
     } while (0)
 
-#  define controld_clear_global_flags(flags_to_clear) do {                  \
-        controld_globals.flags                                              \
-            = pcmk__clear_flags_as(__func__, __LINE__, LOG_TRACE, "Global", \
-                                   "controller", controld_globals.flags,    \
-                                   (flags_to_clear), #flags_to_clear);      \
+#  define controld_clear_global_flags(flags_to_clear) do {                    \
+        controld_globals.flags = pcmk__clear_flags_as(__func__, __LINE__,     \
+                                                      PCMK__LOG_TRACE,        \
+                                                      "Global", "controller", \
+                                                      controld_globals.flags, \
+                                                      (flags_to_clear),       \
+                                                      #flags_to_clear);       \
     } while (0)
 
 #endif  // ifndef CONTROLD_GLOBALS__H

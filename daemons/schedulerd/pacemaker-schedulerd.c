@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -136,10 +136,11 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_SCHEDULERD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker scheduler");
+    pcmk__notice("Starting Pacemaker scheduler");
 
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
-        crm_err("Terminating due to bad permissions on " PCMK_SCHEDULER_INPUT_DIR);
+        pcmk__err("Terminating due to bad permissions on "
+                  PCMK_SCHEDULER_INPUT_DIR);
         exit_code = CRM_EX_FATAL;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "ERROR: Bad permissions on %s (see logs for details)",
@@ -162,11 +163,12 @@ main(int argc, char **argv)
     }
     pe__register_messages(logger_out);
     pcmk__register_lib_messages(logger_out);
-    pcmk__output_set_log_level(logger_out, LOG_TRACE);
+    pcmk__output_set_log_level(logger_out, PCMK__LOG_TRACE);
 
     /* Create the mainloop and run it... */
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker scheduler successfully started and accepting connections");
+    pcmk__notice("Pacemaker scheduler successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
 done:
@@ -182,7 +184,7 @@ void
 pengine_shutdown(int nsig)
 {
     if (ipcs != NULL) {
-        crm_trace("Closing IPC server");
+        pcmk__trace("Closing IPC server");
         mainloop_del_ipc_server(ipcs);
         ipcs = NULL;
     }

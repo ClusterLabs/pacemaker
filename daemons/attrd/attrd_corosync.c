@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,10 +28,10 @@ attrd_confirmation(int callid)
 {
     xmlNode *node = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
-    crm_xml_add(node, PCMK__XA_SRC, pcmk__cluster_local_node_name());
-    crm_xml_add(node, PCMK_XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
-    crm_xml_add_int(node, PCMK__XA_CALL_ID, callid);
+    pcmk__xe_set(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
+    pcmk__xe_set(node, PCMK__XA_SRC, pcmk__cluster_local_node_name());
+    pcmk__xe_set(node, PCMK_XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
+    pcmk__xe_set_int(node, PCMK__XA_CALL_ID, callid);
 
     return node;
 }
@@ -39,7 +39,7 @@ attrd_confirmation(int callid)
 static void
 attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
-    const char *election_op = crm_element_value(xml, PCMK__XA_CRM_TASK);
+    const char *election_op = pcmk__xe_get(xml, PCMK__XA_CRM_TASK);
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
@@ -64,7 +64,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, PCMK_XA_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
         CRM_CHECK(request.op != NULL, return);
 
         attrd_handle_request(&request);
@@ -81,7 +81,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
              * response so the originating peer knows what they're a confirmation
              * for.
              */
-            crm_element_value_int(xml, PCMK__XA_CALL_ID, &callid);
+            pcmk__xe_get_int(xml, PCMK__XA_CALL_ID, &callid);
             reply = attrd_confirmation(callid);
 
             /* And then send the confirmation back to the originating peer.  This
@@ -89,7 +89,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
              * peer where it will have to do something with a PCMK__XA_CONFIRM type
              * message.
              */
-            crm_debug("Sending %s a confirmation", peer->name);
+            pcmk__debug("Sending %s a confirmation", peer->name);
             attrd_send_message(peer, reply, false);
             pcmk__xml_free(reply);
         }
@@ -114,8 +114,8 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     xml = pcmk__xml_parse(data);
 
     if (xml == NULL) {
-        crm_err("Bad message received from %s[%u]: '%.120s'",
-                from, nodeid, data);
+        pcmk__err("Bad message received from %s[%u]: '%.120s'", from, nodeid,
+                  data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
                                           pcmk__node_search_cluster_member),
@@ -130,10 +130,10 @@ static void
 attrd_cpg_destroy(gpointer unused)
 {
     if (attrd_shutting_down(false)) {
-        crm_info("Disconnected from Corosync process group");
+        pcmk__info("Disconnected from Corosync process group");
 
     } else {
-        crm_crit("Lost connection to Corosync process group, shutting down");
+        pcmk__crit("Lost connection to Corosync process group, shutting down");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }
@@ -151,7 +151,7 @@ attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 {
     xmlNode *op = pcmk__xe_create(NULL, PCMK_XE_OP);
 
-    crm_xml_add(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
     attrd_add_value_xml(op, a, v, false);
     attrd_send_message(NULL, op, false);
     pcmk__xml_free(op);
@@ -164,33 +164,33 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
                      const void *data)
 {
     bool gone = false;
-    bool is_remote = pcmk_is_set(peer->flags, pcmk__node_status_remote);
+    bool is_remote = pcmk__is_set(peer->flags, pcmk__node_status_remote);
 
     switch (kind) {
         case pcmk__node_update_name:
-            crm_debug("%s node %s is now %s",
-                      (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state));
+            pcmk__debug("%s node %s is now %s",
+                        (is_remote? "Remote" : "Cluster"),
+                        peer->name, state_text(peer->state));
             break;
 
         case pcmk__node_update_processes:
-            if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
+            if (!pcmk__is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
-            crm_debug("Node %s is %s a peer",
-                      peer->name, (gone? "no longer" : "now"));
+            pcmk__debug("Node %s is %s a peer", peer->name,
+                        (gone? "no longer" : "now"));
             break;
 
         case pcmk__node_update_state:
-            crm_debug("%s node %s is now %s (was %s)",
-                      (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state), state_text(data));
+            pcmk__debug("%s node %s is now %s (was %s)",
+                        (is_remote? "Remote" : "Cluster"),
+                        peer->name, state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
                 if (attrd_election_won()
-                    && !pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
+                    && !pcmk__is_set(peer->flags, pcmk__node_status_remote)) {
                     attrd_peer_sync(peer);
                 }
             } else {
@@ -223,7 +223,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     bool changed = false;
     attribute_value_t *v = NULL;
     const char *prev_xml_id = NULL;
-    const char *node_xml_id = crm_element_value(xml, PCMK__XA_ATTR_HOST_ID);
+    const char *node_xml_id = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST_ID);
 
     // Create entry for value if not already existing
     v = g_hash_table_lookup(a->values, host);
@@ -243,7 +243,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     }
 
     // If value is for a Pacemaker Remote node, remember that
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
     if (is_remote) {
         attrd_set_value_flags(v, attrd_value_remote);
         pcmk__assert(pcmk__cluster_lookup_remote_node(host) != NULL);
@@ -261,18 +261,24 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
          * kept in sync.
          */
         v = g_hash_table_lookup(a->values, attrd_cluster->priv->node_name);
-        crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
-                   attr, host, readable_value(v), value, peer->name);
+        pcmk__notice("%s[%s]: local value '%s' takes priority over '%s' from "
+                     "%s",
+                     attr, host, readable_value(v), value, peer->name);
         attrd_broadcast_value(a, v);
 
     } else if (changed) {
-        crm_notice("Setting %s[%s]%s%s: %s -> %s "
-                   QB_XS " from %s with %s write delay and node XML ID %s",
-                   attr, host, a->set_type ? " in " : "",
-                   pcmk__s(a->set_type, ""), readable_value(v),
-                   pcmk__s(value, "(unset)"), peer->name,
-                   (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms),
-                   pcmk__s(node_xml_id, "unknown"));
+        const char *timeout_s = "no";
+
+        if (a->timeout_ms != 0) {
+            timeout_s = pcmk__readable_interval(a->timeout_ms);
+        }
+
+        pcmk__notice("Setting %s[%s]%s%s: %s -> %s "
+                     QB_XS " from %s with %s write delay and node XML ID %s",
+                     attr, host, ((a->set_type != NULL)? " in " : ""),
+                     pcmk__s(a->set_type, ""), readable_value(v),
+                     pcmk__s(value, "(unset)"), peer->name, timeout_s,
+                     pcmk__s(node_xml_id, "unknown"));
         pcmk__str_update(&v->current, value);
         attrd_set_attr_flags(a, attrd_attr_changed);
 
@@ -289,8 +295,8 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
 
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {
-            crm_trace("Delaying write of %s %s for dampening",
-                      attr, pcmk__readable_interval(a->timeout_ms));
+            pcmk__trace("Delaying write of %s %s for dampening", attr,
+                        pcmk__readable_interval(a->timeout_ms));
             mainloop_timer_start(a->timer);
         } else {
             attrd_write_or_elect_attribute(a);
@@ -299,18 +305,17 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     } else {
         int is_force_write = 0;
 
-        crm_element_value_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE,
-                              &is_force_write);
+        pcmk__xe_get_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, &is_force_write);
 
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
             /* The actual attribute is written by Writer after election. */
-            crm_trace("%s[%s] from %s is unchanged (%s), forcing write",
-                      attr, host, peer->name, pcmk__s(value, "unset"));
+            pcmk__trace("%s[%s] from %s is unchanged (%s), forcing write", attr,
+                        host, peer->name, pcmk__s(value, "unset"));
             attrd_set_attr_flags(a, attrd_attr_force_write);
         } else {
-            crm_trace("%s[%s] from %s is unchanged (%s)",
-                      attr, host, peer->name, pcmk__s(value, "unset"));
+            pcmk__trace("%s[%s] from %s is unchanged (%s)", attr, host,
+                        peer->name, pcmk__s(value, "unset"));
         }
     }
 
@@ -320,9 +325,8 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     // Remember node's XML ID if we're just learning it
     if ((node_xml_id != NULL)
         && !pcmk__str_eq(node_xml_id, prev_xml_id, pcmk__str_none)) {
-        crm_trace("Learned %s[%s] node XML ID is %s (was %s)",
-                  a->id, v->nodename, node_xml_id,
-                  pcmk__s(prev_xml_id, "unknown"));
+        pcmk__trace("Learned %s[%s] node XML ID is %s (was %s)", a->id,
+                    v->nodename, node_xml_id, pcmk__s(prev_xml_id, "unknown"));
         attrd_set_node_xml_id(v->nodename, node_xml_id);
         if (attrd_election_won()) {
             // In case we couldn't write a value missing the XML ID before
@@ -336,12 +340,12 @@ attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
                       bool filter)
 {
     attribute_t *a = NULL;
-    const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
-    const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
+    const char *attr = pcmk__xe_get(xml, PCMK__XA_ATTR_NAME);
+    const char *value = pcmk__xe_get(xml, PCMK__XA_ATTR_VALUE);
+    const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
 
     if (attr == NULL) {
-        crm_warn("Could not update attribute: peer did not specify name");
+        pcmk__warn("Could not update attribute: peer did not specify name");
         return;
     }
 
@@ -354,7 +358,7 @@ attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
         // If no host was specified, update all hosts
         GHashTableIter vIter;
 
-        crm_debug("Setting %s for all hosts to %s", attr, value);
+        pcmk__debug("Setting %s for all hosts to %s", attr, value);
         pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_HOST_ID);
         g_hash_table_iter_init(&vIter, a->values);
 
@@ -390,14 +394,15 @@ broadcast_unseen_local_values(void)
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
 
-            if (!pcmk_is_set(v->flags, attrd_value_from_peer)
+            if (!pcmk__is_set(v->flags, attrd_value_from_peer)
                 && pcmk__str_eq(v->nodename, attrd_cluster->priv->node_name,
                                 pcmk__str_casei)) {
-                crm_trace("* %s[%s]='%s' is local-only",
-                          a->id, v->nodename, readable_value(v));
+                pcmk__trace("* %s[%s]='%s' is local-only", a->id, v->nodename,
+                            readable_value(v));
                 if (sync == NULL) {
                     sync = pcmk__xe_create(NULL, __func__);
-                    crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+                    pcmk__xe_set(sync, PCMK_XA_TASK,
+                                 PCMK__ATTRD_CMD_SYNC_RESPONSE);
                 }
                 attrd_add_value_xml(sync, a, v, a->timeout_ms && a->timer);
             }
@@ -405,7 +410,7 @@ broadcast_unseen_local_values(void)
     }
 
     if (sync != NULL) {
-        crm_debug("Broadcasting local-only values");
+        pcmk__debug("Broadcasting local-only values");
         attrd_send_message(NULL, sync, false);
         pcmk__xml_free(sync);
     }
@@ -427,7 +432,7 @@ attrd_cluster_connect(void)
     rc = pcmk_cluster_connect(attrd_cluster);
     rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
-        crm_err("Cluster connection failed");
+        pcmk__err("Cluster connection failed");
         return rc;
     }
     return pcmk_ok;
@@ -437,11 +442,10 @@ void
 attrd_peer_clear_failure(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
-    const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
-    const char *op = crm_element_value(xml, PCMK__XA_ATTR_CLEAR_OPERATION);
-    const char *interval_spec = crm_element_value(xml,
-                                                  PCMK__XA_ATTR_CLEAR_INTERVAL);
+    const char *rsc = pcmk__xe_get(xml, PCMK__XA_ATTR_RESOURCE);
+    const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
+    const char *op = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_OPERATION);
+    const char *interval_spec = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_INTERVAL);
     guint interval_ms = 0U;
     char *attr = NULL;
     GHashTableIter iter;
@@ -454,12 +458,12 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     pcmk_parse_interval_spec(interval_spec, &interval_ms);
 
     if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
-        crm_info("Ignoring invalid request to clear failures for %s",
-                 pcmk__s(rsc, "all resources"));
+        pcmk__info("Ignoring invalid request to clear failures for %s",
+                   pcmk__s(rsc, "all resources"));
         return;
     }
 
-    crm_xml_add(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
 
     /* Make sure value is not set, so we delete */
     pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
@@ -467,9 +471,9 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
         if (regexec(&regex, attr, 0, NULL, 0) == 0) {
-            crm_trace("Matched %s when clearing %s",
-                      attr, pcmk__s(rsc, "all resources"));
-            crm_xml_add(xml, PCMK__XA_ATTR_NAME, attr);
+            pcmk__trace("Matched %s when clearing %s", attr,
+                        pcmk__s(rsc, "all resources"));
+            pcmk__xe_set(xml, PCMK__XA_ATTR_NAME, attr);
             attrd_peer_update(peer, xml, host, false);
         }
     }
@@ -488,8 +492,8 @@ void
 attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
                          xmlNode *xml)
 {
-    crm_info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
-             peer->name);
+    pcmk__info("Processing " PCMK__ATTRD_CMD_SYNC_RESPONSE " from %s",
+               peer->name);
 
     if (peer_won) {
         /* Initialize the "seen" flag for all attributes to cleared, so we can
@@ -502,8 +506,8 @@ attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
     for (xmlNode *child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, NULL)) {
 
-        attrd_peer_update(peer, child,
-                          crm_element_value(child, PCMK__XA_ATTR_HOST), true);
+        attrd_peer_update(peer, child, pcmk__xe_get(child, PCMK__XA_ATTR_HOST),
+                          true);
     }
 
     if (peer_won) {
@@ -529,14 +533,14 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
     GHashTableIter aIter;
 
     CRM_CHECK(host != NULL, return);
-    crm_notice("Removing all %s attributes for node %s "
-               QB_XS " %s reaping node from cache",
-               host, source, (uncache? "and" : "without"));
+    pcmk__notice("Removing all %s attributes for node %s "
+                 QB_XS " %s reaping node from cache",
+                 host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         if(g_hash_table_remove(a->values, host)) {
-            crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
+            pcmk__debug("Removed %s[%s] for peer %s", a->id, host, source);
         }
     }
 
@@ -562,20 +566,19 @@ attrd_peer_sync(pcmk__node_status_t *peer)
     attribute_value_t *v = NULL;
     xmlNode *sync = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+    pcmk__xe_set(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
-            crm_debug("Syncing %s[%s]='%s' to %s",
-                      a->id, v->nodename, readable_value(v),
-                      readable_peer(peer));
+            pcmk__debug("Syncing %s[%s]='%s' to %s", a->id, v->nodename,
+                        readable_value(v), readable_peer(peer));
             attrd_add_value_xml(sync, a, v, false);
         }
     }
 
-    crm_debug("Syncing values to %s", readable_peer(peer));
+    pcmk__debug("Syncing values to %s", readable_peer(peer));
     attrd_send_message(peer, sync, false);
     pcmk__xml_free(sync);
 }
@@ -611,7 +614,7 @@ attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
      * point, process that now.
      */
     if (handle_sync_point) {
-        crm_trace("Hit local sync point for attribute update");
+        pcmk__trace("Hit local sync point for attribute update");
         attrd_ack_waitlist_clients(attrd_sync_point_local, xml);
     }
 }

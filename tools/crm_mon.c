@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -404,7 +404,7 @@ apply_include_exclude(GSList *lst, GError **error) {
 
 static gboolean
 user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+    char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.user_includes_excludes = g_slist_append(options.user_includes_excludes, s);
     return TRUE;
@@ -412,7 +412,7 @@ user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer 
 
 static gboolean
 include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+    char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.includes_excludes = g_slist_append(options.includes_excludes, s);
     return TRUE;
@@ -506,20 +506,21 @@ print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 
 static gboolean
 reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    int rc = crm_get_msec(optarg);
+    long long reconnect_ms = 0;
 
-    if (rc == -1) {
-        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid value for -i: %s", optarg);
+    if ((pcmk__parse_ms(optarg, &reconnect_ms) != pcmk_rc_ok)
+        || (reconnect_ms < 0)) {
+        g_set_error(err, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM,
+                    "Invalid value for -i: %s", optarg);
         return FALSE;
-    } else {
-        pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
-
-        if (options.exec_mode != mon_exec_daemonized) {
-            // Reconnect interval applies to daemonized too, so don't override
-            options.exec_mode = mon_exec_update;
-        }
     }
 
+    pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
+
+    if (options.exec_mode != mon_exec_daemonized) {
+        // Reconnect interval applies to daemonized too, so don't override
+        options.exec_mode = mon_exec_update;
+    }
     return TRUE;
 }
 
@@ -565,7 +566,7 @@ show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
-        char *s = crm_strdup_printf("bans:%s", optarg);
+        char *s = pcmk__assert_asprintf("bans:%s", optarg);
         gboolean rc = user_include_exclude_cb("--include", s, data, err);
         free(s);
         return rc;
@@ -865,7 +866,7 @@ setup_fencer_connection(void)
 
     rc = st->cmds->connect(st, crm_system_name, NULL);
     if (rc == pcmk_ok) {
-        crm_trace("Setting up stonith callbacks");
+        pcmk__trace("Setting up stonith callbacks");
         if (options.watch_fencing) {
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
@@ -1090,7 +1091,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'o':
                 show ^= pcmk_section_operations;
-                if (!pcmk_is_set(show, pcmk_section_operations)) {
+                if (!pcmk__is_set(show, pcmk_section_operations)) {
                     show_opts &= ~pcmk_show_timing;
                 }
                 break;
@@ -1102,7 +1103,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 't':
                 show_opts ^= pcmk_show_timing;
-                if (pcmk_is_set(show_opts, pcmk_show_timing)) {
+                if (pcmk__is_set(show_opts, pcmk_show_timing)) {
                     show |= pcmk_section_operations;
                 }
                 break;
@@ -1114,7 +1115,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (pcmk_any_flags_set(show, pcmk_section_summary)) {
+                if (pcmk__any_flags_set(show, pcmk_section_summary)) {
                     show &= ~pcmk_section_summary;
                 } else {
                     show |= pcmk_section_summary;
@@ -1143,18 +1144,24 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         refresh();
 
         curses_formatted_printf(out, "%s", "Display option change mode\n");
-        print_option_help(out, 'c', pcmk_is_set(show, pcmk_section_tickets));
-        print_option_help(out, 'f', pcmk_is_set(show, pcmk_section_failcounts));
-        print_option_help(out, 'n', pcmk_is_set(show_opts, pcmk_show_rscs_by_node));
-        print_option_help(out, 'o', pcmk_is_set(show, pcmk_section_operations));
-        print_option_help(out, 'r', pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
-        print_option_help(out, 't', pcmk_is_set(show_opts, pcmk_show_timing));
-        print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
-        print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
-        print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
-        print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details));
-        print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
-        print_option_help(out, 'j', pcmk_is_set(show_opts, pcmk_show_pending));
+        print_option_help(out, 'c', pcmk__is_set(show, pcmk_section_tickets));
+        print_option_help(out, 'f',
+                          pcmk__is_set(show, pcmk_section_failcounts));
+        print_option_help(out, 'n',
+                          pcmk__is_set(show_opts, pcmk_show_rscs_by_node));
+        print_option_help(out, 'o',
+                          pcmk__is_set(show, pcmk_section_operations));
+        print_option_help(out, 'r',
+                          pcmk__is_set(show_opts, pcmk_show_inactive_rscs));
+        print_option_help(out, 't', pcmk__is_set(show_opts, pcmk_show_timing));
+        print_option_help(out, 'A',
+                          pcmk__is_set(show, pcmk_section_attributes));
+        print_option_help(out, 'L', pcmk__is_set(show, pcmk_section_bans));
+        print_option_help(out, 'D', !pcmk__is_set(show, pcmk_section_summary));
+        print_option_help(out, 'R',
+                          pcmk__any_flags_set(show_opts, pcmk_show_details));
+        print_option_help(out, 'b', pcmk__is_set(show_opts, pcmk_show_brief));
+        print_option_help(out, 'j', pcmk__is_set(show_opts, pcmk_show_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
         curses_formatted_printf(out, "%s", "\nToggle fields via field letter, type any other key to return\n");
     }
@@ -1174,13 +1181,13 @@ avoid_zombies(void)
 
     memset(&sa, 0, sizeof(struct sigaction));
     if (sigemptyset(&sa.sa_mask) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
+        pcmk__warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
         return;
     }
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
     if (sigaction(SIGCHLD, &sa, NULL) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
+        pcmk__warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
     }
 }
 
@@ -1556,11 +1563,13 @@ main(int argc, char **argv)
     /* Sync up the initial value of interactive_fence_level with whatever was set with
      * --include/--exclude= options.
      */
-    if (pcmk_all_flags_set(show, pcmk_section_fencing_all)) {
+    if (pcmk__all_flags_set(show, pcmk_section_fencing_all)) {
         interactive_fence_level = 3;
-    } else if (pcmk_is_set(show, pcmk_section_fence_worked)) {
+    } else if (pcmk__is_set(show, pcmk_section_fence_worked)) {
         interactive_fence_level = 2;
-    } else if (pcmk_any_flags_set(show, pcmk_section_fence_failed | pcmk_section_fence_pending)) {
+    } else if (pcmk__any_flags_set(show,
+                                   pcmk_section_fence_failed
+                                   |pcmk_section_fence_pending)) {
         interactive_fence_level = 1;
     } else {
         interactive_fence_level = 0;
@@ -1593,7 +1602,7 @@ main(int argc, char **argv)
         free(content);
     }
 
-    crm_info("Starting %s", crm_system_name);
+    pcmk__info("Starting %s", crm_system_name);
 
     cib__set_output(cib, out);
 
@@ -1604,7 +1613,9 @@ main(int argc, char **argv)
     scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
-    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
+    if ((cib->variant == cib_native)
+        && pcmk__is_set(show, pcmk_section_times)) {
+
         // Currently used only in the times section
         pcmk__query_node_name(out, 0, &(scheduler->priv->local_node_name), 0);
     }
@@ -1664,7 +1675,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
 
-    crm_info("Exiting %s", crm_system_name);
+    pcmk__info("Exiting %s", crm_system_name);
 
     return clean_up(CRM_EX_OK);
 }
@@ -1680,7 +1691,8 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     char *status_s = pcmk__itoa(status);
     char *target_rc_s = pcmk__itoa(target_rc);
 
-    crm_debug("Sending external notification to '%s' via '%s'", options.external_recipient, options.external_agent);
+    pcmk__debug("Sending external notification to '%s' via '%s'",
+                options.external_recipient, options.external_agent);
 
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
@@ -1700,12 +1712,15 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
         out->err(out, "notification fork() failed: %s", strerror(errno));
     }
     if (pid == 0) {
-        /* crm_debug("notification: I am the child. Executing the nofitication program."); */
+        /* pcmk__debug("notification: I am the child. Executing the "
+         *             "notification program.");
+         */
         execl(options.external_agent, options.external_agent, NULL);
         crm_exit(CRM_EX_ERROR);
     }
 
-    crm_trace("Finished running custom notification program '%s'.", options.external_agent);
+    pcmk__trace("Finished running custom notification program '%s'",
+                options.external_agent);
     free(target_rc_s);
     free(status_s);
     free(rc_s);
@@ -1738,7 +1753,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     id = pcmk__xe_history_key(rsc_op);
 
-    magic = crm_element_value(rsc_op, PCMK__XA_TRANSITION_MAGIC);
+    magic = pcmk__xe_get(rsc_op, PCMK__XA_TRANSITION_MAGIC);
     if (magic == NULL) {
         /* non-change */
         return pcmk_rc_ok;
@@ -1746,23 +1761,23 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     if (!decode_transition_magic(magic, NULL, NULL, NULL, &status, &rc,
                                  &target_rc)) {
-        crm_err("Invalid event %s detected for %s", magic, id);
+        pcmk__err("Invalid event %s detected for %s", magic, id);
         return pcmk_rc_ok;
     }
 
     if (parse_op_key(id, &rsc, &task, NULL) == FALSE) {
-        crm_err("Invalid event detected for %s", id);
+        pcmk__err("Invalid event detected for %s", id);
         goto bail;
     }
 
-    node = crm_element_value(rsc_op, PCMK__META_ON_NODE);
+    node = pcmk__xe_get(rsc_op, PCMK__META_ON_NODE);
 
     while ((n != NULL) && !pcmk__xe_is(n, PCMK__XE_NODE_STATE)) {
         n = n->parent;
     }
 
     if(node == NULL && n) {
-        node = crm_element_value(n, PCMK_XA_UNAME);
+        node = pcmk__xe_get(n, PCMK_XA_UNAME);
     }
 
     if (node == NULL && n) {
@@ -1774,25 +1789,25 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     }
 
     if (node == NULL) {
-        crm_err("No node detected for event %s (%s)", magic, id);
+        pcmk__err("No node detected for event %s (%s)", magic, id);
         goto bail;
     }
 
     /* look up where we expected it to be? */
     desc = pcmk_rc_str(pcmk_rc_ok);
     if ((status == PCMK_EXEC_DONE) && (target_rc == rc)) {
-        crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
+        pcmk__notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_OCF_NOT_RUNNING) {
             notify = FALSE;
         }
 
     } else if (status == PCMK_EXEC_DONE) {
         desc = crm_exit_str(rc);
-        crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
+        pcmk__warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {
         desc = pcmk_exec_status_str(status);
-        crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
+        pcmk__warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
     if (notify && options.external_agent) {
@@ -1819,7 +1834,7 @@ mon_trigger_refresh(gpointer user_data)
 static int
 handle_op_for_node(xmlNode *xml, void *userdata)
 {
-    const char *node = crm_element_value(xml, PCMK_XA_UNAME);
+    const char *node = pcmk__xe_get(xml, PCMK_XA_UNAME);
 
     if (node == NULL) {
         node = pcmk__xe_id(xml);
@@ -1833,8 +1848,8 @@ static int
 crm_diff_update_element(xmlNode *change, void *userdata)
 {
     const char *name = NULL;
-    const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-    const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+    const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+    const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
     xmlNode *match = NULL;
     const char *node = NULL;
 
@@ -1859,12 +1874,12 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         name = (const char *)match->name;
     }
 
-    crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
+    pcmk__trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
     if(xpath == NULL) {
         /* Version field, ignore */
 
     } else if(name == NULL) {
-        crm_debug("No result for %s operation to %s", op, xpath);
+        pcmk__debug("No result for %s operation to %s", op, xpath);
         pcmk__assert(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
                                       NULL));
 
@@ -1877,7 +1892,7 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         pcmk__xe_foreach_child(match, NULL, handle_op_for_node, NULL);
 
     } else if (strcmp(name, PCMK__XE_NODE_STATE) == 0) {
-        node = crm_element_value(match, PCMK_XA_UNAME);
+        node = pcmk__xe_get(match, PCMK_XA_UNAME);
         if (node == NULL) {
             node = pcmk__xe_id(match);
         }
@@ -1906,7 +1921,8 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         free(local_node);
 
     } else {
-        crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+        pcmk__trace("Ignoring %s operation for %s %p, %s", op, xpath, match,
+                    name);
     }
 
     return pcmk_rc_ok;
@@ -1930,26 +1946,29 @@ crm_diff_update(const char *event, xmlNode * msg)
         switch (rc) {
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
-                crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__notice("[%s] Patch aborted: %s (%d)", event,
+                             pcmk_strerror(rc), rc);
                 pcmk__xml_free(current_cib); current_cib = NULL;
                 break;
             case pcmk_ok:
                 cib_updated = TRUE;
                 break;
             default:
-                crm_notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
+                             rc);
                 pcmk__xml_free(current_cib); current_cib = NULL;
         }
     }
 
     if (current_cib == NULL) {
-        crm_trace("Re-requesting the full cib");
+        pcmk__trace("Re-requesting the full cib");
         cib->cmds->query(cib, NULL, &current_cib, cib_sync_call);
     }
 
     if (options.external_agent) {
         int format = 0;
-        crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
+
+        pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
         if (format == 2) {
             xmlNode *wrapper = pcmk__xe_first_child(msg,
@@ -1960,7 +1979,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             pcmk__xe_foreach_child(diff, NULL, crm_diff_update_element, NULL);
 
         } else {
-            crm_err("Unknown patch format: %d", format);
+            pcmk__err("Unknown patch format: %d", format);
         }
     }
 
@@ -1987,9 +2006,10 @@ mon_refresh_display(gpointer user_data)
         return G_SOURCE_REMOVE;
     }
 
-    if (fence_history == pcmk__fence_history_full &&
-        !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
-        output_format != mon_output_xml) {
+    if ((fence_history == pcmk__fence_history_full)
+        && !pcmk__all_flags_set(show, pcmk_section_fencing_all)
+        && (output_format != mon_output_xml)) {
+
         fence_history = pcmk__fence_history_reduced;
     }
 

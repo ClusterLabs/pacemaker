@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 #include <stdio.h>
 #include <crm/crm.h>
+#include <crm/common/acl.h>                 // pcmk_acl_required()
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
@@ -76,8 +77,8 @@ print_xml_output(xmlNode * xml)
         return;
     }
 
-    if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
-        const char *id = crm_element_value(xml, PCMK_XA_ID);
+    if (pcmk__is_set(options.cmd_options, cib_xpath_address)) {
+        const char *id = pcmk__xe_get(xml, PCMK_XA_ID);
 
         if (pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
             xmlNode *child = NULL;
@@ -106,7 +107,7 @@ report_schema_unchanged(void)
 {
     const char *err = pcmk_rc_str(pcmk_rc_schema_unchanged);
 
-    crm_info("Upgrade unnecessary: %s\n", err);
+    pcmk__info("Upgrade unnecessary: %s\n", err);
     printf("Upgrade unnecessary: %s\n", err);
     exit_code = CRM_EX_OK;
 }
@@ -592,7 +593,7 @@ main(int argc, char **argv)
         GString *buf = g_string_sized_new(1024);
 
         output = createEmptyCib(1);
-        crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
+        pcmk__xe_set(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
 
         pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
         fprintf(stdout, "%s", buf->str);
@@ -712,7 +713,7 @@ main(int argc, char **argv)
     }
 
     if (input != NULL) {
-        crm_log_xml_debug(input, "[admin input]");
+        pcmk__log_xml_debug(input, "[admin input]");
 
     } else if (source != NULL) {
         exit_code = CRM_EX_CONFIG;
@@ -766,8 +767,8 @@ main(int argc, char **argv)
         rc = pcmk_legacy2rc(rc);
         exit_code = pcmk_rc2exitc(rc);
 
-        crm_err("Init failed, could not perform requested operations: %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Init failed, could not perform requested operations: %s",
+                  pcmk_rc_str(rc));
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Init failed, could not perform requested operations: %s",
                     pcmk_rc_str(rc));
@@ -783,7 +784,7 @@ main(int argc, char **argv)
         report_schema_unchanged();
 
     } else if (rc != pcmk_rc_ok) {
-        crm_err("Call failed: %s", pcmk_rc_str(rc));
+        pcmk__err("Call failed: %s", pcmk_rc_str(rc));
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
 
@@ -836,7 +837,7 @@ main(int argc, char **argv)
         print_xml_output(output);
     }
 
-    crm_trace("%s exiting normally", crm_system_name);
+    pcmk__trace("%s exiting normally", crm_system_name);
 
 done:
     g_strfreev(processed_args);
@@ -876,7 +877,7 @@ do_work(xmlNode *input, xmlNode **output)
         }
     }
 
-    crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
+    pcmk__trace("Passing \"%s\" to variant_op...", options.cib_action);
     return cib_internal_op(the_cib, options.cib_action, options.dest_node,
                            options.cib_section, input, output,
                            options.cmd_options, options.cib_user);
@@ -890,7 +891,7 @@ do_init(void)
     the_cib = cib_new();
     rc = cib__signon_attempts(the_cib, cib_command, 5);
     if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
+        pcmk__err("Could not connect to the CIB: %s", pcmk_strerror(rc));
         fprintf(stderr, "Could not connect to the CIB: %s\n",
                 pcmk_strerror(rc));
     }

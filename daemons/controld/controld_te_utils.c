@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -25,11 +26,11 @@ stop_te_timer(pcmk__graph_action_t *action)
         return FALSE;
     }
     if (action->timer != 0) {
-        crm_trace("Stopping action timer");
+        pcmk__trace("Stopping action timer");
         g_source_remove(action->timer);
         action->timer = 0;
     } else {
-        crm_trace("Action timer was already stopped");
+        pcmk__trace("Action timer was already stopped");
         return FALSE;
     }
     return TRUE;
@@ -39,13 +40,13 @@ static gboolean
 te_graph_trigger(gpointer user_data)
 {
     if (controld_globals.transition_graph == NULL) {
-        crm_debug("Nothing to do");
+        pcmk__debug("Nothing to do");
         return TRUE;
     }
 
-    crm_trace("Invoking graph %d in state %s",
-              controld_globals.transition_graph->id,
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__trace("Invoking graph %d in state %s",
+                controld_globals.transition_graph->id,
+                fsa_state2string(controld_globals.fsa_state));
 
     switch (controld_globals.fsa_state) {
         case S_STARTING:
@@ -70,23 +71,23 @@ te_graph_trigger(gpointer user_data)
         controld_globals.transition_graph->batch_limit = orig_limit;
 
         if (graph_rc == pcmk__graph_active) {
-            crm_trace("Transition not yet complete");
+            pcmk__trace("Transition not yet complete");
             return TRUE;
 
         } else if (graph_rc == pcmk__graph_pending) {
-            crm_trace("Transition not yet complete - no actions fired");
+            pcmk__trace("Transition not yet complete - no actions fired");
             return TRUE;
         }
 
         if (graph_rc != pcmk__graph_complete) {
-            crm_warn("Transition failed: %s",
-                     pcmk__graph_status2text(graph_rc));
+            pcmk__warn("Transition failed: %s",
+                       pcmk__graph_status2text(graph_rc));
             pcmk__log_graph(LOG_NOTICE, controld_globals.transition_graph);
         }
     }
 
-    crm_debug("Transition %d is now complete",
-              controld_globals.transition_graph->id);
+    pcmk__debug("Transition %d is now complete",
+                controld_globals.transition_graph->id);
     controld_globals.transition_graph->complete = true;
     notify_crmd(controld_globals.transition_graph);
 
@@ -118,7 +119,7 @@ controld_destroy_transition_trigger(void)
 void
 controld_trigger_graph_as(const char *fn, int line)
 {
-    crm_trace("%s:%d - Triggered graph processing", fn, line);
+    pcmk__trace("%s:%d - Triggered graph processing", fn, line);
     mainloop_set_trigger(transition_trigger);
 }
 
@@ -191,9 +192,9 @@ node_pending_timer_popped(gpointer key)
         return FALSE;
     }
 
-    crm_warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) "
-             "on joining the process group",
-             (const char *) key, controld_globals.node_pending_timeout);
+    pcmk__warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) on "
+               "joining the process group",
+               (const char *) key, controld_globals.node_pending_timeout);
 
     if (controld_globals.node_pending_timeout > 0) {
         abort_timer_popped(node_pending_timer);
@@ -223,10 +224,10 @@ init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
         return;
     }
 
-    crm_notice("Waiting for pending %s with " PCMK_XA_ID " '%s' "
-               "to join the process group (timeout=%us)",
-               pcmk__s(node->name, "node"), node->xml_id,
-               controld_globals.node_pending_timeout);
+    pcmk__notice("Waiting for pending %s with " PCMK_XA_ID " '%s' to join the "
+                 "process group (timeout=%us)",
+                 pcmk__s(node->name, "node"), node->xml_id,
+                 controld_globals.node_pending_timeout);
 
     key = pcmk__str_copy(node->xml_id);
     node_pending_timer = pcmk__assert_alloc(1, sizeof(struct abort_timer_s));
@@ -263,7 +264,7 @@ controld_node_pending_timer(const pcmk__node_status_t *node)
      * already part of CPG, or PCMK_OPT_NODE_PENDING_TIMEOUT is disabled, free
      * any node pending timer for it.
      */
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)
         || (node->when_member <= 1) || (node->when_online > 0)
         || (controld_globals.node_pending_timeout == 0)) {
 
@@ -321,18 +322,21 @@ update_abort_priority(pcmk__graph_t *graph, int priority,
     }
 
     if (graph->abort_priority < priority) {
-        crm_debug("Abort priority upgraded from %d to %d", graph->abort_priority, priority);
+        pcmk__debug("Abort priority upgraded from %d to %d",
+                    graph->abort_priority, priority);
         graph->abort_priority = priority;
         if (graph->abort_reason != NULL) {
-            crm_debug("'%s' abort superseded by %s", graph->abort_reason, abort_reason);
+            pcmk__debug("'%s' abort superseded by %s", graph->abort_reason,
+                        abort_reason);
         }
         graph->abort_reason = abort_reason;
         change = TRUE;
     }
 
     if (graph->completion_action < action) {
-        crm_debug("Abort action %s superseded by %s: %s",
-                  abort2text(graph->completion_action), abort2text(action), abort_reason);
+        pcmk__debug("Abort action %s superseded by %s: %s",
+                    abort2text(graph->completion_action), abort2text(action),
+                    abort_reason);
         graph->completion_action = action;
         change = TRUE;
     }
@@ -350,6 +354,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
     int level = LOG_INFO;
     const xmlNode *diff = NULL;
     const xmlNode *change = NULL;
+    const bool complete = controld_globals.transition_graph->complete;
 
     CRM_CHECK(controld_globals.transition_graph != NULL, return);
 
@@ -361,9 +366,9 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         case S_ILLEGAL:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_info("Abort %s suppressed: state=%s (%scomplete)",
-                     abort_text, fsa_state2string(controld_globals.fsa_state),
-                     (controld_globals.transition_graph->complete? "" : "in"));
+            pcmk__info("Abort %s suppressed: state=%s (%scomplete)",
+                       abort_text, fsa_state2string(controld_globals.fsa_state),
+                       (complete? "" : "in"));
             return;
         default:
             break;
@@ -390,7 +395,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         }
 
         if(diff) {
-            xml_patch_versions(diff, add, del);
+            pcmk__xml_patchset_versions(diff, del, add);
             for(search = reason; search; search = search->parent) {
                 if (pcmk__xe_is(search, PCMK_XE_CHANGE)) {
                     change = search;
@@ -420,8 +425,8 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         g_string_free(local_path, TRUE);
 
     } else {
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *path = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *path = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if(change == reason) {
             if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
@@ -451,22 +456,20 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
                        QB_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
-                       crm_element_value(reason, PCMK_XA_ID), op,
-                       crm_element_value(reason, PCMK_XA_NAME),
-                       crm_element_value(reason, PCMK_XA_VALUE),
+                       pcmk__xe_get(reason, PCMK_XA_ID), op,
+                       pcmk__xe_get(reason, PCMK_XA_NAME),
+                       pcmk__xe_get(reason, PCMK_XA_VALUE),
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__xe_is(reason, PCMK__XE_LRM_RSC_OP)) {
-            const char *magic = crm_element_value(reason,
-                                                  PCMK__XA_TRANSITION_MAGIC);
+            const char *magic = pcmk__xe_get(reason, PCMK__XA_TRANSITION_MAGIC);
 
             do_crm_log(level, "Transition %d aborted by operation %s '%s' on %s: %s "
                        QB_XS " magic=%s cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
-                       crm_element_value(reason, PCMK__XA_OPERATION_KEY), op,
-                       crm_element_value(reason, PCMK__META_ON_NODE),
-                       abort_text,
+                       pcmk__xe_get(reason, PCMK__XA_OPERATION_KEY), op,
+                       pcmk__xe_get(reason, PCMK__META_ON_NODE), abort_text,
                        magic, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 

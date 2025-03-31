@@ -15,6 +15,7 @@
 #include <glib.h>                       // gboolean, gpointer, guint, etc.
 #include <libxml/tree.h>                // xmlNode
 
+#include <crm/common/logging_internal.h>    // PCMK__LOG_TRACE
 #include <crm/common/resources.h>       // pcmk_resource_t
 #include <crm/common/roles.h>           // enum rsc_role_e
 #include <crm/common/scheduler_types.h> // pcmk_node_t, etc.
@@ -32,8 +33,11 @@ extern "C" {
  */
 #define pcmk__set_rsc_flags(resource, flags_to_set) do {                    \
         (resource)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
-            LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
-            (flags_to_set), #flags_to_set);                                 \
+                                               PCMK__LOG_TRACE, "Resource", \
+                                               (resource)->id,              \
+                                               (resource)->flags,           \
+                                               (flags_to_set),              \
+                                               #flags_to_set);             \
     } while (0)
 
 /*!
@@ -43,10 +47,14 @@ extern "C" {
  * \param[in,out] resource        Resource to clear flags for
  * \param[in]     flags_to_clear  Group of enum pcmk_rsc_flags to clear
  */
-#define pcmk__clear_rsc_flags(resource, flags_to_clear) do {                \
-        (resource)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
-            LOG_TRACE, "Resource", (resource)->id, (resource)->flags,       \
-            (flags_to_clear), #flags_to_clear);                             \
+#define pcmk__clear_rsc_flags(resource, flags_to_clear) do {            \
+        (resource)->flags = pcmk__clear_flags_as(__func__, __LINE__,    \
+                                                 PCMK__LOG_TRACE,       \
+                                                 "Resource",            \
+                                                 (resource)->id,        \
+                                                 (resource)->flags,     \
+                                                 (flags_to_clear),      \
+                                                 #flags_to_clear);      \
     } while (0)
 
 //! Resource variants supported by Pacemaker

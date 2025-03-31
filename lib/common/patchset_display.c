@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,11 +44,11 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patchset_versions(patchset, del, add);
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
-        const char *fmt = crm_element_value(patchset, PCMK_XA_FORMAT);
-        const char *digest = crm_element_value(patchset, PCMK__XA_DIGEST);
+        const char *fmt = pcmk__xe_get(patchset, PCMK_XA_FORMAT);
+        const char *digest = pcmk__xe_get(patchset, PCMK__XA_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",
@@ -86,16 +86,17 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
                                                       NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (op == NULL) {
             continue;
         }
 
         if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-            char *prefix = crm_strdup_printf(PCMK__XML_PREFIX_CREATED " %s: ",
-                                             xpath);
+            char *prefix = pcmk__assert_asprintf(PCMK__XML_PREFIX_CREATED
+                                                 " %s: ",
+                                                 xpath);
 
             temp_rc = pcmk__xml_show(out, prefix, change->children, 0,
                                      pcmk__xml_fmt_pretty|pcmk__xml_fmt_open);
@@ -114,7 +115,7 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
             free(prefix);
 
         } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
-            const char *position = crm_element_value(change, PCMK_XE_POSITION);
+            const char *position = pcmk__xe_get(change, PCMK_XE_POSITION);
 
             temp_rc = out->info(out,
                                 PCMK__XML_PREFIX_MOVED " %s moved to offset %s",
@@ -131,15 +132,15 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
                                                              NULL);
                  child != NULL; child = pcmk__xe_next(child, NULL)) {
 
-                const char *name = crm_element_value(child, PCMK_XA_NAME);
+                const char *name = pcmk__xe_get(child, PCMK_XA_NAME);
 
-                op = crm_element_value(child, PCMK_XA_OPERATION);
+                op = pcmk__xe_get(child, PCMK_XA_OPERATION);
                 if (op == NULL) {
                     continue;
                 }
 
                 if (strcmp(op, "set") == 0) {
-                    const char *value = crm_element_value(child, PCMK_XA_VALUE);
+                    const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
                     pcmk__add_separated_word(&buffer_set, 256, "@", ", ");
                     pcmk__g_strcat(buffer_set, name, "=", value, NULL);
@@ -166,7 +167,7 @@ xml_show_patchset(pcmk__output_t *out, const xmlNode *patchset)
         } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
             int position = -1;
 
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
             if (position >= 0) {
                 temp_rc = out->info(out, "-- %s (%d)", xpath, position);
             } else {
@@ -203,13 +204,13 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
     int format = 1;
 
     if (patchset == NULL) {
-        crm_trace("Empty patch");
+        pcmk__trace("Empty patch");
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;
     }
 
@@ -242,12 +243,12 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
     uint8_t log_level = pcmk__output_get_log_level(out);
     int format = 1;
 
-    if (log_level == LOG_NEVER) {
+    if (log_level == PCMK__LOG_NEVER) {
         return pcmk_rc_no_output;
     }
 
     if (patchset == NULL) {
-        crm_trace("Empty patch");
+        pcmk__trace("Empty patch");
         return pcmk_rc_no_output;
     }
 
@@ -262,9 +263,9 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;
     }
 
@@ -302,7 +303,7 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
         g_string_free(buf, TRUE);
         return pcmk_rc_ok;
     }
-    crm_trace("Empty patch");
+    pcmk__trace("Empty patch");
     return pcmk_rc_no_output;
 }
 

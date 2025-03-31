@@ -41,9 +41,9 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     const char *best_digest = NULL;
 
     // Find node's resource history
-    xpath = crm_strdup_printf(XPATH_OP_HISTORY, node->priv->name, rsc->id);
+    xpath = pcmk__assert_asprintf(XPATH_OP_HISTORY, node->priv->name, rsc->id);
     history = pcmk__xpath_find_one(rsc->priv->scheduler->input->doc, xpath,
-                                   LOG_NEVER);
+                                   PCMK__LOG_NEVER);
     free(xpath);
 
     // Examine each history entry
@@ -53,16 +53,16 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
          lrm_rsc_op != NULL;
          lrm_rsc_op = pcmk__xe_next(lrm_rsc_op, PCMK__XE_LRM_RSC_OP)) {
 
-        const char *digest = crm_element_value(lrm_rsc_op,
-                                               PCMK__XA_OP_RESTART_DIGEST);
+        const char *digest = pcmk__xe_get(lrm_rsc_op,
+                                          PCMK__XA_OP_RESTART_DIGEST);
         guint interval_ms = 0;
-        const char *task = crm_element_value(lrm_rsc_op, PCMK_XA_OPERATION);
+        const char *task = pcmk__xe_get(lrm_rsc_op, PCMK_XA_OPERATION);
         bool effective_op = false;
         bool failure = pcmk__ends_with(pcmk__xe_id(lrm_rsc_op),
                                        "_last_failure_0");
 
 
-        crm_element_value_ms(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_guint(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);
         effective_op = interval_ms == 0
                        && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
                                                PCMK_ACTION_START,
@@ -137,7 +137,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
     }
 
     msg_data = pcmk__xe_create(NULL, rsc_type);
-    crm_xml_add(msg_data, PCMK_XA_ID, rsc_id);
+    pcmk__xe_set(msg_data, PCMK_XA_ID, rsc_id);
 
     rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, msg_data, cib_opts);
     rc = pcmk_legacy2rc(rc);
@@ -218,8 +218,8 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     // Generate an operation key
     if (xml_op != NULL) {
-        task = crm_element_value(xml_op, PCMK_XA_OPERATION);
-        crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
+        task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
+        pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
     }
     if (task == NULL) { // Assume start if no history is available
         task = PCMK_ACTION_START;

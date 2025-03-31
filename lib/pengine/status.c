@@ -38,7 +38,7 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
     // @COMPAT Drop this function when support for the syntax is dropped
     xmlNode *deprecated = pcmk__xpath_find_one(scheduler->input->doc,
                                                XPATH_DEPRECATED_RULES,
-                                               LOG_NEVER);
+                                               PCMK__LOG_NEVER);
 
     if (deprecated != NULL) {
         pcmk__warn_once(pcmk__wo_op_attr_expr,
@@ -70,7 +70,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
         return FALSE;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_have_status)) {
         /* cluster_status() has already been called since the last time the
          * scheduler was reset. Unpacking the input CIB again would cause
          * duplication within the scheduler object's data structures.
@@ -81,7 +81,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
         return TRUE;
     }
 
-    new_version = crm_element_value(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
+    new_version = pcmk__xe_get(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
 
     if (pcmk__check_feature_set(new_version) != pcmk_rc_ok) {
         pcmk__config_err("Can't process CIB with feature set '%s' greater than our own '%s'",
@@ -89,7 +89,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
         return FALSE;
     }
 
-    crm_trace("Beginning unpack");
+    pcmk__trace("Beginning unpack");
 
     pcmk__xml_free(scheduler->priv->failed);
     scheduler->priv->failed = pcmk__xe_create(NULL, "failed-ops");
@@ -106,19 +106,19 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     scheduler->priv->op_defaults =
         pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_OP_DEFAULTS,
-                             LOG_NEVER);
+                             PCMK__LOG_NEVER);
     check_for_deprecated_rules(scheduler);
 
     scheduler->priv->rsc_defaults =
         pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_RSC_DEFAULTS,
-                             LOG_NEVER);
+                             PCMK__LOG_NEVER);
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
-                                   "//" PCMK_XE_CRM_CONFIG, LOG_TRACE);
+                                   "//" PCMK_XE_CRM_CONFIG, PCMK__LOG_TRACE);
     unpack_config(section, scheduler);
 
-   if (!pcmk_any_flags_set(scheduler->flags,
-                           pcmk__sched_location_only|pcmk__sched_quorate)
+   if (!pcmk__any_flags_set(scheduler->flags,
+                            pcmk__sched_location_only|pcmk__sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
         pcmk__sched_warn(scheduler,
                          "Fencing and resource management disabled "
@@ -126,31 +126,32 @@ cluster_status(pcmk_scheduler_t * scheduler)
     }
 
     section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_NODES,
-                                   LOG_TRACE);
+                                   PCMK__LOG_TRACE);
     unpack_nodes(section, scheduler);
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
-                                   "//" PCMK_XE_RESOURCES, LOG_TRACE);
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+                                   "//" PCMK_XE_RESOURCES, PCMK__LOG_TRACE);
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
-                                   "//" PCMK_XE_FENCING_TOPOLOGY, LOG_TRACE);
+                                   "//" PCMK_XE_FENCING_TOPOLOGY,
+                                   PCMK__LOG_TRACE);
     pcmk__validate_fencing_topology(section);
 
     section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_TAGS,
-                                   LOG_NEVER);
+                                   PCMK__LOG_NEVER);
     unpack_tags(section, scheduler);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         section = pcmk__xpath_find_one(scheduler->input->doc,
-                                       "//" PCMK_XE_STATUS, LOG_TRACE);
+                                       "//" PCMK_XE_STATUS, PCMK__LOG_TRACE);
         unpack_status(section, scheduler);
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_no_counts)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_no_counts)) {
         for (GList *item = scheduler->priv->resources;
              item != NULL; item = item->next) {
 
@@ -158,17 +159,17 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
             rsc->priv->fns->count(item->data);
         }
-        crm_trace("Cluster resource count: %d (%d disabled, %d blocked)",
-                  scheduler->priv->ninstances,
-                  scheduler->priv->disabled_resources,
-                  scheduler->priv->blocked_resources);
+        pcmk__trace("Cluster resource count: %d (%d disabled, %d blocked)",
+                    scheduler->priv->ninstances,
+                    scheduler->priv->disabled_resources,
+                    scheduler->priv->blocked_resources);
     }
 
     if ((scheduler->priv->local_node_name != NULL)
         && (pcmk_find_node(scheduler,
                            scheduler->priv->local_node_name) == NULL)) {
-        crm_info("Creating a fake local node for %s",
-                 scheduler->priv->local_node_name);
+        pcmk__info("Creating a fake local node for %s",
+                   scheduler->priv->local_node_name);
         pe_create_node(scheduler->priv->local_node_name,
                        scheduler->priv->local_node_name, NULL, 0, scheduler);
     }
@@ -197,7 +198,7 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
             return match;
         }
     }
-    crm_trace("No match for %s", id);
+    pcmk__trace("No match for %s", id);
     return NULL;
 }
 
@@ -299,13 +300,13 @@ cleanup_calculations(pcmk_scheduler_t *scheduler)
         g_hash_table_destroy(scheduler->priv->tags);
     }
 
-    crm_trace("deleting resources");
+    pcmk__trace("deleting resources");
     g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
 
-    crm_trace("deleting actions");
+    pcmk__trace("deleting actions");
     g_list_free_full(scheduler->priv->actions, pcmk__free_action);
 
-    crm_trace("deleting nodes");
+    pcmk__trace("deleting nodes");
     g_list_free_full(scheduler->nodes, pcmk__free_node);
     scheduler->nodes = NULL;
 

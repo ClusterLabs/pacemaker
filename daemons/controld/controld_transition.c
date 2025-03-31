@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <crm/crm.h>
+#include <crm/common/scores.h>      // PCMK_SCORE_INFINITY
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>
@@ -35,7 +36,7 @@ do_te_control(long long action,
     cib_t *cib_conn = controld_globals.cib_conn;
     gboolean init_ok = TRUE;
 
-    if (pcmk_is_set(action, A_TE_STOP)) {
+    if (pcmk__is_set(action, A_TE_STOP)) {
         pcmk__free_graph(controld_globals.transition_graph);
         controld_globals.transition_graph = NULL;
 
@@ -46,35 +47,36 @@ do_te_control(long long action,
         }
 
         controld_clear_fsa_input_flags(R_TE_CONNECTED);
-        crm_info("Transitioner is now inactive");
+        pcmk__info("Transitioner is now inactive");
     }
 
     if ((action & A_TE_START) == 0) {
         return;
 
-    } else if (pcmk_is_set(controld_globals.fsa_input_register,
-                           R_TE_CONNECTED)) {
-        crm_debug("The transitioner is already active");
+    } else if (pcmk__is_set(controld_globals.fsa_input_register,
+                            R_TE_CONNECTED)) {
+        pcmk__debug("The transitioner is already active");
         return;
 
     } else if ((action & A_TE_START) && cur_state == S_STOPPING) {
-        crm_info("Ignoring request to start the transitioner while shutting down");
+        pcmk__info("Ignoring request to start the transitioner while shutting "
+                   "down");
         return;
     }
 
     if (controld_globals.te_uuid == NULL) {
-        controld_globals.te_uuid = crm_generate_uuid();
-        crm_info("Registering TE UUID: %s", controld_globals.te_uuid);
+        controld_globals.te_uuid = pcmk__generate_uuid();
+        pcmk__info("Registering TE UUID: %s", controld_globals.te_uuid);
     }
 
     if (cib_conn == NULL) {
-        crm_err("Could not set CIB callbacks");
+        pcmk__err("Could not set CIB callbacks");
         init_ok = FALSE;
 
     } else if (cib_conn->cmds->add_notify_callback(cib_conn,
                                                    PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                    te_update_diff) != pcmk_ok) {
-        crm_err("Could not set CIB notification callback");
+        pcmk__err("Could not set CIB notification callback");
         init_ok = FALSE;
     }
 
@@ -83,7 +85,7 @@ do_te_control(long long action,
         pcmk__free_graph(controld_globals.transition_graph);
 
         /* create a blank one */
-        crm_debug("Transitioner is now active");
+        pcmk__debug("Transitioner is now active");
         controld_globals.transition_graph = create_blank_graph();
         controld_set_fsa_input_flags(R_TE_CONNECTED);
     }
@@ -99,16 +101,16 @@ do_te_invoke(long long action,
 
     if (!AM_I_DC
         || ((controld_globals.fsa_state != S_TRANSITION_ENGINE)
-            && pcmk_is_set(action, A_TE_INVOKE))) {
-        crm_notice("No need to invoke the TE (%s) in state %s",
-                   fsa_action2string(action),
-                   fsa_state2string(controld_globals.fsa_state));
+            && pcmk__is_set(action, A_TE_INVOKE))) {
+        pcmk__notice("No need to invoke the TE (%s) in state %s",
+                     fsa_action2string(action),
+                     fsa_state2string(controld_globals.fsa_state));
         return;
     }
 
     if (action & A_TE_CANCEL) {
-        crm_debug("Cancelling the transition: %sactive",
-                  controld_globals.transition_graph->complete? "in" : "");
+        pcmk__debug("Cancelling the transition: %sactive",
+                    (controld_globals.transition_graph->complete? "in" : ""));
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Peer Cancelled", NULL);
         if (!controld_globals.transition_graph->complete) {
@@ -125,18 +127,18 @@ do_te_invoke(long long action,
     } else if (action & A_TE_INVOKE) {
         ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
         xmlNode *graph_data = input->xml;
-        const char *ref = crm_element_value(input->msg, PCMK_XA_REFERENCE);
-        const char *graph_input = crm_element_value(input->msg,
-                                                    PCMK__XA_CRM_TGRAPH_IN);
+        const char *ref = pcmk__xe_get(input->msg, PCMK_XA_REFERENCE);
+        const char *graph_input = pcmk__xe_get(input->msg,
+                                               PCMK__XA_CRM_TGRAPH_IN);
 
         if (graph_data == NULL) {
-            crm_log_xml_err(input->msg, "Bad command");
+            pcmk__log_xml_err(input->msg, "Bad command");
             register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
             return;
         }
 
         if (!controld_globals.transition_graph->complete) {
-            crm_info("Another transition is already active");
+            pcmk__info("Another transition is already active");
             abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Transition Active", NULL);
             return;
@@ -145,21 +147,21 @@ do_te_invoke(long long action,
         if ((controld_globals.fsa_pe_ref == NULL)
             || !pcmk__str_eq(controld_globals.fsa_pe_ref, ref,
                              pcmk__str_none)) {
-            crm_info("Transition is redundant: %s expected but %s received",
-                     pcmk__s(controld_globals.fsa_pe_ref, "no reference"),
-                     pcmk__s(ref, "no reference"));
+            pcmk__info("Transition is redundant: %s expected but %s received",
+                       pcmk__s(controld_globals.fsa_pe_ref, "no reference"),
+                       pcmk__s(ref, "no reference"));
             abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Transition Redundant", NULL);
         }
 
         if (controld_is_started_transition_timer()) {
-            crm_debug("The transitioner wait for a transition timer");
+            pcmk__debug("The transitioner wait for a transition timer");
             return;
         }
 
         CRM_CHECK(graph_data != NULL,
-                  crm_err("Input raised by %s is invalid", msg_data->origin);
-                  crm_log_xml_err(input->msg, "Bad command");
+                  pcmk__err("Input raised by %s is invalid", msg_data->origin);
+                  pcmk__log_xml_err(input->msg, "Bad command");
                   return);
 
         pcmk__free_graph(controld_globals.transition_graph);
@@ -168,13 +170,13 @@ do_te_invoke(long long action,
         CRM_CHECK(controld_globals.transition_graph != NULL,
                   controld_globals.transition_graph = create_blank_graph();
                   return);
-        crm_info("Processing graph %d (ref=%s) derived from %s",
-                 controld_globals.transition_graph->id, ref, graph_input);
+        pcmk__info("Processing graph %d (ref=%s) derived from %s",
+                   controld_globals.transition_graph->id, ref, graph_input);
 
         te_reset_job_counts();
 
         trigger_graph();
-        pcmk__log_graph(LOG_TRACE, controld_globals.transition_graph);
+        pcmk__log_graph(PCMK__LOG_TRACE, controld_globals.transition_graph);
 
         if (graph_data != input->xml) {
             pcmk__xml_free(graph_data);
