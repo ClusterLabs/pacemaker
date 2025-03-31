@@ -194,13 +194,13 @@ void attrd_peer_clear_failure(pcmk__request_t *request);
 void attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
                               xmlNode *xml);
 
-void attrd_broadcast_protocol(void);
+void attrd_send_protocol(const pcmk__node_status_t *peer);
 xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
 xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
 xmlNode *attrd_client_update(pcmk__request_t *request);
 xmlNode *attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
-gboolean attrd_send_message(pcmk__node_status_t *node, xmlNode *data,
+gboolean attrd_send_message(const pcmk__node_status_t *node, xmlNode *data,
                             bool confirm);
 
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
