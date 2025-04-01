@@ -95,7 +95,6 @@ class PluralFormatter(Formatter):
 def apply_substitutions(s, extra=None):
     """Apply text substitutions to an input string and return it."""
     substitutions = {
-        "cts_cli_data": "%s/cli" % test_home,
         "shadow": SHADOW_NAME,
     }
 
@@ -2273,13 +2272,13 @@ class CrmVerifyRegressionTest(RegressionTest):
         """A list of Test instances to be run as part of this regression test."""
         invalid_tests = [
             make_test_group("Verify a file-specified invalid configuration",
-                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml",
+                            f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml",
                             expected_rc=ExitStatus.CONFIG),
             make_test_group("Verify a file-specified invalid configuration (verbose)",
-                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --verbose",
+                            f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --verbose",
                             expected_rc=ExitStatus.CONFIG),
             make_test_group("Verify a file-specified invalid configuration (quiet)",
-                            "crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --quiet",
+                            f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_bz.xml --quiet",
                             expected_rc=ExitStatus.CONFIG),
             ValidatingTest("Verify another file-specified invalid configuration",
                            f"crm_verify --xml-file {cts_cli_data}/crm_verify_invalid_no_stonith.xml --output-as=xml",
@@ -2349,15 +2348,15 @@ class CrmSimulateRegressionTest(RegressionTest):
 
         basic_tests = [
             Test("Show allocation scores with crm_simulate",
-                 "crm_simulate -x {cts_cli_data}/crm_mon.xml --show-scores --output-as=xml"),
+                 f"crm_simulate -x {cts_cli_data}/crm_mon.xml --show-scores --output-as=xml"),
             Test("Show utilization with crm_simulate",
-                 "crm_simulate -x {cts_cli_data}/crm_mon.xml --show-utilization"),
+                 f"crm_simulate -x {cts_cli_data}/crm_mon.xml --show-utilization"),
             Test("Simulate injecting a failure",
-                 "crm_simulate -x {cts_cli_data}/crm_mon.xml -S -i ping_monitor_10000@cluster02=1"),
+                 f"crm_simulate -x {cts_cli_data}/crm_mon.xml -S -i ping_monitor_10000@cluster02=1"),
             Test("Simulate bringing a node down",
-                 "crm_simulate -x {cts_cli_data}/crm_mon.xml -S --node-down=cluster01"),
+                 f"crm_simulate -x {cts_cli_data}/crm_mon.xml -S --node-down=cluster01"),
             Test("Simulate a node failing",
-                 "crm_simulate -x {cts_cli_data}/crm_mon.xml -S --node-fail=cluster02"),
+                 f"crm_simulate -x {cts_cli_data}/crm_mon.xml -S --node-fail=cluster02"),
             Test("Run crm_simulate with invalid CIB (enum violation)",
                  "crm_simulate -p -S",
                  stdin=bad_cib,
@@ -2403,7 +2402,7 @@ class CrmDiffRegressionTest(RegressionTest):
         """A list of Test instances to be run as part of this regression test."""
         return [
             Test("Create an XML patchset",
-                 "crm_diff -o {cts_cli_data}/crm_diff_old.xml -n {cts_cli_data}/crm_diff_new.xml",
+                 f"crm_diff -o {cts_cli_data}/crm_diff_old.xml -n {cts_cli_data}/crm_diff_new.xml",
                  expected_rc=ExitStatus.ERROR)
         ]
 
