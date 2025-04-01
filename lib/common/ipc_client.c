@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1373,13 +1373,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
 
         do {
-            /* @TODO Is this check really needed? Won't qb_ipcc_sendv() return
-             * an error if it's not connected?
-             */
-            if (!crm_ipc_connected(client)) {
-                goto send_cleanup;
-            }
-
             qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
         } while ((qb_rc == -EAGAIN) && (time(NULL) < timeout));
 
