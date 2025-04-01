@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,6 +20,7 @@
 #  include <ucred.h>
 #endif
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -1233,53 +1234,81 @@ crm_ipc_name(crm_ipc_t * client)
 // \return Standard Pacemaker return code
 static int
 internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
-                       ssize_t *bytes)
+                       ssize_t *bytes, xmlNode **reply)
 {
-    time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+    pcmk__ipc_header_t *hdr = NULL;
+    time_t timeout = 0;
+    int32_t qb_timeout = -1;
     int rc = pcmk_rc_ok;
 
+    if (ms_timeout > 0) {
+        timeout = time(NULL) + 1 + (ms_timeout / 1000);
+        qb_timeout = 1000;
+    }
+
     /* get the reply */
-    crm_trace("Waiting on reply to %s IPC message %d",
-              client->server_name, request_id);
+    crm_trace("Expecting reply to %s IPC message %d", client->server_name,
+              request_id);
+
     do {
+        xmlNode *xml = NULL;
 
-        *bytes = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size, 1000);
-        if (*bytes > 0) {
-            pcmk__ipc_header_t *hdr = NULL;
+        *bytes = qb_ipcc_recv(client->ipc, client->buffer, client->buf_size,
+                              qb_timeout);
 
-            rc = crm_ipc_decompress(client);
-            if (rc != pcmk_rc_ok) {
-                return rc;
-            }
-
-            hdr = (pcmk__ipc_header_t *)(void*)client->buffer;
-            if (hdr->qb.id == request_id) {
-                /* Got it */
+        if (*bytes <= 0) {
+            if (!crm_ipc_connected(client)) {
+                crm_err("%s IPC provider disconnected while waiting for message %d",
+                        client->server_name, request_id);
                 break;
-            } else if (hdr->qb.id < request_id) {
-                xmlNode *bad = pcmk__xml_parse(crm_ipc_buffer(client));
-
-                crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
-                crm_log_xml_notice(bad, "OldIpcReply");
-
-            } else {
-                xmlNode *bad = pcmk__xml_parse(crm_ipc_buffer(client));
-
-                crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
-                crm_log_xml_notice(bad, "ImpossibleReply");
-                pcmk__assert(hdr->qb.id <= request_id);
             }
-        } else if (!crm_ipc_connected(client)) {
-            crm_err("%s IPC provider disconnected while waiting for message %d",
-                    client->server_name, request_id);
+
+            continue;
+        }
+
+        rc = crm_ipc_decompress(client);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+        hdr = (pcmk__ipc_header_t *)(void*) client->buffer;
+
+        if (hdr->qb.id == request_id) {
+            /* Got it */
             break;
         }
 
-    } while (time(NULL) < timeout);
+        xml = pcmk__xml_parse(crm_ipc_buffer(client));
 
-    if (*bytes < 0) {
+        if (hdr->qb.id < request_id) {
+            crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
+            crm_log_xml_notice(xml, "OldIpcReply");
+        } else if (hdr->qb.id > request_id) {
+            crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
+            crm_log_xml_notice(xml, "ImpossibleReply");
+            pcmk__assert(hdr->qb.id <= request_id);
+        }
+    } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
+
+    if (*bytes > 0) {
+        crm_trace("Received %zd-byte reply %" PRId32 " to %s IPC %d: %.100s",
+                  *bytes, hdr->qb.id, client->server_name, request_id,
+                  crm_ipc_buffer(client));
+
+        if (reply != NULL) {
+            *reply = pcmk__xml_parse(crm_ipc_buffer(client));
+        }
+    } else if (*bytes < 0) {
         rc = (int) -*bytes; // System errno
+        crm_trace("No reply to %s IPC %d: %s " QB_XS " rc=%d",
+                  client->server_name, request_id, pcmk_rc_str(rc), rc);
     }
+    /* If bytes == 0, we'll return that to crm_ipc_send which will interpret
+     * that as pcmk_rc_ok, log that the IPC request failed (since we did not
+     * give it a valid reply), and return that 0 to its callers.  It's up to
+     * the callers to take appropriate action after that.
+     */
+
     return rc;
 }
 
@@ -1301,6 +1330,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
              enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply)
 {
     int rc = 0;
+    time_t timeout = 0;
     ssize_t qb_rc = 0;
     ssize_t bytes = 0;
     struct iovec *iov;
@@ -1368,33 +1398,38 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
               client->server_name, header->qb.id, header->qb.size, ms_timeout);
 
-    if ((ms_timeout > 0) || !pcmk_is_set(flags, crm_ipc_client_response)) {
+    /* Send the IPC request, respecting any timeout we were passed */
+    if (ms_timeout > 0) {
+        timeout = time(NULL) + 1 + (ms_timeout / 1000);
+    }
 
-        time_t timeout = time(NULL) + 1 + (ms_timeout / 1000);
+    do {
+        qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
+    } while ((qb_rc == -EAGAIN) && ((timeout == 0) || (time(NULL) < timeout)));
 
-        do {
-            /* @TODO Is this check really needed? Won't qb_ipcc_sendv() return
-             * an error if it's not connected?
-             */
-            if (!crm_ipc_connected(client)) {
-                goto send_cleanup;
-            }
+    rc = (int) qb_rc; // Negative of system errno, or bytes sent
+    if (qb_rc <= 0) {
+        goto send_cleanup;
+    }
 
-            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
-        } while ((qb_rc == -EAGAIN) && (time(NULL) < timeout));
+    /* If we should not wait for a response, bail now */
+    if (!pcmk_is_set(flags, crm_ipc_client_response)) {
+        crm_trace("Not waiting for reply to %s IPC request %d",
+                  client->server_name, header->qb.id);
+        goto send_cleanup;
+    }
 
-        rc = (int) qb_rc; // Negative of system errno, or bytes sent
-        if (qb_rc <= 0) {
-            goto send_cleanup;
+    rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, &bytes, reply);
+    if (rc == pcmk_rc_ok) {
+        rc = (int) bytes; // Size of reply received
+    } else {
+        /* rc is either a positive system errno or a negative standard Pacemaker
+         * return code.  If it's an errno, we need to convert it back to a
+         * negative number for comparison and return at the end of this function.
+         */
+        rc = pcmk_rc2legacy(rc);
 
-        } else if (!pcmk_is_set(flags, crm_ipc_client_response)) {
-            crm_trace("Not waiting for reply to %s IPC request %d",
-                      client->server_name, header->qb.id);
-            goto send_cleanup;
-        }
-
-        rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, &bytes);
-        if (rc != pcmk_rc_ok) {
+        if (ms_timeout > 0) {
             /* We didn't get the reply in time, so disable future sends for now.
              * The only alternative would be to close the connection since we
              * don't know how to detect and discard out-of-sequence replies.
@@ -1403,31 +1438,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
              */
             client->need_reply = TRUE;
         }
-        rc = (int) bytes; // Negative system errno, or size of reply received
-
-    } else {
-        // No timeout, and client response needed
-        do {
-            qb_rc = qb_ipcc_sendv_recv(client->ipc, iov, 2, client->buffer,
-                                       client->buf_size, -1);
-        } while ((qb_rc == -EAGAIN) && crm_ipc_connected(client));
-        rc = (int) qb_rc; // Negative system errno, or size of reply received
-    }
-
-    if (rc > 0) {
-        pcmk__ipc_header_t *hdr = (pcmk__ipc_header_t *)(void*)client->buffer;
-
-        crm_trace("Received %d-byte reply %d to %s IPC %d: %.100s",
-                  rc, hdr->qb.id, client->server_name, header->qb.id,
-                  crm_ipc_buffer(client));
-
-        if (reply) {
-            *reply = pcmk__xml_parse(crm_ipc_buffer(client));
-        }
-
-    } else {
-        crm_trace("No reply to %s IPC %d: rc=%d",
-                  client->server_name, header->qb.id, rc);
     }
 
   send_cleanup:
