@@ -92,16 +92,6 @@ class PluralFormatter(Formatter):
         return super().format_field(value, format_spec)
 
 
-def apply_substitutions(s, extra=None):
-    """Apply text substitutions to an input string and return it."""
-    substitutions = {}
-
-    if extra is not None:
-        substitutions.update(extra)
-
-    return s.format(**substitutions)
-
-
 def cleanup_shadow_dir():
     """Remove any previously created shadow CIB directory."""
     subprocess.run(["crm_shadow", "--force", "--delete", SHADOW_NAME],
@@ -117,7 +107,7 @@ def copy_existing_cib(existing):
     """
     (fp, new) = mkstemp(prefix="cts-cli.cib.xml.")
     os.close(fp)
-    copyfile(apply_substitutions(existing), new)
+    copyfile(existing, new)
     return new
 
 
@@ -144,9 +134,7 @@ def make_test_group(desc, cmd, **kwargs):
         # Insert "--output-as=" after the command name.
         splitup = cmd.split()
         splitup.insert(1, c.format_args)
-
-        obj = c(desc, apply_substitutions(" ".join(splitup), extra={"fmt": c.format_args}),
-                **kwargs)
+        obj = c(desc, " ".join(splitup), **kwargs)
         tests.append(obj)
 
     return TestGroup(tests)
@@ -232,7 +220,7 @@ def run_cmd_list(cmds):
         if isinstance(c, types.FunctionType):
             c()
         else:
-            subprocess.run(apply_substitutions(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            subprocess.run(c, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                            shell=True, universal_newlines=True, check=True)
 
 
@@ -341,9 +329,6 @@ def environ(env):
     default, or given with a nested call to this context) by passing None for the
     value.  Additionally, this context manager accepts None for the env parameter,
     in which case nothing will be done.
-
-    Finally, note that values in env will be passed to apply_substitutions before
-    being set in the environment.
     """
     if env is None:
         env = {}
@@ -355,7 +340,7 @@ def environ(env):
         if v is None:
             os.environ.pop(k)
         else:
-            os.environ[k] = apply_substitutions(v)
+            os.environ[k] = v
 
     try:
         yield
@@ -383,15 +368,14 @@ class StdinCmd:
         """Create a new StdinCmd instance.
 
         Arguments:
-        cmd -- The command string to run later.  This string will be passed
-               to apply_substitutions before being executed.
+        cmd -- The command string to run later.
         """
         self._cmd = cmd
 
     def run(self):
         """Run this command, returning a subprocess.Popen object."""
-        return subprocess.Popen(apply_substitutions(self._cmd), shell=True,
-                                encoding="utf-8", stdout=subprocess.PIPE)
+        return subprocess.Popen(self._cmd, shell=True, encoding="utf-8",
+                                stdout=subprocess.PIPE)
 
 
 class Test:
@@ -406,8 +390,7 @@ class Test:
 
         Arguments:
         desc        -- A short human-readable description of this test
-        cmd         -- The command to run for this test, as a string.  This string
-                       will be passed to apply_substitutions before being executed.
+        cmd         -- The command to run for this test, as a string.
 
         Keyword arguments:
         expected_rc -- The expected return value of cmd
@@ -513,7 +496,7 @@ class Test:
         """
         self._output = []
 
-        cmd = apply_substitutions(self.cmd)
+        cmd = self.cmd
         app = cmd.split(" ")[0]
 
         test_id = "%s(%s)" % (app, group)
@@ -608,7 +591,7 @@ class AclTest(Test):
         """
         self._output = []
 
-        cmd = apply_substitutions(self.cmd)
+        cmd = self.cmd
         app = cmd.split(" ")[0]
 
         test_id = "%s(%s)" % (app, group)
@@ -2572,7 +2555,7 @@ class CrmMonRegressionTest(RegressionTest):
                       env={"CIB_file": f"{cts_cli_data}/crm_mon.xml"}),
             Test("Check that CIB_file=\"-\" works", "crm_mon -1",
                  env={"CIB_file": "-"},
-                 stdin=pathlib.Path(apply_substitutions(f"{cts_cli_data}/crm_mon.xml"))),
+                 stdin=pathlib.Path(f"{cts_cli_data}/crm_mon.xml")),
             TestGroup(partial_tests,
                       env={"CIB_file": f"{cts_cli_data}/crm_mon-partial.xml"}),
             TestGroup(unmanaged_tests,
