@@ -94,9 +94,7 @@ class PluralFormatter(Formatter):
 
 def apply_substitutions(s, extra=None):
     """Apply text substitutions to an input string and return it."""
-    substitutions = {
-        "shadow": SHADOW_NAME,
-    }
+    substitutions = {}
 
     if extra is not None:
         substitutions.update(extra)
@@ -1912,7 +1910,7 @@ class CrmShadowRegressionTest(RegressionTest):
         # Don't use create_shadow_cib() here; test explicitly
         new_instance_tests = [
             make_test_group("Create copied shadow instance",
-                            "crm_shadow --create {shadow} --batch",
+                            f"crm_shadow --create {SHADOW_NAME} --batch",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             # Query shadow instance based on active CIB
             make_test_group("Get active shadow instance (copied)",
@@ -1975,19 +1973,19 @@ class CrmShadowRegressionTest(RegressionTest):
                                expected_rc=ExitStatus.ERROR),
                 # Commit an inactive shadow instance with no active instance
                 make_test_group("Commit shadow instance (no active instance)",
-                                "crm_shadow --commit {shadow}",
+                                f"crm_shadow --commit {SHADOW_NAME}",
                                 env={"CIB_shadow": None},
                                 expected_rc=ExitStatus.USAGE),
                 make_test_group("Commit shadow instance (no active instance) (force)",
-                                "crm_shadow --commit {shadow} --force",
+                                f"crm_shadow --commit {SHADOW_NAME} --force",
                                 env={"CIB_shadow": None}),
                 # Commit an inactive shadow instance with an active instance
                 make_test_group("Commit shadow instance (mismatch)",
-                                "crm_shadow --commit {shadow}",
+                                f"crm_shadow --commit {SHADOW_NAME}",
                                 env={"CIB_shadow": "nonexistent_shadow"},
                                 expected_rc=ExitStatus.USAGE),
                 make_test_group("Commit shadow instance (mismatch) (force)",
-                                "crm_shadow --commit {shadow} --force",
+                                f"crm_shadow --commit {SHADOW_NAME} --force",
                                 env={"CIB_shadow": "nonexistent_shadow"}),
                 # Commit an active shadow instance whose shadow file is missing
                 make_test_group("Commit shadow instance (nonexistent shadow file)",
@@ -2004,11 +2002,11 @@ class CrmShadowRegressionTest(RegressionTest):
                                 expected_rc=ExitStatus.NOSUCH),
                 # Commit an active shadow instance when the CIB file is missing
                 make_test_group("Commit shadow instance (nonexistent CIB file)",
-                                "crm_shadow --commit {shadow}",
+                                f"crm_shadow --commit {SHADOW_NAME}",
                                 env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
                                 expected_rc=ExitStatus.USAGE),
                 make_test_group("Commit shadow instance (nonexistent CIB file) (force)",
-                                "crm_shadow --commit {shadow} --force",
+                                f"crm_shadow --commit {SHADOW_NAME} --force",
                                 env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"},
                                 expected_rc=ExitStatus.NOSUCH),
                 make_test_group("Get active shadow instance's diff (nonexistent CIB file)",
@@ -2097,23 +2095,23 @@ class CrmShadowRegressionTest(RegressionTest):
         create_1_tests = [
             # Create new shadow instance based on active CIB with no instance active
             make_test_group("Create copied shadow instance (no active instance)",
-                            "crm_shadow --create {shadow} --batch",
+                            f"crm_shadow --create {SHADOW_NAME} --batch",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": None}),
             # Create new shadow instance based on active CIB with other instance active
             make_test_group("Create copied shadow instance (mismatch)",
-                            "crm_shadow --create {shadow} --batch",
+                            f"crm_shadow --create {SHADOW_NAME} --batch",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": "nonexistent_shadow"}),
             # Create new shadow instance based on CIB (shadow file already exists)
             make_test_group("Create copied shadow instance (file already exists)",
-                            "crm_shadow --create {shadow} --batch",
+                            f"crm_shadow --create {SHADOW_NAME} --batch",
                             expected_rc=ExitStatus.CANTCREAT),
             make_test_group("Create copied shadow instance (file already exists) (force)",
-                            "crm_shadow --create {shadow} --batch --force"),
+                            f"crm_shadow --create {SHADOW_NAME} --batch --force"),
             # Create new shadow instance based on active CIB when the CIB file is missing
             make_test_group("Create copied shadow instance (nonexistent CIB file) (force)",
-                            "crm_shadow --create {shadow} --batch --force",
+                            f"crm_shadow --create {SHADOW_NAME} --batch --force",
                             expected_rc=ExitStatus.NOSUCH,
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
@@ -2122,29 +2120,29 @@ class CrmShadowRegressionTest(RegressionTest):
         create_2_tests = [
             # Create new empty shadow instance
             make_test_group("Create empty shadow instance",
-                            "crm_shadow --create-empty {shadow} --batch",
+                            f"crm_shadow --create-empty {SHADOW_NAME} --batch",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             # Create empty shadow instance with no active instance
             make_test_group("Create empty shadow instance (no active instance)",
-                            "crm_shadow --create-empty {shadow} --batch",
+                            f"crm_shadow --create-empty {SHADOW_NAME} --batch",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": None}),
             # Create empty shadow instance with other instance active
             make_test_group("Create empty shadow instance (mismatch)",
-                            "crm_shadow --create-empty {shadow} --batch",
+                            f"crm_shadow --create-empty {SHADOW_NAME} --batch",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_shadow": "nonexistent_shadow"}),
             # Create empty shadow instance when the CIB file is missing
             make_test_group("Create empty shadow instance (nonexistent CIB file)",
-                            "crm_shadow --create-empty {shadow} --batch",
+                            f"crm_shadow --create-empty {SHADOW_NAME} --batch",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force",
                             env={"CIB_file": f"{cts_cli_data}/nonexistent_cib.xml"}),
             # Create empty shadow instance (shadow file already exists)
             make_test_group("Create empty shadow instance (file already exists)",
-                            "crm_shadow --create-empty {shadow} --batch",
+                            f"crm_shadow --create-empty {SHADOW_NAME} --batch",
                             expected_rc=ExitStatus.CANTCREAT),
             make_test_group("Create empty shadow instance (file already exists) (force)",
-                            "crm_shadow --create-empty {shadow} --batch --force"),
+                            f"crm_shadow --create-empty {SHADOW_NAME} --batch --force"),
             # Query shadow instance with an empty CIB.
             # --which and --file queries were done earlier.
             TestGroup([
@@ -2179,7 +2177,7 @@ class CrmShadowRegressionTest(RegressionTest):
                            expected_rc=ExitStatus.ERROR),
 
             make_test_group("Reset shadow instance to active CIB with nonexistent shadow file",
-                            "crm_shadow --reset {shadow} --batch --force",
+                            f"crm_shadow --reset {SHADOW_NAME} --batch --force",
                             setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
             Test("Active shadow instance no different from active CIB after force-reset",
                  "crm_shadow --diff"),
@@ -2187,30 +2185,30 @@ class CrmShadowRegressionTest(RegressionTest):
 
         reset_2_tests = [
             make_test_group("Reset inactive shadow instance (none active) to active CIB",
-                            "crm_shadow --reset {shadow} --force --batch"),
+                            f"crm_shadow --reset {SHADOW_NAME} --force --batch"),
         ]
 
         reset_3_tests = [
             make_test_group("Reset inactive shadow instance while another instance active",
-                            "crm_shadow --reset {shadow} --batch --force"),
+                            f"crm_shadow --reset {SHADOW_NAME} --batch --force"),
         ]
 
         reset_4_tests = [
             make_test_group("Reset shadow instance with nonexistent CIB",
-                            "crm_shadow --reset {shadow} --batch --force",
+                            f"crm_shadow --reset {SHADOW_NAME} --batch --force",
                             expected_rc=ExitStatus.NOSUCH),
         ]
 
         # Switch shadow instances
         switch_tests = [
             make_test_group("Switch to new shadow instance",
-                            "crm_shadow --switch {shadow} --batch"),
+                            f"crm_shadow --switch {SHADOW_NAME} --batch"),
             TestGroup([
                 make_test_group("Switch to nonexistent shadow instance",
-                                "crm_shadow --switch {shadow} --batch",
+                                f"crm_shadow --switch {SHADOW_NAME} --batch",
                                 expected_rc=ExitStatus.NOSUCH),
                 make_test_group("Switch to nonexistent shadow instance (force)",
-                                "crm_shadow --switch {shadow} --batch --force",
+                                f"crm_shadow --switch {SHADOW_NAME} --batch --force",
                                 expected_rc=ExitStatus.NOSUCH),
             ], setup=f"crm_shadow --delete {SHADOW_NAME} --force"),
         ]
