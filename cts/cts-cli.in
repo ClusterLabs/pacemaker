@@ -64,7 +64,7 @@ SHADOW_NAME = "cts-cli"
 # Arguments to pass to valgrind
 VALGRIND_ARGS = ["-q", "--gen-suppressions=all", "--show-reachable=no", "--leak-check=full",
                  "--trace-children=no", "--time-stamp=yes", "--num-callers=20",
-                 "--suppressions=%s/valgrind-pcmk.suppressions" % test_home]
+                 f"--suppressions={test_home}/valgrind-pcmk.suppressions"]
 
 
 class PluralFormatter(Formatter):
@@ -438,19 +438,19 @@ class Test:
                 rc = ExitStatus(rc)
                 rc_str = str(rc)
 
-        self._output.append("=#=#=#= End test: %s - %s (%d) =#=#=#=" % (self.desc, rc_str, rc))
+        self._output.append(f"=#=#=#= End test: {self.desc} - {rc_str} ({rc:d}) =#=#=#=")
 
     def _log_start_test(self):
         """Log a message when a test starts."""
-        self._output.append("=#=#=#= Begin test: %s =#=#=#=" % self.desc)
+        self._output.append(f"=#=#=#= Begin test: {self.desc} =#=#=#=")
 
     def _log_test_failed(self, app, rc):
         """Log a message when a test fails."""
-        self._output.append("* Failed (rc=%.3d): %-23s - %s" % (rc, app, self.desc))
+        self._output.append(f"* Failed (rc={rc:.3d}): {app:<23} - {self.desc}")
 
     def _log_test_passed(self, app):
         """Log a message when a test passes."""
-        self._output.append("* Passed: %-21s - %s" % (app, self.desc))
+        self._output.append(f"* Passed: {app:<21} - {self.desc}")
 
     # pylint: disable=unused-argument
     def _validate_hook(self, rc, _stdout, _stderr, valgrind=False):
@@ -499,8 +499,8 @@ class Test:
         cmd = self.cmd
         app = cmd.split(" ")[0]
 
-        test_id = "%s(%s)" % (app, group)
-        print("* Running: %-31s - %s" % (test_id, self.desc))
+        test_id = f"{app}({group})"
+        print(f"* Running: {test_id:<31} - {self.desc}")
         self._log_start_test()
 
         # Add any environment variables specified in Test.__init__
@@ -529,7 +529,7 @@ class Test:
                 kwargs["input"] = self._stdin
 
             if valgrind:
-                cmd = "valgrind %s %s" % (" ".join(VALGRIND_ARGS), cmd)
+                cmd = f"valgrind {' '.join(VALGRIND_ARGS)} {cmd}"
 
             # Run the test command
             # We handle the "check" argument above in the kwargs dict.
@@ -548,7 +548,7 @@ class Test:
                 return False
 
         if self.update_cib:
-            self._output.append("=#=#=#= Current cib after: %s =#=#=#=" % self.desc)
+            self._output.append(f"=#=#=#= Current cib after: {self.desc} =#=#=#=")
             self._output.extend(current_cib().splitlines())
 
         self._validate_hook(rc, cmd_p.stdout, cmd_p.stderr, valgrind=valgrind)
@@ -594,8 +594,8 @@ class AclTest(Test):
         cmd = self.cmd
         app = cmd.split(" ")[0]
 
-        test_id = "%s(%s)" % (app, group)
-        print("* Running: %-31s - %s" % (test_id, self.desc))
+        test_id = f"{app}({group})"
+        print(f"* Running: {test_id:<31} - {self.desc}")
 
         # Add any environment variables specified in Test.__init__
         if env is None:
@@ -632,7 +632,7 @@ class AclTest(Test):
                 kwargs["input"] = fp.read().decode(encoding="utf-8")
 
                 if valgrind:
-                    cmd = "valgrind %s %s" % (" ".join(VALGRIND_ARGS), cmd)
+                    cmd = f"valgrind {' '.join(VALGRIND_ARGS)} {cmd}"
 
                 # Run the test command
                 # We handle the "check" argument above in the kwargs dict.
@@ -649,7 +649,7 @@ class AclTest(Test):
                         return False
 
         if self.update_cib:
-            self._output.append("=#=#=#= Current cib after: %s =#=#=#=" % self.desc)
+            self._output.append(f"=#=#=#= Current cib after: {self.desc} =#=#=#=")
             self._output.extend(current_cib().splitlines())
 
         self._validate_hook(rc, cmd_p.stdout, cmd_p.stderr, valgrind=valgrind)
@@ -669,7 +669,7 @@ class ValidatingTest(Test):
 
     def __init__(self, desc, cmd, **kwargs):
         """Create a new ValidatingTest instance."""
-        Test.__init__(self, desc + " (XML)", cmd, **kwargs)
+        Test.__init__(self, f"{desc} (XML)", cmd, **kwargs)
 
     def _validate_hook(self, rc, stdout, stderr, valgrind=False):
         """Validate test output with xmllint."""
@@ -687,7 +687,7 @@ class ValidatingTest(Test):
             self._log_end_test(rc)
             return 0
         except XmlValidationError as e:
-            self._output.append("=#=#=#= End test: %s - Failed to validate (%d) =#=#=#=" % (self.desc, e.exit_code))
+            self._output.append(f"=#=#=#= End test: {self.desc} - Failed to validate ({e.exit_code:d}) =#=#=#=")
             self._output.extend(e.output.splitlines())
             return e.exit_code
 
@@ -936,7 +936,7 @@ class RegressionTest:
         Arguments:
         verbose -- If True, the diff will be written to stdout
         """
-        args = ["diff", "-wu", "%s/cli/regression.%s.exp" % (test_home, self.name), self.results_file]
+        args = ["diff", "-wu", f"{test_home}/cli/regression.{self.name}.exp", self.results_file]
 
         try:
             if verbose:
@@ -955,7 +955,7 @@ class RegressionTest:
             self.cleanup()
             return
 
-        print("    %s" % self.results_file)
+        print(f"    {self.results_file}")
 
         if verbose:
             print("======================================================")
@@ -1004,7 +1004,7 @@ class RegressionTest:
         s = "\n".join(self._output).encode()
         s += b"\n"
 
-        (fp, self._tempfile) = mkstemp(prefix="cts-cli.%s." % self.name)
+        (fp, self._tempfile) = mkstemp(prefix=f"cts-cli.{self.name}.")
         os.write(fp, s)
         os.close(fp)
 
@@ -1106,21 +1106,21 @@ class DatesRegressionTest(RegressionTest):
         # Ensure invalid period specifications are rejected
         invalid_period_tests = []
         for p in invalid_periods:
-            invalid_period_tests.append(Test("Invalid period - [%s]" % p,
-                                             "iso8601 -p '%s'" % p,
+            invalid_period_tests.append(Test(f"Invalid period - [{p}]",
+                                             f"iso8601 -p '{p}'",
                                              expected_rc=ExitStatus.INVALID_PARAM))
 
         year_tests = []
         for y in ["06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "40"]:
             year_tests.extend([
-                Test("20%s-W01-7" % y,
-                     "iso8601 -d '20%s-W01-7 00Z'" % y),
-                Test("20%s-W01-7 - round-trip" % y,
-                     "iso8601 -d '20%s-W01-7 00Z' -W -E '20%s-W01-7 00:00:00Z'" % (y, y)),
-                Test("20%s-W01-1" % y,
-                     "iso8601 -d '20%s-W01-1 00Z'" % y),
-                Test("20%s-W01-1 - round-trip" % y,
-                     "iso8601 -d '20%s-W01-1 00Z' -W -E '20%s-W01-1 00:00:00Z'" % (y, y))
+                Test(f"20{y}-W01-7",
+                     f"iso8601 -d '20{y}-W01-7 00Z'"),
+                Test(f"20{y}-W01-7 - round-trip",
+                     f"iso8601 -d '20{y}-W01-7 00Z' -W -E '20{y}-W01-7 00:00:00Z'"),
+                Test(f"20{y}-W01-1",
+                     f"iso8601 -d '20{y}-W01-1 00Z'"),
+                Test(f"20{y}-W01-1 - round-trip",
+                     f"iso8601 -d '20{y}-W01-1 00Z' -W -E '20{y}-W01-1 00:00:00Z'")
             ])
 
         return invalid_period_tests + [
@@ -1706,10 +1706,10 @@ class CrmResourceRegressionTest(RegressionTest):
                     "prim8", "prim9", "prim10", "prim11", "prim12", "prim13",
                     "group", "clone"]:
             constraint_tests.extend([
-                make_test_group("Check locations and constraints for %s" % rsc,
-                                "crm_resource -a -r %s" % rsc),
-                make_test_group("Recursively check locations and constraints for %s" % rsc,
-                                "crm_resource -A -r %s" % rsc),
+                make_test_group(f"Check locations and constraints for {rsc}",
+                                f"crm_resource -a -r {rsc}"),
+                make_test_group(f"Recursively check locations and constraints for {rsc}",
+                                f"crm_resource -A -r {rsc}"),
             ])
 
         constraint_tests.extend([
@@ -2266,7 +2266,7 @@ class CrmVerifyRegressionTest(RegressionTest):
                            expected_rc=ExitStatus.CONFIG),
         ]
 
-        with open("%s/cli/crm_mon.xml" % test_home, encoding="utf-8") as f:
+        with open(f"{test_home}/cli/crm_mon.xml", encoding="utf-8") as f:
             cib_contents = f.read()
 
         valid_tests = [
@@ -2281,9 +2281,9 @@ class CrmVerifyRegressionTest(RegressionTest):
                            "crm_verify -p --output-as=xml --verbose",
                            stdin=pathlib.Path(f"{cts_cli_data}/crm_mon.xml")),
             ValidatingTest("Verify a string-supplied valid configuration",
-                           "crm_verify -X '%s' --output-as=xml" % cib_contents),
+                           f"crm_verify -X '{cib_contents}' --output-as=xml"),
             ValidatingTest("Verbosely verify a string-supplied valid configuration",
-                           "crm_verify -X '%s' --output-as=xml --verbose" % cib_contents),
+                           f"crm_verify -X '{cib_contents}' --output-as=xml --verbose"),
         ]
 
         return invalid_tests + valid_tests
@@ -2972,7 +2972,7 @@ class RulesRegressionTest(RegressionTest):
         """A list of Test instances to be run as part of this regression test."""
         tomorrow = datetime.now() + timedelta(days=1)
 
-        rule_cib = """<cib epoch="1" num_updates="0" admin_epoch="0"  validate-with="pacemaker-3.9">
+        rule_cib = f"""<cib epoch="1" num_updates="0" admin_epoch="0"  validate-with="pacemaker-3.9">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2997,7 +2997,7 @@ class RulesRegressionTest(RegressionTest):
       </rsc_location>
       <rsc_location id="cli-prefer-dummy-not-yet" rsc="dummy">
         <rule id="cli-prefer-rule-dummy-not-yet" score="INFINITY">
-          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start="%s"/>
+          <date_expression id="cli-prefer-lifetime-end-dummy-not-yet" operation="gt" start="{tomorrow.strftime('%F %T %z')}"/>
         </rule>
       </rsc_location>
       <rsc_location id="cli-prefer-dummy-date_spec-only-years" rsc="dummy">
@@ -3022,7 +3022,7 @@ class RulesRegressionTest(RegressionTest):
     </constraints>
   </configuration>
   <status/>
-</cib>""" % tomorrow.strftime("%F %T %z")
+</cib>"""
 
         usage_tests = [
             make_test_group("crm_rule given no arguments", "crm_rule",
@@ -3135,9 +3135,8 @@ def build_options():
     """Handle command line arguments."""
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="Command line tool regression tests",
-                                     epilog="Default tests: %s\n"
-                                            "Other tests: agents (must be run in an installed environment)" %
-                                            " ".join(default_tests))
+                                     epilog=f"Default tests: {' '.join(default_tests)}\n"
+                                     "Other tests: agents (must be run in an installed environment)")
     parser.add_argument("-j", "--jobs", metavar="JOBS", default=cpu_count() - 1, type=int,
                         help="The number of tests to run simultaneously")
     parser.add_argument("-p", "--path", metavar="DIR", action="append",
@@ -3181,7 +3180,7 @@ def setup_environment(valgrind):
 def path_prepend(p):
     """Add another directory to the front of $PATH."""
     old = os.environ["PATH"]
-    os.environ["PATH"] = "%s:%s" % (p, old)
+    os.environ["PATH"] = f"{p}:{old}"
 
 
 def setup_path(opts_path):
@@ -3192,16 +3191,16 @@ def setup_path(opts_path):
     for p in opts_path:
         path_prepend(p)
 
-    if os.path.exists("%s/tools/crm_simulate" % srcdir):
-        print("Using local binaries from: %s" % srcdir)
+    if os.path.exists(f"{srcdir}/tools/crm_simulate"):
+        print(f"Using local binaries from: {srcdir}")
 
-        path_prepend("%s/tools" % srcdir)
+        path_prepend(f"{srcdir}/tools")
 
         for daemon in ["based", "controld", "fenced", "schedulerd"]:
-            path_prepend("%s/daemons/%s" % (srcdir, daemon))
+            path_prepend(f"{srcdir}/daemons/{daemon}")
 
-        print("Using local schemas from: %s/xml" % srcdir)
-        os.environ["PCMK_schema_directory"] = "%s/xml" % srcdir
+        print(f"Using local schemas from: {srcdir}/xml")
+        os.environ["PCMK_schema_directory"] = f"{srcdir}/xml"
     else:
         path_prepend(BuildOptions.DAEMON_DIR)
         os.environ["PCMK_schema_directory"] = BuildOptions.SCHEMA_DIR
@@ -3245,7 +3244,7 @@ def results(regs, save, verbose):
         r.write()
 
         if save:
-            dest = "%s/cli/regression.%s.exp" % (test_home, r.name)
+            dest = f"{test_home}/cli/regression.{r.name}.exp"
             copyfile(r.results_file, dest)
 
         r.diff(verbose)
