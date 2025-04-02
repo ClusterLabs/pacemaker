@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -447,6 +447,16 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Fence pending nodes after %s",
                   pcmk__readable_interval(scheduler->node_pending_timeout
                                           * 1000));
+    }
+
+    value = pcmk__cluster_option(config_hash,
+                                 PCMK__OPT_FENCE_REMOTE_WITHOUT_QUORUM);
+    if ((value != NULL) && !crm_is_true(value)) {
+        crm_warn(PCMK__OPT_FENCE_REMOTE_WITHOUT_QUORUM " disabled - remote "
+                 "nodes may not be fenced in inquorate partition");
+        scheduler->fence_remote_without_quorum = false;
+    } else {
+        scheduler->fence_remote_without_quorum = true;
     }
 
     return TRUE;

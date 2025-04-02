@@ -300,6 +300,11 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Whether the cluster should check for active resources during start-up</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
+      <parameter name="fence-remote-without-quorum" advanced="1" generated="0">
+        <longdesc lang="en">By default, inquorate nodes can fence Pacemaker Remote nodes that are part of its partition regardless of whether the resource was successfully restarted elsewhere.  If false, an additional check will be added to only fence remote nodes if the cluster thinks they were unable to be restarted.</longdesc>
+        <shortdesc lang="en">Whether remote nodes can be fenced without quorum</shortdesc>
+        <content type="boolean" default=""/>
+      </parameter>
       <parameter name="stonith-enabled" advanced="1" generated="0">
         <longdesc lang="en">If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.</longdesc>
         <shortdesc lang="en">Whether nodes may be fenced as part of recovery</shortdesc>
@@ -635,6 +640,10 @@ Also known as properties, these are options that affect behavior across the enti
       * Delay cluster recovery for this much time to allow for additional events to occur. Useful if your configuration is sensitive to the order in which ping updates arrive.
       * Possible values: duration (default: )
 
+    * fence-remote-without-quorum: Whether remote nodes can be fenced without quorum
+      * By default, inquorate nodes can fence Pacemaker Remote nodes that are part of its partition regardless of whether the resource was successfully restarted elsewhere.  If false, an additional check will be added to only fence remote nodes if the cluster thinks they were unable to be restarted.
+      * Possible values: boolean (default: )
+
     * stonith-enabled: Whether nodes may be fenced as part of recovery
       * If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.
       * Possible values: boolean (default: )
@@ -760,6 +769,11 @@ Also known as properties, these are options that affect behavior across the enti
       <parameter name="enable-startup-probes" advanced="0" generated="0">
         <longdesc lang="en">Whether the cluster should check for active resources during start-up</longdesc>
         <shortdesc lang="en">Whether the cluster should check for active resources during start-up</shortdesc>
+        <content type="boolean" default=""/>
+      </parameter>
+      <parameter name="fence-remote-without-quorum" advanced="1" generated="0">
+        <longdesc lang="en">By default, inquorate nodes can fence Pacemaker Remote nodes that are part of its partition regardless of whether the resource was successfully restarted elsewhere.  If false, an additional check will be added to only fence remote nodes if the cluster thinks they were unable to be restarted.</longdesc>
+        <shortdesc lang="en">Whether remote nodes can be fenced without quorum</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="stonith-enabled" advanced="1" generated="0">

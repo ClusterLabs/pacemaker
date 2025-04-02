@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,6 +215,10 @@ struct pe_working_set_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
     enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum
+
+    // Can Pacemaker Remote nodes be fenced even from a node that doesn't
+    // have quorum?
+    bool fence_remote_without_quorum;
 
     GHashTable *config_hash;        // Cluster properties
 
