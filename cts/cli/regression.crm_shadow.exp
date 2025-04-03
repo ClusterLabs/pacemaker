@@ -3,7 +3,7 @@ crm_shadow: No active shadow configuration defined
 =#=#=#= End test: Get active shadow instance (no active instance) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance (no active instance)
 =#=#=#= Begin test: Get active shadow instance (no active instance) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --which --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --which">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: No active shadow configuration defined</error>
@@ -17,7 +17,7 @@ crm_shadow: No active shadow configuration defined
 =#=#=#= End test: Get active shadow instance's file name (no active instance) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's file name (no active instance)
 =#=#=#= Begin test: Get active shadow instance's file name (no active instance) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --file --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --file">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: No active shadow configuration defined</error>
@@ -31,7 +31,7 @@ crm_shadow: No active shadow configuration defined
 =#=#=#= End test: Get active shadow instance's contents (no active instance) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's contents (no active instance)
 =#=#=#= Begin test: Get active shadow instance's contents (no active instance) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --display --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --display">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: No active shadow configuration defined</error>
@@ -45,7 +45,7 @@ crm_shadow: No active shadow configuration defined
 =#=#=#= End test: Get active shadow instance's diff (no active instance) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (no active instance)
 =#=#=#= Begin test: Get active shadow instance's diff (no active instance) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --diff --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --diff">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: No active shadow configuration defined</error>
@@ -60,7 +60,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create copied shadow instance - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create copied shadow instance
 =#=#=#= Begin test: Create copied shadow instance (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create cts-cli --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -72,7 +72,7 @@ cts-cli
 =#=#=#= End test: Get active shadow instance (copied) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance (copied)
 =#=#=#= Begin test: Get active shadow instance (copied) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --which --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --which">
   <shadow instance="cts-cli"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -83,7 +83,7 @@ cts-cli
 =#=#=#= End test: Get active shadow instance's file name (copied) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's file name (copied)
 =#=#=#= Begin test: Get active shadow instance's file name (copied) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --file --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --file">
   <shadow instance="cts-cli" file="/tmp/cts-cli.shadow/shadow.cts-cli"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -408,7 +408,7 @@ cts-cli
 =#=#=#= End test: Get active shadow instance's contents (copied) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's contents (copied)
 =#=#=#= Begin test: Get active shadow instance's contents (copied) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --display --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --display">
   <shadow instance="cts-cli">
     <content><![CDATA[<cib epoch="1" num_updates="173" admin_epoch="1" update-origin="cluster01" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
   <configuration>
@@ -735,7 +735,7 @@ cts-cli
 =#=#=#= End test: Get active shadow instance's diff (copied) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (copied)
 =#=#=#= Begin test: Get active shadow instance's diff (copied) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --diff --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --diff">
   <shadow instance="cts-cli"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -893,7 +893,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (no active instance) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (no active instance)
 =#=#=#= Begin test: Commit shadow instance (no active instance) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit cts-cli --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit cts-cli">
   <status code="64" message="Incorrect usage">
     <errors>
       <error>crm_shadow: The commit command overwrites the active cluster configuration.
@@ -907,7 +907,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (no active instance) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (no active instance) (force)
 =#=#=#= Begin test: Commit shadow instance (no active instance) (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit cts-cli --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit cts-cli --force">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Commit shadow instance (no active instance) (force) (XML) - OK (0) =#=#=#=
@@ -919,7 +919,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (mismatch) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (mismatch)
 =#=#=#= Begin test: Commit shadow instance (mismatch) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit cts-cli --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit cts-cli">
   <status code="64" message="Incorrect usage">
     <errors>
       <error>crm_shadow: The commit command overwrites the active cluster configuration.
@@ -934,7 +934,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (mismatch) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (mismatch) (force)
 =#=#=#= Begin test: Commit shadow instance (mismatch) (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit cts-cli --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit cts-cli --force">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Commit shadow instance (mismatch) (force) (XML) - OK (0) =#=#=#=
@@ -945,7 +945,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (nonexistent shadow file) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (nonexistent shadow file)
 =#=#=#= Begin test: Commit shadow instance (nonexistent shadow file) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit nonexistent_shadow --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit nonexistent_shadow">
   <status code="64" message="Incorrect usage">
     <errors>
       <error>crm_shadow: The commit command overwrites the active cluster configuration.
@@ -960,7 +960,7 @@ crm_shadow: Could not access shadow instance 'nonexistent_shadow': No such file 
 =#=#=#= End test: Commit shadow instance (nonexistent shadow file) (force) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (nonexistent shadow file) (force)
 =#=#=#= Begin test: Commit shadow instance (nonexistent shadow file) (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit nonexistent_shadow --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit nonexistent_shadow --force">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not access shadow instance 'nonexistent_shadow': No such file or directory</error>
@@ -974,7 +974,7 @@ crm_shadow: Could not access shadow instance 'nonexistent_shadow': No such file 
 =#=#=#= End test: Get active shadow instance's diff (nonexistent shadow file) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (nonexistent shadow file)
 =#=#=#= Begin test: Get active shadow instance's diff (nonexistent shadow file) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --diff --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --diff">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not access shadow instance 'nonexistent_shadow': No such file or directory</error>
@@ -989,7 +989,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 =#=#=#= End test: Commit shadow instance (nonexistent CIB file) - Incorrect usage (64) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (nonexistent CIB file)
 =#=#=#= Begin test: Commit shadow instance (nonexistent CIB file) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit cts-cli --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit cts-cli">
   <status code="64" message="Incorrect usage">
     <errors>
       <error>crm_shadow: The commit command overwrites the active cluster configuration.
@@ -1004,7 +1004,7 @@ crm_shadow: Could not connect to CIB: No such device or address
 =#=#=#= End test: Commit shadow instance (nonexistent CIB file) (force) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Commit shadow instance (nonexistent CIB file) (force)
 =#=#=#= Begin test: Commit shadow instance (nonexistent CIB file) (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --commit cts-cli --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --commit cts-cli --force">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not connect to CIB: No such device or address</error>
@@ -1018,7 +1018,7 @@ crm_shadow: Could not connect to CIB: No such device or address
 =#=#=#= End test: Get active shadow instance's diff (nonexistent CIB file) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (nonexistent CIB file)
 =#=#=#= Begin test: Get active shadow instance's diff (nonexistent CIB file) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --diff --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --diff">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not connect to CIB: No such device or address</error>
@@ -1172,7 +1172,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create copied shadow instance (no active instance) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create copied shadow instance (no active instance)
 =#=#=#= Begin test: Create copied shadow instance (no active instance) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create cts-cli --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1185,7 +1185,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create copied shadow instance (mismatch) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create copied shadow instance (mismatch)
 =#=#=#= Begin test: Create copied shadow instance (mismatch) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create cts-cli --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1198,7 +1198,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Create copied shadow instance (file already exists) - Cannot create output file (73) =#=#=#=
 * Passed: crm_shadow            - Create copied shadow instance (file already exists)
 =#=#=#= Begin test: Create copied shadow instance (file already exists) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create cts-cli --batch">
   <status code="73" message="Cannot create output file">
     <errors>
       <error>crm_shadow: A shadow instance 'cts-cli' already exists.
@@ -1214,7 +1214,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create copied shadow instance (file already exists) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create copied shadow instance (file already exists) (force)
 =#=#=#= Begin test: Create copied shadow instance (file already exists) (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create cts-cli --batch --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create cts-cli --batch --force">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1226,7 +1226,7 @@ crm_shadow: Could not connect to CIB: No such device or address
 =#=#=#= End test: Create copied shadow instance (nonexistent CIB file) (force) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Create copied shadow instance (nonexistent CIB file) (force)
 =#=#=#= Begin test: Create copied shadow instance (nonexistent CIB file) (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create cts-cli --batch --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create cts-cli --batch --force">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not connect to CIB: No such device or address</error>
@@ -1242,7 +1242,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create empty shadow instance - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance
 =#=#=#= Begin test: Create empty shadow instance (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create-empty cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create-empty cts-cli --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1256,7 +1256,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create empty shadow instance (no active instance) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance (no active instance)
 =#=#=#= Begin test: Create empty shadow instance (no active instance) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create-empty cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create-empty cts-cli --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1270,7 +1270,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create empty shadow instance (mismatch) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance (mismatch)
 =#=#=#= Begin test: Create empty shadow instance (mismatch) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create-empty cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create-empty cts-cli --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1284,7 +1284,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create empty shadow instance (nonexistent CIB file) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance (nonexistent CIB file)
 =#=#=#= Begin test: Create empty shadow instance (nonexistent CIB file) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create-empty cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create-empty cts-cli --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1297,7 +1297,7 @@ To prevent accidental destruction of the shadow file, the --force flag is requir
 =#=#=#= End test: Create empty shadow instance (file already exists) - Cannot create output file (73) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance (file already exists)
 =#=#=#= Begin test: Create empty shadow instance (file already exists) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create-empty cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create-empty cts-cli --batch">
   <status code="73" message="Cannot create output file">
     <errors>
       <error>crm_shadow: A shadow instance 'cts-cli' already exists.
@@ -1314,7 +1314,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create empty shadow instance (file already exists) (force) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance (file already exists) (force)
 =#=#=#= Begin test: Create empty shadow instance (file already exists) (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --create-empty cts-cli --batch --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --create-empty cts-cli --batch --force">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1334,7 +1334,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Get active shadow instance's contents (empty CIB) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's contents (empty CIB)
 =#=#=#= Begin test: Get active shadow instance's contents (empty CIB) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --display --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --display">
   <shadow instance="cts-cli">
     <content><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1379,7 +1379,7 @@ Diff: +++ 0.1.0 (null)
 =#=#=#= End test: Get active shadow instance's diff (empty CIB) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (empty CIB)
 =#=#=#= Begin test: Get active shadow instance's diff (empty CIB) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --diff --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --diff">
   <shadow instance="cts-cli">
     <xml-patchset><![CDATA[<diff format="2">
   <version>
@@ -1498,7 +1498,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Reset shadow instance to active CIB with nonexistent shadow file - OK (0) =#=#=#=
 * Passed: crm_shadow            - Reset shadow instance to active CIB with nonexistent shadow file
 =#=#=#= Begin test: Reset shadow instance to active CIB with nonexistent shadow file (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --reset cts-cli --batch --force">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1514,7 +1514,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Reset inactive shadow instance (none active) to active CIB - OK (0) =#=#=#=
 * Passed: crm_shadow            - Reset inactive shadow instance (none active) to active CIB
 =#=#=#= Begin test: Reset inactive shadow instance (none active) to active CIB (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --force --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --reset cts-cli --force --batch">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1527,7 +1527,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Reset inactive shadow instance while another instance active - OK (0) =#=#=#=
 * Passed: crm_shadow            - Reset inactive shadow instance while another instance active
 =#=#=#= Begin test: Reset inactive shadow instance while another instance active (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --reset cts-cli --batch --force">
   <instruction>A new shadow instance was created. To begin using it, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1539,7 +1539,7 @@ crm_shadow: Could not connect to CIB: No such device or address
 =#=#=#= End test: Reset shadow instance with nonexistent CIB - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Reset shadow instance with nonexistent CIB
 =#=#=#= Begin test: Reset shadow instance with nonexistent CIB (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --reset cts-cli --batch --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --reset cts-cli --batch --force">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not connect to CIB: No such device or address</error>
@@ -1554,7 +1554,7 @@ To switch to the named shadow instance, enter the following into your shell:
 =#=#=#= End test: Switch to new shadow instance - OK (0) =#=#=#=
 * Passed: crm_shadow            - Switch to new shadow instance
 =#=#=#= Begin test: Switch to new shadow instance (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --switch cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --switch cts-cli --batch">
   <instruction>To switch to the named shadow instance, enter the following into your shell:
 	export CIB_shadow=cts-cli</instruction>
   <status code="0" message="OK"/>
@@ -1566,7 +1566,7 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
 =#=#=#= End test: Switch to nonexistent shadow instance - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Switch to nonexistent shadow instance
 =#=#=#= Begin test: Switch to nonexistent shadow instance (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --switch cts-cli --batch --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --switch cts-cli --batch">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not access shadow instance 'cts-cli': No such file or directory</error>
@@ -1580,7 +1580,7 @@ crm_shadow: Could not access shadow instance 'cts-cli': No such file or director
 =#=#=#= End test: Switch to nonexistent shadow instance (force) - No such object (105) =#=#=#=
 * Passed: crm_shadow            - Switch to nonexistent shadow instance (force)
 =#=#=#= Begin test: Switch to nonexistent shadow instance (force) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_shadow --switch cts-cli --batch --force --output-as=xml">
+<pacemaker-result api-version="X" request="crm_shadow --output-as=xml --switch cts-cli --batch --force">
   <status code="105" message="No such object">
     <errors>
       <error>crm_shadow: Could not access shadow instance 'cts-cli': No such file or directory</error>

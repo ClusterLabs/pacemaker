@@ -13,7 +13,7 @@ remote node: overcloud-rabbit-2 (overcloud-rabbit-2)
 =#=#=#= End test: List all nodes - OK (0) =#=#=#=
 * Passed: crmadmin              - List all nodes
 =#=#=#= Begin test: List all nodes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crmadmin -N --output-as=xml">
+<pacemaker-result api-version="X" request="crmadmin --output-as=xml -N">
   <nodes>
     <node type="cluster" name="overcloud-controller-0" id="1"/>
     <node type="cluster" name="overcloud-controller-1" id="2"/>
@@ -46,7 +46,7 @@ overcloud-rabbit-2
 =#=#=#= End test: Minimally list all nodes - OK (0) =#=#=#=
 * Passed: crmadmin              - Minimally list all nodes
 =#=#=#= Begin test: Minimally list all nodes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crmadmin -N -q --output-as=xml">
+<pacemaker-result api-version="X" request="crmadmin --output-as=xml -N -q">
   <nodes>
     <node type="cluster" name="overcloud-controller-0" id="1"/>
     <node type="cluster" name="overcloud-controller-1" id="2"/>
@@ -88,7 +88,7 @@ cluster node: overcloud-galera-2 (6)
 =#=#=#= End test: List cluster nodes - OK (0) =#=#=#=
 * Passed: crmadmin              - List cluster nodes
 =#=#=#= Begin test: List cluster nodes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crmadmin -N cluster --output-as=xml">
+<pacemaker-result api-version="X" request="crmadmin --output-as=xml -N cluster">
   <nodes>
     <node type="cluster" name="overcloud-controller-0" id="1"/>
     <node type="cluster" name="overcloud-controller-1" id="2"/>
@@ -107,7 +107,7 @@ guest node: lxc2 (lxc2)
 =#=#=#= End test: List guest nodes - OK (0) =#=#=#=
 * Passed: crmadmin              - List guest nodes
 =#=#=#= Begin test: List guest nodes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crmadmin -N guest --output-as=xml">
+<pacemaker-result api-version="X" request="crmadmin --output-as=xml -N guest">
   <nodes>
     <node type="guest" name="lxc1" id="lxc1"/>
     <node type="guest" name="lxc2" id="lxc2"/>
@@ -123,7 +123,7 @@ remote node: overcloud-rabbit-2 (overcloud-rabbit-2)
 =#=#=#= End test: List remote nodes - OK (0) =#=#=#=
 * Passed: crmadmin              - List remote nodes
 =#=#=#= Begin test: List remote nodes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crmadmin -N remote --output-as=xml">
+<pacemaker-result api-version="X" request="crmadmin --output-as=xml -N remote">
   <nodes>
     <node type="remote" name="overcloud-rabbit-0" id="overcloud-rabbit-0"/>
     <node type="remote" name="overcloud-rabbit-1" id="overcloud-rabbit-1"/>
@@ -146,7 +146,7 @@ remote node: overcloud-rabbit-2 (overcloud-rabbit-2)
 =#=#=#= End test: List cluster,remote nodes - OK (0) =#=#=#=
 * Passed: crmadmin              - List cluster,remote nodes
 =#=#=#= Begin test: List cluster,remote nodes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crmadmin -N cluster,remote --output-as=xml">
+<pacemaker-result api-version="X" request="crmadmin --output-as=xml -N cluster,remote">
   <nodes>
     <node type="cluster" name="overcloud-controller-0" id="1"/>
     <node type="cluster" name="overcloud-controller-1" id="2"/>
@@ -171,7 +171,7 @@ remote node: overcloud-rabbit-2 (overcloud-rabbit-2)
 =#=#=#= End test: List guest,remote nodes - OK (0) =#=#=#=
 * Passed: crmadmin              - List guest,remote nodes
 =#=#=#= Begin test: List guest,remote nodes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crmadmin -N guest,remote --output-as=xml">
+<pacemaker-result api-version="X" request="crmadmin --output-as=xml -N guest,remote">
   <nodes>
     <node type="guest" name="lxc1" id="lxc1"/>
     <node type="guest" name="lxc2" id="lxc2"/>

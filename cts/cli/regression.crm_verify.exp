@@ -3,7 +3,7 @@ Configuration invalid (with errors) (-V may provide more detail)
 =#=#=#= End test: Verify a file-specified invalid configuration - Invalid configuration (78) =#=#=#=
 * Passed: crm_verify            - Verify a file-specified invalid configuration
 =#=#=#= Begin test: Verify a file-specified invalid configuration (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_verify --xml-file crm_verify_invalid_bz.xml --output-as=xml">
+<pacemaker-result api-version="X" request="crm_verify --output-as=xml --xml-file crm_verify_invalid_bz.xml">
   <status code="78" message="Invalid configuration">
     <errors>
       <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
@@ -25,7 +25,7 @@ Configuration invalid (with errors)
 * Passed: crm_verify            - Verify a file-specified invalid configuration (verbose)
 =#=#=#= Begin test: Verify a file-specified invalid configuration (verbose) (XML) =#=#=#=
 unpack_config 	warning: Blind faith: not fencing unseen nodes
-<pacemaker-result api-version="X" request="crm_verify --xml-file crm_verify_invalid_bz.xml --verbose --output-as=xml">
+<pacemaker-result api-version="X" request="crm_verify --output-as=xml --xml-file crm_verify_invalid_bz.xml --verbose">
   <status code="78" message="Invalid configuration">
     <errors>
       <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
@@ -41,7 +41,7 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
 =#=#=#= End test: Verify a file-specified invalid configuration (quiet) - Invalid configuration (78) =#=#=#=
 * Passed: crm_verify            - Verify a file-specified invalid configuration (quiet)
 =#=#=#= Begin test: Verify a file-specified invalid configuration (quiet) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_verify --xml-file crm_verify_invalid_bz.xml --quiet --output-as=xml">
+<pacemaker-result api-version="X" request="crm_verify --output-as=xml --xml-file crm_verify_invalid_bz.xml --quiet">
   <status code="78" message="Invalid configuration">
     <errors>
       <error>error: Resource test2:0 is of type systemd and therefore cannot be used as a promotable clone resource</error>
