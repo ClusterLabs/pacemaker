@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <inttypes.h>   // PRIu32
 
 #include <crm/cluster.h>
 #include <crm/cluster/internal.h>
@@ -117,7 +118,8 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     }
 
     if (xml == NULL) {
-        crm_err("Bad message of class %d received from %s[%u]: '%.120s'", kind, from, nodeid, data);
+        crm_err("Bad message of class %d received from %s[%" PRIu32 "]: '%.120s'",
+                kind, from, nodeid, data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
                                           pcmk__node_search_cluster_member),
@@ -169,41 +171,52 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 
     switch (kind) {
         case crm_status_uname:
-            crm_debug("%s node %s is now %s",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->uname, state_text(peer->state));
+                      pcmk__s(peer->uname, "unknown"), peer->id,
+                      state_text(peer->state));
             break;
 
         case crm_status_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
-            crm_debug("Node %s is %s a peer",
-                      peer->uname, (gone? "no longer" : "now"));
+            crm_debug("Node %s[%" PRIu32 "] is %s a peer",
+                      pcmk__s(peer->uname, "unknown"), peer->id,
+                      (gone? "no longer" : "now"));
             break;
 
         case crm_status_nstate:
-            crm_debug("%s node %s is now %s (was %s)",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s (was %s)",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->uname, state_text(peer->state), state_text(data));
+                      pcmk__s(peer->uname, "unknown"), peer->id,
+                      state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, CRM_NODE_MEMBER, pcmk__str_casei)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
-                if (attrd_election_won()
-                    && !pcmk_is_set(peer->flags, crm_remote_node)) {
-                    attrd_peer_sync(peer);
+                if (!is_remote) {
+                   if (attrd_election_won()) {
+                       attrd_peer_sync(peer);
+
+                   } else {
+                       // Anyway send a message so that the peer learns our name
+                       attrd_send_protocol(peer);
+                   }
                 }
+
             } else {
                 // Remove all attribute values associated with lost nodes
-                attrd_peer_remove(peer->uname, false, "loss");
+                if (peer->uname != NULL) {
+                    attrd_peer_remove(peer->uname, false, "loss");
+                }
                 gone = true;
             }
             break;
     }
 
     // Remove votes from cluster nodes that leave, in case election in progress
-    if (gone && !is_remote) {
+    if (gone && !is_remote && peer->uname != NULL) {
         attrd_remove_voter(peer);
         attrd_remove_peer_protocol_ver(peer->uname);
         attrd_do_not_expect_from_peer(peer->uname);
@@ -320,8 +333,13 @@ update_attr_on_host(attribute_t *a, const crm_node_t *peer, const xmlNode *xml,
     // Remember node's XML ID if we're just learning it
     if ((node_xml_id != NULL)
         && !pcmk__str_eq(node_xml_id, prev_xml_id, pcmk__str_none)) {
+        // Remember node's name in case unknown in the membership cache
+        crm_node_t *known_peer =
+            pcmk__get_node(0, host, node_xml_id,
+                           pcmk__node_search_cluster_member);
+
         crm_trace("Learned %s[%s] node XML ID is %s (was %s)",
-                  a->id, v->nodename, node_xml_id,
+                  a->id, known_peer->uname, node_xml_id,
                   pcmk__s(prev_xml_id, "unknown"));
         attrd_set_node_xml_id(v->nodename, node_xml_id);
         if (attrd_election_won()) {
