@@ -429,14 +429,18 @@ class Test:
     def _log_end_test(self, rc):
         """Log a message when a test ends."""
         if isinstance(rc, ExitStatus):
+            # This is an ExitStatus - explicitly convert it to an int here and
+            # also get the matching error string.
             rc_str = str(rc)
+            rc = int(rc)
+        elif rc < 0:
+            # This is a negative number, which is a signal.
+            rc = abs(rc)
+            rc_str = signal.strsignal(rc)
         else:
-            if rc < 0:
-                rc = abs(rc)
-                rc_str = signal.strsignal(rc)
-            else:
-                rc = ExitStatus(rc)
-                rc_str = str(rc)
+            # This is a non-negative number.  We don't have to do anything to the
+            # number itself, but we do need to get the error string.
+            rc_str = str(ExitStatus(rc))
 
         self._output.append(f"=#=#=#= End test: {self.desc} - {rc_str} ({rc:d}) =#=#=#=")
 
