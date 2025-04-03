@@ -3,7 +3,7 @@ crm_attribute: Invalid --list-options value 'asdf'. Allowed values: cluster
 =#=#=#= End test: List all available options (invalid type) - Incorrect usage (64) =#=#=#=
 * Passed: crm_attribute         - List all available options (invalid type)
 =#=#=#= Begin test: List all available options (invalid type) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute --list-options=asdf --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml --list-options=asdf">
   <status code="64" message="Incorrect usage">
     <errors>
       <error>crm_attribute: Invalid --list-options value 'asdf'. Allowed values: cluster</error>
@@ -161,7 +161,7 @@ Also known as properties, these are options that affect behavior across the enti
 =#=#=#= End test: List non-advanced cluster options - OK (0) =#=#=#=
 * Passed: crm_attribute         - List non-advanced cluster options
 =#=#=#= Begin test: List non-advanced cluster options (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute --list-options=cluster --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml --list-options=cluster">
   <resource-agent name="cluster-options" version="">
     <version>1.1</version>
     <longdesc lang="en">Also known as properties, these are options that affect behavior across the entire cluster. They are configured within cluster_property_set elements inside the crm_config subsection of the CIB configuration section.</longdesc>
@@ -613,7 +613,7 @@ Also known as properties, these are options that affect behavior across the enti
 =#=#=#= End test: List all available cluster options - OK (0) =#=#=#=
 * Passed: crm_attribute         - List all available cluster options
 =#=#=#= Begin test: List all available cluster options (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute --list-options=cluster --all --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml --list-options=cluster --all">
   <resource-agent name="cluster-options" version="">
     <version>1.1</version>
     <longdesc lang="en">Also known as properties, these are options that affect behavior across the entire cluster. They are configured within cluster_property_set elements inside the crm_config subsection of the CIB configuration section.</longdesc>
@@ -962,7 +962,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Test '++' nvpair value update syntax - OK (0) =#=#=#=
 * Passed: crm_attribute         - Test '++' nvpair value update syntax
 =#=#=#= Begin test: Test '++' nvpair value update syntax (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value++ --score --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -n test_attr -v value++ --score">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '++' nvpair value update syntax (XML) =#=#=#=
@@ -999,7 +999,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Test '+=' nvpair value update syntax - OK (0) =#=#=#=
 * Passed: crm_attribute         - Test '+=' nvpair value update syntax
 =#=#=#= Begin test: Test '+=' nvpair value update syntax (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value+=2 --score --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -n test_attr -v value+=2 --score">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '+=' nvpair value update syntax (XML) =#=#=#=
@@ -1070,7 +1070,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Test '++' nvpair value update syntax (--score not set) - OK (0) =#=#=#=
 * Passed: crm_attribute         - Test '++' nvpair value update syntax (--score not set)
 =#=#=#= Begin test: Test '++' nvpair value update syntax (--score not set) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value++ --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -n test_attr -v value++">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '++' nvpair value update syntax (--score not set) (XML) =#=#=#=
@@ -1107,7 +1107,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Test '+=' nvpair value update syntax (--score not set) - OK (0) =#=#=#=
 * Passed: crm_attribute         - Test '+=' nvpair value update syntax (--score not set)
 =#=#=#= Begin test: Test '+=' nvpair value update syntax (--score not set) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -n test_attr -v value+=2 --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -n test_attr -v value+=2">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '+=' nvpair value update syntax (--score not set) (XML) =#=#=#=
@@ -1777,7 +1777,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Query a nonexistent promotable score attribute - No such object (105) =#=#=#=
 * Passed: crm_attribute         - Query a nonexistent promotable score attribute
 =#=#=#= Begin test: Query a nonexistent promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -G">
   <status code="105" message="No such object">
     <errors>
       <error>crm_attribute: Error performing operation: No such device or address</error>
@@ -1790,7 +1790,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Delete a nonexistent promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Delete a nonexistent promotable score attribute
 =#=#=#= Begin test: Delete a nonexistent promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -D">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Delete a nonexistent promotable score attribute (XML) - OK (0) =#=#=#=
@@ -1800,7 +1800,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Query after deleting a nonexistent promotable score attribute - No such object (105) =#=#=#=
 * Passed: crm_attribute         - Query after deleting a nonexistent promotable score attribute
 =#=#=#= Begin test: Query after deleting a nonexistent promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -G">
   <status code="105" message="No such object">
     <errors>
       <error>crm_attribute: Error performing operation: No such device or address</error>
@@ -1813,7 +1813,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Update a nonexistent promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Update a nonexistent promotable score attribute
 =#=#=#= Begin test: Update a nonexistent promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -v 1 --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -v 1">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Update a nonexistent promotable score attribute (XML) - OK (0) =#=#=#=
@@ -1823,7 +1823,7 @@ scope=status name=master-promotable-rsc value=1
 =#=#=#= End test: Query after updating a nonexistent promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Query after updating a nonexistent promotable score attribute
 =#=#=#= Begin test: Query after updating a nonexistent promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -G">
   <attribute name="master-promotable-rsc" value="1" scope="status"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1833,7 +1833,7 @@ scope=status name=master-promotable-rsc value=1
 =#=#=#= End test: Update an existing promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Update an existing promotable score attribute
 =#=#=#= Begin test: Update an existing promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -v 5 --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -v 5">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Update an existing promotable score attribute (XML) - OK (0) =#=#=#=
@@ -1843,7 +1843,7 @@ scope=status name=master-promotable-rsc value=5
 =#=#=#= End test: Query after updating an existing promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Query after updating an existing promotable score attribute
 =#=#=#= Begin test: Query after updating an existing promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -G">
   <attribute name="master-promotable-rsc" value="5" scope="status"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1854,7 +1854,7 @@ Deleted status attribute: id=status-1-master-promotable-rsc name=master-promotab
 =#=#=#= End test: Delete an existing promotable score attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Delete an existing promotable score attribute
 =#=#=#= Begin test: Delete an existing promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -D --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -D">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Delete an existing promotable score attribute (XML) - OK (0) =#=#=#=
@@ -1864,7 +1864,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Query after deleting an existing promotable score attribute - No such object (105) =#=#=#=
 * Passed: crm_attribute         - Query after deleting an existing promotable score attribute
 =#=#=#= Begin test: Query after deleting an existing promotable score attribute (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p promotable-rsc -G --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p promotable-rsc -G">
   <status code="105" message="No such object">
     <errors>
       <error>crm_attribute: Error performing operation: No such device or address</error>
@@ -1877,7 +1877,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Update a promotable score attribute to -INFINITY - OK (0) =#=#=#=
 * Passed: crm_attribute         - Update a promotable score attribute to -INFINITY
 =#=#=#= Begin test: Update a promotable score attribute to -INFINITY (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -v -INFINITY --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p -v -INFINITY">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Update a promotable score attribute to -INFINITY (XML) - OK (0) =#=#=#=
@@ -1887,7 +1887,7 @@ scope=status name=master-promotable-rsc value=-INFINITY
 =#=#=#= End test: Query after updating a promotable score attribute to -INFINITY - OK (0) =#=#=#=
 * Passed: crm_attribute         - Query after updating a promotable score attribute to -INFINITY
 =#=#=#= Begin test: Query after updating a promotable score attribute to -INFINITY (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_attribute -N cluster01 -p -G --output-as=xml">
+<pacemaker-result api-version="X" request="crm_attribute --output-as=xml -N cluster01 -p -G">
   <attribute name="master-promotable-rsc" value="-INFINITY" scope="status"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
