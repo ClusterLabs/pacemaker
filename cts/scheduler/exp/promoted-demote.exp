@@ -23,33 +23,7 @@
   </synapse>
   <synapse id="2" priority="1000000">
     <action_set>
-      <rsc_op id="107" operation="notify" operation_key="named_drbd_node:1_post_notify_promote_0" internal_operation_key="named_drbd_node:0_post_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
-        <primitive id="named_drbd_node" long-id="named_drbd_node:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_active_uname="cxa1 cxb1" CRM_meta_notify_all_uname="cxa1 cxb1" CRM_meta_notify_available_uname="cxa1 cxb1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="named_drbd_node:1" CRM_meta_notify_promote_uname="cxb1" CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_slave_uname="cxa1 cxb1" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_unpromoted_uname="cxa1 cxb1" CRM_meta_on_node="cxa1" CRM_meta_on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="drbd4"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="62" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="3">
-    <action_set>
-      <rsc_op id="106" operation="notify" operation_key="named_drbd_node:1_pre_notify_promote_0" internal_operation_key="named_drbd_node:0_pre_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
-        <primitive id="named_drbd_node" long-id="named_drbd_node:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_active_uname="cxa1 cxb1" CRM_meta_notify_all_uname="cxa1 cxb1" CRM_meta_notify_available_uname="cxa1 cxb1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="named_drbd_node:1" CRM_meta_notify_promote_uname="cxb1" CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_slave_uname="cxa1 cxb1" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_unpromoted_uname="cxa1 cxb1" CRM_meta_on_node="cxa1" CRM_meta_on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="drbd4"/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="60" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="4" priority="1000000">
-    <action_set>
-      <rsc_op id="109" operation="notify" operation_key="named_drbd_node:0_post_notify_promote_0" internal_operation_key="named_drbd_node:1_post_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+      <rsc_op id="107" operation="notify" operation_key="named_drbd_node:0_post_notify_promote_0" internal_operation_key="named_drbd_node:1_post_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
         <primitive id="named_drbd_node" long-id="named_drbd_node:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_active_uname="cxa1 cxb1" CRM_meta_notify_all_uname="cxa1 cxb1" CRM_meta_notify_available_uname="cxa1 cxb1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="named_drbd_node:1" CRM_meta_notify_promote_uname="cxb1" CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_slave_uname="cxa1 cxb1" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_unpromoted_uname="cxa1 cxb1" CRM_meta_on_node="cxb1" CRM_meta_on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="drbd4"/>
       </rsc_op>
@@ -60,9 +34,9 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="5">
+  <synapse id="3">
     <action_set>
-      <rsc_op id="108" operation="notify" operation_key="named_drbd_node:0_pre_notify_promote_0" internal_operation_key="named_drbd_node:1_pre_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+      <rsc_op id="106" operation="notify" operation_key="named_drbd_node:0_pre_notify_promote_0" internal_operation_key="named_drbd_node:1_pre_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
         <primitive id="named_drbd_node" long-id="named_drbd_node:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_active_uname="cxa1 cxb1" CRM_meta_notify_all_uname="cxa1 cxb1" CRM_meta_notify_available_uname="cxa1 cxb1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="named_drbd_node:1" CRM_meta_notify_promote_uname="cxb1" CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_slave_uname="cxa1 cxb1" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_unpromoted_uname="cxa1 cxb1" CRM_meta_on_node="cxb1" CRM_meta_on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="drbd4"/>
       </rsc_op>
@@ -73,25 +47,25 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6">
+  <synapse id="4">
     <action_set>
-      <rsc_op id="45" operation="monitor" operation_key="named_drbd_node:0_monitor_10000" internal_operation_key="named_drbd_node:1_monitor_10000" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+      <rsc_op id="43" operation="monitor" operation_key="named_drbd_node:0_monitor_10000" internal_operation_key="named_drbd_node:1_monitor_10000" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
         <primitive id="named_drbd_node" long-id="named_drbd_node:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="cxb1" CRM_meta_on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Promoted" CRM_meta_timeout="5000"  drbd_resource="drbd4"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="44" operation="promote" operation_key="named_drbd_node:0_promote_0" internal_operation_key="named_drbd_node:1_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+        <rsc_op id="42" operation="promote" operation_key="named_drbd_node:0_promote_0" internal_operation_key="named_drbd_node:1_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
       </trigger>
       <trigger>
         <pseudo_event id="63" operation="notified" operation_key="named_drbd_confirmed-post_notify_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="7">
+  <synapse id="5">
     <action_set>
-      <rsc_op id="44" operation="promote" operation_key="named_drbd_node:0_promote_0" internal_operation_key="named_drbd_node:1_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
+      <rsc_op id="42" operation="promote" operation_key="named_drbd_node:0_promote_0" internal_operation_key="named_drbd_node:1_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045">
         <primitive id="named_drbd_node" long-id="named_drbd_node:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_active_uname="cxa1 cxb1" CRM_meta_notify_all_uname="cxa1 cxb1" CRM_meta_notify_available_uname="cxa1 cxb1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="named_drbd_node:1" CRM_meta_notify_promote_uname="cxb1" CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_slave_uname="cxa1 cxb1" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_unpromoted_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_unpromoted_uname="cxa1 cxb1" CRM_meta_on_node="cxb1" CRM_meta_on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="drbd4"/>
       </rsc_op>
@@ -99,6 +73,32 @@
     <inputs>
       <trigger>
         <pseudo_event id="58" operation="promote" operation_key="named_drbd_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6" priority="1000000">
+    <action_set>
+      <rsc_op id="109" operation="notify" operation_key="named_drbd_node:1_post_notify_promote_0" internal_operation_key="named_drbd_node:0_post_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+        <primitive id="named_drbd_node" long-id="named_drbd_node:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_active_uname="cxa1 cxb1" CRM_meta_notify_all_uname="cxa1 cxb1" CRM_meta_notify_available_uname="cxa1 cxb1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="named_drbd_node:1" CRM_meta_notify_promote_uname="cxb1" CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_slave_uname="cxa1 cxb1" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_notify_unpromoted_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_unpromoted_uname="cxa1 cxb1" CRM_meta_on_node="cxa1" CRM_meta_on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="drbd4"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="62" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="108" operation="notify" operation_key="named_drbd_node:1_pre_notify_promote_0" internal_operation_key="named_drbd_node:0_pre_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
+        <primitive id="named_drbd_node" long-id="named_drbd_node:1" class="ocf" provider="heartbeat" type="drbd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_active_uname="cxa1 cxb1" CRM_meta_notify_all_uname="cxa1 cxb1" CRM_meta_notify_available_uname="cxa1 cxb1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="named_drbd_node:2" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="named_drbd_node:1" CRM_meta_notify_promote_uname="cxb1" CRM_meta_notify_promoted_resource=" " CRM_meta_notify_promoted_uname=" " CRM_meta_notify_slave_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_slave_uname="cxa1 cxb1" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_notify_unpromoted_resource="named_drbd_node:0 named_drbd_node:1" CRM_meta_notify_unpromoted_uname="cxa1 cxb1" CRM_meta_on_node="cxa1" CRM_meta_on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="drbd4"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="60" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -113,10 +113,10 @@
         <pseudo_event id="62" operation="notify" operation_key="named_drbd_post_notify_promoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="107" operation="notify" operation_key="named_drbd_node:1_post_notify_promote_0" internal_operation_key="named_drbd_node:0_post_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
+        <rsc_op id="107" operation="notify" operation_key="named_drbd_node:0_post_notify_promote_0" internal_operation_key="named_drbd_node:1_post_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
       </trigger>
       <trigger>
-        <rsc_op id="109" operation="notify" operation_key="named_drbd_node:0_post_notify_promote_0" internal_operation_key="named_drbd_node:1_post_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+        <rsc_op id="109" operation="notify" operation_key="named_drbd_node:1_post_notify_promote_0" internal_operation_key="named_drbd_node:0_post_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -146,10 +146,10 @@
         <pseudo_event id="60" operation="notify" operation_key="named_drbd_pre_notify_promote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="106" operation="notify" operation_key="named_drbd_node:1_pre_notify_promote_0" internal_operation_key="named_drbd_node:0_pre_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
+        <rsc_op id="106" operation="notify" operation_key="named_drbd_node:0_pre_notify_promote_0" internal_operation_key="named_drbd_node:1_pre_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
       </trigger>
       <trigger>
-        <rsc_op id="108" operation="notify" operation_key="named_drbd_node:0_pre_notify_promote_0" internal_operation_key="named_drbd_node:1_pre_notify_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+        <rsc_op id="108" operation="notify" operation_key="named_drbd_node:1_pre_notify_promote_0" internal_operation_key="named_drbd_node:0_pre_notify_promote_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -169,7 +169,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="44" operation="promote" operation_key="named_drbd_node:0_promote_0" internal_operation_key="named_drbd_node:1_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+        <rsc_op id="42" operation="promote" operation_key="named_drbd_node:0_promote_0" internal_operation_key="named_drbd_node:1_promote_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
       </trigger>
     </inputs>
   </synapse>
