@@ -328,7 +328,7 @@ remote_node_up(const char *node_name)
     broadcast_remote_state_message(node_name, true);
 
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
-    state = create_node_state_update(node, node_update_cluster, update,
+    state = create_node_state_update(node, controld_node_update_cluster, update,
                                      __func__);
 
     /* Clear the PCMK__XA_NODE_FENCED flag in the node state. If the node ever
@@ -391,7 +391,8 @@ remote_node_down(const char *node_name, const enum down_opts opts)
 
     /* Update CIB node state */
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
-    create_node_state_update(node, node_update_cluster, update, __func__);
+    create_node_state_update(node, controld_node_update_cluster, update,
+                             __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, NULL);
     pcmk__xml_free(update);
 }
@@ -1408,7 +1409,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     node = pcmk__cluster_lookup_remote_node(lrm_state->node_name);
     CRM_CHECK(node != NULL, return);
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
-    state = create_node_state_update(node, node_update_none, update,
+    state = create_node_state_update(node, controld_node_update_none, update,
                                      __func__);
     crm_xml_add(state, PCMK__XA_NODE_IN_MAINTENANCE, (maintenance? "1" : "0"));
     if (controld_update_cib(PCMK_XE_STATUS, update, call_opt,

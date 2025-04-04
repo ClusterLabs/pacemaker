@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -83,7 +83,7 @@ do_ha_control(long long action,
             return;
         }
 
-        populate_cib_nodes(node_update_none, __func__);
+        populate_cib_nodes(controld_node_update_none, __func__);
         controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
         crm_info("Connected to the cluster");
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 
 #include <inttypes.h>           // PRIu32
 #include <stdbool.h>            // bool
+#include <stdint.h>             // uint32_t
 #include <stdio.h>              // NULL
 
 #include <sys/param.h>
@@ -266,7 +267,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
     if (AM_I_DC) {
         xmlNode *update = NULL;
-        int flags = node_update_peer;
+        uint32_t flags = controld_node_update_peer;
         int alive = node_alive(node);
         pcmk__graph_action_t *down = match_down_event(node->xml_id);
 
@@ -293,7 +294,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
                 // Shutdown actions are immediately confirmed (i.e. no_wait)
                 if (!is_remote) {
-                    flags |= node_update_join | node_update_expected;
+                    flags |= controld_node_update_join
+                             |controld_node_update_expected;
                     crmd_peer_down(node, FALSE);
                     check_join_state(controld_globals.fsa_state, __func__);
                 }
@@ -348,7 +350,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             /* A pacemaker_remote node won't have its cluster status updated
              * in the CIB by membership-layer callbacks, so do it here.
              */
-            flags |= node_update_cluster;
+            flags |= controld_node_update_cluster;
 
             /* Trigger resource placement on newly integrated nodes */
             if (appeared) {
@@ -365,7 +367,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
              * PCMK_OPT_NODE_PENDING_TIMEOUT.
              */
             node->when_member = 1;
-            flags |= node_update_cluster;
+            flags |= controld_node_update_cluster;
             controld_node_pending_timer(node);
         }
 

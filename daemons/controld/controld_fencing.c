@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -221,11 +221,12 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     pcmk__node_status_t *peer = NULL;
     xmlNode *node_state = NULL;
 
-    /* We (usually) rely on the membership layer to do node_update_cluster,
-     * and the peer status callback to do node_update_peer, because the node
-     * might have already rejoined before we get the stonith result here.
+    /* We (usually) rely on the membership layer to do
+     * controld_node_update_cluster, and the peer status callback to do
+     * controld_node_update_peer, because the node might have already rejoined
+     * before we get the stonith result here.
      */
-    int flags = node_update_join | node_update_expected;
+    uint32_t flags = controld_node_update_join|controld_node_update_expected;
 
     CRM_CHECK((target != NULL) && (target_xml_id != NULL), return);
 
@@ -238,7 +239,7 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
          * in the CIB. However, if the node has never been seen, do it here, so
          * the node is not considered unclean.
          */
-        flags |= node_update_cluster;
+        flags |= controld_node_update_cluster;
     }
 
     if (peer->xml_id == NULL) {

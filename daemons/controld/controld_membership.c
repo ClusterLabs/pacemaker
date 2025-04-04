@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 /* put these first so that uuid_t is defined without conflicts */
 #include <crm_internal.h>
 
+#include <stdint.h>                     // uint32_t
 #include <string.h>
 
 #include <crm/crm.h>
@@ -69,8 +70,10 @@ post_cache_update(int instance)
     controld_set_fsa_input_flags(R_MEMBERSHIP);
 
     if (AM_I_DC) {
-        populate_cib_nodes(node_update_quick | node_update_cluster | node_update_peer |
-                           node_update_expected, __func__);
+        populate_cib_nodes(controld_node_update_quick
+                           |controld_node_update_cluster
+                           |controld_node_update_peer
+                           |controld_node_update_expected, __func__);
     }
 
     /*
@@ -115,14 +118,14 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
  * \brief Create an XML node state tag with updates
  *
  * \param[in,out] node    Node whose state will be used for update
- * \param[in]     flags   Bitmask of node_update_flags indicating what to update
+ * \param[in]     flags   Group of <tt>enum controld_node_update_flags</tt>
  * \param[in,out] parent  XML node to contain update (or NULL)
  * \param[in]     source  Who requested the update (only used for logging)
  *
  * \return Pointer to created node state tag
  */
 xmlNode *
-create_node_state_update(pcmk__node_status_t *node, int flags,
+create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
                          xmlNode *parent, const char *source)
 {
     // @TODO Ensure all callers handle NULL returns
@@ -150,7 +153,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
 
     crm_xml_add(node_state, PCMK_XA_UNAME, node->name);
 
-    if ((flags & node_update_cluster) && node->state) {
+    if (pcmk_is_set(flags, controld_node_update_cluster)) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
             crm_xml_add_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
@@ -163,7 +166,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
     }
 
     if (!pcmk_is_set(node->flags, pcmk__node_status_remote)) {
-        if (flags & node_update_peer) {
+        if (pcmk_is_set(flags, controld_node_update_peer)) {
             if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
                 crm_xml_add_ll(node_state, PCMK_XA_CRMD, node->when_online);
@@ -178,7 +181,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
             }
         }
 
-        if (flags & node_update_join) {
+        if (pcmk_is_set(flags, controld_node_update_join)) {
             if (controld_get_join_phase(node) <= controld_join_none) {
                 value = CRMD_JOINSTATE_DOWN;
             } else {
@@ -187,7 +190,7 @@ create_node_state_update(pcmk__node_status_t *node, int flags,
             crm_xml_add(node_state, PCMK__XA_JOIN, value);
         }
 
-        if (flags & node_update_expected) {
+        if (pcmk_is_set(flags, controld_node_update_expected)) {
             crm_xml_add(node_state, PCMK_XA_EXPECTED, node->expected);
         }
     }
@@ -284,6 +287,61 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
     }
 }
 
+/*!
+ * \internal
+ * \brief Populate a \c PCMK_XE_NODES element from the peer cache
+ *
+ * Create a \c PCMK_XE_NODE element for each node in the cache.
+ *
+ * \param[in,out] nodes_xml  \c PCMK_XE_NODES element to populate
+ */
+static void
+populate_cib_nodes_from_cache(xmlNode *nodes_xml)
+{
+    GString *xpath = NULL;
+    GHashTableIter iter;
+    pcmk__node_status_t *node = NULL;
+
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        cib_t *cib_conn = controld_globals.cib_conn;
+        int call_id = 0;
+        xmlNode *new_node = NULL;
+
+        if ((node->xml_id == NULL) || (node->name == NULL)) {
+            // We need both in order for the node to be valid
+            continue;
+        }
+
+        crm_trace("Creating node entry for %s/%s", node->name, node->xml_id);
+
+        new_node = pcmk__xe_create(nodes_xml, PCMK_XE_NODE);
+        crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
+        crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
+
+        if (xpath == NULL) {
+            xpath = g_string_sized_new(512);
+        } else {
+            g_string_truncate(xpath, 0);
+        }
+
+        // Search and remove unknown nodes with the conflicting uname from CIB
+        pcmk__g_strcat(xpath,
+                       "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
+                       "/" PCMK_XE_NODES "/" PCMK_XE_NODE
+                       "[@" PCMK_XA_UNAME "='", node->name, "']"
+                       "[@" PCMK_XA_ID "!='", node->xml_id, "']", NULL);
+
+        call_id = cib_conn->cmds->query(cib_conn, xpath->str, NULL, cib_xpath);
+        fsa_register_cib_callback(call_id, pcmk__str_copy(node->xml_id),
+                                  search_conflicting_node_callback);
+    }
+
+    if (xpath != NULL) {
+        g_string_free(xpath, TRUE);
+    }
+}
+
 static void
 node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -302,95 +360,62 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
 }
 
 void
-populate_cib_nodes(enum node_update_flags flags, const char *source)
+populate_cib_nodes(uint32_t flags, const char *source)
 {
-    cib_t *cib_conn = controld_globals.cib_conn;
-
-    int call_id = 0;
-    gboolean from_hashtable = TRUE;
+    bool from_cache = true;
     xmlNode *node_list = pcmk__xe_create(NULL, PCMK_XE_NODES);
 
+    GHashTableIter iter;
+    pcmk__node_status_t *node = NULL;
+
 #if SUPPORT_COROSYNC
-    if (!pcmk_is_set(flags, node_update_quick)
+    if (!pcmk_is_set(flags, controld_node_update_quick)
         && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
 
-        from_hashtable = pcmk__corosync_add_nodes(node_list);
+        from_cache = !pcmk__corosync_add_nodes(node_list);
     }
 #endif
 
-    if (from_hashtable) {
-        GHashTableIter iter;
-        pcmk__node_status_t *node = NULL;
-        GString *xpath = NULL;
+    crm_trace("Populating <" PCMK_XE_NODES "> section of CIB from %s",
+              (from_cache? "peer cache" : "cluster"));
 
-        g_hash_table_iter_init(&iter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            xmlNode *new_node = NULL;
-
-            if ((node->xml_id != NULL) && (node->name != NULL)) {
-                crm_trace("Creating node entry for %s/%s",
-                          node->name, node->xml_id);
-                if (xpath == NULL) {
-                    xpath = g_string_sized_new(512);
-                } else {
-                    g_string_truncate(xpath, 0);
-                }
-
-                /* We need both to be valid */
-                new_node = pcmk__xe_create(node_list, PCMK_XE_NODE);
-                crm_xml_add(new_node, PCMK_XA_ID, node->xml_id);
-                crm_xml_add(new_node, PCMK_XA_UNAME, node->name);
-
-                /* Search and remove unknown nodes with the conflicting uname from CIB */
-                pcmk__g_strcat(xpath,
-                               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-                               "/" PCMK_XE_NODES "/" PCMK_XE_NODE
-                               "[@" PCMK_XA_UNAME "='", node->name, "']"
-                               "[@" PCMK_XA_ID "!='", node->xml_id, "']", NULL);
-
-                call_id = cib_conn->cmds->query(cib_conn,
-                                                (const char *) xpath->str, NULL,
-                                                cib_xpath);
-                fsa_register_cib_callback(call_id, pcmk__str_copy(node->xml_id),
-                                          search_conflicting_node_callback);
-            }
-        }
-
-        if (xpath != NULL) {
-            g_string_free(xpath, TRUE);
-        }
+    if (from_cache) {
+        populate_cib_nodes_from_cache(node_list);
     }
 
-    crm_trace("Populating <nodes> section from %s", from_hashtable ? "hashtable" : "cluster");
+    if (controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
+                            node_list_update_callback) != pcmk_rc_ok) {
+        // Callback logs an error
+        goto done;
+    }
+    if (pcmk__peer_cache == NULL) {
+        // We don't have the necessary info to update the CIB's status section
+        goto done;
+    }
+    if (!AM_I_DC) {
+        // Only the DC populates the status section (@TODO Why only status?)
+        goto done;
+    }
 
-    if ((controld_update_cib(PCMK_XE_NODES, node_list, cib_none,
-                             node_list_update_callback) == pcmk_rc_ok)
-         && (pcmk__peer_cache != NULL) && AM_I_DC) {
-        /*
-         * There is no need to update the local CIB with our values if
-         * we've not seen valid membership data
-         */
-        GHashTableIter iter;
-        pcmk__node_status_t *node = NULL;
+    pcmk__xml_free(node_list);
+    node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
-        pcmk__xml_free(node_list);
-        node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
+    g_hash_table_iter_init(&iter, pcmk__peer_cache);
+    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        create_node_state_update(node, flags, node_list, source);
+    }
 
-        g_hash_table_iter_init(&iter, pcmk__peer_cache);
+    if (pcmk__remote_peer_cache != NULL) {
+        g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
             create_node_state_update(node, flags, node_list, source);
         }
-
-        if (pcmk__remote_peer_cache != NULL) {
-            g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
-            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-                create_node_state_update(node, flags, node_list, source);
-            }
-        }
-
-        controld_update_cib(PCMK_XE_STATUS, node_list, cib_none,
-                            crmd_node_update_complete);
     }
+
+    controld_update_cib(PCMK_XE_STATUS, node_list, cib_none,
+                        crmd_node_update_complete);
+
+done:
     pcmk__xml_free(node_list);
 }
 

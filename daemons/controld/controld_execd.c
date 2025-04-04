@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -588,7 +588,8 @@ controld_query_executor_state(void)
     CRM_CHECK(peer != NULL, return NULL);
 
     xml_state = create_node_state_update(peer,
-                                         node_update_cluster|node_update_peer,
+                                         controld_node_update_cluster
+                                         |controld_node_update_peer,
                                          NULL, __func__);
     if (xml_state == NULL) {
         return NULL;
@@ -1729,7 +1730,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     }
 
     peer = controld_get_local_node_status();
-    update = create_node_state_update(peer, node_update_none, NULL,
+    update = create_node_state_update(peer, controld_node_update_none, NULL,
                                       __func__);
 
     iter = pcmk__xe_create(update, PCMK__XE_LRM);
