@@ -54,35 +54,6 @@ fenced_scheduler_init(void)
 
 /*!
  * \internal
- * \brief Set the local node name for scheduling purposes
- *
- * \param[in] node_name  Name to set as local node name
- */
-void
-fenced_set_local_node(const char *node_name)
-{
-    pcmk__assert(scheduler != NULL);
-
-    scheduler->priv->local_node_name = pcmk__str_copy(node_name);
-}
-
-/*!
- * \internal
- * \brief Get the local node name
- *
- * \return Local node name
- */
-const char *
-fenced_get_local_node(void)
-{
-    if (scheduler == NULL) {
-        return NULL;
-    }
-    return scheduler->priv->local_node_name;
-}
-
-/*!
- * \internal
  * \brief Free all scheduler-related resources
  */
 void
@@ -112,14 +83,15 @@ fenced_scheduler_cleanup(void)
 static pcmk_node_t *
 local_node_allowed_for(const pcmk_resource_t *rsc)
 {
-    if ((rsc != NULL) && (scheduler->priv->local_node_name != NULL)) {
+    const char *local_node = fenced_get_local_node();
+
+    if ((rsc != NULL) && (local_node != NULL)) {
         GHashTableIter iter;
         pcmk_node_t *node = NULL;
 
         g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
         while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
-            if (pcmk__str_eq(node->priv->name, scheduler->priv->local_node_name,
-                             pcmk__str_casei)) {
+            if (pcmk__str_eq(node->priv->name, local_node, pcmk__str_casei)) {
                 return node;
             }
         }
