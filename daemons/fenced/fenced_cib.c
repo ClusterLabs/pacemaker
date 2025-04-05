@@ -328,15 +328,14 @@ watchdog_device_update(void)
                     STONITH_WATCHDOG_ID,
                     st_namespace_internal,
                     STONITH_WATCHDOG_AGENT,
-                    NULL, /* stonith_device_register will add our
+                    NULL, /* fenced_device_register() will add our
                              own name as PCMK_STONITH_HOST_LIST param
                              so we can skip that here
                            */
                     NULL);
-            rc = stonith_device_register(xml, TRUE);
+            rc = fenced_device_register(xml, true);
             pcmk__xml_free(xml);
-            if (rc != pcmk_ok) {
-                rc = pcmk_legacy2rc(rc);
+            if (rc != pcmk_rc_ok) {
                 exit_code = CRM_EX_FATAL;
                 crm_crit("Cannot register watchdog pseudo fence agent: %s",
                          pcmk_rc_str(rc));

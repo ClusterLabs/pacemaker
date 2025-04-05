@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <stdbool.h>                    // bool
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -1017,7 +1018,7 @@ target_list_type(stonith_device_t * dev)
 }
 
 static stonith_device_t *
-build_device_from_xml(xmlNode *dev)
+build_device_from_xml(const xmlNode *dev)
 {
     const char *value;
     stonith_device_t *device = NULL;
@@ -1325,91 +1326,92 @@ device_has_duplicate(const stonith_device_t *device)
 }
 
 int
-stonith_device_register(xmlNode *dev, gboolean from_cib)
+fenced_device_register(const xmlNode *dev, bool from_cib)
 {
+    const char *local_node_name = fenced_get_local_node();
     stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(dev);
-    guint ndevices = 0;
-    int rv = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
-    CRM_CHECK(device != NULL, return -ENOMEM);
+    CRM_CHECK(device != NULL, return ENOMEM);
 
     /* do we have a watchdog-device? */
-    if (pcmk__str_eq(device->id, STONITH_WATCHDOG_ID, pcmk__str_none) ||
-        pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
-                     STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) do {
+    if (pcmk__str_eq(device->id, STONITH_WATCHDOG_ID, pcmk__str_none)
+        || pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
+                            STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
+
         if (stonith_watchdog_timeout_ms <= 0) {
             crm_err("Ignoring watchdog fence device without "
-                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set.");
-            rv = -ENODEV;
-            /* fall through to cleanup & return */
-        } else if (!pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
-                                 STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
-            crm_err("Ignoring watchdog fence device with unknown "
-                    "agent '%s' unequal '" STONITH_WATCHDOG_AGENT "'.",
-                    device->agent?device->agent:"");
-            rv = -ENODEV;
-            /* fall through to cleanup & return */
-        } else if (!pcmk__str_eq(device->id, STONITH_WATCHDOG_ID,
-                                 pcmk__str_none)) {
-            crm_err("Ignoring watchdog fence device "
-                    "named %s !='"STONITH_WATCHDOG_ID"'.",
-                    device->id?device->id:"");
-            rv = -ENODEV;
-            /* fall through to cleanup & return */
-        } else {
-            const char *local_node_name = fenced_get_local_node();
+                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set");
+            rc = ENODEV;
+            goto done;
+        }
+        if (!pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
+                              STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
+            crm_err("Ignoring watchdog fence device with unknown agent '%s' "
+                    "rather than '" STONITH_WATCHDOG_AGENT "'",
+                    pcmk__s(device->agent, ""));
+            rc = ENODEV;
+            goto done;
+        }
+        if (!pcmk__str_eq(device->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
+            crm_err("Ignoring watchdog fence device named '%s' rather than "
+                    "'" STONITH_WATCHDOG_ID "'",
+                    pcmk__s(device->id, ""));
+            rc = ENODEV;
+            goto done;
+        }
 
-            if (pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT,
-                             pcmk__str_none)) {
-                /* this either has an empty list or the targets
-                   configured for watchdog-fencing
-                 */
-                g_list_free_full(stonith_watchdog_targets, free);
-                stonith_watchdog_targets = device->targets;
-                device->targets = NULL;
-            }
-            if (node_does_watchdog_fencing(local_node_name)) {
-                g_list_free_full(device->targets, free);
-                device->targets = stonith__parse_targets(local_node_name);
-                pcmk__insert_dup(device->params,
-                                 PCMK_STONITH_HOST_LIST, local_node_name);
-                /* proceed as with any other stonith-device */
-                break;
-            }
+        if (pcmk__str_eq(device->agent, STONITH_WATCHDOG_AGENT,
+                         pcmk__str_none)) {
+            /* This has either an empty list or the targets configured for
+             * watchdog fencing
+             */
+            g_list_free_full(stonith_watchdog_targets, free);
+            stonith_watchdog_targets = device->targets;
+            device->targets = NULL;
+        }
 
-            crm_debug("Skip registration of watchdog fence device on node not in host-list.");
-            /* cleanup and fall through to more cleanup and return */
+        if (!node_does_watchdog_fencing(local_node_name)) {
+            crm_debug("Skip registration of watchdog fence device on node not "
+                      "in host list");
             device->targets = NULL;
             stonith_device_remove(device->id, from_cib);
+            goto done;
         }
-        free_device(device);
-        return rv;
-    } while (0);
+
+        // Proceed as with any other fencing device
+        g_list_free_full(device->targets, free);
+        device->targets = stonith__parse_targets(local_node_name);
+        pcmk__insert_dup(device->params, PCMK_STONITH_HOST_LIST,
+                         local_node_name);
+    }
 
     dup = device_has_duplicate(device);
-    if (dup) {
-        ndevices = g_hash_table_size(device_list);
+    if (dup != NULL) {
+        guint ndevices = g_hash_table_size(device_list);
+
         crm_debug("Device '%s' already in device list (%d active device%s)",
                   device->id, ndevices, pcmk__plural_s(ndevices));
         free_device(device);
         device = dup;
-        dup = g_hash_table_lookup(device_list, device->id);
-        dup->dirty = FALSE;
+        device->dirty = FALSE;
 
     } else {
+        guint ndevices = 0;
         stonith_device_t *old = g_hash_table_lookup(device_list, device->id);
 
-        if (from_cib && old && old->api_registered) {
-            /* If the cib is writing over an entry that is shared with a stonith client,
-             * copy any pending ops that currently exist on the old entry to the new one.
-             * Otherwise the pending ops will be reported as failures
+        if (from_cib && (old != NULL) && old->api_registered) {
+            /* If the CIB is writing over an entry that is shared with a stonith
+             * client, copy any pending ops that currently exist on the old
+             * entry to the new one. Otherwise the pending ops will be reported
+             * as failures.
              */
             crm_info("Overwriting existing entry for %s from CIB", device->id);
             device->pending_ops = old->pending_ops;
             device->api_registered = TRUE;
             old->pending_ops = NULL;
-            if (device->pending_ops) {
+            if (device->pending_ops != NULL) {
                 mainloop_set_trigger(device->work);
             }
         }
@@ -1426,7 +1428,11 @@ stonith_device_register(xmlNode *dev, gboolean from_cib)
         device->api_registered = TRUE;
     }
 
-    return pcmk_ok;
+done:
+    if (rc != pcmk_rc_ok) {
+        free_device(device);
+    }
+    return rc;
 }
 
 void
@@ -3403,8 +3409,9 @@ handle_device_add_request(pcmk__request_t *request)
                                         "//" PCMK__XE_ST_DEVICE_ID, LOG_ERR);
 
     if (is_privileged(request->ipc_client, op)) {
-        int rc = stonith_device_register(dev, FALSE);
+        int rc = fenced_device_register(dev, false);
 
+        rc = pcmk_rc2legacy(rc);
         pcmk__set_result(&request->result,
                          ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
                          stonith__legacy2status(rc),

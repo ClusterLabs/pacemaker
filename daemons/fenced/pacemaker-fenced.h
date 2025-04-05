@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -234,7 +234,7 @@ uint64_t get_stonith_flag(const char *name);
 void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                             xmlNode *op_request, const char *remote_peer);
 
-int stonith_device_register(xmlNode *msg, gboolean from_cib);
+int fenced_device_register(const xmlNode *dev, bool from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);
 
