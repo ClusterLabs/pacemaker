@@ -1441,10 +1441,10 @@ stonith_device_remove(const char *id, bool from_cib)
     stonith_device_t *device = g_hash_table_lookup(device_list, id);
     guint ndevices = 0;
 
-    if (!device) {
+    if (device == NULL) {
         ndevices = g_hash_table_size(device_list);
-        crm_info("Device '%s' not found (%d active device%s)",
-                 id, ndevices, pcmk__plural_s(ndevices));
+        crm_info("Device '%s' not found (%u active device%s)", id, ndevices,
+                 pcmk__plural_s(ndevices));
         return;
     }
 
@@ -1458,14 +1458,14 @@ stonith_device_remove(const char *id, bool from_cib)
     if (!device->cib_registered && !device->api_registered) {
         g_hash_table_remove(device_list, id);
         ndevices = g_hash_table_size(device_list);
-        crm_info("Removed '%s' from device list (%d active device%s)",
+        crm_info("Removed '%s' from device list (%u active device%s)",
                  id, ndevices, pcmk__plural_s(ndevices));
     } else {
-        crm_trace("Not removing '%s' from device list (%d active) because "
-                  "still registered via:%s%s",
+        // Exactly one is true at this point
+        crm_trace("Not removing '%s' from device list (%u active) because "
+                  "still registered via %s",
                   id, g_hash_table_size(device_list),
-                  (device->cib_registered? " cib" : ""),
-                  (device->api_registered? " api" : ""));
+                  (device->cib_registered? "CIB" : "API"));
     }
 }
 
