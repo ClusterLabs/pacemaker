@@ -26,7 +26,7 @@
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
-typedef struct stonith_device_s {
+typedef struct {
     char *id;
     char *agent;
     char *namespace;
@@ -35,7 +35,6 @@ typedef struct stonith_device_s {
     GString *on_target_actions;
     GList *targets;
     time_t targets_age;
-    gboolean has_attr_map;
 
     // Whether target's nodeid should be passed as a parameter to the agent
     gboolean include_nodeid;
