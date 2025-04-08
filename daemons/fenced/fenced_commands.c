@@ -107,9 +107,6 @@ typedef struct {
                      void *user_data);
     guint timer_sigterm;
     guint timer_sigkill;
-    /*! If the operation timed out, this is the last signal
-     *  we sent to the process to get it to terminate */
-    int last_timeout_signo;
 
     fenced_device_t *active_on;
     fenced_device_t *activating_on;
