@@ -55,7 +55,7 @@ typedef struct {
     gboolean cib_registered;
     gboolean api_registered;
     gboolean dirty;
-} stonith_device_t;
+} fenced_device_t;
 
 /* These values are used to index certain arrays by "phase". Usually an
  * operation has only one "phase", so phase is always zero. However, some

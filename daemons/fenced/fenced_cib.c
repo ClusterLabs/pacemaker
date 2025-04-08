@@ -202,7 +202,7 @@ static void
 cib_devices_update(void)
 {
     GHashTableIter iter;
-    stonith_device_t *device = NULL;
+    fenced_device_t *device = NULL;
 
     crm_info("Updating devices to version %s.%s.%s",
              crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
