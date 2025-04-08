@@ -247,7 +247,7 @@ cib_devices_update(void)
              crm_element_value(local_cib, PCMK_XA_EPOCH),
              crm_element_value(local_cib, PCMK_XA_NUM_UPDATES));
 
-    g_hash_table_foreach(device_list, mark_dirty_if_cib_registered, NULL);
+    fenced_foreach_device(mark_dirty_if_cib_registered, NULL);
 
     /* have list repopulated if cib has a watchdog-fencing-resource
        TODO: keep a cached list for queries happening while we are refreshing

@@ -116,6 +116,21 @@ typedef struct {
 static xmlNode *construct_async_reply(const async_command_t *cmd,
                                       const pcmk__action_result_t *result);
 
+/*!
+ * \internal
+ * \brief Call a function for each known fence device
+ *
+ * \param[in]     fn         Function to call for each device
+ * \param[in,out] user_data  User data
+ */
+void
+fenced_foreach_device(GHFunc fn, gpointer user_data)
+{
+    if (device_list != NULL) {
+        g_hash_table_foreach(device_list, fn, user_data);
+    }
+}
+
 static gboolean
 is_action_required(const char *action, const fenced_device_t *device)
 {
@@ -2206,7 +2221,7 @@ get_capable_devices(const char *host, const char *action, int timeout,
               ndevices, pcmk__plural_s(ndevices),
               (search->action? search->action : "unknown action"),
               (search->host? search->host : "any node"));
-    g_hash_table_foreach(device_list, search_devices, search);
+    fenced_foreach_device(search_devices, search);
 }
 
 struct st_query_data {
