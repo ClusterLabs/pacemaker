@@ -163,7 +163,6 @@ make_args(const char *agent, const char *action, const char *target,
         if (target_nodeid != 0) {
             char *nodeid = crm_strdup_printf("%" PRIu32, target_nodeid);
 
-            // cts-fencing looks for this log message
             crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
                      nodeid, action, pcmk__s(target, "no node"));
             g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
