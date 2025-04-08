@@ -215,7 +215,7 @@ typedef struct stonith_topology_s {
 
 void stonith_shutdown(int nsig);
 
-void init_device_list(void);
+void fenced_init_device_table(void);
 void fenced_free_device_table(void);
 bool fenced_has_watchdog_device(void);
 void fenced_foreach_device(GHFunc fn, gpointer user_data);

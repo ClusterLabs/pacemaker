@@ -634,7 +634,7 @@ main(int argc, char **argv)
         setup_cib();
     }
 
-    init_device_list();
+    fenced_init_device_table();
     init_topology_list();
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);

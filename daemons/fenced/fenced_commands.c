@@ -792,8 +792,12 @@ free_device(gpointer data)
     free(device);
 }
 
+/*!
+ * \internal
+ * \brief Initialize the table of known fence devices
+ */
 void
-init_device_list(void)
+fenced_init_device_table(void)
 {
     if (device_table == NULL) {
         device_table = pcmk__strkey_table(NULL, free_device);
