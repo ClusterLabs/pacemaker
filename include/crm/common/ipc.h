@@ -150,6 +150,10 @@ enum crm_ipc_flags
     //! All replies to proxied connections are sent as events.  This flag
     //! preserves whether the events should be treated as an Event or a Response
     crm_ipc_proxied_relay_response  = (UINT32_C(1) << 18),
+    //! This is a multi-part IPC message
+    crm_ipc_multipart               = (UINT32_C(1) << 19),
+    //! This is the end of a multi-part IPC message
+    crm_ipc_multipart_end           = (UINT32_C(1) << 20),
 };
 
 typedef struct crm_ipc_s crm_ipc_t;
