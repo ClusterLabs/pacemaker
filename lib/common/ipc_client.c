@@ -845,6 +845,8 @@ struct crm_ipc_s {
  *       crm_ipc_destroy().
  * \note This should be considered deprecated for use with daemons supported by
  *       pcmk_new_ipc_api().
+ * \note @COMPAT Since 3.0.1, \p max_size is ignored and the default given by
+ *       \c crm_ipc_default_buffer_size() will be used instead.
  */
 crm_ipc_t *
 crm_ipc_new(const char *name, size_t max_size)
@@ -864,7 +866,7 @@ crm_ipc_new(const char *name, size_t max_size)
         free(client);
         return NULL;
     }
-    client->buf_size = pcmk__ipc_buffer_size(max_size);
+    client->buf_size = crm_ipc_default_buffer_size();
     client->buffer = malloc(client->buf_size);
     if (client->buffer == NULL) {
         crm_err("Could not create %s IPC connection: %s",
