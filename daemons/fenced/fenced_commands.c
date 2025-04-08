@@ -118,6 +118,20 @@ static xmlNode *construct_async_reply(const async_command_t *cmd,
 
 /*!
  * \internal
+ * \brief Check whether the fencer's device table contains a watchdog device
+ *
+ * \retval \c true   If the device table contains a watchdog device
+ * \retval \c false  Otherwise
+ */
+bool
+fenced_has_watchdog_device(void)
+{
+    return (device_list != NULL)
+           && (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) != NULL);
+}
+
+/*!
+ * \internal
  * \brief Call a function for each known fence device
  *
  * \param[in]     fn         Function to call for each device

@@ -346,8 +346,8 @@ static void
 watchdog_device_update(void)
 {
     if (stonith_watchdog_timeout_ms > 0) {
-        if (!g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) &&
-            !stonith_watchdog_targets) {
+        if (!fenced_has_watchdog_device()
+            && (stonith_watchdog_targets == NULL)) {
             /* getting here watchdog-fencing enabled, no device there yet
                and reason isn't stonith_watchdog_targets preventing that
              */
@@ -373,7 +373,7 @@ watchdog_device_update(void)
             }
         }
 
-    } else if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) != NULL) {
+    } else if (fenced_has_watchdog_device()) {
         /* be silent if no device - todo parameter to stonith_device_remove */
         stonith_device_remove(STONITH_WATCHDOG_ID, true);
     }

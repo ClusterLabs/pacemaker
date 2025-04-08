@@ -217,6 +217,7 @@ void stonith_shutdown(int nsig);
 
 void init_device_list(void);
 void free_device_list(void);
+bool fenced_has_watchdog_device(void);
 void fenced_foreach_device(GHFunc fn, gpointer user_data);
 void fenced_foreach_device_remove(GHRFunc fn);
 
