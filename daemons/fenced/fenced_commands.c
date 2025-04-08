@@ -1058,7 +1058,6 @@ build_device_from_xml(const xmlNode *dev)
     }
 
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
-    /* TODO: Hook up priority */
 
     return device;
 }
@@ -2762,20 +2761,6 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
     }
 }
 
-static gint
-sort_device_priority(gconstpointer a, gconstpointer b)
-{
-    const stonith_device_t *dev_a = a;
-    const stonith_device_t *dev_b = b;
-
-    if (dev_a->priority > dev_b->priority) {
-        return -1;
-    } else if (dev_a->priority < dev_b->priority) {
-        return 1;
-    }
-    return 0;
-}
-
 static void
 stonith_fence_get_devices_cb(GList * devices, void *user_data)
 {
@@ -2787,8 +2772,6 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
              ndevices, pcmk__plural_s(ndevices), cmd->target);
 
     if (devices != NULL) {
-        /* Order based on priority */
-        devices = g_list_sort(devices, sort_device_priority);
         device = g_hash_table_lookup(device_list, devices->data);
     }
 

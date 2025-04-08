@@ -38,7 +38,6 @@ typedef struct {
 
     /* whether the cluster should automatically unfence nodes with the device */
     gboolean automatic_unfencing;
-    guint priority;
 
     uint32_t flags; // Group of enum st_device_flags
 
