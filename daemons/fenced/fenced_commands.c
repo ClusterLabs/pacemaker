@@ -80,10 +80,8 @@ static int get_agent_metadata(const char *agent, xmlNode **metadata);
 static void read_action_metadata(fenced_device_t *device);
 static enum fenced_target_by unpack_level_kind(const xmlNode *level);
 
-typedef struct async_command_s {
-
+typedef struct {
     int id;
-    int pid;
     int fd_stdout;
     uint32_t options;
     int default_timeout; /* seconds */
