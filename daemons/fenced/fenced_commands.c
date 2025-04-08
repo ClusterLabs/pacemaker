@@ -792,19 +792,24 @@ free_device(gpointer data)
     free(device);
 }
 
-void free_device_list(void)
-{
-    if (device_table != NULL) {
-        g_hash_table_destroy(device_table);
-        device_table = NULL;
-    }
-}
-
 void
 init_device_list(void)
 {
     if (device_table == NULL) {
         device_table = pcmk__strkey_table(NULL, free_device);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free the table of known fence devices
+ */
+void
+fenced_free_device_table(void)
+{
+    if (device_table != NULL) {
+        g_hash_table_destroy(device_table);
+        device_table = NULL;
     }
 }
 

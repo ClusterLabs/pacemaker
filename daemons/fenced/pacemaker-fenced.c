@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -437,7 +437,7 @@ stonith_cleanup(void)
     pcmk__client_cleanup();
     free_stonith_remote_op_list();
     free_topology_list();
-    free_device_list();
+    fenced_free_device_table();
     free_metadata_cache();
     fenced_unregister_handlers();
 }
