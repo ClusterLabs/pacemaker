@@ -36,9 +36,6 @@ typedef struct {
     GList *targets;
     time_t targets_age;
 
-    // Whether target's nodeid should be passed as a parameter to the agent
-    gboolean include_nodeid;
-
     /* whether the cluster should automatically unfence nodes with the device */
     gboolean automatic_unfencing;
     guint priority;

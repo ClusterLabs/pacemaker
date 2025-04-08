@@ -99,7 +99,6 @@ typedef struct async_command_s {
     char *remote_op_id;
 
     char *target;
-    uint32_t target_nodeid;
     char *action;
     char *device;
 
@@ -596,9 +595,9 @@ stonith_device_execute(stonith_device_t * device)
         host_arg = "plug";
     }
 
-    action = stonith__action_create(device->agent, action_str, cmd->target,
-                                    cmd->target_nodeid, cmd->timeout,
-                                    device->params, device->aliases, host_arg);
+    action = stonith__action_create(device->agent, action_str, cmd->target, 0,
+                                    cmd->timeout, device->params,
+                                    device->aliases, host_arg);
 
     /* for async exec, exec_rc is negative for early error exit
        otherwise handling of success/errors is done via callbacks */
@@ -653,14 +652,6 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 
     if (cmd->device) {
         free(cmd->device);
-    }
-
-    if (device->include_nodeid && (cmd->target != NULL)) {
-        pcmk__node_status_t *node =
-            pcmk__get_node(0, cmd->target, NULL,
-                           pcmk__node_search_cluster_member);
-
-        cmd->target_nodeid = node->cluster_layer_id;
     }
 
     cmd->device = pcmk__str_copy(device->id);
@@ -908,27 +899,6 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
     return pcmk_rc_ok;
 }
 
-static gboolean
-is_nodeid_required(xmlNode * xml)
-{
-    xmlXPathObject *xpath = NULL;
-
-    if (!xml) {
-        return FALSE;
-    }
-
-    xpath = pcmk__xpath_search(xml->doc,
-                               "//" PCMK_XE_PARAMETER
-                               "[@" PCMK_XA_NAME "='nodeid']");
-    if (pcmk__xpath_num_results(xpath) == 0) {
-        xmlXPathFreeObject(xpath);
-        return FALSE;
-    }
-
-    xmlXPathFreeObject(xpath);
-    return TRUE;
-}
-
 static void
 read_action_metadata(stonith_device_t *device)
 {
@@ -1070,11 +1040,6 @@ build_device_from_xml(const xmlNode *dev)
 
         default:
             break;
-    }
-
-    value = g_hash_table_lookup(device->params, "nodeid");
-    if (!value) {
-        device->include_nodeid = is_nodeid_required(device->agent_metadata);
     }
 
     value = crm_element_value(dev, PCMK__XA_RSC_PROVIDES);
