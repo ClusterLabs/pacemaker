@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2024 the Pacemaker project contributors
+ * Later changes copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -297,8 +297,8 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     crm_trace("Connecting %s channel", channel);
 
-    native->source = mainloop_add_ipc_client(channel, G_PRIORITY_HIGH,
-                                             512 * 1024, cib, &cib_callbacks);
+    native->source = mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 0, cib,
+                                             &cib_callbacks);
     native->ipc = mainloop_get_ipc_client(native->source);
 
     if (rc != pcmk_ok || native->ipc == NULL || !crm_ipc_connected(native->ipc)) {
