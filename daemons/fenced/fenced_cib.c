@@ -196,25 +196,58 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
 
 /*!
  * \internal
+ * \brief Mark a fence device dirty if its \c cib_registered flag is \c TRUE
+ *
+ * \param[in]     key        Ignored
+ * \param[in,out] value      Fence device (<tt>fenced_device_t *</tt>)
+ * \param[in]     user_data  Ignored
+ *
+ * \note This function is suitable for use with \c g_hash_table_foreach().
+ */
+static void
+mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
+{
+    fenced_device_t *device = value;
+
+    if (device->cib_registered) {
+        device->dirty = TRUE;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return the value of a fence device's \c dirty flag
+ *
+ * \param[in] key        Ignored
+ * \param[in] value      Fence device (<tt>fenced_device_t *</tt>)
+ * \param[in] user_data  Ignored
+ *
+ * \return \c dirty flag of \p value
+ *
+ * \note This function is suitable for use with
+ *       \c g_hash_table_foreach_remove().
+ */
+static gboolean
+device_is_dirty(gpointer key, gpointer value, gpointer user_data)
+{
+    fenced_device_t *device = value;
+
+    return device->dirty;
+}
+
+/*!
+ * \internal
  * \brief Update all STONITH device definitions based on current CIB
  */
 static void
 cib_devices_update(void)
 {
-    GHashTableIter iter;
-    fenced_device_t *device = NULL;
-
     crm_info("Updating devices to version %s.%s.%s",
              crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
              crm_element_value(local_cib, PCMK_XA_EPOCH),
              crm_element_value(local_cib, PCMK_XA_NUM_UPDATES));
 
-    g_hash_table_iter_init(&iter, device_list);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
-        if (device->cib_registered) {
-            device->dirty = TRUE;
-        }
-    }
+    g_hash_table_foreach(device_list, mark_dirty_if_cib_registered, NULL);
 
     /* have list repopulated if cib has a watchdog-fencing-resource
        TODO: keep a cached list for queries happening while we are refreshing
@@ -224,12 +257,7 @@ cib_devices_update(void)
 
     fenced_scheduler_run(local_cib);
 
-    g_hash_table_iter_init(&iter, device_list);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
-        if (device->dirty) {
-            g_hash_table_iter_remove(&iter);
-        }
-    }
+    g_hash_table_foreach_remove(device_list, device_is_dirty, NULL);
 }
 
 #define PRIMITIVE_ID_XP_FRAGMENT "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='"
