@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -920,7 +920,7 @@ mainloop_io_t *
 mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                         void *userdata, struct ipc_client_callbacks *callbacks)
 {
-    crm_ipc_t *ipc = crm_ipc_new(name, max_size);
+    crm_ipc_t *ipc = crm_ipc_new(name, 0);
     mainloop_io_t *source = NULL;
     int rc = pcmk__add_mainloop_ipc(ipc, priority, userdata, callbacks,
                                     &source);

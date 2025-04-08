@@ -105,8 +105,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
         return ENOMEM;
     }
 
-    (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false),
-                              (*api)->ipc_size_max);
+    (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false), 0);
     if ((*api)->ipc == NULL) {
         pcmk_free_ipc_api(*api);
         *api = NULL;
@@ -509,7 +508,7 @@ pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
     }
 
     if (api->ipc == NULL) {
-        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false), api->ipc_size_max);
+        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false), 0);
         if (api->ipc == NULL) {
             return ENOMEM;
         }
