@@ -38,7 +38,8 @@
 
 #include <pacemaker-fenced.h>
 
-GHashTable *device_list = NULL;
+static GHashTable *device_table = NULL;
+
 GHashTable *topology = NULL;
 static GList *cmd_list = NULL;
 
@@ -126,8 +127,8 @@ static xmlNode *construct_async_reply(const async_command_t *cmd,
 bool
 fenced_has_watchdog_device(void)
 {
-    return (device_list != NULL)
-           && (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) != NULL);
+    return (device_table != NULL)
+           && (g_hash_table_lookup(device_table, STONITH_WATCHDOG_ID) != NULL);
 }
 
 /*!
@@ -140,8 +141,8 @@ fenced_has_watchdog_device(void)
 void
 fenced_foreach_device(GHFunc fn, gpointer user_data)
 {
-    if (device_list != NULL) {
-        g_hash_table_foreach(device_list, fn, user_data);
+    if (device_table != NULL) {
+        g_hash_table_foreach(device_table, fn, user_data);
     }
 }
 
@@ -155,8 +156,8 @@ fenced_foreach_device(GHFunc fn, gpointer user_data)
 void
 fenced_foreach_device_remove(GHRFunc fn)
 {
-    if (device_list != NULL) {
-        g_hash_table_foreach_remove(device_list, fn, NULL);
+    if (device_table != NULL) {
+        g_hash_table_foreach_remove(device_table, fn, NULL);
     }
 }
 
@@ -292,10 +293,10 @@ get_action_timeout(const fenced_device_t *device, const char *action,
 static fenced_device_t *
 cmd_device(const async_command_t *cmd)
 {
-    if ((cmd == NULL) || (cmd->device == NULL) || (device_list == NULL)) {
+    if ((cmd == NULL) || (cmd->device == NULL) || (device_table == NULL)) {
         return NULL;
     }
-    return g_hash_table_lookup(device_list, cmd->device);
+    return g_hash_table_lookup(device_table, cmd->device);
 }
 
 /*!
@@ -311,8 +312,8 @@ fenced_device_reboot_action(const char *device_id)
 {
     const char *action = NULL;
 
-    if ((device_list != NULL) && (device_id != NULL)) {
-        fenced_device_t *device = g_hash_table_lookup(device_list, device_id);
+    if ((device_table != NULL) && (device_id != NULL)) {
+        fenced_device_t *device = g_hash_table_lookup(device_table, device_id);
 
         if ((device != NULL) && (device->params != NULL)) {
             action = g_hash_table_lookup(device->params, "pcmk_reboot_action");
@@ -332,8 +333,8 @@ fenced_device_reboot_action(const char *device_id)
 bool
 fenced_device_supports_on(const char *device_id)
 {
-    if ((device_list != NULL) && (device_id != NULL)) {
-        fenced_device_t *device = g_hash_table_lookup(device_list, device_id);
+    if ((device_table != NULL) && (device_id != NULL)) {
+        fenced_device_t *device = g_hash_table_lookup(device_table, device_id);
 
         if (device != NULL) {
             return pcmk_is_set(device->flags, st_device_supports_on);
@@ -793,17 +794,17 @@ free_device(gpointer data)
 
 void free_device_list(void)
 {
-    if (device_list != NULL) {
-        g_hash_table_destroy(device_list);
-        device_list = NULL;
+    if (device_table != NULL) {
+        g_hash_table_destroy(device_table);
+        device_table = NULL;
     }
 }
 
 void
 init_device_list(void)
 {
-    if (device_list == NULL) {
-        device_list = pcmk__strkey_table(NULL, free_device);
+    if (device_table == NULL) {
+        device_table = pcmk__strkey_table(NULL, free_device);
     }
 }
 
@@ -1302,12 +1303,12 @@ device_params_diff(GHashTable *first, GHashTable *second) {
 
 /*!
  * \internal
- * \brief Checks to see if an identical device already exists in the device_list
+ * \brief Checks to see if an identical device already exists in the table
  */
 static fenced_device_t *
 device_has_duplicate(const fenced_device_t *device)
 {
-    fenced_device_t *dup = g_hash_table_lookup(device_list, device->id);
+    fenced_device_t *dup = g_hash_table_lookup(device_table, device->id);
 
     if (!dup) {
         crm_trace("No match for %s", device->id);
@@ -1392,7 +1393,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
 
     dup = device_has_duplicate(device);
     if (dup != NULL) {
-        guint ndevices = g_hash_table_size(device_list);
+        guint ndevices = g_hash_table_size(device_table);
 
         crm_debug("Device '%s' already in device list (%d active device%s)",
                   device->id, ndevices, pcmk__plural_s(ndevices));
@@ -1402,7 +1403,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
 
     } else {
         guint ndevices = 0;
-        fenced_device_t *old = g_hash_table_lookup(device_list, device->id);
+        fenced_device_t *old = g_hash_table_lookup(device_table, device->id);
 
         if (from_cib && (old != NULL) && old->api_registered) {
             /* If the CIB is writing over an entry that is shared with a stonith
@@ -1418,9 +1419,9 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
                 mainloop_set_trigger(device->work);
             }
         }
-        g_hash_table_replace(device_list, device->id, device);
+        g_hash_table_replace(device_table, device->id, device);
 
-        ndevices = g_hash_table_size(device_list);
+        ndevices = g_hash_table_size(device_table);
         crm_notice("Added '%s' to device list (%d active device%s)",
                    device->id, ndevices, pcmk__plural_s(ndevices));
     }
@@ -1441,11 +1442,11 @@ done:
 void
 stonith_device_remove(const char *id, bool from_cib)
 {
-    fenced_device_t *device = g_hash_table_lookup(device_list, id);
+    fenced_device_t *device = g_hash_table_lookup(device_table, id);
     guint ndevices = 0;
 
     if (device == NULL) {
-        ndevices = g_hash_table_size(device_list);
+        ndevices = g_hash_table_size(device_table);
         crm_info("Device '%s' not found (%u active device%s)", id, ndevices,
                  pcmk__plural_s(ndevices));
         return;
@@ -1459,15 +1460,15 @@ stonith_device_remove(const char *id, bool from_cib)
     }
 
     if (!device->cib_registered && !device->api_registered) {
-        g_hash_table_remove(device_list, id);
-        ndevices = g_hash_table_size(device_list);
+        g_hash_table_remove(device_table, id);
+        ndevices = g_hash_table_size(device_table);
         crm_info("Removed '%s' from device list (%u active device%s)",
                  id, ndevices, pcmk__plural_s(ndevices));
     } else {
         // Exactly one is true at this point
         crm_trace("Not removing '%s' from device list (%u active) because "
                   "still registered via %s",
-                  id, g_hash_table_size(device_list),
+                  id, g_hash_table_size(device_table),
                   (device->cib_registered? "CIB" : "API"));
     }
 }
@@ -1945,7 +1946,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
         }
     }
 
-    device = g_hash_table_lookup(device_list, id);
+    device = g_hash_table_lookup(device_table, id);
     if (device == NULL) {
         crm_info("Ignoring API '%s' action request because device %s not found",
                  action, id);
@@ -1980,7 +1981,7 @@ search_devices_record_result(struct device_search_s *search, const char *device,
     search->replies_received++;
     if (can_fence && device) {
         if (search->support_action_only != st_device_supports_none) {
-            fenced_device_t *dev = g_hash_table_lookup(device_list, device);
+            fenced_device_t *dev = g_hash_table_lookup(device_table, device);
             if (dev && !pcmk_is_set(dev->flags, search->support_action_only)) {
                 return;
             }
@@ -2224,7 +2225,7 @@ get_capable_devices(const char *host, const char *action, int timeout,
                     uint32_t support_action_only)
 {
     struct device_search_s *search;
-    guint ndevices = g_hash_table_size(device_list);
+    guint ndevices = g_hash_table_size(device_table);
 
     if (ndevices == 0) {
         callback(NULL, user_data);
@@ -2417,7 +2418,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     crm_xml_add(list, PCMK__XA_ST_TARGET, query->target);
 
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
-        fenced_device_t *device = g_hash_table_lookup(device_list, lpc->data);
+        fenced_device_t *device = g_hash_table_lookup(device_table, lpc->data);
         const char *action = query->action;
         xmlNode *dev = NULL;
 
@@ -2735,7 +2736,7 @@ static fenced_device_t *
 next_required_device(async_command_t *cmd)
 {
     for (GList *iter = cmd->next_device_iter; iter != NULL; iter = iter->next) {
-        fenced_device_t *next_device = g_hash_table_lookup(device_list,
+        fenced_device_t *next_device = g_hash_table_lookup(device_table,
                                                            iter->data);
 
         if (is_action_required(cmd->action, next_device)) {
@@ -2782,7 +2783,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
                && !is_action_required(cmd->action, device)) {
         /* if this device didn't work out, see if there are any others we can try.
          * if the failed device was 'required', we can't pick another device. */
-        next_device = g_hash_table_lookup(device_list,
+        next_device = g_hash_table_lookup(device_table,
                                           cmd->next_device_iter->data);
         cmd->next_device_iter = cmd->next_device_iter->next;
     }
@@ -2811,7 +2812,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
              ndevices, pcmk__plural_s(ndevices), cmd->target);
 
     if (devices != NULL) {
-        device = g_hash_table_lookup(device_list, devices->data);
+        device = g_hash_table_lookup(device_table, devices->data);
     }
 
     if (device == NULL) { // No device found
@@ -2865,7 +2866,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
 
     device_id = crm_element_value(dev, PCMK__XA_ST_DEVICE_ID);
     if (device_id != NULL) {
-        device = g_hash_table_lookup(device_list, device_id);
+        device = g_hash_table_lookup(device_table, device_id);
         if (device == NULL) {
             crm_err("Requested device '%s' is not available", device_id);
             pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
