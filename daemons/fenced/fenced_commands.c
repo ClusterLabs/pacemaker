@@ -595,7 +595,7 @@ stonith_device_execute(stonith_device_t * device)
         host_arg = "plug";
     }
 
-    action = stonith__action_create(device->agent, action_str, cmd->target, 0,
+    action = stonith__action_create(device->agent, action_str, cmd->target,
                                     cmd->timeout, device->params,
                                     device->aliases, host_arg);
 

@@ -113,7 +113,6 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
  * \param[in] agent          Fencing agent name
  * \param[in] action         Name of fencing action
  * \param[in] target         Name of target node for fencing action
- * \param[in] target_nodeid  Node ID of target node for fencing action
  * \param[in] device_args    Fence device parameters
  * \param[in] port_map       Target node-to-port mapping for fence device
  * \param[in] host_arg       Argument name for passing target
@@ -122,8 +121,7 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
  */
 static GHashTable *
 make_args(const char *agent, const char *action, const char *target,
-          uint32_t target_nodeid, GHashTable *device_args,
-          GHashTable *port_map, const char *host_arg)
+          GHashTable *device_args, GHashTable *port_map, const char *host_arg)
 {
     GHashTable *arg_list = NULL;
     const char *value = NULL;
@@ -158,15 +156,6 @@ make_args(const char *agent, const char *action, const char *target,
          * https://github.com/ClusterLabs/fence-agents/blob/main/doc/FenceAgentAPI.md
          */
         pcmk__insert_dup(arg_list, "nodename", target);
-
-        // If the target's node ID was specified, pass it, too
-        if (target_nodeid != 0) {
-            char *nodeid = crm_strdup_printf("%" PRIu32, target_nodeid);
-
-            crm_info("Passing '%s' as nodeid with fence action '%s' targeting %s",
-                     nodeid, action, pcmk__s(target, "no node"));
-            g_hash_table_insert(arg_list, strdup("nodeid"), nodeid);
-        }
 
         // Check whether target should be specified as some other argument
         param = g_hash_table_lookup(device_args, PCMK_STONITH_HOST_ARGUMENT);
@@ -252,7 +241,6 @@ stonith__action_result(stonith_action_t *action)
  * \param[in] agent          Fence agent to use
  * \param[in] action_name    Fencing action to be executed
  * \param[in] target         Name of target of fencing action (if known)
- * \param[in] target_nodeid  Node ID of target of fencing action (if known)
  * \param[in] timeout_sec    Timeout to be used when executing action
  * \param[in] device_args    Parameters to pass to fence agent
  * \param[in] port_map       Mapping of target names to device ports
@@ -262,14 +250,14 @@ stonith__action_result(stonith_action_t *action)
  */
 stonith_action_t *
 stonith__action_create(const char *agent, const char *action_name,
-                       const char *target, uint32_t target_nodeid,
-                       int timeout_sec, GHashTable *device_args,
-                       GHashTable *port_map, const char *host_arg)
+                       const char *target, int timeout_sec,
+                       GHashTable *device_args, GHashTable *port_map,
+                       const char *host_arg)
 {
     stonith_action_t *action = pcmk__assert_alloc(1, sizeof(stonith_action_t));
 
-    action->args = make_args(agent, action_name, target, target_nodeid,
-                             device_args, port_map, host_arg);
+    action->args = make_args(agent, action_name, target, device_args, port_map,
+                             host_arg);
     crm_debug("Preparing '%s' action targeting %s using agent %s",
               action_name, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
