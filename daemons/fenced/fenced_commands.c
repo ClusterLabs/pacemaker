@@ -105,8 +105,6 @@ typedef struct {
     void *internal_user_data;
     void (*done_cb) (int pid, const pcmk__action_result_t *result,
                      void *user_data);
-    guint timer_sigterm;
-    guint timer_sigkill;
 
     fenced_device_t *active_on;
     fenced_device_t *activating_on;
