@@ -557,7 +557,8 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  *
  * \param[in]  request        Identifier for libqb response header
  * \param[in]  message        XML message to send
- * \param[out] result         Where to store prepared I/O vector
+ * \param[out] result         Where to store prepared I/O vector - NULL
+ *                            on error
  * \param[out] bytes          Size of prepared data in bytes
  *
  * \return Standard Pacemaker return code
@@ -602,6 +603,7 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
                 "larger than the maximum of %" PRIu32, header->size,
                 max_send_size);
         rc = EMSGSIZE;
+        pcmk_free_ipc_event(iov);
         goto done;
     }
 
@@ -718,7 +720,6 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
         pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
         rc = pcmk__ipc_send_iov(c, iov, flags);
     } else {
-        pcmk_free_ipc_event(iov);
         crm_notice("IPC message to pid %d failed: %s " CRM_XS " rc=%d",
                    c->pid, pcmk_rc_str(rc), rc);
     }
