@@ -99,8 +99,11 @@ typedef struct {
     char *action;
     char *device;
 
+    //! Head of device list (used only for freeing list with command object)
     GList *device_list;
-    GList *next_device_iter; // device_list entry for next device to execute
+
+    //! Next item to process in \c device_list
+    GList *next_device_iter;
 
     void *internal_user_data;
     void (*done_cb) (int pid, const pcmk__action_result_t *result,
@@ -2778,7 +2781,11 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
         free_async_command(cmd);
         g_list_free_full(devices, free);
 
-    } else { // Device found, schedule it for fencing
+    } else {
+        /* Device found. Schedule a fencing command for it.
+         *
+         * Assign devices to device_list so that it will be freed with cmd.
+         */
         cmd->device_list = devices;
         cmd->next_device_iter = devices->next;
         schedule_stonith_command(cmd, device);
