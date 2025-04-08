@@ -82,7 +82,6 @@ static enum fenced_target_by unpack_level_kind(const xmlNode *level);
 
 typedef struct {
     int id;
-    int fd_stdout;
     uint32_t options;
     int default_timeout; /* seconds */
     int timeout; /* seconds */
