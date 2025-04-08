@@ -131,6 +131,21 @@ fenced_foreach_device(GHFunc fn, gpointer user_data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Remove each known fence device matching a given predicate
+ *
+ * \param[in] fn  Function that returns \c TRUE to remove a fence device or
+ *                \c FALSE to keep it
+ */
+void
+fenced_foreach_device_remove(GHRFunc fn)
+{
+    if (device_list != NULL) {
+        g_hash_table_foreach_remove(device_list, fn, NULL);
+    }
+}
+
 static gboolean
 is_action_required(const char *action, const fenced_device_t *device)
 {

@@ -257,7 +257,7 @@ cib_devices_update(void)
 
     fenced_scheduler_run(local_cib);
 
-    g_hash_table_foreach_remove(device_list, device_is_dirty, NULL);
+    fenced_foreach_device_remove(device_is_dirty);
 }
 
 #define PRIMITIVE_ID_XP_FRAGMENT "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='"
