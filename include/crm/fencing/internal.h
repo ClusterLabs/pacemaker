@@ -21,10 +21,6 @@
 extern "C" {
 #endif
 
-enum st_device_flags {
-    st_device_supports_status           = (1 << 1),
-};
-
 #define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
         device_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,      \
                                           "Fence device", device_id,          \

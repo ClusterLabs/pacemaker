@@ -42,6 +42,9 @@ enum fenced_device_flags {
 
     //! Device supports reboot action
     fenced_df_supports_reboot = (UINT32_C(1) << 2),
+
+    //! Device supports status action
+    fenced_df_supports_status = (UINT32_C(1) << 3),
 };
 
 typedef struct {
@@ -57,7 +60,7 @@ typedef struct {
     /* whether the cluster should automatically unfence nodes with the device */
     gboolean automatic_unfencing;
 
-    uint32_t flags; // Group of enum fenced_device_flags and enum st_device_flags
+    uint32_t flags; // Group of enum fenced_device_flags
 
     GHashTable *params;
     GHashTable *aliases;

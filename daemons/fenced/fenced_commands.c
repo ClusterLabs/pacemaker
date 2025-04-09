@@ -977,7 +977,7 @@ read_action_metadata(fenced_device_t *device)
                                       fenced_df_supports_list);
         } else if (pcmk__str_eq(action, PCMK_ACTION_STATUS, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
-                                      st_device_supports_status);
+                                      fenced_df_supports_status);
         } else if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
                                       fenced_df_supports_reboot);
@@ -1021,7 +1021,7 @@ target_list_type(fenced_device_t *dev)
             check_type = PCMK_VALUE_STATIC_LIST;
         } else if (pcmk_is_set(dev->flags, fenced_df_supports_list)) {
             check_type = PCMK_VALUE_DYNAMIC_LIST;
-        } else if (pcmk_is_set(dev->flags, st_device_supports_status)) {
+        } else if (pcmk_is_set(dev->flags, fenced_df_supports_status)) {
             check_type = PCMK_VALUE_STATUS;
         } else {
             check_type = PCMK_VALUE_NONE;
