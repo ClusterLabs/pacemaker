@@ -26,6 +26,15 @@
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
+/*!
+ * \internal
+ * \brief Flags for \c fenced_device_t configuration, state, and support
+ */
+enum fenced_device_flags {
+    //! This flag has no effect
+    fenced_df_none            = UINT32_C(0),
+};
+
 typedef struct {
     char *id;
     char *agent;
@@ -39,7 +48,7 @@ typedef struct {
     /* whether the cluster should automatically unfence nodes with the device */
     gboolean automatic_unfencing;
 
-    uint32_t flags; // Group of enum st_device_flags
+    uint32_t flags; // Group of enum fenced_device_flags and enum st_device_flags
 
     GHashTable *params;
     GHashTable *aliases;
@@ -315,7 +324,7 @@ fenced_set_protocol_error(pcmk__action_result_t *result)
  * \param[in] action  Action to check
  *
  * \return st_device_supports_on if \p action is "on", otherwise
- *         st_device_supports_none
+ *         \c fenced_df_none
  */
 static inline uint32_t
 fenced_support_flag(const char *action)
@@ -323,7 +332,7 @@ fenced_support_flag(const char *action)
     if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
         return st_device_supports_on;
     }
-    return st_device_supports_none;
+    return fenced_df_none;
 }
 
 extern GHashTable *topology;

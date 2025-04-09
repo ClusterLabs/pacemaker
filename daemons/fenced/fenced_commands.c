@@ -1981,7 +1981,7 @@ search_devices_record_result(struct device_search_s *search, const char *device,
 {
     search->replies_received++;
     if (can_fence && device) {
-        if (search->support_action_only != st_device_supports_none) {
+        if (search->support_action_only != fenced_df_none) {
             fenced_device_t *dev = g_hash_table_lookup(device_table, device);
             if (dev && !pcmk_is_set(dev->flags, search->support_action_only)) {
                 return;
@@ -3216,7 +3216,7 @@ handle_query_request(pcmk__request_t *request)
     get_capable_devices(target, action, timeout,
                         pcmk_is_set(query->call_options,
                                     st_opt_allow_self_fencing),
-                        query, stonith_query_capable_device_cb, st_device_supports_none);
+                        query, stonith_query_capable_device_cb, fenced_df_none);
     return NULL;
 }
 
