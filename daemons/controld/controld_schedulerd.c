@@ -438,11 +438,20 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     freeXpathObject(xpathObj);
 }
 
+static gboolean
+sleep_timer(gpointer data)
+{
+    controld_set_fsa_action_flags(A_PE_INVOKE);
+    controld_trigger_fsa();
+    return G_SOURCE_REMOVE;
+}
+
 static void
 do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     char *ref = NULL;
     pid_t watchdog = pcmk__locate_sbd();
+    mainloop_timer_t *timer = NULL;
 
     if (rc != pcmk_ok) {
         crm_err("Could not retrieve the Cluster Information Base: %s "
@@ -469,10 +478,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else if (num_cib_op_callbacks() > 1) {
         crm_debug("Re-asking for the CIB: %d other peer updates still pending",
                   (num_cib_op_callbacks() - 1));
-        sleep(1);
-        controld_set_fsa_action_flags(A_PE_INVOKE);
-        controld_trigger_fsa();
-        return;
+        timer = mainloop_timer_add("timer", 1000, FALSE, sleep_timer, NULL);
+        mainloop_timer_start(sleep_timer);
     }
 
     CRM_LOG_ASSERT(output != NULL);
