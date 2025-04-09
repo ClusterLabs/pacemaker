@@ -33,6 +33,9 @@ gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const 
 enum fenced_device_flags {
     //! This flag has no effect
     fenced_df_none            = UINT32_C(0),
+
+    //! Device supports list action
+    fenced_df_supports_list   = (UINT32_C(1) << 0),
 };
 
 typedef struct {

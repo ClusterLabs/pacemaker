@@ -22,7 +22,6 @@ extern "C" {
 #endif
 
 enum st_device_flags {
-    st_device_supports_list             = (1 << 0),
     st_device_supports_status           = (1 << 1),
     st_device_supports_reboot           = (1 << 2),
     st_device_supports_on               = (1 << 5),
