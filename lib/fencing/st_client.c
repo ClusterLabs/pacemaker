@@ -2429,46 +2429,34 @@ stonith__event_state_neq(stonith_history_t *history, void *user_data)
     return history->state != GPOINTER_TO_INT(user_data);
 }
 
-void
-stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
-                                xmlNode *metadata)
+/*!
+ * \internal
+ * \brief Check whether a given parameter exists in a fence agent's metadata
+ *
+ * \param[in] metadata  Agent metadata
+ * \param[in] name      Parameter name
+ *
+ * \retval \c true   If \p name exists as a parameter in \p metadata
+ * \retval \c false  Otherwise
+ */
+bool
+stonith__param_is_supported(xmlNode *metadata, const char *name)
 {
+    char *xpath_s = NULL;
     xmlXPathObject *xpath = NULL;
-    int max = 0;
-    int lpc = 0;
+    bool supported = false;
 
-    CRM_CHECK((device_flags != NULL) && (metadata != NULL), return);
+    CRM_CHECK(metadata != NULL, return false);
 
-    xpath = pcmk__xpath_search(metadata->doc, "//" PCMK_XE_PARAMETER);
-    max = pcmk__xpath_num_results(xpath);
+    xpath_s = crm_strdup_printf("//" PCMK_XE_PARAMETER
+                                "[@" PCMK_XA_NAME "='%s']",
+                                name);
+    xpath = pcmk__xpath_search(metadata->doc, xpath_s);
+    supported = (pcmk__xpath_num_results(xpath) > 0);
 
-    if (max == 0) {
-        xmlXPathFreeObject(xpath);
-        return;
-    }
-
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *parameter = NULL;
-        xmlNode *match = pcmk__xpath_result(xpath, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if (match == NULL) {
-            continue;
-        }
-
-        parameter = crm_element_value(match, PCMK_XA_NAME);
-
-        if (pcmk__str_eq(parameter, "plug", pcmk__str_casei)) {
-            stonith__set_device_flags(*device_flags, device_name,
-                                      st_device_supports_parameter_plug);
-
-        } else if (pcmk__str_eq(parameter, "port", pcmk__str_casei)) {
-            stonith__set_device_flags(*device_flags, device_name,
-                                      st_device_supports_parameter_port);
-        }
-    }
-
+    free(xpath_s);
     xmlXPathFreeObject(xpath);
+    return supported;
 }
 
 /*!

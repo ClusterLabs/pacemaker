@@ -100,9 +100,7 @@ const char *stonith__later_succeeded(const stonith_history_t *event,
                                      const stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
-void stonith__device_parameter_flags(uint32_t *device_flags,
-                                     const char *device_name,
-                                     xmlNode *metadata);
+bool stonith__param_is_supported(xmlNode *metadata, const char *name);
 
 /* Only 1-9 is allowed for fencing topology levels,
  * however, 0 is used to unregister all levels in

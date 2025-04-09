@@ -500,8 +500,17 @@ get_agent_metadata_cb(gpointer data) {
         case pcmk_rc_ok:
             if (device->agent_metadata) {
                 read_action_metadata(device);
-                stonith__device_parameter_flags(&(device->flags), device->id,
-                                        device->agent_metadata);
+
+                if (stonith__param_is_supported(device->agent_metadata,
+                                                "plug")) {
+                    stonith__set_device_flags(device->flags, device->id,
+                                              st_device_supports_parameter_plug);
+                }
+                if (stonith__param_is_supported(device->agent_metadata,
+                                                "port")) {
+                    stonith__set_device_flags(device->flags, device->id,
+                                              st_device_supports_parameter_port);
+                }
             }
             return G_SOURCE_REMOVE;
 
@@ -1075,8 +1084,17 @@ build_device_from_xml(const xmlNode *dev)
         case pcmk_rc_ok:
             if (device->agent_metadata) {
                 read_action_metadata(device);
-                stonith__device_parameter_flags(&(device->flags), device->id,
-                                                device->agent_metadata);
+
+                if (stonith__param_is_supported(device->agent_metadata,
+                                                "plug")) {
+                    stonith__set_device_flags(device->flags, device->id,
+                                              st_device_supports_parameter_plug);
+                }
+                if (stonith__param_is_supported(device->agent_metadata,
+                                                "port")) {
+                    stonith__set_device_flags(device->flags, device->id,
+                                              st_device_supports_parameter_port);
+                }
             }
             break;
 

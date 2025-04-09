@@ -282,16 +282,15 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         rc = stonith__rhcs_get_metadata(agent, remaining_timeout, &metadata);
 
         if (rc == pcmk_ok) {
-            uint32_t device_flags = 0;
-
-            stonith__device_parameter_flags(&device_flags, agent, metadata);
-            if (pcmk_is_set(device_flags, st_device_supports_parameter_port)) {
-                host_arg = "port";
-
-            } else if (pcmk_is_set(device_flags,
-                                   st_device_supports_parameter_plug)) {
+            if (stonith__param_is_supported(metadata, "plug")) {
                 host_arg = "plug";
+            } else if (stonith__param_is_supported(metadata, "port")) {
+                host_arg = "port";
             }
+
+            crm_trace("Using '%s' as default " PCMK_STONITH_HOST_ARGUMENT
+                      " for %s",
+                      pcmk__s(host_arg, PCMK_VALUE_NONE), agent);
         }
 
         pcmk__xml_free(metadata);
