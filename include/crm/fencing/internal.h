@@ -26,8 +26,6 @@ enum st_device_flags {
     st_device_supports_list             = (1 << 0),
     st_device_supports_status           = (1 << 1),
     st_device_supports_reboot           = (1 << 2),
-    st_device_supports_parameter_plug   = (1 << 3),
-    st_device_supports_parameter_port   = (1 << 4),
     st_device_supports_on               = (1 << 5),
 };
 
