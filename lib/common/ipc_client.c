@@ -819,7 +819,6 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
 
 struct crm_ipc_s {
     struct pollfd pfd;
-    unsigned int max_buf_size; // maximum bytes we can send or receive over IPC
     unsigned int buf_size;     // size of allocated buffer
     int msg_size;
     int need_reply;
@@ -870,9 +869,6 @@ crm_ipc_new(const char *name, size_t max_size)
         free(client);
         return NULL;
     }
-
-    /* Clients initiating connection pick the max buf size */
-    client->max_buf_size = client->buf_size;
 
     client->pfd.fd = -1;
     client->pfd.events = POLLIN;
@@ -935,18 +931,6 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
         }
         crm_ipc_close(ipc);
         return rc;
-    }
-
-    ipc->max_buf_size = qb_ipcc_get_buffer_size(ipc->ipc);
-    if (ipc->max_buf_size > ipc->buf_size) {
-        free(ipc->buffer);
-        ipc->buffer = calloc(ipc->max_buf_size, sizeof(char));
-        if (ipc->buffer == NULL) {
-            rc = errno;
-            crm_ipc_close(ipc);
-            return rc;
-        }
-        ipc->buf_size = ipc->max_buf_size;
     }
 
     return pcmk_rc_ok;
