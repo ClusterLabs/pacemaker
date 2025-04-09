@@ -337,7 +337,7 @@ fenced_device_supports_on(const char *device_id)
         fenced_device_t *device = g_hash_table_lookup(device_table, device_id);
 
         if (device != NULL) {
-            return pcmk_is_set(device->flags, st_device_supports_on);
+            return pcmk_is_set(device->flags, fenced_df_supports_on);
         }
     }
     return false;
@@ -993,7 +993,7 @@ read_action_metadata(fenced_device_t *device)
                 device->automatic_unfencing = TRUE;
             }
             stonith__set_device_flags(device->flags, device->id,
-                                      st_device_supports_on);
+                                      fenced_df_supports_on);
         }
 
         if ((action != NULL)
@@ -2125,7 +2125,7 @@ can_fence_host_with_device(fenced_device_t *dev,
      * or the local node is not allowed to perform it
      */
     if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)
-        && !pcmk_is_set(dev->flags, st_device_supports_on)) {
+        && !pcmk_is_set(dev->flags, fenced_df_supports_on)) {
         check_type = "Agent does not support 'on'";
         goto search_report_results;
 

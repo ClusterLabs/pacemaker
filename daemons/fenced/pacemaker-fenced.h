@@ -36,6 +36,9 @@ enum fenced_device_flags {
 
     //! Device supports list action
     fenced_df_supports_list   = (UINT32_C(1) << 0),
+
+    //! Device supports on action
+    fenced_df_supports_on     = (UINT32_C(1) << 1),
 };
 
 typedef struct {
@@ -326,14 +329,14 @@ fenced_set_protocol_error(pcmk__action_result_t *result)
  *
  * \param[in] action  Action to check
  *
- * \return st_device_supports_on if \p action is "on", otherwise
+ * \return \c fenced_df_supports_on if \p action is "on", otherwise
  *         \c fenced_df_none
  */
 static inline uint32_t
 fenced_support_flag(const char *action)
 {
     if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
-        return st_device_supports_on;
+        return fenced_df_supports_on;
     }
     return fenced_df_none;
 }

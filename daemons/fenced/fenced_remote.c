@@ -1686,7 +1686,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
 
                 for (iter2 = op->query_results; iter2 != NULL; iter = iter2->next) {
                     peer_device_info_t *peer = iter2->data;
-                    if (find_peer_device(op, peer, iter->data, st_device_supports_on)) {
+                    if (find_peer_device(op, peer, iter->data,
+                                         fenced_df_supports_on)) {
                         total_timeout += get_device_timeout(op, peer,
                                                             iter->data, true);
                         break;
@@ -2259,7 +2260,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     // Nodes <2.1.5 won't set this, so assume unfencing in that case
     rc = pcmk__xe_get_flags(xml, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS,
                             &(props->device_support_flags),
-                            st_device_supports_on);
+                            fenced_df_supports_on);
     if (rc != pcmk_rc_ok) {
         crm_warn("Couldn't determine device support for %s "
                  "(assuming unfencing): %s", device, pcmk_rc_str(rc));
