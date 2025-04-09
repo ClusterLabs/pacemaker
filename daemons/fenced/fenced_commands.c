@@ -500,17 +500,8 @@ get_agent_metadata_cb(gpointer data) {
         case pcmk_rc_ok:
             if (device->agent_metadata) {
                 read_action_metadata(device);
-
-                if (stonith__param_is_supported(device->agent_metadata,
-                                                "plug")) {
-                    stonith__set_device_flags(device->flags, device->id,
-                                              st_device_supports_parameter_plug);
-                }
-                if (stonith__param_is_supported(device->agent_metadata,
-                                                "port")) {
-                    stonith__set_device_flags(device->flags, device->id,
-                                              st_device_supports_parameter_port);
-                }
+                device->default_host_arg =
+                    stonith__default_host_arg(device->agent_metadata);
             }
             return G_SOURCE_REMOVE;
 
@@ -551,7 +542,6 @@ stonith_device_execute(fenced_device_t *device)
 {
     int exec_rc = 0;
     const char *action_str = NULL;
-    const char *host_arg = NULL;
     async_command_t *cmd = NULL;
     stonith_action_t *action = NULL;
     int active_cmds = 0;
@@ -640,16 +630,9 @@ stonith_device_execute(fenced_device_t *device)
         action_str = PCMK_ACTION_OFF;
     }
 
-    if (pcmk_is_set(device->flags, st_device_supports_parameter_port)) {
-        host_arg = "port";
-
-    } else if (pcmk_is_set(device->flags, st_device_supports_parameter_plug)) {
-        host_arg = "plug";
-    }
-
     action = stonith__action_create(device->agent, action_str, cmd->target,
                                     cmd->timeout, device->params,
-                                    device->aliases, host_arg);
+                                    device->aliases, device->default_host_arg);
 
     /* for async exec, exec_rc is negative for early error exit
        otherwise handling of success/errors is done via callbacks */
@@ -1084,17 +1067,8 @@ build_device_from_xml(const xmlNode *dev)
         case pcmk_rc_ok:
             if (device->agent_metadata) {
                 read_action_metadata(device);
-
-                if (stonith__param_is_supported(device->agent_metadata,
-                                                "plug")) {
-                    stonith__set_device_flags(device->flags, device->id,
-                                              st_device_supports_parameter_plug);
-                }
-                if (stonith__param_is_supported(device->agent_metadata,
-                                                "port")) {
-                    stonith__set_device_flags(device->flags, device->id,
-                                              st_device_supports_parameter_port);
-                }
+                device->default_host_arg =
+                    stonith__default_host_arg(device->agent_metadata);
             }
             break;
 

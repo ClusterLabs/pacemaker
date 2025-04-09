@@ -47,6 +47,7 @@ typedef struct {
     mainloop_timer_t *timer;
     crm_trigger_t *work;
     xmlNode *agent_metadata;
+    const char *default_host_arg;
 
     /*! A verified device is one that has contacted the
      * agent successfully to perform a monitor operation */

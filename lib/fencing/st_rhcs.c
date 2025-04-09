@@ -282,12 +282,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         rc = stonith__rhcs_get_metadata(agent, remaining_timeout, &metadata);
 
         if (rc == pcmk_ok) {
-            if (stonith__param_is_supported(metadata, "plug")) {
-                host_arg = "plug";
-            } else if (stonith__param_is_supported(metadata, "port")) {
-                host_arg = "port";
-            }
-
+            host_arg = stonith__default_host_arg(metadata);
             crm_trace("Using '%s' as default " PCMK_STONITH_HOST_ARGUMENT
                       " for %s",
                       pcmk__s(host_arg, PCMK_VALUE_NONE), agent);

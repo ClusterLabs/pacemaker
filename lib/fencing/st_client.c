@@ -2439,24 +2439,43 @@ stonith__event_state_neq(stonith_history_t *history, void *user_data)
  * \retval \c true   If \p name exists as a parameter in \p metadata
  * \retval \c false  Otherwise
  */
-bool
-stonith__param_is_supported(xmlNode *metadata, const char *name)
+static bool
+param_is_supported(xmlNode *metadata, const char *name)
 {
-    char *xpath_s = NULL;
-    xmlXPathObject *xpath = NULL;
-    bool supported = false;
-
-    CRM_CHECK(metadata != NULL, return false);
-
-    xpath_s = crm_strdup_printf("//" PCMK_XE_PARAMETER
-                                "[@" PCMK_XA_NAME "='%s']",
-                                name);
-    xpath = pcmk__xpath_search(metadata->doc, xpath_s);
-    supported = (pcmk__xpath_num_results(xpath) > 0);
+    char *xpath_s = crm_strdup_printf("//" PCMK_XE_PARAMETER
+                                      "[@" PCMK_XA_NAME "='%s']",
+                                      name);
+    xmlXPathObject *xpath = pcmk__xpath_search(metadata->doc, xpath_s);
+    bool supported = (pcmk__xpath_num_results(xpath) > 0);
 
     free(xpath_s);
     xmlXPathFreeObject(xpath);
     return supported;
+}
+
+/*!
+ * \internal
+ * \brief Get the default host argument based on a device's agent metadata
+ *
+ * If an agent supports the "plug" parameter, default to that. Otherwise default
+ * to the "port" parameter if supported. Otherwise return \c NULL.
+ *
+ * \param[in] metadata  Agent metadata
+ *
+ * \return Parameter name for default host argument
+ */
+const char *
+stonith__default_host_arg(xmlNode *metadata)
+{
+    CRM_CHECK(metadata != NULL, return NULL);
+
+    if (param_is_supported(metadata, "plug")) {
+        return "plug";
+    }
+    if (param_is_supported(metadata, "port")) {
+        return "port";
+    }
+    return NULL;
 }
 
 /*!
