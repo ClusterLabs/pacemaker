@@ -27,6 +27,8 @@ static void handle_disconnect(void);
 
 static pcmk_ipc_api_t *schedulerd_api = NULL;
 
+static mainloop_timer_t *cib_retry_timer = NULL;
+
 /*!
  * \internal
  * \brief Close any scheduler connection and free associated memory
@@ -444,6 +446,15 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     xmlXPathFreeObject(xpathObj);
 }
 
+static gboolean
+sleep_timer(gpointer data)
+{
+    controld_set_fsa_action_flags(A_PE_INVOKE);
+    controld_trigger_fsa();
+    mainloop_timer_del(cib_retry_timer);
+    return G_SOURCE_REMOVE;
+}
+
 static void
 do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
@@ -475,10 +486,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else if (num_cib_op_callbacks() > 1) {
         crm_debug("Re-asking for the CIB: %d other peer updates still pending",
                   (num_cib_op_callbacks() - 1));
-        sleep(1);
-        controld_set_fsa_action_flags(A_PE_INVOKE);
-        controld_trigger_fsa();
-        return;
+        cib_retry_timer = mainloop_timer_add("cib_retry", 1000, FALSE, sleep_timer, NULL);
+        mainloop_timer_start(cib_retry_timer);
     }
 
     CRM_LOG_ASSERT(output != NULL);
