@@ -23,7 +23,6 @@ extern "C" {
 
 enum st_device_flags {
     st_device_supports_status           = (1 << 1),
-    st_device_supports_reboot           = (1 << 2),
 };
 
 #define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \

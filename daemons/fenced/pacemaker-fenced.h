@@ -39,6 +39,9 @@ enum fenced_device_flags {
 
     //! Device supports on action
     fenced_df_supports_on     = (UINT32_C(1) << 1),
+
+    //! Device supports reboot action
+    fenced_df_supports_reboot = (UINT32_C(1) << 2),
 };
 
 typedef struct {

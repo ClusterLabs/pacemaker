@@ -265,7 +265,7 @@ get_action_timeout(const fenced_device_t *device, const char *action,
          * we will remap to "off", so check timeout for "off" instead
          */
         if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)
-            && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
+            && !pcmk_is_set(device->flags, fenced_df_supports_reboot)) {
             crm_trace("%s doesn't support reboot, using timeout for off instead",
                       device->id);
             action = PCMK_ACTION_OFF;
@@ -621,7 +621,7 @@ stonith_device_execute(fenced_device_t *device)
 
     action_str = cmd->action;
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_REBOOT, pcmk__str_none)
-        && !pcmk_is_set(device->flags, st_device_supports_reboot)) {
+        && !pcmk_is_set(device->flags, fenced_df_supports_reboot)) {
 
         crm_notice("Remapping 'reboot' action%s%s using %s to 'off' "
                    "because agent '%s' does not support reboot",
@@ -980,7 +980,7 @@ read_action_metadata(fenced_device_t *device)
                                       st_device_supports_status);
         } else if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
             stonith__set_device_flags(device->flags, device->id,
-                                      st_device_supports_reboot);
+                                      fenced_df_supports_reboot);
         } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
             /* PCMK_XA_AUTOMATIC means the cluster will unfence a node when it
              * joins.
@@ -2444,7 +2444,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
          */
-        if (!pcmk_is_set(device->flags, st_device_supports_reboot)
+        if (!pcmk_is_set(device->flags, fenced_df_supports_reboot)
             && pcmk__str_eq(query->action, PCMK_ACTION_REBOOT,
                             pcmk__str_none)) {
             crm_trace("%s doesn't support reboot, using values for off instead",
