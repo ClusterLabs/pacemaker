@@ -45,6 +45,9 @@ enum fenced_device_flags {
 
     //! Device supports status action
     fenced_df_supports_status = (UINT32_C(1) << 3),
+
+    //! Device is automatically used to unfence newly joined nodes
+    fenced_df_auto_unfence    = (UINT32_C(1) << 4),
 };
 
 /*!
@@ -71,9 +74,6 @@ typedef struct {
     GString *on_target_actions;
     GList *targets;
     time_t targets_age;
-
-    /* whether the cluster should automatically unfence nodes with the device */
-    gboolean automatic_unfencing;
 
     uint32_t flags; // Group of enum fenced_device_flags
 

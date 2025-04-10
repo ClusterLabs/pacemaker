@@ -164,7 +164,8 @@ fenced_foreach_device_remove(GHRFunc fn)
 static gboolean
 is_action_required(const char *action, const fenced_device_t *device)
 {
-    return (device != NULL) && device->automatic_unfencing
+    return (device != NULL)
+           && pcmk_is_set(device->flags, fenced_df_auto_unfence)
            && pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none);
 }
 
@@ -990,7 +991,8 @@ read_action_metadata(fenced_device_t *device)
              */
             if (pcmk__xe_attr_is_true(match, PCMK_XA_AUTOMATIC)
                 || pcmk__xe_attr_is_true(match, PCMK__XA_REQUIRED)) {
-                device->automatic_unfencing = TRUE;
+
+                fenced_device_set_flags(device, fenced_df_auto_unfence);
             }
             fenced_device_set_flags(device, fenced_df_supports_on);
         }
@@ -1087,7 +1089,7 @@ build_device_from_xml(const xmlNode *dev)
 
     value = crm_element_value(dev, PCMK__XA_RSC_PROVIDES);
     if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
-        device->automatic_unfencing = TRUE;
+        fenced_device_set_flags(device, fenced_df_auto_unfence);
     }
 
     if (is_action_required(PCMK_ACTION_ON, device)) {
