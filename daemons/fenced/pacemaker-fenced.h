@@ -57,6 +57,9 @@ enum fenced_device_flags {
 
     //! Device has been registered via the fencer's CIB diff callback
     fenced_df_cib_registered  = (UINT32_C(1) << 7),
+
+    //! Device has not yet been re-registered after a CIB change
+    fenced_df_dirty           = (UINT32_C(1) << 8),
 };
 
 /*!
@@ -110,8 +113,6 @@ typedef struct {
     crm_trigger_t *work;
     xmlNode *agent_metadata;
     const char *default_host_arg;
-
-    gboolean dirty;
 } fenced_device_t;
 
 /* These values are used to index certain arrays by "phase". Usually an

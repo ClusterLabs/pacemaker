@@ -211,7 +211,7 @@ mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
     fenced_device_t *device = value;
 
     if (pcmk_is_set(device->flags, fenced_df_cib_registered)) {
-        device->dirty = TRUE;
+        fenced_device_set_flags(device, fenced_df_dirty);
     }
 }
 
@@ -233,7 +233,7 @@ device_is_dirty(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    return device->dirty;
+    return pcmk_is_set(device->flags, fenced_df_dirty);
 }
 
 /*!

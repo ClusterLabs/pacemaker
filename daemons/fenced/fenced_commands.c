@@ -1401,7 +1401,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
                   device->id, ndevices, pcmk__plural_s(ndevices));
         free_device(device);
         device = dup;
-        device->dirty = FALSE;
+        fenced_device_clear_flags(device, fenced_df_dirty);
 
     } else {
         guint ndevices = 0;
