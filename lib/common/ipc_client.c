@@ -819,7 +819,6 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
 
 struct crm_ipc_s {
     struct pollfd pfd;
-    unsigned int buf_size;     // size of allocated buffer
     int msg_size;
     int need_reply;
     GByteArray *buffer;
@@ -861,7 +860,6 @@ crm_ipc_new(const char *name, size_t max_size)
         return NULL;
     }
 
-    client->buf_size = crm_ipc_default_buffer_size();
     client->buffer = NULL;
     client->pfd.fd = -1;
     client->pfd.events = POLLIN;
@@ -893,7 +891,7 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
     }
 
     ipc->need_reply = FALSE;
-    ipc->ipc = qb_ipcc_connect(ipc->server_name, ipc->buf_size);
+    ipc->ipc = qb_ipcc_connect(ipc->server_name, crm_ipc_default_buffer_size());
     if (ipc->ipc == NULL) {
         return errno;
     }
@@ -1066,7 +1064,7 @@ crm_ipc_read(crm_ipc_t * client)
 
     buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(), sizeof(char));
     client->msg_size = qb_ipcc_event_recv(client->ipc, buffer,
-                                          client->buf_size, 0);
+                                          crm_ipc_default_buffer_size(), 0);
 
     if (client->msg_size >= 0) {
         header = (pcmk__ipc_header_t *)(void*) buffer;
@@ -1094,7 +1092,7 @@ crm_ipc_read(crm_ipc_t * client)
     }
 
     if (header) {
-        client->buffer = g_byte_array_sized_new(client->buf_size);
+        client->buffer = g_byte_array_sized_new(crm_ipc_default_buffer_size());
         g_byte_array_append(client->buffer, (const guint8 *) buffer,
                             client->msg_size);
 
@@ -1154,12 +1152,13 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
               request_id);
 
     do {
-        char *buffer = pcmk__assert_alloc(client->buf_size, sizeof(char));
+        char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
+                                          sizeof(char));
         const char *data = NULL;
         xmlNode *xml = NULL;
 
-        *bytes = qb_ipcc_recv(client->ipc, buffer, client->buf_size,
-                              qb_timeout);
+        *bytes = qb_ipcc_recv(client->ipc, buffer,
+                              crm_ipc_default_buffer_size(), qb_timeout);
 
         if (*bytes <= 0) {
             if (!crm_ipc_connected(client)) {
@@ -1180,7 +1179,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                 g_byte_array_free(client->buffer, TRUE);
             }
 
-            client->buffer = g_byte_array_sized_new(client->buf_size);
+            client->buffer = g_byte_array_sized_new(crm_ipc_default_buffer_size());
             g_byte_array_append(client->buffer, (const guint8 *) buffer, *bytes);
             break;
         }
@@ -1272,7 +1271,8 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
                                           sizeof(char));
 
-        qb_rc = qb_ipcc_recv(client->ipc, buffer, client->buf_size, ms_timeout);
+        qb_rc = qb_ipcc_recv(client->ipc, buffer, crm_ipc_default_buffer_size(),
+                             ms_timeout);
 
         if (qb_rc < 0) {
             crm_warn("Sending %s IPC disabled until pending reply received",
