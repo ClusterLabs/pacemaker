@@ -1137,12 +1137,14 @@ crm_ipc_name(crm_ipc_t * client)
 // \return Standard Pacemaker return code
 static int
 internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
-                       ssize_t *bytes, xmlNode **reply)
+                       xmlNode **reply)
 {
     pcmk__ipc_header_t *hdr = NULL;
     time_t timeout = 0;
     int32_t qb_timeout = -1;
     int rc = pcmk_rc_ok;
+    ssize_t bytes = 0;
+    int reply_id = 0;
 
     if (ms_timeout > 0) {
         timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
@@ -1159,10 +1161,10 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
         const char *data = NULL;
         xmlNode *xml = NULL;
 
-        *bytes = qb_ipcc_recv(client->ipc, buffer,
-                              crm_ipc_default_buffer_size(), qb_timeout);
+        bytes = qb_ipcc_recv(client->ipc, buffer,
+                             crm_ipc_default_buffer_size(), qb_timeout);
 
-        if (*bytes <= 0) {
+        if (bytes <= 0) {
             free(buffer);
 
             if (!crm_ipc_connected(client)) {
@@ -1175,44 +1177,47 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
         }
 
         hdr = (pcmk__ipc_header_t *) (void *) buffer;
+        reply_id = hdr->qb.id;
 
-        if (hdr->qb.id == request_id) {
+        if (reply_id == request_id) {
             /* Got the reply we were expecting. */
-            if (client->buffer != NULL) {
-                g_byte_array_free(client->buffer, TRUE);
+            rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+
+            if (rc == pcmk_rc_ipc_more) {
+                continue;
+            } else if (rc != pcmk_rc_ok) {
+                free(buffer);
+                return rc;
             }
 
-            client->buffer = g_byte_array_sized_new(crm_ipc_default_buffer_size());
-            g_byte_array_append(client->buffer, (const guint8 *) buffer, *bytes);
-            free(buffer);
             break;
         }
 
         data = buffer + sizeof(pcmk__ipc_header_t);
         xml = pcmk__xml_parse(data);
 
-        if (hdr->qb.id < request_id) {
-            crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
+        if (reply_id < request_id) {
+            crm_err("Discarding old reply %d (need %d)", reply_id, request_id);
             crm_log_xml_notice(xml, "OldIpcReply");
-        } else if (hdr->qb.id > request_id) {
-            crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
+        } else if (reply_id > request_id) {
+            crm_err("Discarding newer reply %d (need %d)", reply_id, request_id);
             crm_log_xml_notice(xml, "ImpossibleReply");
             pcmk__assert(hdr->qb.id <= request_id);
         }
 
         free(buffer);
-    } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
+    } while (time(NULL) < timeout || (timeout == 0 && bytes == -EAGAIN));
 
-    if (*bytes > 0) {
-        crm_trace("Received %zd-byte reply %" PRId32 " to %s IPC %d: %.100s",
-                  *bytes, hdr->qb.id, client->server_name, request_id,
-                  crm_ipc_buffer(client));
+    if (client->buffer->len > 0) {
+        crm_trace("Received %u-byte reply %" PRId32 " to %s IPC %d: %.100s",
+                  client->buffer->len, reply_id, client->server_name,
+                  request_id, crm_ipc_buffer(client));
 
         if (reply != NULL) {
             *reply = pcmk__xml_parse(crm_ipc_buffer(client));
         }
-    } else if (*bytes < 0) {
-        rc = (int) -*bytes; // System errno
+    } else if (bytes < 0) {
+        rc = (int) -bytes; // System errno
         crm_trace("No reply to %s IPC %d: %s " QB_XS " rc=%d",
                   client->server_name, request_id, pcmk_rc_str(rc), rc);
     }
@@ -1275,20 +1280,39 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
                                           sizeof(char));
 
-        qb_rc = qb_ipcc_recv(client->ipc, buffer, crm_ipc_default_buffer_size(),
-                             ms_timeout);
+        do {
+            qb_rc = qb_ipcc_recv(client->ipc, buffer,
+                                 crm_ipc_default_buffer_size(), ms_timeout);
+
+            header = (void *) buffer;
+
+            /* We expected a reply but failed to read it, so we can't continue. */
+            if (qb_rc < 0) {
+                crm_warn("Sending %s IPC disabled until pending reply received",
+                         client->server_name);
+                free(buffer);
+                return -EALREADY;
+
+            } else if (!pcmk__valid_ipc_header(header)) {
+                free(buffer);
+                return -EBADMSG;
+
+            /* We expected a reply and got either a standalone one or the last
+             * part of a multipart reply.  We're done reading the expected reply
+             * and can continue.
+             */
+            } else if (!pcmk__ipc_msg_is_multipart(header) ||
+                       pcmk__ipc_msg_is_multipart_end(header)) {
+                crm_notice("Sending %s IPC re-enabled after pending reply received",
+                           client->server_name);
+                client->need_reply = FALSE;
+                break;
+            }
+
+            /* Otherwise, just keep looping until we've read the whole thing. */
+        } while (true);
+
         free(buffer);
-
-        if (qb_rc < 0) {
-            crm_warn("Sending %s IPC disabled until pending reply received",
-                     client->server_name);
-            return -EALREADY;
-
-        } else {
-            crm_notice("Sending %s IPC re-enabled after pending reply received",
-                       client->server_name);
-            client->need_reply = FALSE;
-        }
     }
 
     id++;
@@ -1367,9 +1391,9 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         goto send_cleanup;
     }
 
-    rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, &bytes, reply);
+    rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, reply);
     if (rc == pcmk_rc_ok) {
-        rc = (int) bytes; // Size of reply received
+        rc = client->buffer->len;   // Size of reply received
     } else {
         /* rc is either a positive system errno or a negative standard Pacemaker
          * return code.  If it's an errno, we need to convert it back to a
