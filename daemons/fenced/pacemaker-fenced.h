@@ -377,13 +377,6 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
-static inline void
-fenced_set_protocol_error(pcmk__action_result_t *result)
-{
-    pcmk__set_result(result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                     "Fencer API request missing required information (bug?)");
-}
-
 /*!
  * \internal
  * \brief Get the device flag to use with a given action when searching devices

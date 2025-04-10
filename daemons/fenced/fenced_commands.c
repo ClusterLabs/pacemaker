@@ -119,6 +119,19 @@ static xmlNode *construct_async_reply(const async_command_t *cmd,
 
 /*!
  * \internal
+ * \brief Set a bad fencer API request error in a result object
+ *
+ * \param[out] result  Result to set
+ */
+static inline void
+set_bad_request_result(pcmk__action_result_t *result)
+{
+    pcmk__set_result(result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                     "Fencer API request missing required information (bug?)");
+}
+
+/*!
+ * \internal
  * \brief Check whether the fencer's device table contains a watchdog device
  *
  * \retval \c true   If the device table contains a watchdog device
@@ -1693,7 +1706,7 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
 
     level = unpack_level_request(msg, &mode, &target, &id);
     if (level == NULL) {
-        fenced_set_protocol_error(result);
+        set_bad_request_result(result);
         return;
     }
 
@@ -1798,7 +1811,7 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
 
     level = unpack_level_request(msg, NULL, &target, &id);
     if (level == NULL) {
-        fenced_set_protocol_error(result);
+        set_bad_request_result(result);
         return;
     }
 
@@ -1916,7 +1929,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
         crm_info("Malformed API action request: device %s, action %s",
                  (id? id : "not specified"),
                  (action? action : "not specified"));
-        fenced_set_protocol_error(result);
+        set_bad_request_result(result);
         return;
     }
 
@@ -1962,7 +1975,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
     cmd = create_async_command(msg);
     if (cmd == NULL) {
         crm_log_xml_warn(msg, "invalid");
-        fenced_set_protocol_error(result);
+        set_bad_request_result(result);
         return;
     }
 
@@ -2857,7 +2870,7 @@ fence_locally(xmlNode *msg, pcmk__action_result_t *result)
     cmd = create_async_command(msg);
     if (cmd == NULL) {
         crm_log_xml_warn(msg, "invalid");
-        fenced_set_protocol_error(result);
+        set_bad_request_result(result);
         return;
     }
 
@@ -3262,7 +3275,7 @@ handle_relay_request(pcmk__request_t *request)
                crm_element_value(dev, PCMK__XA_ST_TARGET));
 
     if (initiate_remote_stonith_op(NULL, request->xml, FALSE) == NULL) {
-        fenced_set_protocol_error(&request->result);
+        set_bad_request_result(&request->result);
         return fenced_construct_reply(request->xml, NULL, &request->result);
     }
 
@@ -3289,7 +3302,7 @@ handle_fence_request(pcmk__request_t *request)
                                  NULL);
                 break;
             default:
-                fenced_set_protocol_error(&request->result);
+                set_bad_request_result(&request->result);
                 break;
         }
 
@@ -3356,7 +3369,7 @@ handle_fence_request(pcmk__request_t *request)
 
         } else if (initiate_remote_stonith_op(request->ipc_client, request->xml,
                                               FALSE) == NULL) {
-            fenced_set_protocol_error(&request->result);
+            set_bad_request_result(&request->result);
 
         } else {
             pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
