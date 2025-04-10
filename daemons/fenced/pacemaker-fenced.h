@@ -47,6 +47,21 @@ enum fenced_device_flags {
     fenced_df_supports_status = (UINT32_C(1) << 3),
 };
 
+/*!
+ * \internal
+ * \brief Set flags for a fencing device
+ *
+ * \param[in,out] device     Device whose flags to set (\c fenced_device_t)
+ * \param[in]     set_flags  Group of <tt>enum fenced_device_flags</tt> to set
+ */
+#define fenced_device_set_flags(device, set_flags) do {                     \
+        pcmk__assert((device) != NULL);                                     \
+        (device)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, \
+                                             "Fence device", (device)->id,  \
+                                             (device)->flags, set_flags,    \
+                                             #set_flags);                   \
+    } while (0)
+
 typedef struct {
     char *id;
     char *agent;

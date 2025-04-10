@@ -973,14 +973,14 @@ read_action_metadata(fenced_device_t *device)
         action = crm_element_value(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
-            stonith__set_device_flags(device->flags, device->id,
-                                      fenced_df_supports_list);
+            fenced_device_set_flags(device, fenced_df_supports_list);
+
         } else if (pcmk__str_eq(action, PCMK_ACTION_STATUS, pcmk__str_none)) {
-            stonith__set_device_flags(device->flags, device->id,
-                                      fenced_df_supports_status);
+            fenced_device_set_flags(device, fenced_df_supports_status);
+
         } else if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
-            stonith__set_device_flags(device->flags, device->id,
-                                      fenced_df_supports_reboot);
+            fenced_device_set_flags(device, fenced_df_supports_reboot);
+
         } else if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
             /* PCMK_XA_AUTOMATIC means the cluster will unfence a node when it
              * joins.
@@ -992,8 +992,7 @@ read_action_metadata(fenced_device_t *device)
                 || pcmk__xe_attr_is_true(match, PCMK__XA_REQUIRED)) {
                 device->automatic_unfencing = TRUE;
             }
-            stonith__set_device_flags(device->flags, device->id,
-                                      fenced_df_supports_on);
+            fenced_device_set_flags(device, fenced_df_supports_on);
         }
 
         if ((action != NULL)
