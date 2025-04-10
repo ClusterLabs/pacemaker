@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -281,4 +281,196 @@ attrd_nvpair_id(const attribute_t *attr, const char *node_state_id)
     }
     pcmk__xml_sanitize_id(nvpair_id);
     return nvpair_id;
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute is one that must be written to the CIB
+ *
+ * \param[in] a  Attribute to check
+ *
+ * \return false if we are in standalone mode or \p a is private, otherwise true
+ */
+bool
+attrd_for_cib(const attribute_t *a)
+{
+    return !stand_alone && (a != NULL)
+           && !pcmk_is_set(a->flags, attrd_attr_is_private);
+}
+
+/*!
+ * \internal
+ * \brief Drop NULL attribute values as indicated by given function
+ *
+ * Drop all NULL node attribute values that a given function indicates should
+ * be, based on the XML ID of an element that was removed from the CIB.
+ *
+ * \param[in] cib_id    ID of XML element that was removed from CIB
+ *                      (a name/value pair, an attribute set, or a node state)
+ * \param[in] set_type  If not NULL, drop only attributes with this set type
+ * \param[in] func      Call this function for every attribute/value
+ *                      combination; keep the value if it returns 0, drop
+ *                      the value and keep checking the attribute's other
+ *                      values if it returns 1, or drop value and stop checking
+ *                      the attribute's further values if it returns 2
+ */
+static void
+drop_removed_values(const char *cib_id, const char *set_type,
+                    int (*func)(const attribute_t *, const attribute_value_t *,
+                                const char *))
+{
+    attribute_t *a = NULL;
+    GHashTableIter attr_iter;
+    const char *entry_type = pcmk__s(set_type, "status entry"); // for log
+
+    CRM_CHECK((cib_id != NULL) && (func != NULL), return);
+
+    // Check every attribute ...
+    g_hash_table_iter_init(&attr_iter, attributes);
+    while (g_hash_table_iter_next(&attr_iter, NULL, (gpointer *) &a)) {
+        attribute_value_t *v = NULL;
+        GHashTableIter value_iter;
+
+        if (!attrd_for_cib(a)
+            || ((set_type != NULL)
+                && !pcmk__str_eq(a->set_type, set_type, pcmk__str_none))) {
+            continue;
+        }
+
+        // Check every value of the attribute ...
+        g_hash_table_iter_init(&value_iter, a->values);
+        while (g_hash_table_iter_next(&value_iter, NULL, (gpointer *) &v)) {
+            int rc = 0;
+
+            if (v->current != NULL) {
+                continue;
+            }
+
+            if (attrd_get_node_xml_id(v->nodename) == NULL) {
+                /* This shouldn't be a significant issue, since we will know the
+                 * XML ID if *any* attribute for the node has ever been written.
+                 */
+                crm_trace("Ignoring %s[%s] after CIB erasure of %s %s because "
+                          "its node XML ID is unknown (possibly attribute was "
+                          "never written to CIB)",
+                          a->id, v->nodename, entry_type, cib_id);
+                continue;
+            }
+
+            rc = func(a, v, cib_id);
+            if (rc > 0) {
+                crm_debug("Dropping %s[%s] after CIB erasure of %s %s",
+                          a->id, v->nodename, entry_type, cib_id);
+                g_hash_table_iter_remove(&value_iter);
+                if (rc > 1) {
+                    return;
+                }
+            }
+        }
+    }
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute value has a given XML ID
+ *
+ * \param[in] a       Attribute being checked
+ * \param[in] v       Attribute value being checked
+ * \param[in] cib_id  ID of name/value pair element that was removed from CIB
+ *
+ * \return 2 if value matches XML ID, otherwise 0
+ */
+static int
+nvpair_matches(const attribute_t *a, const attribute_value_t *v,
+               const char *cib_id)
+{
+    char *id = attrd_nvpair_id(a, attrd_get_node_xml_id(v->nodename));
+
+    /* The attribute manager doesn't enforce uniqueness for value XML IDs
+     * (schema validation could be disabled), but in practice they should be,
+     * so we can stop looping if we find a match.
+     */
+    int rc = pcmk__str_eq(id, cib_id, pcmk__str_none)? 2 : 0;
+
+    free(id);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Drop attribute value corresponding to given removed CIB entry
+ *
+ * \param[in] cib_id  ID of name/value pair element that was removed from CIB
+ */
+void
+attrd_drop_removed_value(const char *cib_id)
+{
+    drop_removed_values(cib_id, NULL, nvpair_matches);
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute value has a given attribute set ID
+ *
+ * \param[in] a       Attribute being checked
+ * \param[in] v       Attribute value being checked
+ * \param[in] cib_id  ID of attribute set that was removed from CIB
+ *
+ * \return 1 if value matches XML ID, otherwise 0
+ */
+static int
+set_id_matches(const attribute_t *a, const attribute_value_t *v,
+               const char *cib_id)
+{
+    char *id = attrd_set_id(a, attrd_get_node_xml_id(v->nodename));
+    int rc = pcmk__str_eq(id, cib_id, pcmk__str_none)? 1: 0;
+
+    free(id);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Drop all removed attribute values for an attribute set
+ *
+ * \param[in] set_type  XML element name of set that was removed
+ * \param[in] cib_id    ID of attribute set that was removed from CIB
+ */
+void
+attrd_drop_removed_set(const char *set_type, const char *cib_id)
+{
+    drop_removed_values(cib_id, set_type, set_id_matches);
+}
+
+/*!
+ * \internal
+ * \brief Check whether an attribute value has a given node state XML ID
+ *
+ * \param[in] a       Attribute being checked
+ * \param[in] v       Attribute value being checked
+ * \param[in] cib_id  ID of node state that was removed from CIB
+ *
+ * \return 1 if value matches removed ID, otherwise 0
+ */
+static int
+node_matches(const attribute_t *a, const attribute_value_t *v,
+             const char *cib_id)
+{
+    if (pcmk__str_eq(cib_id, attrd_get_node_xml_id(v->nodename),
+                     pcmk__str_none)) {
+        return 1;
+    }
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Drop all removed attribute values for a node
+ *
+ * \param[in] cib_id  ID of node state that was removed from CIB
+ */
+void
+attrd_drop_removed_values(const char *cib_id)
+{
+    drop_removed_values(cib_id, NULL, node_matches);
 }
