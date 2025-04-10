@@ -312,6 +312,12 @@ pcmk__free_client(pcmk__client_t *c)
     free(c->id);
     free(c->name);
     free(c->user);
+
+    if (c->buffer != NULL) {
+        g_byte_array_free(c->buffer, TRUE);
+        c->buffer = NULL;
+    }
+
     if (c->remote) {
         if (c->remote->auth_timeout) {
             g_source_remove(c->remote->auth_timeout);
