@@ -125,6 +125,8 @@ enum fenced_notify_flags {
     fenced_nf_history_synced    = (UINT32_C(1) << 4),
 };
 
+enum fenced_notify_flags fenced_parse_notify_flag(const char *type);
+
 typedef struct {
     char *id;
     char *agent;
@@ -306,8 +308,6 @@ void free_stonith_remote_op_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 void fenced_unregister_handlers(void);
-
-uint64_t get_stonith_flag(const char *name);
 
 void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                             xmlNode *op_request, const char *remote_peer);

@@ -3240,7 +3240,8 @@ handle_notify_request(pcmk__request_t *request)
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));
-        pcmk__set_client_flags(request->ipc_client, get_stonith_flag(flag_name));
+        pcmk__set_client_flags(request->ipc_client,
+                               fenced_parse_notify_flag(flag_name));
     }
 
     flag_name = crm_element_value(request->xml, PCMK__XA_ST_NOTIFY_DEACTIVATE);
@@ -3248,7 +3249,7 @@ handle_notify_request(pcmk__request_t *request)
         crm_debug("Disabling %s callbacks for client %s",
                   flag_name, pcmk__request_origin(request));
         pcmk__clear_client_flags(request->ipc_client,
-                                 get_stonith_flag(flag_name));
+                                 fenced_parse_notify_flag(flag_name));
     }
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
