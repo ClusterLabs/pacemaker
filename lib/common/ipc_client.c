@@ -1057,48 +1057,55 @@ crm_ipc_ready(crm_ipc_t *client)
 long
 crm_ipc_read(crm_ipc_t * client)
 {
-    pcmk__ipc_header_t *header = NULL;
     char *buffer = NULL;
     long rc = -ENOMSG;
 
     pcmk__assert((client != NULL) && (client->ipc != NULL));
 
     buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(), sizeof(char));
-    client->msg_size = qb_ipcc_event_recv(client->ipc, buffer,
-                                          crm_ipc_default_buffer_size(), 0);
 
-    if (client->msg_size >= 0) {
-        header = (pcmk__ipc_header_t *)(void*) buffer;
-        if (!pcmk__valid_ipc_header(header)) {
-            rc = -EBADMSG;
-            goto done;
+    do {
+        ssize_t bytes = qb_ipcc_event_recv(client->ipc, buffer,
+                                           crm_ipc_default_buffer_size(), 0);
+        pcmk__ipc_header_t *header = NULL;
+
+        if (bytes <= 0) {
+            crm_trace("No message received from %s IPC: %s",
+                      client->server_name, pcmk_strerror(bytes));
+
+            if (!crm_ipc_connected(client) || bytes == -ENOTCONN) {
+                crm_err("Connection to %s IPC failed", client->server_name);
+                rc = -ENOTCONN;
+                goto done;
+            } else if (bytes == -EAGAIN) {
+                rc = -EAGAIN;
+                goto done;
+            }
+
+            break;
         }
 
-        crm_trace("Received %s IPC event %d size=%u rc=%d text='%.100s'",
-                  client->server_name, header->qb.id, header->qb.size,
-                  client->msg_size, buffer + sizeof(pcmk__ipc_header_t));
+        header = (pcmk__ipc_header_t *)(void *) buffer;
 
-    } else {
-        crm_trace("No message received from %s IPC: %s",
-                  client->server_name, pcmk_strerror(client->msg_size));
+        crm_trace("Received %s IPC event %d size=%u rc=%zd text='%.100s'",
+                  client->server_name, header->qb.id, header->qb.size, bytes,
+                  buffer + sizeof(pcmk__ipc_header_t));
 
-        if (client->msg_size == -EAGAIN) {
-            rc = -EAGAIN;
+        rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+
+        if (rc == pcmk_rc_ok) {
+            break;
+        } else if (rc == pcmk_rc_ipc_more) {
+            continue;
+        } else {
+            rc = -rc;
             goto done;
         }
-    }
+    } while (true);
 
-    if (!crm_ipc_connected(client) || client->msg_size == -ENOTCONN) {
-        crm_err("Connection to %s IPC failed", client->server_name);
-    }
-
-    if (header) {
-        client->buffer = g_byte_array_sized_new(crm_ipc_default_buffer_size());
-        g_byte_array_append(client->buffer, (const guint8 *) buffer,
-                            client->msg_size);
-
+    if (client->buffer->len > 0) {
         /* Data length excluding the header */
-        rc = header->size;
+        rc = client->buffer->len - sizeof(pcmk__ipc_header_t);
     }
 
 done:
