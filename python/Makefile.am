@@ -1,5 +1,5 @@
 #
-# Copyright 2023-2024 the Pacemaker project contributors
+# Copyright 2023-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,4 +22,5 @@ check-local:
 	if [ "x$(top_srcdir)" != "x$(top_builddir)" ]; then \
 		cp -r $(top_srcdir)/python/* $(abs_top_builddir)/python/; \
 	fi
-	PYTHONPATH=$(top_builddir)/python $(PYTHON) -m unittest discover -v -s $(top_builddir)/python/tests
+	PYTHONPATH=$(top_builddir)/python:$(top_builddir)/python/pacemaker/.libs \
+	$(PYTHON) -m unittest discover -v -s $(top_builddir)/python/tests
