@@ -1457,7 +1457,7 @@ stonith_device_remove(const char *id, bool from_cib)
     if (from_cib) {
         device->cib_registered = FALSE;
     } else {
-        device->verified = FALSE;
+        fenced_device_clear_flags(device, fenced_df_verified);
         device->api_registered = FALSE;
     }
 
@@ -2438,7 +2438,8 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
 
         // Has had successful monitor, list, or status on this node
-        crm_xml_add_int(dev, PCMK__XA_ST_MONITOR_VERIFIED, device->verified);
+        crm_xml_add_int(dev, PCMK__XA_ST_MONITOR_VERIFIED,
+                        pcmk_is_set(device->flags, fenced_df_verified));
 
         crm_xml_add_int(dev, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, device->flags);
 
@@ -2767,12 +2768,13 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
 
     /* The device is ready to do something else now */
     if (device) {
-        if (!device->verified && pcmk__result_ok(result)
+        if (!pcmk_is_set(device->flags, fenced_df_verified)
+            && pcmk__result_ok(result)
             && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_LIST,
                                     PCMK_ACTION_MONITOR, PCMK_ACTION_STATUS,
                                     NULL)) {
 
-            device->verified = TRUE;
+            fenced_device_set_flags(device, fenced_df_verified);
         }
 
         mainloop_set_trigger(device->work);

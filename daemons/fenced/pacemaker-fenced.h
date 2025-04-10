@@ -48,6 +48,9 @@ enum fenced_device_flags {
 
     //! Device is automatically used to unfence newly joined nodes
     fenced_df_auto_unfence    = (UINT32_C(1) << 4),
+
+    //! Device has run a successful list, status, or monitor action on this node
+    fenced_df_verified        = (UINT32_C(1) << 5),
 };
 
 /*!
@@ -63,6 +66,23 @@ enum fenced_device_flags {
                                              "Fence device", (device)->id,  \
                                              (device)->flags, set_flags,    \
                                              #set_flags);                   \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear flags for a fencing device
+ *
+ * \param[in,out] device       Device whose flags to clear (\c fenced_device_t)
+ * \param[in]     clear_flags  Group of <tt>enum fenced_device_flags</tt> to
+ *                             clear
+ */
+#define fenced_device_clear_flags(device, clear_flags) do {                 \
+        pcmk__assert((device) != NULL);                                     \
+        (device)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
+                                               LOG_TRACE, "Fence device",   \
+                                               (device)->id,                \
+                                               (device)->flags,             \
+                                               clear_flags, #clear_flags);  \
     } while (0)
 
 typedef struct {
@@ -84,10 +104,6 @@ typedef struct {
     crm_trigger_t *work;
     xmlNode *agent_metadata;
     const char *default_host_arg;
-
-    /*! A verified device is one that has contacted the
-     * agent successfully to perform a monitor operation */
-    gboolean verified;
 
     gboolean cib_registered;
     gboolean api_registered;
