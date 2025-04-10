@@ -116,7 +116,13 @@ enum fenced_notify_flags {
     //! Notify about changes to fencing history
     fenced_nf_history_changed   = (UINT32_C(1) << 3),
 
-    st_callback_notify_history_synced = (UINT32_C(1) << 6),
+    /* @FIXME A comment in stonith_fence_history() says its check is not
+     * conclusive: it may send a "history synced" notification when the history
+     * has not been synced. Hence "might have been synced" below. Try to find a
+     * better test.
+     */
+    //! Notify when the fencing history might have been synced
+    fenced_nf_history_synced    = (UINT32_C(1) << 4),
 };
 
 typedef struct {
