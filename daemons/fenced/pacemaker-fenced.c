@@ -266,7 +266,7 @@ get_stonith_flag(const char *name)
 
     } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY,
                             pcmk__str_none)) {
-        return st_callback_notify_history;
+        return fenced_nf_history_changed;
 
     } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
                             pcmk__str_none)) {

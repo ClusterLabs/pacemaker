@@ -113,7 +113,9 @@ enum fenced_notify_flags {
     //! Notify about fencing device removals via the fencer API
     fenced_nf_device_removed    = (UINT32_C(1) << 2),
 
-    st_callback_notify_history        = (UINT32_C(1) << 5),
+    //! Notify about changes to fencing history
+    fenced_nf_history_changed   = (UINT32_C(1) << 3),
+
     st_callback_notify_history_synced = (UINT32_C(1) << 6),
 };
 
