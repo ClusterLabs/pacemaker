@@ -86,6 +86,15 @@
   </synapse>
   <synapse id="8">
     <action_set>
+      <crm_event id="8" operation="clear_failcount" operation_key="ping-3_clear_failcount_0" internal_operation_key="ping-3:1_clear_failcount_0" on_node="cluster02" on_node_uuid="2">
+        <primitive id="ping-3" long-id="ping-3:1" class="ocf" provider="pacemaker" type="ping"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000"  dampen="5s" host_list="192.168.122.3" multiplier="1000"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
       <rsc_op id="5" operation="stop" operation_key="ping-3_stop_0" internal_operation_key="ping-3:0_stop_0" on_node="cluster01" on_node_uuid="1">
         <primitive id="ping-3" long-id="ping-3:0" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  dampen="5s" host_list="192.168.122.3" multiplier="1000"/>
@@ -97,20 +106,11 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="9">
+  <synapse id="10">
     <action_set>
       <crm_event id="4" operation="clear_failcount" operation_key="ping-3_clear_failcount_0" internal_operation_key="ping-3:0_clear_failcount_0" on_node="cluster01" on_node_uuid="1">
         <primitive id="ping-3" long-id="ping-3:0" class="ocf" provider="pacemaker" type="ping"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cluster01" CRM_meta_on_node_uuid="1" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000"  dampen="5s" host_list="192.168.122.3" multiplier="1000"/>
-      </crm_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="10">
-    <action_set>
-      <crm_event id="8" operation="clear_failcount" operation_key="ping-3_clear_failcount_0" internal_operation_key="ping-3:1_clear_failcount_0" on_node="cluster02" on_node_uuid="2">
-        <primitive id="ping-3" long-id="ping-3:1" class="ocf" provider="pacemaker" type="ping"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cluster02" CRM_meta_on_node_uuid="2" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000"  dampen="5s" host_list="192.168.122.3" multiplier="1000"/>
       </crm_event>
     </action_set>
     <inputs/>

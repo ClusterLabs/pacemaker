@@ -32,18 +32,18 @@ Transition Summary:
 
 Executing Cluster Transition:
   * Pseudo action:   ms-r1_pre_notify_promote_0
-  * Resource action: drbd-r1         notify on hex-2
   * Resource action: drbd-r1         notify on hex-3
+  * Resource action: drbd-r1         notify on hex-2
   * Pseudo action:   ms-r1_confirmed-pre_notify_promote_0
   * Pseudo action:   ms-r1_promote_0
   * Resource action: drbd-r1         promote on hex-3
   * Pseudo action:   ms-r1_promoted_0
   * Pseudo action:   ms-r1_post_notify_promoted_0
-  * Resource action: drbd-r1         notify on hex-2
   * Resource action: drbd-r1         notify on hex-3
+  * Resource action: drbd-r1         notify on hex-2
   * Pseudo action:   ms-r1_confirmed-post_notify_promoted_0
-  * Resource action: drbd-r1         monitor=29000 on hex-2
   * Resource action: drbd-r1         monitor=31000 on hex-3
+  * Resource action: drbd-r1         monitor=29000 on hex-2
 
 Revised Cluster Status:
   * Node List:
