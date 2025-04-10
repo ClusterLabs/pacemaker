@@ -1430,7 +1430,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
     }
 
     if (from_cib) {
-        device->cib_registered = TRUE;
+        fenced_device_set_flags(device, fenced_df_cib_registered);
     } else {
         fenced_device_set_flags(device, fenced_df_api_registered);
     }
@@ -1456,25 +1456,28 @@ stonith_device_remove(const char *id, bool from_cib)
     }
 
     if (from_cib) {
-        device->cib_registered = FALSE;
+        fenced_device_clear_flags(device, fenced_df_cib_registered);
     } else {
         fenced_device_clear_flags(device,
                                   fenced_df_api_registered|fenced_df_verified);
     }
 
-    if (!device->cib_registered
-        && !pcmk_is_set(device->flags, fenced_df_api_registered)) {
-
+    if (!pcmk_any_flags_set(device->flags,
+                            fenced_df_api_registered
+                            |fenced_df_cib_registered)) {
         g_hash_table_remove(device_table, id);
         ndevices = g_hash_table_size(device_table);
         crm_info("Removed '%s' from device list (%u active device%s)",
                  id, ndevices, pcmk__plural_s(ndevices));
     } else {
         // Exactly one is true at this point
+        const bool cib_registered = pcmk_is_set(device->flags,
+                                                fenced_df_cib_registered);
+
         crm_trace("Not removing '%s' from device list (%u active) because "
                   "still registered via %s",
                   id, g_hash_table_size(device_table),
-                  (device->cib_registered? "CIB" : "API"));
+                  (cib_registered? "CIB" : "API"));
     }
 }
 

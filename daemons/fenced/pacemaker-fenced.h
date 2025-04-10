@@ -54,6 +54,9 @@ enum fenced_device_flags {
 
     //! Device has been registered via the stonith API
     fenced_df_api_registered  = (UINT32_C(1) << 6),
+
+    //! Device has been registered via the fencer's CIB diff callback
+    fenced_df_cib_registered  = (UINT32_C(1) << 7),
 };
 
 /*!
@@ -108,7 +111,6 @@ typedef struct {
     xmlNode *agent_metadata;
     const char *default_host_arg;
 
-    gboolean cib_registered;
     gboolean dirty;
 } fenced_device_t;
 

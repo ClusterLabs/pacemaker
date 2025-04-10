@@ -196,7 +196,8 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
 
 /*!
  * \internal
- * \brief Mark a fence device dirty if its \c cib_registered flag is \c TRUE
+ * \brief Mark a fence device dirty if its \c fenced_df_cib_registered flag is
+ *        set
  *
  * \param[in]     key        Ignored
  * \param[in,out] value      Fence device (<tt>fenced_device_t *</tt>)
@@ -209,7 +210,7 @@ mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    if (device->cib_registered) {
+    if (pcmk_is_set(device->flags, fenced_df_cib_registered)) {
         device->dirty = TRUE;
     }
 }
