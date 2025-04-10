@@ -240,7 +240,6 @@ int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
     pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (ver), (st))
 
 int pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
-                          uint32_t max_send_size,
                           struct iovec **result, ssize_t *bytes);
 int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request,
                        const xmlNode *message, uint32_t flags);

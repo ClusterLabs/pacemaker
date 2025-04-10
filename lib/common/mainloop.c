@@ -664,7 +664,7 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
         qb_ipcs_request_rate_limit(server, conv_libqb_prio2ratelimit(prio));
     }
 
-    // All clients should use at least PCMK_ipc_buffer as their buffer size
+    // Enforce a minimum IPC buffer size on all clients
     qb_ipcs_enforce_buffer_size(server, crm_ipc_default_buffer_size());
     qb_ipcs_poll_handlers_set(server, &gio_poll_funcs);
 
@@ -916,7 +916,7 @@ mainloop_io_t *
 mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                         void *userdata, struct ipc_client_callbacks *callbacks)
 {
-    crm_ipc_t *ipc = crm_ipc_new(name, max_size);
+    crm_ipc_t *ipc = crm_ipc_new(name, 0);
     mainloop_io_t *source = NULL;
     int rc = pcmk__add_mainloop_ipc(ipc, priority, userdata, callbacks,
                                     &source);
