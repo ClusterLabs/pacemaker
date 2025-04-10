@@ -570,34 +570,6 @@ class FenceTests(Tests):
         test.add_log_pattern("Delaying 'off' action targeting node3 using true3",
                              negative=True)
 
-    def build_nodeid_tests(self):
-        """Register tests that use a corosync node id."""
-        our_uname = localname()
-
-        # verify nodeid is supplied when nodeid is in the metadata parameters
-        test = self.new_test("supply_nodeid",
-                             "Verify nodeid is given when fence agent has nodeid as parameter")
-
-        test.add_cmd("stonith_admin",
-                     args=f'--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list={our_uname}"')
-        test.add_cmd("stonith_admin", args=f"--output-as=xml -F {our_uname} -t 3")
-        test.add_log_pattern(f"as nodeid with fence action 'off' targeting {our_uname}")
-
-        # verify nodeid is _NOT_ supplied when nodeid is not in the metadata parameters
-        test = self.new_test("do_not_supply_nodeid",
-                             "Verify nodeid is _NOT_ given when fence agent does not have nodeid as parameter")
-
-        # use a host name that won't be in corosync.conf
-        test.add_cmd("stonith_admin",
-                     args='--output-as=xml -R true1 -a fence_dummy_no_nodeid '
-                          f'-o mode=pass -o pcmk_host_list="regr-test {our_uname}"')
-        test.add_cmd("stonith_admin", args="--output-as=xml -F regr-test -t 3")
-        test.add_log_pattern("as nodeid with fence action 'off' targeting regr-test",
-                             negative=True)
-        test.add_cmd("stonith_admin", args=f"--output-as=xml -F {our_uname} -t 3")
-        test.add_log_pattern("as nodeid with fence action 'off' targeting {our_uname}",
-                             negative=True)
-
     def build_unfence_tests(self):
         """Register tests that verify unfencing."""
         our_uname = localname()
@@ -917,7 +889,6 @@ def main():
         tests.build_fence_no_merge_tests()
         tests.build_unfence_tests()
         tests.build_unfence_on_target_tests()
-        tests.build_nodeid_tests()
         tests.build_remap_tests()
         tests.build_query_tests()
         tests.build_metadata_tests()

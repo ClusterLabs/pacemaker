@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -26,7 +26,7 @@
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
-typedef struct stonith_device_s {
+typedef struct {
     char *id;
     char *agent;
     char *namespace;
@@ -35,14 +35,9 @@ typedef struct stonith_device_s {
     GString *on_target_actions;
     GList *targets;
     time_t targets_age;
-    gboolean has_attr_map;
-
-    // Whether target's nodeid should be passed as a parameter to the agent
-    gboolean include_nodeid;
 
     /* whether the cluster should automatically unfence nodes with the device */
     gboolean automatic_unfencing;
-    guint priority;
 
     uint32_t flags; // Group of enum st_device_flags
 
@@ -60,7 +55,7 @@ typedef struct stonith_device_s {
     gboolean cib_registered;
     gboolean api_registered;
     gboolean dirty;
-} stonith_device_t;
+} fenced_device_t;
 
 /* These values are used to index certain arrays by "phase". Usually an
  * operation has only one "phase", so phase is always zero. However, some
@@ -220,8 +215,12 @@ typedef struct stonith_topology_s {
 
 void stonith_shutdown(int nsig);
 
-void init_device_list(void);
-void free_device_list(void);
+void fenced_init_device_table(void);
+void fenced_free_device_table(void);
+bool fenced_has_watchdog_device(void);
+void fenced_foreach_device(GHFunc fn, gpointer user_data);
+void fenced_foreach_device_remove(GHRFunc fn);
+
 void init_topology_list(void);
 void free_topology_list(void);
 void free_stonith_remote_op_list(void);
@@ -234,7 +233,7 @@ uint64_t get_stonith_flag(const char *name);
 void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                             xmlNode *op_request, const char *remote_peer);
 
-int stonith_device_register(xmlNode *msg, gboolean from_cib);
+int fenced_device_register(const xmlNode *dev, bool from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);
 
@@ -326,7 +325,6 @@ fenced_support_flag(const char *action)
     return st_device_supports_none;
 }
 
-extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long long stonith_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;

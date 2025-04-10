@@ -129,8 +129,8 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     xmlXPathObject *xpathObj = NULL;
     stonith_action_t *action = stonith__action_create(agent,
                                                       PCMK_ACTION_METADATA,
-                                                      NULL, 0, timeout_sec,
-                                                      NULL, NULL, NULL);
+                                                      NULL, timeout_sec, NULL,
+                                                      NULL, NULL);
     int rc = stonith__execute(action);
     pcmk__action_result_t *result = stonith__action_result(action);
 
@@ -306,7 +306,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         host_arg = NULL;
     }
 
-    action = stonith__action_create(agent, PCMK_ACTION_VALIDATE_ALL, target, 0,
+    action = stonith__action_create(agent, PCMK_ACTION_VALIDATE_ALL, target,
                                     remaining_timeout, params, NULL, host_arg);
 
     rc = stonith__execute(action);

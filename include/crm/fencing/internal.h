@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -58,7 +58,6 @@ typedef struct stonith_action_s stonith_action_t;
 stonith_action_t *stonith__action_create(const char *agent,
                                          const char *action_name,
                                          const char *target,
-                                         uint32_t target_nodeid,
                                          int timeout_sec,
                                          GHashTable *device_args,
                                          GHashTable *port_map,

@@ -196,25 +196,58 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
 
 /*!
  * \internal
+ * \brief Mark a fence device dirty if its \c cib_registered flag is \c TRUE
+ *
+ * \param[in]     key        Ignored
+ * \param[in,out] value      Fence device (<tt>fenced_device_t *</tt>)
+ * \param[in]     user_data  Ignored
+ *
+ * \note This function is suitable for use with \c g_hash_table_foreach().
+ */
+static void
+mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
+{
+    fenced_device_t *device = value;
+
+    if (device->cib_registered) {
+        device->dirty = TRUE;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Return the value of a fence device's \c dirty flag
+ *
+ * \param[in] key        Ignored
+ * \param[in] value      Fence device (<tt>fenced_device_t *</tt>)
+ * \param[in] user_data  Ignored
+ *
+ * \return \c dirty flag of \p value
+ *
+ * \note This function is suitable for use with
+ *       \c g_hash_table_foreach_remove().
+ */
+static gboolean
+device_is_dirty(gpointer key, gpointer value, gpointer user_data)
+{
+    fenced_device_t *device = value;
+
+    return device->dirty;
+}
+
+/*!
+ * \internal
  * \brief Update all STONITH device definitions based on current CIB
  */
 static void
 cib_devices_update(void)
 {
-    GHashTableIter iter;
-    stonith_device_t *device = NULL;
-
     crm_info("Updating devices to version %s.%s.%s",
              crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
              crm_element_value(local_cib, PCMK_XA_EPOCH),
              crm_element_value(local_cib, PCMK_XA_NUM_UPDATES));
 
-    g_hash_table_iter_init(&iter, device_list);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
-        if (device->cib_registered) {
-            device->dirty = TRUE;
-        }
-    }
+    fenced_foreach_device(mark_dirty_if_cib_registered, NULL);
 
     /* have list repopulated if cib has a watchdog-fencing-resource
        TODO: keep a cached list for queries happening while we are refreshing
@@ -224,78 +257,78 @@ cib_devices_update(void)
 
     fenced_scheduler_run(local_cib);
 
-    g_hash_table_iter_init(&iter, device_list);
-    while (g_hash_table_iter_next(&iter, NULL, (void **)&device)) {
-        if (device->dirty) {
-            g_hash_table_iter_remove(&iter);
-        }
-    }
+    fenced_foreach_device_remove(device_is_dirty);
 }
 
+#define PRIMITIVE_ID_XP_FRAGMENT "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='"
+
 static void
-update_cib_stonith_devices(const char *event, xmlNode * msg)
+update_cib_stonith_devices(const xmlNode *patchset)
 {
-    int format = 1;
-    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT,
-                                            NULL, NULL);
-    xmlNode *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     char *reason = NULL;
 
-    CRM_CHECK(patchset != NULL, return);
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
-
-    if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
-        return;
-    }
-
-    for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
+    for (const xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL,
+                                                      NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
         const char *op = crm_element_value(change, PCMK_XA_OPERATION);
         const char *xpath = crm_element_value(change, PCMK_XA_PATH);
-        const char *shortpath = NULL;
+        const char *primitive_xpath = NULL;
 
         if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
             || (strstr(xpath, "/" PCMK_XE_STATUS) != NULL)) {
             continue;
         }
 
-        if (pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)
-            && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
-            const char *rsc_id = NULL;
-            char *search = NULL;
-            char *mutable = NULL;
+        primitive_xpath = strstr(xpath, PRIMITIVE_ID_XP_FRAGMENT);
+        if ((primitive_xpath != NULL)
+            && pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)) {
 
-            if ((strstr(xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
-                || (strstr(xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
+            const char *rsc_id = NULL;
+            const char *end_quote = NULL;
+
+            if ((strstr(primitive_xpath, PCMK_XE_INSTANCE_ATTRIBUTES) != NULL)
+                || (strstr(primitive_xpath, PCMK_XE_META_ATTRIBUTES) != NULL)) {
 
                 reason = pcmk__str_copy("(meta) attribute deleted from "
                                         "resource");
                 break;
             }
-            mutable = pcmk__str_copy(xpath);
-            rsc_id = strstr(mutable, PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
-            if (rsc_id != NULL) {
-                rsc_id += strlen(PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "=\'");
-                search = strchr(rsc_id, '\'');
+
+            rsc_id = primitive_xpath + sizeof(PRIMITIVE_ID_XP_FRAGMENT) - 1;
+            end_quote = strchr(rsc_id, '\'');
+
+            CRM_LOG_ASSERT(end_quote != NULL);
+            if (end_quote == NULL) {
+                crm_err("Bug: Malformed item in Pacemaker-generated patchset");
+                continue;
             }
-            if (search != NULL) {
-                *search = 0;
-                stonith_device_remove(rsc_id, true);
+
+            if (strchr(end_quote, '/') == NULL) {
+                /* The primitive element itself was deleted. If this was a
+                 * fencing resource, it's faster to remove it directly than to
+                 * run the scheduler and update all device registrations.
+                */
+                char *copy = strndup(rsc_id, end_quote - rsc_id);
+
+                pcmk__assert(copy != NULL);
+                stonith_device_remove(copy, true);
+
                 /* watchdog_device_update called afterwards
                    to fall back to implicit definition if needed */
-            } else {
-                crm_warn("Ignoring malformed CIB update (resource deletion)");
-            }
-            free(mutable);
 
-        } else if (strstr(xpath, "/" PCMK_XE_RESOURCES)
-                   || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
-                   || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
-            shortpath = strrchr(xpath, '/');
-            pcmk__assert(shortpath != NULL);
-            reason = crm_strdup_printf("%s %s", op, shortpath+1);
+                free(copy);
+                continue;
+            }
+        }
+
+        if (strstr(xpath, "/" PCMK_XE_RESOURCES)
+            || strstr(xpath, "/" PCMK_XE_CONSTRAINTS)
+            || strstr(xpath, "/" PCMK_XE_RSC_DEFAULTS)) {
+
+            const char *shortpath = strrchr(xpath, '/');
+
+            reason = crm_strdup_printf("%s %s", op, shortpath + 1);
             break;
         }
     }
@@ -313,8 +346,8 @@ static void
 watchdog_device_update(void)
 {
     if (stonith_watchdog_timeout_ms > 0) {
-        if (!g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) &&
-            !stonith_watchdog_targets) {
+        if (!fenced_has_watchdog_device()
+            && (stonith_watchdog_targets == NULL)) {
             /* getting here watchdog-fencing enabled, no device there yet
                and reason isn't stonith_watchdog_targets preventing that
              */
@@ -325,15 +358,14 @@ watchdog_device_update(void)
                     STONITH_WATCHDOG_ID,
                     st_namespace_internal,
                     STONITH_WATCHDOG_AGENT,
-                    NULL, /* stonith_device_register will add our
+                    NULL, /* fenced_device_register() will add our
                              own name as PCMK_STONITH_HOST_LIST param
                              so we can skip that here
                            */
                     NULL);
-            rc = stonith_device_register(xml, TRUE);
+            rc = fenced_device_register(xml, true);
             pcmk__xml_free(xml);
-            if (rc != pcmk_ok) {
-                rc = pcmk_legacy2rc(rc);
+            if (rc != pcmk_rc_ok) {
                 exit_code = CRM_EX_FATAL;
                 crm_crit("Cannot register watchdog pseudo fence agent: %s",
                          pcmk_rc_str(rc));
@@ -341,7 +373,7 @@ watchdog_device_update(void)
             }
         }
 
-    } else if (g_hash_table_lookup(device_list, STONITH_WATCHDOG_ID) != NULL) {
+    } else if (fenced_has_watchdog_device()) {
         /* be silent if no device - todo parameter to stonith_device_remove */
         stonith_device_remove(STONITH_WATCHDOG_ID, true);
     }
@@ -465,6 +497,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
 static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
+    xmlNode *patchset = NULL;
     long long timeout_ms_saved = stonith_watchdog_timeout_ms;
     bool need_full_refresh = false;
 
@@ -483,7 +516,6 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     if (local_cib != NULL) {
         int rc = pcmk_ok;
         xmlNode *wrapper = NULL;
-        xmlNode *patchset = NULL;
 
         crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
         if (rc != pcmk_ok) {
@@ -498,6 +530,11 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         switch (rc) {
             case pcmk_ok:
             case -pcmk_err_old_data:
+                /* @TODO Full refresh (with or without query) in case of
+                 * -pcmk_err_old_data? It seems wrong to call
+                 * stonith_device_remove() based on primitive deletion in an
+                 * old diff.
+                 */
                 break;
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
@@ -532,7 +569,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     } else {
         // Partial refresh
         update_fencing_topology(event, msg);
-        update_cib_stonith_devices(event, msg);
+        update_cib_stonith_devices(patchset);
     }
 
     watchdog_device_update();
