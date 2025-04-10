@@ -1675,7 +1675,7 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
  * the entry's device list for the specified level.
  *
  * \param[in]  msg     XML request for STONITH level registration
- * \param[out] result  Where to set result of registration
+ * \param[out] result  Where to set result of registration (can be \c NULL)
  */
 void
 fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
@@ -1689,7 +1689,7 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
     stonith_key_value_t *dIter = NULL;
     stonith_key_value_t *devices = NULL;
 
-    CRM_CHECK((msg != NULL) && (result != NULL), return);
+    CRM_CHECK(msg != NULL, return);
 
     level = unpack_level_request(msg, &mode, &target, &id);
     if (level == NULL) {
@@ -1786,7 +1786,7 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
  * global topology table.
  *
  * \param[in]  msg     XML request for STONITH level registration
- * \param[out] result  Where to set result of unregistration
+ * \param[out] result  Where to set result of unregistration (can be \c NULL)
  */
 void
 fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
@@ -1795,8 +1795,6 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
     stonith_topology_t *tp;
     char *target;
     xmlNode *level = NULL;
-
-    CRM_CHECK(result != NULL, return);
 
     level = unpack_level_request(msg, NULL, &target, &id);
     if (level == NULL) {

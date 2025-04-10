@@ -68,43 +68,26 @@ node_has_attr(const char *node, const char *name, const char *value)
 }
 
 static void
-add_topology_level(xmlNode *match)
-{
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
-    CRM_CHECK(match != NULL, return);
-
-    fenced_register_level(match, &result);
-    pcmk__reset_result(&result);
-}
-
-static void
-topology_remove_helper(const char *node, int level)
-{
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
-
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add_int(data, PCMK_XA_INDEX, level);
-    crm_xml_add(data, PCMK_XA_TARGET, node);
-
-    fenced_unregister_level(data, &result);
-    pcmk__reset_result(&result);
-    pcmk__xml_free(data);
-}
-
-static void
 remove_topology_level(xmlNode *match)
 {
     int index = 0;
     char *key = NULL;
+    xmlNode *data = NULL;
 
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
     crm_element_value_int(match, PCMK_XA_INDEX, &index);
-    topology_remove_helper(key, index);
+
+    data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
+    crm_xml_add(data, PCMK_XA_TARGET, key);
+    crm_xml_add_int(data, PCMK_XA_INDEX, index);
+
+    fenced_unregister_level(data, NULL);
+
     free(key);
+    pcmk__xml_free(data);
 }
 
 static void
@@ -119,7 +102,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
             continue;
         }
         remove_topology_level(match);
-        add_topology_level(match);
+        fenced_register_level(match, NULL);
     }
 }
 
@@ -446,7 +429,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
             }
 
             if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-                add_topology_level(change->children);
+                fenced_register_level(change->children, NULL);
 
             } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
                 xmlNode *match = pcmk__xe_first_child(change,
@@ -455,7 +438,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
                 if (match != NULL) {
                     remove_topology_level(match->children);
-                    add_topology_level(match->children);
+                    fenced_register_level(match->children, NULL);
                 }
             }
             continue;
