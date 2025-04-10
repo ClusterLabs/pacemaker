@@ -13,7 +13,7 @@
 #include <string.h>         // strcmp()
 #include <libxml/tree.h>    // xmlNode
 
-#include <crm/common/xml_internal.h>    // enum xml_private_flags
+#include <crm/common/xml_internal.h>    // enum pcmk__xml_flags
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +34,7 @@ pcmk__is_privileged(const char *user)
 void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
 
 bool pcmk__check_acl(xmlNode *xml, const char *attr_name,
-                     enum xml_private_flags mode);
+                     enum pcmk__xml_flags mode);
 
 #ifdef __cplusplus
 }

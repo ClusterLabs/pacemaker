@@ -137,7 +137,7 @@ already_sorted(void **state)
         xml_node_private_t *nodepriv = attr->_private;
 
         if (nodepriv != NULL) {
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_lazy);
+            pcmk__set_xml_flags(nodepriv, pcmk__xf_ignore_attr_pos);
         }
     }
 
@@ -171,7 +171,7 @@ need_sort(void **state)
         xml_node_private_t *nodepriv = attr->_private;
 
         if (nodepriv != NULL) {
-            pcmk__set_xml_flags(nodepriv, pcmk__xf_lazy);
+            pcmk__set_xml_flags(nodepriv, pcmk__xf_ignore_attr_pos);
         }
     }
 

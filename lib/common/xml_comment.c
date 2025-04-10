@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                    // bool, false
 #include <stdio.h>                      // NULL
 
 #include <libxml/tree.h>                // xmlDoc, xmlNode, etc.
@@ -41,44 +42,47 @@ pcmk__xc_create(xmlDoc *doc, const char *content)
 
 /*!
  * \internal
- * \brief Find a comment with matching content in specified XML
+ * \brief Check whether two comments have matching content (case-insensitive)
  *
- * \param[in] root            XML to search
- * \param[in] search_comment  Comment whose content should be searched for
- * \param[in] exact           If true, comment must also be at same position
+ * \param[in] comment1  First comment node to compare
+ * \param[in] comment2  Second comment node to compare
+ *
+ * \return \c true if \p comment1 and \p comment2 have matching content (by
+ *         case-insensitive string comparison), or \c false otherwise
  */
-xmlNode *
-pcmk__xc_match(const xmlNode *root, const xmlNode *search_comment, bool exact)
+bool
+pcmk__xc_matches(const xmlNode *comment1, const xmlNode *comment2)
 {
-    xmlNode *a_child = NULL;
-    int search_offset = pcmk__xml_position(search_comment, pcmk__xf_skip);
+    pcmk__assert((comment1 != NULL) && (comment1->type == XML_COMMENT_NODE)
+                 && (comment2 != NULL) && (comment2->type == XML_COMMENT_NODE));
 
-    CRM_CHECK(search_comment->type == XML_COMMENT_NODE, return NULL);
+    return pcmk__str_eq((const char *) comment1->content,
+                        (const char *) comment2->content, pcmk__str_casei);
+}
 
-    for (a_child = pcmk__xml_first_child(root); a_child != NULL;
-         a_child = pcmk__xml_next(a_child)) {
-        if (exact) {
-            int offset = pcmk__xml_position(a_child, pcmk__xf_skip);
-            xml_node_private_t *nodepriv = a_child->_private;
+/*!
+ * \internal
+ * \brief Find a comment with matching content among children of specified XML
+ *
+ * \param[in] parent  XML whose children to search
+ * \param[in] search  Comment whose content should be searched for
+ *
+ * \return Matching comment, or \c NULL if no match is found
+ */
+static xmlNode *
+match_xc_child(const xmlNode *parent, const xmlNode *search)
+{
+    pcmk__assert((search != NULL) && (search->type == XML_COMMENT_NODE));
 
-            if (offset < search_offset) {
-                continue;
+    for (xmlNode *child = pcmk__xml_first_child(parent); child != NULL;
+         child = pcmk__xml_next(child)) {
 
-            } else if (offset > search_offset) {
-                return NULL;
-            }
-
-            if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
-                continue;
-            }
+        if (child->type != XML_COMMENT_NODE) {
+            continue;
         }
 
-        if (a_child->type == XML_COMMENT_NODE
-            && pcmk__str_eq((const char *)a_child->content, (const char *)search_comment->content, pcmk__str_casei)) {
-            return a_child;
-
-        } else if (exact) {
-            return NULL;
+        if (pcmk__xc_matches(child, search)) {
+            return child;
         }
     }
 
@@ -103,7 +107,7 @@ pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update)
     CRM_CHECK(update->type == XML_COMMENT_NODE, return);
 
     if (target == NULL) {
-        target = pcmk__xc_match(parent, update, false);
+        target = match_xc_child(parent, update);
     }
 
     if (target == NULL) {
