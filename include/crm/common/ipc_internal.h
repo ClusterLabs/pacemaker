@@ -172,6 +172,16 @@ struct pcmk__client_s {
     int event_timer;
     GQueue *event_queue;
 
+    /* Buffer used to store a multipart IPC message when we are building it
+     * up over multiple reads.
+     *
+     * NOTE: The use of a GByteArray here restricts the maximum size of an
+     * IPC message.  A GByteArray can hold G_MAXUINT bytes, which is the same
+     * as UINT_MAX.  So, an IPC message can be about 4 GB in size, minus the
+     * header.
+     */
+    GByteArray *buffer;
+
     /* Depending on the client type, only some of the following will be
      * populated/valid. @TODO Maybe convert to a union.
      */
