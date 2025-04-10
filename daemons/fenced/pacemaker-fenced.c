@@ -256,7 +256,7 @@ uint64_t
 get_stonith_flag(const char *name)
 {
     if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
-        return st_callback_notify_fence;
+        return fenced_nf_fence_result;
 
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
         return st_callback_device_add;

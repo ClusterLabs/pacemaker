@@ -102,7 +102,9 @@ enum fenced_notify_flags {
     //! This flag has no effect
     fenced_nf_none              = UINT32_C(0),
 
-    st_callback_notify_fence          = (UINT32_C(1) << 0),
+    //! Notify about fencing operation results
+    fenced_nf_fence_result      = (UINT32_C(1) << 0),
+
     st_callback_device_add            = (UINT32_C(1) << 2),
     st_callback_device_del            = (UINT32_C(1) << 4),
     st_callback_notify_history        = (UINT32_C(1) << 5),
