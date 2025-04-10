@@ -94,6 +94,19 @@ enum fenced_device_flags {
                                                clear_flags, #clear_flags);  \
     } while (0)
 
+/*!
+ * \internal
+ * \brief Flags for fencer client notification types
+ */
+enum fenced_notify_flags {
+    st_callback_unknown               = UINT32_C(0),
+    st_callback_notify_fence          = (UINT32_C(1) << 0),
+    st_callback_device_add            = (UINT32_C(1) << 2),
+    st_callback_device_del            = (UINT32_C(1) << 4),
+    st_callback_notify_history        = (UINT32_C(1) << 5),
+    st_callback_notify_history_synced = (UINT32_C(1) << 6),
+};
+
 typedef struct {
     char *id;
     char *agent;
@@ -224,16 +237,6 @@ typedef struct remote_fencing_op_s {
 } remote_fencing_op_t;
 
 void fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged);
-
-// Fencer-specific client flags
-enum st_client_flags {
-    st_callback_unknown               =  UINT64_C(0),
-    st_callback_notify_fence          = (UINT64_C(1) << 0),
-    st_callback_device_add            = (UINT64_C(1) << 2),
-    st_callback_device_del            = (UINT64_C(1) << 4),
-    st_callback_notify_history        = (UINT64_C(1) << 5),
-    st_callback_notify_history_synced = (UINT64_C(1) << 6)
-};
 
 // How the user specified the target of a topology level
 enum fenced_target_by {
