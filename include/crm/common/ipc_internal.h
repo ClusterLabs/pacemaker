@@ -172,6 +172,11 @@ struct pcmk__client_s {
     int event_timer;
     GQueue *event_queue;
 
+    /* Buffer used to store a multipart IPC message when we are building it
+     * up over multiple reads.
+     */
+    GByteArray *buffer;
+
     /* Depending on the client type, only some of the following will be
      * populated/valid. @TODO Maybe convert to a union.
      */
