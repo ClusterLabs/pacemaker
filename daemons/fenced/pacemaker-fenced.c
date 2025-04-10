@@ -259,7 +259,7 @@ get_stonith_flag(const char *name)
         return fenced_nf_fence_result;
 
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
-        return st_callback_device_add;
+        return fenced_nf_device_registered;
 
     } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_DEL, pcmk__str_casei)) {
         return st_callback_device_del;
