@@ -1407,7 +1407,8 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
         guint ndevices = 0;
         fenced_device_t *old = g_hash_table_lookup(device_table, device->id);
 
-        if (from_cib && (old != NULL) && old->api_registered) {
+        if (from_cib && (old != NULL)
+            && pcmk_is_set(old->flags, fenced_df_api_registered)) {
             /* If the CIB is writing over an entry that is shared with a stonith
              * client, copy any pending ops that currently exist on the old
              * entry to the new one. Otherwise the pending ops will be reported
@@ -1415,7 +1416,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
              */
             crm_info("Overwriting existing entry for %s from CIB", device->id);
             device->pending_ops = old->pending_ops;
-            device->api_registered = TRUE;
+            fenced_device_set_flags(device, fenced_df_api_registered);
             old->pending_ops = NULL;
             if (device->pending_ops != NULL) {
                 mainloop_set_trigger(device->work);
@@ -1431,7 +1432,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
     if (from_cib) {
         device->cib_registered = TRUE;
     } else {
-        device->api_registered = TRUE;
+        fenced_device_set_flags(device, fenced_df_api_registered);
     }
 
 done:
@@ -1457,11 +1458,13 @@ stonith_device_remove(const char *id, bool from_cib)
     if (from_cib) {
         device->cib_registered = FALSE;
     } else {
-        fenced_device_clear_flags(device, fenced_df_verified);
-        device->api_registered = FALSE;
+        fenced_device_clear_flags(device,
+                                  fenced_df_api_registered|fenced_df_verified);
     }
 
-    if (!device->cib_registered && !device->api_registered) {
+    if (!device->cib_registered
+        && !pcmk_is_set(device->flags, fenced_df_api_registered)) {
+
         g_hash_table_remove(device_table, id);
         ndevices = g_hash_table_size(device_table);
         crm_info("Removed '%s' from device list (%u active device%s)",
@@ -1956,7 +1959,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
                             "'%s' not found", id);
         return;
 
-    } else if (!device->api_registered
+    } else if (!pcmk_is_set(device->flags, fenced_df_api_registered)
                && (strcmp(action, PCMK_ACTION_MONITOR) == 0)) {
         // Monitors may run only on "started" (API-registered) devices
         crm_info("Ignoring API '%s' action request because device %s not active",

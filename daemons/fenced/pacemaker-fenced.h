@@ -51,6 +51,9 @@ enum fenced_device_flags {
 
     //! Device has run a successful list, status, or monitor action on this node
     fenced_df_verified        = (UINT32_C(1) << 5),
+
+    //! Device has been registered via the stonith API
+    fenced_df_api_registered  = (UINT32_C(1) << 6),
 };
 
 /*!
@@ -106,7 +109,6 @@ typedef struct {
     const char *default_host_arg;
 
     gboolean cib_registered;
-    gboolean api_registered;
     gboolean dirty;
 } fenced_device_t;
 
