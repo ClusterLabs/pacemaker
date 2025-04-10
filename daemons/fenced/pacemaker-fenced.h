@@ -99,7 +99,9 @@ enum fenced_device_flags {
  * \brief Flags for fencer client notification types
  */
 enum fenced_notify_flags {
-    st_callback_unknown               = UINT32_C(0),
+    //! This flag has no effect
+    fenced_nf_none              = UINT32_C(0),
+
     st_callback_notify_fence          = (UINT32_C(1) << 0),
     st_callback_device_add            = (UINT32_C(1) << 2),
     st_callback_device_del            = (UINT32_C(1) << 4),

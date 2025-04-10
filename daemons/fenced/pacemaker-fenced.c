@@ -273,7 +273,7 @@ get_stonith_flag(const char *name)
         return st_callback_notify_history_synced;
 
     }
-    return st_callback_unknown;
+    return fenced_nf_none;
 }
 
 static void
