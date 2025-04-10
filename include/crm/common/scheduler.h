@@ -216,10 +216,6 @@ struct pe_working_set_s {
     //! \deprecated Call pcmk_get_no_quorum_policy() to get no-quorum policy
     enum pe_quorum_policy no_quorum_policy; // Response to loss of quorum
 
-    // Can Pacemaker Remote nodes be fenced even from a node that doesn't
-    // have quorum?
-    bool fence_remote_without_quorum;
-
     GHashTable *config_hash;        // Cluster properties
 
     // Ticket constraints unpacked from ticket state
@@ -268,6 +264,10 @@ struct pe_working_set_s {
     void *priv;                     // For Pacemaker use only
 
     guint node_pending_timeout;     // Pending join times out after this (ms)
+
+    // Can Pacemaker Remote nodes be fenced even from a node that doesn't
+    // have quorum?
+    bool fence_remote_without_quorum;
 };
 //!@}
 
