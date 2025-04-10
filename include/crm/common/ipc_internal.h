@@ -244,6 +244,7 @@ int pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
 int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request,
                        const xmlNode *message, uint32_t flags);
 int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
+void pcmk__ipc_free_client_buffer(crm_ipc_t *client);
 xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data,
                                uint32_t *id, uint32_t *flags);
 
