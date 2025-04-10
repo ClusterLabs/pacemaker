@@ -317,10 +317,8 @@ int fenced_device_register(const xmlNode *dev, bool from_cib);
 void stonith_device_remove(const char *id, bool from_cib);
 
 char *stonith_level_key(const xmlNode *msg, enum fenced_target_by);
-void fenced_register_level(xmlNode *msg, char **desc,
-                           pcmk__action_result_t *result);
-void fenced_unregister_level(xmlNode *msg, char **desc,
-                             pcmk__action_result_t *result);
+void fenced_register_level(xmlNode *msg, pcmk__action_result_t *result);
+void fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result);
 
 stonith_topology_t *find_topology_for_host(const char *host);
 

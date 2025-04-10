@@ -70,21 +70,17 @@ node_has_attr(const char *node, const char *name, const char *value)
 static void
 add_topology_level(xmlNode *match)
 {
-    char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(match != NULL, return);
 
-    fenced_register_level(match, &desc, &result);
-    fenced_send_config_notification(STONITH_OP_LEVEL_ADD, &result, desc);
+    fenced_register_level(match, &result);
     pcmk__reset_result(&result);
-    free(desc);
 }
 
 static void
 topology_remove_helper(const char *node, int level)
 {
-    char *desc = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
     xmlNode *data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
 
@@ -92,11 +88,9 @@ topology_remove_helper(const char *node, int level)
     crm_xml_add_int(data, PCMK_XA_INDEX, level);
     crm_xml_add(data, PCMK_XA_TARGET, node);
 
-    fenced_unregister_level(data, &desc, &result);
-    fenced_send_config_notification(STONITH_OP_LEVEL_DEL, &result, desc);
+    fenced_unregister_level(data, &result);
     pcmk__reset_result(&result);
     pcmk__xml_free(data);
-    free(desc);
 }
 
 static void

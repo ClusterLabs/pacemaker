@@ -383,9 +383,8 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
  * \internal
  * \brief Send notifications for a configuration change to subscribed clients
  *
- * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD,
- *                    \c STONITH_OP_DEVICE_DEL, \c STONITH_OP_LEVEL_ADD, or
- *                    \c STONITH_OP_LEVEL_DEL)
+ * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD or
+ *                    \c STONITH_OP_DEVICE_DEL)
  * \param[in] result  Operation result
  * \param[in] desc    Description of what changed (either device ID or string
  *                    representation of level

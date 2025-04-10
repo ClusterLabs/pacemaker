@@ -1622,14 +1622,13 @@ parse_device_list(const char *devices)
  * \param[out] mode    If not NULL, where to store level kind
  * \param[out] target  If not NULL, where to store representation of target
  * \param[out] id      If not NULL, where to store level number
- * \param[out] desc    If not NULL, where to store log-friendly level description
  *
  * \return Topology level XML from within \p xml, or NULL if not found
- * \note The caller is responsible for freeing \p *target and \p *desc if set.
+ * \note The caller is responsible for freeing \p *target if set.
  */
 static xmlNode *
 unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
-                     int *id, char **desc)
+                     int *id)
 {
     enum fenced_target_by local_mode = fenced_target_by_unknown;
     char *local_target = NULL;
@@ -1644,17 +1643,10 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
                                    LOG_WARNING);
     }
 
-    if (xml == NULL) {
-        if (desc != NULL) {
-            *desc = crm_strdup_printf("missing");
-        }
-    } else {
+    if (xml != NULL) {
         local_mode = unpack_level_kind(xml);
         local_target = stonith_level_key(xml, local_mode);
         crm_element_value_int(xml, PCMK_XA_INDEX, &local_id);
-        if (desc != NULL) {
-            *desc = crm_strdup_printf("%s[%d]", local_target, local_id);
-        }
     }
 
     if (mode != NULL) {
@@ -1683,11 +1675,10 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
  * the entry's device list for the specified level.
  *
  * \param[in]  msg     XML request for STONITH level registration
- * \param[out] desc    If not NULL, set to string representation "TARGET[LEVEL]"
  * \param[out] result  Where to set result of registration
  */
 void
-fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
+fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
 {
     int id = 0;
     xmlNode *level;
@@ -1700,7 +1691,7 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
 
     CRM_CHECK((msg != NULL) && (result != NULL), return);
 
-    level = unpack_level_request(msg, &mode, &target, &id, desc);
+    level = unpack_level_request(msg, &mode, &target, &id);
     if (level == NULL) {
         fenced_set_protocol_error(result);
         return;
@@ -1795,12 +1786,10 @@ fenced_register_level(xmlNode *msg, char **desc, pcmk__action_result_t *result)
  * global topology table.
  *
  * \param[in]  msg     XML request for STONITH level registration
- * \param[out] desc    If not NULL, set to string representation "TARGET[LEVEL]"
  * \param[out] result  Where to set result of unregistration
  */
 void
-fenced_unregister_level(xmlNode *msg, char **desc,
-                        pcmk__action_result_t *result)
+fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
 {
     int id = -1;
     stonith_topology_t *tp;
@@ -1809,7 +1798,7 @@ fenced_unregister_level(xmlNode *msg, char **desc,
 
     CRM_CHECK(result != NULL, return);
 
-    level = unpack_level_request(msg, NULL, &target, &id, desc);
+    level = unpack_level_request(msg, NULL, &target, &id);
     if (level == NULL) {
         fenced_set_protocol_error(result);
         return;
@@ -3454,19 +3443,16 @@ handle_device_delete_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_add_request(pcmk__request_t *request)
 {
-    char *desc = NULL;
     const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);
 
     if (is_privileged(request->ipc_client, op)) {
-        fenced_register_level(request->xml, &desc, &request->result);
+        fenced_register_level(request->xml, &request->result);
     } else {
-        unpack_level_request(request->xml, NULL, NULL, NULL, &desc);
+        unpack_level_request(request->xml, NULL, NULL, NULL);
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must add level via CIB");
     }
-    fenced_send_config_notification(op, &request->result, desc);
-    free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
@@ -3474,19 +3460,16 @@ handle_level_add_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_delete_request(pcmk__request_t *request)
 {
-    char *desc = NULL;
     const char *op = crm_element_value(request->xml, PCMK__XA_ST_OP);
 
     if (is_privileged(request->ipc_client, op)) {
-        fenced_unregister_level(request->xml, &desc, &request->result);
+        fenced_unregister_level(request->xml, &request->result);
     } else {
-        unpack_level_request(request->xml, NULL, NULL, NULL, &desc);
+        unpack_level_request(request->xml, NULL, NULL, NULL);
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
                          PCMK_EXEC_INVALID,
                          "Unprivileged users must delete level via CIB");
     }
-    fenced_send_config_notification(op, &request->result, desc);
-    free(desc);
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
