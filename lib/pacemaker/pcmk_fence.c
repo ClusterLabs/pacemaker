@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -246,7 +246,7 @@ pcmk_request_fencing(xmlNodePtr *xml, const char *target, const char *action,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -346,7 +346,7 @@ pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -390,7 +390,7 @@ pcmk_fence_installed(xmlNodePtr *xml, unsigned int timeout)
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -472,7 +472,7 @@ pcmk_fence_list_targets(xmlNodePtr *xml, const char *device_id, unsigned int tim
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -509,7 +509,7 @@ pcmk_fence_metadata(xmlNodePtr *xml, const char *agent, unsigned int timeout)
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -557,7 +557,7 @@ pcmk_fence_registered(xmlNodePtr *xml, const char *target, unsigned int timeout)
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -585,7 +585,7 @@ pcmk_fence_register_level(xmlNodePtr *xml, const char *target, int fence_level,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -611,7 +611,7 @@ pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_level
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -646,7 +646,7 @@ pcmk_fence_validate(xmlNodePtr *xml, const char *agent, const char *id,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 

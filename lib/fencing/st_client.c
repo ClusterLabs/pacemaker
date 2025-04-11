@@ -219,7 +219,7 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
         }
 
         if (!st) {
-            stonith_api_delete(stonith_api);
+            stonith__api_free(stonith_api);
         }
     } else {
         crm_err("Stonith-API for watchdog-fencing-query couldn't be created.");
@@ -1692,7 +1692,7 @@ stonith_dispatch(stonith_t * st)
 }
 
 static int
-stonith_api_free(stonith_t * stonith)
+free_stonith_api(stonith_t *stonith)
 {
     int rc = pcmk_ok;
 
@@ -1728,10 +1728,7 @@ stonith_api_free(stonith_t * stonith)
 void
 stonith_api_delete(stonith_t * stonith)
 {
-    crm_trace("Destroying %p", stonith);
-    if(stonith) {
-        stonith->cmds->free(stonith);
-    }
+    stonith__api_free(stonith);
 }
 
 static gboolean
@@ -1898,7 +1895,7 @@ stonith__api_new(void)
         return NULL;
     }
 
-    new_stonith->cmds->free       = stonith_api_free;
+    new_stonith->cmds->free       = free_stonith_api;
     new_stonith->cmds->connect    = stonith_api_signon;
     new_stonith->cmds->disconnect = stonith_api_signoff;
 
@@ -1930,6 +1927,21 @@ stonith__api_new(void)
     new_stonith->cmds->validate              = stonith_api_validate;
 
     return new_stonith;
+}
+
+/*!
+ * \internal
+ * \brief Free a fencer API connection object
+ *
+ * \param[in,out] stonith_api  Fencer API connection object
+ */
+void
+stonith__api_free(stonith_t *stonith_api)
+{
+    crm_trace("Destroying %p", stonith_api);
+    if (stonith_api != NULL) {
+        stonith_api->cmds->free(stonith_api);
+    }
 }
 
 /*!
@@ -2044,7 +2056,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
         }
     }
 
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -2104,7 +2116,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         }
     }
 
-    stonith_api_delete(st);
+    stonith__api_free(st);
 
     if(when) {
         api_log(LOG_INFO, "Node %u/%s last kicked at: %ld", nodeid, uname, (long int)when);
@@ -2139,7 +2151,7 @@ stonith_agent_exists(const char *agent, int timeout)
     }
 
     stonith_key_value_freeall(devices, 1, 1);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 

@@ -160,7 +160,7 @@ passive_test(void)
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
     if (rc != pcmk_ok) {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
     st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
@@ -323,7 +323,7 @@ sanity_tests(void)
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
     if (rc != pcmk_ok) {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
     st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
@@ -351,7 +351,7 @@ standard_dev_test(void)
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
     if (rc != pcmk_ok) {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
 
@@ -606,7 +606,7 @@ test_shutdown(int nsig)
         crm_info("Disconnect: %d", rc);
 
         crm_debug("Destroy");
-        stonith_api_delete(st);
+        stonith__api_free(st);
     }
 
     if (rc) {
