@@ -174,7 +174,7 @@ gboolean
 stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
 {
     gboolean rv = FALSE;
-    stonith_t *stonith_api = st?st:stonith_api_new();
+    stonith_t *stonith_api = (st != NULL)? st : stonith__api_new();
     char *list = NULL;
 
     if(stonith_api) {
@@ -1858,8 +1858,15 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Create a new fencer API connection object
+ *
+ * \return Newly allocated fencer API connection object, or \c NULL on
+ *         allocation failure
+ */
 stonith_t *
-stonith_api_new(void)
+stonith__api_new(void)
 {
     stonith_t *new_stonith = NULL;
     stonith_private_t *private = NULL;
@@ -1891,7 +1898,6 @@ stonith_api_new(void)
         return NULL;
     }
 
-/* *INDENT-OFF* */
     new_stonith->cmds->free       = stonith_api_free;
     new_stonith->cmds->connect    = stonith_api_signon;
     new_stonith->cmds->disconnect = stonith_api_signoff;
@@ -1922,9 +1928,14 @@ stonith_api_new(void)
     new_stonith->cmds->register_notification = stonith_api_add_notification;
 
     new_stonith->cmds->validate              = stonith_api_validate;
-/* *INDENT-ON* */
 
     return new_stonith;
+}
+
+stonith_t *
+stonith_api_new(void)
+{
+    return stonith__api_new();
 }
 
 /*!
@@ -2005,7 +2016,7 @@ int
 stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
     int rc = pcmk_ok;
-    stonith_t *st = stonith_api_new();
+    stonith_t *st = stonith__api_new();
     const char *action = off? PCMK_ACTION_OFF : PCMK_ACTION_REBOOT;
 
     api_log_open();
@@ -2048,7 +2059,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
 {
     int rc = pcmk_ok;
     time_t when = 0;
-    stonith_t *st = stonith_api_new();
+    stonith_t *st = stonith__api_new();
     stonith_history_t *history = NULL, *hp = NULL;
 
     if (st == NULL) {
@@ -2119,7 +2130,7 @@ stonith_agent_exists(const char *agent, int timeout)
         return rc;
     }
 
-    st = stonith_api_new();
+    st = stonith__api_new();
     if (st == NULL) {
         crm_err("Could not list fence agents: API memory allocation failed");
         return FALSE;

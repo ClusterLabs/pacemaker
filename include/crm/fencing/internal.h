@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+stonith_t *stonith__api_new(void);
+
 #define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
         st_call_opts = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
                                           "Fencer call", (call_for),         \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/remote_internal.h>
+#include <crm/fencing/internal.h>           // stonith__api_new()
 #include <crm/lrmd_internal.h>
 
 #include "pacemaker-execd.h"
@@ -74,7 +75,7 @@ get_stonith_connection(void)
     if (stonith_api == NULL) {
         int rc = pcmk_ok;
 
-        stonith_api = stonith_api_new();
+        stonith_api = stonith__api_new();
         if (stonith_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return NULL;

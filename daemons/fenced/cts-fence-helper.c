@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -661,7 +661,7 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
-    st = stonith_api_new();
+    st = stonith__api_new();
     if (st == NULL) {
         exit_code = CRM_EX_DISCONNECT;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,

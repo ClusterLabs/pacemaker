@@ -2060,7 +2060,7 @@ static int
 stonith_get_metadata(const char *provider, const char *type, char **output)
 {
     int rc = pcmk_ok;
-    stonith_t *stonith_api = stonith_api_new();
+    stonith_t *stonith_api = stonith__api_new();
 
     if (stonith_api == NULL) {
         crm_err("Could not get fence agent meta-data: API memory allocation failed");
@@ -2220,7 +2220,7 @@ static int
 list_stonith_agents(lrmd_list_t ** resources)
 {
     int rc = 0;
-    stonith_t *stonith_api = stonith_api_new();
+    stonith_t *stonith_api = stonith__api_new();
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 

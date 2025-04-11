@@ -24,7 +24,7 @@
 static stonith_t *
 fencing_connect(void)
 {
-    stonith_t *st = stonith_api_new();
+    stonith_t *st = stonith__api_new();
     int rc = pcmk_rc_ok;
 
     if (st == NULL) {
