@@ -1678,12 +1678,6 @@ stonith__api_dispatch(stonith_t *stonith_api)
     return pcmk_rc_ok;
 }
 
-bool
-stonith_dispatch(stonith_t *stonith_api)
-{
-    return (stonith__api_dispatch(stonith_api) == pcmk_rc_ok);
-}
-
 static int
 free_stonith_api(stonith_t *stonith)
 {
@@ -2779,6 +2773,12 @@ stonith_dump_pending_callbacks(stonith_t *stonith)
     }
     return g_hash_table_foreach(private->stonith_op_callback_table,
                                 stonith_dump_pending_op, NULL);
+}
+
+bool
+stonith_dispatch(stonith_t *stonith_api)
+{
+    return (stonith__api_dispatch(stonith_api) == pcmk_rc_ok);
 }
 
 // LCOV_EXCL_STOP

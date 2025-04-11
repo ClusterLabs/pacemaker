@@ -588,8 +588,6 @@ struct stonith_s {
 };
 
 /* Core functions */
-bool stonith_dispatch(stonith_t * st);
-
 stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
                                            const char *value);
 void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);

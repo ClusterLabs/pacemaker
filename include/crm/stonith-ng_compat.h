@@ -33,6 +33,9 @@ void stonith_api_delete(stonith_t *stonith);
 //! \deprecated Do not use
 void stonith_dump_pending_callbacks(stonith_t *stonith);
 
+//! \deprecated Do not use
+bool stonith_dispatch(stonith_t *stonith_api);
+
 #ifdef __cplusplus
 }
 #endif
