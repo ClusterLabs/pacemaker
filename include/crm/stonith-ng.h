@@ -169,8 +169,12 @@ typedef struct stonith_callback_data_s {
     void *opaque;
 } stonith_callback_data_t;
 
-typedef struct stonith_api_operations_s
-{
+// @TODO Keep this object but make it internal
+/*!
+ * \brief Fencing API operations
+ * \deprecated Use appropriate functions in libpacemaker instead
+ */
+typedef struct stonith_api_operations_s {
     /*!
      * \brief Destroy a fencer connection
      *
