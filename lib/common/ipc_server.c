@@ -753,6 +753,7 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
     struct iovec *iov = NULL;
     int rc = pcmk_rc_ok;
     GString *iov_buffer = NULL;
+    uint16_t index = 0;
 
     if (c == NULL) {
         return EINVAL;
@@ -760,16 +761,41 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
 
     iov_buffer = g_string_sized_new(1024);
     pcmk__xml_string(message, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(request, iov_buffer, 0, &iov, NULL);
+    do {
+        rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
 
-    if (rc == pcmk_rc_ok) {
-        pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-        rc = pcmk__ipc_send_iov(c, iov, flags);
-    } else {
-        crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
-                   c->pid, pcmk_rc_str(rc), rc);
-    }
+        switch (rc) {
+            case pcmk_rc_ok: {
+                /* No more message to prepare after we send this chunk */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
+                goto done;
+            }
 
+            case pcmk_rc_ipc_more:
+                /* Preparing succeeded, but there are more chunks to go after
+                 * this one is sent.
+                 */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
+
+                /* Did an error occur during transmission? */
+                if (rc != pcmk_rc_ok) {
+                    goto done;
+                }
+
+                index++;
+                break;
+
+            default:
+                /* An error occurred during preparation */
+                crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
+                           c->pid, pcmk_rc_str(rc), rc);
+                goto done;
+        }
+    } while (true);
+
+done:
     g_string_free(iov_buffer, TRUE);
     return rc;
 }
