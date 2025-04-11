@@ -588,8 +588,6 @@ struct stonith_s {
 };
 
 /* Core functions */
-void stonith_dump_pending_callbacks(stonith_t * st);
-
 bool stonith_dispatch(stonith_t * st);
 
 stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
