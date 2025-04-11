@@ -110,7 +110,7 @@ dispatch_helper(int timeout)
     while (true) {
         rc = poll(&pollfd, 1, timeout); /* wait 10 minutes, -1 forever */
         if (rc > 0) {
-            if (!stonith_dispatch(st)) {
+            if (stonith__api_dispatch(st) != pcmk_rc_ok) {
                 break;
             }
         } else {
