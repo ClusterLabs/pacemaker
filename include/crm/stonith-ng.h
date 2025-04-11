@@ -173,12 +173,17 @@ typedef struct stonith_callback_data_s {
     void *opaque;
 } stonith_callback_data_t;
 
-typedef struct stonith_api_operations_s
-{
+// @TODO Keep this object but make it internal
+/*!
+ * \brief Fencer API operations
+ * \deprecated Use appropriate functions in libpacemaker instead
+ */
+typedef struct stonith_api_operations_s {
     /*!
      * \brief Destroy a fencer connection
      *
      * \param[in,out] st  Fencer connection to destroy
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*free) (stonith_t *st);
 
@@ -191,6 +196,7 @@ typedef struct stonith_api_operations_s
      *                            store IPC file descriptor here
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
 
@@ -200,6 +206,7 @@ typedef struct stonith_api_operations_s
      * \param[in,out] st  Fencer connection to disconnect
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*disconnect)(stonith_t *st);
 
@@ -212,6 +219,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_device)(stonith_t *st, int options, const char *name);
 
@@ -230,6 +238,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_device)(stonith_t *st, int options, const char *id,
                            const char *namespace_s, const char *agent,
@@ -245,6 +254,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_level)(stonith_t *st, int options, const char *node,
                         int level);
@@ -260,6 +270,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_level)(stonith_t *st, int options, const char *node,
                           int level, const stonith_key_value_t *device_list);
@@ -280,6 +291,7 @@ typedef struct stonith_api_operations_s
      *
      * \return Legacy Pacemaker return code
      * \note The caller is responsible for freeing *output using free().
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*metadata)(stonith_t *stonith, int call_options, const char *agent,
                     const char *namespace_s, char **output, int timeout_sec);
@@ -301,6 +313,7 @@ typedef struct stonith_api_operations_s
      * \return Number of items in list on success, or negative errno otherwise
      * \note The caller is responsible for freeing the returned list with
      *       stonith_key_value_freeall().
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*list_agents)(stonith_t *stonith, int call_options,
                        const char *namespace_s, stonith_key_value_t **devices,
@@ -317,6 +330,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*list)(stonith_t *stonith, int call_options, const char *id,
                 char **list_info, int timeout);
@@ -331,6 +345,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*monitor)(stonith_t *stonith, int call_options, const char *id,
                    int timeout);
@@ -346,6 +361,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*status)(stonith_t *stonith, int call_options, const char *id,
                   const char *port, int timeout);
@@ -363,6 +379,7 @@ typedef struct stonith_api_operations_s
      *       will be returned.
      *
      * \return Number of items in list on success, or negative errno otherwise
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*query)(stonith_t *stonith, int call_options, const char *target,
                  stonith_key_value_t **devices, int timeout);
@@ -381,6 +398,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*fence)(stonith_t *stonith, int call_options, const char *node,
                  const char *action, int timeout, int tolerance);
@@ -394,6 +412,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*confirm)(stonith_t *stonith, int call_options, const char *target);
 
@@ -407,6 +426,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     timeout       Error if unable to complete within this
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*history)(stonith_t *stonith, int call_options, const char *node,
                    stonith_history_t **history, int timeout);
@@ -419,6 +439,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     callback      Callback to register
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_notification)(stonith_t *stonith, const char *event,
                                  void (*callback)(stonith_t *st,
@@ -431,6 +452,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     event    Event to unregister callbacks for (NULL for all)
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_notification)(stonith_t *stonith, const char *event);
 
@@ -450,6 +472,7 @@ typedef struct stonith_api_operations_s
      *
      * \return \c TRUE on success, \c FALSE if call_id indicates error,
      *         or -EINVAL if \p stonith is not valid
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_callback)(stonith_t *stonith, int call_id, int timeout,
                              int options, void *user_data,
@@ -466,6 +489,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     all_callbacks  If true, unregister all callbacks
      *
      * \return pcmk_ok
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_callback)(stonith_t *stonith, int call_id, bool all_callbacks);
 
@@ -489,6 +513,7 @@ typedef struct stonith_api_operations_s
      *         on success, otherwise a negative legacy Pacemaker return code
      * \note The caller should set only one of \p node, \p pattern, or \p attr
      *       and \p value.
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_level_full)(stonith_t *st, int options,
                              const char *node, const char *pattern,
@@ -516,6 +541,7 @@ typedef struct stonith_api_operations_s
      *         on success, otherwise a negative legacy Pacemaker return code
      *
      * \note The caller should set only one of node, pattern or attr/value.
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_level_full)(stonith_t *st, int options,
                                const char *node, const char *pattern,
@@ -541,6 +567,7 @@ typedef struct stonith_api_operations_s
      * \return pcmk_ok if validation succeeds, -errno otherwise
      * \note If pcmk_ok is returned, the caller is responsible for freeing
      *       the output (if requested) with free().
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*validate)(stonith_t *st, int call_options, const char *rsc_id,
                     const char *namespace_s, const char *agent,
@@ -564,6 +591,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*fence_with_delay)(stonith_t *stonith, int call_options,
                             const char *node, const char *action, int timeout,
