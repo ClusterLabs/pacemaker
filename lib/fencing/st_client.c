@@ -1932,12 +1932,6 @@ stonith__api_new(void)
     return new_stonith;
 }
 
-stonith_t *
-stonith_api_new(void)
-{
-    return stonith__api_new();
-}
-
 /*!
  * \brief Make a blocking connection attempt to the fencer
  *
@@ -2749,3 +2743,19 @@ stonith__event_description(const stonith_event_t *event)
                              ((reason == NULL)? "" : ")"),
                              pcmk__s(event->id, "(none)"));
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+// See comments in stonith-ng.h for why we re-declare before defining
+
+stonith_t *stonith_api_new(void);
+
+stonith_t *
+stonith_api_new(void)
+{
+    return stonith__api_new();
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

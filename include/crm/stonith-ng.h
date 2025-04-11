@@ -616,7 +616,6 @@ struct stonith_s {
 };
 
 /* Core functions */
-stonith_t *stonith_api_new(void);
 void stonith_api_delete(stonith_t * st);
 
 void stonith_dump_pending_callbacks(stonith_t * st);
@@ -748,6 +747,18 @@ bool stonith_agent_exists(const char *agent, int timeout);
  * \param[in] action  Fence action
  */
 const char *stonith_action_str(const char *action);
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+
+/* Normally we'd put this section in a separate file (crm/fencing/compat.h), but
+ * we can't do that for the reason noted at the top of this file. That does mean
+ * we have to duplicate these declarations where they're implemented.
+ */
+
+//! \deprecated Use appropriate functions in libpacemaker
+stonith_t *stonith_api_new(void);
+
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #ifdef __cplusplus
 }
