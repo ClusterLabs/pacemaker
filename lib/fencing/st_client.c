@@ -1725,12 +1725,6 @@ free_stonith_api(stonith_t *stonith)
     return rc;
 }
 
-void
-stonith_api_delete(stonith_t * stonith)
-{
-    stonith__api_free(stonith);
-}
-
 static gboolean
 is_stonith_param(gpointer key, gpointer value, gpointer user_data)
 {
@@ -2767,6 +2761,14 @@ stonith_t *
 stonith_api_new(void)
 {
     return stonith__api_new();
+}
+
+void stonith_api_delete(stonith_t *stonith);
+
+void
+stonith_api_delete(stonith_t *stonith)
+{
+    stonith__api_free(stonith);
 }
 
 // LCOV_EXCL_STOP

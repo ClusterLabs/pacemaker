@@ -616,8 +616,6 @@ struct stonith_s {
 };
 
 /* Core functions */
-void stonith_api_delete(stonith_t * st);
-
 void stonith_dump_pending_callbacks(stonith_t * st);
 
 bool stonith_dispatch(stonith_t * st);
@@ -757,6 +755,9 @@ const char *stonith_action_str(const char *action);
 
 //! \deprecated Use appropriate functions in libpacemaker
 stonith_t *stonith_api_new(void);
+
+//! \deprecated Use appropriate functions in libpacemaker
+void stonith_api_delete(stonith_t *stonith);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
