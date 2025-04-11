@@ -32,7 +32,11 @@ extern "C" {
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
 
-/* *INDENT-OFF* */
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencer API connection state
+ * \deprecated Do not use
+ */
 enum stonith_state {
     stonith_connected_command,
     stonith_connected_query,
@@ -578,7 +582,6 @@ struct stonith_s {
     void *st_private;
     stonith_api_operations_t *cmds;
 };
-/* *INDENT-ON* */
 
 /* Core functions */
 stonith_t *stonith_api_new(void);
