@@ -44,7 +44,6 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 enum test_modes {
     test_standard = 0,  // test using a specific developer environment
-    test_passive,       // watch notifications only
     test_api_sanity,    // sanity-test stonith client API using fence_dummy
     test_api_mainloop,  // sanity-test mainloop code with async responses
 };
@@ -61,8 +60,6 @@ mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
         options.mode = test_api_mainloop;
     } else if (pcmk__str_any_of(option_name, "--api_test", "-t", NULL)) {
         options.mode = test_api_sanity;
-    } else if (pcmk__str_any_of(option_name, "--passive", "-p", NULL)) {
-        options.mode = test_passive;
     }
 
     return TRUE;
@@ -74,10 +71,6 @@ static GOptionEntry entries[] = {
     },
 
     { "api_test", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
-      NULL, NULL,
-    },
-
-    { "passive", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
       NULL, NULL,
     },
 
@@ -151,28 +144,6 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
                data->call_id, stonith__exit_status(data),
                stonith__execution_status(data),
                pcmk__s(stonith__exit_reason(data), "unspecified reason"));
-}
-
-static void
-passive_test(void)
-{
-    int rc = 0;
-
-    rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
-    if (rc != pcmk_ok) {
-        stonith__api_free(st);
-        crm_exit(CRM_EX_DISCONNECT);
-    }
-    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                    st_callback);
-    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
-                                    st_callback);
-    st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
-    st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
-    st->cmds->register_callback(st, 0, 120, st_opt_timeout_updates, NULL, "st_global_callback",
-                                st_global_callback);
-
-    dispatch_helper(600 * 1000);
 }
 
 #define single_test(cmd, str, num_notifications, expected_rc) \
@@ -672,9 +643,6 @@ main(int argc, char **argv)
     switch (options.mode) {
         case test_standard:
             standard_dev_test();
-            break;
-        case test_passive:
-            passive_test();
             break;
         case test_api_sanity:
             sanity_tests();
