@@ -588,7 +588,6 @@ struct stonith_s {
 };
 
 /* Core functions */
-stonith_t *stonith_api_new(void);
 void stonith_api_delete(stonith_t * st);
 
 void stonith_dump_pending_callbacks(stonith_t * st);
@@ -723,6 +722,10 @@ const char *stonith_action_str(const char *action);
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/fencing/stonith-ng_compat.h>
 #endif
 
 #endif

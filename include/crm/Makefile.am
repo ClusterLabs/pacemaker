@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,7 +22,8 @@ header_HEADERS		= cib.h			\
 			  msg_xml_compat.h	\
 			  services.h		\
 			  services_compat.h	\
-			  stonith-ng.h
+			  stonith-ng.h		\
+			  stonith-ng_compat.h
 
 noinst_HEADERS		= $(wildcard *_internal.h)
 
