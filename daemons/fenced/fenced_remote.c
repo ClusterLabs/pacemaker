@@ -139,7 +139,9 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
 
     if (!props->executed[data->op->phase]
         && (!data->verified_only || props->verified)
-        && ((data->support_action_only == st_device_supports_none) || pcmk_is_set(props->device_support_flags, data->support_action_only))) {
+        && ((data->support_action_only == fenced_df_none)
+            || pcmk_is_set(props->device_support_flags,
+                           data->support_action_only))) {
         ++(data->count);
     }
 }
@@ -187,11 +189,17 @@ find_peer_device(const remote_fencing_op_t *op, const peer_device_info_t *peer,
 {
     device_properties_t *props = g_hash_table_lookup(peer->devices, device);
 
-    if (props && support_action_only != st_device_supports_none && !pcmk_is_set(props->device_support_flags, support_action_only)) {
+    if (props == NULL) {
         return NULL;
     }
-    return (props && !props->executed[op->phase]
-           && !props->disallowed[op->phase])? props : NULL;
+    if ((support_action_only != fenced_df_none)
+        && !pcmk_is_set(props->device_support_flags, support_action_only)) {
+        return NULL;
+    }
+    if (props->executed[op->phase] || props->disallowed[op->phase]) {
+        return NULL;
+    }
+    return props;
 }
 
 /*!
@@ -217,7 +225,8 @@ grab_peer_device(const remote_fencing_op_t *op, peer_device_info_t *peer,
     }
 
     crm_trace("Removing %s from %s (%d remaining)",
-              device, peer->host, count_peer_devices(op, peer, FALSE, st_device_supports_none));
+              device, peer->host,
+              count_peer_devices(op, peer, FALSE, fenced_df_none));
     props->executed[op->phase] = TRUE;
     return TRUE;
 }
@@ -1677,7 +1686,8 @@ get_op_total_timeout(const remote_fencing_op_t *op,
 
                 for (iter2 = op->query_results; iter2 != NULL; iter = iter2->next) {
                     peer_device_info_t *peer = iter2->data;
-                    if (find_peer_device(op, peer, iter->data, st_device_supports_on)) {
+                    if (find_peer_device(op, peer, iter->data,
+                                         fenced_df_supports_on)) {
                         total_timeout += get_device_timeout(op, peer,
                                                             iter->data, true);
                         break;
@@ -2143,7 +2153,8 @@ all_topology_devices_found(const remote_fencing_op_t *op)
                 if (skip_target && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
                     continue;
                 }
-                match = find_peer_device(op, peer, device->data, st_device_supports_none);
+                match = find_peer_device(op, peer, device->data,
+                                         fenced_df_none);
             }
             if (!match) {
                 return FALSE;
@@ -2249,7 +2260,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     // Nodes <2.1.5 won't set this, so assume unfencing in that case
     rc = pcmk__xe_get_flags(xml, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS,
                             &(props->device_support_flags),
-                            st_device_supports_on);
+                            fenced_df_supports_on);
     if (rc != pcmk_rc_ok) {
         crm_warn("Couldn't determine device support for %s "
                  "(assuming unfencing): %s", device, pcmk_rc_str(rc));

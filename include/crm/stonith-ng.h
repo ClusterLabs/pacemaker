@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,7 +32,11 @@ extern "C" {
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
 
-/* *INDENT-OFF* */
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencing API connection state
+ * \deprecated Do not use
+ */
 enum stonith_state {
     stonith_connected_command,
     stonith_connected_query,
@@ -139,6 +143,7 @@ typedef struct stonith_history_s {
     char *exit_reason;
 } stonith_history_t;
 
+// @TODO Keep this typedef but rename it and make it internal
 typedef struct stonith_s stonith_t;
 
 typedef struct stonith_event_s {
@@ -168,8 +173,12 @@ typedef struct stonith_callback_data_s {
     void *opaque;
 } stonith_callback_data_t;
 
-typedef struct stonith_api_operations_s
-{
+// @TODO Keep this object but make it internal
+/*!
+ * \brief Fencing API operations
+ * \deprecated Use appropriate functions in libpacemaker instead
+ */
+typedef struct stonith_api_operations_s {
     /*!
      * \brief Destroy a fencer connection
      *
@@ -566,22 +575,19 @@ typedef struct stonith_api_operations_s
 
 } stonith_api_operations_t;
 
+// @TODO Keep this object but make it internal
+/*!
+ * \brief Fencing API connection object
+ * \deprecated Use appropriate functions in libpacemaker instead
+ */
 struct stonith_s {
     enum stonith_state state;
     int call_id;
     void *st_private;
     stonith_api_operations_t *cmds;
 };
-/* *INDENT-ON* */
 
 /* Core functions */
-stonith_t *stonith_api_new(void);
-void stonith_api_delete(stonith_t * st);
-
-void stonith_dump_pending_callbacks(stonith_t * st);
-
-bool stonith_dispatch(stonith_t * st);
-
 stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
                                            const char *value);
 void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
@@ -710,6 +716,10 @@ const char *stonith_action_str(const char *action);
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/fencing/stonith-ng_compat.h>
 #endif
 
 #endif

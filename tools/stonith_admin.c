@@ -556,7 +556,7 @@ main(int argc, char **argv)
 
     out->quiet = args->quiet;
 
-    st = stonith_api_new();
+    st = stonith__api_new();
     if (st == NULL) {
         rc = -ENOMEM;
     } else if (!no_connect) {
@@ -719,7 +719,7 @@ main(int argc, char **argv)
 
     if (st != NULL) {
         st->cmds->disconnect(st);
-        stonith_api_delete(st);
+        stonith__api_free(st);
     }
 
     return exit_code;

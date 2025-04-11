@@ -68,49 +68,26 @@ node_has_attr(const char *node, const char *name, const char *value)
 }
 
 static void
-add_topology_level(xmlNode *match)
-{
-    char *desc = NULL;
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-
-    CRM_CHECK(match != NULL, return);
-
-    fenced_register_level(match, &desc, &result);
-    fenced_send_config_notification(STONITH_OP_LEVEL_ADD, &result, desc);
-    pcmk__reset_result(&result);
-    free(desc);
-}
-
-static void
-topology_remove_helper(const char *node, int level)
-{
-    char *desc = NULL;
-    pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
-
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add_int(data, PCMK_XA_INDEX, level);
-    crm_xml_add(data, PCMK_XA_TARGET, node);
-
-    fenced_unregister_level(data, &desc, &result);
-    fenced_send_config_notification(STONITH_OP_LEVEL_DEL, &result, desc);
-    pcmk__reset_result(&result);
-    pcmk__xml_free(data);
-    free(desc);
-}
-
-static void
 remove_topology_level(xmlNode *match)
 {
     int index = 0;
     char *key = NULL;
+    xmlNode *data = NULL;
 
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
     crm_element_value_int(match, PCMK_XA_INDEX, &index);
-    topology_remove_helper(key, index);
+
+    data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
+    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
+    crm_xml_add(data, PCMK_XA_TARGET, key);
+    crm_xml_add_int(data, PCMK_XA_INDEX, index);
+
+    fenced_unregister_level(data, NULL);
+
     free(key);
+    pcmk__xml_free(data);
 }
 
 static void
@@ -125,7 +102,7 @@ register_fencing_topology(xmlXPathObjectPtr xpathObj)
             continue;
         }
         remove_topology_level(match);
-        add_topology_level(match);
+        fenced_register_level(match, NULL);
     }
 }
 
@@ -196,7 +173,8 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
 
 /*!
  * \internal
- * \brief Mark a fence device dirty if its \c cib_registered flag is \c TRUE
+ * \brief Mark a fence device dirty if its \c fenced_df_cib_registered flag is
+ *        set
  *
  * \param[in]     key        Ignored
  * \param[in,out] value      Fence device (<tt>fenced_device_t *</tt>)
@@ -209,8 +187,8 @@ mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    if (device->cib_registered) {
-        device->dirty = TRUE;
+    if (pcmk_is_set(device->flags, fenced_df_cib_registered)) {
+        fenced_device_set_flags(device, fenced_df_dirty);
     }
 }
 
@@ -232,7 +210,7 @@ device_is_dirty(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    return device->dirty;
+    return pcmk_is_set(device->flags, fenced_df_dirty);
 }
 
 /*!
@@ -451,7 +429,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
             }
 
             if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
-                add_topology_level(change->children);
+                fenced_register_level(change->children, NULL);
 
             } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
                 xmlNode *match = pcmk__xe_first_child(change,
@@ -460,7 +438,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
                 if (match != NULL) {
                     remove_topology_level(match->children);
-                    add_topology_level(match->children);
+                    fenced_register_level(match->children, NULL);
                 }
             }
             continue;

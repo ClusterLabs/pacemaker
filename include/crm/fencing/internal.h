@@ -21,22 +21,9 @@
 extern "C" {
 #endif
 
-enum st_device_flags {
-    st_device_supports_none             = (0 << 0),
-    st_device_supports_list             = (1 << 0),
-    st_device_supports_status           = (1 << 1),
-    st_device_supports_reboot           = (1 << 2),
-    st_device_supports_parameter_plug   = (1 << 3),
-    st_device_supports_parameter_port   = (1 << 4),
-    st_device_supports_on               = (1 << 5),
-};
-
-#define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
-        device_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,      \
-                                          "Fence device", device_id,          \
-                                          (device_flags), (flags_to_set),     \
-                                          #flags_to_set);                     \
-    } while (0)
+stonith_t *stonith__api_new(void);
+void stonith__api_free(stonith_t *stonith_api);
+int stonith__api_dispatch(stonith_t *stonith_api);
 
 #define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
         st_call_opts = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
@@ -100,9 +87,7 @@ const char *stonith__later_succeeded(const stonith_history_t *event,
                                      const stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
-void stonith__device_parameter_flags(uint32_t *device_flags,
-                                     const char *device_name,
-                                     xmlNode *metadata);
+const char *stonith__default_host_arg(xmlNode *metadata);
 
 /* Only 1-9 is allowed for fencing topology levels,
  * however, 0 is used to unregister all levels in

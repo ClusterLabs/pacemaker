@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/remote_internal.h>
+#include <crm/fencing/internal.h>           // stonith__api_new()
 #include <crm/lrmd_internal.h>
 
 #include "pacemaker-execd.h"
@@ -67,14 +68,14 @@ stonith_t *
 get_stonith_connection(void)
 {
     if (stonith_api && stonith_api->state == stonith_disconnected) {
-        stonith_api_delete(stonith_api);
+        stonith__api_free(stonith_api);
         stonith_api = NULL;
     }
 
     if (stonith_api == NULL) {
         int rc = pcmk_ok;
 
-        stonith_api = stonith_api_new();
+        stonith_api = stonith__api_new();
         if (stonith_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return NULL;
@@ -83,7 +84,7 @@ get_stonith_connection(void)
         if (rc != pcmk_ok) {
             crm_err("Could not connect to fencer in 10 attempts: %s "
                     QB_XS " rc=%d", pcmk_strerror(rc), rc);
-            stonith_api_delete(stonith_api);
+            stonith__api_free(stonith_api);
             stonith_api = NULL;
         } else {
             stonith_api_operations_t *cmds = stonith_api->cmds;
@@ -283,7 +284,7 @@ exit_executor(void)
 
     crm_info("Terminating with %d client%s",
              nclients, pcmk__plural_s(nclients));
-    stonith_api_delete(stonith_api);
+    stonith__api_free(stonith_api);
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }

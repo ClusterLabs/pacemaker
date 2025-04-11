@@ -24,7 +24,7 @@
 static stonith_t *
 fencing_connect(void)
 {
-    stonith_t *st = stonith_api_new();
+    stonith_t *st = stonith__api_new();
     int rc = pcmk_rc_ok;
 
     if (st == NULL) {
@@ -35,7 +35,7 @@ fencing_connect(void)
     if (rc == pcmk_rc_ok) {
         return st;
     } else {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         return NULL;
     }
 }
@@ -276,7 +276,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
 
 done:
     pcmk_free_scheduler(scheduler);
-    stonith_api_delete(stonith);
+    stonith__api_free(stonith);
     pcmk__xml_free(current_cib);
     return pcmk_rc_ok;
 }

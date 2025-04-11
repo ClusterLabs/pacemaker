@@ -85,7 +85,6 @@ struct timer_rec_s {
 typedef int (*stonith_op_t) (const char *, int, const char *, xmlNode *,
                              xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
-bool stonith_dispatch(stonith_t * st);
 xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                            int call_options);
 static int stonith_send_command(stonith_t *stonith, const char *op,
@@ -174,7 +173,7 @@ gboolean
 stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
 {
     gboolean rv = FALSE;
-    stonith_t *stonith_api = st?st:stonith_api_new();
+    stonith_t *stonith_api = (st != NULL)? st : stonith__api_new();
     char *list = NULL;
 
     if(stonith_api) {
@@ -219,7 +218,7 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
         }
 
         if (!st) {
-            stonith_api_delete(stonith_api);
+            stonith__api_free(stonith_api);
         }
     } else {
         crm_err("Stonith-API for watchdog-fencing-query couldn't be created.");
@@ -1359,26 +1358,6 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
     return TRUE;
 }
 
-static void
-stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
-{
-    int call = GPOINTER_TO_INT(key);
-    stonith_callback_client_t *blob = value;
-
-    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "no ID"));
-}
-
-void
-stonith_dump_pending_callbacks(stonith_t * stonith)
-{
-    stonith_private_t *private = stonith->st_private;
-
-    if (private->stonith_op_callback_table == NULL) {
-        return;
-    }
-    return g_hash_table_foreach(private->stonith_op_callback_table, stonith_dump_pending_op, NULL);
-}
-
 /*!
  * \internal
  * \brief Get the data section of a fencer notification
@@ -1664,35 +1643,43 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     return rc;
 }
 
-/* Not used with mainloop */
-bool
-stonith_dispatch(stonith_t * st)
+/*!
+ * \internal
+ * \brief Process IPC messages for a fencing API connection
+ *
+ * This is used for testing purposes in scenarios that don't use a mainloop to
+ * dispatch messages automatically.
+ *
+ * \param[in,out] stonith_api  Fencing API connetion object
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+stonith__api_dispatch(stonith_t *stonith_api)
 {
-    gboolean stay_connected = TRUE;
     stonith_private_t *private = NULL;
 
-    pcmk__assert(st != NULL);
-    private = st->st_private;
+    pcmk__assert(stonith_api != NULL);
+    private = stonith_api->st_private;
 
     while (crm_ipc_ready(private->ipc)) {
-
         if (crm_ipc_read(private->ipc) > 0) {
             const char *msg = crm_ipc_buffer(private->ipc);
 
-            stonith_dispatch_internal(msg, strlen(msg), st);
+            stonith_dispatch_internal(msg, strlen(msg), stonith_api);
         }
 
         if (!crm_ipc_connected(private->ipc)) {
             crm_err("Connection closed");
-            stay_connected = FALSE;
+            return ENOTCONN;
         }
     }
 
-    return stay_connected;
+    return pcmk_rc_ok;
 }
 
 static int
-stonith_api_free(stonith_t * stonith)
+free_stonith_api(stonith_t *stonith)
 {
     int rc = pcmk_ok;
 
@@ -1723,15 +1710,6 @@ stonith_api_free(stonith_t * stonith)
     }
 
     return rc;
-}
-
-void
-stonith_api_delete(stonith_t * stonith)
-{
-    crm_trace("Destroying %p", stonith);
-    if(stonith) {
-        stonith->cmds->free(stonith);
-    }
 }
 
 static gboolean
@@ -1858,8 +1836,15 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Create a new fencing API connection object
+ *
+ * \return Newly allocated fencing API connection object, or \c NULL on
+ *         allocation failure
+ */
 stonith_t *
-stonith_api_new(void)
+stonith__api_new(void)
 {
     stonith_t *new_stonith = NULL;
     stonith_private_t *private = NULL;
@@ -1891,8 +1876,7 @@ stonith_api_new(void)
         return NULL;
     }
 
-/* *INDENT-OFF* */
-    new_stonith->cmds->free       = stonith_api_free;
+    new_stonith->cmds->free       = free_stonith_api;
     new_stonith->cmds->connect    = stonith_api_signon;
     new_stonith->cmds->disconnect = stonith_api_signoff;
 
@@ -1922,9 +1906,23 @@ stonith_api_new(void)
     new_stonith->cmds->register_notification = stonith_api_add_notification;
 
     new_stonith->cmds->validate              = stonith_api_validate;
-/* *INDENT-ON* */
 
     return new_stonith;
+}
+
+/*!
+ * \internal
+ * \brief Free a fencing API connection object
+ *
+ * \param[in,out] stonith_api  Fencing API connection object
+ */
+void
+stonith__api_free(stonith_t *stonith_api)
+{
+    crm_trace("Destroying %p", stonith_api);
+    if (stonith_api != NULL) {
+        stonith_api->cmds->free(stonith_api);
+    }
 }
 
 /*!
@@ -2005,7 +2003,7 @@ int
 stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
 {
     int rc = pcmk_ok;
-    stonith_t *st = stonith_api_new();
+    stonith_t *st = stonith__api_new();
     const char *action = off? PCMK_ACTION_OFF : PCMK_ACTION_REBOOT;
 
     api_log_open();
@@ -2039,7 +2037,7 @@ stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off)
         }
     }
 
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -2048,7 +2046,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
 {
     int rc = pcmk_ok;
     time_t when = 0;
-    stonith_t *st = stonith_api_new();
+    stonith_t *st = stonith__api_new();
     stonith_history_t *history = NULL, *hp = NULL;
 
     if (st == NULL) {
@@ -2099,7 +2097,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
         }
     }
 
-    stonith_api_delete(st);
+    stonith__api_free(st);
 
     if(when) {
         api_log(LOG_INFO, "Node %u/%s last kicked at: %ld", nodeid, uname, (long int)when);
@@ -2119,7 +2117,7 @@ stonith_agent_exists(const char *agent, int timeout)
         return rc;
     }
 
-    st = stonith_api_new();
+    st = stonith__api_new();
     if (st == NULL) {
         crm_err("Could not list fence agents: API memory allocation failed");
         return FALSE;
@@ -2134,7 +2132,7 @@ stonith_agent_exists(const char *agent, int timeout)
     }
 
     stonith_key_value_freeall(devices, 1, 1);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -2429,46 +2427,53 @@ stonith__event_state_neq(stonith_history_t *history, void *user_data)
     return history->state != GPOINTER_TO_INT(user_data);
 }
 
-void
-stonith__device_parameter_flags(uint32_t *device_flags, const char *device_name,
-                                xmlNode *metadata)
+/*!
+ * \internal
+ * \brief Check whether a given parameter exists in a fence agent's metadata
+ *
+ * \param[in] metadata  Agent metadata
+ * \param[in] name      Parameter name
+ *
+ * \retval \c true   If \p name exists as a parameter in \p metadata
+ * \retval \c false  Otherwise
+ */
+static bool
+param_is_supported(xmlNode *metadata, const char *name)
 {
-    xmlXPathObject *xpath = NULL;
-    int max = 0;
-    int lpc = 0;
+    char *xpath_s = crm_strdup_printf("//" PCMK_XE_PARAMETER
+                                      "[@" PCMK_XA_NAME "='%s']",
+                                      name);
+    xmlXPathObject *xpath = pcmk__xpath_search(metadata->doc, xpath_s);
+    bool supported = (pcmk__xpath_num_results(xpath) > 0);
 
-    CRM_CHECK((device_flags != NULL) && (metadata != NULL), return);
-
-    xpath = pcmk__xpath_search(metadata->doc, "//" PCMK_XE_PARAMETER);
-    max = pcmk__xpath_num_results(xpath);
-
-    if (max == 0) {
-        xmlXPathFreeObject(xpath);
-        return;
-    }
-
-    for (lpc = 0; lpc < max; lpc++) {
-        const char *parameter = NULL;
-        xmlNode *match = pcmk__xpath_result(xpath, lpc);
-
-        CRM_LOG_ASSERT(match != NULL);
-        if (match == NULL) {
-            continue;
-        }
-
-        parameter = crm_element_value(match, PCMK_XA_NAME);
-
-        if (pcmk__str_eq(parameter, "plug", pcmk__str_casei)) {
-            stonith__set_device_flags(*device_flags, device_name,
-                                      st_device_supports_parameter_plug);
-
-        } else if (pcmk__str_eq(parameter, "port", pcmk__str_casei)) {
-            stonith__set_device_flags(*device_flags, device_name,
-                                      st_device_supports_parameter_port);
-        }
-    }
-
+    free(xpath_s);
     xmlXPathFreeObject(xpath);
+    return supported;
+}
+
+/*!
+ * \internal
+ * \brief Get the default host argument based on a device's agent metadata
+ *
+ * If an agent supports the "plug" parameter, default to that. Otherwise default
+ * to the "port" parameter if supported. Otherwise return \c NULL.
+ *
+ * \param[in] metadata  Agent metadata
+ *
+ * \return Parameter name for default host argument
+ */
+const char *
+stonith__default_host_arg(xmlNode *metadata)
+{
+    CRM_CHECK(metadata != NULL, return NULL);
+
+    if (param_is_supported(metadata, "plug")) {
+        return "plug";
+    }
+    if (param_is_supported(metadata, "port")) {
+        return "port";
+    }
+    return NULL;
 }
 
 /*!
@@ -2731,3 +2736,50 @@ stonith__event_description(const stonith_event_t *event)
                              ((reason == NULL)? "" : ")"),
                              pcmk__s(event->id, "(none)"));
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/stonith-ng_compat.h>
+
+stonith_t *
+stonith_api_new(void)
+{
+    return stonith__api_new();
+}
+
+void
+stonith_api_delete(stonith_t *stonith)
+{
+    stonith__api_free(stonith);
+}
+
+static void
+stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
+{
+    int call = GPOINTER_TO_INT(key);
+    stonith_callback_client_t *blob = value;
+
+    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "no ID"));
+}
+
+void
+stonith_dump_pending_callbacks(stonith_t *stonith)
+{
+    stonith_private_t *private = stonith->st_private;
+
+    if (private->stonith_op_callback_table == NULL) {
+        return;
+    }
+    return g_hash_table_foreach(private->stonith_op_callback_table,
+                                stonith_dump_pending_op, NULL);
+}
+
+bool
+stonith_dispatch(stonith_t *stonith_api)
+{
+    return (stonith__api_dispatch(stonith_api) == pcmk_rc_ok);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
