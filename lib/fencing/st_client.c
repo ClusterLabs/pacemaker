@@ -1359,26 +1359,6 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
     return TRUE;
 }
 
-static void
-stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
-{
-    int call = GPOINTER_TO_INT(key);
-    stonith_callback_client_t *blob = value;
-
-    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "no ID"));
-}
-
-void
-stonith_dump_pending_callbacks(stonith_t * stonith)
-{
-    stonith_private_t *private = stonith->st_private;
-
-    if (private->stonith_op_callback_table == NULL) {
-        return;
-    }
-    return g_hash_table_foreach(private->stonith_op_callback_table, stonith_dump_pending_op, NULL);
-}
-
 /*!
  * \internal
  * \brief Get the data section of a fencer notification
@@ -2769,6 +2749,29 @@ void
 stonith_api_delete(stonith_t *stonith)
 {
     stonith__api_free(stonith);
+}
+
+static void
+stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
+{
+    int call = GPOINTER_TO_INT(key);
+    stonith_callback_client_t *blob = value;
+
+    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "no ID"));
+}
+
+void stonith_dump_pending_callbacks(stonith_t *stonith);
+
+void
+stonith_dump_pending_callbacks(stonith_t *stonith)
+{
+    stonith_private_t *private = stonith->st_private;
+
+    if (private->stonith_op_callback_table == NULL) {
+        return;
+    }
+    return g_hash_table_foreach(private->stonith_op_callback_table,
+                                stonith_dump_pending_op, NULL);
 }
 
 // LCOV_EXCL_STOP
