@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,6 +139,7 @@ typedef struct stonith_history_s {
     char *exit_reason;
 } stonith_history_t;
 
+// @TODO Keep this typedef but rename it and make it internal
 typedef struct stonith_s stonith_t;
 
 typedef struct stonith_event_s {
@@ -566,6 +567,11 @@ typedef struct stonith_api_operations_s
 
 } stonith_api_operations_t;
 
+// @TODO Keep this object but make it internal
+/*!
+ * \brief Fencer API connection object
+ * \deprecated Use appropriate functions in libpacemaker instead
+ */
 struct stonith_s {
     enum stonith_state state;
     int call_id;
