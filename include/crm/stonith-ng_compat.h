@@ -27,6 +27,9 @@ extern "C" {
 //! \deprecated Use appropriate functions in libpacemaker
 stonith_t *stonith_api_new(void);
 
+//! \deprecated Use appropriate functions in libpacemaker
+void stonith_api_delete(stonith_t *stonith);
+
 #ifdef __cplusplus
 }
 #endif

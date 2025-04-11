@@ -588,8 +588,6 @@ struct stonith_s {
 };
 
 /* Core functions */
-void stonith_api_delete(stonith_t * st);
-
 void stonith_dump_pending_callbacks(stonith_t * st);
 
 bool stonith_dispatch(stonith_t * st);
