@@ -935,7 +935,7 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
     init_metadata_cache();
     buffer = g_hash_table_lookup(metadata_cache, agent);
     if (buffer == NULL) {
-        stonith_t *st = stonith_api_new();
+        stonith_t *st = stonith__api_new();
         int rc;
 
         if (st == NULL) {

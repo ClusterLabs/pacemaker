@@ -661,7 +661,7 @@ controld_timer_fencer_connect(gpointer user_data)
     int rc = pcmk_ok;
 
     if (stonith_api == NULL) {
-        stonith_api = stonith_api_new();
+        stonith_api = stonith__api_new();
         if (stonith_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return G_SOURCE_REMOVE;
