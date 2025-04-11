@@ -649,6 +649,14 @@ pcmk__ipc_prepare_iov(uint32_t request, const GString *message, uint16_t index,
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
 
+    if ((rc == pcmk_rc_ok) && (index != 0)) {
+        pcmk__set_ipc_flags(header->flags, "multipart ipc",
+                            crm_ipc_multipart | crm_ipc_multipart_end);
+    } else if (rc == pcmk_rc_ipc_more) {
+        pcmk__set_ipc_flags(header->flags, "multipart ipc",
+                            crm_ipc_multipart);
+    }
+
     *result = iov;
     pcmk__assert(header->qb.size > 0);
     if (bytes != NULL) {
