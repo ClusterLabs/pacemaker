@@ -20,10 +20,14 @@ extern "C" {
  * \ingroup fencing
  */
 
-/* IMPORTANT: DLM source code includes this file directly, without having access
- * to other Pacemaker headers on its include path, so this file should *not*
- * include any other Pacemaker headers. (DLM might be updated to avoid the
- * issue, but we should still follow this guideline for a long time after.)
+/* IMPORTANT: dlm source code includes this file directly. Until dlm v4.2.0
+ * (commit 5afd9fdc), dlm did not have access to other Pacemaker headers on its
+ * include path. This file should *not* include any other Pacemaker headers
+ * until we decide that we no longer need to support dlm versions older than
+ * v4.2.0.
+ *
+ * @COMPAT Remove this restriction and take any opportunities to simplify code
+ * when possible.
  */
 
 #  include <dlfcn.h>
