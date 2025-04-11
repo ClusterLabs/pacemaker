@@ -880,7 +880,7 @@ setup_fencer_connection(void)
                                             mon_st_callback_display);
         }
     } else {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         st = NULL;
     }
 
@@ -931,7 +931,7 @@ setup_cib_connection(void)
 
             out->err(out, "Cannot monitor CIB changes; exiting");
             cib__clean_up_connection(&cib);
-            stonith_api_delete(st);
+            stonith__api_free(st);
             st = NULL;
         }
     }
@@ -2120,7 +2120,7 @@ clean_up(crm_exit_t exit_code)
     }
 
     cib__clean_up_connection(&cib);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     free(options.neg_location_prefix);
     free(options.only_node);
     free(options.only_rsc);

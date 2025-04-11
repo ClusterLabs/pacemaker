@@ -719,7 +719,7 @@ main(int argc, char **argv)
 
     if (st != NULL) {
         st->cmds->disconnect(st);
-        stonith_api_delete(st);
+        stonith__api_free(st);
     }
 
     return exit_code;

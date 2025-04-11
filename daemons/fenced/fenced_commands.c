@@ -945,7 +945,7 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
         }
         rc = st->cmds->metadata(st, st_opt_sync_call, agent,
                                 NULL, &buffer, 10);
-        stonith_api_delete(st);
+        stonith__api_free(st);
         if (rc || !buffer) {
             crm_err("Could not retrieve metadata for fencing agent %s", agent);
             return EAGAIN;

@@ -68,7 +68,7 @@ stonith_t *
 get_stonith_connection(void)
 {
     if (stonith_api && stonith_api->state == stonith_disconnected) {
-        stonith_api_delete(stonith_api);
+        stonith__api_free(stonith_api);
         stonith_api = NULL;
     }
 
@@ -84,7 +84,7 @@ get_stonith_connection(void)
         if (rc != pcmk_ok) {
             crm_err("Could not connect to fencer in 10 attempts: %s "
                     QB_XS " rc=%d", pcmk_strerror(rc), rc);
-            stonith_api_delete(stonith_api);
+            stonith__api_free(stonith_api);
             stonith_api = NULL;
         } else {
             stonith_api_operations_t *cmds = stonith_api->cmds;
@@ -284,7 +284,7 @@ exit_executor(void)
 
     crm_info("Terminating with %d client%s",
              nclients, pcmk__plural_s(nclients));
-    stonith_api_delete(stonith_api);
+    stonith__api_free(stonith_api);
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }

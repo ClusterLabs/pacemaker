@@ -111,7 +111,7 @@ pcmk__setup_output_fencing(pcmk__output_t **out, stonith_t **st, xmlNode **xml)
     rc = (*st)->cmds->connect(*st, crm_system_name, NULL);
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
-        stonith_api_delete(*st);
+        stonith__api_free(*st);
         return rc;
     }
 
