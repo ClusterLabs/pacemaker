@@ -23,6 +23,7 @@ extern "C" {
 
 stonith_t *stonith__api_new(void);
 void stonith__api_free(stonith_t *stonith_api);
+int stonith__api_dispatch(stonith_t *stonith_api);
 
 #define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
         st_call_opts = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \

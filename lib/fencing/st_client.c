@@ -85,7 +85,6 @@ struct timer_rec_s {
 typedef int (*stonith_op_t) (const char *, int, const char *, xmlNode *,
                              xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
-bool stonith_dispatch(stonith_t * st);
 xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                            int call_options);
 static int stonith_send_command(stonith_t *stonith, const char *op,
@@ -1644,31 +1643,45 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     return rc;
 }
 
-/* Not used with mainloop */
-bool
-stonith_dispatch(stonith_t * st)
+/*!
+ * \internal
+ * \brief Process IPC messages for a fencer API connection
+ *
+ * This is used for testing purposes in scenarios that don't use a mainloop to
+ * dispatch messages automatically.
+ *
+ * \param[in,out] stonith_api  Fencer API connetion object
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+stonith__api_dispatch(stonith_t *stonith_api)
 {
-    gboolean stay_connected = TRUE;
     stonith_private_t *private = NULL;
 
-    pcmk__assert(st != NULL);
-    private = st->st_private;
+    pcmk__assert(stonith_api != NULL);
+    private = stonith_api->st_private;
 
     while (crm_ipc_ready(private->ipc)) {
-
         if (crm_ipc_read(private->ipc) > 0) {
             const char *msg = crm_ipc_buffer(private->ipc);
 
-            stonith_dispatch_internal(msg, strlen(msg), st);
+            stonith_dispatch_internal(msg, strlen(msg), stonith_api);
         }
 
         if (!crm_ipc_connected(private->ipc)) {
             crm_err("Connection closed");
-            stay_connected = FALSE;
+            return ENOTCONN;
         }
     }
 
-    return stay_connected;
+    return pcmk_rc_ok;
+}
+
+bool
+stonith_dispatch(stonith_t *stonith_api)
+{
+    return (stonith__api_dispatch(stonith_api) == pcmk_rc_ok);
 }
 
 static int
