@@ -425,8 +425,6 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         pcmk__set_client_flags(c, pcmk__client_proxied);
     }
 
-    pcmk__assert(text[header->size - 1] == 0);
-
     xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
     return xml;
