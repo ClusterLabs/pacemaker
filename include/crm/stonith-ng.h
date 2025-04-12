@@ -152,10 +152,17 @@ enum stonith_namespace {
     st_namespace_lha,       //! \deprecated Do not use
 };
 
+/* @COMPAT Drop this and use a GList/GSList of pcmk_nvpair_t or a GHashtable as
+ * appropriate
+ */
+/*!
+ * \brief Key-value pair list node
+ * \deprecated Do not use
+ */
 typedef struct stonith_key_value_s {
     char *key;
     char *value;
-        struct stonith_key_value_s *next;
+    struct stonith_key_value_s *next;
 } stonith_key_value_t;
 
 typedef struct stonith_history_s {
