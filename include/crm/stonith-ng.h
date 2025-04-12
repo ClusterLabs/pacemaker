@@ -258,6 +258,7 @@ typedef struct stonith_api_operations_s {
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Not used internally
      * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_level)(stonith_t *st, int options, const char *node,
@@ -274,6 +275,7 @@ typedef struct stonith_api_operations_s {
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Used only by cts-fence-helper.c internally
      * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_level)(stonith_t *st, int options, const char *node,
@@ -365,6 +367,7 @@ typedef struct stonith_api_operations_s {
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Used only by cts-fence-helper.c internally
      * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*status)(stonith_t *stonith, int call_options, const char *id,
@@ -402,6 +405,9 @@ typedef struct stonith_api_operations_s {
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Used only by cts-fence-helper.c and \c stonith_api_kick()
+     *       internally. The latter might go away eventually if dlm starts using
+     *       \c pcmk_request_fencing().
      * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*fence)(stonith_t *stonith, int call_options, const char *node,
@@ -493,6 +499,7 @@ typedef struct stonith_api_operations_s {
      * \param[in]     all_callbacks  If true, unregister all callbacks
      *
      * \return pcmk_ok
+     * \note Not used internally (but perhaps it should be)
      * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_callback)(stonith_t *stonith, int call_id, bool all_callbacks);
@@ -571,6 +578,7 @@ typedef struct stonith_api_operations_s {
      * \return pcmk_ok if validation succeeds, -errno otherwise
      * \note If pcmk_ok is returned, the caller is responsible for freeing
      *       the output (if requested) with free().
+     * \note Not used internally
      * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*validate)(stonith_t *st, int call_options, const char *rsc_id,
