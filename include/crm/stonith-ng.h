@@ -165,6 +165,11 @@ typedef struct stonith_key_value_s {
     struct stonith_key_value_s *next;
 } stonith_key_value_t;
 
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencing history entry
+ * \deprecated Do not use
+ */
 typedef struct stonith_history_s {
     char *target;
     char *action;
