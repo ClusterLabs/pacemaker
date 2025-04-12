@@ -116,14 +116,18 @@ enum stonith_call_options {
     st_opt_broadcast            = (1 << 20),
 };
 
-/*! Order matters here, do not change values */
-enum op_state
-{
-    st_query,
-    st_exec,
-    st_done,
-    st_duplicate,
-    st_failed,
+// Order matters here, do not change values
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencing operation states
+ * \deprecated Do not use
+ */
+enum op_state {
+    st_query,       //! \deprecated Do not use
+    st_exec,        //! \deprecated Do not use
+    st_done,        //! \deprecated Do not use
+    st_duplicate,   //! \deprecated Do not use
+    st_failed,      //! \deprecated Do not use
 };
 
 // Supported fence agent interface standards
