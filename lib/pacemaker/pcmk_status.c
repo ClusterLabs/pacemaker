@@ -129,7 +129,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
     g_list_free_full(unames, free);
     g_list_free_full(resources, free);
 
-    stonith_history_free(stonith_history);
+    stonith__history_free(stonith_history);
     stonith_history = NULL;
     return rc;
 }

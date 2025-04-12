@@ -110,7 +110,7 @@ reduce_fence_history(stonith_history_t *history)
                         || pcmk__str_eq(hp->delegate, np->delegate,
                                         pcmk__str_casei))) {
                         /* purge older hp */
-                        stonith_history_free(hp);
+                        stonith__history_free(hp);
                         break;
                 }
             }
@@ -287,7 +287,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
 
     if (cleanup) {
         // Cleanup doesn't return a history list
-        stonith_history_free(history);
+        stonith__history_free(history);
         return pcmk_legacy2rc(rc);
     }
 
@@ -322,7 +322,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
 
     out->end_list(out);
 
-    stonith_history_free(history);
+    stonith__history_free(history);
     return pcmk_legacy2rc(rc);
 }
 

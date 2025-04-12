@@ -88,6 +88,7 @@ void stonith__register_messages(pcmk__output_t *out);
 
 GList *stonith__parse_targets(const char *hosts);
 
+void stonith__history_free(stonith_history_t *head);
 const char *stonith__later_succeeded(const stonith_history_t *event,
                                      const stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);

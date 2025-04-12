@@ -766,7 +766,7 @@ do_stonith_history_sync(gpointer user_data)
         stonith_api->cmds->history(stonith_api,
                                    st_opt_sync_call | st_opt_broadcast,
                                    NULL, &history, 5);
-        stonith_history_free(history);
+        stonith__history_free(history);
         return TRUE;
     } else {
         crm_info("Skip triggering stonith history-sync as stonith is disconnected");

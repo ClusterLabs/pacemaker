@@ -760,18 +760,36 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Free a list of fencing history objects and all members of each object
+ *
+ * \param[in,out] head  Head of fencing history object list
+ */
+void
+stonith__history_free(stonith_history_t *head)
+{
+    /* @COMPAT Drop "next" member of stonith_history_t, use a GList or GSList,
+     * and use the appropriate free function (while ensuring the members get
+     * freed)
+     */
+    while (head != NULL) {
+        stonith_history_t *next = head->next;
+
+        free(head->target);
+        free(head->action);
+        free(head->origin);
+        free(head->delegate);
+        free(head->client);
+        free(head->exit_reason);
+        free(head);
+        head = next;
+    }
+}
+
 void stonith_history_free(stonith_history_t *history)
 {
-    stonith_history_t *hp, *hp_old;
-
-    for (hp = history; hp; hp_old = hp, hp = hp->next, free(hp_old)) {
-        free(hp->target);
-        free(hp->action);
-        free(hp->origin);
-        free(hp->delegate);
-        free(hp->client);
-        free(hp->exit_reason);
-    }
+    stonith__history_free(history);
 }
 
 static gint
@@ -2113,7 +2131,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
             }
         }
 
-        stonith_history_free(history);
+        stonith__history_free(history);
 
         if(rc == pcmk_ok) {
             api_log(LOG_INFO, "Found %d entries for %u/%s: %d in progress, %d completed", entries, nodeid, uname, progress, completed);
