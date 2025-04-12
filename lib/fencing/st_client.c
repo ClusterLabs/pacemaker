@@ -2191,12 +2191,6 @@ stonith__agent_exists(const char *name)
     return rc;
 }
 
-bool
-stonith_agent_exists(const char *agent, int timeout)
-{
-    return stonith__agent_exists(agent);
-}
-
 const char *
 stonith_action_str(const char *action)
 {
@@ -2899,6 +2893,14 @@ const char *
 stonith_op_state_str(enum op_state state)
 {
     return stonith__op_state_text(state);
+}
+
+bool stonith_agent_exists(const char *agent, int timeout);
+
+bool
+stonith_agent_exists(const char *agent, int timeout)
+{
+    return stonith__agent_exists(agent);
 }
 
 // LCOV_EXCL_STOP

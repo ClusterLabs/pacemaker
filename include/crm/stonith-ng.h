@@ -712,17 +712,6 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
     return (*st_time_fn) (nodeid, NULL, in_progress);
 }
 
-/**
- * Does the given agent describe a stonith resource that can exist?
- *
- * \param[in] agent     What is the name of the agent?
- * \param[in] timeout   Timeout to use when querying.  If 0 is given,
- *                      use a default of 120.
- *
- * \return A boolean
- */
-bool stonith_agent_exists(const char *agent, int timeout);
-
 /*!
  * \brief Turn fence action into a more readable string
  *
@@ -765,6 +754,9 @@ int stonith_api_connect_retry(stonith_t *st, const char *name,
 
 //! \deprecated Do not use
 const char *stonith_op_state_str(enum op_state state);
+
+//! \deprecated Do not use
+bool stonith_agent_exists(const char *agent, int timeout);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
