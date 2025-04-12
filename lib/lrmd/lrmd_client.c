@@ -2057,7 +2057,7 @@ lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
 }
 
 static int
-stonith_get_metadata(const char *provider, const char *type, char **output)
+stonith_get_metadata(const char *type, char **output)
 {
     int rc = pcmk_ok;
     stonith_t *stonith_api = stonith__api_new();
@@ -2067,8 +2067,8 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
         return -ENOMEM;
     }
 
-    rc = stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type,
-                                     provider, output, 0);
+    rc = stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, NULL,
+                                     output, 0);
     if ((rc == pcmk_ok) && (*output == NULL)) {
         rc = -EIO;
     }
@@ -2101,7 +2101,9 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
 
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         lrmd_key_value_freeall(params);
-        return stonith_get_metadata(provider, type, output);
+
+        // stonith-class resources don't support a provider
+        return stonith_get_metadata(type, output);
     }
 
     params_table = pcmk__strkey_table(free, free);
