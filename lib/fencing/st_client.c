@@ -126,6 +126,31 @@ parse_namespace(const char *namespace_s)
 }
 
 /*!
+ * \internal
+ * \brief Get name of a fence agent namespace as a string
+ *
+ * \param[in] st_namespace  Namespace as enum value
+ *
+ * \return Name of \p st_namespace as a string
+ */
+static const char *
+namespace_text(enum stonith_namespace st_namespace)
+{
+    switch (st_namespace) {
+        case st_namespace_any:
+            return "any";
+        case st_namespace_rhcs:
+            return "stonith-ng";
+        case st_namespace_internal:
+            return "internal";
+        case st_namespace_lha:
+            return "heartbeat";
+        default:
+            return "unsupported";
+    }
+}
+
+/*!
  * \brief Get agent namespace name
  *
  * \param[in] namespace  Namespace as enum value
@@ -135,14 +160,7 @@ parse_namespace(const char *namespace_s)
 const char *
 stonith_namespace2text(enum stonith_namespace st_namespace)
 {
-    switch (st_namespace) {
-        case st_namespace_any:      return "any";
-        case st_namespace_rhcs:     return "stonith-ng";
-        case st_namespace_internal: return "internal";
-        case st_namespace_lha:      return "heartbeat";
-        default:                    break;
-    }
-    return "unsupported";
+    return namespace_text(st_namespace);
 }
 
 /*!
@@ -317,8 +335,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace standard,
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
     crm_xml_add(data, PCMK_XA_AGENT, agent);
     if ((standard != st_namespace_any) && (standard != st_namespace_invalid)) {
-        crm_xml_add(data, PCMK__XA_NAMESPACE,
-                    stonith_namespace2text(standard));
+        crm_xml_add(data, PCMK__XA_NAMESPACE, namespace_text(standard));
     }
     if (rsc_provides) {
         crm_xml_add(data, PCMK__XA_RSC_PROVIDES, rsc_provides);
@@ -524,8 +541,7 @@ stonith_api_device_metadata(stonith_t *stonith, int call_options,
         timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
-    crm_trace("Looking up metadata for %s agent %s",
-              stonith_namespace2text(ns), agent);
+    crm_trace("Looking up metadata for %s agent %s", namespace_text(ns), agent);
 
     switch (ns) {
         case st_namespace_rhcs:
