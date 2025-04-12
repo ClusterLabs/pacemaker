@@ -2021,12 +2021,6 @@ stonith__key_value_freeall(stonith_key_value_t *head, bool keys, bool values)
     }
 }
 
-void
-stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
-{
-    stonith__key_value_freeall(head, (keys != 0), (values != 0));
-}
-
 #define api_log_open() openlog("stonith-api", LOG_CONS | LOG_NDELAY | LOG_PID, LOG_DAEMON)
 #define api_log(level, fmt, args...) syslog(level, "%s: "fmt, __func__, args)
 
@@ -2828,6 +2822,14 @@ stonith_key_value_add(stonith_key_value_t *head, const char *key,
                       const char *value)
 {
     return stonith__key_value_add(head, key, value);
+}
+
+void stonith_key_value_freeall(stonith_key_value_t *head, int keys, int values);
+
+void
+stonith_key_value_freeall(stonith_key_value_t *head, int keys, int values)
+{
+    stonith__key_value_freeall(head, (keys != 0), (values != 0));
 }
 
 // LCOV_EXCL_STOP

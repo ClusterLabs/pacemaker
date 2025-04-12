@@ -616,8 +616,6 @@ struct stonith_s {
 };
 
 /* Core functions */
-void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
-
 void stonith_history_free(stonith_history_t *history);
 
 // Convenience functions
@@ -762,6 +760,9 @@ bool stonith_dispatch(stonith_t *stonith_api);
 //! \deprecated Do not use
 stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
                                            const char *key, const char *value);
+
+//! \deprecated Do not use
+void stonith_key_value_freeall(stonith_key_value_t *head, int keys, int values);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
