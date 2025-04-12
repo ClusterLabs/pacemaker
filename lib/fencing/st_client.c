@@ -95,6 +95,37 @@ static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
 static int stonith_api_del_notification(stonith_t *stonith,
                                         const char *event);
+
+/*!
+ * \internal
+ * \brief Parse fence agent namespace from a string
+ *
+ * \param[in] namespace_s  Name of namespace as string
+ *
+ * \return enum value parsed from \p namespace_s
+ */
+static enum stonith_namespace
+parse_namespace(const char *namespace_s)
+{
+    if (pcmk__str_eq(namespace_s, "any", pcmk__str_null_matches)) {
+        return st_namespace_any;
+    }
+    /* @TODO Is "redhat" still necessary except for stonith_text2namespace()
+     * backward compatibility?
+     */
+    if (pcmk__str_any_of(namespace_s, "redhat", "stonith-ng", NULL)) {
+        return st_namespace_rhcs;
+    }
+    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_none)) {
+        return st_namespace_internal;
+    }
+    if (pcmk__str_eq(namespace_s, "heartbeat", pcmk__str_none)) {
+        return st_namespace_lha;
+    }
+    return st_namespace_invalid;
+}
+
+
 /*!
  * \brief Get agent namespace by name
  *
@@ -105,20 +136,7 @@ static int stonith_api_del_notification(stonith_t *stonith,
 enum stonith_namespace
 stonith_text2namespace(const char *namespace_s)
 {
-    if (pcmk__str_eq(namespace_s, "any", pcmk__str_null_matches)) {
-        return st_namespace_any;
-
-    } else if (!strcmp(namespace_s, "redhat")
-               || !strcmp(namespace_s, "stonith-ng")) {
-        return st_namespace_rhcs;
-
-    } else if (!strcmp(namespace_s, "internal")) {
-        return st_namespace_internal;
-
-    } else if (!strcmp(namespace_s, "heartbeat")) {
-        return st_namespace_lha;
-    }
-    return st_namespace_invalid;
+    return parse_namespace(namespace_s);
 }
 
 /*!
@@ -336,8 +354,7 @@ stonith_api_register_device(stonith_t *st, int call_options,
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_device_registration_xml(id,
-                                          stonith_text2namespace(namespace_s),
+    data = create_device_registration_xml(id, parse_namespace(namespace_s),
                                           agent, params, NULL);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
@@ -483,7 +500,7 @@ stonith_api_device_list(stonith_t *stonith, int call_options,
                         int timeout)
 {
     int count = 0;
-    enum stonith_namespace ns = stonith_text2namespace(namespace_s);
+    enum stonith_namespace ns = parse_namespace(namespace_s);
 
     if (devices == NULL) {
         crm_err("Parameter error: stonith_api_device_list");
