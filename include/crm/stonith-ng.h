@@ -186,6 +186,11 @@ typedef struct stonith_history_s {
 // @TODO Keep this typedef but rename it and make it internal
 typedef struct stonith_s stonith_t;
 
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencing event
+ * \deprecated Do not use
+ */
 typedef struct stonith_event_s {
     char *id;
     char *operation;
@@ -197,10 +202,9 @@ typedef struct stonith_event_s {
 
     char *device;
 
-    /*! The name of the client that initiated the action. */
+    // Name of the client that initiated the action
     char *client_origin;
 
-    //! \internal This field should be treated as internal to Pacemaker
     void *opaque;
 } stonith_event_t;
 
