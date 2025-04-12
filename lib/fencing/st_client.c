@@ -1993,12 +1993,6 @@ stonith__key_value_add(stonith_key_value_t *head, const char *key,
     return head;
 }
 
-stonith_key_value_t *
-stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *value)
-{
-    return stonith__key_value_add(head, key, value);
-}
-
 void
 stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
 {
@@ -2808,6 +2802,16 @@ bool
 stonith_dispatch(stonith_t *stonith_api)
 {
     return (stonith__api_dispatch(stonith_api) == pcmk_rc_ok);
+}
+
+stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *head,
+                                           const char *key, const char *value);
+
+stonith_key_value_t *
+stonith_key_value_add(stonith_key_value_t *head, const char *key,
+                      const char *value)
+{
+    return stonith__key_value_add(head, key, value);
 }
 
 // LCOV_EXCL_STOP
