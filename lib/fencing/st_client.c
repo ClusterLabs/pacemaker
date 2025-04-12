@@ -2446,12 +2446,6 @@ stonith__op_state_text(enum op_state state)
     }
 }
 
-const char *
-stonith_op_state_str(enum op_state state)
-{
-    return stonith__op_state_text(state);
-}
-
 stonith_history_t *
 stonith__first_matching_event(stonith_history_t *history,
                               bool (*matching_fn)(stonith_history_t *, void *),
@@ -2879,6 +2873,14 @@ int
 stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
 {
     return pcmk_rc2legacy(stonith__api_connect_retry(st, name, max_attempts));
+}
+
+const char *stonith_op_state_str(enum op_state state);
+
+const char *
+stonith_op_state_str(enum op_state state)
+{
+    return stonith__op_state_text(state);
 }
 
 // LCOV_EXCL_STOP

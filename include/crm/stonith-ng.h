@@ -615,9 +615,6 @@ struct stonith_s {
     stonith_api_operations_t *cmds;
 };
 
-// Convenience functions
-const char *stonith_op_state_str(enum op_state state);
-
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API
  *
@@ -765,6 +762,9 @@ void stonith_history_free(stonith_history_t *head);
 //! \deprecated Do not use
 int stonith_api_connect_retry(stonith_t *st, const char *name,
                               int max_attempts);
+
+//! \deprecated Do not use
+const char *stonith_op_state_str(enum op_state state);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
