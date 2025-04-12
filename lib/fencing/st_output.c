@@ -55,7 +55,7 @@ timespec_string(time_t sec, long nsec, bool show_usec) {
  * \param[in] history  Fence history entry to describe
  *
  * \return One-word description of history entry state
- * \note This is similar to stonith_op_state_str() except user-oriented (i.e.
+ * \note This is similar to stonith__op_state_text() except user-oriented (i.e.,
  *       for cluster status) instead of developer-oriented (for debug logs).
  */
 static const char *

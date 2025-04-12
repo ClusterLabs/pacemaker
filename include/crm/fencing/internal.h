@@ -147,6 +147,8 @@ gchar *stonith__history_description(const stonith_history_t *event,
                                     const char *later_succeeded,
                                     uint32_t show_opts);
 
+const char *stonith__op_state_text(enum op_state state);
+
 /*!
  * \internal
  * \brief Is a fencing operation in pending state?

@@ -514,7 +514,7 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
             crm_err("Skipping duplicate notification for %s@%s "
                     QB_XS " state=%s id=%.8s",
                     other->client_name, other->originator,
-                    stonith_op_state_str(other->state), other->id);
+                    stonith__op_state_text(other->state), other->id);
         }
     }
 }
@@ -773,11 +773,11 @@ remote_op_query_timeout(gpointer data)
     } else if (op->query_results) {
         // Query succeeded, so attempt the actual fencing
         crm_debug("Query %.8s targeting %s complete (state=%s)",
-                  op->id, op->target, stonith_op_state_str(op->state));
+                  op->id, op->target, stonith__op_state_text(op->state));
         request_peer_fencing(op, NULL);
     } else {
         crm_debug("Query %.8s targeting %s timed out (state=%s)",
-                  op->id, op->target, stonith_op_state_str(op->state));
+                  op->id, op->target, stonith__op_state_text(op->state));
         finalize_timed_out_op(op, "No capable peers replied to device query "
                                   "within timeout");
     }
@@ -1348,7 +1348,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
             crm_notice("Requesting peer fencing (%s) targeting %s "
                        QB_XS " id=%.8s state=%s base_timeout=%ds",
                        op->action, op->target, op->id,
-                       stonith_op_state_str(op->state), op->base_timeout);
+                       stonith__op_state_text(op->state), op->base_timeout);
     }
 
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
@@ -1878,7 +1878,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
     crm_trace("Action %.8s targeting %s for %s is %s",
               op->id, op->target, op->client_name,
-              stonith_op_state_str(op->state));
+              stonith__op_state_text(op->state));
 
     if ((op->phase == st_phase_on) && (op->devices != NULL)) {
         /* We are in the "on" phase of a remapped topology reboot. If this
@@ -2038,7 +2038,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         /* We've exhausted all available peers */
         crm_info("No remaining peers capable of fencing (%s) %s for client %s "
                  QB_XS " state=%s", op->action, op->target, op->client_name,
-                 stonith_op_state_str(op->state));
+                 stonith__op_state_text(op->state));
         CRM_CHECK(op->state < st_done, return);
         finalize_timed_out_op(op, "All nodes failed, or are unable, to "
                                   "fence target");
@@ -2063,7 +2063,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             crm_info("No peers (out of %d) have devices capable of fencing "
                      "(%s) %s for client %s " QB_XS " state=%s",
                      op->replies, op->action, op->target, op->client_name,
-                     stonith_op_state_str(op->state));
+                     stonith__op_state_text(op->state));
 
             pcmk__reset_result(&op->result);
             pcmk__set_result(&op->result, CRM_EX_ERROR,
@@ -2084,7 +2084,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             crm_info("No peers (out of %d) are capable of fencing (%s) %s "
                      "for client %s " QB_XS " state=%s",
                      op->replies, op->action, op->target, op->client_name,
-                     stonith_op_state_str(op->state));
+                     stonith__op_state_text(op->state));
         }
 
         op->state = st_failed;
@@ -2434,7 +2434,7 @@ process_remote_stonith_query(xmlNode *msg)
         crm_info("Discarding query result from %s (%d device%s): "
                  "Operation is %s", peer->host,
                  peer->ndevices, pcmk__plural_s(peer->ndevices),
-                 stonith_op_state_str(op->state));
+                 stonith__op_state_text(op->state));
     }
 
     return pcmk_ok;

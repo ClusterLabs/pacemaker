@@ -2419,23 +2419,37 @@ stonith__sort_history(stonith_history_t *history)
 }
 
 /*!
- * \brief Return string equivalent of an operation state value
+ * \internal
+ * \brief Return string equivalent of a fencing operation state value
  *
  * \param[in] state  Fencing operation state value
  *
- * \return Human-friendly string equivalent of state
+ * \return Human-friendly string equivalent of \p state
  */
+const char *
+stonith__op_state_text(enum op_state state)
+{
+    // @COMPAT Move this to the fencer after dropping stonith_op_state_str()
+    switch (state) {
+        case st_query:
+            return "querying";
+        case st_exec:
+            return "executing";
+        case st_done:
+            return "completed";
+        case st_duplicate:
+            return "duplicate";
+        case st_failed:
+            return "failed";
+        default:
+            return "unknown";
+    }
+}
+
 const char *
 stonith_op_state_str(enum op_state state)
 {
-    switch (state) {
-        case st_query:      return "querying";
-        case st_exec:       return "executing";
-        case st_done:       return "completed";
-        case st_duplicate:  return "duplicate";
-        case st_failed:     return "failed";
-    }
-    return "unknown";
+    return stonith__op_state_text(state);
 }
 
 stonith_history_t *
