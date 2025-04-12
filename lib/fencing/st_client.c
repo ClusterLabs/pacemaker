@@ -151,6 +151,34 @@ namespace_text(enum stonith_namespace st_namespace)
 }
 
 /*!
+ * \internal
+ * \brief Determine fence agent namespace from agent name
+ *
+ * This involves external checks (for example, checking the existence of a file
+ * or calling an external library function).
+ *
+ * \param[in] agent  Fence agent name
+ *
+ * \return Namespace to which \p agent belongs, or \c st_namespace_invalid if
+ *         not found
+ */
+static enum stonith_namespace
+get_namespace_from_agent(const char *agent)
+{
+    if (stonith__agent_is_rhcs(agent)) {
+        return st_namespace_rhcs;
+    }
+
+#if HAVE_STONITH_STONITH_H
+    if (stonith__agent_is_lha(agent)) {
+        return st_namespace_lha;
+    }
+#endif  // HAVE_STONITH_STONITH_H
+
+    return st_namespace_invalid;
+}
+
+/*!
  * \brief Determine namespace of a fence agent
  *
  * \param[in] agent        Fence agent type
@@ -164,18 +192,7 @@ stonith_get_namespace(const char *agent, const char *namespace_s)
     if (pcmk__str_eq(namespace_s, "internal", pcmk__str_none)) {
         return st_namespace_internal;
     }
-
-    if (stonith__agent_is_rhcs(agent)) {
-        return st_namespace_rhcs;
-    }
-
-#if HAVE_STONITH_STONITH_H
-    if (stonith__agent_is_lha(agent)) {
-        return st_namespace_lha;
-    }
-#endif
-
-    return st_namespace_invalid;
+    return get_namespace_from_agent(agent);
 }
 
 gboolean
@@ -310,7 +327,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace standard,
 
 #if HAVE_STONITH_STONITH_H
     if (standard == st_namespace_any) {
-        standard = stonith_get_namespace(agent, NULL);
+        standard = get_namespace_from_agent(agent);
     }
     if (standard == st_namespace_lha) {
         hash2field((gpointer) "plugin", (gpointer) agent, args);
@@ -522,7 +539,7 @@ stonith_api_device_metadata(stonith_t *stonith, int call_options,
      * the cluster is not running, which is important for higher-level tools.
      */
 
-    enum stonith_namespace ns = stonith_get_namespace(agent, NULL);
+    enum stonith_namespace ns = get_namespace_from_agent(agent);
 
     if (timeout_sec <= 0) {
         timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
@@ -1777,7 +1794,7 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
         timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
-    switch (stonith_get_namespace(agent, NULL)) {
+    switch (get_namespace_from_agent(agent)) {
         case st_namespace_rhcs:
             rc = stonith__rhcs_validate(st, call_options, target, agent,
                                         params, host_arg, timeout_sec,
@@ -2556,7 +2573,7 @@ stonith__metadata_async(const char *agent, int timeout_sec,
                                          void *user_data),
                         void *user_data)
 {
-    switch (stonith_get_namespace(agent, NULL)) {
+    switch (get_namespace_from_agent(agent)) {
         case st_namespace_rhcs:
             {
                 stonith_action_t *action = NULL;
