@@ -615,9 +615,6 @@ struct stonith_s {
     stonith_api_operations_t *cmds;
 };
 
-/* Core functions */
-void stonith_history_free(stonith_history_t *history);
-
 // Convenience functions
 int stonith_api_connect_retry(stonith_t *st, const char *name,
                               int max_attempts);
@@ -763,6 +760,9 @@ stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
 
 //! \deprecated Do not use
 void stonith_key_value_freeall(stonith_key_value_t *head, int keys, int values);
+
+//! \deprecated Do not use
+void stonith_history_free(stonith_history_t *head);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 

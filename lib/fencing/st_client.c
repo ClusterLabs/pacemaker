@@ -787,11 +787,6 @@ stonith__history_free(stonith_history_t *head)
     }
 }
 
-void stonith_history_free(stonith_history_t *history)
-{
-    stonith__history_free(history);
-}
-
 static gint
 stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
@@ -2848,6 +2843,14 @@ void
 stonith_key_value_freeall(stonith_key_value_t *head, int keys, int values)
 {
     stonith__key_value_freeall(head, (keys != 0), (values != 0));
+}
+
+void stonith_history_free(stonith_history_t *head);
+
+void
+stonith_history_free(stonith_history_t *head)
+{
+    stonith__history_free(head);
 }
 
 // LCOV_EXCL_STOP
