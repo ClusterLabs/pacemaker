@@ -15,6 +15,7 @@
 #include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
+#include <crm/fencing/internal.h>           // stonith__agent_exists()
 #include <pacemaker-internal.h>
 
 #include <sys/param.h>
@@ -1161,7 +1162,7 @@ validate_cmdline_config(void)
     // Check whether agent exists
     if (pcmk__str_eq(options.class, PCMK_RESOURCE_CLASS_STONITH,
                      pcmk__str_none)) {
-        if (!stonith_agent_exists(options.agent, 0)) {
+        if (!stonith__agent_exists(options.agent)) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                         _("%s is not a known stonith agent"), options.agent);
             return;

@@ -2148,35 +2148,53 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
     return when;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a fence agent with a given name exists
+ *
+ * \param[in] name     Agent name
+ *
+ * \retval \c true   If a fence agent named \p name exists
+ * \retval \c false  Otherwise
+ */
 bool
-stonith_agent_exists(const char *agent, int timeout)
+stonith__agent_exists(const char *name)
 {
-    stonith_t *st = NULL;
-    stonith_key_value_t *devices = NULL;
-    stonith_key_value_t *dIter = NULL;
-    bool rc = FALSE;
+    stonith_t *stonith_api = NULL;
+    stonith_key_value_t *agents = NULL;
+    bool rc = false;
 
-    if (agent == NULL) {
-        return rc;
+    if (name == NULL) {
+        return false;
     }
 
-    st = stonith__api_new();
-    if (st == NULL) {
+    stonith_api = stonith__api_new();
+    if (stonith_api == NULL) {
         crm_err("Could not list fence agents: API memory allocation failed");
-        return FALSE;
+        return false;
     }
-    st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, timeout == 0 ? 120 : timeout);
 
-    for (dIter = devices; dIter != NULL; dIter = dIter->next) {
-        if (pcmk__str_eq(dIter->value, agent, pcmk__str_none)) {
-            rc = TRUE;
+    // The list_agents method ignores its timeout argument
+    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL, &agents,
+                                   0);
+
+    for (const stonith_key_value_t *iter = agents; iter != NULL;
+         iter = iter->next) {
+        if (pcmk__str_eq(iter->value, name, pcmk__str_none)) {
+            rc = true;
             break;
         }
     }
 
-    stonith__key_value_freeall(devices, true, true);
-    stonith__api_free(st);
+    stonith__key_value_freeall(agents, true, true);
+    stonith__api_free(stonith_api);
     return rc;
+}
+
+bool
+stonith_agent_exists(const char *agent, int timeout)
+{
+    return stonith__agent_exists(agent);
 }
 
 const char *

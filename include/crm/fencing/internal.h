@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_FENCING_INTERNAL__H
 #define PCMK__CRM_FENCING_INTERNAL__H
 
+#include <stdbool.h>                        // bool
+
 #include <glib.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
@@ -27,6 +29,8 @@ int stonith__api_dispatch(stonith_t *stonith_api);
 
 int stonith__api_connect_retry(stonith_t *stonith, const char *name,
                                int max_attempts);
+
+bool stonith__agent_exists(const char *name);
 
 stonith_key_value_t *stonith__key_value_add(stonith_key_value_t *head,
                                             const char *key, const char *value);
