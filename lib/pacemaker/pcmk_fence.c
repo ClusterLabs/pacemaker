@@ -73,7 +73,7 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
 
         rc = st->cmds->register_level_full(st, st_opts, node, pattern, name,
                                            value, fence_level, kvs);
-        stonith_key_value_freeall(kvs, 0, 1);
+        stonith__key_value_freeall(kvs, false, true);
     } else {
         rc = st->cmds->remove_level_full(st, st_opts, node, pattern,
                                          name, value, fence_level);
@@ -370,7 +370,7 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
     }
     out->end_list(out);
 
-    stonith_key_value_freeall(devices, 1, 1);
+    stonith__key_value_freeall(devices, true, true);
     return pcmk_rc_ok;
 }
 
@@ -533,7 +533,7 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, const char *target,
     }
     out->end_list(out);
 
-    stonith_key_value_freeall(devices, 1, 1);
+    stonith__key_value_freeall(devices, true, true);
 
     /* Return pcmk_rc_ok here, not the number of results.  Callers probably
      * don't care.

@@ -1964,7 +1964,7 @@ stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
  *
  * \return Head of appended-to list (equal to \p head if \p head is not \c NULL)
  * \note The caller is responsible for freeing the return value using
- *       \c stonith_key_value_freeall().
+ *       \c stonith__key_value_freeall().
  */
 stonith_key_value_t *
 stonith__key_value_add(stonith_key_value_t *head, const char *key,
@@ -1993,13 +1993,23 @@ stonith__key_value_add(stonith_key_value_t *head, const char *key,
     return head;
 }
 
+/*!
+ * \internal
+ * \brief Free all items in a \c stonith_key_value_t list
+ *
+ * This means freeing the list itself with all of its nodes. Keys and values may
+ * be freed depending on arguments.
+ *
+ * \param[in,out] head    Head of list
+ * \param[in]     keys    If \c true, free all keys
+ * \param[in]     values  If \c true, free all values
+ */
 void
-stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
+stonith__key_value_freeall(stonith_key_value_t *head, bool keys, bool values)
 {
-    stonith_key_value_t *p;
+    while (head != NULL) {
+        stonith_key_value_t *next = head->next;
 
-    while (head) {
-        p = head->next;
         if (keys) {
             free(head->key);
         }
@@ -2007,8 +2017,14 @@ stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
             free(head->value);
         }
         free(head);
-        head = p;
+        head = next;
     }
+}
+
+void
+stonith_key_value_freeall(stonith_key_value_t * head, int keys, int values)
+{
+    stonith__key_value_freeall(head, (keys != 0), (values != 0));
 }
 
 #define api_log_open() openlog("stonith-api", LOG_CONS | LOG_NDELAY | LOG_PID, LOG_DAEMON)
@@ -2146,7 +2162,7 @@ stonith_agent_exists(const char *agent, int timeout)
         }
     }
 
-    stonith_key_value_freeall(devices, 1, 1);
+    stonith__key_value_freeall(devices, true, true);
     stonith__api_free(st);
     return rc;
 }

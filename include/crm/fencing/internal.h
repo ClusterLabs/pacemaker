@@ -27,6 +27,8 @@ int stonith__api_dispatch(stonith_t *stonith_api);
 
 stonith_key_value_t *stonith__key_value_add(stonith_key_value_t *head,
                                             const char *key, const char *value);
+void stonith__key_value_freeall(stonith_key_value_t *head, bool keys,
+                                bool values);
 
 #define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
         st_call_opts = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \

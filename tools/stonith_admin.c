@@ -615,7 +615,7 @@ main(int argc, char **argv)
             }
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
                                            params);
-            stonith_key_value_freeall(params, 1, 1);
+            stonith__key_value_freeall(params, true, true);
 
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {

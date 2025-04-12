@@ -1226,7 +1226,7 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
                                             cmd->rsc_id, rsc->provider,
                                             rsc->type, device_params);
 
-    stonith_key_value_freeall(device_params, 1, 1);
+    stonith__key_value_freeall(device_params, true, true);
     return rc;
 }
 

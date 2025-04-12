@@ -2239,7 +2239,7 @@ list_stonith_agents(lrmd_list_t ** resources)
         }
     }
 
-    stonith_key_value_freeall(stonith_resources, 1, 0);
+    stonith__key_value_freeall(stonith_resources, true, false);
     return rc;
 }
 

@@ -316,7 +316,7 @@ typedef struct stonith_api_operations_s {
      *
      * \return Number of items in list on success, or negative errno otherwise
      * \note The caller is responsible for freeing the returned list with
-     *       stonith_key_value_freeall().
+     *       \c stonith__key_value_freeall().
      * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*list_agents)(stonith_t *stonith, int call_options,
