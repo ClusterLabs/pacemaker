@@ -522,7 +522,7 @@ stonith_api_device_metadata(stonith_t *stonith, int call_options,
      * the cluster is not running, which is important for higher-level tools.
      */
 
-    enum stonith_namespace ns = stonith_get_namespace(agent, namespace_s);
+    enum stonith_namespace ns = stonith_get_namespace(agent, NULL);
 
     if (timeout_sec <= 0) {
         timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;

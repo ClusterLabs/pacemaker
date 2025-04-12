@@ -286,10 +286,7 @@ typedef struct stonith_api_operations_s {
      * \param[in]     call_options  Group of enum stonith_call_options
      *                              (currently ignored)
      * \param[in]     agent         Fence agent to query
-     * \param[in]     namespace_s   Type of fence agent to search for ("redhat"
-     *                              or "stonith-ng" for RHCS-style, "internal"
-     *                              for Pacemaker-internal devices, "heartbeat"
-     *                              for LHA-style, or "any" or NULL for any)
+     * \param[in]     namespace_s   Ignored
      * \param[out]    output        Where to store metadata
      * \param[in]     timeout_sec   Error if not complete within this time
      *
