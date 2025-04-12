@@ -178,23 +178,6 @@ get_namespace_from_agent(const char *agent)
     return st_namespace_invalid;
 }
 
-/*!
- * \brief Determine namespace of a fence agent
- *
- * \param[in] agent        Fence agent type
- * \param[in] namespace_s  Name of agent namespace as string, if known
- *
- * \return Namespace of specified agent, as enum value
- */
-enum stonith_namespace
-stonith_get_namespace(const char *agent, const char *namespace_s)
-{
-    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_none)) {
-        return st_namespace_internal;
-    }
-    return get_namespace_from_agent(agent);
-}
-
 gboolean
 stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
 {
@@ -2941,6 +2924,18 @@ const char *
 stonith_namespace2text(enum stonith_namespace st_namespace)
 {
     return namespace_text(st_namespace);
+}
+
+enum stonith_namespace stonith_get_namespace(const char *agent,
+                                             const char *namespace_s);
+
+enum stonith_namespace
+stonith_get_namespace(const char *agent, const char *namespace_s)
+{
+    if (pcmk__str_eq(namespace_s, "internal", pcmk__str_none)) {
+        return st_namespace_internal;
+    }
+    return get_namespace_from_agent(agent);
 }
 
 // LCOV_EXCL_STOP

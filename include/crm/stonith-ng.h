@@ -123,9 +123,6 @@ enum stonith_namespace {
     st_namespace_lha,       // Linux-HA compatible
 };
 
-enum stonith_namespace stonith_get_namespace(const char *agent,
-                                             const char *namespace_s);
-
 typedef struct stonith_key_value_s {
     char *key;
     char *value;
@@ -762,6 +759,10 @@ enum stonith_namespace stonith_text2namespace(const char *namespace_s);
 
 //! \deprecated Do not use
 const char *stonith_namespace2text(enum stonith_namespace st_namespace);
+
+//! \deprecated Do not use
+enum stonith_namespace stonith_get_namespace(const char *agent,
+                                             const char *namespace_s);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
