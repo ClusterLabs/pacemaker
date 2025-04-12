@@ -220,7 +220,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         if ((name == NULL) || (value == NULL)) {
             continue;
         }
-        params = stonith_key_value_add(params, name, value);
+        params = stonith__key_value_add(params, name, value);
     }
 
     xml = create_device_registration_xml(rsc_id, st_namespace_any, agent,

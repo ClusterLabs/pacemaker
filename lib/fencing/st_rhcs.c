@@ -81,7 +81,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     }
 
     for (int i = 0; i < file_num; i++) {
-        *devices = stonith_key_value_add(*devices, NULL, namelist[i]->d_name);
+        *devices = stonith__key_value_add(*devices, NULL, namelist[i]->d_name);
         free(namelist[i]);
     }
     free(namelist);

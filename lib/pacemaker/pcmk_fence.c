@@ -68,7 +68,7 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
         stonith_key_value_t *kvs = NULL;
 
         for (GList *iter = devices; iter != NULL; iter = iter->next) {
-            kvs = stonith_key_value_add(kvs, NULL, iter->data);
+            kvs = stonith__key_value_add(kvs, NULL, iter->data);
         }
 
         rc = st->cmds->register_level_full(st, st_opts, node, pattern, name,

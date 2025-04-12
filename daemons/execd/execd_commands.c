@@ -1212,7 +1212,7 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
 
         g_hash_table_iter_init(&iter, cmd->params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            device_params = stonith_key_value_add(device_params, key, value);
+            device_params = stonith__key_value_add(device_params, key, value);
         }
     }
 

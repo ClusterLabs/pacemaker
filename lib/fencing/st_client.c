@@ -572,13 +572,12 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
             CRM_LOG_ASSERT(match != NULL);
             if(match != NULL) {
+                const char *match_id = crm_element_value(match, PCMK_XA_ID);
                 xmlChar *match_path = xmlGetNodePath(match);
 
                 crm_info("//*[@" PCMK_XA_AGENT "][%d] = %s", lpc, match_path);
                 free(match_path);
-                *devices = stonith_key_value_add(*devices, NULL,
-                                                 crm_element_value(match,
-                                                                   PCMK_XA_ID));
+                *devices = stonith__key_value_add(*devices, NULL, match_id);
             }
         }
 
@@ -1955,27 +1954,49 @@ stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Append a newly allocated STONITH key-value pair to a list
+ *
+ * \param[in,out] head   Head of key-value pair list (\c NULL for new list)
+ * \param[in]     key    Key to add
+ * \param[in]     value  Value to add
+ *
+ * \return Head of appended-to list (equal to \p head if \p head is not \c NULL)
+ * \note The caller is responsible for freeing the return value using
+ *       \c stonith_key_value_freeall().
+ */
 stonith_key_value_t *
-stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *value)
+stonith__key_value_add(stonith_key_value_t *head, const char *key,
+                       const char *value)
 {
-    stonith_key_value_t *p, *end;
+    /* @COMPAT Replace this function with pcmk_prepend_nvpair(), and reverse the
+     * list when finished adding to it; or with a hash table where order does
+     * not matter
+     */
+    stonith_key_value_t *pair = pcmk__assert_alloc(1,
+                                                   sizeof(stonith_key_value_t));
 
-    p = pcmk__assert_alloc(1, sizeof(stonith_key_value_t));
-    p->key = pcmk__str_copy(key);
-    p->value = pcmk__str_copy(value);
+    pair->key = pcmk__str_copy(key);
+    pair->value = pcmk__str_copy(value);
 
-    end = head;
-    while (end && end->next) {
-        end = end->next;
-    }
+    if (head != NULL) {
+        stonith_key_value_t *end = head;
 
-    if (end) {
-        end->next = p;
+        for (; end->next != NULL; end = end->next);
+        end->next = pair;
+
     } else {
-        head = p;
+        head = pair;
     }
 
     return head;
+}
+
+stonith_key_value_t *
+stonith_key_value_add(stonith_key_value_t * head, const char *key, const char *value)
+{
+    return stonith__key_value_add(head, key, value);
 }
 
 void

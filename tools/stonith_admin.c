@@ -610,7 +610,7 @@ main(int argc, char **argv)
             if (options.params != NULL) {
                 g_hash_table_iter_init(&iter, options.params);
                 while (g_hash_table_iter_next(&iter, &key, &val)) {
-                    params = stonith_key_value_add(params, key, val);
+                    params = stonith__key_value_add(params, key, val);
                 }
             }
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
