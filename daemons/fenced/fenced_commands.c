@@ -1600,33 +1600,6 @@ unpack_level_kind(const xmlNode *level)
     return fenced_target_by_unknown;
 }
 
-static stonith_key_value_t *
-parse_device_list(const char *devices)
-{
-    int lpc = 0;
-    int max = 0;
-    int last = 0;
-    stonith_key_value_t *output = NULL;
-
-    if (devices == NULL) {
-        return output;
-    }
-
-    max = strlen(devices);
-    for (lpc = 0; lpc <= max; lpc++) {
-        if (devices[lpc] == ',' || devices[lpc] == 0) {
-            char *line = strndup(devices + last, lpc - last);
-
-            output = stonith_key_value_add(output, NULL, line);
-            free(line);
-
-            last = lpc + 1;
-        }
-    }
-
-    return output;
-}
-
 /*!
  * \internal
  * \brief Unpack essential information from topology request XML
@@ -1699,8 +1672,7 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
     char *target;
 
     stonith_topology_t *tp;
-    stonith_key_value_t *dIter = NULL;
-    stonith_key_value_t *devices = NULL;
+    const char *value = NULL;
 
     CRM_CHECK(msg != NULL, return);
 
@@ -1771,14 +1743,20 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
                  tp->target, id);
     }
 
-    devices = parse_device_list(crm_element_value(level, PCMK_XA_DEVICES));
-    for (dIter = devices; dIter; dIter = dIter->next) {
-        const char *device = dIter->value;
+    value = crm_element_value(level, PCMK_XA_DEVICES);
+    if (value != NULL) {
+        /* Empty string and whitespace are not possible with schema validation
+         * enabled. Don't bother handling them specially here.
+         */
+        gchar **devices = g_strsplit(value, ",", 0);
 
-        crm_trace("Adding device '%s' for %s[%d]", device, tp->target, id);
-        tp->levels[id] = g_list_append(tp->levels[id], pcmk__str_copy(device));
+        for (char **dev = devices; (dev != NULL) && (*dev != NULL); dev++) {
+            crm_trace("Adding device '%s' for %s[%d]", *dev, tp->target, id);
+            tp->levels[id] = g_list_append(tp->levels[id],
+                                           pcmk__str_copy(*dev));
+        }
+        g_strfreev(devices);
     }
-    stonith_key_value_freeall(devices, 1, 1);
 
     {
         int nlevels = count_active_levels(tp);
