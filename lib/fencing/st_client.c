@@ -151,19 +151,6 @@ namespace_text(enum stonith_namespace st_namespace)
 }
 
 /*!
- * \brief Get agent namespace name
- *
- * \param[in] namespace  Namespace as enum value
- *
- * \return Namespace name as string
- */
-const char *
-stonith_namespace2text(enum stonith_namespace st_namespace)
-{
-    return namespace_text(st_namespace);
-}
-
-/*!
  * \brief Determine namespace of a fence agent
  *
  * \param[in] agent        Fence agent type
@@ -2930,6 +2917,14 @@ enum stonith_namespace
 stonith_text2namespace(const char *namespace_s)
 {
     return parse_namespace(namespace_s);
+}
+
+const char *stonith_namespace2text(enum stonith_namespace st_namespace);
+
+const char *
+stonith_namespace2text(enum stonith_namespace st_namespace)
+{
+    return namespace_text(st_namespace);
 }
 
 // LCOV_EXCL_STOP
