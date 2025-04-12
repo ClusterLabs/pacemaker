@@ -125,20 +125,6 @@ parse_namespace(const char *namespace_s)
     return st_namespace_invalid;
 }
 
-
-/*!
- * \brief Get agent namespace by name
- *
- * \param[in] namespace_s  Name of namespace as string
- *
- * \return Namespace as enum value
- */
-enum stonith_namespace
-stonith_text2namespace(const char *namespace_s)
-{
-    return parse_namespace(namespace_s);
-}
-
 /*!
  * \brief Get agent namespace name
  *
@@ -2920,6 +2906,14 @@ stonith_action_str(const char *action)
     } else {
         return action;
     }
+}
+
+enum stonith_namespace stonith_text2namespace(const char *namespace_s);
+
+enum stonith_namespace
+stonith_text2namespace(const char *namespace_s)
+{
+    return parse_namespace(namespace_s);
 }
 
 // LCOV_EXCL_STOP
