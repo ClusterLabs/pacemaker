@@ -208,6 +208,11 @@ typedef struct stonith_event_s {
     void *opaque;
 } stonith_event_t;
 
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Data for an asynchronous fencing request callback
+ * \deprecated Do not use
+ */
 typedef struct stonith_callback_data_s {
     int rc;
     int call_id;
