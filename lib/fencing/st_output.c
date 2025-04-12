@@ -50,6 +50,26 @@ timespec_string(time_t sec, long nsec, bool show_usec) {
 
 /*!
  * \internal
+ * \brief Return a readable string equivalent of a fencing history item's action
+ *
+ * \param[in] history  Fencing history entry
+ *
+ * \return Readable string equivalent of action belonging to \p history
+ */
+static const char *
+history_action_text(const stonith_history_t *history)
+{
+    if (pcmk__str_eq(history->action, PCMK_ACTION_ON, pcmk__str_none)) {
+        return "unfencing";
+    }
+    if (pcmk__str_eq(history->action, PCMK_ACTION_OFF, pcmk__str_none)) {
+        return "turning off";
+    }
+    return pcmk__s(history->action, "fencing");
+}
+
+/*!
+ * \internal
  * \brief Return a status-friendly description of fence history entry state
  *
  * \param[in] history  Fence history entry to describe
@@ -98,8 +118,7 @@ stonith__history_description(const stonith_history_t *history,
                                            history->completed_nsec, true);
     }
 
-    pcmk__g_strcat(str,
-                   stonith_action_str(history->action), " of ", history->target,
+    pcmk__g_strcat(str, history_action_text(history), " of ", history->target,
                    NULL);
 
     if (!pcmk_is_set(show_opts, pcmk_show_failed_detail)) {
