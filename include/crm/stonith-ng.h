@@ -47,56 +47,72 @@ enum stonith_state {
     stonith_disconnected,
 };
 
-//! Flags that can be set in call options for API requests
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Flags that can be set in call options for API requests
+ *
+ * \deprecated Do not use
+ */
 enum stonith_call_options {
-    //! No options
+    // No options
+    //! \deprecated Do not use
     st_opt_none                 = 0,
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Unused
+    //! \deprecated Do not use
     st_opt_verbose              = (1 << 0),
 #endif
 
-    //! The fencing target is allowed to execute the request
+    // The fencing target is allowed to execute the request
+    //! \deprecated Do not use
     st_opt_allow_self_fencing   = (1 << 1),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use st_opt_allow_self_fencing instead
+    //! \deprecated Do not use
     st_opt_allow_suicide        = st_opt_allow_self_fencing,
 #endif
 
     // Used internally to indicate that request is manual fence confirmation
-    //! \internal Do not use
+    // \internal Do not use
+    //! \deprecated Do not use
     st_opt_manual_ack           = (1 << 3),
 
-    //! Do not return any reply from server
+    // Do not return any reply from server
+    //! \deprecated Do not use
     st_opt_discard_reply        = (1 << 4),
 
     // Used internally to indicate that request requires a fencing topology
-    //! \internal Do not use
+    // \internal Do not use
+    //! \deprecated Do not use
     st_opt_topology             = (1 << 6),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Unused
+    //! \deprecated Do not use
     st_opt_scope_local          = (1 << 8),
 #endif
 
-    //! Interpret target as node cluster layer ID instead of name
+    // Interpret target as node cluster layer ID instead of name
+    //! \deprecated Do not use
     st_opt_cs_nodeid            = (1 << 9),
 
-    //! Wait for request to be completed before returning
+    // Wait for request to be completed before returning
+    //! \deprecated Do not use
     st_opt_sync_call            = (1 << 12),
 
-    //! Request that server send an update with optimal callback timeout
+    // Request that server send an update with optimal callback timeout
+    //! \deprecated Do not use
     st_opt_timeout_updates      = (1 << 13),
 
-    //! Invoke callback only if request succeeded
+    // Invoke callback only if request succeeded
+    //! \deprecated Do not use
     st_opt_report_only_success  = (1 << 14),
 
-    //! For a fence history request, request that the history be cleared
+    // For a fence history request, request that the history be cleared
+    //! \deprecated Do not use
     st_opt_cleanup              = (1 << 19),
 
-    //! For a fence history request, broadcast the request to all nodes
+    // For a fence history request, broadcast the request to all nodes
+    //! \deprecated Do not use
     st_opt_broadcast            = (1 << 20),
 };
 
