@@ -623,7 +623,7 @@ pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
     char *error_output = NULL;
     int rc;
 
-    rc  = stonith__validate(st, st_opt_sync_call, id, NULL, agent, params,
+    rc  = stonith__validate(st, st_opt_sync_call, id, agent, params,
                             pcmk__timeout_ms2s(timeout), &output, &error_output);
     out->message(out, "validate", agent, id, output, error_output, rc);
     return pcmk_legacy2rc(rc);

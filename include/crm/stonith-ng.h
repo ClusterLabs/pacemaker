@@ -563,10 +563,7 @@ typedef struct stonith_api_operations_s {
      * \param[in,out] st            Fencer connection to use
      * \param[in]     call_options  Group of enum stonith_call_options
      * \param[in]     rsc_id        ID used to replace CIB secrets in \p params
-     * \param[in]     namespace_s   Type of fence agent to validate ("redhat"
-     *                              or "stonith-ng" for RHCS-style, "internal"
-     *                              for Pacemaker-internal devices, "heartbeat"
-     *                              for LHA-style, or "any" or NULL for any)
+     * \param[in]     namespace_s   Ignored
      * \param[in]     agent         Fence agent to validate
      * \param[in]     params        Configuration parameters to pass to agent
      * \param[in]     timeout       Fail if no response within this many seconds

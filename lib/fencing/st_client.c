@@ -1738,9 +1738,8 @@ is_stonith_param(gpointer key, gpointer value, gpointer user_data)
 
 int
 stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
-                  const char *namespace_s, const char *agent,
-                  GHashTable *params, int timeout_sec, char **output,
-                  char **error_output)
+                  const char *agent, GHashTable *params, int timeout_sec,
+                  char **output, char **error_output)
 {
     int rc = pcmk_rc_ok;
 
@@ -1778,7 +1777,7 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
         timeout_sec = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
 
-    switch (stonith_get_namespace(agent, namespace_s)) {
+    switch (stonith_get_namespace(agent, NULL)) {
         case st_namespace_rhcs:
             rc = stonith__rhcs_validate(st, call_options, target, agent,
                                         params, host_arg, timeout_sec,
@@ -1847,8 +1846,8 @@ stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
         }
     }
 
-    rc = stonith__validate(st, call_options, rsc_id, namespace_s, agent,
-                           params_table, timeout_sec, output, error_output);
+    rc = stonith__validate(st, call_options, rsc_id, agent, params_table,
+                           timeout_sec, output, error_output);
 
     g_hash_table_destroy(params_table);
     return rc;
