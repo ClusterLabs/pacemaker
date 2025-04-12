@@ -130,17 +130,26 @@ enum op_state {
     st_failed,      //! \deprecated Do not use
 };
 
-// Supported fence agent interface standards
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Supported fence agent interface standards
+ * \deprecated Do not use
+ */
 enum stonith_namespace {
-    st_namespace_invalid,
-    st_namespace_any,
-    st_namespace_internal,  // Implemented internally by Pacemaker
+    st_namespace_invalid,   //! \deprecated Do not use
+    st_namespace_any,       //! \deprecated Do not use
+
+    // Implemented internally by Pacemaker
+    st_namespace_internal,  //! \deprecated Do not use
 
     /* Neither of these projects are active any longer, but the fence agent
      * interfaces they created are still in use and supported by Pacemaker.
      */
-    st_namespace_rhcs,      // Red Hat Cluster Suite compatible
-    st_namespace_lha,       // Linux-HA compatible
+    // Red Hat Cluster Suite compatible
+    st_namespace_rhcs,      //! \deprecated Do not use
+
+    // Linux-HA compatible
+    st_namespace_lha,       //! \deprecated Do not use
 };
 
 typedef struct stonith_key_value_s {
