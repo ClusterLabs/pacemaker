@@ -620,7 +620,7 @@ struct stonith_s {
  *
  * At least one of nodeid and uname are required
  *
- * NOTE: DLM uses both of these
+ * NOTE: dlm (as of at least 4.3.0) uses these (via the helper functions below)
  */
 int stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off);
 time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
@@ -667,9 +667,11 @@ time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
 #define STONITH_LIBRARY "libstonithd.so.56"
 
+// NOTE: dlm (as of at least 4.3.0) uses these (via the helper functions below)
 typedef int (*st_api_kick_fn) (int nodeid, const char *uname, int timeout, bool off);
 typedef time_t (*st_api_time_fn) (int nodeid, const char *uname, bool in_progress);
 
+// NOTE: dlm (as of at least 4.3.0) uses this
 static inline int
 stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)
 {
@@ -693,6 +695,7 @@ stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)
     return (*st_kick_fn) (nodeid, NULL, timeout, off);
 }
 
+// NOTE: dlm (as of at least 4.3.0) uses this
 static inline time_t
 stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 {
