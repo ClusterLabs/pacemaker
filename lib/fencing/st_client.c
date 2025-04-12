@@ -2191,20 +2191,6 @@ stonith__agent_exists(const char *name)
     return rc;
 }
 
-const char *
-stonith_action_str(const char *action)
-{
-    if (action == NULL) {
-        return "fencing";
-    } else if (strcmp(action, PCMK_ACTION_ON) == 0) {
-        return "unfencing";
-    } else if (strcmp(action, PCMK_ACTION_OFF) == 0) {
-        return "turning off";
-    } else {
-        return action;
-    }
-}
-
 /*!
  * \internal
  * \brief Parse a target name from one line of a target list string
@@ -2901,6 +2887,22 @@ bool
 stonith_agent_exists(const char *agent, int timeout)
 {
     return stonith__agent_exists(agent);
+}
+
+const char *stonith_action_str(const char *action);
+
+const char *
+stonith_action_str(const char *action)
+{
+    if (action == NULL) {
+        return "fencing";
+    } else if (strcmp(action, PCMK_ACTION_ON) == 0) {
+        return "unfencing";
+    } else if (strcmp(action, PCMK_ACTION_OFF) == 0) {
+        return "turning off";
+    } else {
+        return action;
+    }
 }
 
 // LCOV_EXCL_STOP

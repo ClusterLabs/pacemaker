@@ -712,13 +712,6 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
     return (*st_time_fn) (nodeid, NULL, in_progress);
 }
 
-/*!
- * \brief Turn fence action into a more readable string
- *
- * \param[in] action  Fence action
- */
-const char *stonith_action_str(const char *action);
-
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 /* Normally we'd put this section in a separate file (crm/fencing/compat.h), but
@@ -757,6 +750,9 @@ const char *stonith_op_state_str(enum op_state state);
 
 //! \deprecated Do not use
 bool stonith_agent_exists(const char *agent, int timeout);
+
+//! \deprecated Do not use
+const char *stonith_action_str(const char *action);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
