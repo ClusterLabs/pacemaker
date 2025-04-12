@@ -154,13 +154,13 @@ async_fence_helper(gpointer user_data)
 {
     stonith_t *st = async_fence_data.st;
     int call_id = 0;
-    int rc = stonith_api_connect_retry(st, async_fence_data.name, 10);
+    int rc = stonith__api_connect_retry(st, async_fence_data.name, 10);
     int timeout = 0;
 
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         g_main_loop_quit(mainloop);
         pcmk__set_result(&async_fence_data.result, CRM_EX_ERROR,
-                         PCMK_EXEC_NOT_CONNECTED, pcmk_strerror(rc));
+                         PCMK_EXEC_NOT_CONNECTED, pcmk_rc_str(rc));
         return TRUE;
     }
 

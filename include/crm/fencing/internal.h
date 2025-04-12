@@ -25,6 +25,9 @@ stonith_t *stonith__api_new(void);
 void stonith__api_free(stonith_t *stonith_api);
 int stonith__api_dispatch(stonith_t *stonith_api);
 
+int stonith__api_connect_retry(stonith_t *stonith, const char *name,
+                               int max_attempts);
+
 stonith_key_value_t *stonith__key_value_add(stonith_key_value_t *head,
                                             const char *key, const char *value);
 void stonith__key_value_freeall(stonith_key_value_t *head, bool keys,

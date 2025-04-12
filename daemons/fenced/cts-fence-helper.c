@@ -530,9 +530,9 @@ test_register_async_devices(int check_event)
 static void
 try_mainloop_connect(int check_event)
 {
-    int rc = stonith_api_connect_retry(st, crm_system_name, 10);
+    int rc = stonith__api_connect_retry(st, crm_system_name, 10);
 
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         mainloop_test_done(__func__, true);
         return;
     }

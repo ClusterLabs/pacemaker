@@ -1938,33 +1938,44 @@ stonith__api_free(stonith_t *stonith_api)
 }
 
 /*!
- * \brief Make a blocking connection attempt to the fencer
+ * \internal
+ * \brief Connect to the fencer, retrying on failure
  *
- * \param[in,out] st            Fencer API object
+ * \param[in,out] stonith       Fencer API connection object
  * \param[in]     name          Client name to use with fencer
- * \param[in]     max_attempts  Return error if this many attempts fail
+ * \param[in]     max_attempts  Maximum number of attempts
  *
- * \return pcmk_ok on success, result of last attempt otherwise
+ * \return \c pcmk_rc_ok on success, or result of last attempt otherwise
  */
 int
-stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
+stonith__api_connect_retry(stonith_t *stonith_api, const char *name,
+                           int max_attempts)
 {
-    int rc = -EINVAL; // if max_attempts is not positive
+    int rc = EINVAL;    // if max_attempts is not positive
 
     for (int attempt = 1; attempt <= max_attempts; attempt++) {
-        rc = st->cmds->connect(st, name, NULL);
-        if (rc == pcmk_ok) {
-            return pcmk_ok;
-        } else if (attempt < max_attempts) {
-            crm_notice("Fencer connection attempt %d of %d failed (retrying in 2s): %s "
-                       QB_XS " rc=%d",
-                       attempt, max_attempts, pcmk_strerror(rc), rc);
+        rc = stonith_api->cmds->connect(stonith_api, name, NULL);
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc == pcmk_rc_ok) {
+            return rc;
+        }
+        if (attempt < max_attempts) {
+            crm_notice("Fencer connection attempt %d of %d failed "
+                       "(retrying in 2s): %s " QB_XS " rc=%d",
+                       attempt, max_attempts, pcmk_rc_str(rc), rc);
             sleep(2);
         }
     }
     crm_notice("Could not connect to fencer: %s " QB_XS " rc=%d",
-               pcmk_strerror(rc), rc);
+               pcmk_rc_str(rc), rc);
     return rc;
+}
+
+int
+stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
+{
+    return pcmk_rc2legacy(stonith__api_connect_retry(st, name, max_attempts));
 }
 
 /*!

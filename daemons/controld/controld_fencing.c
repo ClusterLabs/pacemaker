@@ -675,10 +675,10 @@ controld_timer_fencer_connect(gpointer user_data)
 
     if (user_data == NULL) {
         // Blocking (retry failures now until successful)
-        rc = stonith_api_connect_retry(stonith_api, crm_system_name, 30);
-        if (rc != pcmk_ok) {
+        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 30);
+        if (rc != pcmk_rc_ok) {
             crm_err("Could not connect to fencer in 30 attempts: %s "
-                    QB_XS " rc=%d", pcmk_strerror(rc), rc);
+                    QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
