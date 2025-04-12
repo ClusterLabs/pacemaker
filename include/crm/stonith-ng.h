@@ -616,8 +616,6 @@ struct stonith_s {
 };
 
 // Convenience functions
-int stonith_api_connect_retry(stonith_t *st, const char *name,
-                              int max_attempts);
 const char *stonith_op_state_str(enum op_state state);
 
 /* Basic helpers that allows nodes to be fenced and the history to be
@@ -763,6 +761,10 @@ void stonith_key_value_freeall(stonith_key_value_t *head, int keys, int values);
 
 //! \deprecated Do not use
 void stonith_history_free(stonith_history_t *head);
+
+//! \deprecated Do not use
+int stonith_api_connect_retry(stonith_t *st, const char *name,
+                              int max_attempts);
 
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 

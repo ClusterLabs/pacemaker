@@ -1972,12 +1972,6 @@ stonith__api_connect_retry(stonith_t *stonith_api, const char *name,
     return rc;
 }
 
-int
-stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
-{
-    return pcmk_rc2legacy(stonith__api_connect_retry(st, name, max_attempts));
-}
-
 /*!
  * \internal
  * \brief Append a newly allocated STONITH key-value pair to a list
@@ -2862,6 +2856,15 @@ void
 stonith_history_free(stonith_history_t *head)
 {
     stonith__history_free(head);
+}
+
+int stonith_api_connect_retry(stonith_t *st, const char *name,
+                              int max_attempts);
+
+int
+stonith_api_connect_retry(stonith_t *st, const char *name, int max_attempts)
+{
+    return pcmk_rc2legacy(stonith__api_connect_retry(st, name, max_attempts));
 }
 
 // LCOV_EXCL_STOP
