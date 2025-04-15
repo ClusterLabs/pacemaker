@@ -355,8 +355,7 @@ typedef struct stonith_api_operations_s {
      *                              Pacemaker-internal devices, "heartbeat" for
      *                              LHA-style, or "any" or NULL for all)
      * \param[out]    devices       Where to store agent list
-     * \param[in]     timeout       Error if unable to complete within this
-     *                              (currently ignored)
+     * \param[in]     timeout       Ignored
      *
      * \return Number of items in list on success, or negative errno otherwise
      * \note The caller is responsible for freeing the returned list with
