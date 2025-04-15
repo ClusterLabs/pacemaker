@@ -351,13 +351,12 @@ pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout,
 }
 
 int
-pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
+pcmk__fence_installed(pcmk__output_t *out, stonith_t *st)
 {
     stonith_key_value_t *devices = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices,
-                               pcmk__timeout_ms2s(timeout));
+    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, 0);
     // rc is a negative error code or a positive number of agents
     if (rc < 0) {
         return pcmk_legacy2rc(rc);
@@ -386,7 +385,7 @@ pcmk_fence_installed(xmlNodePtr *xml, unsigned int timeout)
         return rc;
     }
 
-    rc = pcmk__fence_installed(out, st, timeout);
+    rc = pcmk__fence_installed(out, st);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);

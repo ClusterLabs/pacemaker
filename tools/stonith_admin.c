@@ -570,7 +570,7 @@ main(int argc, char **argv)
 
     switch (action) {
         case 'I':
-            rc = pcmk__fence_installed(out, st, options.timeout*1000);
+            rc = pcmk__fence_installed(out, st);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Failed to list installed devices: %s", pcmk_rc_str(rc));
             }

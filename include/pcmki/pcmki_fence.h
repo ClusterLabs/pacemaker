@@ -90,11 +90,10 @@ int pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
  *
  * \param[in,out] out     The output functions structure
  * \param[in,out] st      A connection to the fencer API
- * \param[in]     timeout How long to wait for the operation to complete (in ms)
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout);
+int pcmk__fence_installed(pcmk__output_t *out, stonith_t *st);
 
 /*!
  * \brief When was a device last fenced?
