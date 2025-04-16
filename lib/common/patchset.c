@@ -296,8 +296,9 @@ patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
         return;
     }
 
-    /* We should always call xml_accept_changes() before calculating a digest.
-     * Otherwise, with an on-tracking dirty target, we could get a wrong digest.
+    /* We should always call pcmk__xml_commit_changes() before calculating a
+     * digest. Otherwise, with an on-tracking dirty target, we could get a wrong
+     * digest.
      */
     CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
 
