@@ -210,12 +210,15 @@
   </synapse>
   <synapse id="17">
     <action_set>
-      <rsc_op id="37" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101">
-        <primitive id="stateful-1" long-id="stateful-1:2" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
+      <rsc_op id="38" operation="stop" operation_key="stateful-1:0_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="pcmk-2" on_node_uuid="102">
+        <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="pcmk-2" CRM_meta_on_node_uuid="102" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <rsc_op id="37" operation="demote" operation_key="stateful-1:0_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="pcmk-2" on_node_uuid="102"/>
+      </trigger>
       <trigger>
         <pseudo_event id="43" operation="stop" operation_key="master-1_stop_0"/>
       </trigger>
@@ -223,23 +226,7 @@
   </synapse>
   <synapse id="18">
     <action_set>
-      <rsc_op id="39" operation="stop" operation_key="stateful-1:0_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="pcmk-2" on_node_uuid="102">
-        <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="pcmk-2" CRM_meta_on_node_uuid="102" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="38" operation="demote" operation_key="stateful-1:0_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="pcmk-2" on_node_uuid="102"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="43" operation="stop" operation_key="master-1_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="19">
-    <action_set>
-      <rsc_op id="38" operation="demote" operation_key="stateful-1:0_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="pcmk-2" on_node_uuid="102">
+      <rsc_op id="37" operation="demote" operation_key="stateful-1:0_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="pcmk-2" on_node_uuid="102">
         <primitive id="stateful-1" long-id="stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="pcmk-2" CRM_meta_on_node_uuid="102" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </rsc_op>
@@ -247,6 +234,19 @@
     <inputs>
       <trigger>
         <pseudo_event id="47" operation="demote" operation_key="master-1_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="39" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101">
+        <primitive id="stateful-1" long-id="stateful-1:2" class="ocf" provider="pacemaker" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="43" operation="stop" operation_key="master-1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -271,7 +271,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="38" operation="demote" operation_key="stateful-1:0_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="pcmk-2" on_node_uuid="102"/>
+        <rsc_op id="37" operation="demote" operation_key="stateful-1:0_demote_0" internal_operation_key="stateful-1:1_demote_0" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
       <trigger>
         <pseudo_event id="47" operation="demote" operation_key="master-1_demote_0"/>
@@ -298,10 +298,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
+        <rsc_op id="38" operation="stop" operation_key="stateful-1:0_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
       <trigger>
-        <rsc_op id="39" operation="stop" operation_key="stateful-1:0_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="pcmk-2" on_node_uuid="102"/>
+        <rsc_op id="39" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
       </trigger>
       <trigger>
         <rsc_op id="40" operation="stop" operation_key="stateful-1:3_stop_0" internal_operation_key="stateful-1:2_stop_0" on_node="pcmk-4" on_node_uuid="104"/>
@@ -388,7 +388,7 @@
         <rsc_op id="31" operation="stop" operation_key="ping-1:1_stop_0" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
       <trigger>
-        <rsc_op id="39" operation="stop" operation_key="stateful-1:0_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="pcmk-2" on_node_uuid="102"/>
+        <rsc_op id="38" operation="stop" operation_key="stateful-1:0_stop_0" internal_operation_key="stateful-1:1_stop_0" on_node="pcmk-2" on_node_uuid="102"/>
       </trigger>
     </inputs>
   </synapse>
@@ -415,7 +415,7 @@
         <rsc_op id="30" operation="stop" operation_key="ping-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
       </trigger>
       <trigger>
-        <rsc_op id="37" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
+        <rsc_op id="39" operation="stop" operation_key="stateful-1:2_stop_0" internal_operation_key="stateful-1:0_stop_0" on_node="pcmk-1" on_node_uuid="101"/>
       </trigger>
       <trigger>
         <crm_event id="50" operation="do_shutdown" operation_key="do_shutdown-pcmk-2" on_node="pcmk-2" on_node_uuid="102"/>

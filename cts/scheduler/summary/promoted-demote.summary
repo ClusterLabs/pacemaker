@@ -31,15 +31,15 @@ Executing Cluster Transition:
   * Resource action: named_address   stop on cxa1
   * Pseudo action:   named_drbd_pre_notify_promote_0
   * Resource action: named_address   start on cxb1
-  * Resource action: named_drbd_node:1 notify on cxa1
   * Resource action: named_drbd_node:0 notify on cxb1
+  * Resource action: named_drbd_node:1 notify on cxa1
   * Pseudo action:   named_drbd_confirmed-pre_notify_promote_0
   * Pseudo action:   named_drbd_promote_0
   * Resource action: named_drbd_node:0 promote on cxb1
   * Pseudo action:   named_drbd_promoted_0
   * Pseudo action:   named_drbd_post_notify_promoted_0
-  * Resource action: named_drbd_node:1 notify on cxa1
   * Resource action: named_drbd_node:0 notify on cxb1
+  * Resource action: named_drbd_node:1 notify on cxa1
   * Pseudo action:   named_drbd_confirmed-post_notify_promoted_0
   * Resource action: named_drbd_node:0 monitor=10000 on cxb1
 
