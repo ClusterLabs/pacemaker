@@ -81,7 +81,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     }
 
     for (int i = 0; i < file_num; i++) {
-        *devices = stonith_key_value_add(*devices, NULL, namelist[i]->d_name);
+        *devices = stonith__key_value_add(*devices, NULL, namelist[i]->d_name);
         free(namelist[i]);
     }
     free(namelist);
@@ -282,16 +282,10 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         rc = stonith__rhcs_get_metadata(agent, remaining_timeout, &metadata);
 
         if (rc == pcmk_ok) {
-            uint32_t device_flags = 0;
-
-            stonith__device_parameter_flags(&device_flags, agent, metadata);
-            if (pcmk_is_set(device_flags, st_device_supports_parameter_port)) {
-                host_arg = "port";
-
-            } else if (pcmk_is_set(device_flags,
-                                   st_device_supports_parameter_plug)) {
-                host_arg = "plug";
-            }
+            host_arg = stonith__default_host_arg(metadata);
+            crm_trace("Using '%s' as default " PCMK_STONITH_HOST_ARGUMENT
+                      " for %s",
+                      pcmk__s(host_arg, PCMK_VALUE_NONE), agent);
         }
 
         pcmk__xml_free(metadata);

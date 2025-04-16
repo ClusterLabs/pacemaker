@@ -344,8 +344,8 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                             crm_debug("Updating outdated pending operation %.8s "
                                       "(state=%s) according to the one (state=%s) from "
                                       "remote peer history",
-                                      op->id, stonith_op_state_str(op->state),
-                                      stonith_op_state_str(remote_op->state));
+                                      op->id, stonith__op_state_text(op->state),
+                                      stonith__op_state_text(remote_op->state));
 
                             g_hash_table_steal(remote_history, op->id);
                             op->id = remote_op->id;
@@ -361,8 +361,8 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                             crm_debug("Broadcasting operation %.8s (state=%s) to "
                                       "update the outdated pending one "
                                       "(state=%s) in remote peer history",
-                                      op->id, stonith_op_state_str(op->state),
-                                      stonith_op_state_str(remote_op->state));
+                                      op->id, stonith__op_state_text(op->state),
+                                      stonith__op_state_text(remote_op->state));
 
                             g_hash_table_remove(remote_history, op->id);
 

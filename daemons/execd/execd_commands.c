@@ -1212,7 +1212,7 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
 
         g_hash_table_iter_init(&iter, cmd->params);
         while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            device_params = stonith_key_value_add(device_params, key, value);
+            device_params = stonith__key_value_add(device_params, key, value);
         }
     }
 
@@ -1226,7 +1226,7 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
                                             cmd->rsc_id, rsc->provider,
                                             rsc->type, device_params);
 
-    stonith_key_value_freeall(device_params, 1, 1);
+    stonith__key_value_freeall(device_params, true, true);
     return rc;
 }
 
@@ -1283,9 +1283,11 @@ execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 static void
 execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
-    int rc = 0;
-    bool do_monitor = FALSE;
+    int rc = pcmk_ok;
+    const char *rc_s = NULL;
+    bool do_monitor = false;
 
+    // Don't free; belongs to pacemaker-execd.c
     stonith_t *stonith_api = get_stonith_connection();
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
@@ -1295,17 +1297,19 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
                                 rsc->fence_probe_result.execution_status,
                                 rsc->fence_probe_result.exit_reason);
         return;
+    }
 
-    } else if (stonith_api == NULL) {
+    if (stonith_api == NULL) {
         stonith_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
                                 PCMK_EXEC_NOT_CONNECTED,
                                 "No connection to fencer");
         return;
+    }
 
-    } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
+    if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
         rc = execd_stonith_start(stonith_api, rsc, cmd);
         if (rc == pcmk_ok) {
-            do_monitor = TRUE;
+            do_monitor = true;
         }
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
@@ -1313,7 +1317,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
                             pcmk__str_casei)) {
-        do_monitor = TRUE;
+        do_monitor = true;
 
     } else {
         stonith_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
@@ -1325,15 +1329,17 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     if (do_monitor) {
         rc = execd_stonith_monitor(stonith_api, rsc, cmd);
         if (rc == pcmk_ok) {
-            // Don't clean up yet, we will find out result of the monitor later
+            // Don't clean up yet. We will get the result of the monitor later.
             return;
         }
     }
 
+    if (rc != -pcmk_err_generic) {
+        rc_s = pcmk_strerror(rc);
+    }
     stonith_action_complete(cmd,
-                            ((rc == pcmk_ok)? CRM_EX_OK : CRM_EX_ERROR),
-                            stonith__legacy2status(rc),
-                            ((rc == -pcmk_err_generic)? NULL : pcmk_strerror(rc)));
+                            ((rc == pcmk_rc_ok)? CRM_EX_OK : CRM_EX_ERROR),
+                            stonith__legacy2status(rc), rc_s);
 }
 
 static void

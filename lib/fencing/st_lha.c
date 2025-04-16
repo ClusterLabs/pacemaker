@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -142,7 +142,7 @@ stonith__list_lha_agents(stonith_key_value_t **devices)
 
     for (entry = type_list; entry != NULL && *entry; ++entry) {
         crm_trace("Added: %s", *entry);
-        *devices = stonith_key_value_add(*devices, NULL, *entry);
+        *devices = stonith__key_value_add(*devices, NULL, *entry);
         count++;
     }
     if (type_list && type_free_fn) {

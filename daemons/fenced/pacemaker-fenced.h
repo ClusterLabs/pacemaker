@@ -26,6 +26,107 @@
  */
 gboolean stonith_check_fence_tolerance(int tolerance, const char *target, const char *action);
 
+/*!
+ * \internal
+ * \brief Flags for \c fenced_device_t configuration, state, and support
+ */
+enum fenced_device_flags {
+    //! This flag has no effect
+    fenced_df_none            = UINT32_C(0),
+
+    //! Device supports list action
+    fenced_df_supports_list   = (UINT32_C(1) << 0),
+
+    //! Device supports on action
+    fenced_df_supports_on     = (UINT32_C(1) << 1),
+
+    //! Device supports reboot action
+    fenced_df_supports_reboot = (UINT32_C(1) << 2),
+
+    //! Device supports status action
+    fenced_df_supports_status = (UINT32_C(1) << 3),
+
+    //! Device is automatically used to unfence newly joined nodes
+    fenced_df_auto_unfence    = (UINT32_C(1) << 4),
+
+    //! Device has run a successful list, status, or monitor action on this node
+    fenced_df_verified        = (UINT32_C(1) << 5),
+
+    //! Device has been registered via the stonith API
+    fenced_df_api_registered  = (UINT32_C(1) << 6),
+
+    //! Device has been registered via the fencer's CIB diff callback
+    fenced_df_cib_registered  = (UINT32_C(1) << 7),
+
+    //! Device has not yet been re-registered after a CIB change
+    fenced_df_dirty           = (UINT32_C(1) << 8),
+};
+
+/*!
+ * \internal
+ * \brief Set flags for a fencing device
+ *
+ * \param[in,out] device     Device whose flags to set (\c fenced_device_t)
+ * \param[in]     set_flags  Group of <tt>enum fenced_device_flags</tt> to set
+ */
+#define fenced_device_set_flags(device, set_flags) do {                     \
+        pcmk__assert((device) != NULL);                                     \
+        (device)->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE, \
+                                             "Fence device", (device)->id,  \
+                                             (device)->flags, set_flags,    \
+                                             #set_flags);                   \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Clear flags for a fencing device
+ *
+ * \param[in,out] device       Device whose flags to clear (\c fenced_device_t)
+ * \param[in]     clear_flags  Group of <tt>enum fenced_device_flags</tt> to
+ *                             clear
+ */
+#define fenced_device_clear_flags(device, clear_flags) do {                 \
+        pcmk__assert((device) != NULL);                                     \
+        (device)->flags = pcmk__clear_flags_as(__func__, __LINE__,          \
+                                               LOG_TRACE, "Fence device",   \
+                                               (device)->id,                \
+                                               (device)->flags,             \
+                                               clear_flags, #clear_flags);  \
+    } while (0)
+
+/*!
+ * \internal
+ * \brief Flags for fencer client notification types
+ */
+enum fenced_notify_flags {
+    //! This flag has no effect
+    fenced_nf_none              = UINT32_C(0),
+
+    //! Notify about fencing operation results
+    fenced_nf_fence_result      = (UINT32_C(1) << 0),
+
+    // @TODO Consider notifying about device registrations via the CIB
+    //! Notify about fencing device registrations via the fencer API
+    fenced_nf_device_registered = (UINT32_C(1) << 1),
+
+    // @TODO Consider notifying about device removals via the CIB
+    //! Notify about fencing device removals via the fencer API
+    fenced_nf_device_removed    = (UINT32_C(1) << 2),
+
+    //! Notify about changes to fencing history
+    fenced_nf_history_changed   = (UINT32_C(1) << 3),
+
+    /* @FIXME A comment in stonith_fence_history() says its check is not
+     * conclusive: it may send a "history synced" notification when the history
+     * has not been synced. Hence "might have been synced" below. Try to find a
+     * better test.
+     */
+    //! Notify when the fencing history might have been synced
+    fenced_nf_history_synced    = (UINT32_C(1) << 4),
+};
+
+enum fenced_notify_flags fenced_parse_notify_flag(const char *type);
+
 typedef struct {
     char *id;
     char *agent;
@@ -36,10 +137,7 @@ typedef struct {
     GList *targets;
     time_t targets_age;
 
-    /* whether the cluster should automatically unfence nodes with the device */
-    gboolean automatic_unfencing;
-
-    uint32_t flags; // Group of enum st_device_flags
+    uint32_t flags; // Group of enum fenced_device_flags
 
     GHashTable *params;
     GHashTable *aliases;
@@ -47,14 +145,7 @@ typedef struct {
     mainloop_timer_t *timer;
     crm_trigger_t *work;
     xmlNode *agent_metadata;
-
-    /*! A verified device is one that has contacted the
-     * agent successfully to perform a monitor operation */
-    gboolean verified;
-
-    gboolean cib_registered;
-    gboolean api_registered;
-    gboolean dirty;
+    const char *default_host_arg;
 } fenced_device_t;
 
 /* These values are used to index certain arrays by "phase". Usually an
@@ -167,16 +258,6 @@ typedef struct remote_fencing_op_s {
 
 void fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged);
 
-// Fencer-specific client flags
-enum st_client_flags {
-    st_callback_unknown               =  UINT64_C(0),
-    st_callback_notify_fence          = (UINT64_C(1) << 0),
-    st_callback_device_add            = (UINT64_C(1) << 2),
-    st_callback_device_del            = (UINT64_C(1) << 4),
-    st_callback_notify_history        = (UINT64_C(1) << 5),
-    st_callback_notify_history_synced = (UINT64_C(1) << 6)
-};
-
 // How the user specified the target of a topology level
 enum fenced_target_by {
     fenced_target_by_unknown = -1,  // Invalid or not yet parsed
@@ -228,8 +309,6 @@ void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 void fenced_unregister_handlers(void);
 
-uint64_t get_stonith_flag(const char *name);
-
 void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
                             xmlNode *op_request, const char *remote_peer);
 
@@ -238,10 +317,8 @@ int fenced_device_register(const xmlNode *dev, bool from_cib);
 void stonith_device_remove(const char *id, bool from_cib);
 
 char *stonith_level_key(const xmlNode *msg, enum fenced_target_by);
-void fenced_register_level(xmlNode *msg, char **desc,
-                           pcmk__action_result_t *result);
-void fenced_unregister_level(xmlNode *msg, char **desc,
-                             pcmk__action_result_t *result);
+void fenced_register_level(xmlNode *msg, pcmk__action_result_t *result);
+void fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result);
 
 stonith_topology_t *find_topology_for_host(const char *host);
 
@@ -300,29 +377,22 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
-static inline void
-fenced_set_protocol_error(pcmk__action_result_t *result)
-{
-    pcmk__set_result(result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                     "Fencer API request missing required information (bug?)");
-}
-
 /*!
  * \internal
  * \brief Get the device flag to use with a given action when searching devices
  *
  * \param[in] action  Action to check
  *
- * \return st_device_supports_on if \p action is "on", otherwise
- *         st_device_supports_none
+ * \return \c fenced_df_supports_on if \p action is "on", otherwise
+ *         \c fenced_df_none
  */
 static inline uint32_t
 fenced_support_flag(const char *action)
 {
     if (pcmk__str_eq(action, PCMK_ACTION_ON, pcmk__str_none)) {
-        return st_device_supports_on;
+        return fenced_df_supports_on;
     }
-    return st_device_supports_none;
+    return fenced_df_none;
 }
 
 extern GHashTable *topology;

@@ -588,7 +588,7 @@ int pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in]     timeout  How long to wait for operation to complete (in ms)
+ * \param[in]     timeout  Ignored
  *
  * \return Standard Pacemaker return code
  */

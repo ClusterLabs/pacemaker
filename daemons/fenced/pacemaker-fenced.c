@@ -252,28 +252,34 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
     }
 }
 
-uint64_t
-get_stonith_flag(const char *name)
+/*!
+ * \internal
+ * \brief Parse a fencer client notification type string to a flag
+ *
+ * \param[in] type  Notification type string
+ *
+ * \return Flag corresponding to \p type, or \c fenced_nf_none if none exists
+ */
+enum fenced_notify_flags
+fenced_parse_notify_flag(const char *type)
 {
-    if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
-        return st_callback_notify_fence;
-
-    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
-        return st_callback_device_add;
-
-    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_DEL, pcmk__str_casei)) {
-        return st_callback_device_del;
-
-    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY,
-                            pcmk__str_none)) {
-        return st_callback_notify_history;
-
-    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
-                            pcmk__str_none)) {
-        return st_callback_notify_history_synced;
-
+    if (pcmk__str_eq(type, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
+        return fenced_nf_fence_result;
     }
-    return st_callback_unknown;
+    if (pcmk__str_eq(type, STONITH_OP_DEVICE_ADD, pcmk__str_none)) {
+        return fenced_nf_device_registered;
+    }
+    if (pcmk__str_eq(type, STONITH_OP_DEVICE_DEL, pcmk__str_none)) {
+        return fenced_nf_device_removed;
+    }
+    if (pcmk__str_eq(type, PCMK__VALUE_ST_NOTIFY_HISTORY, pcmk__str_none)) {
+        return fenced_nf_history_changed;
+    }
+    if (pcmk__str_eq(type, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
+                     pcmk__str_none)) {
+        return fenced_nf_history_synced;
+    }
+    return fenced_nf_none;
 }
 
 static void
@@ -295,7 +301,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (pcmk_is_set(client->flags, get_stonith_flag(type))) {
+    if (pcmk_is_set(client->flags, fenced_parse_notify_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
                                     crm_ipc_server_event);
 
@@ -377,9 +383,8 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
  * \internal
  * \brief Send notifications for a configuration change to subscribed clients
  *
- * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD,
- *                    \c STONITH_OP_DEVICE_DEL, \c STONITH_OP_LEVEL_ADD, or
- *                    \c STONITH_OP_LEVEL_DEL)
+ * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD or
+ *                    \c STONITH_OP_DEVICE_DEL)
  * \param[in] result  Operation result
  * \param[in] desc    Description of what changed (either device ID or string
  *                    representation of level

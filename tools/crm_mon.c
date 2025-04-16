@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -856,7 +856,7 @@ setup_fencer_connection(void)
     int rc = pcmk_ok;
 
     if (options.fence_connect && st == NULL) {
-        st = stonith_api_new();
+        st = stonith__api_new();
     }
 
     if (!options.fence_connect || st == NULL || st->state != stonith_disconnected) {
@@ -880,7 +880,7 @@ setup_fencer_connection(void)
                                             mon_st_callback_display);
         }
     } else {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         st = NULL;
     }
 
@@ -931,7 +931,7 @@ setup_cib_connection(void)
 
             out->err(out, "Cannot monitor CIB changes; exiting");
             cib__clean_up_connection(&cib);
-            stonith_api_delete(st);
+            stonith__api_free(st);
             st = NULL;
         }
     }
@@ -2120,7 +2120,7 @@ clean_up(crm_exit_t exit_code)
     }
 
     cib__clean_up_connection(&cib);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     free(options.neg_location_prefix);
     free(options.only_node);
     free(options.only_rsc);

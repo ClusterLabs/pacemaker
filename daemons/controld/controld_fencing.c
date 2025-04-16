@@ -661,7 +661,7 @@ controld_timer_fencer_connect(gpointer user_data)
     int rc = pcmk_ok;
 
     if (stonith_api == NULL) {
-        stonith_api = stonith_api_new();
+        stonith_api = stonith__api_new();
         if (stonith_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return G_SOURCE_REMOVE;
@@ -675,10 +675,10 @@ controld_timer_fencer_connect(gpointer user_data)
 
     if (user_data == NULL) {
         // Blocking (retry failures now until successful)
-        rc = stonith_api_connect_retry(stonith_api, crm_system_name, 30);
-        if (rc != pcmk_ok) {
+        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 30);
+        if (rc != pcmk_rc_ok) {
             crm_err("Could not connect to fencer in 30 attempts: %s "
-                    QB_XS " rc=%d", pcmk_strerror(rc), rc);
+                    QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
@@ -766,7 +766,7 @@ do_stonith_history_sync(gpointer user_data)
         stonith_api->cmds->history(stonith_api,
                                    st_opt_sync_call | st_opt_broadcast,
                                    NULL, &history, 5);
-        stonith_history_free(history);
+        stonith__history_free(history);
         return TRUE;
     } else {
         crm_info("Skip triggering stonith history-sync as stonith is disconnected");

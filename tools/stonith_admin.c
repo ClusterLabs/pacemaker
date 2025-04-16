@@ -556,7 +556,7 @@ main(int argc, char **argv)
 
     out->quiet = args->quiet;
 
-    st = stonith_api_new();
+    st = stonith__api_new();
     if (st == NULL) {
         rc = -ENOMEM;
     } else if (!no_connect) {
@@ -570,7 +570,7 @@ main(int argc, char **argv)
 
     switch (action) {
         case 'I':
-            rc = pcmk__fence_installed(out, st, options.timeout*1000);
+            rc = pcmk__fence_installed(out, st);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Failed to list installed devices: %s", pcmk_rc_str(rc));
             }
@@ -610,12 +610,12 @@ main(int argc, char **argv)
             if (options.params != NULL) {
                 g_hash_table_iter_init(&iter, options.params);
                 while (g_hash_table_iter_next(&iter, &key, &val)) {
-                    params = stonith_key_value_add(params, key, val);
+                    params = stonith__key_value_add(params, key, val);
                 }
             }
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
                                            params);
-            stonith_key_value_freeall(params, 1, 1);
+            stonith__key_value_freeall(params, true, true);
 
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {
@@ -719,7 +719,7 @@ main(int argc, char **argv)
 
     if (st != NULL) {
         st->cmds->disconnect(st);
-        stonith_api_delete(st);
+        stonith__api_free(st);
     }
 
     return exit_code;

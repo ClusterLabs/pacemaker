@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -44,7 +44,6 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 enum test_modes {
     test_standard = 0,  // test using a specific developer environment
-    test_passive,       // watch notifications only
     test_api_sanity,    // sanity-test stonith client API using fence_dummy
     test_api_mainloop,  // sanity-test mainloop code with async responses
 };
@@ -61,8 +60,6 @@ mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **e
         options.mode = test_api_mainloop;
     } else if (pcmk__str_any_of(option_name, "--api_test", "-t", NULL)) {
         options.mode = test_api_sanity;
-    } else if (pcmk__str_any_of(option_name, "--passive", "-p", NULL)) {
-        options.mode = test_passive;
     }
 
     return TRUE;
@@ -74,10 +71,6 @@ static GOptionEntry entries[] = {
     },
 
     { "api_test", 't', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
-      NULL, NULL,
-    },
-
-    { "passive", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
       NULL, NULL,
     },
 
@@ -117,7 +110,7 @@ dispatch_helper(int timeout)
     while (true) {
         rc = poll(&pollfd, 1, timeout); /* wait 10 minutes, -1 forever */
         if (rc > 0) {
-            if (!stonith_dispatch(st)) {
+            if (stonith__api_dispatch(st) != pcmk_rc_ok) {
                 break;
             }
         } else {
@@ -153,28 +146,6 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
                pcmk__s(stonith__exit_reason(data), "unspecified reason"));
 }
 
-static void
-passive_test(void)
-{
-    int rc = 0;
-
-    rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
-    if (rc != pcmk_ok) {
-        stonith_api_delete(st);
-        crm_exit(CRM_EX_DISCONNECT);
-    }
-    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                    st_callback);
-    st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
-                                    st_callback);
-    st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
-    st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
-    st->cmds->register_callback(st, 0, 120, st_opt_timeout_updates, NULL, "st_global_callback",
-                                st_global_callback);
-
-    dispatch_helper(600 * 1000);
-}
-
 #define single_test(cmd, str, num_notifications, expected_rc) \
 { \
     int rc = 0; \
@@ -205,9 +176,9 @@ run_fence_failure_test(void)
 {
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "false_1_node1=1,2 false_1_node2=3,4");
-    params = stonith_key_value_add(params, "mode", "fail");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith__key_value_add(params, "mode", "fail");
 
     single_test(st->
                 cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_dummy", params),
@@ -224,7 +195,7 @@ run_fence_failure_test(void)
     single_test(st->cmds->remove_device(st, st_opts, "test-id1"),
                 "Remove device1 for failure test", 1, 0);
 
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
 }
 
 static void
@@ -232,18 +203,18 @@ run_fence_failure_rollover_test(void)
 {
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "false_1_node1=1,2 false_1_node2=3,4");
-    params = stonith_key_value_add(params, "mode", "fail");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith__key_value_add(params, "mode", "fail");
 
     single_test(st->
                 cmds->register_device(st, st_opts, "test-id1", "stonith-ng", "fence_dummy", params),
                 "Register device1 for rollover test", 1, 0);
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
     params = NULL;
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "false_1_node1=1,2 false_1_node2=3,4");
-    params = stonith_key_value_add(params, "mode", "pass");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith__key_value_add(params, "mode", "pass");
 
     single_test(st->
                 cmds->register_device(st, st_opts, "test-id2", "stonith-ng", "fence_dummy", params),
@@ -264,7 +235,7 @@ run_fence_failure_rollover_test(void)
     single_test(st->cmds->remove_device(st, st_opts, "test-id2"),
                 "Remove device2 for rollover tests", 1, 0);
 
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
 }
 
 static void
@@ -272,15 +243,16 @@ run_standard_test(void)
 {
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "false_1_node1=1,2 false_1_node2=3,4");
-    params = stonith_key_value_add(params, "mode", "pass");
-    params = stonith_key_value_add(params, "mock_dynamic_hosts", "false_1_node1 false_1_node2");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "false_1_node1=1,2 false_1_node2=3,4");
+    params = stonith__key_value_add(params, "mode", "pass");
+    params = stonith__key_value_add(params, "mock_dynamic_hosts",
+                                    "false_1_node1 false_1_node2");
 
     single_test(st->
                 cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_dummy", params),
                 "Register", 1, 0);
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
     params = NULL;
 
     single_test(st->cmds->list(st, st_opts, "test-id", NULL, 1),
@@ -313,7 +285,7 @@ run_standard_test(void)
 
     single_test(st->cmds->remove_device(st, st_opts, "test-id"), "Remove test-id", 1, 0);
 
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
 }
 
 static void
@@ -323,7 +295,7 @@ sanity_tests(void)
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
     if (rc != pcmk_ok) {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
     st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
@@ -351,12 +323,12 @@ standard_dev_test(void)
 
     rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
     if (rc != pcmk_ok) {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
 
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "some-host=pcmk-7 true_1_node1=3,4");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "some-host=pcmk-7 true_1_node1=3,4");
 
     rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_xvm", params);
     crm_debug("Register: %d", rc);
@@ -403,7 +375,7 @@ standard_dev_test(void)
     rc = st->cmds->remove_device(st, st_opts, "test-id");
     crm_debug("Remove test-id: %d", rc);
 
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
 }
 
 static void
@@ -528,29 +500,29 @@ test_register_async_devices(int check_event)
     char buf[16] = { 0, };
     stonith_key_value_t *params = NULL;
 
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "false_1_node1=1,2");
-    params = stonith_key_value_add(params, "mode", "fail");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "false_1_node1=1,2");
+    params = stonith__key_value_add(params, "mode", "fail");
     st->cmds->register_device(st, st_opts, "false_1", "stonith-ng", "fence_dummy", params);
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
 
     params = NULL;
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "true_1_node1=1,2");
-    params = stonith_key_value_add(params, "mode", "pass");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "true_1_node1=1,2");
+    params = stonith__key_value_add(params, "mode", "pass");
     st->cmds->register_device(st, st_opts, "true_1", "stonith-ng", "fence_dummy", params);
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
 
     params = NULL;
-    params = stonith_key_value_add(params, PCMK_STONITH_HOST_MAP,
-                                   "custom_timeout_node1=1,2");
-    params = stonith_key_value_add(params, "mode", "fail");
-    params = stonith_key_value_add(params, "delay", "1000");
+    params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
+                                    "custom_timeout_node1=1,2");
+    params = stonith__key_value_add(params, "mode", "fail");
+    params = stonith__key_value_add(params, "delay", "1000");
     snprintf(buf, sizeof(buf) - 1, "%d", MAINLOOP_DEFAULT_TIMEOUT + CUSTOM_TIMEOUT_ADDITION);
-    params = stonith_key_value_add(params, "pcmk_off_timeout", buf);
+    params = stonith__key_value_add(params, "pcmk_off_timeout", buf);
     st->cmds->register_device(st, st_opts, "false_custom_timeout", "stonith-ng", "fence_dummy",
                               params);
-    stonith_key_value_freeall(params, 1, 1);
+    stonith__key_value_freeall(params, true, true);
 
     mainloop_test_done(__func__, true);
 }
@@ -558,9 +530,9 @@ test_register_async_devices(int check_event)
 static void
 try_mainloop_connect(int check_event)
 {
-    int rc = stonith_api_connect_retry(st, crm_system_name, 10);
+    int rc = stonith__api_connect_retry(st, crm_system_name, 10);
 
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         mainloop_test_done(__func__, true);
         return;
     }
@@ -606,7 +578,7 @@ test_shutdown(int nsig)
         crm_info("Disconnect: %d", rc);
 
         crm_debug("Destroy");
-        stonith_api_delete(st);
+        stonith__api_free(st);
     }
 
     if (rc) {
@@ -661,7 +633,7 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
-    st = stonith_api_new();
+    st = stonith__api_new();
     if (st == NULL) {
         exit_code = CRM_EX_DISCONNECT;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -672,9 +644,6 @@ main(int argc, char **argv)
     switch (options.mode) {
         case test_standard:
             standard_dev_test();
-            break;
-        case test_passive:
-            passive_test();
             break;
         case test_api_sanity:
             sanity_tests();

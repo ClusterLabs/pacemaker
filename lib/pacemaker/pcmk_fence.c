@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -68,12 +68,12 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
         stonith_key_value_t *kvs = NULL;
 
         for (GList *iter = devices; iter != NULL; iter = iter->next) {
-            kvs = stonith_key_value_add(kvs, NULL, iter->data);
+            kvs = stonith__key_value_add(kvs, NULL, iter->data);
         }
 
         rc = st->cmds->register_level_full(st, st_opts, node, pattern, name,
                                            value, fence_level, kvs);
-        stonith_key_value_freeall(kvs, 0, 1);
+        stonith__key_value_freeall(kvs, false, true);
     } else {
         rc = st->cmds->remove_level_full(st, st_opts, node, pattern,
                                          name, value, fence_level);
@@ -110,7 +110,7 @@ reduce_fence_history(stonith_history_t *history)
                         || pcmk__str_eq(hp->delegate, np->delegate,
                                         pcmk__str_casei))) {
                         /* purge older hp */
-                        stonith_history_free(hp);
+                        stonith__history_free(hp);
                         break;
                 }
             }
@@ -154,13 +154,13 @@ async_fence_helper(gpointer user_data)
 {
     stonith_t *st = async_fence_data.st;
     int call_id = 0;
-    int rc = stonith_api_connect_retry(st, async_fence_data.name, 10);
+    int rc = stonith__api_connect_retry(st, async_fence_data.name, 10);
     int timeout = 0;
 
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         g_main_loop_quit(mainloop);
         pcmk__set_result(&async_fence_data.result, CRM_EX_ERROR,
-                         PCMK_EXEC_NOT_CONNECTED, pcmk_strerror(rc));
+                         PCMK_EXEC_NOT_CONNECTED, pcmk_rc_str(rc));
         return TRUE;
     }
 
@@ -246,7 +246,7 @@ pcmk_request_fencing(xmlNodePtr *xml, const char *target, const char *action,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -287,7 +287,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
 
     if (cleanup) {
         // Cleanup doesn't return a history list
-        stonith_history_free(history);
+        stonith__history_free(history);
         return pcmk_legacy2rc(rc);
     }
 
@@ -322,7 +322,7 @@ pcmk__fence_history(pcmk__output_t *out, stonith_t *st, const char *target,
 
     out->end_list(out);
 
-    stonith_history_free(history);
+    stonith__history_free(history);
     return pcmk_legacy2rc(rc);
 }
 
@@ -346,18 +346,17 @@ pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
 int
-pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
+pcmk__fence_installed(pcmk__output_t *out, stonith_t *st)
 {
     stonith_key_value_t *devices = NULL;
     int rc = pcmk_rc_ok;
 
-    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices,
-                               pcmk__timeout_ms2s(timeout));
+    rc = st->cmds->list_agents(st, st_opt_sync_call, NULL, &devices, 0);
     // rc is a negative error code or a positive number of agents
     if (rc < 0) {
         return pcmk_legacy2rc(rc);
@@ -370,7 +369,7 @@ pcmk__fence_installed(pcmk__output_t *out, stonith_t *st, unsigned int timeout)
     }
     out->end_list(out);
 
-    stonith_key_value_freeall(devices, 1, 1);
+    stonith__key_value_freeall(devices, true, true);
     return pcmk_rc_ok;
 }
 
@@ -386,11 +385,11 @@ pcmk_fence_installed(xmlNodePtr *xml, unsigned int timeout)
         return rc;
     }
 
-    rc = pcmk__fence_installed(out, st, timeout);
+    rc = pcmk__fence_installed(out, st);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -472,7 +471,7 @@ pcmk_fence_list_targets(xmlNodePtr *xml, const char *device_id, unsigned int tim
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -509,7 +508,7 @@ pcmk_fence_metadata(xmlNodePtr *xml, const char *agent, unsigned int timeout)
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -533,7 +532,7 @@ pcmk__fence_registered(pcmk__output_t *out, stonith_t *st, const char *target,
     }
     out->end_list(out);
 
-    stonith_key_value_freeall(devices, 1, 1);
+    stonith__key_value_freeall(devices, true, true);
 
     /* Return pcmk_rc_ok here, not the number of results.  Callers probably
      * don't care.
@@ -557,7 +556,7 @@ pcmk_fence_registered(xmlNodePtr *xml, const char *target, unsigned int timeout)
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -585,7 +584,7 @@ pcmk_fence_register_level(xmlNodePtr *xml, const char *target, int fence_level,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -611,7 +610,7 @@ pcmk_fence_unregister_level(xmlNodePtr *xml, const char *target, int fence_level
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
@@ -623,7 +622,7 @@ pcmk__fence_validate(pcmk__output_t *out, stonith_t *st, const char *agent,
     char *error_output = NULL;
     int rc;
 
-    rc  = stonith__validate(st, st_opt_sync_call, id, NULL, agent, params,
+    rc  = stonith__validate(st, st_opt_sync_call, id, agent, params,
                             pcmk__timeout_ms2s(timeout), &output, &error_output);
     out->message(out, "validate", agent, id, output, error_output, rc);
     return pcmk_legacy2rc(rc);
@@ -646,7 +645,7 @@ pcmk_fence_validate(xmlNodePtr *xml, const char *agent, const char *id,
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
 
     st->cmds->disconnect(st);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     return rc;
 }
 
