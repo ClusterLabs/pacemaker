@@ -498,7 +498,10 @@ crm_ipcs_flush_events(pcmk__client_t *c)
             break;
         }
 
-        qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
+        do {
+            qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
+        } while (qb_rc == -EAGAIN);
+
         if (qb_rc < 0) {
             rc = (int) -qb_rc;
             break;
@@ -695,13 +698,13 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
 
         if (flags & crm_ipc_server_free) {
-            crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
+            crm_trace("Sending original event %d to %p[%d]", header->qb.id, c->ipcs, c->pid);
             add_event(c, iov);
 
         } else {
             struct iovec *iov_copy = pcmk__new_ipc_event();
 
-            crm_trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
+            crm_trace("Sending a copy of event %d to %p[%d]", header->qb.id, c->ipcs, c->pid);
             iov_copy[0].iov_len = iov[0].iov_len;
             iov_copy[0].iov_base = malloc(iov[0].iov_len);
             memcpy(iov_copy[0].iov_base, iov[0].iov_base, iov[0].iov_len);
@@ -731,7 +734,10 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
             part_text = crm_strdup_printf(" ");
         }
 
-        qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
+        do {
+            qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
+        } while (qb_rc == -EAGAIN);
+
         if (qb_rc < header->qb.size) {
             if (qb_rc < 0) {
                 rc = (int) -qb_rc;
