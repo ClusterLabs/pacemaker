@@ -312,6 +312,12 @@ pcmk__free_client(pcmk__client_t *c)
     free(c->id);
     free(c->name);
     free(c->user);
+
+    if (c->buffer != NULL) {
+        g_byte_array_free(c->buffer, TRUE);
+        c->buffer = NULL;
+    }
+
     if (c->remote) {
         if (c->remote->auth_timeout) {
             g_source_remove(c->remote->auth_timeout);
@@ -397,7 +403,6 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
                       uint32_t *flags)
 {
     xmlNode *xml = NULL;
-    char *uncompressed = NULL;
     char *text = ((char *)data) + sizeof(pcmk__ipc_header_t);
     pcmk__ipc_header_t *header = data;
 
@@ -420,33 +425,8 @@ pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
         pcmk__set_client_flags(c, pcmk__client_proxied);
     }
 
-    if (header->size_compressed) {
-        int rc = 0;
-        unsigned int size_u = 1 + header->size_uncompressed;
-        uncompressed = pcmk__assert_alloc(1, size_u);
-
-        crm_trace("Decompressing message data %u bytes into %u bytes",
-                  header->size_compressed, size_u);
-
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed, &size_u, text, header->size_compressed, 1, 0);
-        text = uncompressed;
-
-        rc = pcmk__bzlib2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " QB_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
-            free(uncompressed);
-            return NULL;
-        }
-    }
-
-    pcmk__assert(text[header->size_uncompressed - 1] == 0);
-
     xml = pcmk__xml_parse(text);
     crm_log_xml_trace(xml, "[IPC received]");
-
-    free(uncompressed);
     return xml;
 }
 
@@ -518,7 +498,10 @@ crm_ipcs_flush_events(pcmk__client_t *c)
             break;
         }
 
-        qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
+        do {
+            qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
+        } while (qb_rc == -EAGAIN);
+
         if (qb_rc < 0) {
             rc = (int) -qb_rc;
             break;
@@ -527,14 +510,9 @@ crm_ipcs_flush_events(pcmk__client_t *c)
 
         sent++;
         header = event[0].iov_base;
-        if (header->size_compressed) {
-            crm_trace("Event %" PRId32 " to %p[%u] (%zd compressed bytes) sent",
-                      header->qb.id, c->ipcs, c->pid, qb_rc);
-        } else {
-            crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
-                      header->qb.id, c->ipcs, c->pid, qb_rc,
-                      (char *) (event[1].iov_base));
-        }
+        crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
+                  header->qb.id, c->ipcs, c->pid, qb_rc,
+                  (char *) (event[1].iov_base));
         pcmk_free_ipc_event(event);
     }
 
@@ -579,22 +557,30 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \internal
  * \brief Create an I/O vector for sending an IPC XML message
  *
- * \param[in]  request        Identifier for libqb response header
- * \param[in]  message        XML message to send
- * \param[in]  max_send_size  If 0, default IPC buffer size is used
- * \param[out] result         Where to store prepared I/O vector
- * \param[out] bytes          Size of prepared data in bytes
+ * If the message is too large to fit into a single buffer, this function will
+ * prepare an I/O vector that only holds as much as fits.  The remainder can
+ * be prepared in a separate call by keeping a running count of
+ * \c result[1].iov_len and passing that in for \p offset.
+ *
+ * \param[in]  request      Identifier for libqb response header
+ * \param[in]  message      Message to send
+ * \param[in]  offset       How many bytes into \p buffer to start when
+ *                          building the message
+ * \param[out] result       Where to store prepared I/O vector - NULL
+ *                          on error
+ * \param[out] bytes        Size of prepared data in bytes (includes header)
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
-                      uint32_t max_send_size, struct iovec **result,
-                      ssize_t *bytes)
+pcmk__ipc_prepare_iov(uint32_t request, const GString *message, uint16_t index,
+                      struct iovec **result, ssize_t *bytes)
 {
-    struct iovec *iov;
+    struct iovec *iov = NULL;
+    unsigned int payload_size = 0;
     unsigned int total = 0;
-    GString *buffer = NULL;
+    unsigned int max_send_size = crm_ipc_default_buffer_size();
+    size_t offset = 0;
     pcmk__ipc_header_t *header = NULL;
     int rc = pcmk_rc_ok;
 
@@ -609,64 +595,74 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
        goto done;
     }
 
-    buffer = g_string_sized_new(1024);
-    pcmk__xml_string(message, 0, buffer, 0);
-
-    if (max_send_size == 0) {
-        max_send_size = crm_ipc_default_buffer_size();
-    }
-    CRM_LOG_ASSERT(max_send_size != 0);
-
     *result = NULL;
     iov = pcmk__new_ipc_event();
     iov[0].iov_len = sizeof(pcmk__ipc_header_t);
     iov[0].iov_base = header;
 
     header->version = PCMK__IPC_VERSION;
-    header->size_uncompressed = 1 + buffer->len;
-    total = iov[0].iov_len + header->size_uncompressed;
 
-    if (total < max_send_size) {
-        iov[1].iov_base = pcmk__str_copy(buffer->str);
-        iov[1].iov_len = header->size_uncompressed;
+    /* We are passed an index, which is basically how many times this function
+     * has been called.  This is how we support multi-part IPC messages.  We
+     * need to convert that into an offset into the buffer that we want to start
+     * reading from.
+     *
+     * Each call to this function can send max_send_size, but this also includes
+     * the header and a null terminator character for the end of the payload.
+     * We need to subtract those out here.
+     */
+    offset = index * (max_send_size - iov[0].iov_len - 1);
 
-    } else {
-        static unsigned int biggest = 0;
+    /* How much of message is left to send?  This does not include the null
+     * terminator character.
+     */
+    payload_size = message->len - offset;
 
-        char *compressed = NULL;
-        unsigned int new_size = 0;
+    /* How much would be transmitted, including the header size and null
+     * terminator character for the buffer?
+     */
+    total = iov[0].iov_len + payload_size + 1;
 
-        if (pcmk__compress(buffer->str,
-                           (unsigned int) header->size_uncompressed,
-                           (unsigned int) max_send_size, &compressed,
-                           &new_size) == pcmk_rc_ok) {
+    if (total >= max_send_size) {
+        /* The entire packet is too big to fit in a single buffer.  Calculate
+         * how much of it we can send - buffer size, minus header size, minus
+         * one for the null terminator.
+         */
+        payload_size = max_send_size - iov[0].iov_len - 1;
 
-            pcmk__set_ipc_flags(header->flags, "send data", crm_ipc_compressed);
-            header->size_compressed = new_size;
+        header->size = payload_size + 1;
 
-            iov[1].iov_len = header->size_compressed;
-            iov[1].iov_base = compressed;
-
-            biggest = QB_MAX(header->size_compressed, biggest);
-
-        } else {
-            crm_log_xml_trace(message, "EMSGSIZE");
-            biggest = QB_MAX(header->size_uncompressed, biggest);
-
-            crm_err("Could not compress %u-byte message into less than IPC "
-                    "limit of %u bytes; set PCMK_ipc_buffer to higher value "
-                    "(%u bytes suggested)",
-                    header->size_uncompressed, max_send_size, 4 * biggest);
-
-            free(compressed);
+        iov[1].iov_base = strndup(message->str + offset, payload_size);
+        if (iov[1].iov_base == NULL) {
+            rc = ENOMEM;
             pcmk_free_ipc_event(iov);
-            rc = EMSGSIZE;
             goto done;
         }
+
+        iov[1].iov_len = header->size;
+        rc = EAGAIN;
+
+    } else {
+        /* The entire packet fits in a single buffer.  We can copy the entirety
+         * of it into the payload.
+         */
+        header->size = payload_size + 1;
+
+        iov[1].iov_base = pcmk__str_copy(message->str + offset);
+        iov[1].iov_len = header->size;
     }
 
+    header->part_id = index;
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
+
+    if (rc == pcmk_rc_ok && index != 0) {
+        pcmk__set_ipc_flags(header->flags, "multipart ipc",
+                            crm_ipc_multipart | crm_ipc_multipart_end);
+    } else if (rc == EAGAIN) {
+        pcmk__set_ipc_flags(header->flags, "multipart ipc",
+                            crm_ipc_multipart);
+    }
 
     *result = iov;
     pcmk__assert(header->qb.size > 0);
@@ -675,9 +671,6 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     }
 
 done:
-    if (buffer != NULL) {
-        g_string_free(buffer, TRUE);
-    }
     return rc;
 }
 
@@ -705,13 +698,13 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
 
         if (flags & crm_ipc_server_free) {
-            crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
+            crm_trace("Sending original event %d to %p[%d]", header->qb.id, c->ipcs, c->pid);
             add_event(c, iov);
 
         } else {
             struct iovec *iov_copy = pcmk__new_ipc_event();
 
-            crm_trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
+            crm_trace("Sending a copy of event %d to %p[%d]", header->qb.id, c->ipcs, c->pid);
             iov_copy[0].iov_len = iov[0].iov_len;
             iov_copy[0].iov_base = malloc(iov[0].iov_len);
             memcpy(iov_copy[0].iov_base, iov[0].iov_base, iov[0].iov_len);
@@ -725,23 +718,43 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
     } else {
         ssize_t qb_rc;
+        char *part_text = NULL;
 
         CRM_LOG_ASSERT(header->qb.id != 0);     /* Replying to a specific request */
 
-        qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
+        if (pcmk__ipc_msg_is_multipart_end(header)) {
+            part_text = crm_strdup_printf(" (final part %d) ", header->part_id);
+        } else if (pcmk__ipc_msg_is_multipart(header)) {
+            if (pcmk__ipc_multipart_id(header) == 0) {
+                part_text = crm_strdup_printf(" (initial part %d) ", header->part_id);
+            } else {
+                part_text = crm_strdup_printf(" (part %d) ", header->part_id);
+            }
+        } else {
+            part_text = crm_strdup_printf(" ");
+        }
+
+        do {
+            qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
+        } while (qb_rc == -EAGAIN);
+
         if (qb_rc < header->qb.size) {
             if (qb_rc < 0) {
                 rc = (int) -qb_rc;
             }
-            crm_notice("Response %" PRId32 " to pid %u failed: %s "
+            crm_notice("Response %" PRId32 "%sto pid %u failed: %s "
                        QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
-                       header->qb.id, c->pid, pcmk_rc_str(rc),
+                       header->qb.id, part_text, c->pid, pcmk_rc_str(rc),
                        header->qb.size, qb_rc, c->ipcs);
+            crm_trace("Text = '%s'", (char *) iov[1].iov_base);
 
         } else {
-            crm_trace("Response %" PRId32 " sent, %zd bytes to %p[%u]",
-                      header->qb.id, qb_rc, c->ipcs, c->pid);
+            crm_trace("Response %" PRId32 "%ssent, %zd bytes to %p[%u]",
+                      header->qb.id, part_text, qb_rc, c->ipcs, c->pid);
+            crm_trace("Text = '%s'", (char *) iov[1].iov_base);
         }
+
+        free(part_text);
 
         if (flags & crm_ipc_server_free) {
             pcmk_free_ipc_event(iov);
@@ -766,20 +779,57 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
 {
     struct iovec *iov = NULL;
     int rc = pcmk_rc_ok;
+    GString *iov_buffer = NULL;
+    uint16_t index = 0;
 
     if (c == NULL) {
         return EINVAL;
     }
-    rc = pcmk__ipc_prepare_iov(request, message, crm_ipc_default_buffer_size(),
-                               &iov, NULL);
-    if (rc == pcmk_rc_ok) {
-        pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-        rc = pcmk__ipc_send_iov(c, iov, flags);
-    } else {
-        pcmk_free_ipc_event(iov);
-        crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
-                   c->pid, pcmk_rc_str(rc), rc);
+
+    iov_buffer = g_string_sized_new(1024);
+
+    if (iov_buffer == NULL) {
+        crm_err("Couldn't convert XML to IPC request");
+        return ENOMEM;
     }
+
+    pcmk__xml_string(message, 0, iov_buffer, 0);
+    do {
+        rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
+
+        switch (rc) {
+            case pcmk_rc_ok: {
+                /* No more message to prepare after we send this chunk */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
+                goto done;
+            }
+
+            case EAGAIN:
+                /* Preparing succeeded, but there are more chunks to go after
+                 * this one is sent.
+                 */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
+
+                /* Did an error occur during transmission? */
+                if (rc != pcmk_rc_ok) {
+                    goto done;
+                }
+
+                index++;
+                break;
+
+            default:
+                /* An error occurred during preparation */
+                crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
+                           c->pid, pcmk_rc_str(rc), rc);
+                goto done;
+        }
+    } while (true);
+
+done:
+    g_string_free(iov_buffer, TRUE);
     return rc;
 }
 

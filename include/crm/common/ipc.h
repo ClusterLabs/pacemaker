@@ -134,7 +134,7 @@ int pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name,
 enum crm_ipc_flags
 {
     crm_ipc_flags_none              = UINT32_C(0),
-    //! Message has been compressed
+    //! \deprecated Since 3.0.1
     crm_ipc_compressed              = (UINT32_C(1) << 0),
     //! _ALL_ replies to proxied connections need to be sent as events
     crm_ipc_proxied                 = (UINT32_C(1) << 8),
@@ -150,6 +150,10 @@ enum crm_ipc_flags
     //! All replies to proxied connections are sent as events.  This flag
     //! preserves whether the events should be treated as an Event or a Response
     crm_ipc_proxied_relay_response  = (UINT32_C(1) << 18),
+    //! This is a multi-part IPC message
+    crm_ipc_multipart               = (UINT32_C(1) << 19),
+    //! This is the end of a multi-part IPC message
+    crm_ipc_multipart_end           = (UINT32_C(1) << 20),
 };
 
 typedef struct crm_ipc_s crm_ipc_t;

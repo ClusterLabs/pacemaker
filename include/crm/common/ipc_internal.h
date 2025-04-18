@@ -172,6 +172,16 @@ struct pcmk__client_s {
     int event_timer;
     GQueue *event_queue;
 
+    /* Buffer used to store a multipart IPC message when we are building it
+     * up over multiple reads.
+     *
+     * NOTE: The use of a GByteArray here restricts the maximum size of an
+     * IPC message.  A GByteArray can hold G_MAXUINT bytes, which is the same
+     * as UINT_MAX.  So, an IPC message can be about 4 GB in size, minus the
+     * header.
+     */
+    GByteArray *buffer;
+
     /* Depending on the client type, only some of the following will be
      * populated/valid. @TODO Maybe convert to a union.
      */
@@ -239,12 +249,15 @@ int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
 #define pcmk__ipc_send_ack(c, req, flags, tag, ver, st) \
     pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (ver), (st))
 
-int pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
-                          uint32_t max_send_size,
-                          struct iovec **result, ssize_t *bytes);
+int pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
+                          uint16_t index, struct iovec **result, ssize_t *bytes);
 int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request,
                        const xmlNode *message, uint32_t flags);
 int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
+int pcmk__ipc_msg_append(GByteArray **buffer, void *data);
+bool pcmk__ipc_msg_is_multipart(void *data);
+bool pcmk__ipc_msg_is_multipart_end(void *data);
+uint16_t pcmk__ipc_multipart_id(void *data);
 xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data,
                                uint32_t *id, uint32_t *flags);
 
