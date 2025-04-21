@@ -134,7 +134,7 @@ int pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name,
 enum crm_ipc_flags
 {
     crm_ipc_flags_none              = UINT32_C(0),
-    //! Message has been compressed
+    //! \deprecated Since 3.0.1
     crm_ipc_compressed              = (UINT32_C(1) << 0),
     //! _ALL_ replies to proxied connections need to be sent as events
     crm_ipc_proxied                 = (UINT32_C(1) << 8),

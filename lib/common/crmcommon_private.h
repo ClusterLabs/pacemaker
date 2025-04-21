@@ -300,7 +300,6 @@ typedef struct pcmk__ipc_methods_s {
 struct pcmk_ipc_api_s {
     enum pcmk_ipc_server server;          // Daemon this IPC API instance is for
     enum pcmk_ipc_dispatch dispatch_type; // How replies should be dispatched
-    size_t ipc_size_max;                  // maximum IPC buffer size
     crm_ipc_t *ipc;                       // IPC connection
     mainloop_io_t *mainloop_io;     // If using mainloop, I/O source for IPC
     bool free_on_disconnect;        // Whether disconnect should free object
@@ -312,8 +311,7 @@ struct pcmk_ipc_api_s {
 
 typedef struct pcmk__ipc_header_s {
     struct qb_ipc_response_header qb;
-    uint32_t size_uncompressed;
-    uint32_t size_compressed;
+    uint32_t size;
     uint32_t flags;
     uint8_t version;
 } pcmk__ipc_header_t;
@@ -325,9 +323,6 @@ G_GNUC_INTERNAL
 void pcmk__call_ipc_callback(pcmk_ipc_api_t *api,
                              enum pcmk_ipc_event event_type,
                              crm_exit_t status, void *event_data);
-
-G_GNUC_INTERNAL
-unsigned int pcmk__ipc_buffer_size(unsigned int max);
 
 G_GNUC_INTERNAL
 bool pcmk__valid_ipc_header(const pcmk__ipc_header_t *header);

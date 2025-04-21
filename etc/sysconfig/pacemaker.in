@@ -348,14 +348,6 @@
 #
 # Default: PCMK_ipc_type="shared-mem"
 
-# PCMK_ipc_buffer (Advanced Use Only)
-#
-# Specify an IPC buffer size in bytes. This can be useful when connecting to
-# large clusters that result in messages exceeding the default size (which will
-# also result in log messages referencing this variable).
-#
-# Default: PCMK_ipc_buffer="131072"
-
 
 ## Cluster type
 

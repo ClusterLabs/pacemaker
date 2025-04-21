@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -108,19 +108,19 @@ cib_notify_send(const xmlNode *xml)
     struct cib_notification_s update;
 
     ssize_t bytes = 0;
-    int rc = pcmk__ipc_prepare_iov(0, xml, 0, &iov, &bytes);
+    int rc = pcmk__ipc_prepare_iov(0, xml, &iov, &bytes);
 
     if (rc == pcmk_rc_ok) {
         update.msg = xml;
         update.iov = iov;
         update.iov_size = bytes;
         pcmk__foreach_ipc_client(cib_notify_send_one, &update);
+        pcmk_free_ipc_event(iov);
 
     } else {
         crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
                    pcmk_rc_str(rc), rc);
     }
-    pcmk_free_ipc_event(iov);
 }
 
 void
