@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -183,18 +183,16 @@ generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_fi
         }
     }
 
-    xml_track_changes(object_new, NULL, object_new, FALSE);
-    if(as_cib) {
-        xml_calculate_significant_changes(object_original, object_new);
-    } else {
-        xml_calculate_changes(object_original, object_new);
+    if (as_cib) {
+        pcmk__xml_doc_set_flags(object_new->doc, pcmk__xf_ignore_attr_pos);
     }
+    pcmk__xml_mark_changes(object_original, object_new);
     crm_log_xml_debug(object_new, (xml_file_new? xml_file_new: "target"));
 
     output = xml_create_patchset(0, object_original, object_new, NULL, FALSE);
 
     pcmk__log_xml_changes(LOG_INFO, object_new);
-    xml_accept_changes(object_new);
+    pcmk__xml_commit_changes(object_new->doc);
 
     if (output == NULL) {
         return pcmk_rc_ok;  // No changes

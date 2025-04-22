@@ -111,6 +111,19 @@ bool xml_tracking_changes(xmlNode *xml);
 //! \deprecated Do not use
 bool xml_document_dirty(xmlNode *xml);
 
+//! \deprecated Do not use
+void xml_accept_changes(xmlNode *xml);
+
+//! \deprecated Do not use
+void xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                       bool enforce_acls);
+
+//! \deprecated Do not use
+void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
+
+//! \deprecated Do not use
+void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
+
 #ifdef __cplusplus
 }
 #endif
