@@ -451,7 +451,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 {
     char *ref = NULL;
     pid_t watchdog = pcmk__locate_sbd();
-    static mainloop_timer_t *timer = NULL;
+    mainloop_timer_t *timer = NULL;
 
     if (rc != pcmk_ok) {
         crm_err("Could not retrieve the Cluster Information Base: %s "
@@ -478,10 +478,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else if (num_cib_op_callbacks() > 1) {
         crm_debug("Re-asking for the CIB: %d other peer updates still pending",
                   (num_cib_op_callbacks() - 1));
-        sleep(1);
-        timer = mainloop_timer_add("timer", 1000, TRUE, sleep_timer, NULL);
+        timer = mainloop_timer_add("timer", 1000, FALSE, sleep_timer, NULL);
         mainloop_timer_start(sleep_timer);
-        return;
+        return G_SOURCE_REMOVE;
     }
 
     CRM_LOG_ASSERT(output != NULL);
