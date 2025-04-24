@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,6 @@ static int
 setup(void **state)
 {
     setenv("PCMK_schema_directory", PCMK__TEST_SCHEMA_DIR, 1);
-    pcmk__schema_init();
     pcmk__xml_test_setup_group(state);
     return 0;
 }
@@ -42,7 +41,6 @@ static int
 teardown(void **state)
 {
     pcmk__xml_test_teardown_group(state);
-    pcmk__schema_cleanup();
     unsetenv("PCMK_schema_directory");
     return 0;
 }
