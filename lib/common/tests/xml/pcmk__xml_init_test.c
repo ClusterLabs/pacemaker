@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,18 +14,11 @@
 #include "crmcommon_private.h"
 
 static void
-buffer_scheme_test(void **state)
-{
-    assert_int_equal(XML_BUFFER_ALLOC_DOUBLEIT, xmlGetBufferAllocationScheme());
-}
-
-static void
 schemas_initialized(void **state)
 {
     assert_non_null(pcmk__find_x_0_schema());
 }
 
-// The group setup/teardown functions call pcmk__xml_init()/pcmk__cml_xleanup()
+// The group setup/teardown functions call pcmk__xml_init()/pcmk__xml_cleanup()
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
-                cmocka_unit_test(buffer_scheme_test),
                 cmocka_unit_test(schemas_initialized))

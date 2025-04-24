@@ -1644,8 +1644,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
  * \internal
  * \brief Initialize the Pacemaker XML environment
  *
- * Set an XML buffer allocation scheme, set XML node create and destroy
- * callbacks, and load schemas into the cache.
+ * Currently this only loads schemas into the cache. It used to do more.
  */
 void
 pcmk__xml_init(void)
@@ -1655,12 +1654,6 @@ pcmk__xml_init(void)
 
     if (!initialized) {
         initialized = true;
-
-        /* Double the buffer size when the buffer needs to grow. The default
-         * allocator XML_BUFFER_ALLOC_EXACT was found to cause poor performance
-         * due to the number of reallocs.
-         */
-        xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
 
         // Load schemas into the cache
         pcmk__schema_init();

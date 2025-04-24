@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -84,7 +84,7 @@ pcmk__assert_validates(xmlNode *xml)
 int
 pcmk__xml_test_setup_group(void **state)
 {
-    // Load schemas and set libxml2 buffer allocation scheme
+    // Load schemas
     pcmk__xml_init();
     return 0;
 }
