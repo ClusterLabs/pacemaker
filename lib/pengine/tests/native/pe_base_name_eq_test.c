@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@ static int
 setup(void **state) {
     char *path = NULL;
 
-    pcmk__xml_init();
+    pcmk__xml_test_setup_group(state);
 
     path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
     input = pcmk__xml_read(path);
@@ -96,7 +96,7 @@ setup(void **state) {
 static int
 teardown(void **state) {
     pe_free_working_set(scheduler);
-    pcmk__xml_cleanup();
+    pcmk__xml_test_teardown_group(state);
     return 0;
 }
 
