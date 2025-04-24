@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <libxml/parser.h>                  // xmlCleanupParser()
+
 // LCOV_EXCL_START
 
 void
@@ -104,7 +106,8 @@ int
 pcmk__xml_test_teardown_group(void **state)
 {
     // Clean up schemas and libxml2 global memory
-    pcmk__xml_cleanup();
+    pcmk__schema_cleanup();
+    xmlCleanupParser();
     return 0;
 }
 

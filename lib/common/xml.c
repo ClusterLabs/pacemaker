@@ -18,7 +18,6 @@
 #include <sys/types.h>
 
 #include <glib.h>                       // gboolean, GString
-#include <libxml/parser.h>              // xmlCleanupParser()
 #include <libxml/tree.h>                // xmlNode, etc.
 #include <libxml/xmlstring.h>           // xmlChar, xmlGetUTF8Char()
 
@@ -1660,19 +1659,6 @@ pcmk__xml_init(void)
     }
 }
 
-/*!
- * \internal
- * \brief Tear down the Pacemaker XML environment
- *
- * Destroy schema cache and clean up memory allocated by libxml2.
- */
-void
-pcmk__xml_cleanup(void)
-{
-    pcmk__schema_cleanup();
-    xmlCleanupParser();
-}
-
 char *
 pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
 {
@@ -1753,6 +1739,8 @@ pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <libxml/parser.h>              // xmlCleanupParser()
+
 #include <crm/common/xml_compat.h>
 
 xmlNode *
@@ -1778,7 +1766,8 @@ crm_xml_init(void)
 void
 crm_xml_cleanup(void)
 {
-    pcmk__xml_cleanup();
+    pcmk__schema_cleanup();
+    xmlCleanupParser();
 }
 
 void
