@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2146,13 +2146,6 @@ crm_xml_init(void)
 
     if(init) {
         init = false;
-        /* The default allocator XML_BUFFER_ALLOC_EXACT does far too many
-         * pcmk__realloc()s and it can take upwards of 18 seconds (yes, seconds)
-         * to dump a 28kb tree which XML_BUFFER_ALLOC_DOUBLEIT can do in
-         * less than 1 second.
-         */
-        xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
-
         crm_schema_init();
     }
 }
