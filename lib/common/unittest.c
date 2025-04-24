@@ -86,8 +86,7 @@ pcmk__assert_validates(xmlNode *xml)
 int
 pcmk__xml_test_setup_group(void **state)
 {
-    // Load schemas
-    pcmk__xml_init();
+    pcmk__schema_init();
     return 0;
 }
 
@@ -105,7 +104,6 @@ pcmk__xml_test_setup_group(void **state)
 int
 pcmk__xml_test_teardown_group(void **state)
 {
-    // Clean up schemas and libxml2 global memory
     pcmk__schema_cleanup();
     xmlCleanupParser();
     return 0;

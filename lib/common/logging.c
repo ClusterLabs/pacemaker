@@ -838,7 +838,11 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
 
     have_logging = true;
 
-    pcmk__xml_init();
+    /* @TODO Try to create a more obvious "global Pacemaker initializer"
+     * function than crm_log_preinit(), and call pcmk__schema_init() there.
+     * See also https://projects.clusterlabs.org/T840.
+     */
+    pcmk__schema_init();
 
     if (crm_trace_nonlog == 0) {
         crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
