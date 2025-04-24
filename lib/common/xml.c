@@ -1418,26 +1418,6 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
     mark_xml_changes(old_xml, new_xml, FALSE);
 }
 
-/*!
- * \internal
- * \brief Initialize the Pacemaker XML environment
- *
- * Currently this only loads schemas into the cache. It used to do more.
- */
-void
-pcmk__xml_init(void)
-{
-    // @TODO Try to find a better caller than crm_log_preinit()
-    static bool initialized = false;
-
-    if (!initialized) {
-        initialized = true;
-
-        // Load schemas into the cache
-        pcmk__schema_init();
-    }
-}
-
 char *
 pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
 {
@@ -1539,7 +1519,7 @@ copy_xml(xmlNode *src)
 void
 crm_xml_init(void)
 {
-    pcmk__xml_init();
+    pcmk__schema_init();
 }
 
 void
