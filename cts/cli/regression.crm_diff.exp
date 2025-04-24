@@ -6,6 +6,7 @@
   </version>
   <change operation="delete" path="/cib/configuration/comment" position="0"/>
   <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
   <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
   <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
   <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
@@ -19,6 +20,9 @@
   </change>
   <change operation="create" path="/cib/configuration/nodes" position="4">
     <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
   </change>
   <change operation="create" path="/cib/configuration" position="3">
     <!-- hello world -->
