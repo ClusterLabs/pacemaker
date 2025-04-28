@@ -430,6 +430,10 @@ static const struct pcmk__rc_info {
       "DC is not yet elected",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_ipc_more",
+      "More IPC message fragments to send",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
