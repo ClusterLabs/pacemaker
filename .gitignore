@@ -359,3 +359,4 @@ pacemaker_*.info
 /xml/crm.dtd
 /xml/version-diff.sh
 ylwrap
+pacemaker.sysusers_*
