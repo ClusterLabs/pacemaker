@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,6 +33,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/mainloop.h>
+#include <libxml/parser.h>              // xmlCleanupParser()
 #include <libxml2/libxml/relaxng.h>
 
 #include "crmcommon_private.h"
@@ -55,12 +56,15 @@ pcmk_common_cleanup(void)
 {
     // @TODO This isn't really everything, move all cleanup here
     mainloop_cleanup();
-    pcmk__xml_cleanup();
+    pcmk__schema_cleanup();
     pcmk__free_common_logger();
-    qb_log_fini(); // Don't log anything after this point
 
     free(crm_system_name);
     crm_system_name = NULL;
+
+    // Clean up external library global state
+    qb_log_fini(); // Don't log anything after this point
+    xmlCleanupParser();
 }
 
 bool
