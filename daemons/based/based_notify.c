@@ -81,7 +81,14 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
             case pcmk__client_ipc:
                 rc = pcmk__ipc_send_iov(client, update->iov,
                                         crm_ipc_server_event);
-                if (rc != pcmk_rc_ok) {
+
+                /* EAGAIN isn't strictly an error for a server event.  The iov
+                 * was added to the send queue, but sending did fail with EAGAIN.
+                 * However, we will attempt to send the event the next time
+                 * pcmk__ipc_send_iov is called, or when crm_ipcs_flush_events_cb
+                 * happens.
+                 */
+                if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
                     crm_warn("Could not notify client %s: %s " QB_XS " id=%s",
                              pcmk__client_name(client), pcmk_rc_str(rc),
                              client->id);

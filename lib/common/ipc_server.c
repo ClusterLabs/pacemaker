@@ -802,8 +802,24 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
                 pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
                 rc = pcmk__ipc_send_iov(c, iov, flags);
 
-                /* Did an error occur during transmission? */
-                if (rc != pcmk_rc_ok) {
+                if (rc == EAGAIN && pcmk_is_set(flags, crm_ipc_server_event)) {
+                    /* In this case, pcmk__ipc_send_iov was able to add the iov
+                     * for this chunk to the send queue, but sending failed with
+                     * EAGAIN.  The chunk is still in the queue and we will
+                     * attempt sending again the next time pcmk__ipc_send_iov is
+                     * called, or when crm_ipcs_flush_events_cb happens.
+                     *
+                     * We don't want to interpret this as an error.  If we do,
+                     * we'll return from this function somewhere in the middle of
+                     * transmitting the whole IPC message which will make a mess
+                     * of things.  Instead, continue with attempting to send the
+                     * next chunk.
+                     */
+                    index++;
+                    break;
+
+                } else if (rc != pcmk_rc_ok) {
+                    /* Some other error occurred during transmission. */
                     goto done;
                 }
 
