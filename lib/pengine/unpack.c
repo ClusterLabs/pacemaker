@@ -452,8 +452,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash,
                                  PCMK__OPT_FENCE_REMOTE_WITHOUT_QUORUM);
     if ((value != NULL) && !crm_is_true(value)) {
-        crm_warn(PCMK__OPT_FENCE_REMOTE_WITHOUT_QUORUM " disabled - remote "
-                 "nodes may not be fenced in inquorate partition");
+        crm_debug(PCMK__OPT_FENCE_REMOTE_WITHOUT_QUORUM " disabled - remote "
+                  "nodes may not be fenced in inquorate partition");
         scheduler->fence_remote_without_quorum = false;
     } else {
         scheduler->fence_remote_without_quorum = true;
