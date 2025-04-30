@@ -18,7 +18,6 @@
 #include <sys/types.h>
 
 #include <glib.h>                       // gboolean, GString
-#include <libxml/parser.h>              // xmlCleanupParser()
 #include <libxml/tree.h>                // xmlNode, etc.
 #include <libxml/xmlstring.h>           // xmlGetUTF8Char()
 
@@ -1419,46 +1418,6 @@ xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
     mark_xml_changes(old_xml, new_xml, FALSE);
 }
 
-/*!
- * \internal
- * \brief Initialize the Pacemaker XML environment
- *
- * Set an XML buffer allocation scheme, set XML node create and destroy
- * callbacks, and load schemas into the cache.
- */
-void
-pcmk__xml_init(void)
-{
-    // @TODO Try to find a better caller than crm_log_preinit()
-    static bool initialized = false;
-
-    if (!initialized) {
-        initialized = true;
-
-        /* Double the buffer size when the buffer needs to grow. The default
-         * allocator XML_BUFFER_ALLOC_EXACT was found to cause poor performance
-         * due to the number of reallocs.
-         */
-        xmlSetBufferAllocationScheme(XML_BUFFER_ALLOC_DOUBLEIT);
-
-        // Load schemas into the cache
-        pcmk__schema_init();
-    }
-}
-
-/*!
- * \internal
- * \brief Tear down the Pacemaker XML environment
- *
- * Destroy schema cache and clean up memory allocated by libxml2.
- */
-void
-pcmk__xml_cleanup(void)
-{
-    pcmk__schema_cleanup();
-    xmlCleanupParser();
-}
-
 char *
 pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
 {
@@ -1539,6 +1498,8 @@ pcmk__xml_artefact_path(enum pcmk__xml_artefact_ns ns, const char *filespec)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <libxml/parser.h>              // xmlCleanupParser()
+
 #include <crm/common/xml_compat.h>
 
 xmlNode *
@@ -1558,13 +1519,14 @@ copy_xml(xmlNode *src)
 void
 crm_xml_init(void)
 {
-    pcmk__xml_init();
+    pcmk__schema_init();
 }
 
 void
 crm_xml_cleanup(void)
 {
-    pcmk__xml_cleanup();
+    pcmk__schema_cleanup();
+    xmlCleanupParser();
 }
 
 void

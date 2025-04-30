@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -87,7 +87,7 @@ setup(void **state)
 
     /* Do not call pcmk__schema_init() here because that is the function we're
      * testing. It needs to be called in each unit test. However, we can call
-     * pcmk__schema_cleanup() in teardown().
+     * pcmk__schema_cleanup() via the XML teardown function in teardown().
      */
 
     return 0;
@@ -99,7 +99,7 @@ teardown(void **state)
     int rc = 0;
     char *f = NULL;
 
-    pcmk__schema_cleanup();
+    pcmk__xml_test_teardown_group(state);
     unsetenv("PCMK_remote_schema_directory");
     unsetenv("PCMK_schema_directory");
 
