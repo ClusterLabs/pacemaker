@@ -81,7 +81,13 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
             case pcmk__client_ipc:
                 rc = pcmk__ipc_send_iov(client, update->iov,
                                         crm_ipc_server_event);
-                if (rc != pcmk_rc_ok) {
+
+                /* EAGAIN isn't an error for server events.  Sending did fail
+                 * with EAGAIN, but the iov was added to the send queue and we
+                 * will attempt to send it again the next time pcmk__ipc_send_iov
+                 * is called, or when crm_ipcs_flush_events_cb happens.
+                 */
+                if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
                     crm_warn("Could not notify client %s: %s " QB_XS " id=%s",
                              pcmk__client_name(client), pcmk_rc_str(rc),
                              client->id);
@@ -109,22 +115,32 @@ cib_notify_send(const xmlNode *xml)
     GString *iov_buffer = NULL;
     ssize_t bytes = 0;
     int rc = pcmk_rc_ok;
+    uint16_t index = 0;
 
     iov_buffer = g_string_sized_new(1024);
     pcmk__xml_string(xml, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(0, iov_buffer, 0, &iov, &bytes);
 
-    if (rc == pcmk_rc_ok) {
+    do {
+        rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
+
+        if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
+            crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
+                       pcmk_rc_str(rc), rc);
+            break;
+        }
+
         update.msg = xml;
         update.iov = iov;
         update.iov_size = bytes;
         pcmk__foreach_ipc_client(cib_notify_send_one, &update);
         pcmk_free_ipc_event(iov);
 
-    } else {
-        crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
-                   pcmk_rc_str(rc), rc);
-    }
+        if (rc == pcmk_rc_ok) {
+            break;
+        }
+
+        index++;
+    } while (true);
 
     g_string_free(iov_buffer, TRUE);
 }
