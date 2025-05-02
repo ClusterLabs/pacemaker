@@ -1262,24 +1262,41 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
 static int
 discard_old_replies(crm_ipc_t *client, int32_t ms_timeout)
 {
+    pcmk__ipc_header_t *header = NULL;
+    int rc = pcmk_rc_ok;
     ssize_t qb_rc = 0;
     char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
                                       sizeof(char));
 
     qb_rc = qb_ipcc_recv(client->ipc, buffer, client->buf_size, ms_timeout);
-    free(buffer);
 
     if (qb_rc < 0) {
         crm_warn("Sending %s IPC disabled until pending reply received",
                  client->server_name);
-        return EALREADY;
+        rc = EALREADY;
+        goto done;
+    }
 
-    } else {
+    header = (pcmk__ipc_header_t *)(void *) buffer;
+
+    if (!pcmk__valid_ipc_header(header)) {
+        rc = EBADMSG;
+
+    } else if (!pcmk_is_set(header->flags, crm_ipc_multipart)
+               || pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
         crm_notice("Sending %s IPC re-enabled after pending reply received",
                    client->server_name);
         client->need_reply = FALSE;
-        return pcmk_rc_ok;
+
+    } else {
+        crm_warn("Sending %s IPC disabled until multipart IPC message "
+                 "reply received", client->server_name);
+        rc = EALREADY;
     }
+
+done:
+    free(buffer);
+    return rc;
 }
 
 /*!
