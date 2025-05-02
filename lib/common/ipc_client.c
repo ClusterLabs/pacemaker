@@ -1169,6 +1169,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     time_t timeout = 0;
     int32_t qb_timeout = -1;
     int rc = pcmk_rc_ok;
+    int reply_id = 0;
 
     if (ms_timeout > 0) {
         timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
@@ -1205,34 +1206,38 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
             break;
         }
 
-        if (hdr->qb.id == request_id) {
-            /* Got the reply we were expecting. */
-            if (client->buffer != NULL) {
-                pcmk__ipc_free_client_buffer(client);
-            }
+        reply_id = hdr->qb.id;
 
-            client->buffer = g_byte_array_sized_new(crm_ipc_default_buffer_size());
-            g_byte_array_append(client->buffer, (const guint8 *) buffer, *bytes);
-            break;
+        if (reply_id == request_id) {
+            /* Got the reply we were expecting. */
+            rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+
+            if (rc == pcmk_rc_ok) {
+                break;
+            } else if (rc == pcmk_rc_ipc_more) {
+                continue;
+            } else {
+                goto done;
+            }
         }
 
         data = buffer + sizeof(pcmk__ipc_header_t);
         xml = pcmk__xml_parse((const char *) data);
 
-        if (hdr->qb.id < request_id) {
-            crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
+        if (reply_id < request_id) {
+            crm_err("Discarding old reply %d (need %d)", reply_id, request_id);
             crm_log_xml_notice(xml, "OldIpcReply");
-        } else if (hdr->qb.id > request_id) {
-            crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
+        } else if (reply_id > request_id) {
+            crm_err("Discarding newer reply %d (need %d)", reply_id, request_id);
             crm_log_xml_notice(xml, "ImpossibleReply");
             pcmk__assert(hdr->qb.id <= request_id);
         }
     } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
 
-    if (*bytes > 0) {
-        crm_trace("Received %zd-byte reply %" PRId32 " to %s IPC %d: %.100s",
-                  *bytes, hdr->qb.id, client->server_name, request_id,
-                  crm_ipc_buffer(client));
+    if (client->buffer->len > 0) {
+        crm_trace("Received %u-byte reply %d to %s IPC %d: %.100s",
+                  client->buffer->len, reply_id, client->server_name,
+                  request_id, crm_ipc_buffer(client));
 
         if (reply != NULL) {
             *reply = pcmk__xml_parse(crm_ipc_buffer(client));
@@ -1252,6 +1257,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
      * there's no need to keep the client buffer around anymore.  Free it here
      * to avoid having to do this anywhere crm_ipc_send is called.
      */
+done:
     pcmk__ipc_free_client_buffer(client);
     g_free(buffer);
     return rc;
