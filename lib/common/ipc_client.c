@@ -1259,6 +1259,29 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     return rc;
 }
 
+static int
+discard_old_replies(crm_ipc_t *client, int32_t ms_timeout)
+{
+    ssize_t qb_rc = 0;
+    char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
+                                      sizeof(char));
+
+    qb_rc = qb_ipcc_recv(client->ipc, buffer, client->buf_size, ms_timeout);
+    free(buffer);
+
+    if (qb_rc < 0) {
+        crm_warn("Sending %s IPC disabled until pending reply received",
+                 client->server_name);
+        return EALREADY;
+
+    } else {
+        crm_notice("Sending %s IPC re-enabled after pending reply received",
+                   client->server_name);
+        client->need_reply = FALSE;
+        return pcmk_rc_ok;
+    }
+}
+
 /*!
  * \brief Send an IPC XML message
  *
@@ -1301,26 +1324,15 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         ms_timeout = 5000;
     }
 
-    /* This loop exists only to clear out any old replies that we haven't
+    /* This block exists only to clear out any old replies that we haven't
      * yet read.  We don't care about their contents since it's too late to
      * do anything with them, so we just read and throw them away.
      */
     if (client->need_reply) {
-        char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
-                                          sizeof(char));
+        int discard_rc = discard_old_replies(client, ms_timeout);
 
-        qb_rc = qb_ipcc_recv(client->ipc, buffer, client->buf_size, ms_timeout);
-        free(buffer);
-
-        if (qb_rc < 0) {
-            crm_warn("Sending %s IPC disabled until pending reply received",
-                     client->server_name);
-            return -EALREADY;
-
-        } else {
-            crm_notice("Sending %s IPC re-enabled after pending reply received",
-                       client->server_name);
-            client->need_reply = FALSE;
+        if (discard_rc != pcmk_rc_ok) {
+            return pcmk_rc2legacy(discard_rc);
         }
     }
 
