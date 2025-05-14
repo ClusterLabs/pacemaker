@@ -1136,6 +1136,7 @@ const char *
 crm_ipc_buffer(crm_ipc_t * client)
 {
     pcmk__assert(client != NULL);
+    CRM_CHECK(client->buffer != NULL, return NULL);
     return (const char *) (client->buffer->data + sizeof(pcmk__ipc_header_t));
 }
 
