@@ -729,6 +729,10 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
                     crm_trace("Could not read IPC message from %s: %s (%ld)",
                               client->name, pcmk_strerror(read_rc), read_rc);
 
+                    if (read_rc == -EAGAIN) {
+                        continue;
+                    }
+
                 } else if (client->dispatch_fn_ipc) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
 
@@ -740,6 +744,8 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
                         rc = G_SOURCE_REMOVE;
                     }
                 }
+
+                pcmk__ipc_free_client_buffer(client->ipc);
 
             } while ((rc == G_SOURCE_CONTINUE) && (read_rc > 0) && --max > 0);
 
