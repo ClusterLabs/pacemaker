@@ -691,7 +691,17 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
     pcmk__set_ipc_flags(header->flags, "server event", flags);
     if (pcmk_is_set(flags, crm_ipc_server_event)) {
-        header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
+        /* Server events don't use an ID, though we do set one in
+         * pcmk__ipc_prepare_iov if the event is in response to a particular
+         * request.  In that case, we don't want to set a new ID here that
+         * overwrites that one.
+         *
+         * @TODO: Since server event IDs aren't used anywhere, do we really
+         * need to set this for any reason other than ease of logging?
+         */
+        if (header->qb.id == 0) {
+            header->qb.id = id++;
+        }
 
         if (pcmk_is_set(flags, crm_ipc_server_free)) {
             crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
