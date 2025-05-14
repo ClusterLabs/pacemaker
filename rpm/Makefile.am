@@ -23,6 +23,7 @@ include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/release.mk
 
 EXTRA_DIST		= pacemaker.spec.in	\
+			  pacemaker.sysusers.in \
 			  rpmlintrc
 
 # Extra options to pass to rpmbuild (this can be used to override the location
@@ -96,7 +97,10 @@ SPEC_RELEASE	= $(shell case "$(WITH)" in 				\
 			echo "$(LAST_RELEASE)" ;;			\
 		  esac)
 SPEC_RELEASE_NO	= $(shell echo $(SPEC_RELEASE) | sed -e s:Pacemaker-:: -e s:-.*::)
-
+SPEC_UNAME      = $(shell cat pacemaker.spec.in| sed -n -e "s:%global uname ::p")
+SPEC_GNAME      = $(shell cat pacemaker.spec.in| sed -n -e "s:%global gname ::p")
+SPEC_HACLUSTER_ID_SUSE = $(shell cat pacemaker.spec.in| sed -n -e "s:%global hacluster_id_suse ::p")
+SPEC_HACLUSTER_ID_OTHER = $(shell cat pacemaker.spec.in| sed -n -e "s:%global hacluster_id_other ::p")
 MOCK_DIR	= $(abs_builddir)/mock
 MOCK_OPTIONS	?= --resultdir="$(MOCK_DIR)" --no-cleanup-after
 
@@ -106,11 +110,23 @@ MOCK_CFG	?= $(shell test -e /etc/fedora-release && echo fedora-$(F)-$(ARCH))
 
 distdir		= $(top_distdir)/rpm
 TARFILE		= $(abs_builddir)/../$(top_distdir).tar.gz
+SYSUSERS_SUSE   = $(abs_builddir)/../pacemaker.sysusers_suse
+SYSUSERS_OTHER  = $(abs_builddir)/../pacemaker.sysusers_other
 
 # Create a source distribution based on a git archive. (If we aren't in a git
 # checkout, do a make dist instead.)
 .PHONY: export
 export:
+	cat $(abs_srcdir)/pacemaker.sysusers.in| sed                            \
+	    -e 's/GNAME/$(SPEC_GNAME)/'                                         \
+	    -e 's/UNAME/$(SPEC_UNAME)/'                                         \
+	    -e 's/HACLUSTER_ID/$(SPEC_HACLUSTER_ID_SUSE)/'                      \
+	    > $(SYSUSERS_SUSE);                                                 \
+	cat $(abs_srcdir)/pacemaker.sysusers.in| sed                            \
+	    -e 's/GNAME/$(SPEC_GNAME)/'                                         \
+	    -e 's/UNAME/$(SPEC_UNAME)/'                                         \
+	    -e 's/HACLUSTER_ID/$(SPEC_HACLUSTER_ID_OTHER)/'                     \
+	    > $(SYSUSERS_OTHER);                                                \
 	cd $(abs_srcdir)/..;							\
 	if [ -z "$(CHECKOUT)" ] && [ -f "$(TARFILE)" ]; then			\
 	    echo "`date`: Using existing tarball: $(TARFILE)";			\
@@ -282,4 +298,4 @@ vars:
 
 .PHONY: clean-local
 clean-local: mock-clean rpm-clean
-	-rm -f "$(TARFILE)"
+	-rm -f "$(TARFILE)" "$(SYSUSERS_SUSE)" "$(SYSUSERS_OTHER)"

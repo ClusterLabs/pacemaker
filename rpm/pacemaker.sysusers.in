@@ -1,0 +1,3 @@
+#Type  Name       ID                  GECOS           Home directory      Shell
+g      GNAME      HACLUSTER_ID
+u      UNAME      HACLUSTER_ID:GNAME  "cluster user"  /var/lib/pacemaker  /sbin/nologin
