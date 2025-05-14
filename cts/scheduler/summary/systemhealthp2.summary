@@ -10,6 +10,7 @@ Current cluster status:
 
 Transition Summary:
   * Fence (reboot) hs21d 'node is unclean'
+  * Start      stonith-1     ( hs21c )
   * Start      apache_1     ( hs21c )
   * Start      nfs_1        ( hs21c )
 
@@ -18,6 +19,7 @@ Executing Cluster Transition:
   * Resource action: apache_1        monitor on hs21c
   * Resource action: nfs_1           monitor on hs21c
   * Fencing hs21d (reboot)
+  * Resource action: stonith-1       start on hs21c
   * Resource action: apache_1        start on hs21c
   * Resource action: nfs_1           start on hs21c
   * Resource action: apache_1        monitor=10000 on hs21c
@@ -29,6 +31,6 @@ Revised Cluster Status:
     * OFFLINE: [ hs21d ]
 
   * Full List of Resources:
-    * stonith-1	(stonith:dummy):	 Stopped
+    * stonith-1	(stonith:dummy):	 Started hs21c
     * apache_1	(ocf:heartbeat:apache):	 Started hs21c
     * nfs_1	(ocf:heartbeat:Filesystem):	 Started hs21c
