@@ -1413,26 +1413,31 @@ new_comment_matches(const xmlNode *old_comment, const xmlNode *new_comment)
  * \internal
  * \brief Check whether a new XML child element matches an old XML child element
  *
- * Two elements match if they have the same name and, if \p match_ids is
- * \c true, the same ID. (Both IDs can be \c NULL in this case.)
+ * Two elements match if they have the same name and the same ID. (Both IDs can
+ * be \c NULL.)
+ *
+ * For XML attributes other than \c PCMK_XA_ID, we can treat a value change as
+ * an in-place modification. However, when Pacemaker applies a patchset, it uses
+ * the \c PCMK_XA_ID attribute to find the node to update (modify, delete, or
+ * move). If we treat two nodes with different \c PCMK_XA_ID attributes as
+ * matching and then mark that attribute as changed, it can cause this lookup to
+ * fail.
+ *
+ * There's unlikely to ever be much practical reason to treat elements with
+ * different IDs as a change. Unless that changes, we'll treat them as a
+ * mismatch.
  *
  * \param[in] old_element  Old XML child element
  * \param[in] new_element  New XML child element
- * \param[in] match_ids    If \c true, require IDs to match (or both to be
- *                         \c NULL)
  *
  * \retval \c true   if \p new_element matches \p old_element
  * \retval \c false  otherwise
  */
 static bool
-new_element_matches(const xmlNode *old_element, const xmlNode *new_element,
-                    bool match_ids)
+new_element_matches(const xmlNode *old_element, const xmlNode *new_element)
 {
-    if (!pcmk__xe_is(new_element, (const char *) old_element->name)) {
-        return false;
-    }
-    return !match_ids
-           || pcmk__str_eq(pcmk__xe_id(old_element), pcmk__xe_id(new_element),
+    return pcmk__xe_is(new_element, (const char *) old_element->name)
+           && pcmk__str_eq(pcmk__xe_id(old_element), pcmk__xe_id(new_element),
                            pcmk__str_none);
 }
 
@@ -1445,22 +1450,19 @@ new_element_matches(const xmlNode *old_element, const xmlNode *new_element,
  * For comments, a match is a comment at the same position with the same
  * content.
  *
- * For elements, a match is an element with the same name and, if required, the
- * same ID. (Both IDs can be \c NULL in this case.)
+ * For elements, a match is an element with the same name and the same ID. (Both
+ * IDs can be \c NULL.)
  *
  * For other node types, there is no match.
  *
  * \param[in] old_child  Child of old XML
  * \param[in] new_child  Child of new XML
- * \param[in] match_ids  If \c true, require element IDs to match (or both to be
- *                       \c NULL)
  *
  * \retval \c true   if \p new_child matches \p old_child
  * \retval \c false  otherwise
  */
 static bool
-new_child_matches(const xmlNode *old_child, const xmlNode *new_child,
-                  bool match_ids)
+new_child_matches(const xmlNode *old_child, const xmlNode *new_child)
 {
     if (old_child->type != new_child->type) {
         return false;
@@ -1470,7 +1472,7 @@ new_child_matches(const xmlNode *old_child, const xmlNode *new_child,
         case XML_COMMENT_NODE:
             return new_comment_matches(old_child, new_child);
         case XML_ELEMENT_NODE:
-            return new_element_matches(old_child, new_child, match_ids);
+            return new_element_matches(old_child, new_child);
         default:
             return false;
     }
@@ -1480,17 +1482,14 @@ new_child_matches(const xmlNode *old_child, const xmlNode *new_child,
  * \internal
  * \brief Find matching XML node pairs between old and new XML's children
  *
- * A node that is part of a matching pair has its <tt>_private:match</tt> member
- * set to the matching node.
+ * A node that is part of a matching pair gets its <tt>_private:match</tt>
+ * member set to the matching node.
  *
  * \param[in,out] old_xml       Old XML
  * \param[in,out] new_xml       New XML
- * \param[in]     comments_ids  If \c true, match comments and require element
- *                              IDs to match; otherwise, skip comments and match
- *                              elements by name only
  */
 static void
-find_matching_children(xmlNode *old_xml, xmlNode *new_xml, bool comments_ids)
+find_matching_children(xmlNode *old_xml, xmlNode *new_xml)
 {
     for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
          old_child = pcmk__xml_next(old_child)) {
@@ -1499,12 +1498,6 @@ find_matching_children(xmlNode *old_xml, xmlNode *new_xml, bool comments_ids)
 
         if ((old_nodepriv == NULL) || (old_nodepriv->match != NULL)) {
             // Can't process, or we already found a match for this old child
-            continue;
-        }
-        if (!comments_ids && (old_child->type != XML_ELEMENT_NODE)) {
-            /* We only match comments and elements, and we're not matching
-             * comments during this call
-             */
             continue;
         }
 
@@ -1520,7 +1513,7 @@ find_matching_children(xmlNode *old_xml, xmlNode *new_xml, bool comments_ids)
                 continue;
             }
 
-            if (new_child_matches(old_child, new_child, comments_ids)) {
+            if (new_child_matches(old_child, new_child)) {
                 old_nodepriv->match = new_child;
                 new_nodepriv->match = old_child;
                 break;
@@ -1559,8 +1552,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
     pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     xml_diff_attrs(old_xml, new_xml);
 
-    find_matching_children(old_xml, new_xml, true);
-    find_matching_children(old_xml, new_xml, false);
+    find_matching_children(old_xml, new_xml);
 
     // Process matches (changed children) and deletions
     for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
