@@ -428,6 +428,7 @@ pcmk_dispatch_ipc(pcmk_ipc_api_t *api)
     while (crm_ipc_ready(api->ipc) > 0) {
         if (crm_ipc_read(api->ipc) > 0) {
             dispatch_ipc_data(crm_ipc_buffer(api->ipc), api);
+            pcmk__ipc_free_client_buffer(api->ipc);
         }
     }
 }
@@ -699,6 +700,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
             }
 
             rc = dispatch_ipc_data(crm_ipc_buffer(api->ipc), api);
+            pcmk__ipc_free_client_buffer(api->ipc);
 
             if (rc == pcmk_rc_ok) {
                 more = false;
