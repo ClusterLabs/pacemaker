@@ -672,11 +672,28 @@ done:
     return rc;
 }
 
+/* Return the next available ID for a server event.
+ *
+ * For the parts of a multipart event, all parts should have the same ID as
+ * the first part.
+ */
+static uint32_t
+id_for_server_event(pcmk__ipc_header_t *header)
+{
+    static uint32_t id = 1;
+
+    if (pcmk_is_set(header->flags, crm_ipc_multipart) && (header->part_id != 0)) {
+        return id;
+    } else {
+        id++;
+        return id;
+    }
+}
+
 int
 pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 {
     int rc = pcmk_rc_ok;
-    static uint32_t id = 1;
     pcmk__ipc_header_t *header = iov[0].iov_base;
 
     /* _ALL_ replies to proxied connections need to be sent as events */
@@ -700,7 +717,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
          * need to set this for any reason other than ease of logging?
          */
         if (header->qb.id == 0) {
-            header->qb.id = id++;
+            header->qb.id = id_for_server_event(header);
         }
 
         if (pcmk_is_set(flags, crm_ipc_server_free)) {
