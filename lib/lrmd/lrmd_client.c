@@ -538,6 +538,7 @@ lrmd_dispatch(lrmd_t * lrmd)
                     const char *msg = crm_ipc_buffer(private->ipc);
 
                     lrmd_ipc_dispatch(msg, strlen(msg), lrmd);
+                    pcmk__ipc_free_client_buffer(private->ipc);
                 }
             }
             break;
