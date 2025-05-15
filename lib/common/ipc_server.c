@@ -679,23 +679,21 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     static uint32_t id = 1;
     pcmk__ipc_header_t *header = iov[0].iov_base;
 
-    if (c->flags & pcmk__client_proxied) {
-        /* _ALL_ replies to proxied connections need to be sent as events */
-        if (!pcmk_is_set(flags, crm_ipc_server_event)) {
-            /* The proxied flag lets us know this was originally meant to be a
-             * response, even though we're sending it over the event channel.
-             */
-            pcmk__set_ipc_flags(flags, "server event",
-                                crm_ipc_server_event
-                                |crm_ipc_proxied_relay_response);
-        }
+    /* _ALL_ replies to proxied connections need to be sent as events */
+    if (pcmk_is_set(c->flags, pcmk__client_proxied)
+        && !pcmk_is_set(flags, crm_ipc_server_event)) {
+        /* The proxied flag lets us know this was originally meant to be a
+         * response, even though we're sending it over the event channel.
+         */
+        pcmk__set_ipc_flags(flags, "server event",
+                            crm_ipc_server_event|crm_ipc_proxied_relay_response);
     }
 
     pcmk__set_ipc_flags(header->flags, "server event", flags);
-    if (flags & crm_ipc_server_event) {
+    if (pcmk_is_set(flags, crm_ipc_server_event)) {
         header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
 
-        if (flags & crm_ipc_server_free) {
+        if (pcmk_is_set(flags, crm_ipc_server_free)) {
             crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
             add_event(c, iov);
 
@@ -713,6 +711,8 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
             add_event(c, iov_copy);
         }
+
+        rc = crm_ipcs_flush_events(c);
 
     } else {
         ssize_t qb_rc;
@@ -734,20 +734,17 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
                       header->qb.id, qb_rc, c->ipcs, c->pid);
         }
 
-        if (flags & crm_ipc_server_free) {
+        if (pcmk_is_set(flags, crm_ipc_server_free)) {
             pcmk_free_ipc_event(iov);
         }
-    }
 
-    if (flags & crm_ipc_server_event) {
-        rc = crm_ipcs_flush_events(c);
-    } else {
         crm_ipcs_flush_events(c);
     }
 
     if ((rc == EPIPE) || (rc == ENOTCONN)) {
         crm_trace("Client %p disconnected", c->ipcs);
     }
+
     return rc;
 }
 
