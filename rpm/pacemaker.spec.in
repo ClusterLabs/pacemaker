@@ -55,6 +55,13 @@
 # Define conditionals so that "rpmbuild --with <feature>" and
 # "rpmbuild --without <feature>" can enable and disable specific features
 
+## Use systemd to create users/groups as required
+%if (0%{?fedora} >= 38)
+%bcond_without use_sysusers
+%else
+%bcond_with use_sysusers
+%endif
+
 ## Add option for Linux-HA (stonith/external) fencing agent support
 %if 0%{?suse_version}
 %bcond_without linuxha
@@ -147,7 +154,10 @@
 
 ## Different distros name certain packages differently
 ## (note: corosync libraries also differ, but all provide corosync-devel)
+%global hacluster_id_suse 90
+%global hacluster_id_other 189
 %if 0%{?suse_version}
+%global hacluster_id %{hacluster_id_suse}
 %global pkgname_bzip2_devel libbz2-devel
 %global pkgname_docbook_xsl docbook-xsl-stylesheets
 %global pkgname_gettext gettext-tools
@@ -155,8 +165,8 @@
 %global pkgname_procps procps
 %global pkgname_glue_libs libglue
 %global pkgname_pcmk_libs lib%{name}3
-%global hacluster_id 90
 %else
+%global hacluster_id %{hacluster_id_other}
 %global pkgname_libtool_devel libtool-ltdl-devel
 %global pkgname_libtool_devel_arch libtool-ltdl-devel%{?_isa}
 %global pkgname_bzip2_devel bzip2-devel
@@ -166,7 +176,6 @@
 %global pkgname_procps procps-ng
 %global pkgname_glue_libs cluster-glue-libs
 %global pkgname_pcmk_libs %{name}-libs
-%global hacluster_id 189
 %endif
 
 ## Distro-specific configuration choices
@@ -236,6 +245,13 @@ Url:           https://www.clusterlabs.org/
 #
 # You can use "spectool -s 0 pacemaker.spec" (rpmdevtools) to show final URL.
 Source0:       https://codeload.github.com/%{github_owner}/%{name}/tar.gz/%{archive_github_url}
+%if 0%{?suse_version} > 0
+Source1:       pacemaker.sysusers_suse
+Source2:       pacemaker.sysusers_other
+%else
+Source1:       pacemaker.sysusers_other
+Source2:       pacemaker.sysusers_suse
+%endif
 Requires:      resource-agents
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
@@ -300,6 +316,9 @@ BuildRequires: %{pkgname_glue_libs}-devel
 BuildRequires: asciidoc
 BuildRequires: %{python_name}-sphinx
 %endif
+
+# Creation of Users / Groups
+BuildRequires:  systemd-rpm-macros
 
 # Booth requires this
 Provides:      pacemaker-ticket-support = 2.0
@@ -545,6 +564,10 @@ mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 # Don't package libtool archives
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
+%if %{with use_sysusers}
+install -p -D -m 0644 %{SOURCE1} %{buildroot}%{_sysusersdir}/pacemaker.conf
+%endif
+
 %post
 %systemd_post pacemaker.service
 
@@ -606,8 +629,10 @@ fi
 %systemd_postun_with_restart crm_mon.service
 
 %pre -n %{pkgname_pcmk_libs}
+%if %{without use_sysusers}
 getent group %{gname} >/dev/null || groupadd -r %{gname} -g %{hacluster_id}
 getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u %{hacluster_id} -s /sbin/nologin -c "cluster user" %{uname}
+%endif
 exit 0
 
 %if %{defined ldconfig_scriptlets}
@@ -731,6 +756,9 @@ exit 0
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
 %files -n %{pkgname_pcmk_libs} %{?with_nls:-f %{name}.lang}
+%if %{with use_sysusers}
+    %{_sysusersdir}/pacemaker.conf
+%endif
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
