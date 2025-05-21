@@ -370,6 +370,19 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         services__format_result(op, PCMK_OCF_NOT_INSTALLED,
                                PCMK_EXEC_NOT_INSTALLED,
                                "systemd unit %s not found", op->agent);
+
+    /* If systemd happens to be re-executing by `systemctl daemon-reexec` at the
+     * same time, dbus gives an error with the name
+     * `org.freedesktop.DBus.Error.NoReply` and the message "Message recipient
+     * disconnected from message bus without replying".
+     * Consider the monitor pending rather than return an error yet, so that it
+     * can retry with another iteration.
+     */
+    } else if (pcmk__str_any_of(op->action, PCMK_ACTION_MONITOR,
+                                PCMK_ACTION_STATUS, NULL)
+               && strstr(error->name, DBUS_ERROR_NO_REPLY)
+               && strstr(error->message, "disconnected")) {
+        services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
     }
 
     crm_info("DBus request for %s of systemd unit %s%s%s failed: %s",
@@ -426,9 +439,13 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
             invoke_unit_by_path(op, path);
 
         } else if (!(op->synchronous)) {
-            services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
-                                    "No DBus object found for systemd unit %s",
-                                    op->agent);
+            if (!pcmk__str_any_of(op->action, PCMK_ACTION_MONITOR,
+                                  PCMK_ACTION_STATUS, NULL)
+                || op->status != PCMK_EXEC_PENDING) {
+                services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
+                                        "No DBus object found for systemd unit %s",
+                                        op->agent);
+            }
             services__finalize_async_op(op);
         }
     }
