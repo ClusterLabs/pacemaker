@@ -788,6 +788,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
     struct iovec *iov = NULL;
     int rc = pcmk_rc_ok;
     GString *iov_buffer = NULL;
+    uint16_t index = 0;
+    bool event_or_proxied = false;
 
     if (c == NULL) {
         return EINVAL;
@@ -804,43 +806,53 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
      * Changing do_local_notify to check for a proxied connection first results
      * in processes on the Pacemaker Remote node (like cibadmin or crm_mon)
      * timing out when waiting for a reply.
-     *
-     * Currently, server events support multipart IPC messages, while other
-     * IPC message types do not.
      */
-    if (pcmk_is_set(flags, crm_ipc_server_event)
-        || pcmk_is_set(c->flags, pcmk__client_proxied)) {
-        uint16_t index = 0;
+    event_or_proxied = pcmk_is_set(flags, crm_ipc_server_event)
+                       || pcmk_is_set(c->flags, pcmk__client_proxied);
 
-        do {
-            rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
+    do {
+        rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
 
-            switch (rc) {
-                case pcmk_rc_ok:
-                    /* No more chunks to send after this one */
-                    pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-                    rc = pcmk__ipc_send_iov(c, iov, flags);
+        switch (rc) {
+            case pcmk_rc_ok:
+                /* No more chunks to send after this one */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
 
-                    /* Return pcmk_rc_ok instead so callers don't have to know
-                     * whether they passed an event or not when interpreting the
-                     * return code.
-                     */
+                if (event_or_proxied) {
                     if (rc == EAGAIN) {
+                        /* Return pcmk_rc_ok instead so callers don't have to know
+                         * whether they passed an event or not when interpreting
+                         * the return code.
+                         */
                         rc = pcmk_rc_ok;
                     }
+                } else {
+                    /* EAGAIN is an error for IPC messages.  We don't have a
+                     * send queue for these, so we need to try again.  If there
+                     * was some other error, we need to break out of this loop
+                     * and report it.
+                     *
+                     * FIXME: Retry limit for EAGAIN?
+                     */
+                    if (rc == EAGAIN) {
+                        break;
+                    }
+                }
 
-                    goto done;
+                goto done;
 
-                case pcmk_rc_ipc_more:
-                    /* There are more chunks to send after this one */
-                    pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-                    rc = pcmk__ipc_send_iov(c, iov, flags);
+            case pcmk_rc_ipc_more:
+                /* There are more chunks to send after this one */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
 
-                    /* Did an error occur during transmission?  EAGAIN is not
-                     * an error for server events.  The event will be queued for
-                     * transmission and we will attempt sending it again the
-                     * next time pcmk__ipc_send_iov is called, or when the
-                     * crm_ipcs_flush_events_cb happens.
+                /* Did an error occur during transmission? */
+                if (event_or_proxied) {
+                    /* EAGAIN is not an error for server events.  The event
+                     * will be queued for transmission and we will attempt
+                     * sending it again the next time pcmk__ipc_send_iov is
+                     * called, or when the crm_ipcs_flush_events_cb happens.
                      */
                     if ((rc != pcmk_rc_ok) && (rc != EAGAIN)) {
                         goto done;
@@ -849,20 +861,29 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
                     index++;
                     break;
 
-                default:
-                    /* An error occurred during preparation */
-                    goto done;
-            }
-        } while (true);
+                } else {
+                    /* EAGAIN is an error for IPC messages.  We don't have a
+                     * send queue for these, so we need to try again.  If there
+                     * was some other error, we need to break out of this loop
+                     * and report it.
+                     *
+                     * FIXME: Retry limit for EAGAIN?
+                     */
+                    if (rc == pcmk_rc_ok) {
+                        index++;
+                        break;
+                    } else if (rc == EAGAIN) {
+                        break;
+                    } else {
+                        goto done;
+                    }
+                }
 
-    } else {
-        rc = pcmk__ipc_prepare_iov(request, iov_buffer, 0, &iov, NULL);
-
-        if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_more)) {
-            pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-            rc = pcmk__ipc_send_iov(c, iov, flags);
+            default:
+                /* An error occurred during preparation */
+                goto done;
         }
-    }
+    } while (true);
 
 done:
     if ((rc != pcmk_rc_ok) && (rc != EAGAIN)) {
