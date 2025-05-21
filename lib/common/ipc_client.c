@@ -1322,13 +1322,13 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
              enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply)
 {
     int rc = 0;
-    time_t timeout = 0;
-    ssize_t qb_rc = 0;
     ssize_t bytes = 0;
-    struct iovec *iov;
+    ssize_t sent_bytes = 0;
+    struct iovec *iov = NULL;
     static uint32_t id = 0;
     pcmk__ipc_header_t *header;
     GString *iov_buffer = NULL;
+    uint16_t index = 0;
 
     if (client == NULL) {
         crm_notice("Can't send IPC request without connection (bug?): %.100s",
@@ -1363,39 +1363,82 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     iov_buffer = g_string_sized_new(1024);
     pcmk__xml_string(message, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(id, iov_buffer, 0, &iov, &bytes);
-
-    if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-        crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
-                 client->server_name, pcmk_rc_str(rc), rc);
-        g_string_free(iov_buffer, TRUE);
-        return pcmk_rc2legacy(rc);
-    }
-
-    header = iov[0].iov_base;
-    pcmk__set_ipc_flags(header->flags, client->server_name, flags);
-
-    if (pcmk_is_set(flags, crm_ipc_proxied)) {
-        /* Don't look for a synchronous response */
-        pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
-    }
-
-    crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
-              client->server_name, header->qb.id, header->qb.size, ms_timeout);
-
-    /* Send the IPC request, respecting any timeout we were passed */
-    if (ms_timeout > 0) {
-        timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
-    }
 
     do {
-        qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
-    } while ((qb_rc == -EAGAIN) && ((timeout == 0) || (time(NULL) < timeout)));
+        ssize_t qb_rc = 0;
+        time_t timeout = 0;
 
-    rc = (int) qb_rc; // Negative of system errno, or bytes sent
-    if (qb_rc <= 0) {
-        goto send_cleanup;
-    }
+        rc = pcmk__ipc_prepare_iov(id, iov_buffer, index, &iov, &bytes);
+
+        if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
+            crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
+                     client->server_name, pcmk_rc_str(rc), rc);
+            g_string_free(iov_buffer, TRUE);
+            return pcmk_rc2legacy(rc);
+        }
+
+        header = iov[0].iov_base;
+        pcmk__set_ipc_flags(header->flags, client->server_name, flags);
+
+        if (pcmk_is_set(flags, crm_ipc_proxied)) {
+            /* Don't look for a synchronous response */
+            pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
+        }
+
+        if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
+            bool is_end = pcmk_is_set(header->flags, crm_ipc_multipart_end);
+            crm_trace("Sending %s IPC request %" PRId32 " (%spart %" PRIu16 ") of "
+                      "%" PRId32 " bytes using %dms timeout",
+                      client->server_name, header->qb.id, is_end ? "final " : "",
+                      index, header->qb.size, ms_timeout);
+            crm_trace("Text = %s", (char *) iov[1].iov_base);
+        } else {
+            crm_trace("Sending %s IPC request %" PRId32 " of %" PRId32 " bytes "
+                      "using %dms timeout",
+                      client->server_name, header->qb.id, header->qb.size,
+                      ms_timeout);
+            crm_trace("Text = %s", (char *) iov[1].iov_base);
+        }
+
+        /* Send the IPC request, respecting any timeout we were passed */
+        if (ms_timeout > 0) {
+            timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
+        }
+
+        do {
+            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
+        } while ((qb_rc == -EAGAIN) && ((timeout == 0) || (time(NULL) < timeout)));
+
+        /* An error occurred when sending. */
+        if (qb_rc <= 0) {
+            rc = (int) qb_rc;   // Negative of system errno
+            goto send_cleanup;
+        }
+
+        /* Sending succeeded.  The next action depends on whether this was a
+         * multipart IPC message or not.
+         */
+        if (rc == pcmk_rc_ok) {
+            /* This was either a standalone IPC message or the last part of
+             * a multipart message.  Set the return value and break out of
+             * this processing loop.
+             */
+            sent_bytes += qb_rc;
+            rc = (int) sent_bytes;
+            break;
+        } else {
+            /* There's no way to get here for any value other than rc == pcmk_rc_more
+             * given the check right after pcmk__ipc_prepare_iov.
+             *
+             * This was a multipart message, loop to process the next chunk.
+             */
+            sent_bytes += qb_rc;
+            index++;
+        }
+
+        pcmk_free_ipc_event(iov);
+        iov = NULL;
+    } while (true);
 
     /* If we should not wait for a response, bail now */
     if (!pcmk_is_set(flags, crm_ipc_client_response)) {
