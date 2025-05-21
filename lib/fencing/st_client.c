@@ -1685,6 +1685,7 @@ stonith__api_dispatch(stonith_t *stonith_api)
             const char *msg = crm_ipc_buffer(private->ipc);
 
             stonith_dispatch_internal(msg, strlen(msg), stonith_api);
+            pcmk__ipc_free_client_buffer(private->ipc);
         }
 
         if (!crm_ipc_connected(private->ipc)) {

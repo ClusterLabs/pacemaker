@@ -550,22 +550,31 @@ crm_ipcs_flush_events(pcmk__client_t *c)
  * \internal
  * \brief Create an I/O vector for sending an IPC XML message
  *
- * \param[in]  request        Identifier for libqb response header
- * \param[in]  message        XML message to send
- * \param[out] result         Where to store prepared I/O vector - NULL
- *                            on error
- * \param[out] bytes          Size of prepared data in bytes
+ * If the message is too large to fit into a single buffer, this function will
+ * prepare an I/O vector that only holds as much as fits.  The remainder can be
+ * prepared in a separate call by keeping a running count of the number of times
+ * this function has been called and passing that in for \p index.
+ *
+ * \param[in]  request Identifier for libqb response header
+ * \param[in]  message Message to send
+ * \param[in]  index   How many times this function has been called - basically,
+ *                     a count of how many chunks of \p message have already
+ *                     been sent
+ * \param[out] result  Where to store prepared I/O vector - NULL on error
+ * \param[out] bytes   Size of prepared data in bytes (includes header)
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
+pcmk__ipc_prepare_iov(uint32_t request, const GString *message, uint16_t index,
                       struct iovec **result, ssize_t *bytes)
 {
-    struct iovec *iov;
+    struct iovec *iov = NULL;
+    unsigned int payload_size = 0;
     unsigned int total = 0;
     unsigned int max_send_size = crm_ipc_default_buffer_size();
-    GString *buffer = NULL;
+    unsigned int max_chunk_size = 0;
+    size_t offset = 0;
     pcmk__ipc_header_t *header = NULL;
     int rc = pcmk_rc_ok;
 
@@ -580,33 +589,74 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
        goto done;
     }
 
-    buffer = g_string_sized_new(1024);
-    pcmk__xml_string(message, 0, buffer, 0);
-
     *result = NULL;
     iov = pcmk__new_ipc_event();
     iov[0].iov_len = sizeof(pcmk__ipc_header_t);
     iov[0].iov_base = header;
 
     header->version = PCMK__IPC_VERSION;
-    header->size = buffer->len + 1;
-    total = iov[0].iov_len + header->size;
+
+    /* We are passed an index, which is basically how many times this function
+     * has been called.  This is how we support multi-part IPC messages.  We
+     * need to convert that into an offset into the buffer that we want to start
+     * reading from.
+     *
+     * Each call to this function can send max_send_size, but this also includes
+     * the header and a null terminator character for the end of the payload.
+     * We need to subtract those out here.
+     */
+    max_chunk_size = max_send_size - iov[0].iov_len - 1;
+    offset = index * max_chunk_size;
+
+    /* How much of message is left to send?  This does not include the null
+     * terminator character.
+     */
+    payload_size = message->len - offset;
+
+    /* How much would be transmitted, including the header size and null
+     * terminator character for the buffer?
+     */
+    total = iov[0].iov_len + payload_size + 1;
 
     if (total >= max_send_size) {
-        crm_log_xml_trace(message, "EMSGSIZE");
-        crm_err("Could not transmit message; message size %" PRIu32" bytes is "
-                "larger than the maximum of %" PRIu32, header->size,
-                max_send_size);
-        rc = EMSGSIZE;
-        pcmk_free_ipc_event(iov);
-        goto done;
+        /* The entire packet is too big to fit in a single buffer.  Calculate
+         * how much of it we can send - buffer size, minus header size, minus
+         * one for the null terminator.
+         */
+        payload_size = max_chunk_size;
+
+        header->size = payload_size + 1;
+
+        iov[1].iov_base = strndup(message->str + offset, payload_size);
+        if (iov[1].iov_base == NULL) {
+            rc = ENOMEM;
+            goto done;
+        }
+
+        iov[1].iov_len = header->size;
+        rc = pcmk_rc_ipc_more;
+
+    } else {
+        /* The entire packet fits in a single buffer.  We can copy the entirety
+         * of it into the payload.
+         */
+        header->size = payload_size + 1;
+
+        iov[1].iov_base = pcmk__str_copy(message->str + offset);
+        iov[1].iov_len = header->size;
     }
 
-    iov[1].iov_base = pcmk__str_copy(buffer->str);
-    iov[1].iov_len = header->size;
-
+    header->part_id = index;
     header->qb.size = iov[0].iov_len + iov[1].iov_len;
     header->qb.id = (int32_t)request;    /* Replying to a specific request */
+
+    if ((rc == pcmk_rc_ok) && (index != 0)) {
+        pcmk__set_ipc_flags(header->flags, "multipart ipc",
+                            crm_ipc_multipart | crm_ipc_multipart_end);
+    } else if (rc == pcmk_rc_ipc_more) {
+        pcmk__set_ipc_flags(header->flags, "multipart ipc",
+                            crm_ipc_multipart);
+    }
 
     *result = iov;
     pcmk__assert(header->qb.size > 0);
@@ -615,36 +665,62 @@ pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
     }
 
 done:
-    if (buffer != NULL) {
-        g_string_free(buffer, TRUE);
+    if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
+        pcmk_free_ipc_event(iov);
     }
+
     return rc;
+}
+
+/* Return the next available ID for a server event.
+ *
+ * For the parts of a multipart event, all parts should have the same ID as
+ * the first part.
+ */
+static uint32_t
+id_for_server_event(pcmk__ipc_header_t *header)
+{
+    static uint32_t id = 1;
+
+    if (pcmk_is_set(header->flags, crm_ipc_multipart) && (header->part_id != 0)) {
+        return id;
+    } else {
+        id++;
+        return id;
+    }
 }
 
 int
 pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 {
     int rc = pcmk_rc_ok;
-    static uint32_t id = 1;
     pcmk__ipc_header_t *header = iov[0].iov_base;
 
-    if (c->flags & pcmk__client_proxied) {
-        /* _ALL_ replies to proxied connections need to be sent as events */
-        if (!pcmk_is_set(flags, crm_ipc_server_event)) {
-            /* The proxied flag lets us know this was originally meant to be a
-             * response, even though we're sending it over the event channel.
-             */
-            pcmk__set_ipc_flags(flags, "server event",
-                                crm_ipc_server_event
-                                |crm_ipc_proxied_relay_response);
-        }
+    /* _ALL_ replies to proxied connections need to be sent as events */
+    if (pcmk_is_set(c->flags, pcmk__client_proxied)
+        && !pcmk_is_set(flags, crm_ipc_server_event)) {
+        /* The proxied flag lets us know this was originally meant to be a
+         * response, even though we're sending it over the event channel.
+         */
+        pcmk__set_ipc_flags(flags, "server event",
+                            crm_ipc_server_event|crm_ipc_proxied_relay_response);
     }
 
     pcmk__set_ipc_flags(header->flags, "server event", flags);
-    if (flags & crm_ipc_server_event) {
-        header->qb.id = id++;   /* We don't really use it, but doesn't hurt to set one */
+    if (pcmk_is_set(flags, crm_ipc_server_event)) {
+        /* Server events don't use an ID, though we do set one in
+         * pcmk__ipc_prepare_iov if the event is in response to a particular
+         * request.  In that case, we don't want to set a new ID here that
+         * overwrites that one.
+         *
+         * @TODO: Since server event IDs aren't used anywhere, do we really
+         * need to set this for any reason other than ease of logging?
+         */
+        if (header->qb.id == 0) {
+            header->qb.id = id_for_server_event(header);
+        }
 
-        if (flags & crm_ipc_server_free) {
+        if (pcmk_is_set(flags, crm_ipc_server_free)) {
             crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
             add_event(c, iov);
 
@@ -662,6 +738,8 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
             add_event(c, iov_copy);
         }
+
+        rc = crm_ipcs_flush_events(c);
 
     } else {
         ssize_t qb_rc;
@@ -683,20 +761,17 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
                       header->qb.id, qb_rc, c->ipcs, c->pid);
         }
 
-        if (flags & crm_ipc_server_free) {
+        if (pcmk_is_set(flags, crm_ipc_server_free)) {
             pcmk_free_ipc_event(iov);
         }
-    }
 
-    if (flags & crm_ipc_server_event) {
-        rc = crm_ipcs_flush_events(c);
-    } else {
         crm_ipcs_flush_events(c);
     }
 
     if ((rc == EPIPE) || (rc == ENOTCONN)) {
         crm_trace("Client %p disconnected", c->ipcs);
     }
+
     return rc;
 }
 
@@ -706,18 +781,90 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
 {
     struct iovec *iov = NULL;
     int rc = pcmk_rc_ok;
+    GString *iov_buffer = NULL;
 
     if (c == NULL) {
         return EINVAL;
     }
-    rc = pcmk__ipc_prepare_iov(request, message, &iov, NULL);
-    if (rc == pcmk_rc_ok) {
-        pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-        rc = pcmk__ipc_send_iov(c, iov, flags);
+
+    iov_buffer = g_string_sized_new(1024);
+    pcmk__xml_string(message, 0, iov_buffer, 0);
+
+    /* Testing crm_ipc_server_event is obvious.  pcmk__client_proxied is less
+     * obvious.  According to pcmk__ipc_send_iov, replies to proxied connections
+     * need to be sent as events.  However, do_local_notify (which calls this
+     * function) will clear all flags so we can't go just by crm_ipc_server_event.
+     *
+     * Changing do_local_notify to check for a proxied connection first results
+     * in processes on the Pacemaker Remote node (like cibadmin or crm_mon)
+     * timing out when waiting for a reply.
+     *
+     * Currently, server events support multipart IPC messages, while other
+     * IPC message types do not.
+     */
+    if (pcmk_is_set(flags, crm_ipc_server_event)
+        || pcmk_is_set(c->flags, pcmk__client_proxied)) {
+        uint16_t index = 0;
+
+        do {
+            rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
+
+            switch (rc) {
+                case pcmk_rc_ok:
+                    /* No more chunks to send after this one */
+                    pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                    rc = pcmk__ipc_send_iov(c, iov, flags);
+
+                    /* Return pcmk_rc_ok instead so callers don't have to know
+                     * whether they passed an event or not when interpreting the
+                     * return code.
+                     */
+                    if (rc == EAGAIN) {
+                        rc = pcmk_rc_ok;
+                    }
+
+                    goto done;
+
+                case pcmk_rc_ipc_more:
+                    /* There are more chunks to send after this one */
+                    pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                    rc = pcmk__ipc_send_iov(c, iov, flags);
+
+                    /* Did an error occur during transmission?  EAGAIN is not
+                     * an error for server events.  The event will be queued for
+                     * transmission and we will attempt sending it again the
+                     * next time pcmk__ipc_send_iov is called, or when the
+                     * crm_ipcs_flush_events_cb happens.
+                     */
+                    if ((rc != pcmk_rc_ok) && (rc != EAGAIN)) {
+                        goto done;
+                    }
+
+                    index++;
+                    break;
+
+                default:
+                    /* An error occurred during preparation */
+                    goto done;
+            }
+        } while (true);
+
     } else {
-        crm_notice("IPC message to pid %d failed: %s " QB_XS " rc=%d",
+        rc = pcmk__ipc_prepare_iov(request, iov_buffer, 0, &iov, NULL);
+
+        if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_more)) {
+            pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+            rc = pcmk__ipc_send_iov(c, iov, flags);
+        }
+    }
+
+done:
+    if ((rc != pcmk_rc_ok) && (rc != EAGAIN)) {
+        crm_notice("IPC message to pid %u failed: %s " QB_XS " rc=%d",
                    c->pid, pcmk_rc_str(rc), rc);
     }
+
+    g_string_free(iov_buffer, TRUE);
     return rc;
 }
 
