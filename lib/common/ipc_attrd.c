@@ -150,6 +150,8 @@ create_attrd_op(const char *user_name)
 static int
 connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
+    static const int max_retries = 5;
+    int retries = max_retries;
     int rc = pcmk_rc_ok;
     bool created_api = false;
     enum pcmk_ipc_dispatch dispatch = pcmk_ipc_dispatch_sync;
@@ -164,10 +166,18 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
         dispatch = api->dispatch_type;
     }
 
-    rc = pcmk__connect_ipc(api, dispatch, 5);
-    if (rc == pcmk_rc_ok) {
-        rc = pcmk__send_ipc_request(api, request);
-    }
+    // If attrd is killed and is being restarted we will temporarily get ECONNREFUSED on connect if it is already dead
+    // or ENOTCONN if it died after we connected to it. We should wait a bit and retry in those cases.
+    do {
+        retries--;
+        if (rc == ENOTCONN || rc == ECONNREFUSED) {
+            sleep(max_retries - retries);
+        }
+        rc = pcmk__connect_ipc(api, dispatch, 5);
+        if (rc == pcmk_rc_ok) {
+            rc = pcmk__send_ipc_request(api, request);
+        }
+    } while (retries > 0 && (rc == ENOTCONN || rc == ECONNREFUSED));
 
     if (created_api) {
         pcmk_free_ipc_api(api);
