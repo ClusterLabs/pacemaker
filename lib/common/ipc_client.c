@@ -1447,6 +1447,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         goto send_cleanup;
     }
 
+    pcmk__ipc_free_client_buffer(client);
     rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, &bytes, reply);
     if (rc == pcmk_rc_ok) {
         rc = (int) bytes; // Size of reply received
