@@ -500,11 +500,31 @@ crm_ipcs_flush_events(pcmk__client_t *c)
             break;
         }
 
-        qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
-        if (qb_rc < 0) {
-            rc = (int) -qb_rc;
-            break;
+        /* Retry sending the event up to five times.  If we get -EAGAIN, sleep
+         * a very short amount of time (too long here is bad) and try again.
+         * If we simply exit the while loop on -EAGAIN, we'll have to wait until
+         * the timer fires off again (up to 1.5 seconds - see delay_next_flush)
+         * to retry sending the message.
+         *
+         * In that case, the queue may just continue to grow faster than we are
+         * processing it, eventually leading to daemons timing out waiting for
+         * replies, which will cause wider failures.
+         */
+        for (unsigned int retries = 5; retries > 0; retries--) {
+            qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
+
+            if (qb_rc < 0) {
+                if (retries == 1 || qb_rc != -EAGAIN) {
+                    rc = (int) -qb_rc;
+                    goto no_more_retries;
+                } else {
+                    pcmk__sleep_ms(5);
+                }
+            } else {
+                break;
+            }
         }
+
         event = g_queue_pop_head(c->event_queue);
 
         sent++;
@@ -515,6 +535,7 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         pcmk_free_ipc_event(event);
     }
 
+no_more_retries:
     queue_len -= sent;
     if (sent > 0 || queue_len) {
         crm_trace("Sent %u events (%u remaining) for %p[%d]: %s (%zd)",
