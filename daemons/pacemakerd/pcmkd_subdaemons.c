@@ -468,18 +468,18 @@ start_child(pcmk_child_t * child)
         /* parent */
         mainloop_child_add(child->pid, 0, name, child, pcmk_child_exit);
 
-	if (use_valgrind) {
-	    crm_info("Forked process %lld using user %lu (%s) and group %lu "
-		     "for subdaemon %s (valgrind enabled: %s)",
-		     (long long) child->pid, (unsigned long) uid,
-		     pcmk__s(child->uid, "root"), (unsigned long) gid, name,
-		     PCMK__VALGRIND_EXEC);
-	} else {
-	    crm_info("Forked process %lld using user %lu (%s) and group %lu "
-		     "for subdaemon %s",
-		     (long long) child->pid, (unsigned long) uid,
-		     pcmk__s(child->uid, "root"), (unsigned long) gid, name);
-	}
+        if (use_valgrind) {
+            crm_info("Forked process %lld using user %lu (%s) and group %lu "
+                     "for subdaemon %s (valgrind enabled: %s)",
+                     (long long) child->pid, (unsigned long) uid,
+                     pcmk__s(child->uid, "root"), (unsigned long) gid, name,
+                     PCMK__VALGRIND_EXEC);
+        } else {
+            crm_info("Forked process %lld using user %lu (%s) and group %lu "
+                     "for subdaemon %s",
+                     (long long) child->pid, (unsigned long) uid,
+                     pcmk__s(child->uid, "root"), (unsigned long) gid, name);
+        }
 
         return pcmk_rc_ok;
 
