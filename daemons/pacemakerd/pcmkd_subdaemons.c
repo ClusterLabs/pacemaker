@@ -259,44 +259,45 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                    "%s[%d] terminated with signal %d (%s)%s",
                    name, pid, signo, strsignal(signo),
                    (core? " and dumped core" : ""));
+        pcmk_process_exit(child);
+        return;
+    }
 
-    } else {
-        switch(exitcode) {
-            case CRM_EX_OK:
-                crm_info("%s[%d] exited with status %d (%s)",
-                         name, pid, exitcode, crm_exit_str(exitcode));
-                break;
+    switch(exitcode) {
+        case CRM_EX_OK:
+            crm_info("%s[%d] exited with status %d (%s)",
+                     name, pid, exitcode, crm_exit_str(exitcode));
+            break;
 
-            case CRM_EX_FATAL:
-                crm_warn("Shutting cluster down because %s[%d] had fatal failure",
-                         name, pid);
+        case CRM_EX_FATAL:
+            crm_warn("Shutting cluster down because %s[%d] had fatal failure",
+                     name, pid);
+            child->flags &= ~child_respawn;
+            fatal_error = TRUE;
+            pcmk_shutdown(SIGTERM);
+            break;
+
+        case CRM_EX_PANIC:
+            {
+                char *msg = NULL;
+
                 child->flags &= ~child_respawn;
                 fatal_error = TRUE;
+                msg = crm_strdup_printf("Subdaemon %s[%d] requested panic",
+                                        name, pid);
+                pcmk__panic(msg);
+
+                // Should never get here
+                free(msg);
                 pcmk_shutdown(SIGTERM);
-                break;
+            }
+            break;
 
-            case CRM_EX_PANIC:
-                {
-                    char *msg = NULL;
-
-                    child->flags &= ~child_respawn;
-                    fatal_error = TRUE;
-                    msg = crm_strdup_printf("Subdaemon %s[%d] requested panic",
-                                            name, pid);
-                    pcmk__panic(msg);
-
-                    // Should never get here
-                    free(msg);
-                    pcmk_shutdown(SIGTERM);
-                }
-                break;
-
-            default:
-                // cts-lab looks for this message
-                crm_err("%s[%d] exited with status %d (%s)",
-                        name, pid, exitcode, crm_exit_str(exitcode));
-                break;
-        }
+        default:
+            // cts-lab looks for this message
+            crm_err("%s[%d] exited with status %d (%s)",
+                    name, pid, exitcode, crm_exit_str(exitcode));
+            break;
     }
 
     pcmk_process_exit(child);
