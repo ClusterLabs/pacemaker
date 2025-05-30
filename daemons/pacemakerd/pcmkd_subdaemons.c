@@ -493,7 +493,7 @@ start_child(pcmk_child_t * child)
 
     } else {
         /* Start a new session */
-        (void)setsid();
+        setsid();
 
         /* Setup the two alternate arg arrays */
         opts_vgrind[0] = pcmk__str_copy(PCMK__VALGRIND_EXEC);
@@ -542,11 +542,11 @@ start_child(pcmk_child_t * child)
         pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 
         if (use_valgrind) {
-            (void)execvp(PCMK__VALGRIND_EXEC, opts_vgrind);
+            execvp(PCMK__VALGRIND_EXEC, opts_vgrind);
         } else {
             char *path = subdaemon_path(child);
 
-            (void) execvp(path, opts_default);
+            execvp(path, opts_default);
             free(path);
         }
         crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
