@@ -584,6 +584,7 @@ child_liveness(pcmk_child_t *child)
     const gid_t *ref_gid;
     const char *name = pcmk__server_name(child->server);
     int rc = pcmk_rc_ipc_unresponsive;
+    int pid_active = pcmk_rc_ok;
     int legacy_rc = pcmk_ok;
     pid_t ipc_pid = 0;
 
@@ -623,56 +624,54 @@ child_liveness(pcmk_child_t *child)
         }
     }
 
-    if (rc == pcmk_rc_ipc_unresponsive) {
-        /* If we get here, a child without IPC is being tracked, no IPC liveness
-         * has been detected, or IPC liveness has been detected with an
-         * unexpected (but authorized) process. This is safe on FreeBSD since
-         * the only change possible from a proper child's PID into "special" PID
-         * of 1 behind more loosely related process.
-         */
-        int ret = pcmk__pid_active(child->pid, name);
-
-        if (ipc_pid && ((ret != pcmk_rc_ok)
-                        || ipc_pid == PCMK__SPECIAL_PID
-                        || (pcmk__pid_active(ipc_pid, name) == pcmk_rc_ok))) {
-            /* An unexpected (but authorized) process was detected at the IPC
-             * endpoint, and either it is active, or the child we're tracking is
-             * not.
-             */
-
-            if (ret == pcmk_rc_ok) {
-                /* The child we're tracking is active. Kill it, and adopt the
-                 * detected process. This assumes that our children don't fork
-                 * (thus getting a different PID owning the IPC), but rather the
-                 * tracking got out of sync because of some means external to
-                 * Pacemaker, and adopting the detected process is better than
-                 * killing it and possibly having to spawn a new child.
-                 */
-                /* not possessing IPC, afterall (what about corosync CPG?) */
-                stop_child(child, SIGKILL);
-            }
-            rc = pcmk_rc_ok;
-            child->pid = ipc_pid;
-        } else if (ret == pcmk_rc_ok) {
-            // Our tracked child's PID was found active, but not its IPC
-            rc = pcmk_rc_ipc_pid_only;
-        } else if ((child->pid == 0) && (ret == EINVAL)) {
-            // FreeBSD can return EINVAL
-            rc = pcmk_rc_ipc_unresponsive;
-        } else {
-            switch (ret) {
-                case EACCES:
-                    rc = pcmk_rc_ipc_unauthorized;
-                    break;
-                case ESRCH:
-                    rc = pcmk_rc_ipc_unresponsive;
-                    break;
-                default:
-                    rc = ret;
-                    break;
-            }
-        }
+    if (rc != pcmk_rc_ipc_unresponsive) {
+        return rc;
     }
+
+    /* If we get here, a child without IPC is being tracked, no IPC liveness
+     * has been detected, or IPC liveness has been detected with an
+     * unexpected (but authorized) process. This is safe on FreeBSD since
+     * the only change possible from a proper child's PID into "special" PID
+     * of 1 behind more loosely related process.
+     */
+    pid_active = pcmk__pid_active(child->pid, name);
+
+    if ((ipc_pid != 0)
+        && ((pid_active != pcmk_rc_ok)
+            || (ipc_pid == PCMK__SPECIAL_PID)
+            || (pcmk__pid_active(ipc_pid, name) == pcmk_rc_ok))) {
+        /* An unexpected (but authorized) process was detected at the IPC
+         * endpoint, and either it is active, or the child we're tracking is
+         * not.
+         */
+
+        if (pid_active == pcmk_rc_ok) {
+            /* The child we're tracking is active. Kill it, and adopt the
+             * detected process. This assumes that our children don't fork
+             * (thus getting a different PID owning the IPC), but rather the
+             * tracking got out of sync because of some means external to
+             * Pacemaker, and adopting the detected process is better than
+             * killing it and possibly having to spawn a new child.
+             */
+            /* not possessing IPC, afterall (what about corosync CPG?) */
+            stop_child(child, SIGKILL);
+        }
+        rc = pcmk_rc_ok;
+        child->pid = ipc_pid;
+    } else if (pid_active == pcmk_rc_ok) {
+        // Our tracked child's PID was found active, but not its IPC
+        rc = pcmk_rc_ipc_pid_only;
+    } else if ((child->pid == 0) && (pid_active == EINVAL)) {
+        // FreeBSD can return EINVAL
+        rc = pcmk_rc_ipc_unresponsive;
+    } else if (pid_active == EACCES) {
+        rc = pcmk_rc_ipc_unauthorized;
+    } else if (pid_active == ESRCH) {
+        rc = pcmk_rc_ipc_unresponsive;
+    } else {
+        rc = pid_active;
+    }
+
     return rc;
 }
 
