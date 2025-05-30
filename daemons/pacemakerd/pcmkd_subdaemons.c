@@ -686,6 +686,26 @@ reset_respawn_count(pcmk_child_t *child)
     child->respawn_count = 0;
 }
 
+#define WAIT_TRIES 4  /* together with interleaved sleeps, worst case ~ 1s */
+
+static int
+child_up_but_no_ipc(pcmk_child_t *child)
+{
+    const char *ipc_name = pcmk__server_ipc_name(child->server);
+
+    if (child->respawn_count == WAIT_TRIES) {
+        crm_crit("%s IPC endpoint for existing process %lld did not (re)appear",
+                 ipc_name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
+        return pcmk_rc_ipc_pid_only;
+    }
+
+    crm_warn("Cannot find %s IPC endpoint for existing process %ld, could still "
+             "reappear in %d attempts",
+             ipc_name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid),
+             WAIT_TRIES - child->respawn_count);
+    return EAGAIN;
+}
+
 /*!
  * \internal
  * \brief Initial one-off check of the pre-existing "child" processes
@@ -713,7 +733,6 @@ reset_respawn_count(pcmk_child_t *child)
  *       otherwise.  One way to suppress liveness detection logic for
  *       particular child is to set the said value to a negative number.
  */
-#define WAIT_TRIES 4  /* together with interleaved sleeps, worst case ~ 1s */
 int
 find_and_track_existing_processes(void)
 {
@@ -787,24 +806,17 @@ find_and_track_existing_processes(void)
                     pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
                     pcmk_children[i].flags |= child_active_before_startup;
                     break;
+
                 case pcmk_rc_ipc_pid_only:
-                    if (pcmk_children[i].respawn_count == WAIT_TRIES) {
-                        crm_crit("%s IPC endpoint for existing authentic"
-                                 " process %lld did not (re)appear",
-                                 ipc_name,
-                                 (long long) PCMK__SPECIAL_PID_AS_0(
-                                                 pcmk_children[i].pid));
-                        return rc;
+                    rc = child_up_but_no_ipc(&pcmk_children[i]);
+
+                    if (rc == EAGAIN) {
+                        wait_in_progress = true;
+                        continue;
                     }
-                    wait_in_progress = true;
-                    crm_warn("Cannot find %s IPC endpoint for existing"
-                             " authentic process %lld, can still (re)appear"
-                             " in %d attempts (?)",
-                             ipc_name,
-                             (long long) PCMK__SPECIAL_PID_AS_0(
-                                             pcmk_children[i].pid),
-                             WAIT_TRIES - pcmk_children[i].respawn_count);
-                    continue;
+
+                    return rc;
+
                 default:
                     crm_crit("Checked liveness of %s: %s " QB_XS " rc=%d",
                              name, pcmk_rc_str(rc), rc);
