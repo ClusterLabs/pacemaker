@@ -37,6 +37,10 @@ class BasePatterns:
             # transition error logging their own error message, which should
             # always be the case.
             r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
+
+            # This message comes up periodically but doesn't actually seem to
+            # be related to any specific test failure, so just ignore it.
+            r"pacemaker-based.* Local CIB .* differs from",
         ]
 
         self._commands = {
