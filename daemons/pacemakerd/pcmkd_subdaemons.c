@@ -365,38 +365,41 @@ pcmk_shutdown_worker(gpointer user_data)
     for (; phase >= 0; phase--) {
         pcmk_child_t *child = &(pcmk_children[phase]);
         const char *name = pcmk__server_name(child->server);
+        time_t now = 0;
 
-        if (child->pid != 0) {
-            time_t now = time(NULL);
-
-            if (pcmk_is_set(child->flags, child_respawn)) {
-                if (child->pid == PCMK__SPECIAL_PID) {
-                    crm_warn("Subdaemon %s cannot be terminated (shutdown "
-                             "will be escalated after %ld seconds if it does "
-                             "not terminate on its own; set PCMK_"
-                             PCMK__ENV_FAIL_FAST "=1 to exit immediately "
-                             "instead)",
-                             name, (long) SHUTDOWN_ESCALATION_PERIOD);
-                }
-                next_log = now + 30;
-                child->flags &= ~child_respawn;
-                stop_child(child, SIGTERM);
-                if (phase < PCMK_CHILD_CONTROLD) {
-                    pcmk__create_timer(SHUTDOWN_ESCALATION_PERIOD,
-                                       escalate_shutdown, child);
-                }
-
-            } else if (now >= next_log) {
-                next_log = now + 30;
-                crm_notice("Still waiting for subdaemon %s to terminate "
-                           QB_XS " pid=%lld", name, (long long) child->pid);
-            }
-            return G_SOURCE_CONTINUE;
+        if (child->pid == 0) {
+            /* cleanup */
+            crm_debug("Subdaemon %s confirmed stopped", name);
+            child->pid = 0;
+            continue;
         }
 
-        /* cleanup */
-        crm_debug("Subdaemon %s confirmed stopped", name);
-        child->pid = 0;
+        now = time(NULL);
+
+        if (pcmk_is_set(child->flags, child_respawn)) {
+            if (child->pid == PCMK__SPECIAL_PID) {
+                crm_warn("Subdaemon %s cannot be terminated (shutdown "
+                         "will be escalated after %ld seconds if it does "
+                         "not terminate on its own; set PCMK_"
+                         PCMK__ENV_FAIL_FAST "=1 to exit immediately "
+                         "instead)",
+                         name, (long) SHUTDOWN_ESCALATION_PERIOD);
+            }
+            next_log = now + 30;
+            child->flags &= ~child_respawn;
+            stop_child(child, SIGTERM);
+            if (phase < PCMK_CHILD_CONTROLD) {
+                pcmk__create_timer(SHUTDOWN_ESCALATION_PERIOD,
+                                   escalate_shutdown, child);
+            }
+
+        } else if (now >= next_log) {
+            next_log = now + 30;
+            crm_notice("Still waiting for subdaemon %s to terminate "
+                       QB_XS " pid=%lld", name, (long long) child->pid);
+        }
+
+        return G_SOURCE_CONTINUE;
     }
 
     crm_notice("Shutdown complete");
