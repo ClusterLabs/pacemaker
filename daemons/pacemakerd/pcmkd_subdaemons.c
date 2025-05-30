@@ -100,15 +100,15 @@ static bool need_root_group = true;
  * Following two variables are used to track that handshake.
  */
 unsigned int shutdown_complete_state_reported_to = 0;
-gboolean shutdown_complete_state_reported_client_closed = FALSE;
+bool shutdown_complete_state_reported_client_closed = false;
 
 /* state we report when asked via pacemakerd-api status-ping */
 const char *pacemakerd_state = PCMK__VALUE_INIT;
-gboolean running_with_sbd = FALSE; /* local copy */
+bool running_with_sbd = false;
 
 GMainLoop *mainloop = NULL;
 
-static gboolean fatal_error = FALSE;
+static bool fatal_error = false;
 
 static int child_liveness(pcmk_child_t *child);
 static gboolean escalate_shutdown(gpointer data);
@@ -252,7 +252,8 @@ escalate_shutdown(gpointer data)
                 pcmk__server_name(child->server));
         stop_child(child, SIGSEGV);
     }
-    return FALSE;
+
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -281,7 +282,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
             crm_warn("Shutting cluster down because %s[%d] had fatal failure",
                      name, pid);
             child->flags &= ~child_respawn;
-            fatal_error = TRUE;
+            fatal_error = true;
             pcmk_shutdown(SIGTERM);
             break;
 
@@ -290,7 +291,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 char *msg = NULL;
 
                 child->flags &= ~child_respawn;
-                fatal_error = TRUE;
+                fatal_error = true;
                 msg = crm_strdup_printf("Subdaemon %s[%d] requested panic",
                                         name, pid);
                 pcmk__panic(msg);
@@ -390,7 +391,7 @@ pcmk_shutdown_worker(gpointer user_data)
                 crm_notice("Still waiting for subdaemon %s to terminate "
                            QB_XS " pid=%lld", name, (long long) child->pid);
             }
-            return TRUE;
+            return G_SOURCE_CONTINUE;
         }
 
         /* cleanup */
@@ -404,7 +405,7 @@ pcmk_shutdown_worker(gpointer user_data)
         pcmk__get_sbd_sync_resource_startup() &&
         !shutdown_complete_state_reported_client_closed) {
         crm_notice("Waiting for SBD to pick up shutdown-complete-state.");
-        return TRUE;
+        return G_SOURCE_CONTINUE;
     }
 
     g_main_loop_quit(mainloop);
@@ -417,7 +418,7 @@ pcmk_shutdown_worker(gpointer user_data)
         crm_exit(CRM_EX_FATAL);
     }
 
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 /* TODO once libqb is taught to juggle with IPC end-points carried over as
@@ -431,8 +432,8 @@ start_child(pcmk_child_t * child)
 {
     uid_t uid = 0;
     gid_t gid = 0;
-    gboolean use_valgrind = FALSE;
-    gboolean use_callgrind = FALSE;
+    bool use_valgrind = false;
+    bool use_callgrind = false;
     const char *name = pcmk__server_name(child->server);
     const char *env_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
     const char *env_callgrind = pcmk__env_option(PCMK__ENV_CALLGRIND_ENABLED);
@@ -441,26 +442,26 @@ start_child(pcmk_child_t * child)
     child->check_count = 0;
 
     if (env_callgrind != NULL && crm_is_true(env_callgrind)) {
-        use_callgrind = TRUE;
-        use_valgrind = TRUE;
+        use_callgrind = true;
+        use_valgrind = true;
 
     } else if ((env_callgrind != NULL)
                && (strstr(env_callgrind, name) != NULL)) {
-        use_callgrind = TRUE;
-        use_valgrind = TRUE;
+        use_callgrind = true;
+        use_valgrind = true;
 
     } else if (env_valgrind != NULL && crm_is_true(env_valgrind)) {
-        use_valgrind = TRUE;
+        use_valgrind = true;
 
     } else if ((env_valgrind != NULL)
                && (strstr(env_valgrind, name) != NULL)) {
-        use_valgrind = TRUE;
+        use_valgrind = true;
     }
 
     if (use_valgrind && strlen(PCMK__VALGRIND_EXEC) == 0) {
         crm_warn("Cannot enable valgrind for subdaemon %s: valgrind not found",
                  name);
-        use_valgrind = FALSE;
+        use_valgrind = false;
     }
 
     if ((child->uid != NULL) && (crm_user_lookup(child->uid, &uid, &gid) < 0)) {
@@ -851,7 +852,7 @@ init_children_processes(void *user_data)
      */
     pcmk__set_env_option(PCMK__ENV_RESPAWNED, PCMK_VALUE_TRUE, false);
     pacemakerd_state = PCMK__VALUE_RUNNING;
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 void
