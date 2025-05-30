@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2023 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,8 +14,8 @@
 extern GMainLoop *mainloop;
 extern struct qb_ipcs_service_handlers pacemakerd_ipc_callbacks;
 extern const char *pacemakerd_state;
-extern gboolean running_with_sbd;
-extern gboolean shutdown_complete_state_reported_client_closed;
+extern bool running_with_sbd;
+extern bool shutdown_complete_state_reported_client_closed;
 extern unsigned int shutdown_complete_state_reported_to;
 extern crm_trigger_t *shutdown_trigger;
 extern crm_trigger_t *startup_trigger;
