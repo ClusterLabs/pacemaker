@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -116,7 +116,7 @@ static int start_child(pcmk_child_t * child);
 static void pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode);
 static void pcmk_process_exit(pcmk_child_t * child);
 static gboolean pcmk_shutdown_worker(gpointer user_data);
-static gboolean stop_child(pcmk_child_t * child, int signal);
+static void stop_child(pcmk_child_t *child, int signal);
 
 /*!
  * \internal
@@ -862,8 +862,8 @@ restart_cluster_subdaemons(void)
     }
 }
 
-static gboolean
-stop_child(pcmk_child_t * child, int signal)
+static void
+stop_child(pcmk_child_t *child, int signal)
 {
     const char *name = pcmk__server_name(child->server);
 
@@ -878,12 +878,12 @@ stop_child(pcmk_child_t * child, int signal)
     if (child->pid == PCMK__SPECIAL_PID) {
         crm_debug("Nothing to do to stop subdaemon %s[%lld]",
                   name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
-        return TRUE;
+        return;
     }
 
     if (child->pid <= 0) {
         crm_trace("Nothing to do to stop subdaemon %s: Not running", name);
-        return TRUE;
+        return;
     }
 
     errno = 0;
@@ -895,6 +895,4 @@ stop_child(pcmk_child_t * child, int signal)
         crm_err("Could not stop subdaemon %s[%lld] with signal %d: %s",
                 name, (long long) child->pid, signal, strerror(errno));
     }
-
-    return TRUE;
 }
