@@ -820,6 +820,17 @@ find_and_track_existing_processes(void)
     return pcmk_rc_ok;
 }
 
+static void
+start_subdaemon(pcmk_child_t *child)
+{
+    if (child->pid != 0) {
+        /* We are already tracking this process */
+        return;
+    }
+
+    start_child(child);
+}
+
 gboolean
 init_children_processes(void *user_data)
 {
@@ -832,14 +843,7 @@ init_children_processes(void *user_data)
     }
 
     /* start any children that have not been detected */
-    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-        if (pcmk_children[i].pid != 0) {
-            /* we are already tracking it */
-            continue;
-        }
-
-        start_child(&(pcmk_children[i]));
-    }
+    for_each_child(start_subdaemon);
 
     /* From this point on, any daemons being started will be due to
      * respawning rather than node start.
@@ -860,20 +864,25 @@ pcmk_shutdown(int nsig)
     mainloop_set_trigger(shutdown_trigger);
 }
 
+static void
+restart_subdaemon(pcmk_child_t *child)
+{
+    if (!pcmk_is_set(child->flags, child_needs_retry) || child->pid != 0) {
+        return;
+    }
+
+    crm_notice("Respawning cluster-based subdaemon %s",
+               pcmk__server_name(child->server));
+
+    if (start_child(child)) {
+        child->flags &= ~child_needs_retry;
+    }
+}
+
 void
 restart_cluster_subdaemons(void)
 {
-    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-        if (!pcmk_is_set(pcmk_children[i].flags, child_needs_retry) || pcmk_children[i].pid != 0) {
-            continue;
-        }
-
-        crm_notice("Respawning cluster-based subdaemon %s",
-                   pcmk__server_name(pcmk_children[i].server));
-        if (start_child(&pcmk_children[i])) {
-            pcmk_children[i].flags &= ~child_needs_retry;
-        }
-    }
+    for_each_child(restart_subdaemon);
 }
 
 static void
