@@ -118,6 +118,14 @@ static void pcmk_process_exit(pcmk_child_t * child);
 static gboolean pcmk_shutdown_worker(gpointer user_data);
 static void stop_child(pcmk_child_t *child, int signal);
 
+static void
+for_each_child(void (*fn)(pcmk_child_t *child))
+{
+    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
+        fn(&pcmk_children[i]);
+    }
+}
+
 /*!
  * \internal
  * \brief Get path to subdaemon executable
@@ -668,6 +676,13 @@ child_liveness(pcmk_child_t *child)
     return rc;
 }
 
+static void
+reset_respawn_count(pcmk_child_t *child)
+{
+    /* Restore pristine state */
+    child->respawn_count = 0;
+}
+
 /*!
  * \internal
  * \brief Initial one-off check of the pre-existing "child" processes
@@ -798,10 +813,8 @@ find_and_track_existing_processes(void)
         }
         pcmk__sleep_ms(250); // Wait a bit for changes to possibly happen
     }
-    for (i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-        pcmk_children[i].respawn_count = 0;  /* restore pristine state */
-    }
 
+    for_each_child(reset_respawn_count);
     pcmk__create_timer(PCMK_PROCESS_CHECK_INTERVAL, check_next_subdaemon,
                        NULL);
     return pcmk_rc_ok;
