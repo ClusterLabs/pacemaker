@@ -434,6 +434,10 @@ static const struct pcmk__rc_info {
       "More IPC message fragments to send",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_next",
+      "Skip to the next iteration of a loop",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
