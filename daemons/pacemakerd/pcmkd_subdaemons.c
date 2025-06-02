@@ -745,6 +745,49 @@ child_alive(pcmk_child_t *child)
     return pcmk_rc_ok;
 }
 
+static int
+find_and_track_child(pcmk_child_t *child, int rounds, bool *wait_in_progress)
+{
+    int rc = pcmk_rc_ok;
+    const char *name = pcmk__server_name(child->server);
+
+    if (child->respawn_count < 0) {
+        return EAGAIN;
+    }
+
+    rc = child_liveness(child);
+    if (rc == pcmk_rc_ipc_unresponsive) {
+        /* As a speculation, don't give up if there are more rounds to
+         * come for other reasons, but don't artificially wait just
+         * because of this, since we would preferably start ASAP.
+         */
+        return EAGAIN;
+    }
+
+    child->respawn_count = rounds;
+
+    if (rc == pcmk_rc_ok) {
+        rc = child_alive(child);
+
+        if (rc == EAGAIN) {
+            *wait_in_progress = true;
+        }
+
+    } else if (rc == pcmk_rc_ipc_pid_only) {
+        rc = child_up_but_no_ipc(child);
+
+        if (rc == EAGAIN) {
+            *wait_in_progress = true;
+        }
+
+    } else {
+        crm_crit("Checked liveness of %s: %s " QB_XS " rc=%d", name,
+                 pcmk_rc_str(rc), rc);
+    }
+
+    return rc;
+}
+
 /*!
  * \internal
  * \brief Initial one-off check of the pre-existing "child" processes
@@ -776,60 +819,26 @@ int
 find_and_track_existing_processes(void)
 {
     bool wait_in_progress;
-    int rc;
     size_t i, rounds;
 
     for (rounds = 1; rounds <= WAIT_TRIES; rounds++) {
         wait_in_progress = false;
+
         for (i = 0; i < PCMK__NELEM(pcmk_children); i++) {
-            const char *name = pcmk__server_name(pcmk_children[i].server);
+            int rc = find_and_track_child(&pcmk_children[i], rounds,
+                                          &wait_in_progress);
 
-            if (pcmk_children[i].respawn_count < 0) {
-                continue;
-            }
-
-            rc = child_liveness(&pcmk_children[i]);
-            if (rc == pcmk_rc_ipc_unresponsive) {
-                /* As a speculation, don't give up if there are more rounds to
-                 * come for other reasons, but don't artificially wait just
-                 * because of this, since we would preferably start ASAP.
-                 */
-                continue;
-            }
-
-            pcmk_children[i].respawn_count = rounds;
-            switch (rc) {
-                case pcmk_rc_ok:
-                    rc = child_alive(&pcmk_children[i]);
-
-                    if (rc == pcmk_rc_ok) {
-                        break;
-                    } else if (rc == EAGAIN) {
-                        wait_in_progress = true;
-                        continue;
-                    }
-
-                    return rc;
-
-                case pcmk_rc_ipc_pid_only:
-                    rc = child_up_but_no_ipc(&pcmk_children[i]);
-
-                    if (rc == EAGAIN) {
-                        wait_in_progress = true;
-                        continue;
-                    }
-
-                    return rc;
-
-                default:
-                    crm_crit("Checked liveness of %s: %s " QB_XS " rc=%d",
-                             name, pcmk_rc_str(rc), rc);
-                    return rc;
+            if (rc == pcmk_rc_ok) {
+                break;
+            } else if (rc != EAGAIN) {
+                return rc;
             }
         }
+
         if (!wait_in_progress) {
             break;
         }
+
         pcmk__sleep_ms(250); // Wait a bit for changes to possibly happen
     }
 
