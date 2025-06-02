@@ -706,6 +706,45 @@ child_up_but_no_ipc(pcmk_child_t *child)
     return EAGAIN;
 }
 
+static int
+child_alive(pcmk_child_t *child)
+{
+    const char *name = pcmk__server_name(child->server);
+
+    if (child->pid == PCMK__SPECIAL_PID) {
+        if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
+            crm_crit("Cannot track pre-existing process for %s IPC on this "
+                     "platform and PCMK_" PCMK__ENV_FAIL_FAST " requested",
+                     name);
+            return EOPNOTSUPP;
+
+        } else if (child->respawn_count == WAIT_TRIES) {
+            /* Because PCMK__ENV_FAIL_FAST wasn't requested, we can't bail
+             * out.  Instead, switch to IPC liveness monitoring which is not
+             * very suitable for heavy system load.
+             */
+            crm_notice("Cannot track pre-existing process for %s IPC on this "
+                       "platform but assuming it is stable and using liveness "
+                       "monitoring", name);
+            crm_warn("The process for %s IPC cannot be terminated, so "
+                     "shutdown will be delayed by %d s to allow time for it "
+                     "to terminate on its own", name, SHUTDOWN_ESCALATION_PERIOD);
+
+        } else {
+            crm_warn("Cannot track pre-existing process for %s IPC on this "
+                     "platform; checking %d more times",
+                     name, WAIT_TRIES - child->respawn_count);
+            return EAGAIN;
+        }
+    }
+
+    crm_notice("Tracking existing %s process (pid=%lld)",
+               name, (long long) PCMK__SPECIAL_PID_AS_0(child->pid));
+    child->respawn_count = -1;  /* 0~keep watching */
+    child->flags |= child_active_before_startup;
+    return pcmk_rc_ok;
+}
+
 /*!
  * \internal
  * \brief Initial one-off check of the pre-existing "child" processes
@@ -744,7 +783,6 @@ find_and_track_existing_processes(void)
         wait_in_progress = false;
         for (i = 0; i < PCMK__NELEM(pcmk_children); i++) {
             const char *name = pcmk__server_name(pcmk_children[i].server);
-            const char *ipc_name = NULL;
 
             if (pcmk_children[i].respawn_count < 0) {
                 continue;
@@ -759,53 +797,19 @@ find_and_track_existing_processes(void)
                 continue;
             }
 
-            // @TODO Functionize more of this to reduce nesting
-            ipc_name = pcmk__server_ipc_name(pcmk_children[i].server);
             pcmk_children[i].respawn_count = rounds;
             switch (rc) {
                 case pcmk_rc_ok:
-                    if (pcmk_children[i].pid == PCMK__SPECIAL_PID) {
-                        if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
-                            crm_crit("Cannot reliably track pre-existing"
-                                     " authentic process behind %s IPC on this"
-                                     " platform and PCMK_" PCMK__ENV_FAIL_FAST
-                                     " requested", ipc_name);
-                            return EOPNOTSUPP;
-                        } else if (pcmk_children[i].respawn_count == WAIT_TRIES) {
-                            crm_notice("Assuming pre-existing authentic, though"
-                                       " on this platform untrackable, process"
-                                       " behind %s IPC is stable (was in %d"
-                                       " previous samples) so rather than"
-                                       " bailing out (PCMK_" PCMK__ENV_FAIL_FAST
-                                       " not requested), we just switch to a"
-                                       " less optimal IPC liveness monitoring"
-                                       " (not very suitable for heavy load)",
-                                       name, WAIT_TRIES - 1);
-                            crm_warn("The process behind %s IPC cannot be"
-                                     " terminated, so the overall shutdown"
-                                     " will get delayed implicitly (%ld s),"
-                                     " which serves as a graceful period for"
-                                     " its native termination if it vitally"
-                                     " depends on some other daemons going"
-                                     " down in a controlled way already",
-                                     name, (long) SHUTDOWN_ESCALATION_PERIOD);
-                        } else {
-                            wait_in_progress = true;
-                            crm_warn("Cannot reliably track pre-existing"
-                                     " authentic process behind %s IPC on this"
-                                     " platform, can still disappear in %d"
-                                     " attempt(s)", ipc_name,
-                                     WAIT_TRIES - pcmk_children[i].respawn_count);
-                            continue;
-                        }
+                    rc = child_alive(&pcmk_children[i]);
+
+                    if (rc == pcmk_rc_ok) {
+                        break;
+                    } else if (rc == EAGAIN) {
+                        wait_in_progress = true;
+                        continue;
                     }
-                    crm_notice("Tracking existing %s process (pid=%lld)",
-                               name,
-                               (long long) PCMK__SPECIAL_PID_AS_0(
-                                               pcmk_children[i].pid));
-                    pcmk_children[i].respawn_count = -1;  /* 0~keep watching */
-                    pcmk_children[i].flags |= child_active_before_startup;
-                    break;
+
+                    return rc;
 
                 case pcmk_rc_ipc_pid_only:
                     rc = child_up_but_no_ipc(&pcmk_children[i]);
