@@ -79,9 +79,6 @@ static pcmk_child_t pcmk_children[] = {
     },
 };
 
-static char *opts_default[] = { NULL, NULL };
-static char *opts_vgrind[] = { NULL, NULL, NULL, NULL, NULL };
-
 crm_trigger_t *shutdown_trigger = NULL;
 crm_trigger_t *startup_trigger = NULL;
 time_t subdaemon_check_progress = 0;
@@ -496,24 +493,10 @@ start_child(pcmk_child_t * child)
         return pcmk_rc_ok;
 
     } else {
+        char *path = subdaemon_path(child);
+
         /* Start a new session */
         setsid();
-
-        /* Setup the two alternate arg arrays */
-        opts_vgrind[0] = pcmk__str_copy(PCMK__VALGRIND_EXEC);
-        if (use_callgrind) {
-            opts_vgrind[1] = pcmk__str_copy("--tool=callgrind");
-            opts_vgrind[2] = pcmk__str_copy("--callgrind-out-file="
-                                            CRM_STATE_DIR "/callgrind.out.%p");
-            opts_vgrind[3] = subdaemon_path(child);
-            opts_vgrind[4] = NULL;
-        } else {
-            opts_vgrind[1] = subdaemon_path(child);
-            opts_vgrind[2] = NULL;
-            opts_vgrind[3] = NULL;
-            opts_vgrind[4] = NULL;
-        }
-        opts_default[0] = subdaemon_path(child);
 
         if(gid) {
             // Drop root group access if not needed
@@ -545,14 +528,19 @@ start_child(pcmk_child_t * child)
         pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
         pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 
-        if (use_valgrind) {
-            execvp(PCMK__VALGRIND_EXEC, opts_vgrind);
+        if (use_callgrind) {
+            char *out_file = pcmk__str_copy("--callgrind-out-file="
+                                            CRM_STATE_DIR "/callgrind.opt.%p");
+            execlp(PCMK__VALGRIND_EXEC, PCMK__VALGRIND_EXEC, "--tool=callgrind",
+                   out_file, path, (char *) NULL);
+            free(out_file);
+        } else if (use_valgrind) {
+            execlp(PCMK__VALGRIND_EXEC, PCMK__VALGRIND_EXEC, path, (char *) NULL);
         } else {
-            char *path = subdaemon_path(child);
-
-            execvp(path, opts_default);
-            free(path);
+            execlp(path, path, (char *) NULL);
         }
+
+        free(path);
         crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
         crm_exit(CRM_EX_FATAL);
     }
