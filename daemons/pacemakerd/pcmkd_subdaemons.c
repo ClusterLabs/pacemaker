@@ -34,6 +34,7 @@ enum child_daemon_flags {
     child_needs_cluster         = 1 << 1,
     child_needs_retry           = 1 << 2,
     child_active_before_startup = 1 << 3,
+    child_shutting_down         = 1 << 4,
 };
 
 typedef struct pcmk_child_s {
@@ -169,7 +170,11 @@ check_next_subdaemon(gpointer user_data)
             break;
 
         case pcmk_rc_ipc_pid_only: // Child was previously OK
-            if (++(child->check_count) >= PCMK_PROCESS_CHECK_RETRIES) {
+            if (pcmk_is_set(child->flags, child_shutting_down)) {
+                crm_notice("Subdaemon %s[%lld] has stopped accepting IPC "
+                           "connections during shutdown", name, pid);
+
+            } else if (++(child->check_count) >= PCMK_PROCESS_CHECK_RETRIES) {
                 // cts-lab looks for this message
                 crm_crit("Subdaemon %s[%lld] is unresponsive to IPC "
                          "after %d attempt%s and will now be killed",
@@ -180,6 +185,7 @@ check_next_subdaemon(gpointer user_data)
                     // Respawn limit hasn't been reached, so retry another round
                     child->check_count = 0;
                 }
+
             } else {
                 crm_notice("Subdaemon %s[%lld] is unresponsive to IPC "
                            "after %d attempt%s (will recheck later)",
@@ -438,7 +444,7 @@ start_child(pcmk_child_t * child)
     const char *env_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
     const char *env_callgrind = pcmk__env_option(PCMK__ENV_CALLGRIND_ENABLED);
 
-    child->flags &= ~child_active_before_startup;
+    child->flags &= ~(child_active_before_startup | child_shutting_down);
     child->check_count = 0;
 
     if (env_callgrind != NULL && crm_is_true(env_callgrind)) {
@@ -930,6 +936,7 @@ stop_child(pcmk_child_t *child, int signal)
         crm_notice("Stopping subdaemon %s "
                    QB_XS " via signal %d to process %lld",
                    name, signal, (long long) child->pid);
+        child->flags |= child_shutting_down;
     } else {
         crm_err("Could not stop subdaemon %s[%lld] with signal %d: %s",
                 name, (long long) child->pid, signal, strerror(errno));
