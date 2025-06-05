@@ -419,7 +419,7 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
         const char *contents = NULL;
 
         check_expected_ptr(path);
-        check_expected_ptr(buf);
+        check_expected(buf);
         check_expected(bufsize);
         errno = mock_type(int);
         contents = mock_ptr_type(const char *);
