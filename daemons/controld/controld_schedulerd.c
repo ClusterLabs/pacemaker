@@ -198,7 +198,7 @@ new_schedulerd_ipc_connection(void)
 
     pcmk_register_ipc_callback(schedulerd_api, scheduler_event_callback, NULL);
 
-    rc = pcmk__connect_ipc(schedulerd_api, pcmk_ipc_dispatch_main, 3);
+    rc = pcmk__connect_ipc_retry_conrefused(schedulerd_api, pcmk_ipc_dispatch_main, 3);
     if (rc != pcmk_rc_ok) {
         crm_err("Error connecting to %s: %s",
                 pcmk_ipc_name(schedulerd_api, true), pcmk_rc_str(rc));

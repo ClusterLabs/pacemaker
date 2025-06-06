@@ -474,6 +474,37 @@ connect_without_main_loop(pcmk_ipc_api_t *api)
 
 /*!
  * \internal
+ * \brief Connect to a Pacemaker daemon via IPC (retrying after soft errors
+ *        and ECONNREFUSED)
+ *
+ * \param[in,out] api            IPC API instance
+ * \param[in]     dispatch_type  How IPC replies should be dispatched
+ * \param[in]     attempts       How many times to try (in case of soft error)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__connect_ipc_retry_conrefused(pcmk_ipc_api_t *api,
+                                   enum pcmk_ipc_dispatch dispatch_type,
+                                   int attempts)
+{
+    int remaining = attempts;
+    int rc = pcmk_rc_ok;
+
+    do {
+        if (rc == ECONNREFUSED) {
+            pcmk__sleep_ms((attempts - remaining) * 500);
+        }
+        rc = pcmk__connect_ipc(api, dispatch_type, remaining);
+        remaining--;
+    } while (rc == ECONNREFUSED && remaining >= 0);
+
+    return rc;
+}
+
+
+/*!
+ * \internal
  * \brief Connect to a Pacemaker daemon via IPC (retrying after soft errors)
  *
  * \param[in,out] api            IPC API instance
