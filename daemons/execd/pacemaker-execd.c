@@ -260,7 +260,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
     crm_trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
-            return pcmk__ipc_send_xml(client, id, reply, FALSE);
+            return pcmk__ipc_send_xml(client, id, reply, crm_ipc_flags_none);
 #ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
             return lrmd__remote_send_xml(client->remote, reply, id, "reply");

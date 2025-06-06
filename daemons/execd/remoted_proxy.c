@@ -206,7 +206,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 
         crm_element_value_int(xml, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
         crm_trace("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
-        rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, FALSE);
+        rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, crm_ipc_flags_none);
 
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
         ipc_client->request_id = 0;
