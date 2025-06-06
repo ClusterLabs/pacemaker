@@ -392,27 +392,26 @@ pcmk__client_pid(qb_ipcs_connection_t *c)
  * \brief Retrieve message XML from data read from client IPC
  *
  * \param[in,out]  c       IPC client connection
- * \param[in]      data    Data read from client connection
  * \param[out]     id      Where to store message ID from libqb header
  * \param[out]     flags   Where to store flags from libqb header
  *
  * \return Message XML on success, NULL otherwise
  */
 xmlNode *
-pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
-                      uint32_t *flags)
+pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
 {
     xmlNode *xml = NULL;
-    char *text = ((char *)data) + sizeof(pcmk__ipc_header_t);
-    pcmk__ipc_header_t *header = data;
+    pcmk__ipc_header_t *header = (void *) c->buffer->data;
+    char *text = (char *) header + sizeof(pcmk__ipc_header_t);
 
     if (!pcmk__valid_ipc_header(header)) {
         return NULL;
     }
 
     if (id) {
-        *id = ((struct qb_ipc_response_header *)data)->id;
+        *id = header->qb.id;
     }
+
     if (flags) {
         *flags = header->flags;
     }

@@ -264,7 +264,7 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        request = pcmk__client_data2xml(client, client->buffer->data, &id, &flags);
+        request = pcmk__client_data2xml(client, &id, &flags);
         g_byte_array_free(client->buffer, TRUE);
         client->buffer = NULL;
 

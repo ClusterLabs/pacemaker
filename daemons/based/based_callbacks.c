@@ -324,8 +324,7 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        op_request = pcmk__client_data2xml(cib_client, cib_client->buffer->data,
-                                           &id, &flags);
+        op_request = pcmk__client_data2xml(cib_client, &id, &flags);
         g_byte_array_free(cib_client->buffer, TRUE);
         cib_client->buffer = NULL;
 

@@ -394,7 +394,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        msg = pcmk__client_data2xml(client, client->buffer->data, &id, &flags);
+        msg = pcmk__client_data2xml(client, &id, &flags);
         g_byte_array_free(client->buffer, TRUE);
         client->buffer = NULL;
 
