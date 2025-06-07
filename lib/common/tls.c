@@ -14,8 +14,6 @@
 #include <gnutls/x509.h>
 #include <stdlib.h>
 
-#include <glib.h>           // gpointer, GPOINTER_TO_INT(), GINT_TO_POINTER()
-
 #include <crm/common/tls_internal.h>
 
 static char *
@@ -101,44 +99,6 @@ tls_load_x509_data(pcmk__tls_t *tls)
     return pcmk_rc_ok;
 }
 
-/*!
- * \internal
- * \brief Verify a peer's certificate
- *
- * \return 0 if the certificate is trusted and the gnutls handshake should
- *         continue, -1 otherwise
- */
-static int
-verify_peer_cert(gnutls_session_t session)
-{
-    int rc;
-    int type;
-    unsigned int status;
-    gnutls_datum_t out;
-
-    /* NULL = no hostname comparison will be performed */
-    rc = gnutls_certificate_verify_peers3(session, NULL, &status);
-
-    /* Success means it was able to perform the verification.  We still have
-     * to check status to see whether the cert is valid or not.
-     */
-    if (rc != GNUTLS_E_SUCCESS) {
-        crm_err("Failed to verify peer certificate: %s", gnutls_strerror(rc));
-        return -1;
-    }
-
-    if (status == 0) {
-        /* The certificate is trusted. */
-        return 0;
-    }
-
-    type = gnutls_certificate_type_get(session);
-    gnutls_certificate_verification_status_print(status, type, &out, 0);
-    crm_err("Peer certificate invalid: %s", out.data);
-    gnutls_free(out.data);
-    return GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR;
-}
-
 static void
 _gnutls_log_func(int level, const char *msg)
 {
@@ -175,8 +135,6 @@ pcmk__free_tls(pcmk__tls_t *tls)
 
     free(tls);
     tls = NULL;
-
-    gnutls_global_deinit();
 }
 
 int
@@ -192,14 +150,6 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
 
     signal(SIGPIPE, SIG_IGN);
 
-    /* gnutls_global_init is safe to call multiple times, but we have to call
-     * gnutls_global_deinit the same number of times for that function to do
-     * anything.
-     *
-     * FIXME: When we can use gnutls >= 3.3.0, we don't have to call
-     * gnutls_global_init anymore.
-     */
-    gnutls_global_init();
     gnutls_global_set_log_level(8);
     gnutls_global_set_log_function(_gnutls_log_func);
 
@@ -349,8 +299,7 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
         goto error;
     }
 
-    gnutls_transport_set_ptr(session,
-                             (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
+    gnutls_transport_set_int(session, csock);
 
     /* gnutls does not make this easy */
     if (tls->cred_type == GNUTLS_CRD_ANON && tls->server) {
@@ -381,12 +330,8 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
             gnutls_certificate_server_set_request(session, GNUTLS_CERT_REQUIRE);
         }
 
-        /* Register a function to verify the peer's certificate.
-         *
-         * FIXME: When we can require gnutls >= 3.4.6, remove verify_peer_cert
-         * and use gnutls_session_set_verify_cert instead.
-         */
-        gnutls_certificate_set_verify_function(tls->credentials.cert, verify_peer_cert);
+        // Register a function to verify the peer's certificate
+        gnutls_session_set_verify_cert(session, NULL, 0);
     }
 
     return session;
@@ -417,12 +362,9 @@ error:
 int
 pcmk__tls_get_client_sock(const pcmk__remote_t *remote)
 {
-    gpointer sock_ptr = NULL;
-
     pcmk__assert((remote != NULL) && (remote->tls_session != NULL));
 
-    sock_ptr = (gpointer) gnutls_transport_get_ptr(remote->tls_session);
-    return GPOINTER_TO_INT(sock_ptr);
+    return gnutls_transport_get_int(remote->tls_session);
 }
 
 int

@@ -84,8 +84,8 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
  * \internal
  * \brief Initialize a new TLS session
  *
- * \param[in] tls         A TLS environment object
- * \param[in] csock       Connected socket for TLS session
+ * \param[in] tls    TLS environment object
+ * \param[in] csock  Connected TCP socket for TLS session
  *
  * \return Pointer to newly created session object, or NULL on error
  */
