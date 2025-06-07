@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -426,7 +426,7 @@ main(int argc, char **argv)
 #endif
 
     if (pcmk__locate_sbd() > 0) {
-        running_with_sbd = TRUE;
+        running_with_sbd = true;
     }
 
     switch (find_and_track_existing_processes()) {
