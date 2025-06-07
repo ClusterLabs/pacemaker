@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -329,8 +329,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
         pcmk__rsc_trace(rsc, "%s is unrunnable because start is", mon->uuid);
         pcmk__clear_action_flags(mon, pcmk__action_runnable);
 
-    } else if ((node == NULL) || !node->details->online
-               || node->details->unclean) {
+    } else if (!pcmk__node_available(node, pcmk__node_alive)) {
         pcmk__rsc_trace(rsc, "%s is unrunnable because no node is available",
                         mon->uuid);
         pcmk__clear_action_flags(mon, pcmk__action_runnable);
@@ -559,7 +558,7 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
          */
         order_after_stops(rsc, stop_node, stopped_mon);
 
-        if (!stop_node->details->online || stop_node->details->unclean) {
+        if (!pcmk__node_available(stop_node, pcmk__node_alive)) {
             pcmk__rsc_debug(rsc, "%s unrunnable on %s: node unavailable)",
                             stopped_mon->uuid, pcmk__node_name(stop_node));
             pcmk__clear_action_flags(stopped_mon, pcmk__action_runnable);
