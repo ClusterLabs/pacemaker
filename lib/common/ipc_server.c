@@ -312,6 +312,12 @@ pcmk__free_client(pcmk__client_t *c)
     free(c->id);
     free(c->name);
     free(c->user);
+
+    if (c->buffer != NULL) {
+        g_byte_array_free(c->buffer, TRUE);
+        c->buffer = NULL;
+    }
+
     if (c->remote) {
         if (c->remote->auth_timeout) {
             g_source_remove(c->remote->auth_timeout);
@@ -386,27 +392,26 @@ pcmk__client_pid(qb_ipcs_connection_t *c)
  * \brief Retrieve message XML from data read from client IPC
  *
  * \param[in,out]  c       IPC client connection
- * \param[in]      data    Data read from client connection
  * \param[out]     id      Where to store message ID from libqb header
  * \param[out]     flags   Where to store flags from libqb header
  *
  * \return Message XML on success, NULL otherwise
  */
 xmlNode *
-pcmk__client_data2xml(pcmk__client_t *c, void *data, uint32_t *id,
-                      uint32_t *flags)
+pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
 {
     xmlNode *xml = NULL;
-    char *text = ((char *)data) + sizeof(pcmk__ipc_header_t);
-    pcmk__ipc_header_t *header = data;
+    pcmk__ipc_header_t *header = (void *) c->buffer->data;
+    char *text = (char *) header + sizeof(pcmk__ipc_header_t);
 
     if (!pcmk__valid_ipc_header(header)) {
         return NULL;
     }
 
     if (id) {
-        *id = ((struct qb_ipc_response_header *)data)->id;
+        *id = header->qb.id;
     }
+
     if (flags) {
         *flags = header->flags;
     }
@@ -494,11 +499,31 @@ crm_ipcs_flush_events(pcmk__client_t *c)
             break;
         }
 
-        qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
-        if (qb_rc < 0) {
-            rc = (int) -qb_rc;
-            break;
+        /* Retry sending the event up to five times.  If we get -EAGAIN, sleep
+         * a very short amount of time (too long here is bad) and try again.
+         * If we simply exit the while loop on -EAGAIN, we'll have to wait until
+         * the timer fires off again (up to 1.5 seconds - see delay_next_flush)
+         * to retry sending the message.
+         *
+         * In that case, the queue may just continue to grow faster than we are
+         * processing it, eventually leading to daemons timing out waiting for
+         * replies, which will cause wider failures.
+         */
+        for (unsigned int retries = 5; retries > 0; retries--) {
+            qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
+
+            if (qb_rc < 0) {
+                if (retries == 1 || qb_rc != -EAGAIN) {
+                    rc = (int) -qb_rc;
+                    goto no_more_retries;
+                } else {
+                    pcmk__sleep_ms(5);
+                }
+            } else {
+                break;
+            }
         }
+
         event = g_queue_pop_head(c->event_queue);
 
         sent++;
@@ -509,6 +534,7 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         pcmk_free_ipc_event(event);
     }
 
+no_more_retries:
     queue_len -= sent;
     if (sent > 0 || queue_len) {
         crm_trace("Sent %u events (%u remaining) for %p[%d]: %s (%zd)",
@@ -743,23 +769,40 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
     } else {
         ssize_t qb_rc;
+        char *part_text = NULL;
 
         CRM_LOG_ASSERT(header->qb.id != 0);     /* Replying to a specific request */
+
+        if (pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
+            part_text = crm_strdup_printf(" (final part %d) ", header->part_id);
+        } else if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
+            if (header->part_id == 0) {
+                part_text = crm_strdup_printf(" (initial part %d) ", header->part_id);
+            } else {
+                part_text = crm_strdup_printf(" (part %d) ", header->part_id);
+            }
+        } else {
+            part_text = crm_strdup_printf(" ");
+        }
 
         qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         if (qb_rc < header->qb.size) {
             if (qb_rc < 0) {
                 rc = (int) -qb_rc;
             }
-            crm_notice("Response %" PRId32 " to pid %u failed: %s "
+
+            crm_notice("Response %" PRId32 "%sto pid %u failed: %s "
                        QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
-                       header->qb.id, c->pid, pcmk_rc_str(rc),
+                       header->qb.id, part_text, c->pid, pcmk_rc_str(rc),
                        header->qb.size, qb_rc, c->ipcs);
 
         } else {
-            crm_trace("Response %" PRId32 " sent, %zd bytes to %p[%u]",
-                      header->qb.id, qb_rc, c->ipcs, c->pid);
+            crm_trace("Response %" PRId32 "%ssent, %zd bytes to %p[%u]",
+                      header->qb.id, part_text, qb_rc, c->ipcs, c->pid);
+            crm_trace("Text = %s", (char *) iov[1].iov_base);
         }
+
+        free(part_text);
 
         if (pcmk_is_set(flags, crm_ipc_server_free)) {
             pcmk_free_ipc_event(iov);
@@ -782,6 +825,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
     struct iovec *iov = NULL;
     int rc = pcmk_rc_ok;
     GString *iov_buffer = NULL;
+    uint16_t index = 0;
+    bool event_or_proxied = false;
 
     if (c == NULL) {
         return EINVAL;
@@ -798,43 +843,53 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
      * Changing do_local_notify to check for a proxied connection first results
      * in processes on the Pacemaker Remote node (like cibadmin or crm_mon)
      * timing out when waiting for a reply.
-     *
-     * Currently, server events support multipart IPC messages, while other
-     * IPC message types do not.
      */
-    if (pcmk_is_set(flags, crm_ipc_server_event)
-        || pcmk_is_set(c->flags, pcmk__client_proxied)) {
-        uint16_t index = 0;
+    event_or_proxied = pcmk_is_set(flags, crm_ipc_server_event)
+                       || pcmk_is_set(c->flags, pcmk__client_proxied);
 
-        do {
-            rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
+    do {
+        rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
 
-            switch (rc) {
-                case pcmk_rc_ok:
-                    /* No more chunks to send after this one */
-                    pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-                    rc = pcmk__ipc_send_iov(c, iov, flags);
+        switch (rc) {
+            case pcmk_rc_ok:
+                /* No more chunks to send after this one */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
 
-                    /* Return pcmk_rc_ok instead so callers don't have to know
-                     * whether they passed an event or not when interpreting the
-                     * return code.
-                     */
+                if (event_or_proxied) {
                     if (rc == EAGAIN) {
+                        /* Return pcmk_rc_ok instead so callers don't have to know
+                         * whether they passed an event or not when interpreting
+                         * the return code.
+                         */
                         rc = pcmk_rc_ok;
                     }
+                } else {
+                    /* EAGAIN is an error for IPC messages.  We don't have a
+                     * send queue for these, so we need to try again.  If there
+                     * was some other error, we need to break out of this loop
+                     * and report it.
+                     *
+                     * FIXME: Retry limit for EAGAIN?
+                     */
+                    if (rc == EAGAIN) {
+                        break;
+                    }
+                }
 
-                    goto done;
+                goto done;
 
-                case pcmk_rc_ipc_more:
-                    /* There are more chunks to send after this one */
-                    pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-                    rc = pcmk__ipc_send_iov(c, iov, flags);
+            case pcmk_rc_ipc_more:
+                /* There are more chunks to send after this one */
+                pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
+                rc = pcmk__ipc_send_iov(c, iov, flags);
 
-                    /* Did an error occur during transmission?  EAGAIN is not
-                     * an error for server events.  The event will be queued for
-                     * transmission and we will attempt sending it again the
-                     * next time pcmk__ipc_send_iov is called, or when the
-                     * crm_ipcs_flush_events_cb happens.
+                /* Did an error occur during transmission? */
+                if (event_or_proxied) {
+                    /* EAGAIN is not an error for server events.  The event
+                     * will be queued for transmission and we will attempt
+                     * sending it again the next time pcmk__ipc_send_iov is
+                     * called, or when the crm_ipcs_flush_events_cb happens.
                      */
                     if ((rc != pcmk_rc_ok) && (rc != EAGAIN)) {
                         goto done;
@@ -843,20 +898,29 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
                     index++;
                     break;
 
-                default:
-                    /* An error occurred during preparation */
-                    goto done;
-            }
-        } while (true);
+                } else {
+                    /* EAGAIN is an error for IPC messages.  We don't have a
+                     * send queue for these, so we need to try again.  If there
+                     * was some other error, we need to break out of this loop
+                     * and report it.
+                     *
+                     * FIXME: Retry limit for EAGAIN?
+                     */
+                    if (rc == pcmk_rc_ok) {
+                        index++;
+                        break;
+                    } else if (rc == EAGAIN) {
+                        break;
+                    } else {
+                        goto done;
+                    }
+                }
 
-    } else {
-        rc = pcmk__ipc_prepare_iov(request, iov_buffer, 0, &iov, NULL);
-
-        if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_more)) {
-            pcmk__set_ipc_flags(flags, "send data", crm_ipc_server_free);
-            rc = pcmk__ipc_send_iov(c, iov, flags);
+            default:
+                /* An error occurred during preparation */
+                goto done;
         }
-    }
+    } while (true);
 
 done:
     if ((rc != pcmk_rc_ok) && (rc != EAGAIN)) {

@@ -100,12 +100,38 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    request = pcmk__client_data2xml(c, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&c->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        request = pcmk__client_data2xml(c, &id, &flags);
+        g_byte_array_free(c->buffer, TRUE);
+        c->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (c->buffer != NULL) {
+            g_byte_array_free(c->buffer, TRUE);
+            c->buffer = NULL;
+        }
+
+        return 0;
+    }
+
     if (request == NULL) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
-
 
     op = crm_element_value(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {

@@ -852,7 +852,6 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
 
 struct crm_ipc_s {
     struct pollfd pfd;
-    unsigned int buf_size;     // size of allocated buffer
     int need_reply;
     GByteArray *buffer;
     char *server_name;          // server IPC name being connected to
@@ -893,7 +892,6 @@ crm_ipc_new(const char *name, size_t max_size)
         return NULL;
     }
 
-    client->buf_size = crm_ipc_default_buffer_size();
     client->buffer = NULL;
     client->pfd.fd = -1;
     client->pfd.events = POLLIN;
@@ -925,7 +923,7 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
     }
 
     ipc->need_reply = FALSE;
-    ipc->ipc = qb_ipcc_connect(ipc->server_name, ipc->buf_size);
+    ipc->ipc = qb_ipcc_connect(ipc->server_name, crm_ipc_default_buffer_size());
     if (ipc->ipc == NULL) {
         return errno;
     }
@@ -1202,6 +1200,7 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     time_t timeout = 0;
     int32_t qb_timeout = -1;
     int rc = pcmk_rc_ok;
+    int reply_id = 0;
 
     if (ms_timeout > 0) {
         timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
@@ -1212,13 +1211,13 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     crm_trace("Expecting reply to %s IPC message %d", client->server_name,
               request_id);
 
-    buffer = g_malloc0(client->buf_size);
+    buffer = g_malloc0(crm_ipc_default_buffer_size());
 
     do {
         guint8 *data = NULL;
         xmlNode *xml = NULL;
 
-        *bytes = qb_ipcc_recv(client->ipc, buffer, client->buf_size,
+        *bytes = qb_ipcc_recv(client->ipc, buffer, crm_ipc_default_buffer_size(),
                               qb_timeout);
 
         hdr = (pcmk__ipc_header_t *) (void *) buffer;
@@ -1238,34 +1237,38 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
             break;
         }
 
-        if (hdr->qb.id == request_id) {
-            /* Got the reply we were expecting. */
-            if (client->buffer != NULL) {
-                pcmk__ipc_free_client_buffer(client);
-            }
+        reply_id = hdr->qb.id;
 
-            client->buffer = g_byte_array_sized_new(client->buf_size);
-            g_byte_array_append(client->buffer, (const guint8 *) buffer, *bytes);
-            break;
+        if (reply_id == request_id) {
+            /* Got the reply we were expecting. */
+            rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+
+            if (rc == pcmk_rc_ok) {
+                break;
+            } else if (rc == pcmk_rc_ipc_more) {
+                continue;
+            } else {
+                goto done;
+            }
         }
 
         data = buffer + sizeof(pcmk__ipc_header_t);
         xml = pcmk__xml_parse((const char *) data);
 
-        if (hdr->qb.id < request_id) {
-            crm_err("Discarding old reply %d (need %d)", hdr->qb.id, request_id);
+        if (reply_id < request_id) {
+            crm_err("Discarding old reply %d (need %d)", reply_id, request_id);
             crm_log_xml_notice(xml, "OldIpcReply");
-        } else if (hdr->qb.id > request_id) {
-            crm_err("Discarding newer reply %d (need %d)", hdr->qb.id, request_id);
+        } else if (reply_id > request_id) {
+            crm_err("Discarding newer reply %d (need %d)", reply_id, request_id);
             crm_log_xml_notice(xml, "ImpossibleReply");
             pcmk__assert(hdr->qb.id <= request_id);
         }
     } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
 
-    if (*bytes > 0) {
-        crm_trace("Received %zd-byte reply %" PRId32 " to %s IPC %d: %.100s",
-                  *bytes, hdr->qb.id, client->server_name, request_id,
-                  crm_ipc_buffer(client));
+    if (client->buffer->len > 0) {
+        crm_trace("Received %u-byte reply %d to %s IPC %d: %.100s",
+                  client->buffer->len, reply_id, client->server_name,
+                  request_id, crm_ipc_buffer(client));
 
         if (reply != NULL) {
             *reply = pcmk__xml_parse(crm_ipc_buffer(client));
@@ -1285,8 +1288,50 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
      * there's no need to keep the client buffer around anymore.  Free it here
      * to avoid having to do this anywhere crm_ipc_send is called.
      */
+done:
     pcmk__ipc_free_client_buffer(client);
     g_free(buffer);
+    return rc;
+}
+
+static int
+discard_old_replies(crm_ipc_t *client, int32_t ms_timeout)
+{
+    pcmk__ipc_header_t *header = NULL;
+    int rc = pcmk_rc_ok;
+    ssize_t qb_rc = 0;
+    char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
+                                      sizeof(char));
+
+    qb_rc = qb_ipcc_recv(client->ipc, buffer, crm_ipc_default_buffer_size(),
+                         ms_timeout);
+
+    if (qb_rc < 0) {
+        crm_warn("Sending %s IPC disabled until pending reply received",
+                 client->server_name);
+        rc = EALREADY;
+        goto done;
+    }
+
+    header = (pcmk__ipc_header_t *)(void *) buffer;
+
+    if (!pcmk__valid_ipc_header(header)) {
+        rc = EBADMSG;
+
+    } else if (!pcmk_is_set(header->flags, crm_ipc_multipart)
+               || pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
+        crm_notice("Sending %s IPC re-enabled after pending reply received",
+                   client->server_name);
+        client->need_reply = FALSE;
+
+    } else {
+        crm_warn("Sending %s IPC disabled until multipart IPC message "
+                 "reply received", client->server_name);
+        rc = EALREADY;
+    }
+
+done:
+    free(buffer);
     return rc;
 }
 
@@ -1308,13 +1353,13 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
              enum crm_ipc_flags flags, int32_t ms_timeout, xmlNode **reply)
 {
     int rc = 0;
-    time_t timeout = 0;
-    ssize_t qb_rc = 0;
     ssize_t bytes = 0;
-    struct iovec *iov;
+    ssize_t sent_bytes = 0;
+    struct iovec *iov = NULL;
     static uint32_t id = 0;
     pcmk__ipc_header_t *header;
     GString *iov_buffer = NULL;
+    uint16_t index = 0;
 
     if (client == NULL) {
         crm_notice("Can't send IPC request without connection (bug?): %.100s",
@@ -1332,26 +1377,15 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         ms_timeout = 5000;
     }
 
-    /* This loop exists only to clear out any old replies that we haven't
+    /* This block exists only to clear out any old replies that we haven't
      * yet read.  We don't care about their contents since it's too late to
      * do anything with them, so we just read and throw them away.
      */
     if (client->need_reply) {
-        char *buffer = pcmk__assert_alloc(crm_ipc_default_buffer_size(),
-                                          sizeof(char));
+        int discard_rc = discard_old_replies(client, ms_timeout);
 
-        qb_rc = qb_ipcc_recv(client->ipc, buffer, client->buf_size, ms_timeout);
-        free(buffer);
-
-        if (qb_rc < 0) {
-            crm_warn("Sending %s IPC disabled until pending reply received",
-                     client->server_name);
-            return -EALREADY;
-
-        } else {
-            crm_notice("Sending %s IPC re-enabled after pending reply received",
-                       client->server_name);
-            client->need_reply = FALSE;
+        if (discard_rc != pcmk_rc_ok) {
+            return pcmk_rc2legacy(discard_rc);
         }
     }
 
@@ -1360,39 +1394,82 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     iov_buffer = g_string_sized_new(1024);
     pcmk__xml_string(message, 0, iov_buffer, 0);
-    rc = pcmk__ipc_prepare_iov(id, iov_buffer, 0, &iov, &bytes);
-
-    if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-        crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
-                 client->server_name, pcmk_rc_str(rc), rc);
-        g_string_free(iov_buffer, TRUE);
-        return pcmk_rc2legacy(rc);
-    }
-
-    header = iov[0].iov_base;
-    pcmk__set_ipc_flags(header->flags, client->server_name, flags);
-
-    if (pcmk_is_set(flags, crm_ipc_proxied)) {
-        /* Don't look for a synchronous response */
-        pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
-    }
-
-    crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",
-              client->server_name, header->qb.id, header->qb.size, ms_timeout);
-
-    /* Send the IPC request, respecting any timeout we were passed */
-    if (ms_timeout > 0) {
-        timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
-    }
 
     do {
-        qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
-    } while ((qb_rc == -EAGAIN) && ((timeout == 0) || (time(NULL) < timeout)));
+        ssize_t qb_rc = 0;
+        time_t timeout = 0;
 
-    rc = (int) qb_rc; // Negative of system errno, or bytes sent
-    if (qb_rc <= 0) {
-        goto send_cleanup;
-    }
+        rc = pcmk__ipc_prepare_iov(id, iov_buffer, index, &iov, &bytes);
+
+        if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
+            crm_warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",
+                     client->server_name, pcmk_rc_str(rc), rc);
+            g_string_free(iov_buffer, TRUE);
+            return pcmk_rc2legacy(rc);
+        }
+
+        header = iov[0].iov_base;
+        pcmk__set_ipc_flags(header->flags, client->server_name, flags);
+
+        if (pcmk_is_set(flags, crm_ipc_proxied)) {
+            /* Don't look for a synchronous response */
+            pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
+        }
+
+        if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
+            bool is_end = pcmk_is_set(header->flags, crm_ipc_multipart_end);
+            crm_trace("Sending %s IPC request %" PRId32 " (%spart %" PRIu16 ") of "
+                      "%" PRId32 " bytes using %dms timeout",
+                      client->server_name, header->qb.id, is_end ? "final " : "",
+                      index, header->qb.size, ms_timeout);
+            crm_trace("Text = %s", (char *) iov[1].iov_base);
+        } else {
+            crm_trace("Sending %s IPC request %" PRId32 " of %" PRId32 " bytes "
+                      "using %dms timeout",
+                      client->server_name, header->qb.id, header->qb.size,
+                      ms_timeout);
+            crm_trace("Text = %s", (char *) iov[1].iov_base);
+        }
+
+        /* Send the IPC request, respecting any timeout we were passed */
+        if (ms_timeout > 0) {
+            timeout = time(NULL) + 1 + pcmk__timeout_ms2s(ms_timeout);
+        }
+
+        do {
+            qb_rc = qb_ipcc_sendv(client->ipc, iov, 2);
+        } while ((qb_rc == -EAGAIN) && ((timeout == 0) || (time(NULL) < timeout)));
+
+        /* An error occurred when sending. */
+        if (qb_rc <= 0) {
+            rc = (int) qb_rc;   // Negative of system errno
+            goto send_cleanup;
+        }
+
+        /* Sending succeeded.  The next action depends on whether this was a
+         * multipart IPC message or not.
+         */
+        if (rc == pcmk_rc_ok) {
+            /* This was either a standalone IPC message or the last part of
+             * a multipart message.  Set the return value and break out of
+             * this processing loop.
+             */
+            sent_bytes += qb_rc;
+            rc = (int) sent_bytes;
+            break;
+        } else {
+            /* There's no way to get here for any value other than rc == pcmk_rc_more
+             * given the check right after pcmk__ipc_prepare_iov.
+             *
+             * This was a multipart message, loop to process the next chunk.
+             */
+            sent_bytes += qb_rc;
+            index++;
+        }
+
+        pcmk_free_ipc_event(iov);
+        iov = NULL;
+    } while (true);
 
     /* If we should not wait for a response, bail now */
     if (!pcmk_is_set(flags, crm_ipc_client_response)) {
@@ -1401,6 +1478,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         goto send_cleanup;
     }
 
+    pcmk__ipc_free_client_buffer(client);
     rc = internal_ipc_get_reply(client, header->qb.id, ms_timeout, &bytes, reply);
     if (rc == pcmk_rc_ok) {
         rc = (int) bytes; // Size of reply received
