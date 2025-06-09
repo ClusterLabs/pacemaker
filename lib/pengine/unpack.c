@@ -423,6 +423,14 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
                   pcmk__readable_interval(scheduler->priv->node_pending_ms));
     }
 
+    set_config_flag(scheduler, PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM,
+                    pcmk__sched_fence_remote_no_quorum);
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_fence_remote_no_quorum)) {
+        crm_trace("Pacemaker Remote nodes may be fenced without quorum");
+    } else {
+        crm_trace("Pacemaker Remote nodes require quorum to be fenced");
+    }
+
     return TRUE;
 }
 
