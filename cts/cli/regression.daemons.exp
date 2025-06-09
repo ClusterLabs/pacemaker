@@ -514,6 +514,15 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
+    <parameter name="fence-remote-without-quorum">
+      <longdesc lang="en">
+        By default, an inquorate node can not fence Pacemaker Remote nodes that are part of its partition as long as the cluster thinks they can be restarted.  If true, inquorate nodes will be able to fence remote nodes regardless.
+      </longdesc>
+      <shortdesc lang="en">
+        *** Advanced Use Only *** Whether remote nodes can be fenced without quorum
+      </shortdesc>
+      <content type="boolean" default=""/>
+    </parameter>
     <parameter name="stonith-enabled">
       <longdesc lang="en">
         If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.
