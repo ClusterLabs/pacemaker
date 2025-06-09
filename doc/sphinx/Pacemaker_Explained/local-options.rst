@@ -639,19 +639,6 @@ environment variables when Pacemaker daemons start up.
        * ``posix``
        * ``sysv``
 
-   * - .. _pcmk_ipc_buffer:
-
-       .. index::
-          pair: node option; PCMK_ipc_buffer
-
-       PCMK_ipc_buffer
-     - :ref:`nonnegative integer <nonnegative_integer>`
-     - 131072
-     - *Advanced Use Only:* Specify an IPC buffer size in bytes. This can be
-       useful when connecting to large clusters that result in messages
-       exceeding the default size (which will also result in log messages
-       referencing this variable).
-
    * - .. _pcmk_cluster_type:
 
        .. index::
