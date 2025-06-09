@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,6 +37,7 @@ extern     "C" {
 #define PCMK_OPT_ENABLE_ACL                     "enable-acl"
 #define PCMK_OPT_ENABLE_STARTUP_PROBES          "enable-startup-probes"
 #define PCMK_OPT_FENCE_REACTION                 "fence-reaction"
+#define PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM    "fence-remote-without-quorum"
 #define PCMK_OPT_HAVE_WATCHDOG                  "have-watchdog"
 #define PCMK_OPT_JOIN_FINALIZATION_TIMEOUT      "join-finalization-timeout"
 #define PCMK_OPT_JOIN_INTEGRATION_TIMEOUT       "join-integration-timeout"

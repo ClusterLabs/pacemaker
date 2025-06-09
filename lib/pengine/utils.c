@@ -69,8 +69,14 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
         /* Remote nodes are marked online when we assign their resource to a
          * node, not when they are actually started (see remote_connection_assigned)
          * so the above test by itself isn't good enough.
+         *
+         * This behavior is now the default.  The user can opt out of it (and
+         * into the old, possibly buggy(?)) behavior by adding
+         * fence-remote-without-quorum="true" to their CIB.  Leaving this option
+         * out will also result in the default behavior.
          */
-        if (pcmk__is_pacemaker_remote_node(node)) {
+        if (pcmk__is_pacemaker_remote_node(node)
+            && !pcmk_is_set(scheduler->flags, pcmk__sched_fence_remote_no_quorum)) {
             /* If we're on a system without quorum, it's entirely possible that
              * the remote resource was automatically moved to a node on the
              * partition with quorum.  We can't tell that from this node - the

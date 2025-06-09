@@ -154,6 +154,11 @@ enum pcmk__scheduler_flags {
      * applying node-specific location criteria, assignment, etc.)
      */
     pcmk__sched_validate_only           = (1ULL << 27),
+
+    /* Can Pacemaker Remote nodes be fenced even from a node that doesn't
+     * have quorum?
+     */
+    pcmk__sched_fence_remote_no_quorum  = (1ULL << 28),
 };
 
 // Implementation of pcmk__scheduler_private_t
