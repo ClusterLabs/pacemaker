@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -117,10 +117,10 @@ services__get_lsb_metadata(const char *type, char **output)
     bool in_header = FALSE;
 
     if (type[0] == '/') {
-        snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
+        pcmk__snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
     } else {
-        snprintf(ra_pathname, sizeof(ra_pathname), "%s/%s",
-                 PCMK__LSB_INIT_DIR, type);
+        pcmk__snprintf(ra_pathname, sizeof(ra_pathname), "%s/%s",
+                       PCMK__LSB_INIT_DIR, type);
     }
 
     crm_trace("Looking into %s", ra_pathname);

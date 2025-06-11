@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -180,21 +180,21 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
 
         if (method > QB_LOG_STDERR) {
             // If logging to file, prefix with timestamp, node name, daemon ID
-            offset += snprintf(fmt + offset, FMT_MAX - offset,
-                               TIMESTAMP_FORMAT_SPEC " %s %-20s[%lu] ",
-                                use_nodename, daemon, (unsigned long) use_pid);
+            offset += pcmk__snprintf(fmt + offset, FMT_MAX - offset,
+                                     TIMESTAMP_FORMAT_SPEC " %s %-20s[%lu] ",
+                                     use_nodename, daemon, (unsigned long) use_pid);
         }
 
         // Add function name (in parentheses)
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%n");
+        offset += pcmk__snprintf(fmt + offset, FMT_MAX - offset, "(%%n");
         if (crm_tracing_enabled()) {
             // When tracing, add file and line number
-            offset += snprintf(fmt + offset, FMT_MAX - offset, "@%%f:%%l");
+            offset += pcmk__snprintf(fmt + offset, FMT_MAX - offset, "@%%f:%%l");
         }
-        offset += snprintf(fmt + offset, FMT_MAX - offset, ")");
+        offset += pcmk__snprintf(fmt + offset, FMT_MAX - offset, ")");
 
         // Add tag (if any), severity, and actual message
-        offset += snprintf(fmt + offset, FMT_MAX - offset, " %%g\t%%p: %%b");
+        offset += pcmk__snprintf(fmt + offset, FMT_MAX - offset, " %%g\t%%p: %%b");
 
         CRM_LOG_ASSERT(offset > 0);
         qb_log_format_set(method, fmt);
@@ -538,7 +538,7 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
                 return;
             }
 
-            snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
+            pcmk__snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
             if (nsig == SIGTRAP) {
                 crm_notice("Blackbox dump requested, please see %s for contents", buffer);
 
@@ -670,7 +670,7 @@ crm_log_filter(struct qb_log_callsite *cs)
             do {
                 offset = next;
                 next = strchrnul(offset, ',');
-                snprintf(token, sizeof(token), "%.*s", (int)(next - offset), offset);
+                pcmk__snprintf(token, sizeof(token), "%.*s", (int)(next - offset), offset);
 
                 tag = g_quark_from_string(token);
                 crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);

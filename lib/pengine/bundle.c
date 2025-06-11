@@ -1524,15 +1524,15 @@ pe__bundle_replica_output_html(pcmk__output_t *out,
     }
 
     if (replica->remote) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->remote));
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                                 rsc_printable_id(replica->remote));
     } else {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->container));
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                                 rsc_printable_id(replica->container));
     }
     if (replica->ipaddr) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
-                           replica->ipaddr);
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
+                                 replica->ipaddr);
     }
 
     pe__common_output_html(out, rsc, buffer, node, show_opts);
@@ -1688,15 +1688,15 @@ pe__bundle_replica_output_text(pcmk__output_t *out,
     }
 
     if (replica->remote) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->remote));
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                                 rsc_printable_id(replica->remote));
     } else {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->container));
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, "%s",
+                                 rsc_printable_id(replica->container));
     }
     if (replica->ipaddr) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
-                           replica->ipaddr);
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
+                                 replica->ipaddr);
     }
 
     pe__common_output_text(out, rsc, buffer, node, show_opts);

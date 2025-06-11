@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,7 +70,7 @@ input_too_long_for_pcmk(void **state)
     /* NULL/non-NULL retval doesn't really matter here; just testing that we
      * call getenv() for "HA_" prefix after too long for "PCMK_".
      */
-    snprintf(buf, NAME_MAX, "HA_%s", long_opt);
+    pcmk__snprintf(buf, NAME_MAX, "HA_%s", long_opt);
     expect_string(__wrap_getenv, name, buf);
     will_return(__wrap_getenv, "value");
     assert_string_equal(pcmk__env_option(long_opt), "value");

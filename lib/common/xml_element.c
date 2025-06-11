@@ -1121,7 +1121,7 @@ crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
 {
     char s[LLSTRSIZE] = { '\0', };
 
-    if (snprintf(s, LLSTRSIZE, "%lld", (long long) value) == LLSTRSIZE) {
+    if (pcmk__snprintf(s, LLSTRSIZE, "%lld", (long long) value) == LLSTRSIZE) {
         return NULL;
     }
     return crm_xml_add(xml, name, s);

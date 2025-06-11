@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,7 +78,7 @@ input_too_long_for_pcmk(void **state)
     }
     long_opt[NAME_MAX - 5] = '\0';
 
-    snprintf(buf, NAME_MAX, "HA_%s", long_opt);
+    pcmk__snprintf(buf, NAME_MAX, "HA_%s", long_opt);
 
     // Call setenv() for "HA_" only
     pcmk__mock_setenv = true;

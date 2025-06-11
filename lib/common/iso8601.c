@@ -488,9 +488,9 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
 static inline void
 sec_usec_as_string(long long sec, int usec, char *buf, size_t *offset)
 {
-    *offset += snprintf(buf + *offset, DATE_MAX - *offset, "%s%lld.%06d",
-                        ((sec == 0) && (usec < 0))? "-" : "",
-                        sec, QB_ABS(usec));
+    *offset += pcmk__snprintf(buf + *offset, DATE_MAX - *offset, "%s%lld.%06d",
+                              ((sec == 0) && (usec < 0))? "-" : "",
+                              sec, QB_ABS(usec));
 }
 
 /*!
@@ -511,16 +511,16 @@ crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
     pcmk__assert(valid_sec_usec(dt->seconds, usec));
 
     if (dt->years) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
-                           dt->years, pcmk__plural_s(dt->years));
+        offset += pcmk__snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
+                                 dt->years, pcmk__plural_s(dt->years));
     }
     if (dt->months) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%2d month%s ",
-                           dt->months, pcmk__plural_s(dt->months));
+        offset += pcmk__snprintf(result + offset, DATE_MAX - offset, "%2d month%s ",
+                                 dt->months, pcmk__plural_s(dt->months));
     }
     if (dt->days) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%2d day%s ",
-                           dt->days, pcmk__plural_s(dt->days));
+        offset += pcmk__snprintf(result + offset, DATE_MAX - offset, "%2d day%s ",
+                                 dt->days, pcmk__plural_s(dt->days));
     }
 
     // At least print seconds (and optionally usecs)
@@ -528,11 +528,11 @@ crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
         if (show_usec) {
             sec_usec_as_string(dt->seconds, usec, result, &offset);
         } else {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%d",
-                               dt->seconds);
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset, "%d",
+                                     dt->seconds);
         }
-        offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
-                           pcmk__plural_s(dt->seconds));
+        offset += pcmk__snprintf(result + offset, DATE_MAX - offset, " second%s",
+                                 pcmk__plural_s(dt->seconds));
     }
 
     // More than one minute, so provide a more readable breakdown into units
@@ -546,32 +546,32 @@ crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
         crm_time_get_sec(dt->seconds, &h, &m, &s);
         print_sec_component = ((s != 0) || (show_usec && (u != 0)));
 
-        offset += snprintf(result + offset, DATE_MAX - offset, " (");
+        offset += pcmk__snprintf(result + offset, DATE_MAX - offset, " (");
 
         if (h) {
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%" PRIu32 " hour%s%s", h, pcmk__plural_s(h),
-                               ((m != 0) || print_sec_component)? " " : "");
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                     "%" PRIu32 " hour%s%s", h, pcmk__plural_s(h),
+                                     ((m != 0) || print_sec_component)? " " : "");
         }
 
         if (m) {
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%" PRIu32 " minute%s%s", m, pcmk__plural_s(m),
-                               print_sec_component? " " : "");
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                     "%" PRIu32 " minute%s%s", m, pcmk__plural_s(m),
+                                     print_sec_component? " " : "");
         }
 
         if (print_sec_component) {
             if (show_usec) {
                 sec_usec_as_string(s, u, result, &offset);
             } else {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%" PRIu32, s);
+                offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                         "%" PRIu32, s);
             }
-            offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
-                               pcmk__plural_s(dt->seconds));
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset, " second%s",
+                                     pcmk__plural_s(dt->seconds));
         }
 
-        offset += snprintf(result + offset, DATE_MAX - offset, ")");
+        offset += pcmk__snprintf(result + offset, DATE_MAX - offset, ")");
     }
 }
 
@@ -622,7 +622,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
         if (pcmk_is_set(flags, crm_time_usecs)) {
             sec_usec_as_string(seconds, usec, result, &offset);
         } else {
-            snprintf(result, DATE_MAX, "%lld", seconds);
+            pcmk__snprintf(result, DATE_MAX, "%lld", seconds);
         }
         return;
     }
@@ -643,9 +643,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             uint32_t d = 0;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
-                                   y, w, d);
+                offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                         "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
+                                         y, w, d);
             }
 
         } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
@@ -653,8 +653,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             uint32_t d = 0;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%" PRIu32 "-%.3" PRIu32, y, d);
+                offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                         "%" PRIu32 "-%.3" PRIu32, y, d);
             }
 
         } else { // YYYY-MM-DD
@@ -663,9 +663,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             uint32_t d = 0;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
-                                   y, m, d);
+                offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                         "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+                                         y, m, d);
             }
         }
     }
@@ -674,28 +674,28 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
         uint32_t h = 0, m = 0, s = 0;
 
         if (offset > 0) {
-            offset += snprintf(result + offset, DATE_MAX - offset, " ");
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset, " ");
         }
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
-                               h, m, s);
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                     "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+                                     h, m, s);
 
             if (pcmk_is_set(flags, crm_time_usecs)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   ".%06" PRIu32, QB_ABS(usec));
+                offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                         ".%06" PRIu32, QB_ABS(usec));
             }
         }
 
         if (pcmk_is_set(flags, crm_time_log_with_timezone)
             && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               " %c%.2" PRIu32 ":%.2" PRIu32,
-                               ((dt->offset < 0)? '-' : '+'), h, m);
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset,
+                                     " %c%.2" PRIu32 ":%.2" PRIu32,
+                                     ((dt->offset < 0)? '-' : '+'), h, m);
         } else {
-            offset += snprintf(result + offset, DATE_MAX - offset, "Z");
+            offset += pcmk__snprintf(result + offset, DATE_MAX - offset, "Z");
         }
     }
 
@@ -2117,8 +2117,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
             if (date_len >= sizeof(date_s)) {
                 return NULL; // No room to add nanoseconds
             }
-            nc = snprintf(&date_s[date_len], sizeof(date_s) - date_len,
-                          "%.*s", nano_digits, nano_s);
+            nc = pcmk__snprintf(&date_s[date_len], sizeof(date_s) - date_len,
+                                "%.*s", nano_digits, nano_s);
 
             if ((nc < 0) || (nc == (sizeof(date_s) - date_len))) {
                 return NULL; // Error or would overflow buffer
@@ -2215,34 +2215,34 @@ pcmk__readable_interval(guint interval_ms)
 
     str[0] = '\0';
     if (interval_ms >= MS_IN_D) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%ud",
-                           interval_ms / MS_IN_D);
+        offset += pcmk__snprintf(str + offset, MAXSTR - offset, "%ud",
+                                 interval_ms / MS_IN_D);
         interval_ms -= (interval_ms / MS_IN_D) * MS_IN_D;
     }
     if (interval_ms >= MS_IN_H) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%uh",
-                           interval_ms / MS_IN_H);
+        offset += pcmk__snprintf(str + offset, MAXSTR - offset, "%uh",
+                                 interval_ms / MS_IN_H);
         interval_ms -= (interval_ms / MS_IN_H) * MS_IN_H;
     }
     if (interval_ms >= MS_IN_M) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%um",
-                           interval_ms / MS_IN_M);
+        offset += pcmk__snprintf(str + offset, MAXSTR - offset, "%um",
+                                 interval_ms / MS_IN_M);
         interval_ms -= (interval_ms / MS_IN_M) * MS_IN_M;
     }
 
     // Ns, N.NNNs, or NNNms
     if (interval_ms >= MS_IN_S) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%u",
-                           interval_ms / MS_IN_S);
+        offset += pcmk__snprintf(str + offset, MAXSTR - offset, "%u",
+                                 interval_ms / MS_IN_S);
         interval_ms -= (interval_ms / MS_IN_S) * MS_IN_S;
         if (interval_ms > 0) {
-            offset += snprintf(str + offset, MAXSTR - offset, ".%03u",
-                               interval_ms);
+            offset += pcmk__snprintf(str + offset, MAXSTR - offset, ".%03u",
+                                     interval_ms);
         }
-        snprintf(str + offset, MAXSTR - offset, "s");
+        pcmk__snprintf(str + offset, MAXSTR - offset, "s");
 
     } else if (interval_ms > 0) {
-        snprintf(str + offset, MAXSTR - offset, "%ums", interval_ms);
+        pcmk__snprintf(str + offset, MAXSTR - offset, "%ums", interval_ms);
 
     } else if (str[0] == '\0') {
         strcpy(str, "0s");

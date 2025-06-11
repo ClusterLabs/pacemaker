@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -206,8 +206,8 @@ pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
     char procfs_exe_path[PATH_MAX];
     ssize_t link_rc;
 
-    if (snprintf(procfs_exe_path, PATH_MAX, "/proc/%lld/exe",
-                 (long long) pid) >= PATH_MAX) {
+    if (pcmk__snprintf(procfs_exe_path, PATH_MAX, "/proc/%lld/exe",
+                       (long long) pid) >= PATH_MAX) {
         return ENAMETOOLONG; // Truncated (shouldn't be possible in practice)
     }
 

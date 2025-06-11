@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,10 +45,10 @@ pcmk__node_attr_target(const char *name)
         const char *target = NULL;
         const char *host_physical = NULL;
 
-        snprintf(buf + offset, sizeof(buf) - offset, "%s", target_var);
+        pcmk__snprintf(buf + offset, sizeof(buf) - offset, "%s", target_var);
         target = getenv(buf);
 
-        snprintf(buf + offset, sizeof(buf) - offset, "%s", phys_var);
+        pcmk__snprintf(buf + offset, sizeof(buf) - offset, "%s", phys_var);
         host_physical = getenv(buf);
 
         // It is important to use the name by which the scheduler knows us

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -175,12 +175,12 @@ test_exit(crm_exit_t exit_code)
     }
 
 #define report_event(event)                                             \
-    snprintf(event_buf_v0, sizeof(event_buf_v0), "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s op_status:%s", \
-             lrmd_event_type2str(event->type),                          \
-             event->rsc_id,                                             \
-             event->op_type ? event->op_type : "none",                  \
-             crm_exit_str((crm_exit_t) event->rc),                      \
-             pcmk_exec_status_str(event->op_status));                   \
+    pcmk__snprintf(event_buf_v0, sizeof(event_buf_v0), "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s op_status:%s", \
+                   lrmd_event_type2str(event->type),                    \
+                   event->rsc_id,                                       \
+                   event->op_type ? event->op_type : "none",            \
+                   crm_exit_str((crm_exit_t) event->rc),                \
+                   pcmk_exec_status_str(event->op_status));             \
     crm_info("%s", event_buf_v0);
 
 static void

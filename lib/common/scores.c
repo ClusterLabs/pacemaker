@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>      // snprintf(), NULL
+#include <stdio.h>      // pcmk__snprintf(), NULL
 #include <string.h>     // strcpy(), strdup()
 #include <sys/types.h>  // size_t
 
@@ -112,7 +112,7 @@ pcmk_readable_score(int score)
 
     } else {
         // Range is limited to +/-1000000, so no chance of overflow
-        snprintf(score_s, sizeof(score_s), "%d", score);
+        pcmk__snprintf(score_s, sizeof(score_s), "%d", score);
     }
 
     return score_s;
