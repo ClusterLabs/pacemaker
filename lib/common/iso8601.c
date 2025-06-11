@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2239,10 +2239,10 @@ pcmk__readable_interval(guint interval_ms)
             offset += snprintf(str + offset, MAXSTR - offset, ".%03u",
                                interval_ms);
         }
-        (void) snprintf(str + offset, MAXSTR - offset, "s");
+        snprintf(str + offset, MAXSTR - offset, "s");
 
     } else if (interval_ms > 0) {
-        (void) snprintf(str + offset, MAXSTR - offset, "%ums", interval_ms);
+        snprintf(str + offset, MAXSTR - offset, "%ums", interval_ms);
 
     } else if (str[0] == '\0') {
         strcpy(str, "0s");
