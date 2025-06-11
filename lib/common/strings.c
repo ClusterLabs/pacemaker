@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,14 +9,15 @@
 
 #include <crm_internal.h>
 
-#include <regex.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <float.h>  // DBL_MIN
-#include <limits.h>
 #include <bzlib.h>
+#include <ctype.h>
+#include <float.h> // DBL_MIN
+#include <limits.h>
+#include <regex.h>
+#include <stdarg.h> // Required for va_list, va_start, va_end
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 
 /*!
@@ -899,6 +900,41 @@ crm_strdup_printf(char const *format, ...)
     pcmk__assert(len > 0);
     va_end(ap);
     return string;
+}
+
+/*!
+ * \internal
+ * \brief Safely format a string, asserting on encoding errors.
+ *
+ * This function wraps vsnprintf and checks its return value.
+ * If vsnprintf returns a negative value (indicating an encoding error),
+ * this function will call pcmk__assert to halt execution in debug builds
+ * or log a critical error in release builds.
+ *
+ * \param[out] str     Buffer to store the formatted string.
+ * \param[in]  size    Size of the buffer.
+ * \param[in]  format  Format string.
+ * \param[in]  ...     Variable arguments for the format string.
+ *
+ * \return Number of characters that would have been written if \p size was
+ *         sufficiently large (not including the terminating null byte),
+ *         or a negative value if an encoding error occurred (though this
+ *         function asserts in that case).
+ * \note The behavior is otherwise identical to snprintf.
+ */
+int
+pcmk__snprintf(char *str, size_t size, const char *format, ...)
+{
+    va_list ap;
+    int retval;
+
+    va_start(ap, format);
+    retval = vsnprintf(str, size, format, ap);
+    va_end(ap);
+
+    pcmk__assert(retval >= 0);
+
+    return retval;
 }
 
 int
