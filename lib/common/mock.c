@@ -458,4 +458,27 @@ __wrap_strdup(const char *s)
     return NULL;
 }
 
+/* vsnprintf()
+ *
+ * If pcmk__mock_vsnprintf is set to true, later calls to vsnprintf()
+ * must be preceded by:
+ *
+ *     will_return(__wrap_vsnprintf, return_value_for_vsnprintf);
+ *
+ * The mocked function will then return the specified 'return_value_for_vsnprintf'.
+ * This is primarily used to test error handling paths by forcing a negative
+ * return value. Otherwise, if pcmk__mock_vsnprintf is false, __real_vsnprintf
+ * is called.
+ */
+bool pcmk__mock_vsnprintf = false;
+
+int
+__wrap_vsnprintf(char *str, size_t size, const char *format, va_list ap)
+{
+    if (!pcmk__mock_vsnprintf) {
+        return __real_vsnprintf(str, size, format, ap);
+    }
+    return mock_type(int);
+}
+
 // LCOV_EXCL_STOP
