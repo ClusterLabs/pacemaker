@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2024 the Pacemaker project contributors
+# Copyright 2020-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -36,6 +36,7 @@ check_PROGRAMS = crm_get_msec_test 		\
 		 pcmk__strcmp_test 		\
 		 pcmk__strkey_table_test 	\
 		 pcmk__strikey_table_test 	\
-		 pcmk__trim_test
+		 pcmk__trim_test                \
+		 pcmk__snprintf_test
 
 TESTS = $(check_PROGRAMS)
