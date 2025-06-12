@@ -135,7 +135,7 @@ make_args(const char *agent, const char *action, const char *target,
     if (device_args) {
         char buffer[512];
 
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
+        pcmk__snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
         value = g_hash_table_lookup(device_args, buffer);
         if (value) {
             crm_debug("Substituting '%s' for fence action %s targeting %s",
@@ -273,7 +273,7 @@ stonith__action_create(const char *agent, const char *action_name,
         char buffer[512];
         const char *value = NULL;
 
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", action_name);
+        pcmk__snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", action_name);
         value = g_hash_table_lookup(device_args, buffer);
 
         if (value) {

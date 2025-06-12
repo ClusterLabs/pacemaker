@@ -286,7 +286,7 @@ get_action_timeout(const fenced_device_t *device, const char *action,
         }
 
         /* If the device config specified an action-specific timeout, use it */
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
+        pcmk__snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
             long long timeout_ms = crm_get_msec(value);

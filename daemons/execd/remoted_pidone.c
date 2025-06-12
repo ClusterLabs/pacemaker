@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -277,7 +277,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
         i = strlen(name);
 
         /* We can overwrite individual argv[] arguments */
-        snprintf(argv[0], maxlen, "%s", name);
+        pcmk__snprintf(argv[0], maxlen, "%s", name);
 
         /* Now zero out everything else */
         p = &argv[0][i];

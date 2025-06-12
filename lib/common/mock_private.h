@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -89,6 +89,10 @@ ssize_t __wrap_readlink(const char *restrict path, char *restrict buf,
 extern bool pcmk__mock_strdup;
 char *__real_strdup(const char *s);
 char *__wrap_strdup(const char *s);
+
+extern bool pcmk__mock_vsnprintf;
+int __real_vsnprintf(char *str, size_t size, const char *format, va_list ap) G_GNUC_PRINTF(3, 0);
+int __wrap_vsnprintf(char *str, size_t size, const char *format, va_list ap) G_GNUC_PRINTF(3, 0);
 
 #ifdef __cplusplus
 }

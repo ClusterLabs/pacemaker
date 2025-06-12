@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,7 @@ has_pids(void **state)
 {
     char path[PATH_MAX];
 
-    snprintf(path, PATH_MAX, "/proc/%u/exe", getpid());
+    pcmk__snprintf(path, PATH_MAX, "/proc/%u/exe", getpid());
 
     // Set readlink() errno and link contents (for /proc/PID/exe)
     pcmk__mock_readlink = true;

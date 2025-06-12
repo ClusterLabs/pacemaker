@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2024 the Pacemaker project contributors
+# Copyright 2021-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -30,7 +30,8 @@ WRAPPED = abort 		\
 	  setenv		\
 	  setgrent		\
 	  strdup 		\
-	  unsetenv
+	  unsetenv \
+	  vsnprintf
 
 if WRAPPABLE_FOPEN64
 WRAPPED	+= fopen64

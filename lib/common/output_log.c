@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -209,9 +209,9 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
 
     for (GList* gIter = priv->prefixes->head; gIter; gIter = gIter->next) {
         if (strcmp(prefix, "") != 0) {
-            offset += snprintf(prefix + offset, LINE_MAX - offset, ": %s", (char *)gIter->data);
+            offset += pcmk__snprintf(prefix + offset, LINE_MAX - offset, ": %s", (char *)gIter->data);
         } else {
-            offset = snprintf(prefix, LINE_MAX, "%s", (char *)gIter->data);
+            offset = pcmk__snprintf(prefix, LINE_MAX, "%s", (char *)gIter->data);
         }
     }
 

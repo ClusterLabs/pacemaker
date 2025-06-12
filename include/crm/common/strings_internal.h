@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,6 +49,9 @@ void pcmk__add_separated_word(GString **list, size_t init_size,
                               const char *word, const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,
                    char **result, unsigned int *result_len);
+
+int pcmk__snprintf(char *str, size_t size, const char *format, ...)
+    G_GNUC_PRINTF(3, 4);
 
 int pcmk__scan_ll(const char *text, long long *result, long long default_value);
 int pcmk__scan_min_int(const char *text, int *result, int minimum);

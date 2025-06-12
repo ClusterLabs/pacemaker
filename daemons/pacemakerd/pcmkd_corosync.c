@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -361,7 +361,7 @@ pacemakerd_read_config(void)
 
         } else {
             char key[PATH_MAX];
-            snprintf(key, PATH_MAX, "uidgid.gid.%u", gid);
+            pcmk__snprintf(key, PATH_MAX, "uidgid.gid.%u", gid);
             rc = cmap_set_uint8(local_handle, key, 1);
             if (rc != CS_OK) {
                 crm_warn("Could not authorize group with Corosync: %s " QB_XS

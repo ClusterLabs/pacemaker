@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -97,11 +97,11 @@ typical_case(void **state)
     assert_int_equal(pcmk__scan_double("-1.0", &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, -1.0, DBL_EPSILON);
 
-    snprintf(str, LOCAL_BUF_SIZE, "%f", DBL_MAX);
+    pcmk__snprintf(str, LOCAL_BUF_SIZE, "%f", DBL_MAX);
     assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, DBL_MAX, DBL_EPSILON);
 
-    snprintf(str, LOCAL_BUF_SIZE, "%f", -DBL_MAX);
+    pcmk__snprintf(str, LOCAL_BUF_SIZE, "%f", -DBL_MAX);
     assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, -DBL_MAX, DBL_EPSILON);
 }
@@ -116,11 +116,11 @@ double_overflow(void **state)
      * 1e(DBL_MAX_10_EXP + 1) produces an inf value
      * Can't use assert_float_equal() because (inf - inf) == NaN
      */
-    snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MAX_10_EXP + 1);
+    pcmk__snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MAX_10_EXP + 1);
     assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), EOVERFLOW);
     assert_true(result > DBL_MAX);
 
-    snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MAX_10_EXP + 1);
+    pcmk__snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MAX_10_EXP + 1);
     assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), EOVERFLOW);
     assert_true(result < -DBL_MAX);
 }
@@ -137,12 +137,12 @@ double_underflow(void **state)
      *
      * C99/C11: result will be **no greater than** DBL_MIN
      */
-    snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MIN_10_EXP - 1);
+    pcmk__snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MIN_10_EXP - 1);
     assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_underflow);
     assert_true(result >= 0.0);
     assert_true(result <= DBL_MIN);
 
-    snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MIN_10_EXP - 1);
+    pcmk__snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MIN_10_EXP - 1);
     assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_underflow);
     assert_true(result <= 0.0);
     assert_true(result >= -DBL_MIN);

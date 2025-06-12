@@ -413,7 +413,9 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
     char buffer[500];
 
-    snprintf(buffer, sizeof(buffer), strcmp(key, "OCF_CHECK_LEVEL") != 0 ? "OCF_RESKEY_%s" : "%s", (char *)key);
+    pcmk__snprintf(buffer, sizeof(buffer),
+                   strcmp(key, "OCF_CHECK_LEVEL") != 0 ? "OCF_RESKEY_%s" : "%s",
+                   (char *)key);
     set_ocf_env(buffer, value, user_data);
 }
 
@@ -1419,7 +1421,7 @@ services_os_get_single_directory_list(const char *root, gboolean files, gboolean
             continue;
         }
 
-        snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
+        pcmk__snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
 
         if (stat(buffer, &sb)) {
             continue;

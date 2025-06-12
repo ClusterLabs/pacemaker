@@ -329,7 +329,7 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    snprintf(port_str, sizeof(port_str), "%d", port);
+    pcmk__snprintf(port_str, sizeof(port_str), "%d", port);
     rc = getaddrinfo(bind_name, port_str, &hints, res);
     rc = pcmk__gaierror2rc(rc);
 

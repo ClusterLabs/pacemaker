@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1081,7 +1081,7 @@ pcmk__env_option(const char *option)
     CRM_CHECK(!pcmk__str_empty(option), return NULL);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+        int rv = pcmk__snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
 
         if (rv < 0) {
             crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
@@ -1132,7 +1132,7 @@ pcmk__set_env_option(const char *option, const char *value, bool compat)
               return);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+        int rv = pcmk__snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
 
         if (rv < 0) {
             crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,

@@ -761,9 +761,9 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     // Resource information
-    snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
-             ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
-             crm_element_value(rsc->priv->xml, PCMK_XA_TYPE));
+    pcmk__snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
+                   ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
+                   crm_element_value(rsc->priv->xml, PCMK_XA_TYPE));
 
     target_role = g_hash_table_lookup(rsc->priv->meta,
                                       PCMK_META_TARGET_ROLE);
@@ -966,17 +966,17 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
             continue;
         }
 
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
         if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
             const char *prov = crm_element_value(rsc->priv->xml,
                                                  PCMK_XA_PROVIDER);
 
             if (prov != NULL) {
-                offset += snprintf(buffer + offset, LINE_MAX - offset,
-                                   ":%s", prov);
+                offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset,
+                                         ":%s", prov);
             }
         }
-        offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
+        offset += pcmk__snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
         CRM_LOG_ASSERT(offset > 0);
 
         if (rsc_table) {

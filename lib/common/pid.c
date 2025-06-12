@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,10 +78,10 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         }
 
         if (daemon[0] != '/') {
-            rc = snprintf(myexe_path, sizeof(myexe_path), CRM_DAEMON_DIR"/%s",
-                          daemon);
+            rc = pcmk__snprintf(myexe_path, sizeof(myexe_path), CRM_DAEMON_DIR"/%s",
+                                daemon);
         } else {
-            rc = snprintf(myexe_path, sizeof(myexe_path), "%s", daemon);
+            rc = pcmk__snprintf(myexe_path, sizeof(myexe_path), "%s", daemon);
         }
 
         if (rc > 0 && rc < sizeof(myexe_path) && !strcmp(exe_path, myexe_path)) {
@@ -225,7 +225,7 @@ pcmk__lock_pidfile(const char *filename, const char *name)
         return errno;
     }
 
-    snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1, (long long) mypid);
+    pcmk__snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1, (long long) mypid);
     rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 

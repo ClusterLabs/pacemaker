@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -179,12 +179,12 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
                 free(timestamp);
             }
 
-            snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%lld",
-                     (long long) epoch);
+            pcmk__snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%lld",
+                           (long long) epoch);
             copy_params = alert_key2param(copy_params,
                                           PCMK__alert_key_timestamp_epoch,
                                           timestamp_epoch);
-            snprintf(timestamp_usec, sizeof(timestamp_usec), "%06d", now->useconds);
+            pcmk__snprintf(timestamp_usec, sizeof(timestamp_usec), "%06d", now->useconds);
             copy_params = alert_key2param(copy_params,
                                           PCMK__alert_key_timestamp_usec,
                                           timestamp_usec);
