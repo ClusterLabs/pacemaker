@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1069,7 +1069,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
         upgrade = final;
         /* following condition ensured in add_schema_by_version */
         pcmk__assert(schema->transform_enter != NULL);
-        transform_leave = strdup(schema->transform_enter);
+        transform_leave = pcmk__str_copy(schema->transform_enter);
         /* enter -> leave */
         memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
         crm_debug("Upgrading schema from %s to %s: "

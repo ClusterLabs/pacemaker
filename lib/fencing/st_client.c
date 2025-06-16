@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2138,6 +2138,10 @@ parse_list_line(const char *line, int len, GList **output)
     size_t i = 0;
     size_t entry_start = 0;
 
+    if (line == NULL) {
+        return;
+    }
+
     /* Skip complaints about additional parameters device doesn't understand
      *
      * @TODO Document or eliminate the implied restriction of target names
@@ -2237,6 +2241,9 @@ stonith__parse_targets(const char *target_spec)
                 if (len > 0) {
                     char *line = strndup(target_spec + line_start, len);
 
+                    pcmk__assert(line != NULL);
+
+                    // cppcheck-suppress nullPointerOutOfMemory
                     line[len] = '\0'; // Because it might be a newline
                     parse_list_line(line, len, &targets);
                     free(line);
