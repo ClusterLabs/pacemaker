@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1530,10 +1530,8 @@ get_device_timeout(const remote_fencing_op_t *op,
                    const peer_device_info_t *peer, const char *device,
                    bool with_delay)
 {
-    int timeout = op->base_timeout;
+    int timeout = valid_fencing_timeout(op->base_timeout, false, op, device);
     device_properties_t *props;
-
-    timeout = valid_fencing_timeout(op->base_timeout, false, op, device);
 
     if (!peer || !device) {
         return timeout;

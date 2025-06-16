@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -189,13 +189,14 @@ services__get_nagios_metadata(const char *type, char **output)
     /* see how big the file is */
     start = ftell(file_strm);
     fseek(file_strm, 0L, SEEK_END);
-    length = ftell(file_strm);
-    fseek(file_strm, 0L, start);
 
+    length = ftell(file_strm);
     pcmk__assert(length >= 0);
+    fseek(file_strm, 0L, SEEK_SET);
+
     pcmk__assert(start == ftell(file_strm));
 
-    if (length <= 0) {
+    if (length == 0) {
         crm_info("%s was not valid", metadata_file);
         free(*output);
         *output = NULL;
