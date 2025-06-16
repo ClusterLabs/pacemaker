@@ -81,11 +81,12 @@ test_assertion_on_negative_return(void **state)
 {
     char buffer[100];
 
-    pcmk__mock_vsnprintf = true;
-
     pcmk__assert_asserts({
         will_return(__wrap_vsnprintf, -1);
-        pcmk__snprintf(buffer, sizeof(buffer), "format %s", "string"); });
+        pcmk__mock_vsnprintf = true;
+        pcmk__snprintf(buffer, sizeof(buffer), "format %s", "string");
+        pcmk__mock_vsnprintf = false;
+    });
 }
 
 PCMK__UNIT_TEST(group_setup_vsnprintf_mock, group_teardown_vsnprintf_mock,
