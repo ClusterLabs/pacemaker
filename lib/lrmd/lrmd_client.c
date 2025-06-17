@@ -1543,7 +1543,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     if (native->tls == NULL) {
         rc = pcmk__init_tls(&native->tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
 
-        if (rc != pcmk_rc_ok) {
+        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
             lrmd_tls_connection_destroy(lrmd);
             report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
             return;

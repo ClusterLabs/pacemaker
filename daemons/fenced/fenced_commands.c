@@ -742,8 +742,8 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
         delay_base = delay_max;
     }
     if (delay_max > 0) {
-        // coverity[dontcall] It doesn't matter here if rand() is predictable
         cmd->start_delay +=
+            // coverity[dont_call] It doesn't matter here if rand() is predictable
             ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
             + delay_base;
     }

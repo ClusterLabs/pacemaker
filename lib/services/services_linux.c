@@ -1402,7 +1402,7 @@ GList *
 services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
 {
     GList *list = NULL;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
     int entries = 0, lpc = 0;
     char buffer[PATH_MAX];
 
