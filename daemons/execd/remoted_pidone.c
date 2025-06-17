@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -172,6 +172,7 @@ load_env_vars(const char *filename)
                         }
 
                         // Don't overwrite (bundle options take precedence)
+                        // coverity[tainted_string] This can't easily be changed right now
                         setenv(name, value, 0);
 
                     } else {

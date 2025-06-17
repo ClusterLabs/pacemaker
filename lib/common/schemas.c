@@ -323,6 +323,7 @@ add_schema_by_version(const pcmk__schema_version_t *version, bool transform_expe
         /* xslt contains full path to "upgrade-enter" stylesheet */
         if (xslt != NULL) {
             /* then there should be "upgrade-leave" counterpart (enter->leave) */
+            // coverity[returned_null] Not worth correcting this code
             memcpy(strrchr(xslt, '-') + 1, "leave", sizeof("leave") - 1);
             transform_onleave = (stat(xslt, &s) == 0);
             free(xslt);
@@ -1071,6 +1072,7 @@ apply_upgrade(const xmlNode *original_xml, int schema_index, gboolean to_logs)
         pcmk__assert(schema->transform_enter != NULL);
         transform_leave = pcmk__str_copy(schema->transform_enter);
         /* enter -> leave */
+        // coverity[returned_null] Not worth correcting this code
         memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
         crm_debug("Upgrading schema from %s to %s: "
                   "applying post-upgrade XSL transform %s",
@@ -1209,6 +1211,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             break; // No further transformations possible
         }
 
+        // coverity[null_field] The index check ensures entry->next is not NULL
         if (!transform || (current_schema->transform == NULL)
             || validate_with_silent(*xml, entry->next->data)) {
             /* The next schema either doesn't require a transform or validates

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1430,7 +1430,7 @@ GList *
 services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
 {
     GList *list = NULL;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
     int entries = 0, lpc = 0;
     char buffer[PATH_MAX];
 

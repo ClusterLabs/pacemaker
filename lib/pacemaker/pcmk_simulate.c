@@ -383,7 +383,7 @@ pcmk__profile_dir(const char *dir, long long repeat,
                   pcmk_scheduler_t *scheduler, const char *use_date)
 {
     pcmk__output_t *out = scheduler->priv;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
 
     int file_num = scandir(dir, &namelist, 0, alphasort);
 

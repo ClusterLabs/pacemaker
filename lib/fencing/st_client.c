@@ -1523,6 +1523,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
     st_event = xml_to_event(blob->xml);
 
     crm_trace("Invoking callback for %p/%s event...", entry, event);
+    // coverity[null_field]
     entry->notify(blob->stonith, st_event);
     crm_trace("Callback invoked...");
 
