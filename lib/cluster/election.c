@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -527,7 +527,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
     int log_level = LOG_INFO;
     gboolean done = FALSE;
     gboolean we_lose = FALSE;
-    const char *reason = "unknown";
+    const char *reason = NULL;
     bool we_are_owner = FALSE;
     pcmk__node_status_t *our_node = NULL;
     pcmk__node_status_t *your_node = NULL;

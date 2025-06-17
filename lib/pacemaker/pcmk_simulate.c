@@ -238,7 +238,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
-        const char *color = "black";
+        const char *color = NULL;
         char *action_name = create_action_name(action, verbose);
 
         if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
