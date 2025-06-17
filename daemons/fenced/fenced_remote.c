@@ -1682,7 +1682,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
             for (iter = auto_list; iter != NULL; iter = iter->next) {
                 GList *iter2 = NULL;
 
-                for (iter2 = op->query_results; iter2 != NULL; iter = iter2->next) {
+                for (iter2 = op->query_results; iter2 != NULL; iter2 = iter2->next) {
                     peer_device_info_t *peer = iter2->data;
                     if (find_peer_device(op, peer, iter->data,
                                          fenced_df_supports_on)) {
