@@ -1532,8 +1532,8 @@ class CtsScheduler:
                 self._failed("Valgrind reported errors")
                 did_fail = True
                 cat(valgrind_output_filename)
-
-            remove_files([valgrind_output_filename])
+            else:
+                remove_files([valgrind_output_filename])
 
         # Check for core dump
         if os.path.isfile("core"):
