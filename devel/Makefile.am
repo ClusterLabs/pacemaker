@@ -157,9 +157,9 @@ coverity-corp: $(COVHTML)
 # Remove all outputs regardless of tag
 .PHONY: coverity-clean
 coverity-clean:
-	-rm -rf "$(abs_builddir)"/coverity-*			\
-		"$(abs_builddir)"/$(PACKAGE)-coverity-*.tgz	\
-		"$(abs_builddir)"/*.coverity
+	-rm -rf "$(abs_top_builddir)"/coverity-*			\
+		"$(abs_top_builddir)"/$(PACKAGE)-coverity-*.tgz	\
+		"$(abs_top_builddir)"/*.coverity
 
 
 ## cppcheck
