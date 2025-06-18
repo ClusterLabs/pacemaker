@@ -62,10 +62,44 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
         return true;
 
-    } else if(node == NULL) {
+    } else if (node == NULL) {
         return false;
 
-    } else if(node->details->online) {
+    } else if (node->details->online) {
+        /* Remote nodes are marked online when we assign their resource to a
+         * node, not when they are actually started (see remote_connection_assigned)
+         * so the above test by itself isn't good enough.
+         */
+        if (pcmk__is_pacemaker_remote_node(node)
+            && !pcmk_is_set(scheduler->flags, pcmk__sched_fence_remote_no_quorum)) {
+            /* If we're on a system without quorum, it's entirely possible that
+             * the remote resource was automatically moved to a node on the
+             * partition with quorum.  We can't tell that from this node - the
+             * best we can do is check if it's possible for the resource to run
+             * on another node in the partition with quorum.  If so, it has
+             * likely been moved and we shouldn't fence it.
+             *
+             * NOTE:  This condition appears to only come up in very limited
+             * circumstances.  It at least requires some very lengthy fencing
+             * timeouts set, some way for fencing to still take place (a second
+             * NIC is how I've reproduced it in testing, but fence_scsi or
+             * sbd could work too), and a resource that runs on the remote node.
+             */
+            pcmk_resource_t *rsc = node->priv->remote;
+            pcmk_node_t *n = NULL;
+            GHashTableIter iter;
+
+            g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void **) &n)) {
+                /* A node that's not online according to this non-quorum node
+                 * is a node that's in another partition.
+                 */
+                if (!n->details->online) {
+                    return false;
+                }
+            }
+        }
+
         crm_notice("We can fence %s without quorum because they're in our membership",
                    pcmk__node_name(node));
         return true;
