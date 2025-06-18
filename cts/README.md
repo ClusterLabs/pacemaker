@@ -186,7 +186,7 @@ setting the following environment variables on all cluster nodes:
 If running the CTS lab with valgrind enabled on the cluster nodes, add these
 options to cts-lab:
 
-    --valgrind-tests --valgrind-procs "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-schedulerd pacemaker-fenced"
+    --valgrind-procs "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-schedulerd pacemaker-fenced"
 
 These options should only be set while specifically testing memory management,
 because they may slow down the cluster significantly, and they will disable

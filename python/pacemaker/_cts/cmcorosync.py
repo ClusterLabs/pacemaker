@@ -63,7 +63,7 @@ class Corosync2(ClusterManager):
         # so don't include them in the returned list
         vgrind = self.env["valgrind-procs"].split()
         for (key, val) in self._fullcomplist.items():
-            if self.env["valgrind-tests"] and key in vgrind:
+            if key in vgrind:
                 self.log(f"Filtering {key} from the component list as it is being profiled by valgrind")
                 continue
 
