@@ -90,7 +90,7 @@ no_specifiers(void **state)
 }
 
 static void
-without_nano(void **state)
+without_frac(void **state)
 {
     assert_hr_format("%H:%M %a %b %d", "03:04 Tue Jan 02", NULL, 0);
     assert_hr_format("%H:%M:%S", "03:04:05", NULL, 0);
@@ -105,7 +105,7 @@ without_nano(void **state)
 }
 
 static void
-with_nano(void **state)
+with_frac(void **state)
 {
     int usec = 123456;
 
@@ -140,5 +140,5 @@ with_nano(void **state)
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(null_format),
                 cmocka_unit_test(no_specifiers),
-                cmocka_unit_test(without_nano),
-                cmocka_unit_test(with_nano))
+                cmocka_unit_test(without_frac),
+                cmocka_unit_test(with_frac))

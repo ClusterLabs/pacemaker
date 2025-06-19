@@ -2020,10 +2020,10 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 
 /*!
  * \internal
- * \brief Expand a date/time format string, including %N for nanoseconds
+ * \brief Expand a date/time format string, including %N for fractional seconds
  *
- * \param[in] format  Date/time format string as per strftime(3) with the
- *                    addition of %N for nanoseconds
+ * \param[in] format  Date/time format string as per \c strftime(3) with the
+ *                    addition of %N for fractional seconds
  * \param[in] hr_dt   Time value to format
  *
  * \return Newly allocated string with formatted string
@@ -2033,7 +2033,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
     int scanned_pos = 0; // How many characters of format have been parsed
     int printed_pos = 0; // How many characters of format have been processed
-    char nano_s[10] = { '\0', };
+    char frac_s[10] = { '\0', };
     GString *buf = NULL;
     char *result = NULL;
 
@@ -2046,11 +2046,11 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     buf = g_string_sized_new(128);
     pcmk__time_set_hr_dt(&dt, hr_dt);
     ha_get_tm_time(&tm, &dt);
-    sprintf(nano_s, "%06d000", hr_dt->useconds);
+    sprintf(frac_s, "%06d", hr_dt->useconds);
 
     while (format[scanned_pos] != '\0') {
-        int fmt_pos;            // Index after last character to pass as-is
-        int nano_digits = 0;    // Length of %N field width (if any)
+        int fmt_pos = 0;        // Index after last character to pass as-is
+        int frac_digits = 0;    // %N specifier's width field value (if any)
         char *tmp_fmt_s = NULL;
         char date_s[128] = { '\0', };
         size_t nbytes = 0;
@@ -2066,7 +2066,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         } else {
             fmt_pos = mark_s - format; // Index of %
 
-            // Skip % and any field width
+            // Skip % and any width field
             scanned_pos = fmt_pos + 1;
             while (isdigit(format[scanned_pos])) {
                 scanned_pos++;
@@ -2078,12 +2078,22 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
                     break;
 
                 case 'N': // %[width]N
+                    /* Fractional seconds. This was supposed to represent
+                     * nanoseconds. However, we only store times at microsecond
+                     * resolution, and the width field support makes this a
+                     * general fractional component specifier rather than a
+                     * nanoseconds specifier.
+                     *
+                     * Further, since we cap the width at 6 digits, a user
+                     * cannot display times at greater than microsecond
+                     * resolution.
+                     */
                     scanned_pos++;
 
-                    // Parse field width
-                    nano_digits = atoi(&format[fmt_pos + 1]);
-                    nano_digits = QB_MAX(nano_digits, 0);
-                    nano_digits = QB_MIN(nano_digits, 6);
+                    // Parse width field
+                    frac_digits = atoi(&format[fmt_pos + 1]);
+                    frac_digits = QB_MAX(frac_digits, 0);
+                    frac_digits = QB_MIN(frac_digits, 6);
                     break;
 
                 default: // Some other specifier
@@ -2116,8 +2126,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 
         g_string_append(buf, date_s);
         printed_pos = scanned_pos;
-        if (nano_digits != 0) {
-            g_string_append_printf(buf, "%.*s", nano_digits, nano_s);
+        if (frac_digits != 0) {
+            g_string_append_printf(buf, "%.*s", frac_digits, frac_s);
         }
     }
 
