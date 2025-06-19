@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -235,7 +235,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
-        const char *color = "black";
+        const char *color = NULL;
         char *action_name = create_action_name(action, verbose);
 
         if (pcmk_is_set(action->flags, pcmk_action_pseudo)) {
@@ -383,7 +383,7 @@ pcmk__profile_dir(const char *dir, long long repeat,
                   pcmk_scheduler_t *scheduler, const char *use_date)
 {
     pcmk__output_t *out = scheduler->priv;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
 
     int file_num = scandir(dir, &namelist, 0, alphasort);
 

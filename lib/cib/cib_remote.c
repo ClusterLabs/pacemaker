@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -243,6 +243,7 @@ cib_remote_callback_dispatch(gpointer user_data)
             return -1;
     }
 
+    // coverity[tainted_data] This can't easily be changed right now
     msg = pcmk__remote_message_xml(&private->callback);
     if (msg == NULL) {
         private->start_time = 0;

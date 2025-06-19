@@ -2176,6 +2176,12 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
         return -EIO;
     }
 
+    /* This is a complaint about services__get_nagios_metadata not NULL-terminating
+     * stdout_data when it calls fread().  However, that function allocates with
+     * pcmk__assert_alloc which uses calloc() to allocate and fill with zeros, so
+     * this is a false positive.
+     */
+    // coverity[string_null]
     *output = strdup(action->stdout_data);
     services_action_free(action);
 

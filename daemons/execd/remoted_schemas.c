@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,41 +45,42 @@ static void
 clean_up_extra_schema_files(void)
 {
     const char *remote_schema_dir = pcmk__remote_schema_dir();
-    struct stat sb;
     int rc;
 
-    rc = stat(remote_schema_dir, &sb);
+    /* Try to create the remote schema directory first. */
+    rc = mkdir(remote_schema_dir, 0755);
 
-    if (rc == -1) {
-        if (errno == ENOENT) {
-            /* If the directory doesn't exist, try to make it first. */
-            if (mkdir(remote_schema_dir, 0755) != 0) {
-                rc = errno;
-                crm_err("Could not create directory for schemas: %s",
-                        pcmk_rc_str(rc));
-            }
+    if (rc == 0) {
+        /* Success. */
+        return;
+    }
 
-        } else {
-            rc = errno;
-            crm_err("Could not create directory for schemas: %s",
-                    pcmk_rc_str(rc));
-        }
-
-    } else if (!S_ISDIR(sb.st_mode)) {
-        /* If something exists with the same name that's not a directory, that's
-         * an error.
-         */
-        crm_err("%s already exists but is not a directory", remote_schema_dir);
-
-    } else {
-        /* It's a directory - clear it out so we can download potentially new
-         * schema files.
+    if (errno == EEXIST) {
+        /* The path already exists.  Assume it's a directory and try to clear
+         * it out so we can download new schema files.  If it's not a directory,
+         * nftw will fail and set errno.
          */
         rc = nftw(remote_schema_dir, rm_files, 10, FTW_DEPTH|FTW_MOUNT|FTW_PHYS);
 
-        if (rc != 0) {
-            crm_err("Could not remove %s: %s", remote_schema_dir, pcmk_rc_str(rc));
+        if (rc == 0) {
+            /* Success. */
+            return;
         }
+
+        if (errno == ENOTDIR) {
+            /* Something other than a directory already has that name. */
+            crm_err("%s already exists but is not a directory",
+                    remote_schema_dir);
+        } else {
+            rc = errno;
+            crm_err("Could not clear directory %s: %s", remote_schema_dir,
+                    pcmk_rc_str(rc));
+        }
+
+    } else {
+        rc = errno;
+        crm_err("Could not create directory for schemas: %s",
+                pcmk_rc_str(rc));
     }
 }
 

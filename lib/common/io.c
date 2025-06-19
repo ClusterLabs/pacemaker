@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -459,7 +459,14 @@ pcmk__file_contents(const char *filename, char **contents)
             rc = errno;
             goto bail;
         }
+
+        errno = 0;
+
         rewind(fp);
+        if (errno != 0) {
+            rc = errno;
+            goto bail;
+        }
 
         read_len = fread(*contents, 1, length, fp);
         if (read_len != length) {

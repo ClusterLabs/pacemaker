@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2096,6 +2096,10 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         }
 
         tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
+        if (tmp_fmt_s == NULL) {
+            return NULL;
+        }
+
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"

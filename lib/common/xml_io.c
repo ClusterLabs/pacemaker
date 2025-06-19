@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -188,6 +188,7 @@ pcmk__xml_read(const char *filename)
         char *input = read_stdin();
 
         if (input != NULL) {
+            // coverity[unsafe_xml_parse_config]
             parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
                               NULL, NULL);
             free(input);
@@ -197,12 +198,14 @@ pcmk__xml_read(const char *filename)
         char *input = decompress_file(filename);
 
         if (input != NULL) {
+            // coverity[unsafe_xml_parse_config]
             parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input,
                               NULL, NULL);
             free(input);
         }
 
     } else {
+        // coverity[unsafe_xml_parse_config]
         parse_xml_recover(&output, xmlCtxtReadFile, ctxt, filename, NULL);
     }
 
@@ -261,6 +264,7 @@ pcmk__xml_parse(const char *input)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
+    // coverity[unsafe_xml_parse_config]
     parse_xml_recover(&output, xmlCtxtReadDoc, ctxt, (pcmkXmlStr) input, NULL,
                       NULL);
 

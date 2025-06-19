@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2023 the Pacemaker project contributors
+# Copyright 2020-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -174,7 +174,7 @@ GLIB_INCL_DEF_CFLAGS = $(shell echo $(GLIB_CFLAGS) 		\
 # -DBUILD_PUBLIC_LIBPACEMAKER -DDEFAULT_CONCURRENT_FENCING_TRUE
 CPPCHECK_ARGS ?=
 
-CPPCHECK_DIRS = replace lib daemons tools
+CPPCHECK_DIRS = lib daemons tools
 CPPCHECK_OUT = $(abs_top_builddir)/cppcheck.out
 
 .PHONY: cppcheck

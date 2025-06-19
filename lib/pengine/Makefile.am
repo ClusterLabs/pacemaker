@@ -33,7 +33,7 @@ libpe_rules_la_SOURCES	= common.c
 libpe_rules_la_SOURCES	+= rules.c
 libpe_rules_la_SOURCES	+= rules_alerts.c
 
-libpe_status_la_LDFLAGS	= -version-info 35:2:7
+libpe_status_la_LDFLAGS	= -version-info 35:3:7
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

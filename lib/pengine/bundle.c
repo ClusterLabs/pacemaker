@@ -1265,6 +1265,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
+            // coverity[null_field] replica->child can't be NULL here
             bundle_data->attribute_target =
                 g_hash_table_lookup(replica->child->meta,
                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);

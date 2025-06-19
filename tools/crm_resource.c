@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -824,6 +824,8 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     char *value = NULL;
 
     if (pcmk__scan_nvpair(optarg, &name, &value) != 2) {
+        free(name);
+        free(value);
         return FALSE;
     }
     if (options.cmdline_params == NULL) {

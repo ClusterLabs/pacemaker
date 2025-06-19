@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,18 +29,8 @@ pcmk__new_common_args(const char *summary)
 {
     pcmk__common_args_t *args = NULL;
 
-    args = calloc(1, sizeof(pcmk__common_args_t));
-    if (args == NULL) {
-        crm_exit(CRM_EX_OSERR);
-    }
-
-    args->summary = strdup(summary);
-    if (args->summary == NULL) {
-        free(args);
-        args = NULL;
-        crm_exit(CRM_EX_OSERR);
-    }
-
+    args = pcmk__assert_alloc(1, sizeof(pcmk__common_args_t));
+    args->summary = pcmk__str_copy(summary);
     return args;
 }
 
