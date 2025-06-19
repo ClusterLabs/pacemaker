@@ -302,9 +302,8 @@ update_element_attribute(pcmk__output_t *out, pcmk_resource_t *rsc,
                          const char *attr_name, const char *attr_value)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *rsc_xml = rsc->priv->xml;
+    xmlNode *rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
 
-    rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
     if (rsc_xml == NULL) {
         return ENXIO;
     }
@@ -435,7 +434,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         const char *rsc_attr_id = attr_id;
         const char *rsc_attr_set = attr_set;
 
-        xmlNode *rsc_xml = rsc->priv->xml;
+        xmlNode *rsc_xml = NULL;
         xmlNode *xml_top = NULL;
         xmlNode *xml_obj = NULL;
         xmlNode *xml_search = NULL;
@@ -635,9 +634,8 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
     }
 
     if (pcmk__str_eq(attr_set_type, ATTR_SET_ELEMENT, pcmk__str_none)) {
-        xmlNode *rsc_xml = rsc->priv->xml;
+        xmlNode *rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
 
-        rsc_xml = get_cib_rsc(cib_xml_orig, rsc);
         if (rsc_xml == NULL) {
             return ENXIO;
         }

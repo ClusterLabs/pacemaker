@@ -278,7 +278,6 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
                                        attr_not_in_string, (void *) value);
     }
 
-    value = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     data->digest_restart_calc = pcmk__digest_operation(data->params_restart);
 }
 

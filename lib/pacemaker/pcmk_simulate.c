@@ -238,7 +238,7 @@ write_sim_dotfile(pcmk_scheduler_t *scheduler, const char *dot_file,
         pcmk_action_t *action = (pcmk_action_t *) iter->data;
         const char *style = "dashed";
         const char *font = "black";
-        const char *color = "black";
+        const char *color = NULL;
         char *action_name = create_action_name(action, verbose);
 
         if (pcmk_is_set(action->flags, pcmk__action_pseudo)) {
@@ -425,7 +425,7 @@ pcmk__profile_dir(pcmk__output_t *out, uint32_t flags, const char *dir,
 {
     pcmk_scheduler_t *scheduler = NULL;
     uint64_t scheduler_flags = pcmk__sched_none;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
     int num_files = 0;
     int rc = pcmk_rc_ok;
 

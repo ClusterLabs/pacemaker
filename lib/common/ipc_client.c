@@ -1519,6 +1519,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     g_string_free(iov_buffer, TRUE);
     pcmk_free_ipc_event(iov);
+    // coverity[return_overflow]
     return rc;
 }
 

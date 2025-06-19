@@ -61,7 +61,7 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
     int rc = pcmk_rc_ok;
     xmlNode *status = NULL;
 
-    pcmk__assert(cib_object != NULL);
+    pcmk__assert((cib_object != NULL) && (*cib_object != NULL));
 
     /* Without the CIB element, we can't get a schema to validate against, so
      * report that separately from validation

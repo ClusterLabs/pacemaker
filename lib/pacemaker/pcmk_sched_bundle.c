@@ -926,6 +926,11 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
     struct probe_data *probe_data = user_data;
     pcmk_resource_t *bundle = probe_data->bundle;
 
+    /* This is guaranteed when constructing probe_data in pcmk__bundle_create_probe,
+     * but this makes static analysis happy.
+     */
+    pcmk__assert(bundle != NULL);
+
     if ((replica->ip != NULL)
         && replica->ip->priv->cmds->create_probe(replica->ip,
                                                  probe_data->node)) {

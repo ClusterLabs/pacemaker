@@ -239,6 +239,7 @@ cib_remote_callback_dispatch(gpointer user_data)
             return -1;
     }
 
+    // coverity[tainted_data] This can't easily be changed right now
     msg = pcmk__remote_message_xml(&private->callback);
     if (msg == NULL) {
         private->start_time = 0;
