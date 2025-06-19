@@ -110,31 +110,36 @@ with_frac(void **state)
     int usec = 123456;
 
     // Display time with no fractional seconds component
-    assert_hr_format("%H:%M:%S.%06N", "03:04:05.000000", NULL, 0);
-    assert_hr_format("%H:%M:%S.%03N", "03:04:05.000", NULL, 0);
-    assert_hr_format("%H:%M:%S.%00N", "03:04:05.", NULL, 0);
+    assert_hr_format("%H:%M:%S.%6N", "03:04:05.000000", NULL, 0);
+    assert_hr_format("%H:%M:%S.%3N", "03:04:05.000", NULL, 0);
     assert_hr_format("%H:%M:%S.%0N", "03:04:05.", NULL, 0);
+    assert_hr_format("%H:%M:%S.%N", "03:04:05.", NULL, 0);
     assert_hr_format("The time is %H:%M:%S.%06N right NOW",
                      "The time is 03:04:05.000000 right NOW", NULL, 0);
 
     // Display at appropriate resolution by truncating toward zero
-    assert_hr_format("%H:%M:%S.%06N", "03:04:05.123456", NULL, usec);
-    assert_hr_format("%H:%M:%S.%05N", "03:04:05.12345", NULL, usec);
-    assert_hr_format("%H:%M:%S.%04N", "03:04:05.1234", NULL, usec);
-    assert_hr_format("%H:%M:%S.%03N", "03:04:05.123", NULL, usec);
-    assert_hr_format("%H:%M:%S.%02N", "03:04:05.12", NULL, usec);
-    assert_hr_format("%H:%M:%S.%01N", "03:04:05.1", NULL, usec);
-    assert_hr_format("%H:%M:%S.%00N", "03:04:05.", NULL, usec);
+    assert_hr_format("%H:%M:%S.%6N", "03:04:05.123456", NULL, usec);
+    assert_hr_format("%H:%M:%S.%5N", "03:04:05.12345", NULL, usec);
+    assert_hr_format("%H:%M:%S.%4N", "03:04:05.1234", NULL, usec);
+    assert_hr_format("%H:%M:%S.%3N", "03:04:05.123", NULL, usec);
+    assert_hr_format("%H:%M:%S.%2N", "03:04:05.12", NULL, usec);
+    assert_hr_format("%H:%M:%S.%1N", "03:04:05.1", NULL, usec);
+    assert_hr_format("%H:%M:%S.%0N", "03:04:05.", NULL, usec);
+    assert_hr_format("%H:%M:%S.%N", "03:04:05.", NULL, usec);
 
-    // Same as above, but with correct zero-padding
+    // Leading zero is ignored, not treated as a request for zero-padding
+    assert_hr_format("%H:%M:%S.%03N", "03:04:05.123", NULL, usec);
+
+    // Same as above, but with zero-padding for smaller fractional components
     usec = 789;
-    assert_hr_format("%H:%M:%S.%06N", "03:04:05.000789", NULL, usec);
-    assert_hr_format("%H:%M:%S.%05N", "03:04:05.00078", NULL, usec);
-    assert_hr_format("%H:%M:%S.%04N", "03:04:05.0007", NULL, usec);
-    assert_hr_format("%H:%M:%S.%03N", "03:04:05.000", NULL, usec);
-    assert_hr_format("%H:%M:%S.%02N", "03:04:05.00", NULL, usec);
-    assert_hr_format("%H:%M:%S.%01N", "03:04:05.0", NULL, usec);
-    assert_hr_format("%H:%M:%S.%00N", "03:04:05.", NULL, usec);
+    assert_hr_format("%H:%M:%S.%6N", "03:04:05.000789", NULL, usec);
+    assert_hr_format("%H:%M:%S.%5N", "03:04:05.00078", NULL, usec);
+    assert_hr_format("%H:%M:%S.%4N", "03:04:05.0007", NULL, usec);
+    assert_hr_format("%H:%M:%S.%3N", "03:04:05.000", NULL, usec);
+    assert_hr_format("%H:%M:%S.%2N", "03:04:05.00", NULL, usec);
+    assert_hr_format("%H:%M:%S.%1N", "03:04:05.0", NULL, usec);
+    assert_hr_format("%H:%M:%S.%0N", "03:04:05.", NULL, usec);
+    assert_hr_format("%H:%M:%S.%N", "03:04:05.", NULL, usec);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

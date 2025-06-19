@@ -2085,6 +2085,10 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
                      * Further, since we cap the width at 6 digits, a user
                      * cannot display times at greater than microsecond
                      * resolution.
+                     *
+                     * A leading zero in the width field is ignored, not treated
+                     * as "use zero-padding." For example, "%03N" and "%3N"
+                     * produce the same result.
                      */
                     scanned_pos++;
 
