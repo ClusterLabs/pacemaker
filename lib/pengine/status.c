@@ -58,6 +58,16 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
  *  - A list of nodes that need to be stonith'd
  *  - A list of nodes that need to be shutdown
  *  - A list of the possible stop/start actions (without dependencies)
+ *
+ * @TODO Currently this function can modify scheduler->input by creating
+ * primitive elements for guest nodes. Commit 5dbc819 aimed to make this
+ * function idempotent. It seems to be idempotent now, except that if
+ * scheduler->input is reused, it may gain duplicate primitive elements for
+ * guest nodes each time.
+ *
+ * Investigate whether we can leave scheduler->input unmodified without a lot of
+ * unnecessary XML copying. Otherwise, just document that scheduler->input may
+ * be modified.
  */
 gboolean
 cluster_status(pcmk_scheduler_t * scheduler)
