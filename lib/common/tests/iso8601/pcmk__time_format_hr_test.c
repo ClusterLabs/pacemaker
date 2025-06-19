@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,17 +24,20 @@
  * \param[in] expected   Assertion succeeds if result matches this
  * \param[in] alternate  If this is not NULL, assertion may also succeed if
  *                       result matches this
+ * \param[in] usec       Microseconds component of the reference time
  *
  * \note This allows two possible results because different strftime()
  *       implementations handle certain format syntax differently.
  */
 static void
 assert_hr_format(const char *format, const char *expected,
-                 const char *alternate)
+                 const char *alternate, int usec)
 {
     pcmk__time_hr_t *hr = TEST_TIME;
-    char *result = pcmk__time_format_hr(format, hr);
+    char *result = NULL;
 
+    hr->useconds = usec;
+    result = pcmk__time_format_hr(format, hr);
     pcmk__time_hr_free(hr);
 
     if (expected == NULL) {
@@ -58,55 +61,55 @@ static void
 null_format(void **state)
 {
     assert_null(pcmk__time_format_hr(NULL, NULL));
-    assert_hr_format(NULL, NULL, NULL); // for pcmk__time_format_hr(NULL, hr)
+    assert_hr_format(NULL, NULL, NULL, 0); // for pcmk__time_format_hr(NULL, hr)
 }
 
 static void
 no_specifiers(void **state)
 {
-    assert_hr_format("no specifiers", "no specifiers", NULL);
+    assert_hr_format("no specifiers", "no specifiers", NULL, 0);
     assert_hr_format("this has a literal % in it",
                      "this has a literal % in it",
                      // *BSD strftime() strips single %
-                     "this has a literal  in it");
+                     "this has a literal  in it", 0);
     assert_hr_format("this has a literal %01 in it",
                      "this has a literal %01 in it",
                      // *BSD strftime() strips %0
-                     "this has a literal 1 in it");
+                     "this has a literal 1 in it", 0);
     assert_hr_format("%2 this starts and ends with %",
                      "%2 this starts and ends with %",
                      // *BSD strftime() strips % in front of nonzero number
-                     "2 this starts and ends with %");
+                     "2 this starts and ends with %", 0);
 
     /* strftime() treats % with a number (and no specifier) as a literal string
      * to be formatted with a field width (undocumented and probably a bug ...)
      */
     assert_hr_format("this ends with %10", "this ends with        %10",
                      // *BSD strftime() strips % in front of nonzero number
-                     "this ends with 10");
+                     "this ends with 10", 0);
 }
 
 static void
 without_nano(void **state)
 {
-    assert_hr_format("%H:%M %a %b %d", "03:04 Tue Jan 02", NULL);
-    assert_hr_format("%H:%M:%S", "03:04:05", NULL);
+    assert_hr_format("%H:%M %a %b %d", "03:04 Tue Jan 02", NULL, 0);
+    assert_hr_format("%H:%M:%S", "03:04:05", NULL, 0);
     assert_hr_format("The time is %H:%M right now",
-                     "The time is 03:04 right now", NULL);
+                     "The time is 03:04 right now", NULL, 0);
     assert_hr_format("%3S seconds", "005 seconds",
                      // *BSD strftime() doesn't support field widths
-                     "3S seconds");
+                     "3S seconds", 0);
 
     // strftime() treats %% as a literal %
-    assert_hr_format("%%H %%N", "%H %N", NULL);
+    assert_hr_format("%%H %%N", "%H %N", NULL, 0);
 }
 
 static void
 with_nano(void **state)
 {
-    assert_hr_format("%H:%M:%S.%06N", "03:04:05.000000", NULL);
+    assert_hr_format("%H:%M:%S.%06N", "03:04:05.000000", NULL, 0);
     assert_hr_format("The time is %H:%M:%S.%06N right NOW",
-                     "The time is 03:04:05.000000 right NOW", NULL);
+                     "The time is 03:04:05.000000 right NOW", NULL, 0);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
