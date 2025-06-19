@@ -405,13 +405,10 @@ profile_file(const char *xml_file, unsigned int repeat,
     for (int i = 0; i < repeat; ++i) {
         pcmk_reset_scheduler(scheduler);
 
-        scheduler->input = cib_object;
+        scheduler->input = pcmk__xml_copy(NULL, cib_object);
         pcmk__set_scheduler_flags(scheduler, flags);
         set_effective_date(scheduler, false, use_date);
         pcmk__schedule_actions(scheduler);
-
-        // Avoid freeing cib_object in pcmk_reset_scheduler()
-        scheduler->input = NULL;
     }
 
     pcmk_reset_scheduler(scheduler);
