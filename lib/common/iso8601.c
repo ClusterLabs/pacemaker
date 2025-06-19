@@ -2033,7 +2033,6 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
     int scanned_pos = 0; // How many characters of format have been parsed
     int printed_pos = 0; // How many characters of format have been processed
-    char frac_s[10] = { '\0', };
     GString *buf = NULL;
     char *result = NULL;
 
@@ -2046,7 +2045,6 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     buf = g_string_sized_new(128);
     pcmk__time_set_hr_dt(&dt, hr_dt);
     ha_get_tm_time(&tm, &dt);
-    sprintf(frac_s, "%06d", hr_dt->useconds);
 
     while (format[scanned_pos] != '\0') {
         int fmt_pos = 0;        // Index after last character to pass as-is
@@ -2127,7 +2125,24 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         g_string_append(buf, date_s);
         printed_pos = scanned_pos;
         if (frac_digits != 0) {
-            g_string_append_printf(buf, "%.*s", frac_digits, frac_s);
+            // Descending powers of 10 (10^5 down to 10^0)
+            static const int powers[6] = { 1e5, 1e4, 1e3, 1e2, 1e1, 1e0 };
+
+            // Sanity check to ensure array access is in bounds
+            pcmk__assert((frac_digits > 0) && (frac_digits <= 6));
+
+            /* Append fractional seconds at the requested resolution, truncated
+             * toward zero. We're basically converting from microseconds to
+             * another unit here. For example, suppose the width field
+             * (frac_digits) is 3. This means "use millisecond resolution." Then
+             * we need to divide our microseconds value by 10^3, which is
+             * powers[3 - 1].
+             *
+             * If the width field is 6 (microsecond resolution), then we divide
+             * our microseconds value by 10^0 == 1, which is powers[6 - 1].
+             */
+            g_string_append_printf(buf, "%0*d", frac_digits,
+                                   hr_dt->useconds / powers[frac_digits - 1]);
         }
     }
 
