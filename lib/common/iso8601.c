@@ -2049,7 +2049,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     while (format[scanned_pos] != '\0') {
         int fmt_pos = 0;        // Index after last character to pass as-is
         int frac_digits = 0;    // %N specifier's width field value (if any)
-        char *tmp_fmt_s = NULL;
+        gchar *tmp_fmt_s = NULL;
         char date_s[128] = { '\0', };
         size_t nbytes = 0;
 
@@ -2103,10 +2103,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
             }
         }
 
-        tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
-        if (tmp_fmt_s == NULL) {
-            return NULL;
-        }
+        tmp_fmt_s = g_strndup(&format[printed_pos], fmt_pos - printed_pos);
 
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
@@ -2116,7 +2113,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
-        free(tmp_fmt_s);
+        g_free(tmp_fmt_s);
         if (nbytes == 0) { // Would overflow buffer
             g_string_truncate(buf, 0);
             goto done;
