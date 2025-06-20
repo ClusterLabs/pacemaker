@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,8 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         /* make sure PID hasn't been reused by another process
            XXX: might still be just a zombie, which could confuse decisions */
         bool checked_through_kill = (rc == 0);
-        char exe_path[PATH_MAX], myexe_path[PATH_MAX];
+        char exe_path[PATH_MAX] = { '\0', };
+        char *myexe_path = NULL;
 
         rc = pcmk__procfs_pid2path(pid, exe_path, sizeof(exe_path));
         if (rc != pcmk_rc_ok) {
@@ -78,13 +79,14 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         }
 
         if (daemon[0] != '/') {
-            rc = snprintf(myexe_path, sizeof(myexe_path), CRM_DAEMON_DIR"/%s",
-                          daemon);
+            myexe_path = crm_strdup_printf(CRM_DAEMON_DIR "/%s", daemon);
         } else {
-            rc = snprintf(myexe_path, sizeof(myexe_path), "%s", daemon);
+            myexe_path = pcmk__str_copy(daemon);
         }
 
-        if (rc > 0 && rc < sizeof(myexe_path) && !strcmp(exe_path, myexe_path)) {
+        rc = strcmp(exe_path, myexe_path);
+        free(myexe_path);
+        if (rc == 0) {
             return pcmk_rc_ok;
         }
     }
