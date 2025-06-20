@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -149,8 +149,6 @@ crm_log_deinit(void)
     pcmk__gthread_log_id = 0;
 }
 
-#define FMT_MAX 256
-
 /*!
  * \internal
  * \brief Set the log format string based on the passed-in method
@@ -174,30 +172,29 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
 
     } else {
         // Everything else gets more detail, for advanced troubleshooting
-
-        int offset = 0;
-        char fmt[FMT_MAX];
+        GString *fmt = g_string_sized_new(256);
 
         if (method > QB_LOG_STDERR) {
             // If logging to file, prefix with timestamp, node name, daemon ID
-            offset += snprintf(fmt + offset, FMT_MAX - offset,
-                               TIMESTAMP_FORMAT_SPEC " %s %-20s[%lu] ",
-                                use_nodename, daemon, (unsigned long) use_pid);
+            g_string_append_printf(fmt,
+                                   TIMESTAMP_FORMAT_SPEC " %s %-20s[%lld] ",
+                                   use_nodename, daemon, (long long) use_pid);
         }
 
         // Add function name (in parentheses)
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%n");
+        g_string_append(fmt, "(%n");
         if (crm_tracing_enabled()) {
             // When tracing, add file and line number
-            offset += snprintf(fmt + offset, FMT_MAX - offset, "@%%f:%%l");
+            g_string_append(fmt, "@%f:%l");
         }
-        offset += snprintf(fmt + offset, FMT_MAX - offset, ")");
+        g_string_append_c(fmt, ')');
 
         // Add tag (if any), severity, and actual message
-        offset += snprintf(fmt + offset, FMT_MAX - offset, " %%g\t%%p: %%b");
+        g_string_append(fmt, " %g\t%p: %b");
 
-        CRM_LOG_ASSERT(offset > 0);
-        qb_log_format_set(method, fmt);
+        CRM_LOG_ASSERT(fmt->len > 0);
+        qb_log_format_set(method, fmt->str);
+        g_string_free(fmt, TRUE);
     }
 }
 
