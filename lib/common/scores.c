@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -94,28 +94,32 @@ pcmk_parse_score(const char *score_s, int *score, int default_score)
  * \param[in] score  Score to display
  *
  * \return Pointer to static memory containing string representation of \p score
- * \note Subsequent calls to this function will overwrite the returned value, so
+ * \note Subsequent calls to this function may overwrite the returned value, so
  *       it should be used only in a local context such as a printf()-style
  *       statement.
  */
 const char *
 pcmk_readable_score(int score)
 {
-    // The longest possible result is "-INFINITY"
-    static char score_s[sizeof(PCMK_VALUE_MINUS_INFINITY)];
-
     if (score >= PCMK_SCORE_INFINITY) {
-        strcpy(score_s, PCMK_VALUE_INFINITY);
+        return PCMK_VALUE_INFINITY;
 
     } else if (score <= -PCMK_SCORE_INFINITY) {
-        strcpy(score_s, PCMK_VALUE_MINUS_INFINITY);
+        return PCMK_VALUE_MINUS_INFINITY;
 
     } else {
-        // Range is limited to +/-1000000, so no chance of overflow
-        snprintf(score_s, sizeof(score_s), "%d", score);
-    }
+        // https://gcc.gnu.org/onlinedocs/gcc-15.1.0/cpp/Stringizing.html
+#define xstr(s) str(s)
+#define str(s) #s
 
-    return score_s;
+        // Result must be shorter than stringized -PCMK_SCORE_INFINITY
+        static char score_s[sizeof(xstr(-PCMK_SCORE_INFINITY))];
+#undef xstr
+#undef str
+
+        pcmk__assert(snprintf(score_s, sizeof(score_s), "%d", score) >= 0);
+        return score_s;
+    }
 }
 
 /*!
