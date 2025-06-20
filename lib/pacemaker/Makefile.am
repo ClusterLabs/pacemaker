@@ -16,7 +16,7 @@ noinst_HEADERS  = libpacemaker_private.h
 ## libraries
 lib_LTLIBRARIES	= libpacemaker.la
 
-libpacemaker_la_LDFLAGS	= -version-info 30:0:0
+libpacemaker_la_LDFLAGS	= -version-info 30:1:0
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
