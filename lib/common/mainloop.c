@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -668,7 +668,7 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
         qb_ipcs_request_rate_limit(server, conv_libqb_prio2ratelimit(prio));
     }
 
-    // Enforce a minimum IPC buffer size on all clients
+    /* All clients should use at least ipc_buffer_max as their buffer size */
     qb_ipcs_enforce_buffer_size(server, crm_ipc_default_buffer_size());
     qb_ipcs_poll_handlers_set(server, &gio_poll_funcs);
 
@@ -920,7 +920,7 @@ mainloop_io_t *
 mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                         void *userdata, struct ipc_client_callbacks *callbacks)
 {
-    crm_ipc_t *ipc = crm_ipc_new(name, 0);
+    crm_ipc_t *ipc = crm_ipc_new(name, max_size);
     mainloop_io_t *source = NULL;
     int rc = pcmk__add_mainloop_ipc(ipc, priority, userdata, callbacks,
                                     &source);

@@ -67,13 +67,16 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
         return EOPNOTSUPP;
     }
 
-    // Set server methods
+    (*api)->ipc_size_max = 0;
+
+    // Set server methods and max_size (if not default)
     switch (server) {
         case pcmk_ipc_attrd:
             (*api)->cmds = pcmk__attrd_api_methods();
             break;
 
         case pcmk_ipc_based:
+            (*api)->ipc_size_max = 512 * 1024; // 512KB
             break;
 
         case pcmk_ipc_controld:
@@ -92,6 +95,8 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
 
         case pcmk_ipc_schedulerd:
             (*api)->cmds = pcmk__schedulerd_api_methods();
+            // @TODO max_size could vary by client, maybe take as argument?
+            (*api)->ipc_size_max = 5 * 1024 * 1024; // 5MB
             break;
     }
     if ((*api)->cmds == NULL) {
@@ -100,7 +105,8 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
         return ENOMEM;
     }
 
-    (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false), 0);
+    (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false),
+                              (*api)->ipc_size_max);
     if ((*api)->ipc == NULL) {
         pcmk_free_ipc_api(*api);
         *api = NULL;
@@ -503,7 +509,7 @@ pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
     }
 
     if (api->ipc == NULL) {
-        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false), 0);
+        api->ipc = crm_ipc_new(pcmk_ipc_name(api, false), api->ipc_size_max);
         if (api->ipc == NULL) {
             return ENOMEM;
         }
@@ -819,6 +825,7 @@ pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name, uint32_t nodeid)
 
 struct crm_ipc_s {
     struct pollfd pfd;
+    unsigned int max_buf_size; // maximum bytes we can send or receive over IPC
     unsigned int buf_size;     // size of allocated buffer
     int msg_size;
     int need_reply;
@@ -839,8 +846,6 @@ struct crm_ipc_s {
  *       crm_ipc_destroy().
  * \note This should be considered deprecated for use with daemons supported by
  *       pcmk_new_ipc_api().
- * \note @COMPAT Since 2.1.10, \p max_size is ignored and the default given by
- *       \c crm_ipc_default_buffer_size() will be used instead.
  */
 crm_ipc_t *
 crm_ipc_new(const char *name, size_t max_size)
@@ -860,7 +865,7 @@ crm_ipc_new(const char *name, size_t max_size)
         free(client);
         return NULL;
     }
-    client->buf_size = crm_ipc_default_buffer_size();
+    client->buf_size = pcmk__ipc_buffer_size(max_size);
     client->buffer = malloc(client->buf_size);
     if (client->buffer == NULL) {
         crm_err("Could not create %s IPC connection: %s",
@@ -869,6 +874,9 @@ crm_ipc_new(const char *name, size_t max_size)
         free(client);
         return NULL;
     }
+
+    /* Clients initiating connection pick the max buf size */
+    client->max_buf_size = client->buf_size;
 
     client->pfd.fd = -1;
     client->pfd.events = POLLIN;
@@ -931,6 +939,18 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
         }
         crm_ipc_close(ipc);
         return rc;
+    }
+
+    ipc->max_buf_size = qb_ipcc_get_buffer_size(ipc->ipc);
+    if (ipc->max_buf_size > ipc->buf_size) {
+        free(ipc->buffer);
+        ipc->buffer = calloc(ipc->max_buf_size, sizeof(char));
+        if (ipc->buffer == NULL) {
+            rc = errno;
+            crm_ipc_close(ipc);
+            return rc;
+        }
+        ipc->buf_size = ipc->max_buf_size;
     }
 
     return pcmk_rc_ok;
@@ -1093,6 +1113,48 @@ crm_ipc_ready(crm_ipc_t *client)
     return (rc < 0)? -errno : rc;
 }
 
+// \return Standard Pacemaker return code
+static int
+crm_ipc_decompress(crm_ipc_t * client)
+{
+    pcmk__ipc_header_t *header = (pcmk__ipc_header_t *)(void*)client->buffer;
+
+    if (header->size_compressed) {
+        int rc = 0;
+        unsigned int size_u = 1 + header->size_uncompressed;
+        /* never let buf size fall below our max size required for ipc reads. */
+        unsigned int new_buf_size = QB_MAX((sizeof(pcmk__ipc_header_t) + size_u), client->max_buf_size);
+        char *uncompressed = pcmk__assert_alloc(1, new_buf_size);
+
+        crm_trace("Decompressing message data %u bytes into %u bytes",
+                 header->size_compressed, size_u);
+
+        rc = BZ2_bzBuffToBuffDecompress(uncompressed + sizeof(pcmk__ipc_header_t), &size_u,
+                                        client->buffer + sizeof(pcmk__ipc_header_t), header->size_compressed, 1, 0);
+        rc = pcmk__bzlib2rc(rc);
+
+        if (rc != pcmk_rc_ok) {
+            crm_err("Decompression failed: %s " CRM_XS " rc=%d",
+                    pcmk_rc_str(rc), rc);
+            free(uncompressed);
+            return rc;
+        }
+
+        pcmk__assert(size_u == header->size_uncompressed);
+
+        memcpy(uncompressed, client->buffer, sizeof(pcmk__ipc_header_t));       /* Preserve the header */
+        header = (pcmk__ipc_header_t *)(void*)uncompressed;
+
+        free(client->buffer);
+        client->buf_size = new_buf_size;
+        client->buffer = uncompressed;
+    }
+
+    pcmk__assert(client->buffer[sizeof(pcmk__ipc_header_t)
+                                + header->size_uncompressed - 1] == 0);
+    return pcmk_rc_ok;
+}
+
 long
 crm_ipc_read(crm_ipc_t * client)
 {
@@ -1105,6 +1167,12 @@ crm_ipc_read(crm_ipc_t * client)
     client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer,
                                           client->buf_size, 0);
     if (client->msg_size >= 0) {
+        int rc = crm_ipc_decompress(client);
+
+        if (rc != pcmk_rc_ok) {
+            return pcmk_rc2legacy(rc);
+        }
+
         header = (pcmk__ipc_header_t *)(void*)client->buffer;
         if (!pcmk__valid_ipc_header(header)) {
             return -EBADMSG;
@@ -1130,7 +1198,7 @@ crm_ipc_read(crm_ipc_t * client)
 
     if (header) {
         /* Data excluding the header */
-        return header->size;
+        return header->size_uncompressed;
     }
     return -ENOMSG;
 }
@@ -1198,6 +1266,11 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
             continue;
         }
 
+        rc = crm_ipc_decompress(client);
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
         hdr = (pcmk__ipc_header_t *)(void*) client->buffer;
 
         if (hdr->qb.id == request_id) {
@@ -1262,6 +1335,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     ssize_t bytes = 0;
     struct iovec *iov;
     static uint32_t id = 0;
+    static int factor = 8;
     pcmk__ipc_header_t *header;
 
     if (client == NULL) {
@@ -1296,7 +1370,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     id++;
     CRM_LOG_ASSERT(id != 0); /* Crude wrap-around detection */
-    rc = pcmk__ipc_prepare_iov(id, message, &iov, &bytes);
+    rc = pcmk__ipc_prepare_iov(id, message, client->max_buf_size, &iov, &bytes);
     if (rc != pcmk_rc_ok) {
         crm_warn("Couldn't prepare %s IPC request: %s " CRM_XS " rc=%d",
                  client->server_name, pcmk_rc_str(rc), rc);
@@ -1309,6 +1383,16 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     if (pcmk_is_set(flags, crm_ipc_proxied)) {
         /* Don't look for a synchronous response */
         pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
+    }
+
+    if(header->size_compressed) {
+        if(factor < 10 && (client->max_buf_size / 10) < (bytes / factor)) {
+            crm_notice("Compressed message exceeds %d0%% of configured IPC "
+                       "limit (%u bytes); consider setting PCMK_ipc_buffer to "
+                       "%u or higher",
+                       factor, client->max_buf_size, 2 * client->max_buf_size);
+            factor++;
+        }
     }
 
     crm_trace("Sending %s IPC request %d of %u bytes using %dms timeout",

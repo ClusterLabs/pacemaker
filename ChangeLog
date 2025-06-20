@@ -1,5 +1,5 @@
 * Thu Jun 19 2025 Chris Lumens <clumens@redhat.com> Pacemaker-2.1.10
-- 98 commits with 93 files changed, 1342 insertions(+), 867 deletions(-)
+- 101 commits with 86 files changed, 1294 insertions(+), 607 deletions(-)
 
 - Fixes since Pacemaker-2.1.9
   + build: Fix default pacemaker-remoted path on Fedora >= 42
@@ -8,9 +8,8 @@
   + executor: avoid use-after-free upon shutdown
   + libcrmcluster: better detect remote nodes in peer cache
   + libcrmcluster: use pcmk__cluster_get_xml_id() when possible
-  + libcrmcommon: Consistently free iov on error.
-  + libcrmservices: Fix overrides for systemd resources
-  + libcrmservices: Don't leak msg if systemd_proxy is NULL.
+  + libcrmservice: Fix overrides for systemd resources
+  + libcrmservice: Don't leak msg if systemd_proxy is NULL.
   + libpacemaker: set fail-count to INFINITY for fatal failures
   + libpe_status: consider parents of an unmanaged resource active on the node
   + pacemaker-attrd: bail earlier if value won't be written
@@ -27,9 +26,6 @@
 
 - Public API changes since Pacemaker-2.1.9
   + libcrmcommon: add pcmk_common_cleanup()
-  + libcrmcommon: Deprecate crm_ipc_compressed.
-  + libcrmcommon: Deprecate max_size parameter to mainloop_add_ipc_client.
-  + libcrmcommon: Ignore the max_size parameter in crm_ipc_new.
 
 * Thu Oct 31 2024 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.1.9
 - 169 commits with 252 files changed, 4498 insertions(+), 2259 deletions(-)
