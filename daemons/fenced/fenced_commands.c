@@ -272,7 +272,7 @@ get_action_timeout(const fenced_device_t *device, const char *action,
                    int default_timeout)
 {
     if (action && device && device->params) {
-        char buffer[64] = { 0, };
+        char *timeout_param = NULL;
         const char *value = NULL;
 
         /* If "reboot" was requested but the device does not support it,
@@ -286,8 +286,10 @@ get_action_timeout(const fenced_device_t *device, const char *action,
         }
 
         /* If the device config specified an action-specific timeout, use it */
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
-        value = g_hash_table_lookup(device->params, buffer);
+        timeout_param = crm_strdup_printf("pcmk_%s_timeout", action);
+        value = g_hash_table_lookup(device->params, timeout_param);
+        free(timeout_param);
+
         if (value) {
             long long timeout_ms = crm_get_msec(value);
             return (int) QB_MIN(pcmk__timeout_ms2s(timeout_ms), INT_MAX);
