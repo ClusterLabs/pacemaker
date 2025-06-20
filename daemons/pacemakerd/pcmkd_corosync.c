@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -360,9 +360,11 @@ pacemakerd_read_config(void)
                      " No group found for user %s", CRM_DAEMON_USER);
 
         } else {
-            char key[PATH_MAX];
-            snprintf(key, PATH_MAX, "uidgid.gid.%u", gid);
+            char *key = crm_strdup_printf("uidgid.gid.%lld", (long long) gid);
+
             rc = cmap_set_uint8(local_handle, key, 1);
+            free(key);
+
             if (rc != CS_OK) {
                 crm_warn("Could not authorize group with Corosync: %s " QB_XS
                          " group=%u rc=%d", pcmk__cs_err_str(rc), gid, rc);
