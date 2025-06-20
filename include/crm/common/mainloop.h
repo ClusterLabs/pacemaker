@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2024 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -130,7 +130,6 @@ qb_ipcs_service_t *mainloop_add_ipc_server_with_prio(const char *name,
 
 void mainloop_del_ipc_server(qb_ipcs_service_t * server);
 
-// @COMPAT max_size parameter is deprecated and unused since 2.1.10
 mainloop_io_t *mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                                        void *userdata, struct ipc_client_callbacks *callbacks);
 
