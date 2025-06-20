@@ -319,8 +319,8 @@ bind_and_listen(struct addrinfo *addr)
 static int
 get_address_info(const char *bind_name, int port, struct addrinfo **res)
 {
-    int rc;
-    char port_str[6]; // at most "65535"
+    int rc = pcmk_rc_ok;
+    char *port_s = pcmk__itoa(port);
     struct addrinfo hints;
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -329,17 +329,16 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    snprintf(port_str, sizeof(port_str), "%d", port);
-    rc = getaddrinfo(bind_name, port_str, &hints, res);
+    rc = getaddrinfo(bind_name, port_s, &hints, res);
     rc = pcmk__gaierror2rc(rc);
 
     if (rc != pcmk_rc_ok) {
         crm_err("Unable to get IP address(es) for %s: %s",
                 (bind_name? bind_name : "local node"), pcmk_rc_str(rc));
-        return rc;
     }
 
-    return pcmk_rc_ok;
+    free(port_s);
+    return rc;
 }
 
 int
