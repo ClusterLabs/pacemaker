@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,8 +44,6 @@ pcmk__build_path(const char *path_c, mode_t mode)
     int rc = pcmk_rc_ok;
     char *path = strdup(path_c);
 
-    // cppcheck seems not to understand the abort logic in CRM_CHECK
-    // cppcheck-suppress memleak
     CRM_CHECK(path != NULL, return -ENOMEM);
     for (len = strlen(path); offset < len; offset++) {
         if (path[offset] == '/') {
@@ -455,7 +453,14 @@ pcmk__file_contents(const char *filename, char **contents)
             rc = errno;
             goto bail;
         }
+
+        errno = 0;
+
         rewind(fp);
+        if (errno != 0) {
+            rc = errno;
+            goto bail;
+        }
 
         read_len = fread(*contents, 1, length, fp);
         if (read_len != length) {
@@ -576,19 +581,15 @@ pcmk__close_fds_in_child(bool all)
         max_fd = (conf_max > 0)? conf_max : 1024;
     }
 
-    /* /proc/self/fd (on Linux) or /dev/fd (on most OSes) contains symlinks to
-     * all open files for the current process, named as the file descriptor.
-     * Use this if available, because it's more efficient than a shotgun
-     * approach to closing descriptors.
+    /* First try /proc.  If that returns NULL (either because opening the
+     * directory failed, or because procfs isn't supported on this platform),
+     * fall back to /dev/fd.
      */
-#if HAVE_LINUX_PROCFS
-    dir = opendir("/proc/self/fd");
+    dir = pcmk__procfs_fd_dir();
     if (dir == NULL) {
         dir = opendir("/dev/fd");
     }
-#else
-    dir = opendir("/dev/fd");
-#endif // HAVE_LINUX_PROCFS
+
     if (dir != NULL) {
         struct dirent *entry;
         int dir_fd = dirfd(dir);

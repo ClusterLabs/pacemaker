@@ -1,5 +1,5 @@
 #
-# Copyright 2024 the Pacemaker project contributors
+# Copyright 2024-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -13,7 +13,6 @@ include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pcmk__find_node_in_list_test		\
-		 pcmk__xe_add_node_test			\
 		 pcmk_cib_node_shutdown_test		\
 		 pcmk_foreach_active_resource_test	\
 		 pcmk_node_is_clean_test		\

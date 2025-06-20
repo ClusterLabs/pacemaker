@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
+
+#include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
@@ -811,8 +813,8 @@ add_replica_actions_to_graph(pcmk__bundle_replica_t *replica, void *user_data)
          * connection host as the magic string "#uname", then
          * replacing it with the underlying host when needed.
          */
-        xmlNode *nvpair = get_xpath_object(XPATH_REMOTE,
-                                           replica->remote->priv->xml, LOG_ERR);
+        xmlNode *nvpair = pcmk__xpath_find_one(replica->remote->priv->xml->doc,
+                                               XPATH_REMOTE, LOG_ERR);
         const char *calculated_addr = NULL;
 
         // Replace the value in replica->remote->xml (if appropriate)
@@ -923,6 +925,11 @@ create_replica_probes(pcmk__bundle_replica_t *replica, void *user_data)
 {
     struct probe_data *probe_data = user_data;
     pcmk_resource_t *bundle = probe_data->bundle;
+
+    /* This is guaranteed when constructing probe_data in pcmk__bundle_create_probe,
+     * but this makes static analysis happy.
+     */
+    pcmk__assert(bundle != NULL);
 
     if ((replica->ip != NULL)
         && replica->ip->priv->cmds->create_probe(replica->ip,

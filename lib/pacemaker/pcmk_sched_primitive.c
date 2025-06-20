@@ -1077,7 +1077,8 @@ pcmk__primitive_internal_constraints(pcmk_resource_t *rsc)
                                             PCMK_ACTION_STOP, 0),
                                NULL, pcmk__ar_then_implies_first, scheduler);
 
-            if (pcmk_is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)) {
+            if (pcmk_is_set(rsc->flags, pcmk__rsc_remote_nesting_allowed)
+                /* @TODO: && non-bundle Pacemaker Remote nodes exist */) {
                 score = 10000;    /* Highly preferred but not essential */
             } else {
                 score = PCMK_SCORE_INFINITY; // Force to run on same host
@@ -1623,7 +1624,10 @@ shutdown_time(pcmk_node_t *node)
                      shutdown, pcmk__node_name(node), pcmk_rc_str(rc));
         }
     }
-    return (result == 0)? get_effective_time(node->priv->scheduler) : result;
+    if (result == 0) {
+        result = pcmk__scheduler_epoch_time(node->priv->scheduler);
+    }
+    return result;
 }
 
 /*!
@@ -1704,8 +1708,8 @@ pcmk__primitive_shutdown_lock(pcmk_resource_t *rsc)
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown (expires @%lld)",
                        rsc->id, pcmk__node_name(rsc->priv->lock_node),
                        (long long) lock_expiration);
-        pe__update_recheck_time(++lock_expiration, scheduler,
-                                "shutdown lock expiration");
+        pcmk__update_recheck_time(++lock_expiration, scheduler,
+                                  "shutdown lock expiration");
     } else {
         pcmk__rsc_info(rsc, "Locking %s to %s due to shutdown",
                        rsc->id, pcmk__node_name(rsc->priv->lock_node));

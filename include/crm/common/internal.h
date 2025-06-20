@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 #include <unistd.h>             // pid_t, getpid()
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint8_t, uint64_t
+#include <inttypes.h>           // PRIu64
 
 #include <glib.h>               // guint, GList, GHashTable
 #include <libxml/tree.h>        // xmlNode
@@ -63,22 +64,9 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
 guint pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 
-/* internal node-related XML utilities (from nodes.c) */
-
-/*!
- * \internal
- * \brief Add local node name and ID to an XML node
- *
- * \param[in,out] request  XML node to modify
- * \param[in]     node     The local node's name
- * \param[in]     nodeid   The local node's ID (can be 0)
- */
-void pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid);
-
-
 /* internal name/value utilities (from nvpair.c) */
 
-int pcmk__scan_nvpair(const char *input, char **name, char **value);
+int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
 
@@ -88,6 +76,10 @@ pid_t pcmk__procfs_pid_of(const char *name);
 unsigned int pcmk__procfs_num_cores(void);
 int pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size);
 bool pcmk__procfs_has_pids(void);
+DIR *pcmk__procfs_fd_dir(void);
+void pcmk__sysrq_trigger(char t);
+bool pcmk__throttle_cib_load(const char *server, float *load);
+bool pcmk__throttle_load_avg(float *load);
 
 /* internal functions related to process IDs (from pid.c) */
 
@@ -141,12 +133,10 @@ pcmk__set_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags %#.8llx (%s) for %s set by %s:%d",
-                            ((flag_type == NULL)? "Group of" : flag_type),
-                            (unsigned long long) flags,
-                            ((flags_str == NULL)? "flags" : flags_str),
-                            ((target == NULL)? "target" : target),
-                            function, line);
+                            "%s flags %#.8" PRIx64 " (%s) for %s set by %s:%d",
+                            pcmk__s(flag_type, "Group of"), flags,
+                            pcmk__s(flags_str, "flags"),
+                            pcmk__s(target, "target"), function, line);
     }
     return result;
 }
@@ -175,12 +165,11 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
     if (result != flag_group) {
         do_crm_log_unlikely(log_level,
-                            "%s flags %#.8llx (%s) for %s cleared by %s:%d",
-                            ((flag_type == NULL)? "Group of" : flag_type),
-                            (unsigned long long) flags,
-                            ((flags_str == NULL)? "flags" : flags_str),
-                            ((target == NULL)? "target" : target),
-                            function, line);
+                            "%s flags %#.8" PRIx64
+                            " (%s) for %s cleared by %s:%d",
+                            pcmk__s(flag_type, "Group of"), flags,
+                            pcmk__s(flags_str, "flags"),
+                            pcmk__s(target, "target"), function, line);
     }
     return result;
 }

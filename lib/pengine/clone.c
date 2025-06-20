@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool, true, false
 #include <stdint.h>
 
-#include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
@@ -319,10 +319,11 @@ unpack_meta_int(const pcmk_resource_t *rsc, const char *meta_name,
     return integer;
 }
 
-gboolean
-clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+bool
+clone_unpack(pcmk_resource_t *rsc)
 {
     int lpc = 0;
+    int num_nodes = g_list_length(rsc->priv->scheduler->nodes);
     xmlNode *a_child = NULL;
     xmlNode *xml_obj = rsc->priv->xml;
     clone_variant_data_t *clone_data = NULL;
@@ -352,9 +353,11 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     /* Use number of nodes (but always at least 1, which is handy for crm_verify
      * for a CIB without nodes) as default, but 0 for minimum and invalid
+     *
+     * @TODO Exclude bundle nodes when counting
      */
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
-                                            QB_MAX(1, g_list_length(scheduler->nodes)));
+                                            QB_MAX(1, num_nodes));
 
     if (crm_is_true(g_hash_table_lookup(rsc->priv->meta,
                                         PCMK_META_ORDERED))) {
@@ -420,14 +423,14 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         /* Create one child instance so that unpack_find_resource() will hook up
          * any orphans up to the parent correctly.
          */
-        if (pe__create_clone_child(rsc, scheduler) == NULL) {
+        if (pe__create_clone_child(rsc, rsc->priv->scheduler) == NULL) {
             return FALSE;
         }
 
     } else {
         // Create a child instance for each available instance number
         for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
-            if (pe__create_clone_child(rsc, scheduler) == NULL) {
+            if (pe__create_clone_child(rsc, rsc->priv->scheduler) == NULL) {
                 return FALSE;
             }
         }
@@ -438,14 +441,14 @@ clone_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     return TRUE;
 }
 
-gboolean
-clone_active(pcmk_resource_t * rsc, gboolean all)
+bool
+clone_active(const pcmk_resource_t *rsc, bool all)
 {
     for (GList *gIter = rsc->priv->children;
          gIter != NULL; gIter = gIter->next) {
 
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        gboolean child_active = child_rsc->priv->fns->active(child_rsc, all);
+        bool child_active = child_rsc->priv->fns->active(child_rsc, all);
 
         if (all == FALSE && child_active) {
             return TRUE;
@@ -538,9 +541,9 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
     GList *all = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -636,7 +639,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     get_clone_variant_data(clone_data, rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -646,8 +649,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     for (gIter = rsc->priv->children; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-        gboolean partially_active = child_rsc->priv->fns->active(child_rsc,
-                                                                 FALSE);
+        bool partially_active = child_rsc->priv->fns->active(child_rsc, false);
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
             continue;
@@ -696,7 +698,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             // Print individual instance when active orphaned/unmanaged/failed
             print_full = TRUE;
 
-        } else if (child_rsc->priv->fns->active(child_rsc, TRUE)) {
+        } else if (child_rsc->priv->fns->active(child_rsc, true)) {
             // Instance of fully active anonymous clone
 
             pcmk_node_t *location = NULL;
@@ -932,7 +934,7 @@ clone_free(pcmk_resource_t * rsc)
         /* There could be a saved unexpanded xml */
         pcmk__xml_free(child_rsc->priv->orig_xml);
         child_rsc->priv->orig_xml = NULL;
-        child_rsc->priv->fns->free(child_rsc);
+        pcmk__free_resource(child_rsc);
     }
 
     g_list_free(rsc->priv->children);
@@ -948,7 +950,7 @@ clone_free(pcmk_resource_t * rsc)
 }
 
 enum rsc_role_e
-clone_resource_state(const pcmk_resource_t * rsc, gboolean current)
+clone_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e clone_role = pcmk_role_unknown;
 
@@ -989,15 +991,15 @@ pe__is_universal_clone(const pcmk_resource_t *rsc,
     return FALSE;
 }
 
-gboolean
-pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                      gboolean check_parent)
+bool
+pe__clone_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                      bool check_parent)
 {
-    gboolean passes = FALSE;
+    bool passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
 
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else {
         get_clone_variant_data(clone_data, rsc);
         passes = pcmk__str_in_list(pcmk__xe_id(clone_data->xml_obj_child),
@@ -1011,8 +1013,8 @@ pe__clone_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 
                 child_rsc = (const pcmk_resource_t *) iter->data;
                 if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                       FALSE)) {
-                    passes = TRUE;
+                                                       false)) {
+                    passes = true;
                     break;
                 }
             }

@@ -14,7 +14,7 @@ pcmk_err_generic - Error
 =#=#=#= End test: Get legacy return code (with name) - OK (0) =#=#=#=
 * Passed: crm_error             - Get legacy return code (with name)
 =#=#=#= Begin test: Get legacy return code (with name) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -n --output-as=xml 201">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -n 201">
   <result-code code="201" name="pcmk_err_generic" description="Error"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -39,7 +39,7 @@ pcmk_err_no_quorum - Operation requires quorum
 =#=#=#= End test: Get multiple legacy return codes (with names) - OK (0) =#=#=#=
 * Passed: crm_error             - Get multiple legacy return codes (with names)
 =#=#=#= Begin test: Get multiple legacy return codes (with names) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -n --output-as=xml 201 202">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -n 201 202">
   <result-code code="201" name="pcmk_err_generic" description="Error"/>
   <result-code code="202" name="pcmk_err_no_quorum" description="Operation requires quorum"/>
   <status code="0" message="OK"/>
@@ -105,7 +105,7 @@ Error
 =#=#=#= End test: Get unknown Pacemaker return code - OK (0) =#=#=#=
 * Passed: crm_error             - Get unknown Pacemaker return code
 =#=#=#= Begin test: Get unknown Pacemaker return code (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -r --output-as=xml -- -10000">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -r -- -10000">
   <result-code code="-10000" description="Error"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -116,7 +116,7 @@ Unknown - Error
 =#=#=#= End test: Get unknown Pacemaker return code (with name) - OK (0) =#=#=#=
 * Passed: crm_error             - Get unknown Pacemaker return code (with name)
 =#=#=#= Begin test: Get unknown Pacemaker return code (with name) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -n -r --output-as=xml -- -10000">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -n -r -- -10000">
   <result-code code="-10000" name="Unknown" description="Error"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -127,7 +127,7 @@ Node not found
 =#=#=#= End test: Get negative Pacemaker return code - OK (0) =#=#=#=
 * Passed: crm_error             - Get negative Pacemaker return code
 =#=#=#= Begin test: Get negative Pacemaker return code (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -r --output-as=xml -- -1005">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -r -- -1005">
   <result-code code="-1005" description="Node not found"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -138,13 +138,15 @@ pcmk_rc_node_unknown - Node not found
 =#=#=#= End test: Get negative Pacemaker return code (with name) - OK (0) =#=#=#=
 * Passed: crm_error             - Get negative Pacemaker return code (with name)
 =#=#=#= Begin test: Get negative Pacemaker return code (with name) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -n -r --output-as=xml -- -1005">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -n -r -- -1005">
   <result-code code="-1005" name="pcmk_rc_node_unknown" description="Node not found"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Get negative Pacemaker return code (with name) (XML) - OK (0) =#=#=#=
 * Passed: crm_error             - Get negative Pacemaker return code (with name) (XML)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) =#=#=#=
+-1041: More IPC message fragments to send
+-1040: DC is not yet elected
 -1039: Compression/decompression error
 -1038: Nameserver resolution error
 -1037: No active transaction found
@@ -189,6 +191,8 @@ pcmk_rc_node_unknown - Node not found
 * Passed: crm_error             - List Pacemaker return codes (non-positive)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_error -l -r --output-as=xml">
+  <result-code code="-1041" description="More IPC message fragments to send"/>
+  <result-code code="-1040" description="DC is not yet elected"/>
   <result-code code="-1039" description="Compression/decompression error"/>
   <result-code code="-1038" description="Nameserver resolution error"/>
   <result-code code="-1037" description="No active transaction found"/>
@@ -233,6 +237,8 @@ pcmk_rc_node_unknown - Node not found
 =#=#=#= End test: List Pacemaker return codes (non-positive) (XML) - OK (0) =#=#=#=
 * Passed: crm_error             - List Pacemaker return codes (non-positive) (XML)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) =#=#=#=
+-1041: pcmk_rc_ipc_more            More IPC message fragments to send
+-1040: pcmk_rc_no_dc               DC is not yet elected
 -1039: pcmk_rc_compression         Compression/decompression error
 -1038: pcmk_rc_ns_resolution       Nameserver resolution error
 -1037: pcmk_rc_no_transaction      No active transaction found
@@ -277,6 +283,8 @@ pcmk_rc_node_unknown - Node not found
 * Passed: crm_error             - List Pacemaker return codes (non-positive) (with names)
 =#=#=#= Begin test: List Pacemaker return codes (non-positive) (with names) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_error -n -l -r --output-as=xml">
+  <result-code code="-1041" name="pcmk_rc_ipc_more" description="More IPC message fragments to send"/>
+  <result-code code="-1040" name="pcmk_rc_no_dc" description="DC is not yet elected"/>
   <result-code code="-1039" name="pcmk_rc_compression" description="Compression/decompression error"/>
   <result-code code="-1038" name="pcmk_rc_ns_resolution" description="Nameserver resolution error"/>
   <result-code code="-1037" name="pcmk_rc_no_transaction" description="No active transaction found"/>
@@ -325,7 +333,7 @@ Unknown exit status
 =#=#=#= End test: Get unknown crm_exit_t exit code - OK (0) =#=#=#=
 * Passed: crm_error             - Get unknown crm_exit_t exit code
 =#=#=#= Begin test: Get unknown crm_exit_t exit code (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -X --output-as=xml -- -10000">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -X -- -10000">
   <result-code code="-10000" description="Unknown exit status"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -336,7 +344,7 @@ CRM_EX_UNKNOWN - Unknown exit status
 =#=#=#= End test: Get unknown crm_exit_t exit code (with name) - OK (0) =#=#=#=
 * Passed: crm_error             - Get unknown crm_exit_t exit code (with name)
 =#=#=#= Begin test: Get unknown crm_exit_t exit code (with name) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -n -X --output-as=xml -- -10000">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -n -X -- -10000">
   <result-code code="-10000" name="CRM_EX_UNKNOWN" description="Unknown exit status"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -347,7 +355,7 @@ Error occurred
 =#=#=#= End test: Get crm_exit_t exit code - OK (0) =#=#=#=
 * Passed: crm_error             - Get crm_exit_t exit code
 =#=#=#= Begin test: Get crm_exit_t exit code (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -X --output-as=xml 1">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -X 1">
   <result-code code="1" description="Error occurred"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -358,7 +366,7 @@ CRM_EX_ERROR - Error occurred
 =#=#=#= End test: Get crm_exit_t exit code (with name) - OK (0) =#=#=#=
 * Passed: crm_error             - Get crm_exit_t exit code (with name)
 =#=#=#= Begin test: Get crm_exit_t exit code (with name) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -n -X --output-as=xml 1">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -n -X 1">
   <result-code code="1" name="CRM_EX_ERROR" description="Error occurred"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -404,6 +412,7 @@ CRM_EX_ERROR - Error occurred
   111: Requested item is not yet in effect
   112: Could not determine status
   113: Not applicable under current conditions
+  114: DC is not yet elected
   124: Timeout occurred
   190: Service is active but might fail soon
   191: Service is promoted but might fail soon
@@ -411,7 +420,7 @@ CRM_EX_ERROR - Error occurred
 =#=#=#= End test: Get all crm_exit_t exit codes - OK (0) =#=#=#=
 * Passed: crm_error             - Get all crm_exit_t exit codes
 =#=#=#= Begin test: Get all crm_exit_t exit codes (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -l -X --output-as=xml">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -l -X">
   <result-code code="0" description="OK"/>
   <result-code code="1" description="Error occurred"/>
   <result-code code="2" description="Invalid parameter"/>
@@ -451,6 +460,7 @@ CRM_EX_ERROR - Error occurred
   <result-code code="111" description="Requested item is not yet in effect"/>
   <result-code code="112" description="Could not determine status"/>
   <result-code code="113" description="Not applicable under current conditions"/>
+  <result-code code="114" description="DC is not yet elected"/>
   <result-code code="124" description="Timeout occurred"/>
   <result-code code="190" description="Service is active but might fail soon"/>
   <result-code code="191" description="Service is promoted but might fail soon"/>
@@ -499,6 +509,7 @@ CRM_EX_ERROR - Error occurred
   111: CRM_EX_NOT_YET_IN_EFFECT    Requested item is not yet in effect
   112: CRM_EX_INDETERMINATE        Could not determine status
   113: CRM_EX_UNSATISFIED          Not applicable under current conditions
+  114: CRM_EX_NO_DC                DC is not yet elected
   124: CRM_EX_TIMEOUT              Timeout occurred
   190: CRM_EX_DEGRADED             Service is active but might fail soon
   191: CRM_EX_DEGRADED_PROMOTED    Service is promoted but might fail soon
@@ -506,7 +517,7 @@ CRM_EX_ERROR - Error occurred
 =#=#=#= End test: Get all crm_exit_t exit codes (with name) - OK (0) =#=#=#=
 * Passed: crm_error             - Get all crm_exit_t exit codes (with name)
 =#=#=#= Begin test: Get all crm_exit_t exit codes (with name) (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_error -l -n -X --output-as=xml">
+<pacemaker-result api-version="X" request="crm_error --output-as=xml -l -n -X">
   <result-code code="0" name="CRM_EX_OK" description="OK"/>
   <result-code code="1" name="CRM_EX_ERROR" description="Error occurred"/>
   <result-code code="2" name="CRM_EX_INVALID_PARAM" description="Invalid parameter"/>
@@ -546,6 +557,7 @@ CRM_EX_ERROR - Error occurred
   <result-code code="111" name="CRM_EX_NOT_YET_IN_EFFECT" description="Requested item is not yet in effect"/>
   <result-code code="112" name="CRM_EX_INDETERMINATE" description="Could not determine status"/>
   <result-code code="113" name="CRM_EX_UNSATISFIED" description="Not applicable under current conditions"/>
+  <result-code code="114" name="CRM_EX_NO_DC" description="DC is not yet elected"/>
   <result-code code="124" name="CRM_EX_TIMEOUT" description="Timeout occurred"/>
   <result-code code="190" name="CRM_EX_DEGRADED" description="Service is active but might fail soon"/>
   <result-code code="191" name="CRM_EX_DEGRADED_PROMOTED" description="Service is promoted but might fail soon"/>

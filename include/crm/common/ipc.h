@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_COMMON_IPC__H
 #define PCMK__CRM_COMMON_IPC__H
 
-
+#include <stdint.h>
 #include <sys/uio.h>
 #include <qb/qbipcc.h>
 #include <crm/common/xml.h>
@@ -131,22 +131,30 @@ int pcmk_ipc_purge_node(pcmk_ipc_api_t *api, const char *node_name,
  * Generic IPC API (to eventually be deprecated as public API and made internal)
  */
 
-/* *INDENT-OFF* */
 enum crm_ipc_flags
 {
-    crm_ipc_flags_none      = 0x00000000,
-
-    crm_ipc_compressed      = 0x00000001, /* Message has been compressed */
-
-    crm_ipc_proxied         = 0x00000100, /* _ALL_ replies to proxied connections need to be sent as events */
-    crm_ipc_client_response = 0x00000200, /* A Response is expected in reply */
+    crm_ipc_flags_none              = UINT32_C(0),
+    //! \deprecated Since 3.0.1
+    crm_ipc_compressed              = (UINT32_C(1) << 0),
+    //! _ALL_ replies to proxied connections need to be sent as events
+    crm_ipc_proxied                 = (UINT32_C(1) << 8),
+    //! A response is expected in reply
+    crm_ipc_client_response         = (UINT32_C(1) << 9),
 
     // These are options for Pacemaker's internal use only (pcmk__ipc_send_*())
-    crm_ipc_server_event    = 0x00010000, /* Send an Event instead of a Response */
-    crm_ipc_server_free     = 0x00020000, /* Free the iovec after sending */
-    crm_ipc_proxied_relay_response = 0x00040000, /* all replies to proxied connections are sent as events, this flag preserves whether the event should be treated as an actual event, or a response.*/
+
+    //! Send an Event instead of a Response
+    crm_ipc_server_event            = (UINT32_C(1) << 16),
+    //! Free the iovec after sending
+    crm_ipc_server_free             = (UINT32_C(1) << 17),
+    //! All replies to proxied connections are sent as events.  This flag
+    //! preserves whether the events should be treated as an Event or a Response
+    crm_ipc_proxied_relay_response  = (UINT32_C(1) << 18),
+    //! This is a multi-part IPC message
+    crm_ipc_multipart               = (UINT32_C(1) << 19),
+    //! This is the end of a multi-part IPC message
+    crm_ipc_multipart_end           = (UINT32_C(1) << 20),
 };
-/* *INDENT-ON* */
 
 typedef struct crm_ipc_s crm_ipc_t;
 

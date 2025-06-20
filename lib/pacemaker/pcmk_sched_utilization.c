@@ -475,6 +475,11 @@ pcmk__show_node_capacities(const char *desc, pcmk_scheduler_t *scheduler)
         const pcmk_node_t *node = (const pcmk_node_t *) iter->data;
         pcmk__output_t *out = scheduler->priv->out;
 
+        // Utilization doesn't apply to bundle nodes
+        if (pcmk__is_bundle_node(node)) {
+            continue;
+        }
+
         out->message(out, "node-capacity", node, desc);
     }
 }

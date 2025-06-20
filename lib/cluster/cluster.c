@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,14 +34,14 @@ CRM_TRACE_INIT_DATA(cluster);
 
 /*!
  * \internal
- * \brief Get a node's cluster-layer UUID, setting it if not already set
+ * \brief Get a node's XML ID in the CIB, setting it if not already set
  *
  * \param[in,out] node  Node to check
  *
- * \return Cluster-layer node UUID of \p node, or \c NULL if unknown
+ * \return CIB XML ID of \p node if known, otherwise \c NULL
  */
 const char *
-pcmk__cluster_node_uuid(pcmk__node_status_t *node)
+pcmk__cluster_get_xml_id(pcmk__node_status_t *node)
 {
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
 
@@ -51,6 +51,9 @@ pcmk__cluster_node_uuid(pcmk__node_status_t *node)
     if (node->xml_id != NULL) {
         return node->xml_id;
     }
+
+    // xml_id is always set when a Pacemaker Remote node entry is created
+    CRM_CHECK(!pcmk_is_set(node->flags, pcmk__node_status_remote), return NULL);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
@@ -163,6 +166,7 @@ pcmk_cluster_free(pcmk_cluster_t *cluster)
         return;
     }
     election_fini(cluster);
+    free(cluster->priv->node_xml_id);
     free(cluster->priv->node_name);
     free(cluster->priv);
     free(cluster);
@@ -267,7 +271,7 @@ pcmk__cluster_node_name(uint32_t nodeid)
     }
 
     crm_notice("Could not obtain a node name for node with "
-               PCMK_XA_ID "=" PRIu32,
+               PCMK_XA_ID "=%" PRIu32,
                nodeid);
     return NULL;
 }
@@ -334,7 +338,8 @@ pcmk__node_name_from_uuid(const char *uuid)
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-        if (pcmk__str_eq(node->xml_id, uuid, pcmk__str_casei)) {
+        if (pcmk__str_eq(uuid, pcmk__cluster_get_xml_id(node),
+                         pcmk__str_none)) {
             return node->name;
         }
     }

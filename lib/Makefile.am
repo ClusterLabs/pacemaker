@@ -18,8 +18,11 @@ LIBS			= cib 		\
 pkgconfig_DATA		= $(LIBS:%=pacemaker-%.pc)	\
 			  libpacemaker.pc		\
 			  pacemaker.pc			\
-			  pacemaker-pe_rules.pc		\
 			  pacemaker-pe_status.pc
+
+if BUILD_DEPRECATED_LIBS
+pkgconfig_DATA		+= pacemaker-pe_rules.pc
+endif
 
 EXTRA_DIST		= $(pkgconfig_DATA:%=%.in)
 

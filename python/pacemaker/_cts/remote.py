@@ -1,7 +1,7 @@
 """Remote command runner for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["RemoteExec", "RemoteFactory"]
-__copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -69,20 +69,20 @@ class AsyncCmd(Thread):
             # pylint: disable=consider-using-with
             self._proc = Popen(self._command, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 
-        self._logger.debug("cmd: async: target=%s, pid=%d: %s" % (self._node, self._proc.pid, self._command))
+        self._logger.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
         self._proc.wait()
 
         if self._delegate:
-            self._logger.debug("cmd: pid %d returned %d to %r" % (self._proc.pid, self._proc.returncode, self._delegate))
+            self._logger.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode} to {self._delegate!r}")
         else:
-            self._logger.debug("cmd: pid %d returned %d" % (self._proc.pid, self._proc.returncode))
+            self._logger.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode}")
 
         if self._proc.stderr:
             err = self._proc.stderr.readlines()
             self._proc.stderr.close()
 
             for line in err:
-                self._logger.debug("cmd: stderr[%d]: %s" % (self._proc.pid, line))
+                self._logger.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
 
             err = convert2string(err)
 
@@ -129,7 +129,7 @@ class RemoteExec:
         if sysname is None or sysname.lower() in [self._our_node, "localhost"]:
             ret = command
         else:
-            ret = "%s %s '%s'" % (self._command, sysname, self._fixcmd(command))
+            ret = f"{self._command} {sysname} '{self._fixcmd(command)}'"
 
         return ret
 
@@ -196,7 +196,7 @@ class RemoteExec:
         rc = proc.wait()
 
         if verbose > 0:
-            self._debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
+            self._debug(f"cmd: target={node}, rc={rc}: {command}")
 
         result = convert2string(result)
 
@@ -205,11 +205,11 @@ class RemoteExec:
             proc.stderr.close()
 
             for err in errors:
-                self._debug("cmd: stderr: %s" % err)
+                self._debug(f"cmd: stderr: {err}")
 
         if verbose == 2:
             for line in result:
-                self._debug("cmd: stdout: %s" % line)
+                self._debug(f"cmd: stdout: {line}")
 
         return (rc, result)
 
@@ -222,18 +222,20 @@ class RemoteExec:
 
         Returns the return code of the cp_command.
         """
-        cmd = "%s '%s' '%s'" % (self._cp_command, source, target)
+        # @TODO Use subprocess module with argument array instead
+        # (self._cp_command should be an array too)
+        cmd = f"{self._cp_command} '{source}' '{target}'"
         rc = os.system(cmd)
 
         if not silent:
-            self._debug("cmd: rc=%d: %s" % (rc, cmd))
+            self._debug(f"cmd: rc={rc}: {cmd}")
 
         return rc
 
     def exists_on_all(self, filename, hosts):
         """Return True if specified file exists on all specified hosts."""
         for host in hosts:
-            rc = self(host, "test -r %s" % filename)
+            rc = self(host, f"test -r {filename}")
             if rc != 0:
                 return False
 

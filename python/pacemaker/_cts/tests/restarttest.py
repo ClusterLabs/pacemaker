@@ -1,7 +1,7 @@
 """Stop and restart a node."""
 
 __all__ = ["RestartTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -29,19 +29,19 @@ class RestartTest(CTSTest):
     def __call__(self, node):
         """Perform this test."""
         self.incr("calls")
-        self.incr("node:%s" % node)
+        self.incr(f"node:{node}")
 
         if self._cm.stat_cm(node):
             self.incr("WasStopped")
             if not self._start(node):
-                return self.failure("start (setup) failure: %s" % node)
+                return self.failure(f"start (setup) failure: {node}")
 
         self.set_timer()
 
         if not self._stop(node):
-            return self.failure("stop failure: %s" % node)
+            return self.failure(f"stop failure: {node}")
 
         if not self._start(node):
-            return self.failure("start failure: %s" % node)
+            return self.failure(f"start failure: {node}")
 
         return self.success()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -237,8 +237,7 @@ crm_cs_flush(gpointer data)
         }
 
         sent++;
-        crm_trace("CPG message sent, size=%llu",
-                  (unsigned long long) iov->iov_len);
+        crm_trace("CPG message sent, size=%zu", iov->iov_len);
 
         cs_message_queue = g_list_remove(cs_message_queue, iov);
         free(iov->iov_base);
@@ -360,10 +359,9 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
         (((msg->size > 1) && (msg->data[msg->size - 2] == '\0'))
          || (msg->data[msg->size - 1] != '\0'))) {
         crm_err("CPG message %d from %s invalid: "
-                "Payload does not end at byte %llu "
+                "Payload does not end at byte %" PRIu32 " "
                 QB_XS " from %s[%u] to %s@%s",
-                msg->id, ais_dest(&(msg->sender)),
-                (unsigned long long) msg->size,
+                msg->id, ais_dest(&(msg->sender)), msg->size,
                 msg_type2text(msg->sender.type), msg->sender.pid,
                 msg_type2text(msg->host.type), ais_dest(&(msg->host)));
         return false;
@@ -576,7 +574,7 @@ node_left(const char *cpg_group_name, int event_counter,
           size_t member_list_entries)
 {
     pcmk__node_status_t *peer =
-        pcmk__search_node_caches(cpg_peer->nodeid, NULL,
+        pcmk__search_node_caches(cpg_peer->nodeid, NULL, NULL,
                                  pcmk__node_search_cluster_member);
     const struct cpg_address **rival = NULL;
 
@@ -807,7 +805,10 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
 
     cpg_evicted = false;
 
-    cpg_group_name = pcmk__server_message_type(cluster->priv->server);
+    if (cluster->priv->server != pcmk_ipc_unknown) {
+        cpg_group_name = pcmk__server_message_type(cluster->priv->server);
+    }
+
     if (cpg_group_name == NULL) {
         /* The name will already be non-NULL for Pacemaker servers. If a
          * command-line tool or external caller connects to the cluster,
@@ -995,8 +996,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
             msg->compressed_size = new_size;
 
         } else {
-            // cppcheck seems not to understand the abort logic in pcmk__realloc
-            // cppcheck-suppress memleak
             msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, data, msg->size);
         }
@@ -1009,15 +1008,13 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     iov->iov_len = msg->header.size;
 
     if (msg->compressed_size > 0) {
-        crm_trace("Queueing CPG message %u to %s "
-                  "(%llu bytes, %d bytes compressed payload): %.200s",
-                  msg->id, target, (unsigned long long) iov->iov_len,
-                  msg->compressed_size, data);
+        crm_trace("Queueing CPG message %" PRIu32 " to %s "
+                  "(%zu bytes, %" PRIu32 " bytes compressed payload): %.200s",
+                  msg->id, target, iov->iov_len, msg->compressed_size, data);
     } else {
-        crm_trace("Queueing CPG message %u to %s "
-                  "(%llu bytes, %d bytes payload): %.200s",
-                  msg->id, target, (unsigned long long) iov->iov_len,
-                  msg->size, data);
+        crm_trace("Queueing CPG message %" PRIu32 " to %s "
+                  "(%zu bytes, %" PRIu32 " bytes payload): %.200s",
+                  msg->id, target, iov->iov_len, msg->size, data);
     }
 
     free(target);

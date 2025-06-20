@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -281,7 +281,8 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                                     PCMK__ATTRD_CMD_UPDATE,
                                     PCMK__ATTRD_CMD_UPDATE_BOTH,
                                     PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
-                pcmk__xe_add_node(request, proxy->node_name, 0);
+
+                crm_xml_add(request, PCMK__XA_ATTR_HOST, proxy->node_name);
             }
 
             rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);

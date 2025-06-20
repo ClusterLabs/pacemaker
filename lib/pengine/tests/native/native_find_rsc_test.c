@@ -37,8 +37,7 @@ setup(void **state) {
         return 1;
     }
 
-    scheduler = pe_new_working_set();
-
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         return 1;
     }
@@ -78,8 +77,9 @@ setup(void **state) {
 }
 
 static int
-teardown(void **state) {
-    pe_free_working_set(scheduler);
+teardown(void **state)
+{
+    pcmk_free_scheduler(scheduler);
     pcmk__xml_test_teardown_group(state);
     return 0;
 }

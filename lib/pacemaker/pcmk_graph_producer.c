@@ -296,7 +296,8 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * transition period until all nodes in the cluster
          * are running the new software /and/ have rebooted
          * once (meaning that they've only ever spoken to a DC
-         * supporting this feature).
+         * supporting this feature). (@TODO The effect of removing this on
+         * regression tests suggests that it is still needed for unique clones)
          *
          * If anyone toggles the unique flag to 'on', the
          * 'instance free' name will correspond to an orphan

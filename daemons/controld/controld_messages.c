@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,10 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
+#include <inttypes.h>                   // PRIx64
+#include <stdint.h>                     // uint64_t
 #include <string.h>
+#include <sys/param.h>
 #include <time.h>
 
 #include <crm/crm.h>
@@ -110,8 +112,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
-        crm_trace("Adding actions %.16llx to input",
-                  (unsigned long long) with_actions);
+        crm_trace("Adding actions %.16" PRIx64 " to input", with_actions);
     }
 
     if (data != NULL) {
@@ -308,7 +309,6 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
     /* done or process later? */
     switch (result) {
         case I_NULL:
-        case I_CIB_OP:
         case I_ROUTER:
         case I_NODE_JOIN:
         case I_JOIN_REQUEST:
@@ -502,7 +502,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     }
 
     if (!broadcast) {
-        node_to = pcmk__search_node_caches(0, host_to,
+        node_to = pcmk__search_node_caches(0, host_to, NULL,
                                            pcmk__node_search_cluster_member);
         if (node_to == NULL) {
             crm_warn("Ignoring message %s because node %s is unknown",
@@ -944,7 +944,8 @@ handle_node_info_request(const xmlNode *msg)
         value = controld_globals.cluster->priv->node_name;
     }
 
-    node = pcmk__search_node_caches(node_id, value, pcmk__node_search_any);
+    node = pcmk__search_node_caches(node_id, value, NULL,
+                                    pcmk__node_search_any);
     if (node) {
         crm_xml_add(reply_data, PCMK_XA_ID, node->xml_id);
         crm_xml_add(reply_data, PCMK_XA_UNAME, node->name);
@@ -1071,7 +1072,8 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
     if (strcmp(op, CRM_OP_SHUTDOWN_REQ) == 0) {
         const char *from = crm_element_value(stored_msg, PCMK__XA_SRC);
         pcmk__node_status_t *node =
-            pcmk__search_node_caches(0, from, pcmk__node_search_cluster_member);
+            pcmk__search_node_caches(0, from, NULL,
+                                     pcmk__node_search_cluster_member);
 
         pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {
@@ -1382,4 +1384,3 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);
     pcmk__xml_free(msg);
 }
-

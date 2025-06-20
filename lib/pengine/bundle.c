@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,9 +10,9 @@
 #include <crm_internal.h>
 
 #include <ctype.h>
+#include <stdbool.h>                    // bool, true, false
 #include <stdint.h>
 
-#include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <crm/common/xml.h>
@@ -73,6 +73,9 @@ typedef struct pe__bundle_variant_data_s {
         GList *ports;       // pe__bundle_port_t *
         GList *mounts;      // pe__bundle_mount_t *
 
+        /* @TODO Maybe use a more object-oriented design instead, with a set of
+         * methods that are different per type rather than switching on this
+         */
         enum pe__container_agent agent_type;
 } pe__bundle_variant_data_t;
 
@@ -950,8 +953,8 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
                                    flags, (flags_to_set), #flags_to_set);   \
     } while (0)
 
-gboolean
-pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+bool
+pe__unpack_bundle(pcmk_resource_t *rsc)
 {
     const char *value = NULL;
     xmlNode *xml_obj = NULL;
@@ -1158,7 +1161,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         GString *buffer = NULL;
 
         if (pe__unpack_resource(xml_resource, &(bundle_data->child), rsc,
-                                scheduler) != pcmk_rc_ok) {
+                                rsc->priv->scheduler) != pcmk_rc_ok) {
             return FALSE;
         }
 
@@ -1228,6 +1231,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
             allocate_ip(bundle_data, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
+            // coverity[null_field] replica->child can't be NULL here
             bundle_data->attribute_target =
                 g_hash_table_lookup(replica->child->priv->meta,
                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
@@ -1265,7 +1269,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
             pcmk__config_err("Failed unpacking resource %s", rsc->id);
-            rsc->priv->fns->free(rsc);
+            pcmk__free_resource(rsc);
             return FALSE;
         }
 
@@ -1317,8 +1321,8 @@ replica_resource_active(pcmk_resource_t *rsc, gboolean all)
     return -1;
 }
 
-gboolean
-pe__bundle_active(pcmk_resource_t *rsc, gboolean all)
+bool
+pe__bundle_active(const pcmk_resource_t *rsc, bool all)
 {
     pe__bundle_variant_data_t *bundle_data = NULL;
     GList *iter = NULL;
@@ -1330,22 +1334,22 @@ pe__bundle_active(pcmk_resource_t *rsc, gboolean all)
 
         rsc_active = replica_resource_active(replica->ip, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
 
         rsc_active = replica_resource_active(replica->child, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
 
         rsc_active = replica_resource_active(replica->container, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
 
         rsc_active = replica_resource_active(replica->remote, all);
         if (rsc_active >= 0) {
-            return (gboolean) rsc_active;
+            return (bool) rsc_active;
         }
     }
 
@@ -1398,14 +1402,14 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
     gboolean printed_header = FALSE;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
     const char *desc = NULL;
 
     pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -1569,14 +1573,14 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
     const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
     pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -1712,14 +1716,14 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
     const char *desc = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     int rc = pcmk_rc_no_output;
-    gboolean print_everything = TRUE;
+    bool print_everything = true;
 
     desc = pe__resource_description(rsc, show_opts);
 
     pcmk__assert(rsc != NULL);
     get_bundle_variant_data(bundle_data, rsc);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -1826,17 +1830,17 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
     if (replica->ip) {
         pcmk__xml_free(replica->ip->priv->xml);
         replica->ip->priv->xml = NULL;
-        replica->ip->priv->fns->free(replica->ip);
+        pcmk__free_resource(replica->ip);
     }
     if (replica->container) {
         pcmk__xml_free(replica->container->priv->xml);
         replica->container->priv->xml = NULL;
-        replica->container->priv->fns->free(replica->container);
+        pcmk__free_resource(replica->container);
     }
     if (replica->remote) {
         pcmk__xml_free(replica->remote->priv->xml);
         replica->remote->priv->xml = NULL;
-        replica->remote->priv->fns->free(replica->remote);
+        pcmk__free_resource(replica->remote);
     }
     free(replica->ipaddr);
     free(replica);
@@ -1871,13 +1875,13 @@ pe__free_bundle(pcmk_resource_t *rsc)
     if(bundle_data->child) {
         pcmk__xml_free(bundle_data->child->priv->xml);
         bundle_data->child->priv->xml = NULL;
-        bundle_data->child->priv->fns->free(bundle_data->child);
+        pcmk__free_resource(bundle_data->child);
     }
     common_free(rsc);
 }
 
 enum rsc_role_e
-pe__bundle_resource_state(const pcmk_resource_t *rsc, gboolean current)
+pe__bundle_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e container_role = pcmk_role_unknown;
     return container_role;
@@ -1926,15 +1930,15 @@ pe__count_bundle(pcmk_resource_t *rsc)
     }
 }
 
-gboolean
-pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                       gboolean check_parent)
+bool
+pe__bundle_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                       bool check_parent)
 {
-    gboolean passes = FALSE;
+    bool passes = false;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
     if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else {
         get_bundle_variant_data(bundle_data, rsc);
 
@@ -1946,23 +1950,23 @@ pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
             pcmk_resource_t *remote = replica->remote;
 
             if ((ip != NULL)
-                && !ip->priv->fns->is_filtered(ip, only_rsc, FALSE)) {
-                passes = TRUE;
+                && !ip->priv->fns->is_filtered(ip, only_rsc, false)) {
+                passes = true;
                 break;
             }
             if ((child != NULL)
-                && !child->priv->fns->is_filtered(child, only_rsc, FALSE)) {
-                passes = TRUE;
+                && !child->priv->fns->is_filtered(child, only_rsc, false)) {
+                passes = true;
                 break;
             }
             if (!container->priv->fns->is_filtered(container, only_rsc,
-                                                   FALSE)) {
-                passes = TRUE;
+                                                   false)) {
+                passes = true;
                 break;
             }
             if ((remote != NULL)
-                && !remote->priv->fns->is_filtered(remote, only_rsc, FALSE)) {
-                passes = TRUE;
+                && !remote->priv->fns->is_filtered(remote, only_rsc, false)) {
+                passes = true;
                 break;
             }
         }
@@ -1984,6 +1988,9 @@ pe__bundle_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
 GList *
 pe__bundle_containers(const pcmk_resource_t *bundle)
 {
+    /* @TODO It would be more efficient to do this once when unpacking the
+     * bundle, creating a new GList* in the variant data
+     */
     GList *containers = NULL;
     const pe__bundle_variant_data_t *data = NULL;
 

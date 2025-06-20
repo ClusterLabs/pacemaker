@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 
 #include <inttypes.h>           // PRIu32
 #include <stdbool.h>            // bool
+#include <stdint.h>             // uint32_t
 #include <stdio.h>              // NULL
 
 #include <sys/param.h>
@@ -106,6 +107,7 @@ node_alive(const pcmk__node_status_t *node)
 
 #define state_text(state) ((state)? (const char *)(state) : "in unknown state")
 
+// @TODO This is insanely long, and some parts should be functionized
 void
 peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                      const void *data)
@@ -128,9 +130,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         && pcmk_is_set(node->processes, crm_get_cluster_proc())
         && !AM_I_DC
         && !is_remote) {
-        /*
-         * This is a hack until we can send to a nodeid and/or we fix node name lookups
-         * These messages are ignored in crmd_ha_msg_filter()
+        /* relay_message() on the recipient ignores these messages, but
+         * libcrmcluster will have cached the node name by then
          */
         xmlNode *query = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
                                            NULL, CRM_SYSTEM_CRMD, CRM_OP_HELLO,
@@ -140,7 +141,6 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                   "node name",
                   node->cluster_layer_id);
         pcmk__cluster_send_message(node, pcmk_ipc_controld, query);
-
         pcmk__xml_free(query);
     }
 
@@ -267,7 +267,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
     if (AM_I_DC) {
         xmlNode *update = NULL;
-        int flags = node_update_peer;
+        uint32_t flags = controld_node_update_peer;
         int alive = node_alive(node);
         pcmk__graph_action_t *down = match_down_event(node->xml_id);
 
@@ -294,7 +294,8 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
                 // Shutdown actions are immediately confirmed (i.e. no_wait)
                 if (!is_remote) {
-                    flags |= node_update_join | node_update_expected;
+                    flags |= controld_node_update_join
+                             |controld_node_update_expected;
                     crmd_peer_down(node, FALSE);
                     check_join_state(controld_globals.fsa_state, __func__);
                 }
@@ -349,7 +350,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             /* A pacemaker_remote node won't have its cluster status updated
              * in the CIB by membership-layer callbacks, so do it here.
              */
-            flags |= node_update_cluster;
+            flags |= controld_node_update_cluster;
 
             /* Trigger resource placement on newly integrated nodes */
             if (appeared) {
@@ -366,7 +367,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
              * PCMK_OPT_NODE_PENDING_TIMEOUT.
              */
             node->when_member = 1;
-            flags |= node_update_cluster;
+            flags |= controld_node_update_cluster;
             controld_node_pending_timer(node);
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -109,18 +109,21 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname,
 
 // \return Standard Pacemaker return code
 int
-cli_resource_print(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler,
-                   bool expanded)
+cli_resource_print(pcmk_resource_t *rsc, bool expanded)
 {
-    pcmk__output_t *out = scheduler->priv->out;
-    uint32_t show_opts = pcmk_show_pending;
+    pcmk_scheduler_t *scheduler = NULL;
+    pcmk__output_t *out = NULL;
     GList *all = NULL;
 
+    pcmk__assert(rsc != NULL);
+
+    scheduler = rsc->priv->scheduler;
+    out = scheduler->priv->out;
     all = g_list_prepend(all, (gpointer) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
-    out->message(out, (const char *) rsc->priv->xml->name, show_opts, rsc, all,
-                 all);
+    out->message(out, (const char *) rsc->priv->xml->name, pcmk_show_pending,
+                 rsc, all, all);
     out->message(out, "resource-config", rsc, !expanded);
     out->end_list(out);
 
@@ -360,6 +363,7 @@ override_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+// Does not modify overrides or its contents
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
                   "crm_exit_t", "int", "const char *", "const char *", "const char *")
@@ -420,6 +424,7 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
+// Does not modify overrides or its contents
 PCMK__OUTPUT_ARGS("resource-agent-action", "int", "const char *", "const char *",
                   "const char *", "const char *", "const char *", "GHashTable *",
                   "crm_exit_t", "int", "const char *", "const char *", "const char *")

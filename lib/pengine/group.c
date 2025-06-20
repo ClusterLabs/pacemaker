@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool, true, false
 #include <stdint.h>
 
-#include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <crm/common/xml.h>
@@ -108,7 +108,7 @@ inactive_resources(pcmk_resource_t *rsc)
 
         pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
 
-        if (!child_rsc->priv->fns->active(child_rsc, TRUE)) {
+        if (!child_rsc->priv->fns->active(child_rsc, true)) {
             retval++;
         }
     }
@@ -159,8 +159,8 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
 {
     bool star_list = pcmk__list_of_1(only_rsc) &&
                      pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
-    bool child_filtered = child->priv->fns->is_filtered(child, only_rsc, FALSE);
-    bool child_active = child->priv->fns->active(child, FALSE);
+    bool child_filtered = child->priv->fns->is_filtered(child, only_rsc, false);
+    bool child_active = child->priv->fns->active(child, false);
     bool show_inactive = pcmk_is_set(show_opts, pcmk_show_inactive_rscs);
 
     /* If the resource is in only_rsc by name (so, ignoring "*") then allow
@@ -180,8 +180,8 @@ skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
     return true;
 }
 
-gboolean
-group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
+bool
+group_unpack(pcmk_resource_t *rsc)
 {
     xmlNode *xml_obj = rsc->priv->xml;
     xmlNode *xml_native_rsc = NULL;
@@ -211,7 +211,7 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
         crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
         if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
-                                scheduler) != pcmk_rc_ok) {
+                                rsc->priv->scheduler) != pcmk_rc_ok) {
             continue;
         }
 
@@ -231,8 +231,8 @@ group_unpack(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     return TRUE;
 }
 
-gboolean
-group_active(pcmk_resource_t *rsc, gboolean all)
+bool
+group_active(const pcmk_resource_t *rsc, bool all)
 {
     gboolean c_all = TRUE;
     gboolean c_any = FALSE;
@@ -276,7 +276,7 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -336,12 +336,12 @@ pe__group_default(pcmk__output_t *out, va_list args)
     gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
                              (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
 
-    gboolean active = rsc->priv->fns->active(rsc, TRUE);
-    gboolean partially_active = rsc->priv->fns->active(rsc, FALSE);
+    bool active = rsc->priv->fns->active(rsc, true);
+    bool partially_active = rsc->priv->fns->active(rsc, false);
 
     desc = pe__resource_description(rsc, show_opts);
 
-    if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+    if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
         return rc;
     }
 
@@ -392,7 +392,7 @@ group_free(pcmk_resource_t * rsc)
 
         pcmk__assert(child_rsc != NULL);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        child_rsc->priv->fns->free(child_rsc);
+        pcmk__free_resource(child_rsc);
     }
 
     pcmk__rsc_trace(rsc, "Freeing child list");
@@ -402,7 +402,7 @@ group_free(pcmk_resource_t * rsc)
 }
 
 enum rsc_role_e
-group_resource_state(const pcmk_resource_t * rsc, gboolean current)
+group_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e group_role = pcmk_role_unknown;
 
@@ -422,21 +422,21 @@ group_resource_state(const pcmk_resource_t * rsc, gboolean current)
     return group_role;
 }
 
-gboolean
-pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
-                      gboolean check_parent)
+bool
+pe__group_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
+                      bool check_parent)
 {
-    gboolean passes = FALSE;
+    bool passes = false;
 
     if (check_parent
         && pcmk__str_in_list(rsc_printable_id(pe__const_top_resource(rsc,
                                                                      false)),
                              only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
-        passes = TRUE;
+        passes = true;
     } else {
         for (const GList *iter = rsc->priv->children;
              iter != NULL; iter = iter->next) {
@@ -444,8 +444,8 @@ pe__group_is_filtered(const pcmk_resource_t *rsc, GList *only_rsc,
             const pcmk_resource_t *child_rsc = iter->data;
 
             if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                   FALSE)) {
-                passes = TRUE;
+                                                   false)) {
+                passes = true;
                 break;
             }
         }

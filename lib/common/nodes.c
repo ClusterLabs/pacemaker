@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,48 @@
 
 #include <libxml/tree.h>        // xmlNode
 #include <crm/common/nvpair.h>
+
+/*!
+ * \internal
+ * \brief Free a node object
+ *
+ * \param[in,out] user_data  Node object to free
+ */
+void
+pcmk__free_node(gpointer user_data)
+{
+    pcmk_node_t *node = user_data;
+
+    if (node == NULL) {
+        return;
+    }
+    if (node->details == NULL) {
+        free(node);
+        return;
+    }
+
+    /* This may be called after freeing resources, which means that we can't
+     * use node->private->name for Pacemaker Remote nodes.
+     */
+    crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
+              "(guest or remote)" : pcmk__node_name(node)));
+
+    if (node->priv->attrs != NULL) {
+        g_hash_table_destroy(node->priv->attrs);
+    }
+    if (node->priv->utilization != NULL) {
+        g_hash_table_destroy(node->priv->utilization);
+    }
+    if (node->priv->digest_cache != NULL) {
+        g_hash_table_destroy(node->priv->digest_cache);
+    }
+    g_list_free(node->details->running_rsc);
+    g_list_free(node->priv->assigned_resources);
+    free(node->priv);
+    free(node->details);
+    free(node->assign);
+    free(node);
+}
 
 /*!
  * \internal
@@ -143,20 +185,6 @@ pcmk_foreach_active_resource(pcmk_node_t *node,
     return result;
 }
 
-void
-pcmk__xe_add_node(xmlNode *xml, const char *node, int nodeid)
-{
-    pcmk__assert(xml != NULL);
-
-    if (node != NULL) {
-        crm_xml_add(xml, PCMK__XA_ATTR_HOST, node);
-    }
-
-    if (nodeid > 0) {
-        crm_xml_add_int(xml, PCMK__XA_ATTR_HOST_ID, nodeid);
-    }
-}
-
 /*!
  * \internal
  * \brief Find a node by name in a list of nodes
@@ -201,7 +229,7 @@ pcmk_cib_node_shutdown(xmlNode *cib, const char *node)
 {
     if ((cib != NULL) && (node != NULL)) {
         char *xpath = crm_strdup_printf(XP_SHUTDOWN, node);
-        xmlNode *match = get_xpath_object(xpath, cib, LOG_TRACE);
+        xmlNode *match = pcmk__xpath_find_one(cib->doc, xpath, LOG_TRACE);
 
         free(xpath);
         if (match != NULL) {

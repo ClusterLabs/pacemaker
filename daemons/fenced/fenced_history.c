@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -342,8 +344,8 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                             crm_debug("Updating outdated pending operation %.8s "
                                       "(state=%s) according to the one (state=%s) from "
                                       "remote peer history",
-                                      op->id, stonith_op_state_str(op->state),
-                                      stonith_op_state_str(remote_op->state));
+                                      op->id, stonith__op_state_text(op->state),
+                                      stonith__op_state_text(remote_op->state));
 
                             g_hash_table_steal(remote_history, op->id);
                             op->id = remote_op->id;
@@ -359,8 +361,8 @@ stonith_local_history_diff_and_merge(GHashTable *remote_history,
                             crm_debug("Broadcasting operation %.8s (state=%s) to "
                                       "update the outdated pending one "
                                       "(state=%s) in remote peer history",
-                                      op->id, stonith_op_state_str(op->state),
-                                      stonith_op_state_str(remote_op->state));
+                                      op->id, stonith__op_state_text(op->state),
+                                      stonith__op_state_text(remote_op->state));
 
                             g_hash_table_remove(remote_history, op->id);
 
@@ -477,7 +479,9 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                       const char *remote_peer, int options)
 {
     const char *target = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_NEVER);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_TARGET "]",
+                                        LOG_NEVER);
     xmlNode *out_history = NULL;
 
     if (dev) {
@@ -487,7 +491,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
             pcmk__node_status_t *node = NULL;
 
             pcmk__scan_min_int(target, &nodeid, 0);
-            node = pcmk__search_node_caches(nodeid, NULL,
+            node = pcmk__search_node_caches(nodeid, NULL, NULL,
                                             pcmk__node_search_any
                                             |pcmk__node_search_cluster_cib);
             if (node != NULL) {
@@ -525,8 +529,9 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         } else if (remote_peer &&
                    !pcmk__str_eq(remote_peer, fenced_get_local_node(),
                                  pcmk__str_casei)) {
-            xmlNode *history = get_xpath_object("//" PCMK__XE_ST_HISTORY, msg,
-                                                LOG_NEVER);
+            xmlNode *history = pcmk__xpath_find_one(msg->doc,
+                                                    "//" PCMK__XE_ST_HISTORY,
+                                                    LOG_NEVER);
 
             /* either a broadcast created directly upon stonith-API request
             * or a diff as response to such a thing

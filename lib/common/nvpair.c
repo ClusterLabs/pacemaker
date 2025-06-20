@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <ctype.h>
-#include <glib.h>
+#include <glib.h>           // gchar, gint, etc.
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
@@ -110,60 +110,49 @@ pcmk_free_nvpairs(GSList *nvpairs)
 
 /*!
  * \internal
- * \brief Extract the name and value from an input string formatted as "name=value".
- * If unable to extract them, they are returned as NULL.
+ * \brief Extract the name and value from a string formatted as "name=value"
  *
- * \param[in]  input The input string, likely from the command line
- * \param[out] name  Everything before the first '=' in the input string
- * \param[out] value Everything after the first '=' in the input string
+ * \param[in]  input  Input string, likely from the command line
+ * \param[out] name   Everything before the first \c '=' in the input string
+ * \param[out] value  Everything after the first \c '=' in the input string,
+ *                    minus trailing newlines
  *
- * \return 2 if both name and value could be extracted, 1 if only one could, and
- *         and error code otherwise
+ * \return Standard Pacemaker return code
+ *
+ * \note On success, the caller is responsible for freeing \p *name and
+ *       \p *value using \c g_free(). On failure, nothing is allocated.
  */
 int
-pcmk__scan_nvpair(const char *input, char **name, char **value)
+pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 {
-#ifdef HAVE_SSCANF_M
-    *name = NULL;
-    *value = NULL;
-    if (sscanf(input, "%m[^=]=%m[^\n]", name, value) <= 0) {
-        return -pcmk_err_bad_nvpair;
-    }
-#else
-    char *sep = NULL;
-    *name = NULL;
-    *value = NULL;
+    gchar **nvpair = NULL;
+    int rc = pcmk_rc_ok;
 
-    sep = strstr(optarg, "=");
-    if (sep == NULL) {
-        return -pcmk_err_bad_nvpair;
-    }
+    pcmk__assert(input != NULL);
+    pcmk__assert((name != NULL) && (*name == NULL));
+    pcmk__assert((value != NULL) && (*value == NULL));
 
-    *name = strndup(input, sep-input);
+    nvpair = g_strsplit(input, "=", 2);
 
-    if (*name == NULL) {
-        return -ENOMEM;
-    }
-
-    /* If the last char in optarg is =, the user gave no
-     * value for the option.  Leave it as NULL.
+    /* Check whether nvpair is well-formed (short-circuits if input was split
+     * into fewer than 2 tokens)
      */
-    if (*(sep+1) != '\0') {
-        *value = strdup(sep+1);
-
-        if (*value == NULL) {
-            return -ENOMEM;
-        }
+    if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+        rc = pcmk_rc_bad_nvpair;
+        goto done;
     }
-#endif
 
-    if (*name != NULL && *value != NULL) {
-        return 2;
-    } else if (*name != NULL || *value != NULL) {
-        return 1;
-    } else {
-        return -pcmk_err_bad_nvpair;
-    }
+    *name = nvpair[0];
+    *value = nvpair[1];
+    pcmk__trim((char *) *value);
+
+    // name and value took ownership
+    nvpair[0] = NULL;
+    nvpair[1] = NULL;
+
+done:
+    g_strfreev(nvpair);
+    return rc;
 }
 
 /*!
@@ -389,6 +378,135 @@ xml2list(const xmlNode *parent)
 
     return nvpair_hash;
 }
+
+/*!
+ * \internal
+ * \brief Unpack a single nvpair XML element into a hash table
+ *
+ * \param[in]     nvpair    XML nvpair element to unpack
+ * \param[in,out] userdata  Unpack data
+ *
+ * \return pcmk_rc_ok (to always proceed to next nvpair)
+ */
+static int
+unpack_nvpair(xmlNode *nvpair, void *userdata)
+{
+    pcmk__nvpair_unpack_t *unpack_data = userdata;
+
+    const char *name = NULL;
+    const char *value = NULL;
+    const char *old_value = NULL;
+    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
+
+    if (ref_nvpair == NULL) {
+        /* Not possible with schema validation enabled (error already
+         * logged)
+         */
+        return pcmk_rc_ok;
+    }
+
+    name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
+    value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+    if ((name == NULL) || (value == NULL)) {
+        return pcmk_rc_ok; // Not possible with schema validation enabled
+    }
+
+    old_value = g_hash_table_lookup(unpack_data->values, name);
+
+    if (pcmk__str_eq(value, "#default", pcmk__str_casei)) {
+        // @COMPAT Deprecated since 2.1.8
+        pcmk__config_warn("Support for setting meta-attributes (such as "
+                          "%s) to the explicit value '#default' is "
+                          "deprecated and will be removed in a future "
+                          "release", name);
+        if (old_value != NULL) {
+            g_hash_table_remove(unpack_data->values, name);
+        }
+
+    } else if ((old_value == NULL) || unpack_data->overwrite) {
+        crm_trace("Setting %s=\"%s\" (was %s)",
+                  name, value, pcmk__s(old_value, "unset"));
+        pcmk__insert_dup(unpack_data->values, name, value);
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Unpack an XML block of nvpair elements into a hash table,
+ *        evaluated for any rule
+ *
+ * \param[in]     data       XML block to unpack
+ * \param[in,out] user_data  Unpack data
+ *
+ * \note This is suitable for use as a GList iterator function
+ */
+void
+pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
+{
+    xmlNode *pair = data;
+    pcmk__nvpair_unpack_t *unpack_data = user_data;
+
+    xmlNode *rule_xml = NULL;
+
+    pcmk__assert((pair != NULL) && (unpack_data != NULL)
+                 && (unpack_data->values != NULL));
+
+    rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
+    if ((rule_xml != NULL)
+        && (pcmk_evaluate_rule(rule_xml, &(unpack_data->rule_input),
+                               unpack_data->next_change) != pcmk_rc_ok)) {
+        return;
+    }
+
+    crm_trace("Adding name/value pairs from %s %s overwrite",
+              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
+    if (pcmk__xe_is(pair->children, PCMK__XE_ATTRIBUTES)) {
+        pair = pair->children;
+    }
+    pcmk__xe_foreach_child(pair, PCMK_XE_NVPAIR, unpack_nvpair, unpack_data);
+}
+
+/*!
+ * \brief Unpack nvpair blocks contained by an XML element into a hash table,
+ *        evaluated for any rules
+ *
+ * \param[in]  xml           XML element containing blocks of nvpair elements
+ * \param[in]  element_name  If not NULL, only unpack blocks of this element
+ * \param[in]  first_id      If not NULL, process block with this ID first
+ * \param[in]  rule_input    Values used to evaluate rule criteria
+ * \param[out] values        Where to store extracted name/value pairs
+ * \param[out] next_change   If not NULL, set to when evaluation will next
+ *                           change, if sooner than its current value
+ */
+void
+pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                          const char *first_id,
+                          const pcmk_rule_input_t *rule_input,
+                          GHashTable *values, crm_time_t *next_change)
+{
+    GList *blocks = pcmk__xe_dereference_children(xml, element_name);
+
+    if (blocks != NULL) {
+        pcmk__nvpair_unpack_t data = {
+            .values = values,
+            .first_id = first_id,
+            .rule_input = {
+                .now = NULL,
+            },
+            .overwrite = false,
+            .next_change = next_change,
+        };
+
+        if (rule_input != NULL) {
+            data.rule_input = *rule_input;
+        }
+        blocks = g_list_sort_with_data(blocks, pcmk__cmp_nvpair_blocks, &data);
+        g_list_foreach(blocks, pcmk__unpack_nvpair_block, &data);
+        g_list_free(blocks);
+    }
+}
+
 
 // Meta-attribute handling
 

@@ -1,8 +1,13 @@
 #!@PYTHON@
-""" Regression tests for Pacemaker's scheduler
-"""
+"""Regression tests for Pacemaker's scheduler."""
 
-__copyright__ = "Copyright 2004-2024 the Pacemaker project contributors"
+# pylint doesn't like the module name "cts-scheduler" which is an invalid complaint for this file
+# but probably something we want to continue warning about elsewhere
+# pylint: disable=invalid-name
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
+
+__copyright__ = "Copyright 2004-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -23,16 +28,26 @@ import tempfile
 if os.path.exists("@abs_top_srcdir@/python"):
     sys.path.insert(0, "@abs_top_srcdir@/python")
 
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
-DESC = """Regression tests for Pacemaker's scheduler"""
 
 class SchedulerTest:
+    """A single scheduler test."""
+
     def __init__(self, name, desc, args=None):
+        """
+        Create a new SchedulerTest instance.
+
+        Arguments:
+        name -- A unique name for this test.
+        desc -- A meaningful description for the test.
+        args -- Additional arguments to pass when running this test
+        """
         self.name = name
         self.desc = desc
 
@@ -41,9 +56,20 @@ class SchedulerTest:
         else:
             self.args = args
 
+
 class SchedulerTestGroup:
+    """Collection of scheduler regression tests."""
+
     def __init__(self, tests):
+        """
+        Create a new SchedulerTestGroup instance.
+
+        Arguments:
+        tests -- A list of SchedulerTest instances to be executed as part of
+                 this group.
+        """
         self.tests = tests
+
 
 # Each entry in TESTS is a group of tests, where each test consists of a
 # test base name, test description, and additional test arguments.
@@ -192,11 +218,9 @@ TESTS = [
         SchedulerTest("rule-dbl-as-number-no-match",
                       "Floating-point rule values set to number comparison: no match"),
         SchedulerTest("rule-dbl-parse-fail-default-str-match",
-                      "Floating-point rule values fail to parse, default to string "
-                      "comparison: match"),
+                      "Floating-point rule values fail to parse, default to string comparison: match"),
         SchedulerTest("rule-dbl-parse-fail-default-str-no-match",
-                      "Floating-point rule values fail to parse, default to string "
-                      "comparison: no match"),
+                      "Floating-point rule values fail to parse, default to string comparison: no match"),
         SchedulerTest("rule-int-as-auto-integer-match",
                       "Integer rule values default to integer comparison: match"),
         SchedulerTest("rule-int-as-auto-integer-no-match",
@@ -210,11 +234,9 @@ TESTS = [
         SchedulerTest("rule-int-as-number-no-match",
                       "Integer rule values set to number comparison: no match"),
         SchedulerTest("rule-int-parse-fail-default-str-match",
-                      "Integer rule values fail to parse, default to string "
-                      "comparison: match"),
+                      "Integer rule values fail to parse, default to string comparison: match"),
         SchedulerTest("rule-int-parse-fail-default-str-no-match",
-                      "Integer rule values fail to parse, default to string "
-                      "comparison: no match"),
+                      "Integer rule values fail to parse, default to string comparison: no match"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("order1", "Order start 1"),
@@ -291,17 +313,13 @@ TESTS = [
         SchedulerTest("coloc-cloned-group-promoted-dependent2",
                       "Cloned group promoted role with primitive (optional)"),
         SchedulerTest("coloc-optional-promoted-dependent-moves-1",
-                      "Colocation score less than promotion score "
-                      + "difference: move"),
+                      "Colocation score less than promotion score difference: move"),
         SchedulerTest("coloc-optional-promoted-dependent-moves-2",
-                      "Colocation score greater than promotion score "
-                      + "difference: move"),
+                      "Colocation score greater than promotion score difference: move"),
         SchedulerTest("coloc-optional-promoted-dependent-stays-1",
-                      "Colocation score greater than promotion score "
-                      + "difference: stay"),
+                      "Colocation score greater than promotion score difference: stay"),
         SchedulerTest("coloc-optional-promoted-dependent-stays-2",
-                      "Colocation score less than promotion score "
-                      + "difference: stay"),
+                      "Colocation score less than promotion score difference: stay"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("rsc-sets-seq-true", "Resource Sets - sequential=false"),
@@ -476,32 +494,23 @@ TESTS = [
         SchedulerTest("clone-recover-no-shuffle-3",
                       "Don't shuffle instances when starting a new bundle instance"),
         SchedulerTest("clone-recover-no-shuffle-4",
-                      "Don't shuffle instances when starting a new primitive instance with "
-                      "location preference "),
+                      "Don't shuffle instances when starting a new primitive instance with location preference"),
         SchedulerTest("clone-recover-no-shuffle-5",
-                      "Don't shuffle instances when starting a new group instance with "
-                      "location preference"),
+                      "Don't shuffle instances when starting a new group instance with location preference"),
         SchedulerTest("clone-recover-no-shuffle-6",
-                      "Don't shuffle instances when starting a new bundle instance with "
-                      "location preference"),
+                      "Don't shuffle instances when starting a new bundle instance with location preference"),
         SchedulerTest("clone-recover-no-shuffle-7",
-                      "Don't shuffle instances when starting a new primitive instance that "
-                      "will be promoted"),
+                      "Don't shuffle instances when starting a new primitive instance that will be promoted"),
         SchedulerTest("clone-recover-no-shuffle-8",
-                      "Don't shuffle instances when starting a new group instance that "
-                      "will be promoted "),
+                      "Don't shuffle instances when starting a new group instance that will be promoted"),
         SchedulerTest("clone-recover-no-shuffle-9",
-                      "Don't shuffle instances when starting a new bundle instance that "
-                      "will be promoted "),
+                      "Don't shuffle instances when starting a new bundle instance that will be promoted"),
         SchedulerTest("clone-recover-no-shuffle-10",
-                      "Don't shuffle instances when starting a new primitive instance that "
-                      "won't be promoted"),
+                      "Don't shuffle instances when starting a new primitive instance that won't be promoted"),
         SchedulerTest("clone-recover-no-shuffle-11",
-                      "Don't shuffle instances when starting a new group instance that "
-                      "won't be promoted "),
+                      "Don't shuffle instances when starting a new group instance that won't be promoted"),
         SchedulerTest("clone-recover-no-shuffle-12",
-                      "Don't shuffle instances when starting a new bundle instance that "
-                      "won't be promoted "),
+                      "Don't shuffle instances when starting a new bundle instance that won't be promoted"),
         SchedulerTest("clone-max-zero", "Orphan processing with clone-max=0"),
         SchedulerTest("clone-anon-dup",
                       "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node"),
@@ -1161,7 +1170,7 @@ TESTS = [
         SchedulerTest("rsc-defaults-2", "Test rsc_defaults conditional expressions without type"),
     ]),
     SchedulerTestGroup([
-        SchedulerTest("stop-all-resources", "Test stop-all-resources=true "),
+        SchedulerTest("stop-all-resources", "Test stop-all-resources=true"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("ocf_degraded-remap-ocf_ok", "Test degraded remapped to OK"),
@@ -1177,8 +1186,7 @@ TESTS_64BIT = [
 
 
 def is_executable(path):
-    """ Check whether a file at a given path is executable. """
-
+    """Check whether a file at a given path is executable."""
     try:
         return os.stat(path)[stat.ST_MODE] & stat.S_IXUSR
     except OSError:
@@ -1186,24 +1194,22 @@ def is_executable(path):
 
 
 def diff(file1, file2, **kwargs):
-    """ Call diff on two files """
-
-    return subprocess.call([ "diff", "-u", "-N", "--ignore-all-space",
-                             "--ignore-blank-lines", file1, file2 ], **kwargs)
+    """Call diff on two files."""
+    return subprocess.call(["diff", "-u", "-N", "--ignore-all-space",
+                            "--ignore-blank-lines", file1, file2], **kwargs)
 
 
 def sort_file(filename):
-    """ Sort a file alphabetically """
-
-    with io.open(filename, "rt") as f:
+    """Sort a file alphabetically."""
+    with io.open(filename, "rt", encoding="utf-8") as f:
         lines = sorted(f)
-    with io.open(filename, "wt") as f:
+
+    with io.open(filename, "wt", encoding="utf-8") as f:
         f.writelines(lines)
 
 
 def remove_files(filenames):
-    """ Remove a list of files """
-
+    """Remove a list of files."""
     for filename in filenames:
         try:
             os.remove(filename)
@@ -1212,66 +1218,59 @@ def remove_files(filenames):
 
 
 def normalize(filename):
-    """ Remove text from a file that isn't important for comparison """
-
+    """Remove text from a file that isn't important for comparison."""
     if not hasattr(normalize, "patterns"):
         normalize.patterns = [
             re.compile(r'crm_feature_set="[^"]*"'),
             re.compile(r'batch-limit="[0-9]*"')
         ]
-    if os.path.isfile(filename):
-        with io.open(filename, "rt") as f:
-            lines = f.readlines()
-        with io.open(filename, "wt") as f:
-            for line in lines:
-                for pattern in normalize.patterns:
-                    line = pattern.sub("", line)
-                f.write(line)
+
+    if not os.path.isfile(filename):
+        return
+
+    with io.open(filename, "rt", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    with io.open(filename, "wt", encoding="utf-8") as f:
+        for line in lines:
+            for pattern in normalize.patterns:
+                line = pattern.sub("", line)
+
+            f.write(line)
 
 
 def cat(filename, dest=sys.stdout):
-    """ Copy a file to a destination file descriptor """
-
-    with io.open(filename, "rt") as f:
+    """Copy a file to a destination file descriptor."""
+    with io.open(filename, "rt", encoding="utf-8") as f:
         shutil.copyfileobj(f, dest)
 
 
-class CtsScheduler(object):
-    """ Regression tests for Pacemaker's scheduler """
+class CtsScheduler:
+    """Regression tests for Pacemaker's scheduler."""
 
     def _parse_args(self, argv):
-        """ Parse command-line arguments """
-
-        parser = argparse.ArgumentParser(description=DESC)
+        """Parse command-line arguments."""
+        parser = argparse.ArgumentParser(description="Regression tests for Pacemaker's scheduler")
 
         parser.add_argument('-V', '--verbose', action='count',
                             help='Display any differences from expected output')
-
         parser.add_argument('--run', metavar='TEST',
                             help=('Run only single specified test (any further '
                                   'arguments will be passed to crm_simulate)'))
-
         parser.add_argument('--update', action='store_true',
                             help='Update expected results with actual results')
-
         parser.add_argument('-b', '--binary', metavar='PATH',
                             help='Specify path to crm_simulate')
-
         parser.add_argument('-i', '--io-dir', metavar='PATH',
                             help='Specify path to regression test data directory')
-
         parser.add_argument('-o', '--out-dir', metavar='PATH',
                             help='Specify where intermediate and output files should go')
-
         parser.add_argument('-v', '--valgrind', action='store_true',
                             help='Run all commands under valgrind')
-
         parser.add_argument('--valgrind-dhat', action='store_true',
                             help='Run all commands under valgrind with heap analyzer')
-
         parser.add_argument('--valgrind-skip-output', action='store_true',
                             help='If running under valgrind, do not display output')
-
         parser.add_argument('--testcmd-options', metavar='OPTIONS', default='',
                             help='Additional options for command under test')
 
@@ -1279,22 +1278,23 @@ class CtsScheduler(object):
         self.single_test_args = []
         narg = 0
         for arg in argv:
-            narg = narg + 1
+            narg += 1
             if arg == '--run':
-                (argv, self.single_test_args) = (argv[:narg+1], argv[narg+1:])
+                (argv, self.single_test_args) = (argv[:narg + 1], argv[narg + 1:])
                 break
 
         self.args = parser.parse_args(argv[1:])
 
     def _error(self, s):
-        print("      * ERROR:   %s" % s)
+        """Print an error message."""
+        print(f"      * ERROR:   {s}")
 
     def _failed(self, s):
-        print("      * FAILED:  %s" % s)
+        """Print a failure message."""
+        print(f"      * FAILED:  {s}")
 
     def _get_valgrind_cmd(self):
-        """ Return command arguments needed (or not) to run valgrind """
-
+        """Return command arguments needed (or not) to run valgrind."""
         if self.args.valgrind:
             os.environ['G_SLICE'] = "always-malloc"
             return [
@@ -1306,7 +1306,7 @@ class CtsScheduler(object):
                 "--show-reachable=no",
                 "--leak-check=full",
                 "--num-callers=20",
-                "--suppressions=%s/valgrind-pcmk.suppressions" % (self.test_home)
+                f"--suppressions={self.test_home}/valgrind-pcmk.suppressions"
             ]
 
         if self.args.valgrind_dhat:
@@ -1323,35 +1323,39 @@ class CtsScheduler(object):
         return []
 
     def _get_simulator_cmd(self):
-        """ Locate the simulation binary """
-
+        """Locate the simulation binary."""
         if self.args.binary is None:
-            self.args.binary = BuildOptions._BUILD_DIR + "/tools/crm_simulate"
+            # pylint: disable=protected-access
+            self.args.binary = f"{BuildOptions._BUILD_DIR}/tools/crm_simulate"
+
             if not is_executable(self.args.binary):
-                self.args.binary = BuildOptions.SBIN_DIR + "/crm_simulate"
+                self.args.binary = f"{BuildOptions.SBIN_DIR}/crm_simulate"
 
         if not is_executable(self.args.binary):
             # @TODO it would be more pythonic to raise an exception
-            self._error("Test binary " + self.args.binary + " not found")
+            self._error(f"Test binary {self.args.binary} not found")
             sys.exit(ExitStatus.NOT_INSTALLED)
 
-        return [ self.args.binary ] + shlex.split(self.args.testcmd_options)
+        return [self.args.binary] + shlex.split(self.args.testcmd_options)
 
     def set_schema_env(self):
-        """ Ensure schema directory environment variable is set, if possible """
-
+        """Ensure schema directory environment variable is set, if possible."""
         try:
             return os.environ['PCMK_schema_directory']
         except KeyError:
-            for d in [ os.path.join(BuildOptions._BUILD_DIR, "xml"),
-                       BuildOptions.SCHEMA_DIR ]:
-                if os.path.isdir(d):
-                    os.environ['PCMK_schema_directory'] = d
-                    return d
+            # pylint: disable=protected-access
+            for d in [os.path.join(BuildOptions._BUILD_DIR, "xml"),
+                      BuildOptions.SCHEMA_DIR]:
+                if not os.path.isdir(d):
+                    continue
+
+                os.environ['PCMK_schema_directory'] = d
+                return d
+
             return None
 
     def __init__(self, argv=sys.argv):
-
+        """Create a new CtsScheduler instance."""
         # Ensure all command output is in portable locale for comparison
         os.environ['LC_ALL'] = "C"
 
@@ -1380,8 +1384,9 @@ class CtsScheduler(object):
             self.failed_filename = os.path.join(self.failed_dir, "test-output.diff")
         else:
             self.failed_filename = os.path.join(self.args.out_dir, "test-output.diff")
+
         os.environ['CIB_shadow_dir'] = self.args.out_dir
-        
+
         self.failed_file = None
 
         self.outfile_out_dir = os.path.join(self.args.out_dir, "out")
@@ -1396,7 +1401,7 @@ class CtsScheduler(object):
             # User can give test base name or file name of a test input
             self.args.run = os.path.splitext(os.path.basename(self.args.run))[0]
         except (AttributeError, TypeError):
-            pass # --run was not specified
+            pass  # --run was not specified
 
         self.set_schema_env()
 
@@ -1421,10 +1426,11 @@ class CtsScheduler(object):
             os.makedirs(self.scores_out_dir, 0o755, True)
             os.makedirs(self.summary_out_dir, 0o755, True)
             os.makedirs(self.stderr_out_dir, 0o755, True)
+
             if self.valgrind_args:
                 os.makedirs(self.valgrind_out_dir, 0o755, True)
         except OSError as ex:
-            self._error("Unable to create output subdirectory: %s" % ex)
+            self._error(f"Unable to create output subdirectory: {ex}")
             remove_files([
                 self.outfile_out_dir,
                 self.dot_out_dir,
@@ -1432,58 +1438,52 @@ class CtsScheduler(object):
                 self.summary_out_dir,
                 self.stderr_out_dir,
             ])
+
             sys.exit(ExitStatus.CANTCREAT)
 
     def _compare_files(self, filename1, filename2):
-        """ Add any file differences to failed results """
-
+        """Add any file differences to failed results."""
         if diff(filename1, filename2, stdout=subprocess.DEVNULL) != 0:
             diff(filename1, filename2, stdout=self.failed_file, stderr=subprocess.DEVNULL)
             self.failed_file.write("\n")
             return True
+
         return False
 
-    def run_one(self, test_name, test_desc, test_args):
-        """ Run one scheduler test """
+    def _file_missing(self, path):
+        """Return True if path does not exist or is empty."""
+        return not os.path.isfile(path) or os.path.getsize(path) == 0
 
-        print("  Test %-41s %s" % ((test_name + ":"), test_desc))
+    def run_one(self, test_name, test_desc, test_args):
+        """Run one scheduler test."""
+        # pylint: disable=too-many-locals
+        print(f"  Test {f'{test_name}:':41} {test_desc}")
 
         did_fail = False
-        self.num_tests = self.num_tests + 1
+        self.num_tests += 1
 
         # Test inputs
-        input_filename = os.path.join(
-            self.xml_input_dir, "%s.xml" % test_name)
-        expected_filename = os.path.join(
-            self.expected_dir, "%s.exp" % test_name)
-        dot_expected_filename = os.path.join(
-            self.dot_expected_dir, "%s.dot" % test_name)
-        scores_filename = os.path.join(
-            self.scores_dir, "%s.scores" % test_name)
-        summary_filename = os.path.join(
-            self.summary_dir, "%s.summary" % test_name)
-        stderr_expected_filename = os.path.join(
-            self.stderr_expected_dir, "%s.stderr" % test_name)
+        input_filename = os.path.join(self.xml_input_dir, f"{test_name}.xml")
+        expected_filename = os.path.join(self.expected_dir, f"{test_name}.exp")
+        dot_expected_filename = os.path.join(self.dot_expected_dir, f"{test_name}.dot")
+        scores_filename = os.path.join(self.scores_dir, f"{test_name}.scores")
+        summary_filename = os.path.join(self.summary_dir, f"{test_name}.summary")
+        stderr_expected_filename = os.path.join(self.stderr_expected_dir, f"{test_name}.stderr")
 
         # (Intermediate) test outputs
-        output_filename = os.path.join(
-            self.outfile_out_dir, "%s.out" % test_name)
-        dot_output_filename = os.path.join(
-            self.dot_out_dir, "%s.dot.pe" % test_name)
-        score_output_filename = os.path.join(
-            self.scores_out_dir, "%s.scores.pe" % test_name)
-        summary_output_filename = os.path.join(
-            self.summary_out_dir, "%s.summary.pe" % test_name)
-        stderr_output_filename = os.path.join(
-            self.stderr_out_dir, "%s.stderr.pe" % test_name)
-        valgrind_output_filename = os.path.join(
-            self.valgrind_out_dir, "%s.valgrind" % test_name)
+        output_filename = os.path.join(self.outfile_out_dir, f"{test_name}.out")
+        dot_output_filename = os.path.join(self.dot_out_dir, f"{test_name}.dot.pe")
+        score_output_filename = os.path.join(self.scores_out_dir, f"{test_name}.scores.pe")
+        summary_output_filename = os.path.join(self.summary_out_dir, f"{test_name}.summary.pe")
+        stderr_output_filename = os.path.join(self.stderr_out_dir, f"{test_name}.stderr.pe")
+        valgrind_output_filename = os.path.join(self.valgrind_out_dir, f"{test_name}.valgrind")
 
         # Common arguments for running test
         test_cmd = []
         if self.valgrind_args:
-            test_cmd = self.valgrind_args + [ "--log-file=%s" % valgrind_output_filename ]
-        test_cmd = test_cmd + self.simulate_args
+            test_cmd = self.valgrind_args + [f"--log-file={valgrind_output_filename}"]
+
+        test_cmd += self.simulate_args
 
         # @TODO It would be more pythonic to raise exceptions for errors,
         # then perhaps it would be nice to make a single-test class
@@ -1491,18 +1491,19 @@ class CtsScheduler(object):
         # Ensure necessary test inputs exist
         if not os.path.isfile(input_filename):
             self._error("No input")
-            self.num_failed = self.num_failed + 1
+            self.num_failed += 1
             return ExitStatus.NOINPUT
+
         if not self.args.update and not os.path.isfile(expected_filename):
             self._error("no stored output")
             return ExitStatus.NOINPUT
 
         # Run simulation to generate summary output
-        test_cmd_full = test_cmd + [ '-x', input_filename, '-S' ] + test_args
-        if self.args.run: # Single test mode
+        test_cmd_full = test_cmd + ['-x', input_filename, '-S'] + test_args
+        if self.args.run:  # Single test mode
             print(" ".join(test_cmd_full))
 
-        with io.open(summary_output_filename, "wt") as f:
+        with io.open(summary_output_filename, "wt", encoding="utf-8") as f:
             subprocess.run(test_cmd_full, stdout=f, stderr=subprocess.STDOUT,
                            env=os.environ, check=False)
 
@@ -1510,85 +1511,87 @@ class CtsScheduler(object):
             cat(summary_output_filename)
 
         # Re-run simulation to generate dot, graph, and scores
-        test_cmd_full = test_cmd + [
-            '-x', input_filename,
-            '-D', dot_output_filename,
-            '-G', output_filename,
-            '-sSQ' ] + test_args
-        with io.open(stderr_output_filename, "wt") as f_stderr, \
-             io.open(score_output_filename,  "wt") as f_score:
+        test_cmd_full = test_cmd + ['-x', input_filename,
+                                    '-D', dot_output_filename,
+                                    '-G', output_filename,
+                                    '-sSQ'] + test_args
+
+        with io.open(stderr_output_filename, "wt", encoding="utf-8") as f_stderr, \
+             io.open(score_output_filename, "wt", encoding="utf-8") as f_score:
             rc = subprocess.call(test_cmd_full, stdout=f_score, stderr=f_stderr, env=os.environ)
 
         # Check for test command failure
         if rc != ExitStatus.OK:
-            self._failed("Test returned: %d" % rc)
+            self._failed(f"Test returned: {rc}")
             did_fail = True
             print(" ".join(test_cmd_full))
 
         # Check for valgrind errors
         if self.valgrind_args and not self.args.valgrind_skip_output:
-            if os.stat(valgrind_output_filename).st_size > 0:
+            if os.path.getsize(valgrind_output_filename) > 0:
                 self._failed("Valgrind reported errors")
                 did_fail = True
                 cat(valgrind_output_filename)
-            remove_files([ valgrind_output_filename ])
+
+            remove_files([valgrind_output_filename])
 
         # Check for core dump
         if os.path.isfile("core"):
-            self._failed("Core-file detected: core." + test_name)
+            self._failed(f"Core-file detected: core.{test_name}")
             did_fail = True
-            os.rename("core", "%s/core.%s" % (self.test_home, test_name))
+            os.rename("core", f"{self.test_home}/core.{test_name}")
 
         # Check any stderr output
         if os.path.isfile(stderr_expected_filename):
             if self._compare_files(stderr_expected_filename, stderr_output_filename):
                 self._failed("stderr changed")
                 did_fail = True
-        elif os.stat(stderr_output_filename).st_size > 0:
+        elif os.path.getsize(stderr_output_filename) > 0:
             self._failed("Output was written to stderr")
             did_fail = True
             cat(stderr_output_filename)
-        remove_files([ stderr_output_filename ])
+
+        remove_files([stderr_output_filename])
 
         # Check whether output graph exists, and normalize it
-        if (not os.path.isfile(output_filename)
-            or os.stat(output_filename).st_size == 0):
+        if self._file_missing(output_filename):
             self._error("No graph produced")
             did_fail = True
-            self.num_failed = self.num_failed + 1
-            remove_files([ output_filename ])
+            self.num_failed += 1
+            remove_files([output_filename])
             return ExitStatus.ERROR
+
         normalize(output_filename)
 
         # Check whether dot output exists, and sort it
-        if (not os.path.isfile(dot_output_filename) or
-            os.stat(dot_output_filename).st_size == 0):
+        if self._file_missing(dot_output_filename):
             self._error("No dot-file summary produced")
             did_fail = True
-            self.num_failed = self.num_failed + 1
-            remove_files([ dot_output_filename, output_filename ])
+            self.num_failed += 1
+            remove_files([dot_output_filename, output_filename])
             return ExitStatus.ERROR
-        with io.open(dot_output_filename, "rt") as f:
-            first_line = f.readline() # "digraph" line with opening brace
+
+        with io.open(dot_output_filename, "rt", encoding="utf-8") as f:
+            first_line = f.readline()  # "digraph" line with opening brace
             lines = f.readlines()
-            last_line = lines[-1] # closing brace
+            last_line = lines[-1]  # closing brace
             del lines[-1]
-            lines = sorted(set(lines)) # unique sort
-        with io.open(dot_output_filename, "wt") as f:
+            lines = sorted(set(lines))  # unique sort
+
+        with io.open(dot_output_filename, "wt", encoding="utf-8") as f:
             f.write(first_line)
             f.writelines(lines)
             f.write(last_line)
 
         # Check whether score output exists, and sort it
-        if (not os.path.isfile(score_output_filename)
-            or os.stat(score_output_filename).st_size == 0):
+        if self._file_missing(score_output_filename):
             self._error("No allocation scores produced")
             did_fail = True
-            self.num_failed = self.num_failed + 1
-            remove_files([ score_output_filename, output_filename ])
+            self.num_failed += 1
+            remove_files([score_output_filename, output_filename])
             return ExitStatus.ERROR
-        else:
-            sort_file(score_output_filename)
+
+        sort_file(score_output_filename)
 
         if self.args.update:
             shutil.copyfile(output_filename, expected_filename)
@@ -1605,7 +1608,7 @@ class CtsScheduler(object):
             self._failed("dot-file summary changed")
             did_fail = True
         else:
-            remove_files([ dot_output_filename ])
+            remove_files([dot_output_filename])
 
         if self._compare_files(expected_filename, output_filename):
             self._failed("xml-file changed")
@@ -1615,61 +1618,63 @@ class CtsScheduler(object):
             self._failed("scores-file changed")
             did_fail = True
 
-        remove_files([ output_filename,
-                       dot_output_filename,
-                       score_output_filename,
-                       summary_output_filename])
+        remove_files([output_filename,
+                      dot_output_filename,
+                      score_output_filename,
+                      summary_output_filename])
 
         if did_fail:
-            self.num_failed = self.num_failed + 1
+            self.num_failed += 1
             return ExitStatus.ERROR
 
         return ExitStatus.OK
 
     def run_all(self):
-        """ Run all defined tests """
-
+        """Run all defined tests."""
         if platform.architecture()[0] == "64bit":
             TESTS.extend(TESTS_64BIT)
 
         for group in TESTS:
             for test in group.tests:
                 self.run_one(test.name, test.desc, test.args)
+
             print()
 
     def _print_summary(self):
-        """ Print a summary of parameters for this test run """
+        """Print a summary of parameters for this test run."""
+        print(f"Test home is:\t{self.test_home}")
+        print(f"Test binary is:\t{self.args.binary}")
 
-        print("Test home is:\t" + self.test_home)
-        print("Test binary is:\t" + self.args.binary)
         if 'PCMK_schema_directory' in os.environ:
-            print("Schema home is:\t" + os.environ['PCMK_schema_directory'])
-        if self.valgrind_args != []:
+            print(f"Schema home is:\t{os.environ['PCMK_schema_directory']}")
+
+        if self.valgrind_args:
             print("Activating memory testing with valgrind")
+
         print()
 
     def _test_results(self):
+        """Report test results."""
         if self.num_failed == 0:
             shutil.rmtree(self.failed_dir)
             return ExitStatus.OK
 
-        if os.path.isfile(self.failed_filename) and os.stat(self.failed_filename).st_size != 0:
-            if self.args.verbose:
-                self._error("Results of %d failed tests (out of %d):" %
-                    (self.num_failed, self.num_tests))
-                cat(self.failed_filename)
-            else:
-                self._error("Results of %d failed tests (out of %d) are in %s" %
-                    (self.num_failed, self.num_tests, self.failed_filename))
-                self._error("Use -V to display them after running the tests")
-        else:
-            self._error("%d (of %d) tests failed (no diff results)" %
-                (self.num_failed, self.num_tests))
+        if self._file_missing(self.failed_filename):
+            self._error(f"{self.num_failed} (of {self.num_tests}) tests failed (no diff results)")
             if os.path.isfile(self.failed_filename):
                 shutil.rmtree(self.failed_dir)
+        elif self.args.verbose:
+            self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}):")
+            cat(self.failed_filename)
+        else:
+            self._error(f"Results of {self.num_failed} failed tests (out of {self.num_tests}) "
+                        f"are in {self.failed_filename}")
+            self._error("Use -V to display them after running the tests")
+
         return ExitStatus.ERROR
 
     def find_test(self, name):
+        """Return the SchedulerTest object with the given name."""
         if platform.architecture()[0] == "64bit":
             TESTS.extend(TESTS_64BIT)
 
@@ -1681,20 +1686,20 @@ class CtsScheduler(object):
         return None
 
     def run(self):
-        """ Run test(s) as specified """
-
+        """Run test(s) as specified."""
         # Check for pre-existing core so we don't think it's from us
         if os.path.exists("core"):
-            self._failed("Can't run with core already present in " + self.test_home)
+            self._failed(f"Can't run with core already present in {self.test_home}")
             return ExitStatus.OSFILE
 
         self._print_summary()
 
         # Zero out the error log
-        self.failed_file = io.open(self.failed_filename, "wt")
+        # pylint: disable=consider-using-with
+        self.failed_file = io.open(self.failed_filename, "wt", encoding="utf-8")
 
         if self.args.run is None:
-            print("Performing the following tests from " + self.args.io_dir)
+            print(f"Performing the following tests from {self.args.io_dir}")
             print()
             self.run_all()
             print()
@@ -1705,7 +1710,7 @@ class CtsScheduler(object):
             test = self.find_test(self.args.run)
 
             if test is None:
-                print("No test named %s" % self.args.run)
+                print(f"No test named {self.args.run}")
                 return ExitStatus.INVALID_PARAM
 
             # If no arguments were given on the command line, default to the ones
@@ -1717,10 +1722,11 @@ class CtsScheduler(object):
 
             rc = self.run_one(test.name, test.desc, args)
             self.failed_file.close()
+
             if self.num_failed > 0:
-              print("\nFailures:\nThese have also been written to: " + self.failed_filename + "\n")
-              cat(self.failed_filename)
-              shutil.rmtree(self.failed_dir)
+                print(f"\nFailures:\nThese have also been written to: {self.failed_filename}\n")
+                cat(self.failed_filename)
+                shutil.rmtree(self.failed_dir)
 
         return rc
 

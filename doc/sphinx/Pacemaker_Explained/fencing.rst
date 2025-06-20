@@ -179,17 +179,6 @@ fencing resource (*not* meta-attributes, even though they are interpreted by
 Pacemaker rather than the fence agent). These are also listed in the man page
 for ``pacemaker-fenced``.
 
-.. Not_Yet_Implemented:
-
-   +----------------------+---------+--------------------+----------------------------------------+
-   | priority             | integer | 0                  | .. index::                             |
-   |                      |         |                    |    single: priority                    |
-   |                      |         |                    |                                        |
-   |                      |         |                    | The priority of the fence device.      |
-   |                      |         |                    | Devices are tried in order of highest  |
-   |                      |         |                    | priority to lowest.                    |
-   +----------------------+---------+--------------------+----------------------------------------+
-
 .. list-table:: **Additional Properties of Fencing Resources**
    :class: longtable
    :widths: 2 1 2 4

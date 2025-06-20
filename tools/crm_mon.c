@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -601,7 +601,9 @@ use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GE
 /* *INDENT-OFF* */
 static GOptionEntry addl_entries[] = {
     { "interval", 'i', 0, G_OPTION_ARG_CALLBACK, reconnect_cb,
-      "Update frequency (default is 5 seconds)",
+      "Update frequency (default is 5 seconds). Note: When run interactively\n"
+      INDENT "on a live cluster, the display will be updated automatically\n"
+      INDENT "whenever the cluster configuration or status changes.",
       "TIMESPEC" },
 
     { "one-shot", '1', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -854,7 +856,7 @@ setup_fencer_connection(void)
     int rc = pcmk_ok;
 
     if (options.fence_connect && st == NULL) {
-        st = stonith_api_new();
+        st = stonith__api_new();
     }
 
     if (!options.fence_connect || st == NULL || st->state != stonith_disconnected) {
@@ -878,7 +880,7 @@ setup_fencer_connection(void)
                                             mon_st_callback_display);
         }
     } else {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         st = NULL;
     }
 
@@ -929,7 +931,7 @@ setup_cib_connection(void)
 
             out->err(out, "Cannot monitor CIB changes; exiting");
             cib__clean_up_connection(&cib);
-            stonith_api_delete(st);
+            stonith__api_free(st);
             st = NULL;
         }
     }
@@ -1599,7 +1601,7 @@ main(int argc, char **argv)
         one_shot();
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
     if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
@@ -2118,7 +2120,7 @@ clean_up(crm_exit_t exit_code)
     }
 
     cib__clean_up_connection(&cib);
-    stonith_api_delete(st);
+    stonith__api_free(st);
     free(options.neg_location_prefix);
     free(options.only_node);
     free(options.only_rsc);
@@ -2127,7 +2129,7 @@ clean_up(crm_exit_t exit_code)
 
     g_strfreev(processed_args);
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
     /* (2) If this is abnormal termination and we're in curses mode, shut down
      * curses first.  Any messages displayed to the screen before curses is shut

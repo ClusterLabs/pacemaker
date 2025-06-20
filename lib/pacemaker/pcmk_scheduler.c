@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -160,6 +160,9 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
 
+    /* @TODO This checks rsc and the top rsc, but should probably check all
+     * ancestors (a cloned group could have it set on the group)
+     */
     if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
         || pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
                        pcmk__rsc_exclusive_probes)) {
@@ -386,8 +389,8 @@ static void
 schedule_resource_actions(pcmk_scheduler_t *scheduler)
 {
     // Process deferred action checks
-    pe__foreach_param_check(scheduler, check_params);
-    pe__free_param_checks(scheduler);
+    pcmk__foreach_param_check(scheduler, check_params);
+    pcmk__free_param_checks(scheduler);
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_probe_resources)) {
         crm_trace("Scheduling probes");
@@ -729,49 +732,14 @@ log_unrunnable_actions(const pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Unpack the CIB for scheduling
- *
- * \param[in,out] cib        CIB XML to unpack (may be NULL if already unpacked)
- * \param[in]     flags      Scheduler flags to set in addition to defaults
- * \param[in,out] scheduler  Scheduler data
- */
-static void
-unpack_cib(xmlNode *cib, unsigned long long flags, pcmk_scheduler_t *scheduler)
-{
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
-        crm_trace("Reusing previously calculated cluster status");
-        pcmk__set_scheduler_flags(scheduler, flags);
-        return;
-    }
-
-    pcmk__assert(cib != NULL);
-    crm_trace("Calculating cluster status");
-
-    /* This will zero the entire struct without freeing anything first, so
-     * callers should never call pcmk__schedule_actions() with a populated data
-     * set unless pcmk__sched_have_status is set (i.e. cluster_status() was
-     * previously called, whether directly or via pcmk__schedule_actions()).
-     */
-    set_working_set_defaults(scheduler);
-
-    pcmk__set_scheduler_flags(scheduler, flags);
-    scheduler->input = cib;
-    cluster_status(scheduler); // Sets pcmk__sched_have_status
-}
-
-/*!
- * \internal
  * \brief Run the scheduler for a given CIB
  *
- * \param[in,out] cib        CIB XML to use as scheduler input
- * \param[in]     flags      Scheduler flags to set in addition to defaults
  * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__schedule_actions(xmlNode *cib, unsigned long long flags,
-                       pcmk_scheduler_t *scheduler)
+pcmk__schedule_actions(pcmk_scheduler_t *scheduler)
 {
-    unpack_cib(cib, flags, scheduler);
+    cluster_status(scheduler);
     pcmk__set_assignment_methods(scheduler);
     pcmk__apply_node_health(scheduler);
     pcmk__unpack_constraints(scheduler);
@@ -838,7 +806,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     // Allows for cleaner syntax than dereferencing the scheduler argument
     pcmk_scheduler_t *new_scheduler = NULL;
 
-    new_scheduler = pe_new_working_set();
+    new_scheduler = pcmk_new_scheduler();
     if (new_scheduler == NULL) {
         return ENOMEM;
     }
@@ -852,7 +820,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
         new_scheduler->input = pcmk__xml_copy(NULL, input);
         if (new_scheduler->input == NULL) {
             out->err(out, "Failed to copy input XML");
-            pe_free_working_set(new_scheduler);
+            pcmk_free_scheduler(new_scheduler);
             return ENOMEM;
         }
 
@@ -860,7 +828,7 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
         int rc = cib__signon_query(out, NULL, &(new_scheduler->input));
 
         if (rc != pcmk_rc_ok) {
-            pe_free_working_set(new_scheduler);
+            pcmk_free_scheduler(new_scheduler);
             return rc;
         }
     }

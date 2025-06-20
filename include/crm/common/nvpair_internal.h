@@ -10,7 +10,8 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 #define PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 
-#include <glib.h>                           // gboolean
+#include <stdbool.h>                        // bool
+#include <glib.h>                           // gboolean, gpointer, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/rules.h>               // pcmk_rule_input_t
@@ -30,8 +31,7 @@ typedef struct unpack_data_s {
     /* Whether each block's values should overwrite any existing ones
      *
      * @COMPAT Only external call paths set this to true. Drop it when we drop
-     * pe_eval_nvpairs() and pe_unpack_nvpairs() after replacing with a new
-     * public API that doesn't overwrite.
+     * pe_eval_nvpairs() and pe_unpack_nvpairs().
      */
     bool overwrite;
 
@@ -41,6 +41,8 @@ typedef struct unpack_data_s {
 
 gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
                              gpointer user_data);
+
+void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
 
 /*!
  * \internal

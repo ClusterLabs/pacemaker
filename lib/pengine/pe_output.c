@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 
 #include <stdint.h>
+
+#include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/xml_internal.h>
 #include <crm/common/output.h>
@@ -200,7 +202,8 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 static const char *
 get_cluster_stack(pcmk_scheduler_t *scheduler)
 {
-    xmlNode *stack = get_xpath_object(XPATH_STACK, scheduler->input, LOG_DEBUG);
+    xmlNode *stack = pcmk__xpath_find_one(scheduler->input->doc, XPATH_STACK,
+                                          LOG_DEBUG);
 
     if (stack != NULL) {
         return crm_element_value(stack, PCMK_XA_VALUE);
@@ -418,8 +421,8 @@ cluster_summary(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
-                                               scheduler->input, LOG_DEBUG);
+        xmlNode *dc_version = pcmk__xpath_find_one(scheduler->input->doc,
+                                                   XPATH_DC_VERSION, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
@@ -494,8 +497,8 @@ cluster_summary_html(pcmk__output_t *out, va_list args) {
     /* Always print DC if none, even if not requested */
     if ((scheduler->dc_node == NULL)
         || pcmk_is_set(section_opts, pcmk_section_dc)) {
-        xmlNode *dc_version = get_xpath_object(XPATH_DC_VERSION,
-                                               scheduler->input, LOG_DEBUG);
+        xmlNode *dc_version = pcmk__xpath_find_one(scheduler->input->doc,
+                                                   XPATH_DC_VERSION, LOG_DEBUG);
         const char *dc_version_s = dc_version?
                                    crm_element_value(dc_version, PCMK_XA_VALUE)
                                    : NULL;
@@ -1037,6 +1040,11 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
     }
 
     switch (scheduler->no_quorum_policy) {
+        /* @COMPAT These should say something like "resources that require
+         * quorum" since resources with requires="nothing" are unaffected, but
+         * it would be a good idea to investigate whether any major projects
+         * search for this text first
+         */
         case pcmk_no_quorum_freeze:
             out->list_item(out, NULL, "No quorum policy: Freeze resources");
             break;
@@ -2353,6 +2361,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
+        // @TODO Maybe skip filtering for XML output
         g_hash_table_iter_init(&iter, node->priv->attrs);
         while (g_hash_table_iter_next (&iter, &key, NULL)) {
             attr_list = filter_attr_list(attr_list, key);
@@ -2485,7 +2494,7 @@ node_history_list(pcmk__output_t *out, va_list args) {
                                       pcmk__str_star_matches)) {
                 continue;
             }
-        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, TRUE)) {
+        } else if (rsc->priv->fns->is_filtered(rsc, only_rsc, true)) {
             continue;
         }
 
@@ -3054,8 +3063,8 @@ resource_list(pcmk__output_t *out, va_list args)
         int x;
 
         /* Complex resources may have some sub-resources active and some inactive */
-        gboolean is_active = rsc->priv->fns->active(rsc, TRUE);
-        gboolean partially_active = rsc->priv->fns->active(rsc, FALSE);
+        bool is_active = rsc->priv->fns->active(rsc, true);
+        bool partially_active = rsc->priv->fns->active(rsc, false);
 
         /* Skip inactive orphans (deleted but still in CIB) */
         if (pcmk_is_set(rsc->flags, pcmk__rsc_removed) && !is_active) {
@@ -3103,6 +3112,9 @@ resource_list(pcmk__output_t *out, va_list args)
             printed_header = true;
         }
 
+        /* @FIXME It looks as if we can return pcmk_rc_no_output even after
+         * writing output here.
+         */
         if (pcmk_is_set(show_opts, pcmk_show_rscs_by_node)) {
             out->list_item(out, NULL, "No inactive resources");
         } else if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {

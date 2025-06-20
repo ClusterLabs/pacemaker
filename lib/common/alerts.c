@@ -128,3 +128,310 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
     g_hash_table_insert(table, pcmk__str_copy(pcmk__alert_keys[name]),
                         pcmk__itoa(value));
 }
+
+#define READABLE_DEFAULT pcmk__readable_interval(PCMK__ALERT_DEFAULT_TIMEOUT_MS)
+
+/*!
+ * \internal
+ * \brief Unpack options for an alert or alert recipient from its
+ *        meta-attributes in the CIB XML configuration
+ *
+ * \param[in,out] xml          Alert or recipient XML
+ * \param[in,out] entry        Where to store unpacked values
+ * \param[in,out] max_timeout  Max timeout of all alerts and recipients thus far
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
+{
+    GHashTable *config_hash = pcmk__strkey_table(free, free);
+    crm_time_t *now = crm_time_new(NULL);
+    const char *value = NULL;
+    int rc = pcmk_rc_ok;
+
+    pcmk_rule_input_t rule_input = {
+        .now = now,
+    };
+
+    pcmk_unpack_nvpair_blocks(xml, PCMK_XE_META_ATTRIBUTES, NULL, &rule_input,
+                              config_hash, NULL);
+    crm_time_free(now);
+
+    value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
+    if ((value != NULL) && !crm_is_true(value)) {
+        // No need to continue unpacking
+        rc = pcmk_rc_disabled;
+        goto done;
+    }
+
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
+    if (value != NULL) {
+        long long timeout_ms = crm_get_msec(value);
+
+        entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
+        if (entry->timeout <= 0) {
+            if (entry->timeout == 0) {
+                crm_trace("Alert %s uses default timeout (%s)",
+                          entry->id, READABLE_DEFAULT);
+            } else {
+                pcmk__config_warn("Using default timeout (%s) for alert %s "
+                                  "because '%s' is not a valid timeout",
+                                  entry->id, value, READABLE_DEFAULT);
+            }
+            entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
+        } else {
+            crm_trace("Alert %s uses timeout of %s",
+                      entry->id, pcmk__readable_interval(entry->timeout));
+        }
+        if (entry->timeout > *max_timeout) {
+            *max_timeout = entry->timeout;
+        }
+    }
+    value = g_hash_table_lookup(config_hash, PCMK_META_TIMESTAMP_FORMAT);
+    if (value != NULL) {
+        /* hard to do any checks here as merely anything can
+         * can be a valid time-format-string
+         */
+        entry->tstamp_format = strdup(value);
+        crm_trace("Alert %s uses timestamp format '%s'",
+                  entry->id, entry->tstamp_format);
+    }
+
+done:
+    g_hash_table_destroy(config_hash);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Unpack agent parameters for an alert or alert recipient into an
+ *        environment variable list based on its CIB XML configuration
+ *
+ * \param[in]     xml    Alert or recipient XML
+ * \param[in,out] entry  Alert entry to create environment variables for
+ */
+static void
+unpack_alert_parameters(const xmlNode *xml, pcmk__alert_t *entry)
+{
+    xmlNode *child;
+
+    if ((xml == NULL) || (entry == NULL)) {
+        return;
+    }
+
+    child = pcmk__xe_first_child(xml, PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
+                                 NULL);
+    if (child == NULL) {
+        return;
+    }
+
+    if (entry->envvars == NULL) {
+        entry->envvars = pcmk__strkey_table(free, free);
+    }
+
+    for (child = pcmk__xe_first_child(child, PCMK_XE_NVPAIR, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child, PCMK_XE_NVPAIR)) {
+
+        const char *name = crm_element_value(child, PCMK_XA_NAME);
+        const char *value = crm_element_value(child, PCMK_XA_VALUE);
+
+        if (value == NULL) {
+            value = "";
+        }
+        pcmk__insert_dup(entry->envvars, name, value);
+        crm_trace("Alert %s: added environment variable %s='%s'",
+                  entry->id, name, value);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create filters for an alert or alert recipient based on its
+ *        configuration in CIB XML
+ *
+ * \param[in]     xml    Alert or recipient XML
+ * \param[in,out] entry  Alert entry to create filters for
+ */
+static void
+unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
+{
+    xmlNode *select = pcmk__xe_first_child(xml, PCMK_XE_SELECT, NULL, NULL);
+    xmlNode *event_type = NULL;
+    uint32_t flags = pcmk__alert_none;
+
+    for (event_type = pcmk__xe_first_child(select, NULL, NULL, NULL);
+         event_type != NULL; event_type = pcmk__xe_next(event_type, NULL)) {
+
+        if (pcmk__xe_is(event_type, PCMK_XE_SELECT_FENCING)) {
+            flags |= pcmk__alert_fencing;
+
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_NODES)) {
+            flags |= pcmk__alert_node;
+
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_RESOURCES)) {
+            flags |= pcmk__alert_resource;
+
+        } else if (pcmk__xe_is(event_type, PCMK_XE_SELECT_ATTRIBUTES)) {
+            xmlNode *attr;
+            const char *attr_name;
+            int nattrs = 0;
+
+            flags |= pcmk__alert_attribute;
+            for (attr = pcmk__xe_first_child(event_type, PCMK_XE_ATTRIBUTE,
+                                             NULL, NULL);
+                 attr != NULL; attr = pcmk__xe_next(attr, PCMK_XE_ATTRIBUTE)) {
+
+                attr_name = crm_element_value(attr, PCMK_XA_NAME);
+                if (attr_name) {
+                    if (nattrs == 0) {
+                        g_strfreev(entry->select_attribute_name);
+                        entry->select_attribute_name = NULL;
+                    }
+                    ++nattrs;
+                    entry->select_attribute_name = pcmk__realloc(entry->select_attribute_name,
+                                                                 (nattrs + 1) * sizeof(char*));
+                    entry->select_attribute_name[nattrs - 1] = strdup(attr_name);
+                    entry->select_attribute_name[nattrs] = NULL;
+                }
+            }
+        }
+    }
+
+    if (flags != pcmk__alert_none) {
+        entry->flags = flags;
+        crm_debug("Alert %s receives events: attributes:%s%s%s%s",
+                  entry->id,
+                  (pcmk_is_set(flags, pcmk__alert_attribute)?
+                   (entry->select_attribute_name? "some" : "all") : "none"),
+                  (pcmk_is_set(flags, pcmk__alert_fencing)? " fencing" : ""),
+                  (pcmk_is_set(flags, pcmk__alert_node)? " nodes" : ""),
+                  (pcmk_is_set(flags, pcmk__alert_resource)? " resources" : ""));
+    }
+}
+
+/*!
+ * \internal
+ * \brief Unpack an alert or an alert recipient
+ *
+ * \param[in,out] alert        Alert or recipient XML
+ * \param[in,out] entry        Where to store unpacked values
+ * \param[in,out] max_timeout  Max timeout of all alerts and recipients thus far
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+unpack_alert(xmlNode *alert, pcmk__alert_t *entry, guint *max_timeout)
+{
+    int rc = pcmk_rc_ok;
+
+    unpack_alert_parameters(alert, entry);
+    rc = unpack_alert_options(alert, entry, max_timeout);
+    if (rc == pcmk_rc_ok) {
+        unpack_alert_filter(alert, entry);
+    }
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Unpack a CIB alerts section into a list of alert entries
+ *
+ * \param[in] alerts  XML of CIB alerts section
+ *
+ * \return List of unpacked alert entries
+ */
+GList *
+pcmk__unpack_alerts(const xmlNode *alerts)
+{
+    xmlNode *alert;
+    pcmk__alert_t *entry;
+    guint max_timeout = 0U;
+    GList *alert_list = NULL;
+
+    for (alert = pcmk__xe_first_child(alerts, PCMK_XE_ALERT, NULL, NULL);
+         alert != NULL; alert = pcmk__xe_next(alert, PCMK_XE_ALERT)) {
+
+        xmlNode *recipient = NULL;
+        int recipients = 0;
+        const char *alert_id = pcmk__xe_id(alert);
+        const char *alert_path = crm_element_value(alert, PCMK_XA_PATH);
+
+        // Not possible with schema validation enabled
+        if (alert_id == NULL) {
+            pcmk__config_err("Ignoring invalid alert without " PCMK_XA_ID);
+            continue;
+        }
+        if (alert_path == NULL) {
+            pcmk__config_err("Ignoring invalid alert %s without " PCMK_XA_PATH,
+                             alert_id);
+            continue;
+        }
+
+        entry = pcmk__alert_new(alert_id, alert_path);
+
+        if (unpack_alert(alert, entry, &max_timeout) != pcmk_rc_ok) {
+            // Don't allow recipients to override if entire alert is disabled
+            crm_debug("Alert %s is disabled", entry->id);
+            pcmk__free_alert(entry);
+            continue;
+        }
+
+        if (entry->tstamp_format == NULL) {
+            entry->tstamp_format =
+                pcmk__str_copy(PCMK__ALERT_DEFAULT_TSTAMP_FORMAT);
+        }
+
+        crm_debug("Alert %s: path=%s timeout=%s tstamp-format='%s'",
+                  entry->id, entry->path,
+                  pcmk__readable_interval(entry->timeout),
+                  entry->tstamp_format);
+
+        for (recipient = pcmk__xe_first_child(alert, PCMK_XE_RECIPIENT, NULL,
+                                              NULL);
+             recipient != NULL;
+             recipient = pcmk__xe_next(recipient, PCMK_XE_RECIPIENT)) {
+
+            pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
+
+            recipients++;
+            recipient_entry->recipient = crm_element_value_copy(recipient,
+                                                                PCMK_XA_VALUE);
+
+            if (unpack_alert(recipient, recipient_entry,
+                             &max_timeout) != pcmk_rc_ok) {
+                crm_debug("Alert %s: recipient %s is disabled",
+                          entry->id, recipient_entry->id);
+                pcmk__free_alert(recipient_entry);
+                continue;
+            }
+            alert_list = g_list_prepend(alert_list, recipient_entry);
+            crm_debug("Alert %s has recipient %s with value %s and %d envvars",
+                      entry->id, pcmk__xe_id(recipient),
+                      recipient_entry->recipient,
+                      (recipient_entry->envvars?
+                       g_hash_table_size(recipient_entry->envvars) : 0));
+        }
+
+        if (recipients == 0) {
+            alert_list = g_list_prepend(alert_list, entry);
+        } else { // Recipients were prepended individually above
+            pcmk__free_alert(entry);
+        }
+    }
+    return alert_list;
+}
+
+/*!
+ * \internal
+ * \brief Free an alert list generated by pcmk__unpack_alerts()
+ *
+ * \param[in,out] alert_list  Alert list to free
+ */
+void
+pcmk__free_alerts(GList *alert_list)
+{
+    if (alert_list != NULL) {
+        g_list_free_full(alert_list, (GDestroyNotify) pcmk__free_alert);
+    }
+}

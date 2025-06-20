@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,9 +23,9 @@
 static GHashTable *schedulerd_handlers = NULL;
 
 static pcmk_scheduler_t *
-init_working_set(void)
+init_scheduler(void)
 {
-    pcmk_scheduler_t *scheduler = pe_new_working_set();
+    pcmk_scheduler_t *scheduler = pcmk_new_scheduler();
 
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = logger_out;
@@ -66,7 +66,7 @@ handle_pecalc_request(pcmk__request_t *request)
     xmlNode *reply = NULL;
     bool is_repoke = false;
     bool process = true;
-    pcmk_scheduler_t *scheduler = init_working_set();
+    pcmk_scheduler_t *scheduler = init_scheduler();
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
@@ -91,9 +91,14 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     if (process) {
-        pcmk__schedule_actions(converted,
-                               pcmk__sched_no_counts
-                               |pcmk__sched_show_utilization, scheduler);
+        scheduler->input = converted;
+        pcmk__set_scheduler_flags(scheduler,
+                                  pcmk__sched_no_counts
+                                  |pcmk__sched_show_utilization);
+        pcmk__schedule_actions(scheduler);
+
+        // Don't free converted as part of scheduler
+        scheduler->input = NULL;
     }
 
     // Get appropriate index into series[] array
@@ -122,7 +127,6 @@ handle_pecalc_request(pcmk__request_t *request)
     crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
               series[series_id].name, series_wrap, seq, value);
 
-    scheduler->input = NULL;
     reply = pcmk__new_reply(msg, scheduler->priv->graph);
 
     if (reply == NULL) {
@@ -165,7 +169,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
 done:
     pcmk__xml_free(converted);
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
     return reply;
 }
@@ -219,6 +223,7 @@ pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static int32_t
 pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     xmlNode *msg = NULL;
@@ -231,7 +236,34 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         schedulerd_register_handlers();
     }
 
-    msg = pcmk__client_data2xml(c, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&c->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        msg = pcmk__client_data2xml(c, &id, &flags);
+        g_byte_array_free(c->buffer, TRUE);
+        c->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (c->buffer != NULL) {
+            g_byte_array_free(c->buffer, TRUE);
+            c->buffer = NULL;
+        }
+
+        return 0;
+    }
+
     if (msg == NULL) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
         return 0;

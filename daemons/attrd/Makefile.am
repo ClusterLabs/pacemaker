@@ -20,7 +20,6 @@ pacemaker_attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 pacemaker_attrd_LDADD = $(top_builddir)/lib/cluster/libcrmcluster.la
 pacemaker_attrd_LDADD += $(top_builddir)/lib/cib/libcib.la
-pacemaker_attrd_LDADD += $(top_builddir)/lib/pengine/libpe_rules.la
 pacemaker_attrd_LDADD += $(top_builddir)/lib/lrmd/liblrmd.la
 pacemaker_attrd_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 pacemaker_attrd_LDADD += $(CLUSTERLIBS)
@@ -32,6 +31,7 @@ pacemaker_attrd_SOURCES	= attrd_alerts.c 	\
 			  attrd_elections.c 	\
 			  attrd_ipc.c 		\
 			  attrd_messages.c 	\
+			  attrd_nodes.c 	\
 			  attrd_sync.c 		\
 			  attrd_utils.c 	\
 			  pacemaker-attrd.c

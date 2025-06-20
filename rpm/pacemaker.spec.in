@@ -313,7 +313,6 @@ BuildRequires: %{pkgname_glue_libs}-devel
 %endif
 
 %if %{with doc}
-BuildRequires: asciidoc
 BuildRequires: %{python_name}-sphinx
 %endif
 
@@ -537,7 +536,7 @@ popd
 %check
 make %{_smp_mflags} check
 { cts/cts-scheduler --run load-stopped-loop \
-  && cts/cts-cli \
+  && cts/cts-cli -V \
   && touch .CHECKED
 } 2>&1 | sed 's/[fF]ail/faiil/g'  # prevent false positives in rpmlint
 [ -f .CHECKED ] && rm -f -- .CHECKED

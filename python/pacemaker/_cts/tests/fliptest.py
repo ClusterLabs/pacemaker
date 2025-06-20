@@ -1,7 +1,7 @@
 """Stop running nodes, and start stopped nodes."""
 
 __all__ = ["FlipTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time
@@ -56,4 +56,4 @@ class FlipTest(CTSTest):
         if ret:
             return self.success()
 
-        return self.failure("%s failure" % kind)
+        return self.failure(f"{kind} failure")

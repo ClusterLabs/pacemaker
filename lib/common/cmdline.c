@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,7 +34,9 @@ pcmk__new_common_args(const char *summary)
         crm_exit(CRM_EX_OSERR);
     }
 
+    // cppcheck-suppress nullPointerOutOfMemory
     args->summary = strdup(summary);
+    // cppcheck-suppress nullPointerOutOfMemory
     if (args->summary == NULL) {
         free(args);
         args = NULL;
@@ -107,7 +109,6 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
     }
 
     // main_group is now owned by context, we don't free it here
-    // cppcheck-suppress memleak
     return context;
 }
 
@@ -139,7 +140,6 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
     g_option_group_add_entries(group, entries);
     g_option_context_add_group(context, group);
     // group is now owned by context, we don't free it here
-    // cppcheck-suppress memleak
 }
 
 static gchar *

@@ -1,7 +1,7 @@
 """A module for managing and communicating with external processes."""
 
 __all__ = ["killall", "exit_if_proc_running", "pipe_communicate", "stdout_from_command"]
-__copyright__ = "Copyright 2009-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2009-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import subprocess
@@ -46,8 +46,8 @@ def is_proc_running(process_name):
 def exit_if_proc_running(process_name):
     """Exit with error if a given process is running."""
     if is_proc_running(process_name):
-        print("Error: %s is already running!" % process_name)
-        print("Run %s only when the cluster is stopped." % sys.argv[0])
+        print(f"Error: {process_name} is already running!")
+        print(f"Run {sys.argv[0]} only when the cluster is stopped.")
         sys.exit(ExitStatus.ERROR)
 
 

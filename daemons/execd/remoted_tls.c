@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -172,11 +172,7 @@ lrmd_remote_client_destroy(gpointer user_data)
     }
 
     if (client->remote->tls_session) {
-        void *sock_ptr;
-        int csock;
-
-        sock_ptr = gnutls_transport_get_ptr(client->remote->tls_session);
-        csock = GPOINTER_TO_INT(sock_ptr);
+        int csock = pcmk__tls_get_client_sock(client->remote);
 
         gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_RDWR);
         gnutls_deinit(client->remote->tls_session);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,7 @@
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t, ...
 
 #include <crm_config.h>             // HAVE_GETPEEREID
+#include <crm/crm.h>                    // crm_system_name
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_controld.h>    // pcmk_controld_api_reply
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_{api_reply,state}
@@ -92,7 +93,9 @@ int pcmk__connect_generic_ipc(crm_ipc_t *ipc);
 int pcmk__ipc_fd(crm_ipc_t *ipc, int *fd);
 int pcmk__connect_ipc(pcmk_ipc_api_t *api, enum pcmk_ipc_dispatch dispatch_type,
                       int attempts);
-
+int pcmk__connect_ipc_retry_conrefused(pcmk_ipc_api_t *api,
+                                       enum pcmk_ipc_dispatch dispatch_type,
+                                       int attempts);
 /*
  * Server-related
  */
@@ -114,6 +117,8 @@ struct pcmk__remote_s {
     char *token;
 
     /* TLS only */
+
+    // Must be created by pcmk__new_tls_session()
     gnutls_session_t tls_session;
 };
 
@@ -168,6 +173,11 @@ struct pcmk__client_s {
 
     int event_timer;
     GQueue *event_queue;
+
+    /* Buffer used to store a multipart IPC message when we are building it
+     * up over multiple reads.
+     */
+    GByteArray *buffer;
 
     /* Depending on the client type, only some of the following will be
      * populated/valid. @TODO Maybe convert to a union.
@@ -236,14 +246,14 @@ int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
 #define pcmk__ipc_send_ack(c, req, flags, tag, ver, st) \
     pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (ver), (st))
 
-int pcmk__ipc_prepare_iov(uint32_t request, const xmlNode *message,
-                          uint32_t max_send_size,
-                          struct iovec **result, ssize_t *bytes);
+int pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
+                          uint16_t index, struct iovec **result, ssize_t *bytes);
 int pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request,
                        const xmlNode *message, uint32_t flags);
 int pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags);
-xmlNode *pcmk__client_data2xml(pcmk__client_t *c, void *data,
-                               uint32_t *id, uint32_t *flags);
+void pcmk__ipc_free_client_buffer(crm_ipc_t *client);
+int pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data);
+xmlNode *pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags);
 
 int pcmk__client_pid(qb_ipcs_connection_t *c);
 

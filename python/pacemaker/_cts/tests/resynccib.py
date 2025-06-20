@@ -1,7 +1,7 @@
 """Start the cluster without a CIB and verify it gets copied from another node."""
 
 __all__ = ["ResyncCIB"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker import BuildOptions
@@ -46,11 +46,11 @@ class ResyncCIB(CTSTest):
             return self.failure("Could not stop all nodes")
 
         # Test config recovery when the other nodes come up
-        self._rsh(node, "rm -f %s/cib*" % BuildOptions.CIB_DIR)
+        self._rsh(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
 
         # Start the selected node
         if not self._restart1(node):
-            return self.failure("Could not start %s" % node)
+            return self.failure(f"Could not start {node}")
 
         # Start all remaining nodes
         if not self._startall(None):

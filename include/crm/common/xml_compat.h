@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
+#include <libxml/xpath.h>           // xmlXPathObject
 
 #include <crm/common/nvpair.h>  // crm_xml_add()
 #include <crm/common/xml_names.h>   // PCMK_XE_CLONE
@@ -71,6 +72,57 @@ char *calculate_operation_digest(xmlNode *input, const char *version);
 //! \deprecated Do not use
 char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
                                      gboolean do_filter, const char *version);
+
+//! \deprecated Do not use
+xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
+
+//! \deprecated Do not use
+static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
+{
+    if ((xpathObj == NULL) || (xpathObj->nodesetval == NULL)) {
+        return 0;
+    }
+    return xpathObj->nodesetval->nodeNr;
+}
+
+//! \deprecated Do not use
+xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
+
+//! \deprecated Do not use
+void freeXpathObject(xmlXPathObjectPtr xpathObj);
+
+//! \deprecated Do not use
+void dedupXpathResults(xmlXPathObjectPtr xpathObj);
+
+//! \deprecated Do not use
+void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
+                              void (*helper)(xmlNode*, void*), void *user_data);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
+
+//! \deprecated Do not use
+typedef const xmlChar *pcmkXmlStr;
+
+//! \deprecated Do not use
+bool xml_tracking_changes(xmlNode *xml);
+
+//! \deprecated Do not use
+bool xml_document_dirty(xmlNode *xml);
+
+//! \deprecated Do not use
+void xml_accept_changes(xmlNode *xml);
+
+//! \deprecated Do not use
+void xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
+                       bool enforce_acls);
+
+//! \deprecated Do not use
+void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
+
+//! \deprecated Do not use
+void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 
 #ifdef __cplusplus
 }

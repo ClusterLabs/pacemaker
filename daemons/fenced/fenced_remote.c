@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,8 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <regex.h>
+
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -137,7 +139,9 @@ count_peer_device(gpointer key, gpointer value, gpointer user_data)
 
     if (!props->executed[data->op->phase]
         && (!data->verified_only || props->verified)
-        && ((data->support_action_only == st_device_supports_none) || pcmk_is_set(props->device_support_flags, data->support_action_only))) {
+        && ((data->support_action_only == fenced_df_none)
+            || pcmk_is_set(props->device_support_flags,
+                           data->support_action_only))) {
         ++(data->count);
     }
 }
@@ -185,11 +189,17 @@ find_peer_device(const remote_fencing_op_t *op, const peer_device_info_t *peer,
 {
     device_properties_t *props = g_hash_table_lookup(peer->devices, device);
 
-    if (props && support_action_only != st_device_supports_none && !pcmk_is_set(props->device_support_flags, support_action_only)) {
+    if (props == NULL) {
         return NULL;
     }
-    return (props && !props->executed[op->phase]
-           && !props->disallowed[op->phase])? props : NULL;
+    if ((support_action_only != fenced_df_none)
+        && !pcmk_is_set(props->device_support_flags, support_action_only)) {
+        return NULL;
+    }
+    if (props->executed[op->phase] || props->disallowed[op->phase]) {
+        return NULL;
+    }
+    return props;
 }
 
 /*!
@@ -215,7 +225,8 @@ grab_peer_device(const remote_fencing_op_t *op, peer_device_info_t *peer,
     }
 
     crm_trace("Removing %s from %s (%d remaining)",
-              device, peer->host, count_peer_devices(op, peer, FALSE, st_device_supports_none));
+              device, peer->host,
+              count_peer_devices(op, peer, FALSE, fenced_df_none));
     props->executed[op->phase] = TRUE;
     return TRUE;
 }
@@ -503,7 +514,7 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
             crm_err("Skipping duplicate notification for %s@%s "
                     QB_XS " state=%s id=%.8s",
                     other->client_name, other->originator,
-                    stonith_op_state_str(other->state), other->id);
+                    stonith__op_state_text(other->state), other->id);
         }
     }
 }
@@ -511,8 +522,9 @@ finalize_op_duplicates(remote_fencing_op_t *op, xmlNode *data)
 static char *
 delegate_from_xml(xmlNode *xml)
 {
-    xmlNode *match = get_xpath_object("//@" PCMK__XA_ST_DELEGATE, xml,
-                                      LOG_NEVER);
+    xmlNode *match = pcmk__xpath_find_one(xml->doc,
+                                          "//*[@" PCMK__XA_ST_DELEGATE "]",
+                                          LOG_NEVER);
 
     if (match == NULL) {
         return crm_element_value_copy(xml, PCMK__XA_SRC);
@@ -761,11 +773,11 @@ remote_op_query_timeout(gpointer data)
     } else if (op->query_results) {
         // Query succeeded, so attempt the actual fencing
         crm_debug("Query %.8s targeting %s complete (state=%s)",
-                  op->id, op->target, stonith_op_state_str(op->state));
+                  op->id, op->target, stonith__op_state_text(op->state));
         request_peer_fencing(op, NULL);
     } else {
         crm_debug("Query %.8s targeting %s timed out (state=%s)",
-                  op->id, op->target, stonith_op_state_str(op->state));
+                  op->id, op->target, stonith__op_state_text(op->state));
         finalize_timed_out_op(op, "No capable peers replied to device query "
                                   "within timeout");
     }
@@ -1110,7 +1122,9 @@ int
 fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, msg, LOG_ERR);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_TARGET "]",
+                                        LOG_ERR);
 
     CRM_CHECK(dev != NULL, return EPROTO);
 
@@ -1122,7 +1136,6 @@ fenced_handle_manual_confirmation(const pcmk__client_t *client, xmlNode *msg)
         return EPROTO;
     }
     op->state = st_done;
-    set_fencing_completed(op);
     op->delegate = pcmk__str_copy("a human");
 
     // For the fencer's purposes, the fencing operation is done
@@ -1150,8 +1163,9 @@ void *
 create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 {
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_TARGET, request,
-                                    LOG_NEVER);
+    xmlNode *dev = pcmk__xpath_find_one(request->doc,
+                                        "//*[@" PCMK__XA_ST_TARGET "]",
+                                        LOG_NEVER);
     int rc = pcmk_rc_ok;
     const char *operation = NULL;
 
@@ -1246,7 +1260,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
         pcmk__node_status_t *node = NULL;
 
         pcmk__scan_min_int(op->target, &nodeid, 0);
-        node = pcmk__search_node_caches(nodeid, NULL,
+        node = pcmk__search_node_caches(nodeid, NULL, NULL,
                                         pcmk__node_search_any
                                         |pcmk__node_search_cluster_cib);
 
@@ -1334,7 +1348,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
             crm_notice("Requesting peer fencing (%s) targeting %s "
                        QB_XS " id=%.8s state=%s base_timeout=%ds",
                        op->action, op->target, op->id,
-                       stonith_op_state_str(op->state), op->base_timeout);
+                       stonith__op_state_text(op->state), op->base_timeout);
     }
 
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
@@ -1532,10 +1546,8 @@ get_device_timeout(const remote_fencing_op_t *op,
                    const peer_device_info_t *peer, const char *device,
                    bool with_delay)
 {
-    int timeout = op->base_timeout;
+    int timeout = valid_fencing_timeout(op->base_timeout, false, op, device);
     device_properties_t *props;
-
-    timeout = valid_fencing_timeout(op->base_timeout, false, op, device);
 
     if (!peer || !device) {
         return timeout;
@@ -1670,9 +1682,10 @@ get_op_total_timeout(const remote_fencing_op_t *op,
             for (iter = auto_list; iter != NULL; iter = iter->next) {
                 GList *iter2 = NULL;
 
-                for (iter2 = op->query_results; iter2 != NULL; iter = iter2->next) {
+                for (iter2 = op->query_results; iter2 != NULL; iter2 = iter2->next) {
                     peer_device_info_t *peer = iter2->data;
-                    if (find_peer_device(op, peer, iter->data, st_device_supports_on)) {
+                    if (find_peer_device(op, peer, iter->data,
+                                         fenced_df_supports_on)) {
                         total_timeout += get_device_timeout(op, peer,
                                                             iter->data, true);
                         break;
@@ -1863,7 +1876,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
 
     crm_trace("Action %.8s targeting %s for %s is %s",
               op->id, op->target, op->client_name,
-              stonith_op_state_str(op->state));
+              stonith__op_state_text(op->state));
 
     if ((op->phase == st_phase_on) && (op->devices != NULL)) {
         /* We are in the "on" phase of a remapped topology reboot. If this
@@ -2023,7 +2036,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
         /* We've exhausted all available peers */
         crm_info("No remaining peers capable of fencing (%s) %s for client %s "
                  QB_XS " state=%s", op->action, op->target, op->client_name,
-                 stonith_op_state_str(op->state));
+                 stonith__op_state_text(op->state));
         CRM_CHECK(op->state < st_done, return);
         finalize_timed_out_op(op, "All nodes failed, or are unable, to "
                                   "fence target");
@@ -2048,7 +2061,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             crm_info("No peers (out of %d) have devices capable of fencing "
                      "(%s) %s for client %s " QB_XS " state=%s",
                      op->replies, op->action, op->target, op->client_name,
-                     stonith_op_state_str(op->state));
+                     stonith__op_state_text(op->state));
 
             pcmk__reset_result(&op->result);
             pcmk__set_result(&op->result, CRM_EX_ERROR,
@@ -2069,7 +2082,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             crm_info("No peers (out of %d) are capable of fencing (%s) %s "
                      "for client %s " QB_XS " state=%s",
                      op->replies, op->action, op->target, op->client_name,
-                     stonith_op_state_str(op->state));
+                     stonith__op_state_text(op->state));
         }
 
         op->state = st_failed;
@@ -2138,7 +2151,8 @@ all_topology_devices_found(const remote_fencing_op_t *op)
                 if (skip_target && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
                     continue;
                 }
-                match = find_peer_device(op, peer, device->data, st_device_supports_none);
+                match = find_peer_device(op, peer, device->data,
+                                         fenced_df_none);
             }
             if (!match) {
                 return FALSE;
@@ -2244,7 +2258,7 @@ add_device_properties(const xmlNode *xml, remote_fencing_op_t *op,
     // Nodes <2.1.5 won't set this, so assume unfencing in that case
     rc = pcmk__xe_get_flags(xml, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS,
                             &(props->device_support_flags),
-                            st_device_supports_on);
+                            fenced_df_supports_on);
     if (rc != pcmk_rc_ok) {
         crm_warn("Couldn't determine device support for %s "
                  "(assuming unfencing): %s", device, pcmk_rc_str(rc));
@@ -2337,14 +2351,18 @@ process_remote_stonith_query(xmlNode *msg)
     remote_fencing_op_t *op = NULL;
     peer_device_info_t *peer = NULL;
     uint32_t replies_expected;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_REMOTE_OP "]",
+                                        LOG_ERR);
 
     CRM_CHECK(dev != NULL, return -EPROTO);
 
     id = crm_element_value(dev, PCMK__XA_ST_REMOTE_OP);
     CRM_CHECK(id != NULL, return -EPROTO);
 
-    dev = get_xpath_object("//@" PCMK__XA_ST_AVAILABLE_DEVICES, msg, LOG_ERR);
+    dev = pcmk__xpath_find_one(msg->doc,
+                               "//*[@" PCMK__XA_ST_AVAILABLE_DEVICES "]",
+                               LOG_ERR);
     CRM_CHECK(dev != NULL, return -EPROTO);
     crm_element_value_int(dev, PCMK__XA_ST_AVAILABLE_DEVICES, &ndevices);
 
@@ -2414,7 +2432,7 @@ process_remote_stonith_query(xmlNode *msg)
         crm_info("Discarding query result from %s (%d device%s): "
                  "Operation is %s", peer->host,
                  peer->ndevices, pcmk__plural_s(peer->ndevices),
-                 stonith_op_state_str(op->state));
+                 stonith__op_state_text(op->state));
     }
 
     return pcmk_ok;
@@ -2435,7 +2453,9 @@ fenced_process_fencing_reply(xmlNode *msg)
     const char *id = NULL;
     const char *device = NULL;
     remote_fencing_op_t *op = NULL;
-    xmlNode *dev = get_xpath_object("//@" PCMK__XA_ST_REMOTE_OP, msg, LOG_ERR);
+    xmlNode *dev = pcmk__xpath_find_one(msg->doc,
+                                        "//*[@" PCMK__XA_ST_REMOTE_OP "]",
+                                        LOG_ERR);
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     CRM_CHECK(dev != NULL, return);

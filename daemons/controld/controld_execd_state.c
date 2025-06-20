@@ -14,8 +14,6 @@
 #include <crm/crm.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules.h>
-#include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 
 #include <pacemaker-internal.h>
@@ -321,6 +319,9 @@ controld_get_executor_state(const char *node_name, bool create)
     return state;
 }
 
+/* @TODO the lone caller just needs to iterate over the values, so replace this
+ * with a g_hash_table_foreach() wrapper instead
+ */
 GList *
 lrm_state_get_list(void)
 {
@@ -473,12 +474,14 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         lrmd_t * lrmd = (lrmd_t *)user_data;
         crm_time_t *now = crm_time_new(NULL);
         GHashTable *config_hash = pcmk__strkey_table(free, free);
+        pcmk_rule_input_t rule_input = {
+            .now = now,
+        };
 
         crm_debug("Call %d : Parsing CIB options", call_id);
-
-        pe_unpack_nvpairs(output, output, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
-                          config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE,
-                          now, NULL);
+        pcmk_unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
+                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                                  config_hash, NULL);
 
         /* Now send it to the remote peer */
         lrmd__validate_remote_settings(lrmd, config_hash);

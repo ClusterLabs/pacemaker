@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,11 +9,13 @@
 
 #include <crm_internal.h>
 
+#include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+
 #include <glib.h>
-#include <dirent.h>
+#include <libxml/xpath.h>           // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -22,7 +24,38 @@
 
 #include "fencing_private.h"
 
-#define RH_STONITH_PREFIX "fence_"
+/*!
+ * \internal
+ * \brief \c scandir() filter for RHCS fence agents
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if \p entry is a regular file whose name begins with \c "fence_"
+ * \retval 0 otherwise
+ */
+static int
+rhcs_agent_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (!pcmk__starts_with(entry->d_name, "fence_")) {
+        goto done;
+    }
+
+    // glibc doesn't enforce PATH_MAX, so don't limit buf size
+    buf = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", entry->d_name);
+    if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
+        goto done;
+    }
+
+    rc = 1;
+
+done:
+    free(buf);
+    return rc;
+}
 
 /*!
  * \internal
@@ -35,59 +68,24 @@
 int
 stonith__list_rhcs_agents(stonith_key_value_t **devices)
 {
-    // Essentially: ls -1 @sbin_dir@/fence_*
+    struct dirent **namelist = NULL;
+    const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist,
+                                 rhcs_agent_filter, alphasort);
 
-    int count = 0, i;
-    struct dirent **namelist;
-    const int file_num = scandir(PCMK__FENCE_BINDIR, &namelist, 0, alphasort);
+    if (file_num < 0) {
+        int rc = errno;
 
-#if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
-    char buffer[FILENAME_MAX + 1];
-#elif defined(O_SEARCH)
-    const int dirfd = open(PCMK__FENCE_BINDIR, O_SEARCH);
-#else
-    const int dirfd = open(PCMK__FENCE_BINDIR, O_PATH);
-#endif
+        crm_err("Could not list " PCMK__FENCE_BINDIR ": %s", pcmk_rc_str(rc));
+        free(namelist);
+        return 0;
+    }
 
-    for (i = 0; i < file_num; i++) {
-        struct stat prop;
-
-        if (pcmk__starts_with(namelist[i]->d_name, RH_STONITH_PREFIX)) {
-#if _POSIX_C_SOURCE < 200809L && !(defined(O_SEARCH) || defined(O_PATH))
-            snprintf(buffer, sizeof(buffer), "%s/%s", PCMK__FENCE_BINDIR,
-                     namelist[i]->d_name);
-            if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-#else
-            if (dirfd == -1) {
-                if (i == 0) {
-                    crm_notice("Problem with listing %s directory "
-                               QB_XS " errno=%d", RH_STONITH_PREFIX, errno);
-                }
-                free(namelist[i]);
-                continue;
-            }
-            /* note: we can possibly prevent following symlinks here,
-                     which may be a good idea, but fall on the nose when
-                     these agents are moved elsewhere & linked back */
-            if (fstatat(dirfd, namelist[i]->d_name, &prop, 0) == 0
-                    && S_ISREG(prop.st_mode)) {
-#endif
-                *devices = stonith_key_value_add(*devices, NULL,
-                                                 namelist[i]->d_name);
-                count++;
-            }
-        }
+    for (int i = 0; i < file_num; i++) {
+        *devices = stonith__key_value_add(*devices, NULL, namelist[i]->d_name);
         free(namelist[i]);
     }
-    if (file_num > 0) {
-        free(namelist);
-    }
-#if _POSIX_C_SOURCE >= 200809L || defined(O_SEARCH) || defined(O_PATH)
-    if (dirfd >= 0) {
-        close(dirfd);
-    }
-#endif
-    return count;
+    free(namelist);
+    return file_num;
 }
 
 static void
@@ -103,13 +101,15 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
                               parameter);
     /* Fudge metadata so that the parameter isn't required in config
      * Pacemaker handles and adds it */
-    xpathObj = xpath_search(metadata, xpath);
-    if (numXpathResults(xpathObj) > 0) {
-        xmlNode *tmp = getXpathResult(xpathObj, 0);
+    xpathObj = pcmk__xpath_search(metadata->doc, xpath);
+    if (pcmk__xpath_num_results(xpathObj) > 0) {
+        xmlNode *tmp = pcmk__xpath_result(xpathObj, 0);
 
-        crm_xml_add(tmp, "required", "0");
+        if (tmp != NULL) {
+            crm_xml_add(tmp, "required", "0");
+        }
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
     free(xpath);
 }
 
@@ -129,8 +129,8 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     xmlXPathObject *xpathObj = NULL;
     stonith_action_t *action = stonith__action_create(agent,
                                                       PCMK_ACTION_METADATA,
-                                                      NULL, 0, timeout_sec,
-                                                      NULL, NULL, NULL);
+                                                      NULL, timeout_sec, NULL,
+                                                      NULL, NULL);
     int rc = stonith__execute(action);
     pcmk__action_result_t *result = stonith__action_result(action);
 
@@ -173,17 +173,17 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         return -pcmk_err_schema_validation;
     }
 
-    xpathObj = xpath_search(xml, "//" PCMK_XE_ACTIONS);
-    if (numXpathResults(xpathObj) > 0) {
-        actions = getXpathResult(xpathObj, 0);
+    xpathObj = pcmk__xpath_search(xml->doc, "//" PCMK_XE_ACTIONS);
+    if (pcmk__xpath_num_results(xpathObj) > 0) {
+        actions = pcmk__xpath_result(xpathObj, 0);
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 
     // Add start and stop (implemented by pacemaker, not agent) to meta-data
-    xpathObj = xpath_search(xml,
-                            "//" PCMK_XE_ACTION
-                            "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
-    if (numXpathResults(xpathObj) <= 0) {
+    xpathObj = pcmk__xpath_search(xml->doc,
+                                  "//" PCMK_XE_ACTION
+                                  "[@" PCMK_XA_NAME "='" PCMK_ACTION_STOP "']");
+    if (pcmk__xpath_num_results(xpathObj) == 0) {
         xmlNode *tmp = NULL;
         const char *timeout_str = NULL;
 
@@ -197,7 +197,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
         crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
     }
-    freeXpathObject(xpathObj);
+    xmlXPathFreeObject(xpathObj);
 
     // Fudge metadata so parameters are not required in config (pacemaker adds them)
     stonith_rhcs_parameter_not_required(xml, STONITH_ATTR_ACTION_OP);
@@ -282,16 +282,10 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         rc = stonith__rhcs_get_metadata(agent, remaining_timeout, &metadata);
 
         if (rc == pcmk_ok) {
-            uint32_t device_flags = 0;
-
-            stonith__device_parameter_flags(&device_flags, agent, metadata);
-            if (pcmk_is_set(device_flags, st_device_supports_parameter_port)) {
-                host_arg = "port";
-
-            } else if (pcmk_is_set(device_flags,
-                                   st_device_supports_parameter_plug)) {
-                host_arg = "plug";
-            }
+            host_arg = stonith__default_host_arg(metadata);
+            crm_trace("Using '%s' as default " PCMK_STONITH_HOST_ARGUMENT
+                      " for %s",
+                      pcmk__s(host_arg, PCMK_VALUE_NONE), agent);
         }
 
         pcmk__xml_free(metadata);
@@ -306,7 +300,7 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
         host_arg = NULL;
     }
 
-    action = stonith__action_create(agent, PCMK_ACTION_VALIDATE_ALL, target, 0,
+    action = stonith__action_create(agent, PCMK_ACTION_VALIDATE_ALL, target,
                                     remaining_timeout, params, NULL, host_arg);
 
     rc = stonith__execute(action);

@@ -28,7 +28,6 @@
 
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
-#include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 
@@ -387,7 +386,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = errno;
         exit_code = pcmk_rc2exitc(rc);
@@ -639,7 +638,7 @@ main(int argc, char **argv)
     }
     attr_delete = NULL;
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
     scheduler = NULL;
 
     cib__clean_up_connection(&cib_conn);

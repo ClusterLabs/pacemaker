@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -114,7 +114,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     xml = pcmk__xml_parse(data);
 
     if (xml == NULL) {
-        crm_err("Bad message received from %s[%u]: '%.120s'",
+        crm_err("Bad message received from %s[%" PRIu32 "]: '%.120s'",
                 from, nodeid, data);
     } else {
         attrd_peer_message(pcmk__get_node(nodeid, from, NULL,
@@ -168,57 +168,55 @@ attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
 
     switch (kind) {
         case pcmk__node_update_name:
-            crm_debug("%s node %s is now %s",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state));
+                      pcmk__s(peer->name, "unknown"), peer->cluster_layer_id,
+                      state_text(peer->state));
             break;
 
         case pcmk__node_update_processes:
             if (!pcmk_is_set(peer->processes, crm_get_cluster_proc())) {
                 gone = true;
             }
-            crm_debug("Node %s is %s a peer",
-                      peer->name, (gone? "no longer" : "now"));
+            crm_debug("Node %s[%" PRIu32 "] is %s a peer",
+                      pcmk__s(peer->name, "unknown"), peer->cluster_layer_id,
+                      (gone? "no longer" : "now"));
             break;
 
         case pcmk__node_update_state:
-            crm_debug("%s node %s is now %s (was %s)",
+            crm_debug("%s node %s[%" PRIu32 "] is now %s (was %s)",
                       (is_remote? "Remote" : "Cluster"),
-                      peer->name, state_text(peer->state), state_text(data));
+                      pcmk__s(peer->name, "unknown"), peer->cluster_layer_id,
+                      state_text(peer->state), state_text(data));
             if (pcmk__str_eq(peer->state, PCMK_VALUE_MEMBER, pcmk__str_none)) {
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
-                if (attrd_election_won()
-                    && !pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
-                    attrd_peer_sync(peer);
+                if (!is_remote) {
+                   if (attrd_election_won()) {
+                       attrd_peer_sync(peer);
+
+                   } else {
+                       // Anyway send a message so that the peer learns our name
+                       attrd_send_protocol(peer);
+                   }
                 }
+
             } else {
                 // Remove all attribute values associated with lost nodes
-                attrd_peer_remove(peer->name, false, "loss");
+                if (peer->name != NULL) {
+                    attrd_peer_remove(peer->name, false, "loss");
+                }
                 gone = true;
             }
             break;
     }
 
     // Remove votes from cluster nodes that leave, in case election in progress
-    if (gone && !is_remote) {
+    if (gone && !is_remote && peer->name != NULL) {
         attrd_remove_voter(peer);
         attrd_remove_peer_protocol_ver(peer->name);
         attrd_do_not_expect_from_peer(peer->name);
-    }
-}
-
-static void
-record_peer_nodeid(attribute_value_t *v, const char *host)
-{
-    pcmk__node_status_t *known_peer =
-        pcmk__get_node(v->nodeid, host, NULL, pcmk__node_search_cluster_member);
-
-    crm_trace("Learned %s has node id %s",
-              known_peer->name, known_peer->xml_id);
-    if (attrd_election_won()) {
-        attrd_write_attributes(attrd_write_changed);
     }
 }
 
@@ -235,6 +233,8 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     int is_remote = 0;
     bool changed = false;
     attribute_value_t *v = NULL;
+    const char *prev_xml_id = NULL;
+    const char *node_xml_id = crm_element_value(xml, PCMK__XA_ATTR_HOST_ID);
 
     // Create entry for value if not already existing
     v = g_hash_table_lookup(a->values, host);
@@ -243,6 +243,14 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
 
         v->nodename = pcmk__str_copy(host);
         g_hash_table_replace(a->values, v->nodename, v);
+    }
+
+    /* If update doesn't contain the node XML ID, fall back to any previously
+     * known value (for logging)
+     */
+    prev_xml_id = attrd_get_node_xml_id(v->nodename);
+    if (node_xml_id == NULL) {
+        node_xml_id = prev_xml_id;
     }
 
     // If value is for a Pacemaker Remote node, remember that
@@ -270,11 +278,12 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
 
     } else if (changed) {
         crm_notice("Setting %s[%s]%s%s: %s -> %s "
-                   QB_XS " from %s with %s write delay",
+                   QB_XS " from %s with %s write delay and node XML ID %s",
                    attr, host, a->set_type ? " in " : "",
                    pcmk__s(a->set_type, ""), readable_value(v),
                    pcmk__s(value, "(unset)"), peer->name,
-                   (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms));
+                   (a->timeout_ms == 0)? "no" : pcmk__readable_interval(a->timeout_ms),
+                   pcmk__s(node_xml_id, "unknown"));
         pcmk__str_update(&v->current, value);
         attrd_set_attr_flags(a, attrd_attr_changed);
 
@@ -319,11 +328,22 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     // This allows us to later detect local values that peer doesn't know about
     attrd_set_value_flags(v, attrd_value_from_peer);
 
-    /* If this is a cluster node whose node ID we are learning, remember it */
-    if ((v->nodeid == 0) && !pcmk_is_set(v->flags, attrd_value_remote)
-        && (crm_element_value_int(xml, PCMK__XA_ATTR_HOST_ID,
-                                  (int*)&v->nodeid) == 0) && (v->nodeid > 0)) {
-        record_peer_nodeid(v, host);
+    // Remember node's XML ID if we're just learning it
+    if ((node_xml_id != NULL)
+        && !pcmk__str_eq(node_xml_id, prev_xml_id, pcmk__str_none)) {
+        // Remember node's name in case unknown in the membership cache
+        pcmk__node_status_t *known_peer =
+            pcmk__get_node(0, host, node_xml_id,
+                           pcmk__node_search_cluster_member);
+
+        crm_trace("Learned %s[%s] node XML ID is %s (was %s)",
+                  a->id, known_peer->name, node_xml_id,
+                  pcmk__s(prev_xml_id, "unknown"));
+        attrd_set_node_xml_id(v->nodename, node_xml_id);
+        if (attrd_election_won()) {
+            // In case we couldn't write a value missing the XML ID before
+            attrd_write_attributes(attrd_write_changed);
+        }
     }
 }
 
@@ -538,6 +558,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
 
     if (uncache) {
         pcmk__purge_node_from_cache(host, 0);
+        attrd_forget_node_xml_id(host);
     }
 }
 

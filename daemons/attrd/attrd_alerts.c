@@ -15,7 +15,6 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/common/cib_internal.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules_internal.h>
 #include <crm/lrmd_internal.h>
 #include "pacemaker-attrd.h"
 
@@ -101,8 +100,8 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
     }
 
-    pe_free_alert_list(attrd_alert_list);
-    attrd_alert_list = pe_unpack_alerts(crmalerts);
+    pcmk__free_alerts(attrd_alert_list);
+    attrd_alert_list = pcmk__unpack_alerts(crmalerts);
 }
 
 gboolean
@@ -125,11 +124,21 @@ attrd_read_options(gpointer user_data)
 }
 
 int
-attrd_send_attribute_alert(const char *node, int nodeid,
+attrd_send_attribute_alert(const char *node, const char *node_xml_id,
                            const char *attr, const char *value)
 {
+    uint32_t nodeid = 0U;
+    pcmk__node_status_t *node_status = NULL;
+
     if (attrd_alert_list == NULL) {
         return pcmk_ok;
+    }
+    node_status = pcmk__search_node_caches(0, node, node_xml_id,
+                                           pcmk__node_search_remote
+                                           |pcmk__node_search_cluster_member
+                                           |pcmk__node_search_cluster_cib);
+    if (node_status != NULL) {
+        nodeid = node_status->cluster_layer_id;
     }
     return lrmd_send_attribute_alert(attrd_lrmd_connect(), attrd_alert_list,
                                      node, nodeid, attr, value);

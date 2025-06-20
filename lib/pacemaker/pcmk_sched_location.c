@@ -15,7 +15,6 @@
 #include <crm/crm.h>
 #include <crm/common/rules_internal.h>
 #include <crm/pengine/status.h>
-#include <crm/pengine/rules.h>
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"
@@ -384,8 +383,8 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         if (crm_time_is_defined(next_change)) {
             time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-            pe__update_recheck_time(t, rsc->priv->scheduler,
-                                    "location rule evaluation");
+            pcmk__update_recheck_time(t, rsc->priv->scheduler,
+                                      "location rule evaluation");
         }
         crm_time_free(next_change);
     }
@@ -454,6 +453,8 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
             free(pmatch);
         }
+
+        // @TODO Maybe log a notice if we did not match any resources
 
         regfree(&regex);
     }

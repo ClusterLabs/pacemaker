@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <inttypes.h>   // PRIu32
 #include <sys/types.h>
 
 #include <crm/cluster.h>
@@ -65,7 +66,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         if (host) {
             v = g_hash_table_lookup(a->values, host);
             host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-            pcmk__xe_add_node(host_value, host, 0);
+            crm_xml_add(host_value, PCMK__XA_ATTR_HOST, host);
             crm_xml_add(host_value, PCMK__XA_ATTR_VALUE,
                         (v? v->current : NULL));
 
@@ -76,7 +77,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
             g_hash_table_iter_init(&iter, a->values);
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
                 host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-                pcmk__xe_add_node(host_value, v->nodename, 0);
+                crm_xml_add(host_value, PCMK__XA_ATTR_HOST, v->nodename);
                 crm_xml_add(host_value, PCMK__XA_ATTR_VALUE, v->current);
             }
         }
@@ -155,7 +156,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
             pcmk__node_status_t *node = NULL;
             char *host_alloc = NULL;
 
-            node = pcmk__search_node_caches(nodeid, NULL,
+            node = pcmk__search_node_caches(nodeid, NULL, NULL,
                                             pcmk__node_search_cluster_member);
             if ((node != NULL) && (node->name != NULL)) {
                 // Use cached name if available
@@ -165,7 +166,7 @@ attrd_client_peer_remove(pcmk__request_t *request)
                 host_alloc = pcmk__cluster_node_name(nodeid);
                 host = host_alloc;
             }
-            pcmk__xe_add_node(xml, host, 0);
+            crm_xml_add(xml, PCMK__XA_ATTR_HOST, host);
         }
     }
 
@@ -232,12 +233,13 @@ attrd_client_refresh(pcmk__request_t *request)
 static void
 handle_missing_host(xmlNode *xml)
 {
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
-
-    if (host == NULL) {
-        crm_trace("Inferring host");
-        pcmk__xe_add_node(xml, attrd_cluster->priv->node_name,
-                          attrd_cluster->priv->node_id);
+    if (crm_element_value(xml, PCMK__XA_ATTR_HOST) == NULL) {
+        crm_trace("Inferring local node %s with XML ID %s",
+                  attrd_cluster->priv->node_name,
+                  attrd_cluster->priv->node_xml_id);
+        crm_xml_add(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
+        crm_xml_add(xml, PCMK__XA_ATTR_HOST_ID,
+                    attrd_cluster->priv->node_xml_id);
     }
 }
 
@@ -551,6 +553,7 @@ attrd_ipc_destroy(qb_ipcs_connection_t *c)
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
@@ -563,7 +566,33 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
-    xml = pcmk__client_data2xml(client, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        xml = pcmk__client_data2xml(client, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
+        }
+
+        return 0;
+    }
 
     if (xml == NULL) {
         crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));

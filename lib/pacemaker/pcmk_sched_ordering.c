@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <inttypes.h>               // PRIx32
-#include <stdbool.h>
+#include <stdbool.h>                // bool, true, false
 #include <glib.h>
 
 #include <crm/crm.h>
@@ -29,6 +29,7 @@ enum ordering_symmetry {
     ordering_symmetric_inverse, // the inverse relation in a symmetric ordering
 };
 
+// @TODO de-functionize this for readability and possibly better log messages
 #define EXPAND_CONSTRAINT_IDREF(__set, __rsc, __name) do {                  \
         __rsc = pcmk__find_constraint_resource(scheduler->priv->resources,  \
                                                __name);                     \
@@ -207,8 +208,7 @@ ordering_flags_for_kind(enum pe_order_kind kind, const char *first,
                 case ordering_symmetric:
                     pcmk__set_relation_flags(flags,
                                              pcmk__ar_first_implies_then);
-                    if (pcmk__strcase_any_of(first, PCMK_ACTION_START,
-                                             PCMK_ACTION_PROMOTE, NULL)) {
+                    if (pcmk__is_up_action(first)) {
                         pcmk__set_relation_flags(flags,
                                                  pcmk__ar_unrunnable_first_blocks);
                     }
@@ -369,18 +369,21 @@ inverse_ordering(const char *id, enum pe_order_kind kind,
                  pcmk_resource_t *rsc_first, const char *action_first,
                  pcmk_resource_t *rsc_then, const char *action_then)
 {
-    action_then = invert_action(action_then);
-    action_first = invert_action(action_first);
-    if ((action_then == NULL) || (action_first == NULL)) {
+    uint32_t flags;
+    const char *inverted_first = invert_action(action_first);
+    const char *inverted_then = invert_action(action_then);
+
+    if ((inverted_then == NULL) || (inverted_first == NULL)) {
         pcmk__config_warn("Cannot invert constraint '%s' "
                           "(please specify inverse manually)", id);
-    } else {
-        uint32_t flags = ordering_flags_for_kind(kind, action_first,
-                                                 ordering_symmetric_inverse);
-
-        pcmk__order_resource_actions(rsc_then, action_then, rsc_first,
-                                     action_first, flags);
+        return;
     }
+
+    // Order inverted actions
+    flags = ordering_flags_for_kind(kind, inverted_first,
+                                    ordering_symmetric_inverse);
+    pcmk__order_resource_actions(rsc_then, inverted_then,
+                                 rsc_first, inverted_first, flags);
 }
 
 static void
@@ -1153,6 +1156,8 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
         /* Don't touch a resource that is unmanaged or blocked, to avoid
          * blocking the shutdown (though if another action depends on this one,
          * we may still end up blocking)
+         *
+         * @TODO This "if" looks wrong, create a regression test for these cases
          */
         if (!pcmk_any_flags_set(action->rsc->flags,
                                 pcmk__rsc_managed|pcmk__rsc_blocked)) {
@@ -1266,6 +1271,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
             order_actions(first_action, then_action_iter, flags);
         } else {
             pcmk__clear_action_flags(then_action_iter, pcmk__action_runnable);
+            // coverity[null_field] order->rsc1 can't be NULL here
             crm_warn("%s of %s is unrunnable because there is no %s of %s "
                      "to order it after", then_action_iter->task, rsc->id,
                      order->task1, order->rsc1->id);
@@ -1307,7 +1313,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
         parse_op_key(order->task1, NULL, &op_type, &interval_ms);
         key = pcmk__op_key(first_rsc->id, op_type, interval_ms);
 
-        first_role = first_rsc->priv->fns->state(first_rsc, TRUE);
+        first_role = first_rsc->priv->fns->state(first_rsc, true);
         if ((first_role == pcmk_role_stopped)
             && pcmk__str_eq(op_type, PCMK_ACTION_STOP, pcmk__str_none)) {
             free(key);

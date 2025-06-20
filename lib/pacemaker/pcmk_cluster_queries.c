@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -235,7 +235,7 @@ designated_controller_event_cb(pcmk_ipc_api_t *controld_api,
 
     reply = (const pcmk_controld_api_reply_t *) event_data;
     out->message(out, "dc", reply->host_from);
-    data->rc = pcmk_rc_ok;
+    data->rc = reply->host_from ? pcmk_rc_ok : pcmk_rc_no_dc;
 }
 
 /*!
@@ -360,7 +360,7 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
         pcmk_register_ipc_callback(api, cb, data);
     }
 
-    rc = pcmk__connect_ipc(api, dispatch_type, 5);
+    rc = pcmk__connect_ipc_retry_conrefused(api, dispatch_type, 5);
     if (rc != pcmk_rc_ok) {
         if (rc == EREMOTEIO) {
             data->pcmkd_state = pcmk_pacemakerd_state_remote;
@@ -852,23 +852,26 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
         if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
             data.field = PCMK_XA_ID;
             data.type = "cluster";
-            crm_foreach_xpath_result(xml_node, PCMK__XP_MEMBER_NODE_CONFIG,
-                                     remote_node_print_helper, &data);
+            pcmk__xpath_foreach_result(xml_node->doc,
+                                       PCMK__XP_MEMBER_NODE_CONFIG,
+                                       remote_node_print_helper, &data);
         }
 
         if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
             data.field = PCMK_XA_VALUE;
             data.type = "guest";
-            crm_foreach_xpath_result(xml_node, PCMK__XP_GUEST_NODE_CONFIG,
-                                     remote_node_print_helper, &data);
+            pcmk__xpath_foreach_result(xml_node->doc,
+                                       PCMK__XP_GUEST_NODE_CONFIG,
+                                       remote_node_print_helper, &data);
         }
 
         if (pcmk__str_empty(node_types)
             || pcmk__str_eq(node_types, ",|^remote", pcmk__str_regex)) {
             data.field = PCMK_XA_ID;
             data.type = "remote";
-            crm_foreach_xpath_result(xml_node, PCMK__XP_REMOTE_NODE_CONFIG,
-                                     remote_node_print_helper, &data);
+            pcmk__xpath_foreach_result(xml_node->doc,
+                                       PCMK__XP_REMOTE_NODE_CONFIG,
+                                       remote_node_print_helper, &data);
         }
 
         out->end_list(out);

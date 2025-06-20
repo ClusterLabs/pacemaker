@@ -1,7 +1,7 @@
 """Kill a pacemaker daemon and test how the cluster recovers."""
 
 __all__ = ["ComponentFail"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -21,6 +21,10 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 # pylint: disable=unsubscriptable-object
 
 
+# @TODO Separate this into a separate test for each component, so the patterns
+# can be made specific to each component, investigating failures is a little
+# easier, and specific testing can be done for each component (for example,
+# set attributes before and after killing pacemaker-attrd and check values).
 class ComponentFail(CTSTest):
     """Kill a random pacemaker daemon and wait for the cluster to recover."""
 
@@ -62,7 +66,7 @@ class ComponentFail(CTSTest):
         while chosen.dc_only and not node_is_dc:
             chosen = self._env.random_gen.choice(self._complist)
 
-        self.debug("...component %s (dc=%s)" % (chosen.name, node_is_dc))
+        self.debug(f"...component {chosen.name} (dc={node_is_dc})")
         self.incr(chosen.name)
 
         if chosen.name != "corosync":
@@ -123,11 +127,11 @@ class ComponentFail(CTSTest):
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
         self._cm.cluster_stable(self._env["StartTime"])
 
-        self.debug("Checking if %s was shot" % node)
+        self.debug(f"Checking if {node} was shot")
         shot = stonith.look(60)
 
         if shot:
-            self.debug("Found: %r" % shot)
+            self.debug(f"Found: {shot!r}")
             self._okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
 
             if not self._env["at-boot"]:
@@ -140,16 +144,16 @@ class ComponentFail(CTSTest):
         # check for logs indicating a graceful recovery
         matched = watch.look_for_all(allow_multiple_matches=True)
         if watch.unmatched:
-            self._logger.log("Patterns not found: %r" % watch.unmatched)
+            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self._cm.cluster_stable(self._env["StartTime"])
 
         if not matched:
-            return self.failure("Didn't find all expected %s patterns" % chosen.name)
+            return self.failure(f"Didn't find all expected {chosen.name} patterns")
 
         if not is_stable:
-            return self.failure("Cluster did not become stable after killing %s" % chosen.name)
+            return self.failure(f"Cluster did not become stable after killing {chosen.name}")
 
         return self.success()
 

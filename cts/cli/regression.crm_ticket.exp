@@ -30,7 +30,7 @@ ticketA
 =#=#=#= End test: List ticket IDs - OK (0) =#=#=#=
 * Passed: crm_ticket            - List ticket IDs
 =#=#=#= Begin test: List ticket IDs (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_ticket -w --output-as=xml">
+<pacemaker-result api-version="X" request="crm_ticket --output-as=xml -w">
   <tickets>
     <ticket id="ticketA" status="revoked" standby="false" granted="false"/>
   </tickets>
@@ -45,7 +45,7 @@ State XML:
 =#=#=#= End test: Query ticket state - OK (0) =#=#=#=
 * Passed: crm_ticket            - Query ticket state
 =#=#=#= Begin test: Query ticket state (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_ticket -t ticketA -q --output-as=xml">
+<pacemaker-result api-version="X" request="crm_ticket --output-as=xml -t ticketA -q">
   <tickets>
     <ticket id="ticketA" granted="false"/>
   </tickets>
@@ -58,7 +58,7 @@ false
 =#=#=#= End test: Query ticket granted state - OK (0) =#=#=#=
 * Passed: crm_ticket            - Query ticket granted state
 =#=#=#= Begin test: Query ticket granted state (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_ticket -t ticketA -G granted --output-as=xml">
+<pacemaker-result api-version="X" request="crm_ticket --output-as=xml -t ticketA -G granted">
   <tickets>
     <ticket id="ticketA">
       <attribute name="granted" value="false"/>
@@ -146,7 +146,7 @@ ticketA	revoked	(standby=false)
 =#=#=#= End test: List ticket details - OK (0) =#=#=#=
 * Passed: crm_ticket            - List ticket details
 =#=#=#= Begin test: List ticket details (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_ticket -L -t ticketA --output-as=xml">
+<pacemaker-result api-version="X" request="crm_ticket --output-as=xml -L -t ticketA">
   <tickets>
     <ticket id="ticketA" status="revoked" standby="false"/>
   </tickets>
@@ -208,7 +208,7 @@ ticketB	revoked
 =#=#=#= End test: List tickets - OK (0) =#=#=#=
 * Passed: crm_ticket            - List tickets
 =#=#=#= Begin test: List tickets (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_ticket -l --output-as=xml">
+<pacemaker-result api-version="X" request="crm_ticket --output-as=xml -l">
   <tickets>
     <ticket id="ticketA" status="revoked" standby="false"/>
     <ticket id="ticketB" status="revoked" standby="false" granted="false"/>
@@ -295,7 +295,7 @@ Constraints XML:
 =#=#=#= End test: Query ticket constraints - OK (0) =#=#=#=
 * Passed: crm_ticket            - Query ticket constraints
 =#=#=#= Begin test: Query ticket constraints (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_ticket -t ticketA -c --output-as=xml">
+<pacemaker-result api-version="X" request="crm_ticket --output-as=xml -t ticketA -c">
   <tickets>
     <ticket id="ticketA">
       <constraints>

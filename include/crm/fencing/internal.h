@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_FENCING_INTERNAL__H
 #define PCMK__CRM_FENCING_INTERNAL__H
+
+#include <stdbool.h>                        // bool
 
 #include <glib.h>
 #include <crm/common/ipc.h>
@@ -21,22 +23,19 @@
 extern "C" {
 #endif
 
-enum st_device_flags {
-    st_device_supports_none             = (0 << 0),
-    st_device_supports_list             = (1 << 0),
-    st_device_supports_status           = (1 << 1),
-    st_device_supports_reboot           = (1 << 2),
-    st_device_supports_parameter_plug   = (1 << 3),
-    st_device_supports_parameter_port   = (1 << 4),
-    st_device_supports_on               = (1 << 5),
-};
+stonith_t *stonith__api_new(void);
+void stonith__api_free(stonith_t *stonith_api);
+int stonith__api_dispatch(stonith_t *stonith_api);
 
-#define stonith__set_device_flags(device_flags, device_id, flags_to_set) do { \
-        device_flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,      \
-                                          "Fence device", device_id,          \
-                                          (device_flags), (flags_to_set),     \
-                                          #flags_to_set);                     \
-    } while (0)
+int stonith__api_connect_retry(stonith_t *stonith, const char *name,
+                               int max_attempts);
+
+bool stonith__agent_exists(const char *name);
+
+stonith_key_value_t *stonith__key_value_add(stonith_key_value_t *head,
+                                            const char *key, const char *value);
+void stonith__key_value_freeall(stonith_key_value_t *head, bool keys,
+                                bool values);
 
 #define stonith__set_call_options(st_call_opts, call_for, flags_to_set) do { \
         st_call_opts = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,     \
@@ -58,7 +57,6 @@ typedef struct stonith_action_s stonith_action_t;
 stonith_action_t *stonith__action_create(const char *agent,
                                          const char *action_name,
                                          const char *target,
-                                         uint32_t target_nodeid,
                                          int timeout_sec,
                                          GHashTable *device_args,
                                          GHashTable *port_map,
@@ -97,13 +95,12 @@ void stonith__register_messages(pcmk__output_t *out);
 
 GList *stonith__parse_targets(const char *hosts);
 
+void stonith__history_free(stonith_history_t *head);
 const char *stonith__later_succeeded(const stonith_history_t *event,
                                      const stonith_history_t *top_history);
 stonith_history_t *stonith__sort_history(stonith_history_t *history);
 
-void stonith__device_parameter_flags(uint32_t *device_flags,
-                                     const char *device_name,
-                                     xmlNode *metadata);
+const char *stonith__default_host_arg(xmlNode *metadata);
 
 /* Only 1-9 is allowed for fencing topology levels,
  * however, 0 is used to unregister all levels in
@@ -154,6 +151,8 @@ gchar *stonith__history_description(const stonith_history_t *event,
                                     const char *later_succeeded,
                                     uint32_t show_opts);
 
+const char *stonith__op_state_text(enum op_state state);
+
 /*!
  * \internal
  * \brief Is a fencing operation in pending state?
@@ -178,7 +177,6 @@ gboolean stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const cha
  * \param[in,out] st            Fencer connection to use
  * \param[in]     call_options  Group of enum stonith_call_options
  * \param[in]     rsc_id        Resource to validate
- * \param[in]     namespace_s   Type of fence agent to search for
  * \param[in]     agent         Fence agent to validate
  * \param[in,out] params        Fence device configuration parameters
  * \param[in]     timeout_sec   How long to wait for operation to complete
@@ -188,9 +186,8 @@ gboolean stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const cha
  * \return Standard Pacemaker return code
  */
 int stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
-                      const char *namespace_s, const char *agent,
-                      GHashTable *params, int timeout_sec, char **output,
-                      char **error_output);
+                      const char *agent, GHashTable *params, int timeout_sec,
+                      char **output, char **error_output);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
 """Fail a random resource and verify its fail count increases."""
 
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.audits import AuditResource
@@ -50,18 +50,18 @@ class ResourceRecover(CTSTest):
         # List all resources active on the node (skip test if none)
         resourcelist = self._cm.active_resources(node)
         if not resourcelist:
-            self._logger.log("No active resources on %s" % node)
+            self._logger.log(f"No active resources on {node}")
             return self.skipped()
 
         # Choose one resource at random
         rsc = self._choose_resource(node, resourcelist)
         if rsc is None:
-            return self.failure("Could not get details of resource '%s'" % self._rid)
+            return self.failure(f"Could not get details of resource '{self._rid}'")
 
         if rsc.id == rsc.clone_id:
-            self.debug("Failing %s" % rsc.id)
+            self.debug(f"Failing {rsc.id}")
         else:
-            self.debug("Failing %s (also known as %s)" % (rsc.id, rsc.clone_id))
+            self.debug(f"Failing {rsc.id} (also known as {rsc.clone_id})")
 
         # Log patterns to watch for (failure, plus restart if managed)
         pats = [
@@ -112,13 +112,15 @@ class ResourceRecover(CTSTest):
 
         if rc != 0 or len(lines) != 1:
             lines = [line.strip() for line in lines]
-            self._logger.log("crm_failcount on %s failed (%d): %s" % (node, rc, " // ".join(lines)))
+            s = " // ".join(lines)
+            self._logger.log(f"crm_failcount on {node} failed ({rc}): {s}")
             return -1
 
         try:
             failcount = int(lines[0])
         except (IndexError, ValueError):
-            self._logger.log("crm_failcount output on %s unparseable: %s" % (node, " ".join(lines)))
+            s = " ".join(lines)
+            self._logger.log(f"crm_failcount output on {node} unparseable: {s}")
             return -1
 
         return failcount
@@ -130,7 +132,7 @@ class ResourceRecover(CTSTest):
         watch = self.create_watch(pats, 60)
         watch.set_watch()
 
-        self._rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self._rid, node))
+        self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
 
         with Timer(self._logger, self.name, "recover"):
             watch.look_for_all()
@@ -139,21 +141,20 @@ class ResourceRecover(CTSTest):
         recovered = self._cm.resource_location(self._rid)
 
         if watch.unmatched:
-            return self.failure("Patterns not found: %r" % watch.unmatched)
+            return self.failure(f"Patterns not found: {watch.unmatched!r}")
 
         if rsc.unique and len(recovered) > 1:
-            return self.failure("%s is now active on more than one node: %r" % (self._rid, recovered))
+            return self.failure(f"{self._rid} is now active on more than one node: {recovered!r}")
 
         if recovered:
-            self.debug("%s is running on: %r" % (self._rid, recovered))
+            self.debug(f"{self._rid} is running on: {recovered!r}")
 
         elif rsc.managed:
-            return self.failure("%s was not recovered and is inactive" % self._rid)
+            return self.failure(f"{self._rid} was not recovered and is inactive")
 
         new_failcount = self._get_failcount(node)
         if new_failcount != orig_failcount + 1:
-            return self.failure("%s fail count is %d not %d"
-                                % (self._rid, new_failcount, orig_failcount + 1))
+            return self.failure(f"{self._rid} fail count is {new_failcount} not {orig_failcount + 1}")
 
         # Anything but None is success
         return 0
@@ -162,9 +163,9 @@ class ResourceRecover(CTSTest):
     def errors_to_ignore(self):
         """Return a list of errors which should be ignored."""
         return [
-            r"Updating failcount for %s" % self._rid,
-            r"schedulerd.*: Recover\s+(%s|%s)\s+\(.*\)" % (self._rid, self._rid_alt),
+            f"Updating failcount for {self._rid}",
+            fr"schedulerd.*: Recover\s+({self._rid}|{self._rid_alt})\s+\(.*\)",
             r"Unknown operation: fail",
             self.templates["Pat:RscOpOK"] % (self._action, self._rid),
-            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self._rid, self._action, self._interval)
+            f"(ERROR|error).*: Action {self._rid}_{self._action}_{self._interval} .* initiated outside of a transition",
         ]

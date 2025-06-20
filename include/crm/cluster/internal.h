@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,7 +37,6 @@ enum crm_proc_flag {
 
 /*!
  * \internal
- * \enum pcmk__node_status_flags
  * \brief Boolean flags for a \c pcmk__node_status_t object
  *
  * Some flags may not be related to status specifically. However, we keep these
@@ -76,7 +75,6 @@ enum pcmk__node_search_flags {
 
 /*!
  * \internal
- * \enum pcmk__node_update
  * \brief Type of update to a \c pcmk__node_status_t object
  */
 enum pcmk__node_update {
@@ -91,6 +89,7 @@ typedef struct pcmk__election pcmk__election_t;
 struct pcmk__cluster_private {
     enum pcmk_ipc_server server;    //!< Server this connection is for (if any)
     char *node_name;                //!< Local node name at cluster layer
+    char *node_xml_id;              //!< Local node XML ID in CIB
     pcmk__election_t *election;     //!< Election state (if election is needed)
 
     /* @TODO Corosync uses an integer node ID, but cluster layers in the
@@ -260,7 +259,7 @@ char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
 
 #  endif
 
-const char *pcmk__cluster_node_uuid(pcmk__node_status_t *node);
+const char *pcmk__cluster_get_xml_id(pcmk__node_status_t *node);
 char *pcmk__cluster_node_name(uint32_t nodeid);
 const char *pcmk__cluster_local_node_name(void);
 const char *pcmk__node_name_from_uuid(const char *uuid);
@@ -309,6 +308,7 @@ void pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name);
 void pcmk__cluster_forget_remote_node(const char *node_name);
 pcmk__node_status_t *pcmk__search_node_caches(unsigned int id,
                                               const char *uname,
+                                              const char *xml_id,
                                               uint32_t flags);
 void pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id);
 

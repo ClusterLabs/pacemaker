@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -133,11 +133,7 @@ enum crmd_fsa_state {
  *
  *======================================*/
 enum crmd_fsa_input {
-/* 0 */
     I_NULL,                     /* Nothing happened */
-/* 1 */
-
-    I_CIB_OP,                   /* An update to the CIB occurred */
     I_CIB_UPDATE,               /* An update to the CIB occurred */
     I_DC_TIMEOUT,               /* We have lost communication with the DC */
     I_ELECTION,                 /* Someone started an election */
@@ -153,7 +149,6 @@ enum crmd_fsa_input {
                                  * being performed.  For example, we may have lost
                                  * our connection to the CIB.
                                  */
-/* 9 */
     I_FAIL,                     /* The action failed to complete successfully */
     I_INTEGRATED,
     I_FINALIZED,
@@ -171,7 +166,6 @@ enum crmd_fsa_input {
     I_TE_SUCCESS,               /* Some non-resource, non-cluster-layer action
                                  * is required of us, e.g. ping
                                  */
-/* 20 */
     I_ROUTER,                   /* Do our job as router and forward this to the
                                  * right place
                                  */
@@ -180,22 +174,16 @@ enum crmd_fsa_input {
     I_TERMINATE,                /* Actually exit */
     I_STARTUP,
     I_PE_SUCCESS,               /* The action completed successfully */
-
     I_JOIN_OFFER,               /* The DC is offering membership */
     I_JOIN_REQUEST,             /* The client is requesting membership */
     I_JOIN_RESULT,              /* If not the DC: The result of a join request
                                  * Else: A client is responding with its local state info
                                  */
-
     I_WAIT_FOR_EVENT,           /* we may be waiting for an async task to "happen"
                                  * and until it does, we can't do anything else
                                  */
-
     I_DC_HEARTBEAT,             /* The DC is telling us that it is alive and well */
 
-    I_LRM_EVENT,
-
-/* 30 */
     I_PENDING,
     I_HALT,
 
@@ -345,7 +333,6 @@ enum crmd_fsa_input {
         // Disconnect from the local executor
 #  define A_LRM_DISCONNECT          0x0200000000000000ULL
 #  define A_LRM_INVOKE              0x0400000000000000ULL
-#  define A_LRM_EVENT               0x0800000000000000ULL
 
 /* -- Logging actions -- */
 #  define A_LOG                     0x1000000000000000ULL
@@ -658,11 +645,6 @@ void do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
 void do_lrm_invoke(long long action, enum crmd_fsa_cause cause,
                    enum crmd_fsa_state cur_state,
                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
-
-/* A_LRM_EVENT */
-void do_lrm_event(long long action, enum crmd_fsa_cause cause,
-                  enum crmd_fsa_state cur_state,
-                  enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
 /* A_TE_INVOKE, A_TE_CANCEL */
 void do_te_invoke(long long action, enum crmd_fsa_cause cause,

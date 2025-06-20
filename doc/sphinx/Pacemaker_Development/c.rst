@@ -92,8 +92,8 @@ Pacemaker Libraries
 |               |         |               |                           |    single: C library; libpe_rules   |
 |               |         |               |                           |    single: libpe_rules              |
 |               |         |               |                           |                                     |
-|               |         |               |                           | Scheduler functionality related     |
-|               |         |               |                           | to evaluating rules                 |
+|               |         |               |                           | Deprecated APIs related to          |
+|               |         |               |                           | evaluating rules                    |
 +---------------+---------+---------------+---------------------------+-------------------------------------+
 | libpe_status  | pe      | lib/pengine   | | include/crm/pengine/*   | .. index::                          |
 |               |         |               |                           |    single: C library; libpe_status  |
@@ -850,6 +850,8 @@ messages and converting from one to another, can be found in
 
 * ``crm_exit_t`` (the ``CRM_EX_*`` enum values) is a system-independent code
   suitable for the exit status of a process, or for interchange between nodes.
+  These values need to be kept in sync with the ``ExitStatus`` enum in
+  ``python/pacemaker/exitstatus.py``.
 
 * Other special-purpose status codes exist, such as ``enum ocf_exitcode`` for
   the possible exit statuses of OCF resource agents (along with some

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -207,31 +207,31 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
     }
 }
 
+/*!
+ * \internal
+ * \brief Update a fencing target's node state
+ *
+ * \param[in] target         Node that was successfully fenced
+ * \param[in] target_xml_id  CIB XML ID of target
+ */
 static void
-send_stonith_update(pcmk__graph_action_t *action, const char *target,
-                    const char *uuid)
+update_node_state_after_fencing(const char *target, const char *target_xml_id)
 {
     int rc = pcmk_ok;
     pcmk__node_status_t *peer = NULL;
-
-    /* We (usually) rely on the membership layer to do node_update_cluster,
-     * and the peer status callback to do node_update_peer, because the node
-     * might have already rejoined before we get the stonith result here.
-     */
-    int flags = node_update_join | node_update_expected;
-
-    /* zero out the node-status & remove all LRM status info */
     xmlNode *node_state = NULL;
 
-    CRM_CHECK(target != NULL, return);
-    CRM_CHECK(uuid != NULL, return);
-
-    /* Make sure the membership and join caches are accurate.
-     * Try getting any existing node cache entry also by node uuid in case it
-     * doesn't have an uname yet.
+    /* We (usually) rely on the membership layer to do
+     * controld_node_update_cluster, and the peer status callback to do
+     * controld_node_update_peer, because the node might have already rejoined
+     * before we get the stonith result here.
      */
-    peer = pcmk__get_node(0, target, uuid, pcmk__node_search_any);
+    uint32_t flags = controld_node_update_join|controld_node_update_expected;
 
+    CRM_CHECK((target != NULL) && (target_xml_id != NULL), return);
+
+    // Ensure target is cached
+    peer = pcmk__get_node(0, target, target_xml_id, pcmk__node_search_any);
     CRM_CHECK(peer != NULL, return);
 
     if (peer->state == NULL) {
@@ -239,20 +239,19 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
          * in the CIB. However, if the node has never been seen, do it here, so
          * the node is not considered unclean.
          */
-        flags |= node_update_cluster;
+        flags |= controld_node_update_cluster;
     }
 
     if (peer->xml_id == NULL) {
-        crm_info("Recording XML ID '%s' for node '%s'", uuid, target);
-        peer->xml_id = pcmk__str_copy(uuid);
+        crm_info("Recording XML ID '%s' for node '%s'", target_xml_id, target);
+        peer->xml_id = pcmk__str_copy(target_xml_id);
     }
 
     crmd_peer_down(peer, TRUE);
 
-    /* Generate a node state update for the CIB */
     node_state = create_node_state_update(peer, flags, NULL, __func__);
+    crm_xml_add(node_state, PCMK_XA_ID, target_xml_id);
 
-    /* we have to mark whether or not remote nodes have already been fenced */
     if (pcmk_is_set(peer->flags, pcmk__node_status_remote)) {
         char *now_s = pcmk__ttoa(time(NULL));
 
@@ -260,25 +259,15 @@ send_stonith_update(pcmk__graph_action_t *action, const char *target,
         free(now_s);
     }
 
-    /* Force our known ID */
-    crm_xml_add(node_state, PCMK_XA_ID, uuid);
-
     rc = controld_globals.cib_conn->cmds->modify(controld_globals.cib_conn,
                                                  PCMK_XE_STATUS, node_state,
                                                  cib_can_create);
+    pcmk__xml_free(node_state);
 
-    /* Delay processing the trigger until the update completes */
-    crm_debug("Sending fencing update %d for %s", rc, target);
+    crm_debug("Updating node state for %s after fencing (call %d)", target, rc);
     fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
 
-    // Make sure it sticks
-    /* controld_globals.cib_conn->cmds->bump_epoch(controld_globals.cib_conn,
-     *                                             cib_none);
-     */
-
     controld_delete_node_state(peer->name, controld_section_all, cib_none);
-    pcmk__xml_free(node_state);
-    return;
 }
 
 /*!
@@ -384,10 +373,10 @@ execute_stonith_cleanup(void)
         char *target = iter->data;
         pcmk__node_status_t *target_node =
             pcmk__get_node(0, target, NULL, pcmk__node_search_cluster_member);
-        const char *uuid = pcmk__cluster_node_uuid(target_node);
+        const char *uuid = pcmk__cluster_get_xml_id(target_node);
 
         crm_notice("Marking %s, target of a previous stonith action, as clean", target);
-        send_stonith_update(NULL, target, uuid);
+        update_node_state_after_fencing(target, uuid);
         free(target);
     }
     g_list_free(stonith_cleanup_list);
@@ -591,18 +580,18 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
                                |pcmk__node_search_cluster_cib;
 
         pcmk__node_status_t *peer = pcmk__search_node_caches(0, event->target,
-                                                             flags);
+                                                             NULL, flags);
         const char *uuid = NULL;
 
         if (peer == NULL) {
             return;
         }
 
-        uuid = pcmk__cluster_node_uuid(peer);
+        uuid = pcmk__cluster_get_xml_id(peer);
 
         if (AM_I_DC) {
             /* The DC always sends updates */
-            send_stonith_update(NULL, event->target, uuid);
+            update_node_state_after_fencing(event->target, uuid);
 
             /* @TODO Ideally, at this point, we'd check whether the fenced node
              * hosted any guest nodes, and call remote_node_down() for them.
@@ -639,7 +628,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
              * have them do so too after the election
              */
             if (controld_is_local_node(event->executioner)) {
-                send_stonith_update(NULL, event->target, uuid);
+                update_node_state_after_fencing(event->target, uuid);
             }
             add_stonith_cleanup(event->target);
         }
@@ -672,7 +661,7 @@ controld_timer_fencer_connect(gpointer user_data)
     int rc = pcmk_ok;
 
     if (stonith_api == NULL) {
-        stonith_api = stonith_api_new();
+        stonith_api = stonith__api_new();
         if (stonith_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return G_SOURCE_REMOVE;
@@ -686,10 +675,10 @@ controld_timer_fencer_connect(gpointer user_data)
 
     if (user_data == NULL) {
         // Blocking (retry failures now until successful)
-        rc = stonith_api_connect_retry(stonith_api, crm_system_name, 30);
-        if (rc != pcmk_ok) {
+        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 30);
+        if (rc != pcmk_rc_ok) {
             crm_err("Could not connect to fencer in 30 attempts: %s "
-                    QB_XS " rc=%d", pcmk_strerror(rc), rc);
+                    QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
@@ -777,7 +766,7 @@ do_stonith_history_sync(gpointer user_data)
         stonith_api->cmds->history(stonith_api,
                                    st_opt_sync_call | st_opt_broadcast,
                                    NULL, &history, 5);
-        stonith_history_free(history);
+        stonith__history_free(history);
         return TRUE;
     } else {
         crm_info("Skip triggering stonith history-sync as stonith is disconnected");
@@ -887,7 +876,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                              is_remote_node);
 
             } else if (!(pcmk_is_set(action->flags, pcmk__graph_action_sent_update))) {
-                send_stonith_update(action, target, uuid);
+                update_node_state_after_fencing(target, uuid);
                 pcmk__set_graph_action_flags(action,
                                              pcmk__graph_action_sent_update);
             }

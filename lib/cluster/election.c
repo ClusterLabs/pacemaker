@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -307,7 +307,8 @@ election_vote(pcmk_cluster_t *cluster)
                              NULL, message_type, CRM_OP_VOTE, NULL);
 
     cluster->priv->election->count++;
-    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER, our_node->xml_id);
+    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER,
+                pcmk__cluster_get_xml_id(our_node));
     crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, cluster->priv->election->count);
 
     // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
@@ -526,7 +527,7 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
     int log_level = LOG_INFO;
     gboolean done = FALSE;
     gboolean we_lose = FALSE;
-    const char *reason = "unknown";
+    const char *reason = NULL;
     bool we_are_owner = FALSE;
     pcmk__node_status_t *our_node = NULL;
     pcmk__node_status_t *your_node = NULL;
@@ -546,8 +547,8 @@ election_count_vote(pcmk_cluster_t *cluster, const xmlNode *message,
     our_node = pcmk__get_node(0, cluster->priv->node_name, NULL,
                               pcmk__node_search_cluster_member);
     we_are_owner = (our_node != NULL)
-                   && pcmk__str_eq(our_node->xml_id, vote.election_owner,
-                                   pcmk__str_none);
+                   && pcmk__str_eq(pcmk__cluster_get_xml_id(our_node),
+                                   vote.election_owner, pcmk__str_none);
 
     if (!can_win) {
         reason = "Not eligible";

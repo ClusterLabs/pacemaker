@@ -17,7 +17,7 @@ crm_rule: --check requires use of --rule=
 =#=#=#= End test: crm_rule given no rule to check - Incorrect usage (64) =#=#=#=
 * Passed: crm_rule              - crm_rule given no rule to check
 =#=#=#= Begin test: crm_rule given no rule to check (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c">
   <status code="64" message="Incorrect usage">
     <errors>
       <error>crm_rule: --check requires use of --rule=</error>
@@ -37,7 +37,7 @@ crm_rule: Couldn't parse input string: invalidxml
 pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 pcmk__log_xmllib_err 	error: XML Error: invalidxml
 pcmk__log_xmllib_err 	error: XML Error: ^
-<pacemaker-result api-version="X" request="crm_rule -c -r blahblah -X invalidxml --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r blahblah -X invalidxml">
   <status code="65" message="Invalid data given">
     <errors>
       <error>crm_rule: Couldn't parse input string: invalidxml</error>
@@ -57,7 +57,7 @@ crm_rule: Couldn't parse input from STDIN
 pcmk__log_xmllib_err 	error: XML Error: Entity: line 1: parser error : Start tag expected, '<' not found
 pcmk__log_xmllib_err 	error: XML Error: invalidxml
 pcmk__log_xmllib_err 	error: XML Error: ^
-<pacemaker-result api-version="X" request="crm_rule -c -r blahblah -X - --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r blahblah -X -">
   <status code="65" message="Invalid data given">
     <errors>
       <error>crm_rule: Couldn't parse input from STDIN</error>
@@ -71,7 +71,7 @@ Could not determine whether rule blahblah is in effect: Rule not found
 =#=#=#= End test: Try to check a rule that doesn't exist - No such object (105) =#=#=#=
 * Passed: crm_rule              - Try to check a rule that doesn't exist
 =#=#=#= Begin test: Try to check a rule that doesn't exist (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r blahblah --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r blahblah">
   <rule-check rule-id="blahblah" rc="105"/>
   <status code="105" message="No such object">
     <errors>
@@ -86,7 +86,7 @@ Could not determine whether rule cli-rule-too-many-date-expressions is in effect
 =#=#=#= End test: Try to check a rule that has too many date_expressions - Unimplemented (3) =#=#=#=
 * Passed: crm_rule              - Try to check a rule that has too many date_expressions
 =#=#=#= Begin test: Try to check a rule that has too many date_expressions (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-rule-too-many-date-expressions --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-rule-too-many-date-expressions">
   <rule-check rule-id="cli-rule-too-many-date-expressions" rc="3"/>
   <status code="3" message="Unimplemented">
     <errors>
@@ -101,7 +101,7 @@ Rule cli-prefer-rule-dummy-expired is expired
 =#=#=#= End test: Verify basic rule is expired - Requested item has expired (110) =#=#=#=
 * Passed: crm_rule              - Verify basic rule is expired
 =#=#=#= Begin test: Verify basic rule is expired (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-expired --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-prefer-rule-dummy-expired">
   <rule-check rule-id="cli-prefer-rule-dummy-expired" rc="110"/>
   <status code="110" message="Requested item has expired"/>
 </pacemaker-result>
@@ -112,7 +112,7 @@ Rule cli-prefer-rule-dummy-expired is still in effect
 =#=#=#= End test: Verify basic rule worked in the past - OK (0) =#=#=#=
 * Passed: crm_rule              - Verify basic rule worked in the past
 =#=#=#= Begin test: Verify basic rule worked in the past (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-expired -d 20180101 --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-prefer-rule-dummy-expired -d 20180101">
   <rule-check rule-id="cli-prefer-rule-dummy-expired" rc="0"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -123,7 +123,7 @@ Rule cli-prefer-rule-dummy-not-yet has not yet taken effect
 =#=#=#= End test: Verify basic rule is not yet in effect - Requested item is not yet in effect (111) =#=#=#=
 * Passed: crm_rule              - Verify basic rule is not yet in effect
 =#=#=#= Begin test: Verify basic rule is not yet in effect (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-not-yet --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-prefer-rule-dummy-not-yet">
   <rule-check rule-id="cli-prefer-rule-dummy-not-yet" rc="111"/>
   <status code="111" message="Requested item is not yet in effect"/>
 </pacemaker-result>
@@ -134,7 +134,7 @@ Rule cli-prefer-rule-dummy-date_spec-only-years is expired
 =#=#=#= End test: Verify date_spec rule with years has expired - Requested item has expired (110) =#=#=#=
 * Passed: crm_rule              - Verify date_spec rule with years has expired
 =#=#=#= Begin test: Verify date_spec rule with years has expired (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-prefer-rule-dummy-date_spec-only-years">
   <rule-check rule-id="cli-prefer-rule-dummy-date_spec-only-years" rc="110"/>
   <status code="110" message="Requested item has expired"/>
 </pacemaker-result>
@@ -146,7 +146,7 @@ Rule cli-prefer-rule-dummy-date_spec-only-years is expired
 =#=#=#= End test: Verify multiple rules at once - Requested item has expired (110) =#=#=#=
 * Passed: crm_rule              - Verify multiple rules at once
 =#=#=#= Begin test: Verify multiple rules at once (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-prefer-rule-dummy-not-yet -r cli-prefer-rule-dummy-date_spec-only-years">
   <rule-check rule-id="cli-prefer-rule-dummy-not-yet" rc="111"/>
   <rule-check rule-id="cli-prefer-rule-dummy-date_spec-only-years" rc="110"/>
   <status code="110" message="Requested item has expired"/>
@@ -158,7 +158,7 @@ Rule cli-prefer-rule-dummy-date_spec-only-years satisfies conditions
 =#=#=#= End test: Verify date_spec rule with years is in effect - OK (0) =#=#=#=
 * Passed: crm_rule              - Verify date_spec rule with years is in effect
 =#=#=#= Begin test: Verify date_spec rule with years is in effect (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201 --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-prefer-rule-dummy-date_spec-only-years -d 20190201">
   <rule-check rule-id="cli-prefer-rule-dummy-date_spec-only-years" rc="0"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -169,7 +169,7 @@ Could not determine whether rule cli-prefer-rule-dummy-date_spec-without-years i
 =#=#=#= End test: Try to check a rule whose date_spec does not contain years= - Unimplemented (3) =#=#=#=
 * Passed: crm_rule              - Try to check a rule whose date_spec does not contain years=
 =#=#=#= Begin test: Try to check a rule whose date_spec does not contain years= (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-prefer-rule-dummy-date_spec-without-years --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-prefer-rule-dummy-date_spec-without-years">
   <rule-check rule-id="cli-prefer-rule-dummy-date_spec-without-years" rc="3"/>
   <status code="3" message="Unimplemented">
     <errors>
@@ -184,7 +184,7 @@ Could not determine whether rule cli-no-date_expression-rule is in effect: Rule 
 =#=#=#= End test: Try to check a rule with no date_expression - Unimplemented (3) =#=#=#=
 * Passed: crm_rule              - Try to check a rule with no date_expression
 =#=#=#= Begin test: Try to check a rule with no date_expression (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_rule -c -r cli-no-date_expression-rule --output-as=xml">
+<pacemaker-result api-version="X" request="crm_rule --output-as=xml -c -r cli-no-date_expression-rule">
   <rule-check rule-id="cli-no-date_expression-rule" rc="3"/>
   <status code="3" message="Unimplemented">
     <errors>

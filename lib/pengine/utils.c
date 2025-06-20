@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
 #include "pe_status_private.h"
@@ -63,10 +62,44 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
         return true;
 
-    } else if(node == NULL) {
+    } else if (node == NULL) {
         return false;
 
-    } else if(node->details->online) {
+    } else if (node->details->online) {
+        /* Remote nodes are marked online when we assign their resource to a
+         * node, not when they are actually started (see remote_connection_assigned)
+         * so the above test by itself isn't good enough.
+         */
+        if (pcmk__is_pacemaker_remote_node(node)
+            && !pcmk_is_set(scheduler->flags, pcmk__sched_fence_remote_no_quorum)) {
+            /* If we're on a system without quorum, it's entirely possible that
+             * the remote resource was automatically moved to a node on the
+             * partition with quorum.  We can't tell that from this node - the
+             * best we can do is check if it's possible for the resource to run
+             * on another node in the partition with quorum.  If so, it has
+             * likely been moved and we shouldn't fence it.
+             *
+             * NOTE:  This condition appears to only come up in very limited
+             * circumstances.  It at least requires some very lengthy fencing
+             * timeouts set, some way for fencing to still take place (a second
+             * NIC is how I've reproduced it in testing, but fence_scsi or
+             * sbd could work too), and a resource that runs on the remote node.
+             */
+            pcmk_resource_t *rsc = node->priv->remote;
+            pcmk_node_t *n = NULL;
+            GHashTableIter iter;
+
+            g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void **) &n)) {
+                /* A node that's not online according to this non-quorum node
+                 * is a node that's in another partition.
+                 */
+                if (!n->details->online) {
+                    return false;
+                }
+            }
+        }
+
         crm_notice("We can fence %s without quorum because they're in our membership",
                    pcmk__node_name(node));
         return true;
@@ -398,21 +431,6 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
     }
 }
 
-time_t
-get_effective_time(pcmk_scheduler_t *scheduler)
-{
-    if(scheduler) {
-        if (scheduler->priv->now == NULL) {
-            crm_trace("Recording a new 'now'");
-            scheduler->priv->now = crm_time_new(NULL);
-        }
-        return crm_time_get_seconds_since_epoch(scheduler->priv->now);
-    }
-
-    crm_trace("Defaulting to 'now'");
-    return time(NULL);
-}
-
 gboolean
 get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 {
@@ -665,51 +683,30 @@ pe__shutdown_requested(const pcmk_node_t *node)
 
 /*!
  * \internal
- * \brief Update "recheck by" time in scheduler data
- *
- * \param[in]     recheck    Epoch time when recheck should happen
- * \param[in,out] scheduler  Scheduler data
- * \param[in]     reason     What time is being updated for (for logs)
- */
-void
-pe__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
-                        const char *reason)
-{
-    if ((recheck > get_effective_time(scheduler))
-        && ((scheduler->priv->recheck_by == 0)
-            || (scheduler->priv->recheck_by > recheck))) {
-        scheduler->priv->recheck_by = recheck;
-        crm_debug("Updated next scheduler recheck to %s for %s",
-                  pcmk__trim(ctime(&recheck)), reason);
-    }
-}
-
-/*!
- * \internal
  * \brief Extract nvpair blocks contained by a CIB XML element into a hash table
  *
  * \param[in]     xml_obj       XML element containing blocks of nvpair elements
  * \param[in]     set_name      If not NULL, only use blocks of this element
- * \param[in]     rule_data     Matching parameters to use when unpacking
- *                              (node_hash member must be NULL if \p set_name is
- *                              PCMK_XE_META_ATTRIBUTES)
+ * \param[in]     rule_input    Values used to evaluate rule criteria
+ *                              (node_attrs member must be NULL if \p set_name
+ *                              is PCMK_XE_META_ATTRIBUTES)
  * \param[out]    hash          Where to store extracted name/value pairs
  * \param[in]     always_first  If not NULL, process block with this ID first
  * \param[in,out] scheduler     Scheduler data containing \p xml_obj
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                           const pe_rule_eval_data_t *rule_data,
+                           const pcmk_rule_input_t *rule_input,
                            GHashTable *hash, const char *always_first,
                            pcmk_scheduler_t *scheduler)
 {
     crm_time_t *next_change = NULL;
 
-    CRM_CHECK((set_name != NULL) && (rule_data != NULL) && (hash != NULL)
+    CRM_CHECK((set_name != NULL) && (rule_input != NULL) && (hash != NULL)
               && (scheduler != NULL), return);
 
     // Node attribute expressions are not allowed for meta-attributes
-    CRM_CHECK((rule_data->node_hash == NULL)
+    CRM_CHECK((rule_input->node_attrs == NULL)
               || (strcmp(set_name, PCMK_XE_META_ATTRIBUTES) != 0), return);
 
     if (xml_obj == NULL) {
@@ -717,12 +714,12 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
     }
 
     next_change = crm_time_new_undefined();
-    pe_eval_nvpairs(scheduler->input, xml_obj, set_name, rule_data, hash,
-                    always_first, FALSE, next_change);
+    pcmk_unpack_nvpair_blocks(xml_obj, set_name, always_first, rule_input, hash,
+                              next_change);
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
-        pe__update_recheck_time(recheck, scheduler, "rule evaluation");
+        pcmk__update_recheck_time(recheck, scheduler, "rule evaluation");
     }
     crm_time_free(next_change);
 }
@@ -784,7 +781,7 @@ pe__rsc_running_on_any(pcmk_resource_t *rsc, GList *node_list)
 bool
 pcmk__rsc_filtered_by_node(pcmk_resource_t *rsc, GList *only_node)
 {
-    return rsc->priv->fns->active(rsc, FALSE)
+    return rsc->priv->fns->active(rsc, false)
            && !pe__rsc_running_on_any(rsc, only_node);
 }
 

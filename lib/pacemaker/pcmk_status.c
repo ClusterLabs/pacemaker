@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
 #include <crm/cib/internal.h>
@@ -25,7 +24,7 @@
 static stonith_t *
 fencing_connect(void)
 {
-    stonith_t *st = stonith_api_new();
+    stonith_t *st = stonith__api_new();
     int rc = pcmk_rc_ok;
 
     if (st == NULL) {
@@ -36,7 +35,7 @@ fencing_connect(void)
     if (rc == pcmk_rc_ok) {
         return st;
     } else {
-        stonith_api_delete(st);
+        stonith__api_free(st);
         return NULL;
     }
 }
@@ -102,7 +101,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
                                                fence_history);
     }
 
-    pe_reset_working_set(scheduler);
+    pcmk_reset_scheduler(scheduler);
     scheduler->input = cib_copy;
     cluster_status(scheduler);
 
@@ -130,7 +129,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
     g_list_free_full(unames, free);
     g_list_free_full(resources, free);
 
-    stonith_history_free(stonith_history);
+    stonith__history_free(stonith_history);
     stonith_history = NULL;
     return rc;
 }
@@ -258,7 +257,7 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
         goto done;
     }
 
-    scheduler = pe_new_working_set();
+    scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
 
@@ -276,8 +275,8 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     }
 
 done:
-    pe_free_working_set(scheduler);
-    stonith_api_delete(stonith);
+    pcmk_free_scheduler(scheduler);
+    stonith__api_free(stonith);
     pcmk__xml_free(current_cib);
     return pcmk_rc_ok;
 }

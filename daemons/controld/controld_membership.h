@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,6 @@ extern "C" {
 
 /*!
  * \internal
- * \enum controld_join_phase
  * \brief Phases that a node may pass through while joining controller group
  */
 enum controld_join_phase {

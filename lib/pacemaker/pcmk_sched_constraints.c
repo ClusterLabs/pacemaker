@@ -23,7 +23,6 @@
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <crm/pengine/rules.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 

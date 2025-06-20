@@ -243,8 +243,7 @@ main(int argc, char **argv)
         pcmk__xml_write_file(cib_object, options.cib_save, false);
     }
 
-    scheduler = pe_new_working_set();
-
+    scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
         rc = errno;
         g_set_error(&error, PCMK__RC_ERROR, rc,
@@ -271,7 +270,7 @@ main(int argc, char **argv)
         out->err(out, "Configuration invalid%s%s", failure_type, verbose_hint);
     }
 
-    pe_free_working_set(scheduler);
+    pcmk_free_scheduler(scheduler);
 
   done:
     g_strfreev(processed_args);

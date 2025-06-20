@@ -726,7 +726,7 @@ pcmk__group_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
     }
 
     location->nodes = node_list_orig;
-    g_list_free_full(node_list_copy, free);
+    g_list_free_full(node_list_copy, pcmk__free_node_copy);
 }
 
 // Group implementation of pcmk__assignment_methods_t:colocated_resources()

@@ -70,7 +70,8 @@ def generate_corosync_cfg(logdir, cluster_name, node_name):
 
     if corosync_cfg_exists():
         # pylint: disable=consider-using-with
-        f = tempfile.NamedTemporaryFile(delete=True)
+        config_dir = os.path.dirname(BuildOptions.COROSYNC_CONFIG_FILE)
+        f = tempfile.NamedTemporaryFile(dir=config_dir, prefix="corosync.conf-")
         f.close()
         shutil.move(BuildOptions.COROSYNC_CONFIG_FILE, f.name)
 

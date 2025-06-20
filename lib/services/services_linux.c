@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -302,14 +302,12 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     if (is_stderr && op->stderr_data) {
         len = strlen(op->stderr_data);
         data = op->stderr_data;
-        crm_trace("Reading %s stderr into offset %lld",
-                  op->id, (long long) len);
+        crm_trace("Reading %s stderr into offset %zu", op->id, len);
 
     } else if (is_stderr == FALSE && op->stdout_data) {
         len = strlen(op->stdout_data);
         data = op->stdout_data;
-        crm_trace("Reading %s stdout into offset %lld",
-                  op->id, (long long) len);
+        crm_trace("Reading %s stdout into offset %zu", op->id, len);
 
     } else {
         crm_trace("Reading %s %s", op->id, out_type(is_stderr));
@@ -321,8 +319,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         if (rc > 0) {
             if (len < MAX_OUTPUT) {
                 buf[rc] = 0;
-                crm_trace("Received %lld bytes of %s %s: %.80s",
-                          (long long) rc, op->id, out_type(is_stderr), buf);
+                crm_trace("Received %zd bytes of %s %s: %.80s",
+                          rc, op->id, out_type(is_stderr), buf);
                 data = pcmk__realloc(data, len + rc + 1);
                 strcpy(data + len, buf);
                 len += rc;
@@ -337,9 +335,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     } while ((rc == buf_read_len) || (rc < 0));
 
     if (discarded > 0) {
-        crm_warn("Truncated %s %s to %lld bytes (discarded %lld)",
-                 op->id, out_type(is_stderr), (long long) len,
-                 (long long) discarded);
+        crm_warn("Truncated %s %s to %zu bytes (discarded %zu)",
+                 op->id, out_type(is_stderr), len, discarded);
     }
 
     if (is_stderr) {
@@ -977,6 +974,10 @@ action_launch_child(svc_action_t *op)
      * below) instead of exit status. However, we've already forked, so
      * exit status is all we have. At least for OCF actions, we can output an
      * exit reason for the parent to parse.
+     *
+     * @TODO It might be better to substitute secrets in the parent before
+     * forking, so that if it fails, we can give a better message and result,
+     * and avoid the fork.
      */
 
 #if PCMK__ENABLE_CIBSECRETS
@@ -1401,7 +1402,7 @@ GList *
 services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
 {
     GList *list = NULL;
-    struct dirent **namelist;
+    struct dirent **namelist = NULL;
     int entries = 0, lpc = 0;
     char buffer[PATH_MAX];
 

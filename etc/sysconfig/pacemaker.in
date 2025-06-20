@@ -46,6 +46,7 @@
 #  debug
 #
 # Default: PCMK_logpriority="notice"
+# Warning: Debug logs may show sensitive configuration values.
 
 # PCMK_logfile
 #
@@ -80,6 +81,7 @@
 #
 # Default: PCMK_debug="no"
 # Example: PCMK_debug="pacemakerd,pacemaker-execd"
+# Warning: Debug logs may show sensitive configuration values.
 
 # PCMK_stderr (Advanced Use Only)
 #
@@ -99,6 +101,7 @@
 #
 # Default: PCMK_trace_functions=""
 # Example: PCMK_trace_functions="unpack_colocation_set,pcmk__cmp_instance"
+# Warning: Trace logs may show sensitive configuration values.
 
 # PCMK_trace_files (Advanced Use Only)
 #
@@ -107,6 +110,7 @@
 #
 # Default: PCMK_trace_files=""
 # Example: PCMK_trace_files="remote.c,watchdog.c"
+# Warning: Trace logs may show sensitive configuration values.
 
 # PCMK_trace_formats (Advanced Use Only)
 #
@@ -115,6 +119,7 @@
 #
 # Default: PCMK_trace_formats=""
 # Example: PCMK_trace_formats="TLS handshake failed: %s (%d)"
+# Warning: Trace logs may show sensitive configuration values.
 
 # PCMK_trace_tags (Advanced Use Only)
 #
@@ -123,6 +128,7 @@
 #
 # Default: PCMK_trace_tags=""
 # Example: PCMK_trace_tags="client-ip,dbfs"
+# Warning: Trace logs may show sensitive configuration values.
 
 # PCMK_blackbox (Advanced Use Only)
 #
@@ -138,6 +144,7 @@
 #
 # Default: PCMK_blackbox="no"
 # Example: PCMK_blackbox="pacemaker-controld,pacemaker-fenced"
+# Warning: Blackboxes may contain sensitive configuration values.
 
 # PCMK_trace_blackbox (Advanced Use Only)
 #
@@ -146,6 +153,7 @@
 #
 # Default: PCMK_trace_blackbox=""
 # Example: PCMK_trace_blackbox="remote.c:144,remote.c:149"
+# Warning: Blackboxes may contain sensitive configuration values.
 
 
 ## Option overrides
@@ -339,14 +347,6 @@
 #  sysv
 #
 # Default: PCMK_ipc_type="shared-mem"
-
-# PCMK_ipc_buffer (Advanced Use Only)
-#
-# Specify an IPC buffer size in bytes. This can be useful when connecting to
-# large clusters that result in messages exceeding the default size (which will
-# also result in log messages referencing this variable).
-#
-# Default: PCMK_ipc_buffer="131072"
 
 
 ## Cluster type

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election_internal.h>
 #include <crm/common/ipc_internal.h>
@@ -70,7 +69,7 @@ do_ha_control(long long action,
 
             free(controld_globals.our_uuid);
             controld_globals.our_uuid =
-                pcmk__str_copy(pcmk__cluster_node_uuid(node));
+                pcmk__str_copy(pcmk__cluster_get_xml_id(node));
 
             if (controld_globals.our_uuid == NULL) {
                 crm_err("Could not obtain local uuid");
@@ -84,7 +83,7 @@ do_ha_control(long long action,
             return;
         }
 
-        populate_cib_nodes(node_update_none, __func__);
+        populate_cib_nodes(controld_node_update_none, __func__);
         controld_clear_fsa_input_flags(R_HA_DISCONNECTED);
         crm_info("Connected to the cluster");
     }
@@ -379,11 +378,39 @@ accept_controller_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static int32_t
 dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
+    xmlNode *msg = NULL;
 
-    xmlNode *msg = pcmk__client_data2xml(client, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        msg = pcmk__client_data2xml(client, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
+        }
+
+        return 0;
+    }
 
     if (msg == NULL) {
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
@@ -530,6 +557,9 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_time_t *now = crm_time_new(NULL);
     xmlNode *crmconfig = NULL;
     xmlNode *alerts = NULL;
+    pcmk_rule_input_t rule_input = {
+        .now = now,
+    };
 
     if (rc != pcmk_ok) {
         fsa_data_t *msg_data = NULL;
@@ -559,9 +589,9 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     crm_debug("Call %d : Parsing CIB options", call_id);
     config_hash = pcmk__strkey_table(free, free);
-    pe_unpack_nvpairs(crmconfig, crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET, NULL,
-                      config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, FALSE, now,
-                      NULL);
+    pcmk_unpack_nvpair_blocks(crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET,
+                              PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                              config_hash, NULL);
 
     // Validate all options, and use defaults if not already present in hash
     pcmk__validate_cluster_options(config_hash);

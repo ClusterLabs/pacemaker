@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -32,6 +32,7 @@ extern "C" {
  * \brief Modify operation of running a cluster simulation.
  */
 enum pcmk_sim_flags {
+    // @COMPAT Use UINT32_C(1); should not affect behavior
     pcmk_sim_none             = 0,
     pcmk_sim_all_actions      = 1 << 0,
     pcmk_sim_show_pending     = 1 << 1,
@@ -234,8 +235,7 @@ int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
  * \param[in,out] scheduler    Scheduler data
  * \param[in]     injections   A structure containing cluster events
  *                             (node up/down, tickets, injected operations)
- * \param[in]     flags        A bitfield of :pcmk_sim_flags to modify
- *                             operation of the simulation
+ * \param[in]     flags        Group of <tt>enum pcmk_sim_flags</tt>
  * \param[in]     section_opts Which portions of the cluster status output
  *                             should be displayed?
  * \param[in]     use_date     Date to set the cluster's time to (may be NULL)
@@ -325,10 +325,7 @@ pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
     return pcmk_check_rules(xml, input, date, rule_ids);
 }
 
-/*!
- * \enum pcmk_rc_disp_flags
- * \brief Bit flags to control which fields of result code info are displayed
- */
+//! Bit flags to control which fields of result code info are displayed
 enum pcmk_rc_disp_flags {
     pcmk_rc_disp_none = 0,          //!< (Does nothing)
     pcmk_rc_disp_code = (1 << 0),   //!< Display result code number
@@ -591,7 +588,7 @@ int pcmk_fence_history(xmlNodePtr *xml, const char *target, unsigned int timeout
  *
  * \param[in,out] xml      The destination for the result, as an XML tree (if
  *                         not NULL, previous contents will be freed and lost)
- * \param[in]     timeout  How long to wait for operation to complete (in ms)
+ * \param[in]     timeout  Ignored
  *
  * \return Standard Pacemaker return code
  */

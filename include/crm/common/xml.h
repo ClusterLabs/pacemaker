@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,21 +10,12 @@
 #ifndef PCMK__CRM_COMMON_XML__H
 #define PCMK__CRM_COMMON_XML__H
 
+#include <stdbool.h>                // bool
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <libxml/tree.h>            // xmlNode
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-
-#include <libxml/tree.h>
-#include <libxml/xpath.h>
-
-#include <crm/crm.h>
-#include <crm/common/nvpair.h>
-#include <crm/common/schemas.h>
+// xml.h is a wrapper for the following headers
+#include <crm/common/xml_element.h>
 #include <crm/common/xml_io.h>
 #include <crm/common/xml_names.h>
 
@@ -38,38 +29,10 @@ extern "C" {
  * \ingroup core
  */
 
-typedef const xmlChar *pcmkXmlStr;
-
-
 /*
  * Searching & Modifying
  */
 
-// NOTE: sbd (as of at least 1.5.2) uses this
-xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
-
-xmlXPathObjectPtr xpath_search(const xmlNode *xml_top, const char *path);
-void crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
-                              void (*helper)(xmlNode*, void*), void *user_data);
-
-void freeXpathObject(xmlXPathObjectPtr xpathObj);
-xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
-void dedupXpathResults(xmlXPathObjectPtr xpathObj);
-
-static inline int numXpathResults(xmlXPathObjectPtr xpathObj)
-{
-    if(xpathObj == NULL || xpathObj->nodesetval == NULL) {
-        return 0;
-    }
-    return xpathObj->nodesetval->nodeNr;
-}
-
-bool xml_tracking_changes(xmlNode * xml);
-bool xml_document_dirty(xmlNode *xml);
-void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls);
-void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
-void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
-void xml_accept_changes(xmlNode * xml);
 bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
 
 xmlNode *xml_create_patchset(

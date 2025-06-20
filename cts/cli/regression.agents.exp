@@ -3,7 +3,7 @@ Operation validate (ocf:pacemaker:Dummy) returned 0 (OK)
 =#=#=#= End test: Validate a valid resource configuration - OK (0) =#=#=#=
 * Passed: crm_resource          - Validate a valid resource configuration
 =#=#=#= Begin test: Validate a valid resource configuration (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_resource --validate --class ocf --provider pacemaker --agent Dummy --output-as=xml">
+<pacemaker-result api-version="X" request="crm_resource --output-as=xml --validate --class ocf --provider pacemaker --agent Dummy">
   <resource-agent-action action="validate" class="ocf" type="Dummy" provider="pacemaker">
     <overrides/>
     <agent-status code="0" message="OK" execution_code="0" execution_message="Done"/>
@@ -18,7 +18,7 @@ Operation validate (ocf:pacemaker:Dummy) returned 6 (Not configured)
 =#=#=#= End test: Validate an invalid resource configuration - Not configured (6) =#=#=#=
 * Passed: crm_resource          - Validate an invalid resource configuration
 =#=#=#= Begin test: Validate an invalid resource configuration (XML) =#=#=#=
-<pacemaker-result api-version="X" request="crm_resource --validate --class ocf --provider pacemaker --agent Dummy --output-as=xml">
+<pacemaker-result api-version="X" request="crm_resource --output-as=xml --validate --class ocf --provider pacemaker --agent Dummy">
   <resource-agent-action action="validate" class="ocf" type="Dummy" provider="pacemaker">
     <overrides/>
     <agent-status code="6" message="Not configured" execution_code="0" execution_message="Done"/>

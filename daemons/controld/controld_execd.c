@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,6 @@
 #include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_rsc_info_t, etc.
 #include <crm/services.h>
 #include <crm/common/xml.h>
-#include <crm/pengine/rules.h>
 #include <crm/lrmd_internal.h>
 
 #include <pacemaker-internal.h>
@@ -573,6 +572,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 xmlNode *
 controld_query_executor_state(void)
 {
+    // @TODO Ensure all callers handle NULL returns
     xmlNode *xml_state = NULL;
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
@@ -588,7 +588,8 @@ controld_query_executor_state(void)
     CRM_CHECK(peer != NULL, return NULL);
 
     xml_state = create_node_state_update(peer,
-                                         node_update_cluster|node_update_peer,
+                                         controld_node_update_cluster
+                                         |controld_node_update_peer,
                                          NULL, __func__);
     if (xml_state == NULL) {
         return NULL;
@@ -598,7 +599,7 @@ controld_query_executor_state(void)
     crm_xml_add(xml_data, PCMK_XA_ID, peer->xml_id);
     rsc_list = pcmk__xe_create(xml_data, PCMK__XE_LRM_RESOURCES);
 
-    /* Build a list of active (not always running) resources */
+    // Build a list of active (not necessarily running) resources
     build_active_RAs(lrm_state, rsc_list);
 
     crm_log_xml_trace(xml_state, "Current executor state");
@@ -1729,7 +1730,7 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     }
 
     peer = controld_get_local_node_status();
-    update = create_node_state_update(peer, node_update_none, NULL,
+    update = create_node_state_update(peer, controld_node_update_none, NULL,
                                       __func__);
 
     iter = pcmk__xe_create(update, PCMK__XE_LRM);
@@ -1954,20 +1955,13 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         }
     }
 
-    /* now do the op */
-    crm_notice("Requesting local execution of %s operation for %s on %s "
-               QB_XS " transition_key=%s op_key=" PCMK__OP_FMT,
-               pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
-               lrm_state->node_name, pcmk__s(transition, ""), rsc->id,
-               operation, op->interval_ms);
-
     nack_reason = should_nack_action(operation);
     if (nack_reason != NULL) {
-        crm_notice("Discarding attempt to perform action %s on %s in state %s "
-                   "(shutdown=%s)", operation, rsc->id,
-                   fsa_state2string(controld_globals.fsa_state),
-                   pcmk__flag_text(controld_globals.fsa_input_register,
-                                   R_SHUTDOWN));
+        crm_notice("Not requesting local execution of %s operation for %s on %s"
+                   " in state %s: %s",
+                   pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
+                   lrm_state->node_name,
+                   fsa_state2string(controld_globals.fsa_state), nack_reason);
 
         lrmd__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_INVALID,
                          nack_reason);
@@ -1976,6 +1970,11 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         free(op_id);
         return;
     }
+
+    crm_notice("Requesting local execution of %s operation for %s on %s "
+               QB_XS " transition %s",
+               pcmk__readable_action(op->op_type, op->interval_ms), rsc->id,
+               lrm_state->node_name, pcmk__s(transition, ""));
 
     controld_record_pending_op(lrm_state->node_name, rsc, op);
 
@@ -2045,14 +2044,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
     free(op_id);
     lrmd_free_event(op);
-}
-
-void
-do_lrm_event(long long action,
-             enum crmd_fsa_cause cause,
-             enum crmd_fsa_state cur_state, enum crmd_fsa_input cur_input, fsa_data_t * msg_data)
-{
-    CRM_CHECK(FALSE, return);
 }
 
 static char *

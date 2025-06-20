@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -90,6 +90,8 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
  * \return Pointer to newly created session object, or NULL on error
  */
 gnutls_session_t pcmk__new_tls_session(pcmk__tls_t *tls, int csock);
+
+int pcmk__tls_get_client_sock(const pcmk__remote_t *remote);
 
 /*!
  * \internal

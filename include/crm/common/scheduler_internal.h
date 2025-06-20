@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -154,6 +154,11 @@ enum pcmk__scheduler_flags {
      * applying node-specific location criteria, assignment, etc.)
      */
     pcmk__sched_validate_only           = (1ULL << 27),
+
+    /* Can Pacemaker Remote nodes be fenced even from a node that doesn't
+     * have quorum?
+     */
+    pcmk__sched_fence_remote_no_quorum  = (1ULL << 28),
 };
 
 // Implementation of pcmk__scheduler_private_t
@@ -169,7 +174,10 @@ struct pcmk__scheduler_private {
     guint priority_fencing_ms;      // Priority-based fencing delay (in ms)
     guint shutdown_lock_ms;         // How long to lock resources (in ms)
     guint node_pending_ms;          // Pending join times out after this (in ms)
+
+    // @TODO convert to enum
     const char *placement_strategy; // Value of placement-strategy property
+
     xmlNode *rsc_defaults;          // Configured resource defaults
     xmlNode *op_defaults;           // Configured operation defaults
     GList *resources;               // Resources in cluster
@@ -278,6 +286,19 @@ extern uint32_t pcmk__warnings;
             LOG_TRACE, "Scheduler", crm_system_name,                        \
             (scheduler)->flags, (flags_to_clear), #flags_to_clear);         \
     } while (0)
+
+void pcmk__set_scheduler_defaults(pcmk_scheduler_t *scheduler);
+time_t pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler);
+void pcmk__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
+                               const char *reason);
+
+void pcmk__add_param_check(const xmlNode *rsc_op, pcmk_resource_t *rsc,
+                           pcmk_node_t *node, enum pcmk__check_parameters);
+void pcmk__foreach_param_check(pcmk_scheduler_t *scheduler,
+                               void (*cb)(pcmk_resource_t*, pcmk_node_t*,
+                                          const xmlNode*,
+                                          enum pcmk__check_parameters));
+void pcmk__free_param_checks(pcmk_scheduler_t *scheduler);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,11 +31,11 @@ struct {
     gboolean apply;
     gboolean as_cib;
     gboolean no_version;
-    gboolean raw_1;
-    gboolean raw_2;
+    gboolean raw_original;
+    gboolean raw_new;
     gboolean use_stdin;
-    char *xml_file_1;
-    char *xml_file_2;
+    char *xml_file_original;
+    char *xml_file_new;
 } options;
 
 gboolean new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
@@ -43,7 +43,7 @@ gboolean original_string_cb(const gchar *option_name, const gchar *optarg, gpoin
 gboolean patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
 static GOptionEntry original_xml_entries[] = {
-    { "original", 'o', 0, G_OPTION_ARG_STRING, &options.xml_file_1,
+    { "original", 'o', 0, G_OPTION_ARG_STRING, &options.xml_file_original,
       "XML is contained in the named file",
       "FILE" },
     { "original-string", 'O', 0, G_OPTION_ARG_CALLBACK, original_string_cb,
@@ -54,7 +54,7 @@ static GOptionEntry original_xml_entries[] = {
 };
 
 static GOptionEntry operation_entries[] = {
-    { "new", 'n', 0, G_OPTION_ARG_STRING, &options.xml_file_2,
+    { "new", 'n', 0, G_OPTION_ARG_STRING, &options.xml_file_new,
       "Compare the original XML to the contents of the named file",
       "FILE" },
     { "new-string", 'N', 0, G_OPTION_ARG_CALLBACK, new_string_cb,
@@ -83,22 +83,22 @@ static GOptionEntry addl_entries[] = {
 
 gboolean
 new_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.raw_2 = TRUE;
-    pcmk__str_update(&options.xml_file_2, optarg);
+    options.raw_new = TRUE;
+    pcmk__str_update(&options.xml_file_new, optarg);
     return TRUE;
 }
 
 gboolean
 original_string_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    options.raw_1 = TRUE;
-    pcmk__str_update(&options.xml_file_1, optarg);
+    options.raw_original = TRUE;
+    pcmk__str_update(&options.xml_file_original, optarg);
     return TRUE;
 }
 
 gboolean
 patch_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.apply = TRUE;
-    pcmk__str_update(&options.xml_file_2, optarg);
+    pcmk__str_update(&options.xml_file_new, optarg);
     return TRUE;
 }
 
@@ -162,7 +162,7 @@ log_patch_cib_versions(xmlNode *patch)
 
 // \return Standard Pacemaker return code
 static int
-generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
+generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_file_new,
                gboolean as_cib, gboolean no_version)
 {
     const char *vfields[] = {
@@ -179,28 +179,26 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
         int lpc;
 
         for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-            crm_copy_xml_element(object_1, object_2, vfields[lpc]);
+            crm_copy_xml_element(object_original, object_new, vfields[lpc]);
         }
     }
 
-    xml_track_changes(object_2, NULL, object_2, FALSE);
-    if(as_cib) {
-        xml_calculate_significant_changes(object_1, object_2);
-    } else {
-        xml_calculate_changes(object_1, object_2);
+    if (as_cib) {
+        pcmk__xml_doc_set_flags(object_new->doc, pcmk__xf_ignore_attr_pos);
     }
-    crm_log_xml_debug(object_2, (xml_file_2? xml_file_2: "target"));
+    pcmk__xml_mark_changes(object_original, object_new);
+    crm_log_xml_debug(object_new, (xml_file_new? xml_file_new: "target"));
 
-    output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
+    output = xml_create_patchset(0, object_original, object_new, NULL, FALSE);
 
-    pcmk__log_xml_changes(LOG_INFO, object_2);
-    xml_accept_changes(object_2);
+    pcmk__log_xml_changes(LOG_INFO, object_new);
+    pcmk__xml_commit_changes(object_new->doc);
 
     if (output == NULL) {
         return pcmk_rc_ok;  // No changes
     }
 
-    patchset_process_digest(output, object_1, object_2, as_cib);
+    patchset_process_digest(output, object_original, object_new, as_cib);
 
     if (as_cib) {
         log_patch_cib_versions(output);
@@ -251,8 +249,8 @@ build_arg_context(pcmk__common_args_t *args) {
 int
 main(int argc, char **argv)
 {
-    xmlNode *object_1 = NULL;
-    xmlNode *object_2 = NULL;
+    xmlNode *object_original = NULL;
+    xmlNode *object_new = NULL;
 
     crm_exit_t exit_code = CRM_EX_OK;
     GError *error = NULL;
@@ -285,53 +283,53 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.raw_1) {
-        object_1 = pcmk__xml_parse(options.xml_file_1);
+    if (options.raw_original) {
+        object_original = pcmk__xml_parse(options.xml_file_original);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input first XML fragment:");
-        object_1 = pcmk__xml_read(NULL);
+        object_original = pcmk__xml_read(NULL);
 
-    } else if (options.xml_file_1 != NULL) {
-        object_1 = pcmk__xml_read(options.xml_file_1);
+    } else if (options.xml_file_original != NULL) {
+        object_original = pcmk__xml_read(options.xml_file_original);
     }
 
-    if (options.raw_2) {
-        object_2 = pcmk__xml_parse(options.xml_file_2);
+    if (options.raw_new) {
+        object_new = pcmk__xml_parse(options.xml_file_new);
 
     } else if (options.use_stdin) {
         fprintf(stderr, "Input second XML fragment:");
-        object_2 = pcmk__xml_read(NULL);
+        object_new = pcmk__xml_read(NULL);
 
-    } else if (options.xml_file_2 != NULL) {
-        object_2 = pcmk__xml_read(options.xml_file_2);
+    } else if (options.xml_file_new != NULL) {
+        object_new = pcmk__xml_read(options.xml_file_new);
     }
 
-    if (object_1 == NULL) {
+    if (object_original == NULL) {
         fprintf(stderr, "Could not parse the first XML fragment\n");
         exit_code = CRM_EX_DATAERR;
         goto done;
     }
-    if (object_2 == NULL) {
+    if (object_new == NULL) {
         fprintf(stderr, "Could not parse the second XML fragment\n");
         exit_code = CRM_EX_DATAERR;
         goto done;
     }
 
     if (options.apply) {
-        rc = apply_patch(object_1, object_2, options.as_cib);
+        rc = apply_patch(object_original, object_new, options.as_cib);
     } else {
-        rc = generate_patch(object_1, object_2, options.xml_file_2, options.as_cib, options.no_version);
+        rc = generate_patch(object_original, object_new, options.xml_file_new, options.as_cib, options.no_version);
     }
     exit_code = pcmk_rc2exitc(rc);
 
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
-    free(options.xml_file_1);
-    free(options.xml_file_2);
-    pcmk__xml_free(object_1);
-    pcmk__xml_free(object_2);
+    free(options.xml_file_original);
+    free(options.xml_file_new);
+    pcmk__xml_free(object_original);
+    pcmk__xml_free(object_new);
 
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);

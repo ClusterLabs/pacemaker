@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,10 +20,14 @@ extern "C" {
  * \ingroup fencing
  */
 
-/* IMPORTANT: DLM source code includes this file directly, without having access
- * to other Pacemaker headers on its include path, so this file should *not*
- * include any other Pacemaker headers. (DLM might be updated to avoid the
- * issue, but we should still follow this guideline for a long time after.)
+/* IMPORTANT: dlm source code includes this file directly. Until dlm v4.2.0
+ * (commit 5afd9fdc), dlm did not have access to other Pacemaker headers on its
+ * include path. This file should *not* include any other Pacemaker headers
+ * until we decide that we no longer need to support dlm versions older than
+ * v4.2.0.
+ *
+ * @COMPAT Remove this restriction and take any opportunities to simplify code
+ * when possible.
  */
 
 #  include <dlfcn.h>
@@ -32,100 +36,140 @@ extern "C" {
 #  include <stdint.h>   // uint32_t
 #  include <time.h>     // time_t
 
-/* *INDENT-OFF* */
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencer API connection state
+ * \deprecated Do not use
+ */
 enum stonith_state {
     stonith_connected_command,
     stonith_connected_query,
     stonith_disconnected,
 };
 
-//! Flags that can be set in call options for API requests
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Flags that can be set in call options for API requests
+ *
+ * \deprecated Do not use
+ */
 enum stonith_call_options {
-    //! No options
+    // No options
+    //! \deprecated Do not use
     st_opt_none                 = 0,
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Unused
+    //! \deprecated Do not use
     st_opt_verbose              = (1 << 0),
 #endif
 
-    //! The fencing target is allowed to execute the request
+    // The fencing target is allowed to execute the request
+    //! \deprecated Do not use
     st_opt_allow_self_fencing   = (1 << 1),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Use st_opt_allow_self_fencing instead
+    //! \deprecated Do not use
     st_opt_allow_suicide        = st_opt_allow_self_fencing,
 #endif
 
     // Used internally to indicate that request is manual fence confirmation
-    //! \internal Do not use
+    // \internal Do not use
+    //! \deprecated Do not use
     st_opt_manual_ack           = (1 << 3),
 
-    //! Do not return any reply from server
+    // Do not return any reply from server
+    //! \deprecated Do not use
     st_opt_discard_reply        = (1 << 4),
 
     // Used internally to indicate that request requires a fencing topology
-    //! \internal Do not use
+    // \internal Do not use
+    //! \deprecated Do not use
     st_opt_topology             = (1 << 6),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    //! \deprecated Unused
+    //! \deprecated Do not use
     st_opt_scope_local          = (1 << 8),
 #endif
 
-    //! Interpret target as node cluster layer ID instead of name
+    // Interpret target as node cluster layer ID instead of name
+    //! \deprecated Do not use
     st_opt_cs_nodeid            = (1 << 9),
 
-    //! Wait for request to be completed before returning
+    // Wait for request to be completed before returning
+    //! \deprecated Do not use
     st_opt_sync_call            = (1 << 12),
 
-    //! Request that server send an update with optimal callback timeout
+    // Request that server send an update with optimal callback timeout
+    //! \deprecated Do not use
     st_opt_timeout_updates      = (1 << 13),
 
-    //! Invoke callback only if request succeeded
+    // Invoke callback only if request succeeded
+    //! \deprecated Do not use
     st_opt_report_only_success  = (1 << 14),
 
-    //! For a fence history request, request that the history be cleared
+    // For a fence history request, request that the history be cleared
+    //! \deprecated Do not use
     st_opt_cleanup              = (1 << 19),
 
-    //! For a fence history request, broadcast the request to all nodes
+    // For a fence history request, broadcast the request to all nodes
+    //! \deprecated Do not use
     st_opt_broadcast            = (1 << 20),
 };
 
-/*! Order matters here, do not change values */
-enum op_state
-{
-    st_query,
-    st_exec,
-    st_done,
-    st_duplicate,
-    st_failed,
+// Order matters here, do not change values
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencing operation states
+ * \deprecated Do not use
+ */
+enum op_state {
+    st_query,       //! \deprecated Do not use
+    st_exec,        //! \deprecated Do not use
+    st_done,        //! \deprecated Do not use
+    st_duplicate,   //! \deprecated Do not use
+    st_failed,      //! \deprecated Do not use
 };
 
-// Supported fence agent interface standards
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Supported fence agent interface standards
+ * \deprecated Do not use
+ */
 enum stonith_namespace {
-    st_namespace_invalid,
-    st_namespace_any,
-    st_namespace_internal,  // Implemented internally by Pacemaker
+    st_namespace_invalid,   //! \deprecated Do not use
+    st_namespace_any,       //! \deprecated Do not use
+
+    // Implemented internally by Pacemaker
+    st_namespace_internal,  //! \deprecated Do not use
 
     /* Neither of these projects are active any longer, but the fence agent
      * interfaces they created are still in use and supported by Pacemaker.
      */
-    st_namespace_rhcs,      // Red Hat Cluster Suite compatible
-    st_namespace_lha,       // Linux-HA compatible
+    // Red Hat Cluster Suite compatible
+    st_namespace_rhcs,      //! \deprecated Do not use
+
+    // Linux-HA compatible
+    st_namespace_lha,       //! \deprecated Do not use
 };
 
-enum stonith_namespace stonith_text2namespace(const char *namespace_s);
-const char *stonith_namespace2text(enum stonith_namespace st_namespace);
-enum stonith_namespace stonith_get_namespace(const char *agent,
-                                             const char *namespace_s);
-
+/* @COMPAT Drop this and use a GList/GSList of pcmk_nvpair_t or a GHashtable as
+ * appropriate
+ */
+/*!
+ * \brief Key-value pair list node
+ * \deprecated Do not use
+ */
 typedef struct stonith_key_value_s {
     char *key;
     char *value;
-        struct stonith_key_value_s *next;
+    struct stonith_key_value_s *next;
 } stonith_key_value_t;
 
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencing history entry
+ * \deprecated Do not use
+ */
 typedef struct stonith_history_s {
     char *target;
     char *action;
@@ -139,8 +183,14 @@ typedef struct stonith_history_s {
     char *exit_reason;
 } stonith_history_t;
 
+// @TODO Keep this typedef but rename it and make it internal
 typedef struct stonith_s stonith_t;
 
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Fencing event
+ * \deprecated Do not use
+ */
 typedef struct stonith_event_s {
     char *id;
     char *operation;
@@ -152,13 +202,17 @@ typedef struct stonith_event_s {
 
     char *device;
 
-    /*! The name of the client that initiated the action. */
+    // Name of the client that initiated the action
     char *client_origin;
 
-    //! \internal This field should be treated as internal to Pacemaker
     void *opaque;
 } stonith_event_t;
 
+// @TODO Keep this definition but make it internal
+/*!
+ * \brief Data for an asynchronous fencing request callback
+ * \deprecated Do not use
+ */
 typedef struct stonith_callback_data_s {
     int rc;
     int call_id;
@@ -168,12 +222,17 @@ typedef struct stonith_callback_data_s {
     void *opaque;
 } stonith_callback_data_t;
 
-typedef struct stonith_api_operations_s
-{
+// @TODO Keep this object but make it internal
+/*!
+ * \brief Fencer API operations
+ * \deprecated Use appropriate functions in libpacemaker instead
+ */
+typedef struct stonith_api_operations_s {
     /*!
      * \brief Destroy a fencer connection
      *
      * \param[in,out] st  Fencer connection to destroy
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*free) (stonith_t *st);
 
@@ -186,6 +245,7 @@ typedef struct stonith_api_operations_s
      *                            store IPC file descriptor here
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
 
@@ -195,6 +255,7 @@ typedef struct stonith_api_operations_s
      * \param[in,out] st  Fencer connection to disconnect
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*disconnect)(stonith_t *st);
 
@@ -207,6 +268,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_device)(stonith_t *st, int options, const char *name);
 
@@ -225,6 +287,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_device)(stonith_t *st, int options, const char *id,
                            const char *namespace_s, const char *agent,
@@ -240,6 +303,8 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Not used internally
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_level)(stonith_t *st, int options, const char *node,
                         int level);
@@ -255,6 +320,8 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Used only by cts-fence-helper.c internally
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_level)(stonith_t *st, int options, const char *node,
                           int level, const stonith_key_value_t *device_list);
@@ -266,15 +333,13 @@ typedef struct stonith_api_operations_s
      * \param[in]     call_options  Group of enum stonith_call_options
      *                              (currently ignored)
      * \param[in]     agent         Fence agent to query
-     * \param[in]     namespace_s   Type of fence agent to search for ("redhat"
-     *                              or "stonith-ng" for RHCS-style, "internal"
-     *                              for Pacemaker-internal devices, "heartbeat"
-     *                              for LHA-style, or "any" or NULL for any)
+     * \param[in]     namespace_s   Ignored
      * \param[out]    output        Where to store metadata
      * \param[in]     timeout_sec   Error if not complete within this time
      *
      * \return Legacy Pacemaker return code
      * \note The caller is responsible for freeing *output using free().
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*metadata)(stonith_t *stonith, int call_options, const char *agent,
                     const char *namespace_s, char **output, int timeout_sec);
@@ -290,12 +355,12 @@ typedef struct stonith_api_operations_s
      *                              Pacemaker-internal devices, "heartbeat" for
      *                              LHA-style, or "any" or NULL for all)
      * \param[out]    devices       Where to store agent list
-     * \param[in]     timeout       Error if unable to complete within this
-     *                              (currently ignored)
+     * \param[in]     timeout       Ignored
      *
      * \return Number of items in list on success, or negative errno otherwise
      * \note The caller is responsible for freeing the returned list with
-     *       stonith_key_value_freeall().
+     *       \c stonith__key_value_freeall().
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*list_agents)(stonith_t *stonith, int call_options,
                        const char *namespace_s, stonith_key_value_t **devices,
@@ -312,6 +377,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*list)(stonith_t *stonith, int call_options, const char *id,
                 char **list_info, int timeout);
@@ -326,6 +392,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*monitor)(stonith_t *stonith, int call_options, const char *id,
                    int timeout);
@@ -341,6 +408,8 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Used only by cts-fence-helper.c internally
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*status)(stonith_t *stonith, int call_options, const char *id,
                   const char *port, int timeout);
@@ -358,6 +427,7 @@ typedef struct stonith_api_operations_s
      *       will be returned.
      *
      * \return Number of items in list on success, or negative errno otherwise
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*query)(stonith_t *stonith, int call_options, const char *target,
                  stonith_key_value_t **devices, int timeout);
@@ -376,6 +446,10 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \note Used only by cts-fence-helper.c and \c stonith_api_kick()
+     *       internally. The latter might go away eventually if dlm starts using
+     *       \c pcmk_request_fencing().
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*fence)(stonith_t *stonith, int call_options, const char *node,
                  const char *action, int timeout, int tolerance);
@@ -389,6 +463,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*confirm)(stonith_t *stonith, int call_options, const char *target);
 
@@ -402,6 +477,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     timeout       Error if unable to complete within this
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*history)(stonith_t *stonith, int call_options, const char *node,
                    stonith_history_t **history, int timeout);
@@ -414,6 +490,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     callback      Callback to register
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_notification)(stonith_t *stonith, const char *event,
                                  void (*callback)(stonith_t *st,
@@ -426,6 +503,7 @@ typedef struct stonith_api_operations_s
      * \param[in]     event    Event to unregister callbacks for (NULL for all)
      *
      * \return Legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_notification)(stonith_t *stonith, const char *event);
 
@@ -445,6 +523,7 @@ typedef struct stonith_api_operations_s
      *
      * \return \c TRUE on success, \c FALSE if call_id indicates error,
      *         or -EINVAL if \p stonith is not valid
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_callback)(stonith_t *stonith, int call_id, int timeout,
                              int options, void *user_data,
@@ -461,6 +540,8 @@ typedef struct stonith_api_operations_s
      * \param[in]     all_callbacks  If true, unregister all callbacks
      *
      * \return pcmk_ok
+     * \note Not used internally (but perhaps it should be)
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_callback)(stonith_t *stonith, int call_id, bool all_callbacks);
 
@@ -484,6 +565,7 @@ typedef struct stonith_api_operations_s
      *         on success, otherwise a negative legacy Pacemaker return code
      * \note The caller should set only one of \p node, \p pattern, or \p attr
      *       and \p value.
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*remove_level_full)(stonith_t *st, int options,
                              const char *node, const char *pattern,
@@ -511,6 +593,7 @@ typedef struct stonith_api_operations_s
      *         on success, otherwise a negative legacy Pacemaker return code
      *
      * \note The caller should set only one of node, pattern or attr/value.
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*register_level_full)(stonith_t *st, int options,
                                const char *node, const char *pattern,
@@ -523,10 +606,7 @@ typedef struct stonith_api_operations_s
      * \param[in,out] st            Fencer connection to use
      * \param[in]     call_options  Group of enum stonith_call_options
      * \param[in]     rsc_id        ID used to replace CIB secrets in \p params
-     * \param[in]     namespace_s   Type of fence agent to validate ("redhat"
-     *                              or "stonith-ng" for RHCS-style, "internal"
-     *                              for Pacemaker-internal devices, "heartbeat"
-     *                              for LHA-style, or "any" or NULL for any)
+     * \param[in]     namespace_s   Ignored
      * \param[in]     agent         Fence agent to validate
      * \param[in]     params        Configuration parameters to pass to agent
      * \param[in]     timeout       Fail if no response within this many seconds
@@ -536,6 +616,8 @@ typedef struct stonith_api_operations_s
      * \return pcmk_ok if validation succeeds, -errno otherwise
      * \note If pcmk_ok is returned, the caller is responsible for freeing
      *       the output (if requested) with free().
+     * \note Not used internally
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*validate)(stonith_t *st, int call_options, const char *rsc_id,
                     const char *namespace_s, const char *agent,
@@ -559,6 +641,7 @@ typedef struct stonith_api_operations_s
      *
      * \return pcmk_ok (if synchronous) or positive call ID (if asynchronous)
      *         on success, otherwise a negative legacy Pacemaker return code
+     * \deprecated \c stonith_api_operations_t is deprecated for external use
      */
     int (*fence_with_delay)(stonith_t *stonith, int call_options,
                             const char *node, const char *action, int timeout,
@@ -566,39 +649,24 @@ typedef struct stonith_api_operations_s
 
 } stonith_api_operations_t;
 
+// @TODO Keep this object but make it internal
+/*!
+ * \brief Fencer API connection object
+ * \deprecated Use appropriate functions in libpacemaker instead
+ */
 struct stonith_s {
     enum stonith_state state;
     int call_id;
     void *st_private;
     stonith_api_operations_t *cmds;
 };
-/* *INDENT-ON* */
-
-/* Core functions */
-stonith_t *stonith_api_new(void);
-void stonith_api_delete(stonith_t * st);
-
-void stonith_dump_pending_callbacks(stonith_t * st);
-
-bool stonith_dispatch(stonith_t * st);
-
-stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
-                                           const char *value);
-void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
-
-void stonith_history_free(stonith_history_t *history);
-
-// Convenience functions
-int stonith_api_connect_retry(stonith_t *st, const char *name,
-                              int max_attempts);
-const char *stonith_op_state_str(enum op_state state);
 
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API
  *
  * At least one of nodeid and uname are required
  *
- * NOTE: DLM uses both of these
+ * NOTE: dlm (as of at least 4.3.0) uses these (via the helper functions below)
  */
 int stonith_api_kick(uint32_t nodeid, const char *uname, int timeout, bool off);
 time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
@@ -645,9 +713,11 @@ time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
 #define STONITH_LIBRARY "libstonithd.so.56"
 
+// NOTE: dlm (as of at least 4.3.0) uses these (via the helper functions below)
 typedef int (*st_api_kick_fn) (int nodeid, const char *uname, int timeout, bool off);
 typedef time_t (*st_api_time_fn) (int nodeid, const char *uname, bool in_progress);
 
+// NOTE: dlm (as of at least 4.3.0) uses this
 static inline int
 stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)
 {
@@ -671,6 +741,7 @@ stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)
     return (*st_kick_fn) (nodeid, NULL, timeout, off);
 }
 
+// NOTE: dlm (as of at least 4.3.0) uses this
 static inline time_t
 stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 {
@@ -690,23 +761,59 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
     return (*st_time_fn) (nodeid, NULL, in_progress);
 }
 
-/**
- * Does the given agent describe a stonith resource that can exist?
- *
- * \param[in] agent     What is the name of the agent?
- * \param[in] timeout   Timeout to use when querying.  If 0 is given,
- *                      use a default of 120.
- *
- * \return A boolean
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+
+/* Normally we'd put this section in a separate file (crm/fencing/compat.h), but
+ * we can't do that for the reason noted at the top of this file. That does mean
+ * we have to duplicate these declarations where they're implemented.
  */
+
+//! \deprecated Use appropriate functions in libpacemaker
+stonith_t *stonith_api_new(void);
+
+//! \deprecated Use appropriate functions in libpacemaker
+void stonith_api_delete(stonith_t *stonith);
+
+//! \deprecated Do not use
+void stonith_dump_pending_callbacks(stonith_t *stonith);
+
+//! \deprecated Do not use
+bool stonith_dispatch(stonith_t *stonith_api);
+
+//! \deprecated Do not use
+stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
+                                           const char *key, const char *value);
+
+//! \deprecated Do not use
+void stonith_key_value_freeall(stonith_key_value_t *head, int keys, int values);
+
+//! \deprecated Do not use
+void stonith_history_free(stonith_history_t *head);
+
+//! \deprecated Do not use
+int stonith_api_connect_retry(stonith_t *st, const char *name,
+                              int max_attempts);
+
+//! \deprecated Do not use
+const char *stonith_op_state_str(enum op_state state);
+
+//! \deprecated Do not use
 bool stonith_agent_exists(const char *agent, int timeout);
 
-/*!
- * \brief Turn fence action into a more readable string
- *
- * \param[in] action  Fence action
- */
+//! \deprecated Do not use
 const char *stonith_action_str(const char *action);
+
+//! \deprecated Do not use
+enum stonith_namespace stonith_text2namespace(const char *namespace_s);
+
+//! \deprecated Do not use
+const char *stonith_namespace2text(enum stonith_namespace st_namespace);
+
+//! \deprecated Do not use
+enum stonith_namespace stonith_get_namespace(const char *agent,
+                                             const char *namespace_s);
+
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,6 +15,8 @@
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>
+
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <pacemaker-controld.h>
 
@@ -55,7 +57,6 @@ typedef struct remote_ra_cmd_s {
     int delay_id;
     /*! timeout in ms for cmd */
     int timeout;
-    int remaining_timeout;
     /*! recurring interval in ms */
     guint interval_ms;
     /*! interval timer id */
@@ -327,7 +328,7 @@ remote_node_up(const char *node_name)
     broadcast_remote_state_message(node_name, true);
 
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
-    state = create_node_state_update(node, node_update_cluster, update,
+    state = create_node_state_update(node, controld_node_update_cluster, update,
                                      __func__);
 
     /* Clear the PCMK__XA_NODE_FENCED flag in the node state. If the node ever
@@ -390,7 +391,8 @@ remote_node_down(const char *node_name, const enum down_opts opts)
 
     /* Update CIB node state */
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
-    create_node_state_update(node, node_update_cluster, update, __func__);
+    create_node_state_update(node, controld_node_update_cluster, update,
+                             __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, NULL);
     pcmk__xml_free(update);
 }
@@ -512,10 +514,18 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     lrmd__reset_result(&op);
 }
 
-static void
-update_remaining_timeout(remote_ra_cmd_t * cmd)
+/*!
+ * \internal
+ * \brief Return a remote command's remaining timeout in seconds
+ *
+ * \param[in] cmd  Remote command to check
+ *
+ * \return Command's remaining timeout in seconds
+ */
+static int
+remaining_timeout_sec(const remote_ra_cmd_t *cmd)
 {
-    cmd->remaining_timeout = ((cmd->timeout / 1000) - (time(NULL) - cmd->start_time)) * 1000;
+    return pcmk__timeout_ms2s(cmd->timeout) - (time(NULL) - cmd->start_time);
 }
 
 static gboolean
@@ -525,19 +535,19 @@ retry_start_cmd_cb(gpointer data)
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
     remote_ra_cmd_t *cmd = NULL;
     int rc = ETIME;
+    int remaining = 0;
 
     if (!ra_data || !ra_data->cur_cmd) {
         return FALSE;
     }
     cmd = ra_data->cur_cmd;
-    if (!pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
+    if (!pcmk__is_up_action(cmd->action)) {
         return FALSE;
     }
-    update_remaining_timeout(cmd);
 
-    if (cmd->remaining_timeout > 0) {
-        rc = handle_remote_ra_start(lrm_state, cmd, cmd->remaining_timeout);
+    remaining = remaining_timeout_sec(cmd);
+    if (remaining > 0) {
+        rc = handle_remote_ra_start(lrm_state, cmd, remaining * 1000);
     } else {
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_TIMEOUT,
@@ -606,6 +616,7 @@ monitor_timeout_cb(gpointer data)
     free_cmd(cmd);
 
     if(lrm_state) {
+        // @TODO Should we move this before reporting the result above?
         lrm_state_disconnect(lrm_state);
     }
     return FALSE;
@@ -719,11 +730,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* Start actions and migrate from actions complete after connection
      * comes back to us. */
-    if ((op->type == lrmd_event_connect)
-        && pcmk__strcase_any_of(cmd->action, PCMK_ACTION_START,
-                                PCMK_ACTION_MIGRATE_FROM, NULL)) {
+    if ((op->type == lrmd_event_connect) && pcmk__is_up_action(cmd->action)) {
         if (op->connection_rc < 0) {
-            update_remaining_timeout(cmd);
+            int remaining = remaining_timeout_sec(cmd);
 
             if ((op->connection_rc == -ENOKEY)
                 || (op->connection_rc == -EKEYREJECTED)) {
@@ -732,14 +741,15 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                                  PCMK_EXEC_ERROR,
                                  pcmk_strerror(op->connection_rc));
 
-            } else if (cmd->remaining_timeout > 3000) {
-                crm_trace("rescheduling start, remaining timeout %d", cmd->remaining_timeout);
+            } else if (remaining > 3) {
+                crm_trace("Rescheduling start (%ds remains before timeout)",
+                          remaining);
                 pcmk__create_timer(1000, retry_start_cmd_cb, lrm_state);
                 return;
 
             } else {
-                crm_trace("can't reschedule start, remaining timeout too small %d",
-                          cmd->remaining_timeout);
+                crm_trace("Not enough time before timeout (%ds) "
+                          "to reschedule start", remaining);
                 pcmk__format_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                                     PCMK_EXEC_TIMEOUT,
                                     "%s without enough time to retry",
@@ -950,12 +960,13 @@ handle_remote_ra_exec(gpointer user_data)
         } else if (!strcmp(cmd->action, PCMK_ACTION_STOP)) {
 
             if (pcmk_is_set(ra_data->status, expect_takeover)) {
-                /* briefly wait on stop for the takeover event to occur. If the
-                 * takeover event does not occur during the wait period, that's fine.
-                 * It just means that the remote-node's lrm_status section is going to get
-                 * cleared which will require all the resources running in the remote-node
-                 * to be explicitly re-detected via probe actions.  If the takeover does occur
-                 * successfully, then we can leave the status section intact. */
+                /* Briefly wait on stop for an expected takeover to occur. If
+                 * the takeover does not occur during the wait, that's fine; it
+                 * just means that the remote node's resource history will be
+                 * cleared, which will require probing all resources on the
+                 * remote node. If the takeover does occur successfully, then we
+                 * can leave the status section intact.
+                 */
                 cmd->takeover_timeout_id = pcmk__create_timer((cmd->timeout/2),
                                                               connection_takeover_timeout_cb,
                                                               cmd);
@@ -1357,10 +1368,10 @@ remote_ra_fail(const char *node_name)
 void
 remote_ra_process_pseudo(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_FENCE);
+    xmlXPathObject *search = pcmk__xpath_search(xml->doc, XPATH_PSEUDO_FENCE);
 
-    if (numXpathResults(search) == 1) {
-        xmlNode *result = getXpathResult(search, 0);
+    if (pcmk__xpath_num_results(search) == 1) {
+        xmlNode *result = pcmk__xpath_result(search, 0);
 
         /* Normally, we handle the necessary side effects of a guest node stop
          * action when reporting the remote agent's result. However, if the stop
@@ -1384,7 +1395,7 @@ remote_ra_process_pseudo(xmlNode *xml)
             }
         }
     }
-    freeXpathObject(search);
+    xmlXPathFreeObject(search);
 }
 
 static void
@@ -1398,7 +1409,7 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
     node = pcmk__cluster_lookup_remote_node(lrm_state->node_name);
     CRM_CHECK(node != NULL, return);
     update = pcmk__xe_create(NULL, PCMK_XE_STATUS);
-    state = create_node_state_update(node, node_update_none, update,
+    state = create_node_state_update(node, controld_node_update_none, update,
                                      __func__);
     crm_xml_add(state, PCMK__XA_NODE_IN_MAINTENANCE, (maintenance? "1" : "0"));
     if (controld_update_cib(PCMK_XE_STATUS, update, call_opt,
@@ -1426,13 +1437,14 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
-    xmlXPathObjectPtr search = xpath_search(xml, XPATH_PSEUDO_MAINTENANCE);
+    xmlXPathObject *search = pcmk__xpath_search(xml->doc,
+                                                XPATH_PSEUDO_MAINTENANCE);
 
-    if (numXpathResults(search) == 1) {
+    if (pcmk__xpath_num_results(search) == 1) {
         xmlNode *node;
         int cnt = 0, cnt_remote = 0;
 
-        for (node = pcmk__xe_first_child(getXpathResult(search, 0),
+        for (node = pcmk__xe_first_child(pcmk__xpath_result(search, 0),
                                          PCMK_XE_NODE, NULL, NULL);
              node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
 
@@ -1463,7 +1475,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
                   PCMK_OPT_MAINTENANCE_MODE,
                   cnt, cnt_remote);
     }
-    freeXpathObject(search);
+    xmlXPathFreeObject(search);
 }
 
 gboolean

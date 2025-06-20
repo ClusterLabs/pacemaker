@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,15 +13,19 @@
 #include <string.h>
 #include <dirent.h>
 #include <errno.h>
+#include <limits.h>             // UCHAR_MAX
 #include <sys/stat.h>
 #include <stdarg.h>
 
 #include <libxml/relaxng.h>
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xmlstring.h>           // xmlChar
 #include <libxslt/xslt.h>
 #include <libxslt/transform.h>
 #include <libxslt/security.h>
 #include <libxslt/xsltutils.h>
 
+#include <crm/common/schemas.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>  /* PCMK__XML_LOG_BASE */
 
@@ -279,14 +283,89 @@ wrap_libxslt(bool finalize)
  * \param[in] entry  Directory entry whose filename to check
  *
  * \return 1 if the entry's filename is of the form
- *         <tt>upgrade-X.Y-ORDER.xsl</tt>, or 0 otherwise
+ *         <tt>upgrade-X.Y-ORDER.xsl</tt> with each number in the range 0 to
+ *         255, or 0 otherwise
  */
 static int
 transform_filter(const struct dirent *entry)
 {
-    return pcmk__str_eq(entry->d_name,
-                        "upgrade-[[:digit:]]+.[[:digit:]]+-[[:digit:]]+.xsl",
-                        pcmk__str_regex)? 1 : 0;
+    const char *re = NULL;
+    unsigned int major = 0;
+    unsigned int minor = 0;
+    unsigned int order = 0;
+
+    /* Each number is an unsigned char, which is 1 to 3 digits long. (Pacemaker
+     * requires an 8-bit char via a configure test.)
+     */
+    re = "upgrade-[[:digit:]]{1,3}\\.[[:digit:]]{1,3}-[[:digit:]]{1,3}\\.xsl";
+
+    if (!pcmk__str_eq(entry->d_name, re, pcmk__str_regex)) {
+        return 0;
+    }
+
+    /* Performance isn't critical here and this is simpler than range-checking
+     * within the regex
+     */
+    if (sscanf(entry->d_name, "upgrade-%u.%u-%u.xsl",
+               &major, &minor, &order) != 3) {
+        return 0;
+    }
+
+    if ((major > UCHAR_MAX) || (minor > UCHAR_MAX) || (order > UCHAR_MAX)) {
+        return 0;
+    }
+    return 1;
+}
+
+/*!
+ * \internal
+ * \brief Compare transform files based on the version strings in their names
+ *
+ * This is a crude version comparison that relies on the specific structure of
+ * these filenames.
+ *
+ * \retval -1 if \p entry1 sorts before \p entry2
+ * \retval  0 if \p entry1 sorts equal to \p entry2
+ * \retval  1 if \p entry1 sorts after \p entry2
+ *
+ * \note The GNU \c versionsort() function would be perfect here, but it's not
+ *       portable.
+ */
+static int
+compare_transforms(const struct dirent **entry1, const struct dirent **entry2)
+{
+    unsigned char major1 = 0;
+    unsigned char major2 = 0;
+    unsigned char minor1 = 0;
+    unsigned char minor2 = 0;
+    unsigned char order1 = 0;
+    unsigned char order2 = 0;
+
+    // If these made it through the filter, they should be of the right format
+    CRM_LOG_ASSERT(sscanf((*entry1)->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
+                          &major1, &minor1, &order1) == 3);
+    CRM_LOG_ASSERT(sscanf((*entry2)->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
+                          &major2, &minor2, &order2) == 3);
+
+    if (major1 < major2) {
+        return -1;
+    } else if (major1 > major2) {
+        return 1;
+    }
+
+    if (minor1 < minor2) {
+        return -1;
+    } else if (minor1 > minor2) {
+        return 1;
+    }
+
+    if (order1 < order2) {
+        return -1;
+    } else if (order1 > order2) {
+        return 1;
+    }
+
+    return 0;
 }
 
 /*!
@@ -319,14 +398,24 @@ static GHashTable *
 load_transforms_from_dir(const char *dir)
 {
     struct dirent **namelist = NULL;
-    int num_matches = scandir(dir, &namelist, transform_filter, versionsort);
-    GHashTable *transforms = pcmk__strkey_table(free, free_transform_list);
+    GHashTable *transforms = NULL;
+    int num_matches = scandir(dir, &namelist, transform_filter,
+                              compare_transforms);
+
+    if (num_matches < 0) {
+        int rc = errno;
+
+        crm_warn("Could not load transforms from %s: %s", dir, pcmk_rc_str(rc));
+        goto done;
+    }
+
+    transforms = pcmk__strkey_table(free, free_transform_list);
 
     for (int i = 0; i < num_matches; i++) {
         pcmk__schema_version_t version = SCHEMA_ZERO;
-        int order = 0;  // Placeholder only
+        unsigned char order = 0;  // Placeholder only
 
-        if (sscanf(namelist[i]->d_name, "upgrade-%hhu.%hhu-%d.xsl",
+        if (sscanf(namelist[i]->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
                    &(version.v[0]), &(version.v[1]), &order) == 3) {
 
             char *version_s = crm_strdup_printf("%hhu.%hhu",
@@ -355,6 +444,7 @@ load_transforms_from_dir(const char *dir)
         }
     }
 
+done:
     free(namelist);
     return transforms;
 }
@@ -368,8 +458,10 @@ pcmk__load_schemas_from_dir(const char *dir)
 
     max = scandir(dir, &namelist, schema_filter, schema_cmp_directory);
     if (max < 0) {
-        crm_warn("Could not load schemas from %s: %s", dir, strerror(errno));
-        return;
+        int rc = errno;
+
+        crm_warn("Could not load schemas from %s: %s", dir, pcmk_rc_str(rc));
+        goto done;
     }
 
     // Look for any upgrade transforms in the same directory
@@ -384,11 +476,13 @@ pcmk__load_schemas_from_dir(const char *dir)
             char *orig_key = NULL;
             GList *transform_list = NULL;
 
-            // The schema becomes the owner of transform_list
-            g_hash_table_lookup_extended(transforms, version_s,
-                                         (gpointer *) &orig_key,
-                                         (gpointer *) &transform_list);
-            g_hash_table_steal(transforms, version_s);
+            if (transforms != NULL) {
+                // The schema becomes the owner of transform_list
+                g_hash_table_lookup_extended(transforms, version_s,
+                                             (gpointer *) &orig_key,
+                                             (gpointer *) &transform_list);
+                g_hash_table_steal(transforms, version_s);
+            }
 
             add_schema(pcmk__schema_validator_rng, &version, NULL,
                        transform_list);
@@ -407,8 +501,11 @@ pcmk__load_schemas_from_dir(const char *dir)
         free(namelist[lpc]);
     }
 
+done:
     free(namelist);
-    g_hash_table_destroy(transforms);
+    if (transforms != NULL) {
+        g_hash_table_destroy(transforms);
+    }
 }
 
 static gint
@@ -923,7 +1020,7 @@ apply_transformation(const xmlNode *xml, const char *transform,
         xsltSetGenericErrorFunc(&crm_log_level, cib_upgrade_err);
     }
 
-    xslt = xsltParseStylesheetFile((pcmkXmlStr) xform);
+    xslt = xsltParseStylesheetFile((const xmlChar *) xform);
     CRM_CHECK(xslt != NULL, goto cleanup);
 
     /* Caller allocates private data for final result document. Intermediate
@@ -1107,6 +1204,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             break; // No further transformations possible
         }
 
+        // coverity[null_field] The index check ensures entry->next is not NULL
         if (!transform || (current_schema->transforms == NULL)
             || validate_with_silent(*xml, entry->next->data)) {
             /* The next schema either doesn't require a transform or validates
@@ -1333,7 +1431,7 @@ external_refs_in_schema(GList **list, const char *contents)
     const char *search = "//*[local-name()='externalRef'] | //*[local-name()='include']";
     xmlNode *xml = pcmk__xml_parse(contents);
 
-    crm_foreach_xpath_result(xml, search, append_href, list);
+    pcmk__xpath_foreach_result(xml->doc, search, append_href, list);
     pcmk__xml_free(xml);
 }
 
@@ -1388,12 +1486,13 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Create a new <file path="..."> node with the contents of the file
      * as a CDATA block underneath it.
      */
-    file_node = pcmk__xe_create(parent, PCMK_XA_FILE);
+    file_node = pcmk__xe_create(parent, PCMK__XE_FILE);
     crm_xml_add(file_node, PCMK_XA_PATH, path);
     *already_included = g_list_prepend(*already_included, path);
 
-    xmlAddChild(file_node, xmlNewCDataBlock(parent->doc, (pcmkXmlStr) contents,
-                                            strlen(contents)));
+    xmlAddChild(file_node,
+                xmlNewCDataBlock(parent->doc, (const xmlChar *) contents,
+                                 strlen(contents)));
 
     /* Scan the file for any <externalRef> or <include> nodes and build up
      * a list of the files they reference.

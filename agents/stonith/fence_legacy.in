@@ -1,6 +1,6 @@
 #!@PYTHON@
 
-__copyright__ = "Copyright 2018-2023 the Pacemaker project contributors"
+__copyright__ = "Copyright 2018-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -116,9 +116,7 @@ def parse_cli_options():
     parser.add_argument("-h", "--help", action="store_true",
                         help="show usage and exit")
 
-    # Don't use action="version", because that printed to stderr before
-    # Python 3.4, and help2man doesn't like that.
-    parser.add_argument("-V", "--version", action="store_true",
+    parser.add_argument("-V", "--version", action="version", version=VERSION,
                         help="show version and exit")
 
     return parser.parse_args()
@@ -207,10 +205,6 @@ def handle_local_options(options):
 
     if options.help:
         print(USAGE)
-        sys.exit(ExitStatus.OK)
-
-    if options.version:
-        print(VERSION)
         sys.exit(ExitStatus.OK)
 
 

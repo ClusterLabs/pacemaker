@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -153,12 +153,18 @@ pcmk__cluster_lookup_remote_node(const char *node_name)
 
     /* It's theoretically possible that the node was added to the cluster peer
      * cache before it was known to be a Pacemaker Remote node. Remove that
-     * entry unless it has a node ID, which means the name actually is
+     * entry unless it has an XML ID, which means the name actually is
      * associated with a cluster node. (@TODO return an error in that case?)
      */
-    node = pcmk__search_node_caches(0, node_name,
+    node = pcmk__search_node_caches(0, node_name, NULL,
                                     pcmk__node_search_cluster_member);
-    if ((node != NULL) && (node->xml_id == NULL)) {
+    if ((node != NULL)
+        && ((node->xml_id == NULL)
+            /* This assumes only Pacemaker Remote nodes have their XML ID the
+             * same as their node name
+             */
+            || pcmk__str_eq(node->name, node->xml_id, pcmk__str_none))) {
+
         /* node_name could be a pointer into the cache entry being removed, so
          * reassign it to a copy before the original gets freed
          */
@@ -331,8 +337,8 @@ refresh_remote_nodes(xmlNode *cib)
     /* Look for guest nodes and remote nodes in the status section */
     data.field = PCMK_XA_ID;
     data.has_state = TRUE;
-    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_STATUS,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_REMOTE_NODE_STATUS,
+                               remote_cache_refresh_helper, &data);
 
     /* Look for guest nodes and remote nodes in the configuration section,
      * because they may have just been added and not have a status entry yet.
@@ -342,12 +348,12 @@ refresh_remote_nodes(xmlNode *cib)
      */
     data.field = PCMK_XA_VALUE;
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, PCMK__XP_GUEST_NODE_CONFIG,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_GUEST_NODE_CONFIG,
+                               remote_cache_refresh_helper, &data);
     data.field = PCMK_XA_ID;
     data.has_state = FALSE;
-    crm_foreach_xpath_result(cib, PCMK__XP_REMOTE_NODE_CONFIG,
-                             remote_cache_refresh_helper, &data);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_REMOTE_NODE_CONFIG,
+                               remote_cache_refresh_helper, &data);
 
     /* Remove all old cache entries that weren't seen in the CIB */
     g_hash_table_foreach_remove(pcmk__remote_peer_cache, is_dirty, NULL);
@@ -713,8 +719,11 @@ search_cluster_member_cache(unsigned int id, const char *uname,
     } else if (uuid != NULL) {
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (pcmk__str_eq(node->xml_id, uuid, pcmk__str_casei)) {
-                crm_trace("UUID match: %s", node->xml_id);
+            const char *this_xml_id = pcmk__cluster_get_xml_id(node);
+
+            if (pcmk__str_eq(uuid, this_xml_id, pcmk__str_none)) {
+                crm_trace("Found cluster node cache entry by XML ID %s",
+                          this_xml_id);
                 by_id = node;
                 break;
             }
@@ -791,36 +800,47 @@ search_cluster_member_cache(unsigned int id, const char *uname,
  * \internal
  * \brief Search caches for a node (cluster or Pacemaker Remote)
  *
- * \param[in] id     If not 0, cluster node ID to search for
- * \param[in] uname  If not NULL, node name to search for
- * \param[in] flags  Group of enum pcmk__node_search_flags
+ * \param[in] id      If not 0, cluster node ID to search for
+ * \param[in] uname   If not NULL, node name to search for
+ * \param[in] xml_id  If not NULL, CIB XML ID of node to search for
+ * \param[in] flags   Group of enum pcmk__node_search_flags
  *
  * \return Node cache entry if found, otherwise NULL
  */
 pcmk__node_status_t *
-pcmk__search_node_caches(unsigned int id, const char *uname, uint32_t flags)
+pcmk__search_node_caches(unsigned int id, const char *uname,
+                         const char *xml_id, uint32_t flags)
 {
     pcmk__node_status_t *node = NULL;
 
-    pcmk__assert((id > 0) || (uname != NULL));
+    pcmk__assert((id > 0) || (uname != NULL) || (xml_id != NULL));
 
     pcmk__cluster_init_node_caches();
 
-    if ((uname != NULL) && pcmk_is_set(flags, pcmk__node_search_remote)) {
-        node = g_hash_table_lookup(pcmk__remote_peer_cache, uname);
+    if (pcmk_is_set(flags, pcmk__node_search_remote)) {
+        if (uname != NULL) {
+            node = g_hash_table_lookup(pcmk__remote_peer_cache, uname);
+        } else if (xml_id != NULL) {
+            node = g_hash_table_lookup(pcmk__remote_peer_cache, xml_id);
+        }
     }
 
     if ((node == NULL)
         && pcmk_is_set(flags, pcmk__node_search_cluster_member)) {
 
-        node = search_cluster_member_cache(id, uname, NULL);
+        node = search_cluster_member_cache(id, uname, xml_id);
     }
 
     if ((node == NULL) && pcmk_is_set(flags, pcmk__node_search_cluster_cib)) {
-        char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
+        if (xml_id != NULL) {
+            node = find_cib_cluster_node(xml_id, uname);
+        } else {
+            // Assumes XML ID is node ID as string (as with Corosync)
+            char *id_str = (id == 0)? NULL : crm_strdup_printf("%u", id);
 
-        node = find_cib_cluster_node(id_str, uname);
-        free(id_str);
+            node = find_cib_cluster_node(id_str, uname);
+            free(id_str);
+        }
     }
 
     return node;
@@ -989,7 +1009,7 @@ pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
     }
 
     if ((xml_id == NULL) && (node->xml_id == NULL)) {
-        xml_id = pcmk__cluster_node_uuid(node);
+        xml_id = pcmk__cluster_get_xml_id(node);
         if (xml_id == NULL) {
             crm_debug("Cannot obtain an XML ID for node %s[%u] at this time",
                       node->name, id);
@@ -1377,7 +1397,8 @@ find_cib_cluster_node(const char *id, const char *uname)
     if (id) {
         g_hash_table_iter_init(&iter, cluster_node_cib_cache);
         while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
-            if (pcmk__str_eq(node->xml_id, id, pcmk__str_casei)) {
+            if (pcmk__str_eq(id, pcmk__cluster_get_xml_id(node),
+                             pcmk__str_none)) {
                 crm_trace("ID match: %s= %p", id, node);
                 by_id = node;
                 break;
@@ -1413,7 +1434,7 @@ find_cib_cluster_node(const char *id, const char *uname)
          * Return by_id. */
 
     } else if ((id != NULL) && (by_name->xml_id != NULL)
-               && pcmk__str_eq(id, by_name->xml_id, pcmk__str_casei)) {
+               && pcmk__str_eq(id, by_name->xml_id, pcmk__str_none)) {
         /* Multiple nodes have the same id in the CIB.
          * Return by_name. */
         node = by_name;
@@ -1469,8 +1490,8 @@ refresh_cluster_node_cib_cache(xmlNode *cib)
 
     g_hash_table_foreach(cluster_node_cib_cache, mark_dirty, NULL);
 
-    crm_foreach_xpath_result(cib, PCMK__XP_MEMBER_NODE_CONFIG,
-                             cluster_node_cib_cache_refresh_helper, NULL);
+    pcmk__xpath_foreach_result(cib->doc, PCMK__XP_MEMBER_NODE_CONFIG,
+                               cluster_node_cib_cache_refresh_helper, NULL);
 
     // Remove all old cache entries that weren't seen in the CIB
     g_hash_table_foreach_remove(cluster_node_cib_cache, is_dirty, NULL);

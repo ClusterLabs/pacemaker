@@ -89,7 +89,8 @@ enable=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 # CHANGED
-disable=line-too-long,
+disable=R0801,
+        line-too-long,
         too-few-public-methods,
         too-many-arguments,
         too-many-branches,

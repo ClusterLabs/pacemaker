@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,43 +70,26 @@ static xmlNode *
 retrieveCib(const char *filename, const char *sigfile)
 {
     xmlNode *root = NULL;
+    int rc = cib_file_read_and_verify(filename, sigfile, &root);
 
-    crm_info("Reading cluster configuration file %s (digest: %s)",
-             filename, sigfile);
-    switch (cib_file_read_and_verify(filename, sigfile, &root)) {
-        case -pcmk_err_cib_corrupt:
-            crm_warn("Continuing but %s will NOT be used.", filename);
-            break;
-
-        case -pcmk_err_cib_modified:
-            /* Archive the original files so the contents are not lost */
-            crm_warn("Continuing but %s will NOT be used.", filename);
+    if (rc == pcmk_ok) {
+        crm_info("Loaded CIB from %s (with digest %s)", filename, sigfile);
+    } else {
+        crm_warn("Continuing but NOT using CIB from %s (with digest %s): %s",
+                 filename, sigfile, pcmk_strerror(rc));
+        if (rc == -pcmk_err_cib_modified) {
+            // Archive the original files so the contents are not lost
             cib_rename(filename);
             cib_rename(sigfile);
-            break;
+        }
     }
     return root;
 }
 
-/*
- * for OSs without support for direntry->d_type, like Solaris
- */
-#ifndef DT_UNKNOWN
-# define DT_UNKNOWN     0
-# define DT_FIFO        1
-# define DT_CHR         2
-# define DT_DIR         4
-# define DT_BLK         6
-# define DT_REG         8
-# define DT_LNK         10
-# define DT_SOCK        12
-# define DT_WHT         14
-#endif /*DT_UNKNOWN*/
-
 static int cib_archive_filter(const struct dirent * a)
 {
     int rc = 0;
-    /* Looking for regular files (d_type = 8) starting with 'cib-' and not ending in .sig */
+    // Looking for regular files starting with "cib-" and not ending in .sig
     struct stat s;
     char *a_path = crm_strdup_printf("%s/%s", cib_root, a->d_name);
 
@@ -115,23 +98,9 @@ static int cib_archive_filter(const struct dirent * a)
         crm_trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc), rc);
         rc = 0;
 
-    } else if ((s.st_mode & S_IFREG) != S_IFREG) {
-        unsigned char dtype;
-#ifdef HAVE_STRUCT_DIRENT_D_TYPE
-        dtype = a->d_type;
-#else
-        switch (s.st_mode & S_IFMT) {
-            case S_IFREG:  dtype = DT_REG;      break;
-            case S_IFDIR:  dtype = DT_DIR;      break;
-            case S_IFCHR:  dtype = DT_CHR;      break;
-            case S_IFBLK:  dtype = DT_BLK;      break;
-            case S_IFLNK:  dtype = DT_LNK;      break;
-            case S_IFIFO:  dtype = DT_FIFO;     break;
-            case S_IFSOCK: dtype = DT_SOCK;     break;
-            default:       dtype = DT_UNKNOWN;  break;
-        }
-#endif
-         crm_trace("%s - wrong type (%d)", a->d_name, dtype);
+    } else if (!S_ISREG(s.st_mode)) {
+        crm_trace("%s - wrong type (%#o)",
+                  a->d_name, (unsigned int) (s.st_mode & S_IFMT));
 
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
         crm_trace("%s - wrong prefix", a->d_name);
@@ -215,27 +184,29 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     free(sigfilepath);
 
     if (root == NULL) {
-        crm_warn("Primary configuration corrupt or unusable, trying backups in %s", cib_root);
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
         if (lpc < 0) {
-            crm_err("scandir(%s) failed: %s", cib_root, pcmk_rc_str(errno));
+            crm_err("Could not check for CIB backups in %s: %s",
+                    cib_root, pcmk_rc_str(errno));
         }
     }
 
     while (root == NULL && lpc > 1) {
-        crm_debug("Testing %d candidates", lpc);
+        int rc = pcmk_ok;
 
         lpc--;
 
         filename = crm_strdup_printf("%s/%s", cib_root, namelist[lpc]->d_name);
         sigfile = crm_strdup_printf("%s.sig", filename);
 
-        crm_info("Reading cluster configuration file %s (digest: %s)",
-                 filename, sigfile);
-        if (cib_file_read_and_verify(filename, sigfile, &root) < 0) {
-            crm_warn("Continuing but %s will NOT be used.", filename);
+        rc = cib_file_read_and_verify(filename, sigfile, &root);
+        if (rc == pcmk_ok) {
+            crm_notice("Loaded CIB from last valid backup %s (with digest %s)",
+                       filename, sigfile);
         } else {
-            crm_notice("Continuing with last valid configuration archive: %s", filename);
+            crm_warn("Not using next most recent CIB backup from %s "
+                     "(with digest %s): %s",
+                     filename, sigfile, pcmk_strerror(rc));
         }
 
         free(namelist[lpc]);
@@ -246,7 +217,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 
     if (root == NULL) {
         root = createEmptyCib(0);
-        crm_warn("Continuing with an empty configuration.");
+        crm_warn("Continuing with an empty configuration");
     }
 
     if (cib_writes_enabled && (use_valgrind != NULL)
@@ -270,16 +241,12 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     /* Do this before schema validation happens */
 
     /* fill in some defaults */
-    name = PCMK_XA_ADMIN_EPOCH;
-    value = crm_element_value(root, name);
-    if (value == NULL) {
-        crm_warn("No value for %s was specified in the configuration.", name);
-        crm_warn("The recommended course of action is to shutdown,"
-                 " run crm_verify and fix any errors it reports.");
-        crm_warn("We will default to zero and continue but may get"
-                 " confused about which configuration to use if"
-                 " multiple nodes are powered up at the same time.");
-        crm_xml_add_int(root, name, 0);
+    value = crm_element_value(root, PCMK_XA_ADMIN_EPOCH);
+    if (value == NULL) { // Not possible with schema validation enabled
+        crm_warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
+                 "cluster may get confused about which node's configuration "
+                 "is most recent");
+        crm_xml_add_int(root, PCMK_XA_ADMIN_EPOCH, 0);
     }
 
     name = PCMK_XA_EPOCH;
@@ -313,18 +280,10 @@ uninitializeCib(void)
     xmlNode *tmp_cib = the_cib;
 
     if (tmp_cib == NULL) {
-        crm_debug("The CIB has already been deallocated.");
         return FALSE;
     }
-
     the_cib = NULL;
-
-    crm_debug("Deallocating the CIB.");
-
     pcmk__xml_free(tmp_cib);
-
-    crm_debug("The CIB has been deallocated.");
-
     return TRUE;
 }
 

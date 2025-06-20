@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,7 +55,6 @@ enum shadow_command {
 
 /*!
  * \internal
- * \enum shadow_disp_flags
  * \brief Bit flags to control which fields of shadow CIB info are displayed
  *
  * \note Ignored for XML output.
@@ -945,12 +944,11 @@ show_shadow_diff(pcmk__output_t *out, GError **error)
     if (read_xml(filename, &new_config, error) != pcmk_rc_ok) {
         goto done;
     }
-    xml_track_changes(new_config, NULL, new_config, false);
-    xml_calculate_changes(old_config, new_config);
+    pcmk__xml_mark_changes(old_config, new_config);
     diff = xml_create_patchset(0, old_config, new_config, NULL, false);
 
     pcmk__log_xml_changes(LOG_INFO, new_config);
-    xml_accept_changes(new_config);
+    pcmk__xml_commit_changes(new_config->doc);
 
     out->quiet = true;
     out->message(out, "shadow",

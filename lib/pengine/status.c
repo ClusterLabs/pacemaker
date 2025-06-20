@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,59 +9,18 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>                     // uint32_t
 #include <sys/param.h>
+
+#include <glib.h>
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/cib_internal.h>
 
-#include <glib.h>
-
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
-
-/*!
- * \brief Create a new object to hold scheduler data
- *
- * \return New, initialized scheduler data on success, else NULL (and set errno)
- * \note Only pcmk_scheduler_t objects created with this function (as opposed
- *       to statically declared or directly allocated) should be used with the
- *       functions in this library, to allow for future extensions to the
- *       data type. The caller is responsible for freeing the memory with
- *       pe_free_working_set() when the instance is no longer needed.
- */
-pcmk_scheduler_t *
-pe_new_working_set(void)
-{
-    pcmk_scheduler_t *scheduler = calloc(1, sizeof(pcmk_scheduler_t));
-
-    if (scheduler == NULL) {
-        return NULL;
-    }
-    scheduler->priv = calloc(1, sizeof(pcmk__scheduler_private_t));
-    if (scheduler->priv == NULL) {
-        free(scheduler);
-        return NULL;
-    }
-    set_working_set_defaults(scheduler);
-    return scheduler;
-}
-
-/*!
- * \brief Free scheduler data
- *
- * \param[in,out] scheduler  Scheduler data to free
- */
-void
-pe_free_working_set(pcmk_scheduler_t *scheduler)
-{
-    if (scheduler != NULL) {
-        pe_reset_working_set(scheduler);
-        free(scheduler->priv->local_node_name);
-        free(scheduler->priv);
-        free(scheduler);
-    }
-}
 
 #define XPATH_DEPRECATED_RULES                          \
     "//" PCMK_XE_OP_DEFAULTS "//" PCMK_XE_EXPRESSION    \
@@ -77,8 +36,9 @@ static void
 check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
 {
     // @COMPAT Drop this function when support for the syntax is dropped
-    xmlNode *deprecated = get_xpath_object(XPATH_DEPRECATED_RULES,
-                                           scheduler->input, LOG_NEVER);
+    xmlNode *deprecated = pcmk__xpath_find_one(scheduler->input->doc,
+                                               XPATH_DEPRECATED_RULES,
+                                               LOG_NEVER);
 
     if (deprecated != NULL) {
         pcmk__warn_once(pcmk__wo_op_attr_expr,
@@ -98,15 +58,37 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
  *  - A list of nodes that need to be stonith'd
  *  - A list of nodes that need to be shutdown
  *  - A list of the possible stop/start actions (without dependencies)
+ *
+ * @TODO Currently this function can modify scheduler->input by creating
+ * primitive elements for guest nodes. Commit 5dbc819 aimed to make this
+ * function idempotent. It seems to be idempotent now, except that if
+ * scheduler->input is reused, it may gain duplicate primitive elements for
+ * guest nodes each time.
+ *
+ * Investigate whether we can leave scheduler->input unmodified without a lot of
+ * unnecessary XML copying. Otherwise, just document that scheduler->input may
+ * be modified.
  */
 gboolean
 cluster_status(pcmk_scheduler_t * scheduler)
 {
+    // @TODO Deprecate, replacing with a safer public alternative if necessary
     const char *new_version = NULL;
     xmlNode *section = NULL;
 
     if ((scheduler == NULL) || (scheduler->input == NULL)) {
         return FALSE;
+    }
+
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
+        /* cluster_status() has already been called since the last time the
+         * scheduler was reset. Unpacking the input CIB again would cause
+         * duplication within the scheduler object's data structures.
+         *
+         * The correct return code here is not obvious. Nothing internal checks
+         * the code, however.
+         */
+        return TRUE;
     }
 
     new_version = crm_element_value(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
@@ -119,9 +101,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     crm_trace("Beginning unpack");
 
-    if (scheduler->priv->failed != NULL) {
-        pcmk__xml_free(scheduler->priv->failed);
-    }
+    pcmk__xml_free(scheduler->priv->failed);
     scheduler->priv->failed = pcmk__xe_create(NULL, "failed-ops");
 
     if (scheduler->priv->now == NULL) {
@@ -134,17 +114,17 @@ cluster_status(pcmk_scheduler_t * scheduler)
         pcmk__clear_scheduler_flags(scheduler, pcmk__sched_quorate);
     }
 
-    scheduler->priv->op_defaults = get_xpath_object("//" PCMK_XE_OP_DEFAULTS,
-                                                    scheduler->input,
-                                                    LOG_NEVER);
+    scheduler->priv->op_defaults =
+        pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_OP_DEFAULTS,
+                             LOG_NEVER);
     check_for_deprecated_rules(scheduler);
 
-    scheduler->priv->rsc_defaults = get_xpath_object("//" PCMK_XE_RSC_DEFAULTS,
-                                                     scheduler->input,
-                                                     LOG_NEVER);
+    scheduler->priv->rsc_defaults =
+        pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_RSC_DEFAULTS,
+                             LOG_NEVER);
 
-    section = get_xpath_object("//" PCMK_XE_CRM_CONFIG, scheduler->input,
-                               LOG_TRACE);
+    section = pcmk__xpath_find_one(scheduler->input->doc,
+                                   "//" PCMK_XE_CRM_CONFIG, LOG_TRACE);
     unpack_config(section, scheduler);
 
    if (!pcmk_any_flags_set(scheduler->flags,
@@ -155,26 +135,28 @@ cluster_status(pcmk_scheduler_t * scheduler)
                          "due to lack of quorum");
     }
 
-    section = get_xpath_object("//" PCMK_XE_NODES, scheduler->input, LOG_TRACE);
+    section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_NODES,
+                                   LOG_TRACE);
     unpack_nodes(section, scheduler);
 
-    section = get_xpath_object("//" PCMK_XE_RESOURCES, scheduler->input,
-                               LOG_TRACE);
+    section = pcmk__xpath_find_one(scheduler->input->doc,
+                                   "//" PCMK_XE_RESOURCES, LOG_TRACE);
     if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
 
-    section = get_xpath_object("//" PCMK_XE_FENCING_TOPOLOGY, scheduler->input,
-                               LOG_TRACE);
+    section = pcmk__xpath_find_one(scheduler->input->doc,
+                                   "//" PCMK_XE_FENCING_TOPOLOGY, LOG_TRACE);
     pcmk__validate_fencing_topology(section);
 
-    section = get_xpath_object("//" PCMK_XE_TAGS, scheduler->input, LOG_NEVER);
+    section = pcmk__xpath_find_one(scheduler->input->doc, "//" PCMK_XE_TAGS,
+                                   LOG_NEVER);
     unpack_tags(section, scheduler);
 
     if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
-        section = get_xpath_object("//" PCMK_XE_STATUS, scheduler->input,
-                                   LOG_TRACE);
+        section = pcmk__xpath_find_one(scheduler->input->doc,
+                                       "//" PCMK_XE_STATUS, LOG_TRACE);
         unpack_status(section, scheduler);
     }
 
@@ -205,250 +187,6 @@ cluster_status(pcmk_scheduler_t * scheduler)
     return TRUE;
 }
 
-/*!
- * \internal
- * \brief Free a list of pcmk_resource_t
- *
- * \param[in,out] resources  List to free
- *
- * \note When the scheduler's resource list is freed, that includes the original
- *       storage for the uname and id of any Pacemaker Remote nodes in the
- *       scheduler's node list, so take care not to use those afterward.
- * \todo Refactor pcmk_node_t to strdup() the node name.
- */
-static void
-pe_free_resources(GList *resources)
-{
-    pcmk_resource_t *rsc = NULL;
-    GList *iterator = resources;
-
-    while (iterator != NULL) {
-        rsc = (pcmk_resource_t *) iterator->data;
-        iterator = iterator->next;
-        rsc->priv->fns->free(rsc);
-    }
-    if (resources != NULL) {
-        g_list_free(resources);
-    }
-}
-
-static void
-pe_free_actions(GList *actions)
-{
-    GList *iterator = actions;
-
-    while (iterator != NULL) {
-        pe_free_action(iterator->data);
-        iterator = iterator->next;
-    }
-    if (actions != NULL) {
-        g_list_free(actions);
-    }
-}
-
-static void
-pe_free_nodes(GList *nodes)
-{
-    for (GList *iterator = nodes; iterator != NULL; iterator = iterator->next) {
-        pcmk_node_t *node = (pcmk_node_t *) iterator->data;
-
-        // Shouldn't be possible, but to be safe ...
-        if (node == NULL) {
-            continue;
-        }
-        if (node->details == NULL) {
-            free(node);
-            continue;
-        }
-
-        /* This is called after pe_free_resources(), which means that we can't
-         * use node->private->name for Pacemaker Remote nodes.
-         */
-        crm_trace("Freeing node %s", (pcmk__is_pacemaker_remote_node(node)?
-                  "(guest or remote)" : pcmk__node_name(node)));
-
-        if (node->priv->attrs != NULL) {
-            g_hash_table_destroy(node->priv->attrs);
-        }
-        if (node->priv->utilization != NULL) {
-            g_hash_table_destroy(node->priv->utilization);
-        }
-        if (node->priv->digest_cache != NULL) {
-            g_hash_table_destroy(node->priv->digest_cache);
-        }
-        g_list_free(node->details->running_rsc);
-        g_list_free(node->priv->assigned_resources);
-        free(node->priv);
-        free(node->details);
-        free(node->assign);
-        free(node);
-    }
-    if (nodes != NULL) {
-        g_list_free(nodes);
-    }
-}
-
-static void
-pe__free_ordering(GList *constraints)
-{
-    GList *iterator = constraints;
-
-    while (iterator != NULL) {
-        pcmk__action_relation_t *order = iterator->data;
-
-        iterator = iterator->next;
-
-        free(order->task1);
-        free(order->task2);
-        free(order);
-    }
-    if (constraints != NULL) {
-        g_list_free(constraints);
-    }
-}
-
-static void
-pe__free_location(GList *constraints)
-{
-    GList *iterator = constraints;
-
-    while (iterator != NULL) {
-        pcmk__location_t *cons = iterator->data;
-
-        iterator = iterator->next;
-
-        g_list_free_full(cons->nodes, pcmk__free_node_copy);
-        free(cons->id);
-        free(cons);
-    }
-    if (constraints != NULL) {
-        g_list_free(constraints);
-    }
-}
-
-/*!
- * \brief Reset scheduler data to defaults without freeing it or constraints
- *
- * \param[in,out] scheduler  Scheduler data to reset
- *
- * \deprecated This function is deprecated as part of the API;
- *             pe_reset_working_set() should be used instead.
- */
-void
-cleanup_calculations(pcmk_scheduler_t *scheduler)
-{
-    if (scheduler == NULL) {
-        return;
-    }
-
-    pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
-    if (scheduler->priv->options != NULL) {
-        g_hash_table_destroy(scheduler->priv->options);
-    }
-
-    if (scheduler->priv->singletons != NULL) {
-        g_hash_table_destroy(scheduler->priv->singletons);
-    }
-
-    if (scheduler->priv->ticket_constraints != NULL) {
-        g_hash_table_destroy(scheduler->priv->ticket_constraints);
-    }
-
-    if (scheduler->priv->templates != NULL) {
-        g_hash_table_destroy(scheduler->priv->templates);
-    }
-
-    if (scheduler->priv->tags != NULL) {
-        g_hash_table_destroy(scheduler->priv->tags);
-    }
-
-    crm_trace("deleting resources");
-    pe_free_resources(scheduler->priv->resources);
-
-    crm_trace("deleting actions");
-    pe_free_actions(scheduler->priv->actions);
-
-    crm_trace("deleting nodes");
-    pe_free_nodes(scheduler->nodes);
-
-    pe__free_param_checks(scheduler);
-    g_list_free(scheduler->priv->stop_needed);
-    crm_time_free(scheduler->priv->now);
-    pcmk__xml_free(scheduler->input);
-    pcmk__xml_free(scheduler->priv->failed);
-    pcmk__xml_free(scheduler->priv->graph);
-
-    set_working_set_defaults(scheduler);
-
-    CRM_LOG_ASSERT((scheduler->priv->location_constraints == NULL)
-                   && (scheduler->priv->ordering_constraints == NULL));
-}
-
-/*!
- * \brief Reset scheduler data to default state without freeing it
- *
- * \param[in,out] scheduler  Scheduler data to reset
- */
-void
-pe_reset_working_set(pcmk_scheduler_t *scheduler)
-{
-    if (scheduler == NULL) {
-        return;
-    }
-
-    crm_trace("Deleting %d ordering constraints",
-              g_list_length(scheduler->priv->ordering_constraints));
-    pe__free_ordering(scheduler->priv->ordering_constraints);
-    scheduler->priv->ordering_constraints = NULL;
-
-    crm_trace("Deleting %d location constraints",
-              g_list_length(scheduler->priv->location_constraints));
-    pe__free_location(scheduler->priv->location_constraints);
-    scheduler->priv->location_constraints = NULL;
-
-    crm_trace("Deleting %d colocation constraints",
-              g_list_length(scheduler->priv->colocation_constraints));
-    g_list_free_full(scheduler->priv->colocation_constraints, free);
-    scheduler->priv->colocation_constraints = NULL;
-
-    cleanup_calculations(scheduler);
-}
-
-void
-set_working_set_defaults(pcmk_scheduler_t *scheduler)
-{
-    // These members must be preserved
-    pcmk__scheduler_private_t *priv = scheduler->priv;
-    pcmk__output_t *out = priv->out;
-    char *local_node_name = scheduler->priv->local_node_name;
-
-    // Wipe the main structs (any other members must have previously been freed)
-    memset(scheduler, 0, sizeof(pcmk_scheduler_t));
-    memset(priv, 0, sizeof(pcmk__scheduler_private_t));
-
-    // Restore the members to preserve
-    scheduler->priv = priv;
-    scheduler->priv->out = out;
-    scheduler->priv->local_node_name = local_node_name;
-
-    // Set defaults for everything else
-    scheduler->priv->next_ordering_id = 1;
-    scheduler->priv->next_action_id = 1;
-    scheduler->no_quorum_policy = pcmk_no_quorum_stop;
-#if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_symmetric_cluster
-                              |pcmk__sched_concurrent_fencing
-                              |pcmk__sched_stop_removed_resources
-                              |pcmk__sched_cancel_removed_actions);
-#else
-    pcmk__set_scheduler_flags(scheduler,
-                              pcmk__sched_symmetric_cluster
-                              |pcmk__sched_stop_removed_resources
-                              |pcmk__sched_cancel_removed_actions);
-#endif
-}
-
 pcmk_resource_t *
 pe_find_resource(GList *rsc_list, const char *id)
 {
@@ -463,7 +201,7 @@ pe_find_resource_with_flags(GList *rsc_list, const char *id, enum pe_find flags)
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         pcmk_resource_t *parent = rIter->data;
         pcmk_resource_t *match = parent->priv->fns->find_rsc(parent, id, NULL,
-                                                             flags);
+                                                             (uint32_t) flags);
 
         if (match != NULL) {
             return match;
@@ -528,14 +266,99 @@ pe_find_node_id(const GList *nodes, const char *id)
 
 #include <crm/pengine/status_compat.h>
 
-/*!
- * \brief Find a node by name in a list of nodes
- *
- * \param[in] nodes      List of nodes (as pcmk_node_t*)
- * \param[in] node_name  Name of node to find
- *
- * \return Node from \p nodes that matches \p node_name if any, otherwise NULL
- */
+pcmk_scheduler_t *
+pe_new_working_set(void)
+{
+    return pcmk_new_scheduler();
+}
+
+void
+pe_reset_working_set(pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return;
+    }
+    pcmk_reset_scheduler(scheduler);
+}
+
+void
+cleanup_calculations(pcmk_scheduler_t *scheduler)
+{
+    if (scheduler == NULL) {
+        return;
+    }
+
+    pcmk__clear_scheduler_flags(scheduler, pcmk__sched_have_status);
+    if (scheduler->priv->options != NULL) {
+        g_hash_table_destroy(scheduler->priv->options);
+    }
+
+    if (scheduler->priv->singletons != NULL) {
+        g_hash_table_destroy(scheduler->priv->singletons);
+    }
+
+    if (scheduler->priv->ticket_constraints != NULL) {
+        g_hash_table_destroy(scheduler->priv->ticket_constraints);
+    }
+
+    if (scheduler->priv->templates != NULL) {
+        g_hash_table_destroy(scheduler->priv->templates);
+    }
+
+    if (scheduler->priv->tags != NULL) {
+        g_hash_table_destroy(scheduler->priv->tags);
+    }
+
+    crm_trace("deleting resources");
+    g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
+
+    crm_trace("deleting actions");
+    g_list_free_full(scheduler->priv->actions, pcmk__free_action);
+
+    crm_trace("deleting nodes");
+    g_list_free_full(scheduler->nodes, pcmk__free_node);
+    scheduler->nodes = NULL;
+
+    pcmk__free_param_checks(scheduler);
+    g_list_free(scheduler->priv->stop_needed);
+    crm_time_free(scheduler->priv->now);
+    pcmk__xml_free(scheduler->input);
+    pcmk__xml_free(scheduler->priv->failed);
+    pcmk__xml_free(scheduler->priv->graph);
+
+    set_working_set_defaults(scheduler);
+
+    CRM_LOG_ASSERT((scheduler->priv->location_constraints == NULL)
+                   && (scheduler->priv->ordering_constraints == NULL));
+}
+
+void
+set_working_set_defaults(pcmk_scheduler_t *scheduler)
+{
+    // These members must be preserved
+    pcmk__scheduler_private_t *priv = scheduler->priv;
+    pcmk__output_t *out = priv->out;
+    char *local_node_name = scheduler->priv->local_node_name;
+
+    // Wipe the main structs (any other members must have previously been freed)
+    memset(scheduler, 0, sizeof(pcmk_scheduler_t));
+    memset(priv, 0, sizeof(pcmk__scheduler_private_t));
+
+    // Restore the members to preserve
+    scheduler->priv = priv;
+    scheduler->priv->out = out;
+    scheduler->priv->local_node_name = local_node_name;
+
+    // Set defaults for everything else
+    pcmk__set_scheduler_defaults(scheduler);
+}
+
+void
+pe_free_working_set(pcmk_scheduler_t *scheduler)
+{
+    pcmk_free_scheduler(scheduler);
+}
+
 pcmk_node_t *
 pe_find_node(const GList *nodes, const char *node_name)
 {

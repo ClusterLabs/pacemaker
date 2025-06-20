@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2024 the Pacemaker project contributors
+ * Copyright 2006-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,7 +43,6 @@ bool pcmk__env_option_enabled(const char *daemon, const char *option);
 
 /*!
  * \internal
- * \enum pcmk__opt_flags
  * \brief Option flags
  */
 enum pcmk__opt_flags {
@@ -136,7 +135,6 @@ bool pcmk__valid_stonith_watchdog_timeout(const char *value);
 #define PCMK__ENV_DEBUG                     "debug"
 #define PCMK__ENV_DH_MAX_BITS               "dh_max_bits"
 #define PCMK__ENV_FAIL_FAST                 "fail_fast"
-#define PCMK__ENV_IPC_BUFFER                "ipc_buffer"
 #define PCMK__ENV_IPC_TYPE                  "ipc_type"
 #define PCMK__ENV_KEY_FILE                  "key_file"
 #define PCMK__ENV_LOGFACILITY               "logfacility"

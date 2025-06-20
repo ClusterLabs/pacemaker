@@ -1,7 +1,7 @@
 """Toggle nodes in and out of maintenance mode."""
 
 __all__ = ["MaintenanceMode"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -65,17 +65,17 @@ class MaintenanceMode(CTSTest):
         watch = self.create_watch(pats, 60)
         watch.set_watch()
 
-        self.debug("Turning maintenance mode %s" % action)
-        self._rsh(node, self.templates["MaintenanceMode%s" % action])
+        self.debug(f"Turning maintenance mode {action}")
+        self._rsh(node, self.templates[f"MaintenanceMode{action}"])
 
         if enabled:
-            self._rsh(node, "crm_resource -V -F -r %s -H %s &>/dev/null" % (self._rid, node))
+            self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
 
-        with Timer(self._logger, self.name, "recover%s" % action):
+        with Timer(self._logger, self.name, f"recover{action}"):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug("Failed to find patterns when turning maintenance mode %s" % action)
+            self.debug(f"Failed to find patterns when turning maintenance mode {action}")
             return repr(watch.unmatched)
 
         return ""
@@ -83,7 +83,7 @@ class MaintenanceMode(CTSTest):
     def _insert_maintenance_dummy(self, node):
         """Create a dummy resource on the given node."""
         pats = [
-            ("%s.*" % node) + (self.templates["Pat:RscOpOK"] % ("start", self._rid))
+            f"{node}.*" + (self.templates["Pat:RscOpOK"] % ("start", self._rid))
         ]
 
         watch = self.create_watch(pats, 60)
@@ -156,10 +156,10 @@ class MaintenanceMode(CTSTest):
                     managed_rscs.remove(tmp.id)
 
         if not managed_rscs:
-            self.debug("Found all %s resources on %s" % (managed_str, node))
+            self.debug(f"Found all {managed_str} resources on {node}")
             return True
 
-        self._logger.log("Could not find all %s resources on %s. %s" % (managed_str, node, managed_rscs))
+        self._logger.log(f"Could not find all {managed_str} resources on {node}. {managed_rscs}")
         return False
 
     def __call__(self, node):
@@ -178,7 +178,7 @@ class MaintenanceMode(CTSTest):
         # this list to verify all the resources become managed again.
         managed_rscs = self._managed_rscs(node)
         if not managed_rscs:
-            self._logger.log("No managed resources on %s" % node)
+            self._logger.log(f"No managed resources on {node}")
             return self.skipped()
 
         # insert a fake resource we can fail during maintenance mode
@@ -206,7 +206,7 @@ class MaintenanceMode(CTSTest):
         self._cm.cluster_stable()
 
         if fail_pat != "":
-            return self.failure("Unmatched patterns: %s" % fail_pat)
+            return self.failure(f"Unmatched patterns: {fail_pat}")
 
         if not verify_unmanaged:
             return self.failure("Failed to verify resources became unmanaged during maintenance mode")
@@ -220,9 +220,9 @@ class MaintenanceMode(CTSTest):
     def errors_to_ignore(self):
         """Return a list of errors which should be ignored."""
         return [
-            r"Updating failcount for %s" % self._rid,
-            r"schedulerd.*: Recover\s+%s\s+\(.*\)" % self._rid,
+            f"Updating failcount for {self._rid}",
+            fr"schedulerd.*: Recover\s+{self._rid}\s+\(.*\)",
             r"Unknown operation: fail",
             self.templates["Pat:RscOpOK"] % (self._action, self._rid),
-            r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self._rid, self._action, 0)
+            f"(ERROR|error).*: Action {self._rid}_{self._action}_0 .* initiated outside of a transition",
         ]

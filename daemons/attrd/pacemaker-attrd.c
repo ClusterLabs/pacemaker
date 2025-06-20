@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,6 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-#include <crm/pengine/rules.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
@@ -185,7 +184,7 @@ main(int argc, char **argv)
      * across all nodes. It also ensures that the writer learns our node name,
      * so it can send our attributes to the CIB.
      */
-    attrd_broadcast_protocol();
+    attrd_send_protocol(NULL);
 
     attrd_init_ipc();
     crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
@@ -207,6 +206,8 @@ main(int argc, char **argv)
         pcmk_cluster_free(attrd_cluster);
         g_hash_table_destroy(attributes);
     }
+
+    attrd_cleanup_xml_ids();
 
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,6 +22,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/remote_internal.h>
+#include <crm/fencing/internal.h>           // stonith__api_new()
 #include <crm/lrmd_internal.h>
 
 #include "pacemaker-execd.h"
@@ -67,23 +68,23 @@ stonith_t *
 get_stonith_connection(void)
 {
     if (stonith_api && stonith_api->state == stonith_disconnected) {
-        stonith_api_delete(stonith_api);
+        stonith__api_free(stonith_api);
         stonith_api = NULL;
     }
 
     if (stonith_api == NULL) {
         int rc = pcmk_ok;
 
-        stonith_api = stonith_api_new();
+        stonith_api = stonith__api_new();
         if (stonith_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return NULL;
         }
-        rc = stonith_api_connect_retry(stonith_api, crm_system_name, 10);
-        if (rc != pcmk_ok) {
+        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 10);
+        if (rc != pcmk_rc_ok) {
             crm_err("Could not connect to fencer in 10 attempts: %s "
-                    QB_XS " rc=%d", pcmk_strerror(rc), rc);
-            stonith_api_delete(stonith_api);
+                    QB_XS " rc=%d", pcmk_rc_str(rc), rc);
+            stonith__api_free(stonith_api);
             stonith_api = NULL;
         } else {
             stonith_api_operations_t *cmds = stonith_api->cmds;
@@ -122,15 +123,44 @@ lrmd_ipc_created(qb_ipcs_connection_t * c)
 static int32_t
 lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *request = pcmk__client_data2xml(client, data, &id, &flags);
+    xmlNode *request = NULL;
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
               return FALSE);
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
               return FALSE);
+
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        request = pcmk__client_data2xml(client, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
+        }
+
+        return 0;
+    }
 
     CRM_CHECK(flags & crm_ipc_client_response, crm_err("Invalid client request: %p", client);
               return FALSE);
@@ -138,6 +168,10 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     if (!request) {
         return 0;
     }
+
+    /* @TODO functionize some of this to reduce duplication with
+     * lrmd_remote_client_msg()
+     */
 
     if (!client->name) {
         const char *value = crm_element_value(request,
@@ -226,7 +260,7 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
     crm_trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
-            return pcmk__ipc_send_xml(client, id, reply, FALSE);
+            return pcmk__ipc_send_xml(client, id, reply, crm_ipc_flags_none);
 #ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
             return lrmd__remote_send_xml(client->remote, reply, id, "reply");
@@ -279,7 +313,7 @@ exit_executor(void)
 
     crm_info("Terminating with %d client%s",
              nclients, pcmk__plural_s(nclients));
-    stonith_api_delete(stonith_api);
+    stonith__api_free(stonith_api);
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
@@ -297,6 +331,7 @@ exit_executor(void)
 
     g_hash_table_destroy(rsc_list);
 
+    // @TODO End mainloop instead so all cleanup is done
     crm_exit(CRM_EX_OK);
 }
 

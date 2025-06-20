@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -57,9 +57,6 @@ fsa_input2string(enum crmd_fsa_input input)
     switch (input) {
         case I_NULL:
             inputAsText = "I_NULL";
-            break;
-        case I_CIB_OP:
-            inputAsText = "I_CIB_OP (unused)";
             break;
         case I_CIB_UPDATE:
             inputAsText = "I_CIB_UPDATE";
@@ -141,9 +138,6 @@ fsa_input2string(enum crmd_fsa_input input)
             break;
         case I_WAIT_FOR_EVENT:
             inputAsText = "I_WAIT_FOR_EVENT";
-            break;
-        case I_LRM_EVENT:
-            inputAsText = "I_LRM_EVENT";
             break;
         case I_PENDING:
             inputAsText = "I_PENDING";
@@ -307,9 +301,6 @@ fsa_action2string(long long action)
             break;
         case A_LRM_CONNECT:
             actionAsText = "A_LRM_CONNECT";
-            break;
-        case A_LRM_EVENT:
-            actionAsText = "A_LRM_EVENT";
             break;
         case A_LRM_INVOKE:
             actionAsText = "A_LRM_INVOKE";
@@ -576,9 +567,6 @@ fsa_dump_actions(uint64_t action, const char *text)
     }
     if (pcmk_is_set(action, A_LRM_CONNECT)) {
         crm_trace("Action %.16llx (A_LRM_CONNECT) %s", A_LRM_CONNECT, text);
-    }
-    if (pcmk_is_set(action, A_LRM_EVENT)) {
-        crm_trace("Action %.16llx (A_LRM_EVENT) %s", A_LRM_EVENT, text);
     }
     if (pcmk_is_set(action, A_LRM_INVOKE)) {
         crm_trace("Action %.16llx (A_LRM_INVOKE) %s", A_LRM_INVOKE, text);

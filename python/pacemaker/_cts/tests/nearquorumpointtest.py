@@ -1,7 +1,7 @@
 """Randomly start and stop nodes to bring the cluster close to the quorum point."""
 
 __all__ = ["NearQuorumPointTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -47,8 +47,8 @@ class NearQuorumPointTest(CTSTest):
             elif action == "stop":
                 stopset.append(node)
 
-        self.debug("start nodes:%r" % startset)
-        self.debug("stop nodes:%r" % stopset)
+        self.debug(f"start nodes:{startset!r}")
+        self.debug(f"stop nodes:{stopset!r}")
 
         # add search patterns
         watchpats = []
@@ -89,7 +89,7 @@ class NearQuorumPointTest(CTSTest):
             self._cm.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
 
-        self._logger.log("Warn: Patterns not found: %r" % watch.unmatched)
+        self._logger.log(f"Warn: Patterns not found: {watch.unmatched!r}")
 
         # get the "bad" nodes
         upnodes = []
@@ -113,9 +113,9 @@ class NearQuorumPointTest(CTSTest):
             return self.success()
 
         if upnodes:
-            self._logger.log("Warn: Unstoppable nodes: %r" % upnodes)
+            self._logger.log(f"Warn: Unstoppable nodes: {upnodes!r}")
 
         if downnodes:
-            self._logger.log("Warn: Unstartable nodes: %r" % downnodes)
+            self._logger.log(f"Warn: Unstartable nodes: {downnodes!r}")
 
         return self.failure()

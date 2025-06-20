@@ -229,8 +229,9 @@ AC_ARG_ENABLE([hardening],
 yes_no_try "$enable_hardening" "try"
 enable_hardening=$?
 
-dnl --enable-* options: features
+dnl --enable-* options: features within Pacemaker
 
+dnl @COMPAT This should be --with-systemd
 AC_ARG_ENABLE([systemd],
     [AS_HELP_STRING([--enable-systemd],
         [enable support for managing resources via systemd @<:@try@:>@])]
@@ -238,7 +239,14 @@ AC_ARG_ENABLE([systemd],
 yes_no_try "$enable_systemd" "try"
 enable_systemd=$?
 
-dnl --enable-* options: features inherent to Pacemaker
+AC_ARG_ENABLE([deprecated-libs],
+    [AS_HELP_STRING([--enable-deprecated-libs],
+        [Build and install deprecated C libraries @<:@yes@:>@])]
+)
+yes_no_try "$enable_deprecated_libs" "yes"
+enable_deprecated_libs=$?
+AM_CONDITIONAL([BUILD_DEPRECATED_LIBS],
+               [test $enable_deprecated_libs -ne $DISABLED])
 
 # AM_GNU_GETTEXT calls AM_NLS which defines the nls option, but it defaults
 # to enabled. We override the definition of AM_NLS to flip the default and mark
@@ -255,7 +263,7 @@ AC_DEFUN([AM_NLS],
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.18])
 
-dnl --with-* options: external software support, and custom locations
+dnl --with-* options: external software support, and custom values
 
 dnl This argument is defined via an M4 macro so default can be a variable
 AC_DEFUN([VERSION_ARG],
@@ -295,8 +303,7 @@ AC_ARG_WITH([bug-url],
 AS_IF([test x"${BUG_URL}" = x""],
       [BUG_URL="https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker"])
 
-dnl --with-* options: features
-
+dnl @COMPAT This should be --enable-cibsecrets option
 AC_ARG_WITH([cibsecrets],
     [AS_HELP_STRING([--with-cibsecrets],
         [support separate file for CIB secrets @<:@no@:>@])]
@@ -971,7 +978,6 @@ dnl ==============================================
 dnl Documentation build dependencies and checks
 dnl ==============================================
 
-AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
 AC_PATH_PROG([SPHINX], [sphinx-build])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
@@ -1012,11 +1018,6 @@ AC_SUBST(MANPAGE_XSLT)
 AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
 AS_IF([test x"${MANPAGE_XSLT}" != x""],
       [PCMK_FEATURES="$PCMK_FEATURES agent-manpages"])
-
-AM_CONDITIONAL([IS_ASCIIDOC], [echo "${ASCIIDOC_CONV}" | grep -Eq 'asciidoc$'])
-AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
-AS_IF([test x"${ASCIIDOC_CONV}" != x""],
-      [PCMK_FEATURES="$PCMK_FEATURES ascii-docs"])
 
 AM_CONDITIONAL([BUILD_SPHINX_DOCS], [test x"${SPHINX}" != x""])
 AM_COND_IF([BUILD_SPHINX_DOCS], [PCMK_FEATURES="$PCMK_FEATURES books"])
@@ -1111,7 +1112,6 @@ cc_temp_flags "$CFLAGS $WERROR"
 
 # Optional headers (inclusion of these should be conditional in C code)
 AC_CHECK_HEADERS([linux/swab.h])
-AC_CHECK_HEADERS([stddef.h])
 AC_CHECK_HEADERS([sys/signalfd.h])
 AC_CHECK_HEADERS([uuid/uuid.h])
 AC_CHECK_HEADERS([security/pam_appl.h pam/pam_appl.h])
@@ -1215,9 +1215,6 @@ dnl Structures
 dnl ========================================================================
 
 AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[[#include <time.h>]])
-AC_CHECK_MEMBER([struct dirent.d_type],
-    AC_DEFINE(HAVE_STRUCT_DIRENT_D_TYPE,1,[Define this if struct dirent has d_type]),,
-    [#include <dirent.h>])
 
 dnl ========================================================================
 dnl Functions
@@ -2075,6 +2072,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/xml/Makefile                       \
                 lib/common/tests/xml_comment/Makefile               \
                 lib/common/tests/xml_element/Makefile               \
+                lib/common/tests/xml_idref/Makefile                 \
                 lib/common/tests/xpath/Makefile                     \
                 lib/fencing/Makefile                                \
                 lib/libpacemaker.pc                                 \

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -107,12 +107,7 @@ init_remote_listener(int port, gboolean encrypted)
 #endif
 
     /* create server socket */
-    ssock = malloc(sizeof(int));
-    if(ssock == NULL) {
-        crm_err("Listener socket allocation failed: %s", pcmk_rc_str(errno));
-        return -1;
-    }
-
+    ssock = pcmk__assert_alloc(1, sizeof(int));
     *ssock = socket(AF_INET, SOCK_STREAM, 0);
     if (*ssock == -1) {
         crm_err("Listener socket creation failed: %s", pcmk_rc_str(errno));
@@ -253,7 +248,7 @@ remote_auth_timeout_cb(gpointer data)
 static int
 cib_remote_listen(gpointer data)
 {
-    int csock = 0;
+    int csock = -1;
     unsigned laddr;
     struct sockaddr_storage addr;
     char ipstr[INET6_ADDRSTRLEN];
@@ -325,7 +320,7 @@ void
 cib_remote_connection_destroy(gpointer user_data)
 {
     pcmk__client_t *client = user_data;
-    int csock = 0;
+    int csock = -1;
 
     if (client == NULL) {
         return;
@@ -343,9 +338,8 @@ cib_remote_connection_destroy(gpointer user_data)
             break;
         case pcmk__client_tls:
             if (client->remote->tls_session) {
-                void *sock_ptr = gnutls_transport_get_ptr(client->remote->tls_session);
+                csock = pcmk__tls_get_client_sock(client->remote);
 
-                csock = GPOINTER_TO_INT(sock_ptr);
                 if (pcmk_is_set(client->flags,
                                 pcmk__client_tls_handshake_complete)) {
                     gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
@@ -360,7 +354,7 @@ cib_remote_connection_destroy(gpointer user_data)
                      pcmk__client_name(client), client->flags);
     }
 
-    if (csock > 0) {
+    if (csock >= 0) {
         close(csock);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -110,7 +110,6 @@ extern controld_globals_t controld_globals;
 
 /*!
  * \internal
- * \enum controld_flags
  * \brief Bit flags to store various controller state and configuration info
  */
 enum controld_flags {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -538,6 +538,7 @@ lrmd_dispatch(lrmd_t * lrmd)
                     const char *msg = crm_ipc_buffer(private->ipc);
 
                     lrmd_ipc_dispatch(msg, strlen(msg), lrmd);
+                    pcmk__ipc_free_client_buffer(private->ipc);
                 }
             }
             break;
@@ -630,7 +631,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
         pcmk__free_tls(native->tls);
         native->tls = NULL;
     }
-    if (native->sock) {
+    if (native->sock >= 0) {
         close(native->sock);
     }
     if (native->process_notify) {
@@ -651,7 +652,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
     native->remote->buffer = NULL;
     native->remote->start_state = NULL;
     native->source = 0;
-    native->sock = 0;
+    native->sock = -1;
 
     if (native->callback) {
         lrmd_event_data_t event = { 0, };
@@ -1542,7 +1543,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     if (native->tls == NULL) {
         rc = pcmk__init_tls(&native->tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
 
-        if (rc != pcmk_rc_ok) {
+        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
             lrmd_tls_connection_destroy(lrmd);
             report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
             return;
@@ -1782,9 +1783,9 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
         mainloop_del_ipc_client(native->source);
         native->source = NULL;
 
-    } else if (native->sock) {
+    } else if (native->sock >= 0) {
         close(native->sock);
-        native->sock = 0;
+        native->sock = -1;
     }
 
     if (native->pending_notify) {
@@ -2057,18 +2058,18 @@ lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
 }
 
 static int
-stonith_get_metadata(const char *provider, const char *type, char **output)
+stonith_get_metadata(const char *type, char **output)
 {
     int rc = pcmk_ok;
-    stonith_t *stonith_api = stonith_api_new();
+    stonith_t *stonith_api = stonith__api_new();
 
     if (stonith_api == NULL) {
         crm_err("Could not get fence agent meta-data: API memory allocation failed");
         return -ENOMEM;
     }
 
-    rc = stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type,
-                                     provider, output, 0);
+    rc = stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, NULL,
+                                     output, 0);
     if ((rc == pcmk_ok) && (*output == NULL)) {
         rc = -EIO;
     }
@@ -2101,7 +2102,9 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
 
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         lrmd_key_value_freeall(params);
-        return stonith_get_metadata(provider, type, output);
+
+        // stonith-class resources don't support a provider
+        return stonith_get_metadata(type, output);
     }
 
     params_table = pcmk__strkey_table(free, free);
@@ -2220,7 +2223,7 @@ static int
 list_stonith_agents(lrmd_list_t ** resources)
 {
     int rc = 0;
-    stonith_t *stonith_api = stonith_api_new();
+    stonith_t *stonith_api = stonith__api_new();
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
@@ -2239,7 +2242,7 @@ list_stonith_agents(lrmd_list_t ** resources)
         }
     }
 
-    stonith_key_value_freeall(stonith_resources, 1, 0);
+    stonith__key_value_freeall(stonith_resources, true, false);
     return rc;
 }
 
@@ -2505,8 +2508,7 @@ metadata_complete(svc_action_t *action)
     struct metadata_cb *metadata_cb = (struct metadata_cb *) action->cb_data;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
-    pcmk__set_result(&result, action->rc, action->status,
-                     services__exit_reason(action));
+    services__copy_result(action, &result);
     pcmk__set_result_output(&result, action->stdout_data, action->stderr_data);
 
     metadata_cb->callback(0, &result, metadata_cb->user_data);
@@ -2574,8 +2576,7 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
         return ENOMEM;
     }
     if (action->rc != PCMK_OCF_UNKNOWN) {
-        pcmk__set_result(&result, action->rc, action->status,
-                         services__exit_reason(action));
+        services__copy_result(action, &result);
         callback(0, &result, user_data);
         pcmk__reset_result(&result);
         services_action_free(action);

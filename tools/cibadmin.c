@@ -27,10 +27,7 @@ enum cibadmin_section_type {
     cibadmin_section_xpath,
 };
 
-static int request_id = 0;
-
 static cib_t *the_cib = NULL;
-static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
@@ -52,7 +49,6 @@ static struct {
     gboolean get_node_path;
     gboolean no_children;
     gboolean score_update;
-    gboolean sync_call;
 
     /* @COMPAT: For "-!" version option. Not advertised nor marked as
      * deprecated, but accepted.
@@ -61,12 +57,15 @@ static struct {
 
     // @COMPAT Deprecated since 3.0.0
     gboolean local;
-} options;
+
+    // @COMPAT Deprecated since 3.0.1
+    gboolean sync_call;
+} options = {
+    .cmd_options = cib_sync_call,
+};
 
 int do_init(void);
 static int do_work(xmlNode *input, xmlNode **output);
-void cibadmin_op_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
-                          void *user_data);
 
 static void
 print_xml_output(xmlNode * xml)
@@ -120,6 +119,9 @@ report_schema_unchanged(void)
 static inline bool
 cib_action_is_dangerous(void)
 {
+    /* @TODO Ideally, --upgrade wouldn't be considered dangerous if the CIB
+     * already uses the latest schema.
+     */
     return options.delete_all
            || pcmk__str_any_of(options.cib_action,
                                PCMK__CIB_REQUEST_UPGRADE,
@@ -344,9 +346,6 @@ static GOptionEntry addl_entries[] = {
       "Run the command with permissions of the named user (valid only for the "
       "root and " CRM_DAEMON_USER " accounts)", "value" },
 
-    { "sync-call", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.sync_call, "Wait for call to complete before returning", NULL },
-
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
       "Limit scope of operation to specific section of CIB\n"
       INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
@@ -428,6 +427,10 @@ static GOptionEntry addl_entries[] = {
     // @COMPAT Deprecated since 3.0.0
     { "local", 'l', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.local,
       "(deprecated)", NULL },
+
+    // @COMPAT Deprecated since 3.0.1
+    { "sync-call", 's', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
+      &options.sync_call, "(deprecated)", NULL },
 
     { NULL }
 };
@@ -651,19 +654,6 @@ main(int argc, char **argv)
                               cib_no_children);
     }
 
-    if (options.sync_call
-        || (options.acl_render_mode != pcmk__acl_render_none)) {
-        /* Wait for call to complete before returning.
-         *
-         * The ACL render modes work only with sync calls due to differences in
-         * output handling between sync/async. It shouldn't matter to the user
-         * whether the call is synchronous; for a CIB query, we have to wait for
-         * the result in order to display it in any case.
-         */
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_sync_call);
-    }
-
     if (options.input_file != NULL) {
         input = pcmk__xml_read(options.input_file);
         source = options.input_file;
@@ -785,56 +775,31 @@ main(int argc, char **argv)
     }
 
     rc = do_work(input, &output);
-    if (!pcmk_is_set(options.cmd_options, cib_sync_call)
-        && (the_cib->variant != cib_file)
-        && (rc >= 0)) {
-        /* For async call, positive rc is the call ID (file always synchronous).
-         *
-         * Wait for the reply by creating a mainloop and running it until the
-         * callbacks are invoked.
-         */
-        request_id = rc;
+    rc = pcmk_legacy2rc(rc);
 
-        the_cib->cmds->register_callback(the_cib, request_id,
-                                         options.message_timeout_sec, FALSE,
-                                         NULL, "cibadmin_op_callback",
-                                         cibadmin_op_callback);
+    if ((rc == pcmk_rc_schema_unchanged)
+        && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
 
-        mainloop = g_main_loop_new(NULL, FALSE);
+        report_schema_unchanged();
 
-        crm_trace("%s waiting for reply from the local CIB", crm_system_name);
+    } else if (rc != pcmk_rc_ok) {
+        crm_err("Call failed: %s", pcmk_rc_str(rc));
+        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
+        exit_code = pcmk_rc2exitc(rc);
 
-        crm_info("Starting mainloop");
-        g_main_loop_run(mainloop);
+        if (rc == pcmk_rc_schema_validation) {
+            if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
+                xmlNode *obj = NULL;
 
-    } else {
-        rc = pcmk_legacy2rc(rc);
-
-        if ((rc == pcmk_rc_schema_unchanged)
-            && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
-
-            report_schema_unchanged();
-
-        } else if (rc != pcmk_rc_ok) {
-            crm_err("Call failed: %s", pcmk_rc_str(rc));
-            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
-            exit_code = pcmk_rc2exitc(rc);
-
-            if (rc == pcmk_rc_schema_validation) {
-                if (strcmp(options.cib_action,
-                           PCMK__CIB_REQUEST_UPGRADE) == 0) {
-                    xmlNode *obj = NULL;
-
-                    if (the_cib->cmds->query(the_cib, NULL, &obj,
-                                             options.cmd_options) == pcmk_ok) {
-                        pcmk__update_schema(&obj, NULL, true, false);
-                    }
-                    pcmk__xml_free(obj);
-
-                } else if (output != NULL) {
-                    // Show validation errors to stderr
-                    pcmk__validate_xml(output, NULL, NULL, NULL);
+                if (the_cib->cmds->query(the_cib, NULL, &obj,
+                                         options.cmd_options) == pcmk_ok) {
+                    pcmk__update_schema(&obj, NULL, true, false);
                 }
+                pcmk__xml_free(obj);
+
+            } else if (output != NULL) {
+                // Show validation errors to stderr
+                pcmk__validate_xml(output, NULL, NULL, NULL);
             }
         }
     }
@@ -931,42 +896,4 @@ do_init(void)
     }
 
     return rc;
-}
-
-void
-cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    rc = pcmk_legacy2rc(rc);
-    exit_code = pcmk_rc2exitc(rc);
-
-    if (rc == pcmk_rc_schema_unchanged) {
-        report_schema_unchanged();
-
-    } else if (rc != pcmk_rc_ok) {
-        crm_warn("Call %s failed: %s " QB_XS " rc=%d",
-                 options.cib_action, pcmk_rc_str(rc), rc);
-        fprintf(stderr, "Call %s failed: %s\n",
-                options.cib_action, pcmk_rc_str(rc));
-        print_xml_output(output);
-
-    } else if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_QUERY) == 0)
-               && (output == NULL)) {
-        crm_err("Query returned no output");
-        crm_log_xml_err(msg, "no output");
-
-    } else if (output == NULL) {
-        crm_info("Call passed");
-
-    } else {
-        crm_info("Call passed");
-        print_xml_output(output);
-    }
-
-    if (call_id == request_id) {
-        g_main_loop_quit(mainloop);
-
-    } else {
-        crm_info("Message was not the response we were looking for (%d vs. %d)",
-                 call_id, request_id);
-    }
 }

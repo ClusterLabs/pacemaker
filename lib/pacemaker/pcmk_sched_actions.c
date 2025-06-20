@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,12 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                        // bool, true, false
 #include <stdio.h>
 #include <sys/param.h>
+
 #include <glib.h>
+#include <libxml/tree.h>                    // xmlNode
 
 #include <crm/lrmd_internal.h>
 #include <crm/common/scheduler_internal.h>
@@ -473,6 +476,12 @@ update_action_for_ordering_flags(pcmk_action_t *first, pcmk_action_t *then,
         && !pcmk_is_set(first->flags, pcmk__action_runnable)
         && pcmk__str_eq(first->task, PCMK_ACTION_STOP, pcmk__str_none)) {
 
+        /* @TODO This seems odd; why wouldn't an unrunnable "first" already
+         * block "then" before this? Note that the unmanaged-stop-{1,2}
+         * scheduler regression tests and the test CIB for T209 have tests for
+         * "stop then stop" relations that would be good for checking any
+         * changes.
+         */
         if (pcmk_is_set(then->flags, pcmk__action_runnable)) {
             pcmk__clear_action_flags(then, pcmk__action_runnable);
             pcmk__set_updated_flags(changed, first, pcmk__updated_then);
@@ -728,7 +737,7 @@ handle_asymmetric_ordering(const pcmk_action_t *first, pcmk_action_t *then)
     if (pcmk_is_set(then->flags, pcmk__action_optional)) {
         enum rsc_role_e then_rsc_role;
 
-        then_rsc_role = then->rsc->priv->fns->state(then->rsc, TRUE);
+        then_rsc_role = then->rsc->priv->fns->state(then->rsc, true);
 
         if ((then_rsc_role == pcmk_role_stopped)
             && pcmk__str_eq(then->task, PCMK_ACTION_STOP, pcmk__str_none)) {
@@ -1149,6 +1158,11 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
      * pre-OCF-1.1 resource agent, but we don't know that here, and we should
      * only ever get results for actions scheduled by us, so we can reasonably
      * assume any "reload" is actually a pre-1.1 agent reload.
+     *
+     * @TODO This remapping can make log messages with task confusing for users
+     * (for example, an "Initiating reload ..." followed by "... start ...
+     * confirmed"). Either do this remapping in the scheduler if possible, or
+     * store the original task in a new XML attribute for later logging.
      */
     if (pcmk__str_any_of(task, PCMK_ACTION_RELOAD, PCMK_ACTION_RELOAD_AGENT,
                          NULL)) {
@@ -1764,6 +1778,9 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         if (pcmk__is_anonymous_clone(pe__const_top_resource(rsc, false))) {
+            /* @TODO Should this be done for bundled primitives as well? Added
+             * by 2ac43ae31
+             */
             pcmk__rsc_trace(rsc,
                             "Skipping configuration check "
                             "for orphaned clone instance %s",
@@ -1839,8 +1856,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                  * definition appear to have been changed. Defer the check until
                  * later in this case.
                  */
-                pe__add_param_check(rsc_op, rsc, node, pcmk__check_active,
-                                    rsc->priv->scheduler);
+                pcmk__add_param_check(rsc_op, rsc, node, pcmk__check_active);
 
             } else if (pcmk__check_action_config(rsc, node, rsc_op)
                        && (pe_get_failcount(node, rsc, NULL, pcmk__fc_effective,
@@ -1933,7 +1949,8 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
             xmlNode *history = NULL;
 
             xpath = crm_strdup_printf(XPATH_NODE_HISTORY, node->priv->name);
-            history = get_xpath_object(xpath, scheduler->input, LOG_NEVER);
+            history = pcmk__xpath_find_one(scheduler->input->doc, xpath,
+                                           LOG_NEVER);
             free(xpath);
 
             process_node_history(node, history);

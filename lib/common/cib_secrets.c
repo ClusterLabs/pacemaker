@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,60 +23,93 @@
 
 #include <crm/common/util.h>
 
-static int is_magic_value(char *p);
-static bool check_md5_hash(char *hash, char *value);
-static void add_secret_params(gpointer key, gpointer value, gpointer user_data);
-static char *read_local_file(char *local_file);
-
-#define MAX_VALUE_LEN 255
-#define MAGIC "lrm://"
-
-static int
-is_magic_value(char *p)
-{
-    return !strcmp(p, MAGIC);
-}
-
-static bool
-check_md5_hash(char *hash, char *value)
-{
-    bool rc = false;
-    char *hash2 = NULL;
-
-    hash2 = crm_md5sum(value);
-    crm_debug("hash: %s, calculated hash: %s", hash, hash2);
-    if (pcmk__str_eq(hash, hash2, pcmk__str_casei)) {
-        rc = true;
-    }
-    free(hash2);
-    return rc;
-}
-
+/*!
+ * \internal
+ * \brief Read file contents into a string, with trailing whitespace removed
+ *
+ * \param[in] filename  Name of file to read
+ *
+ * \return File contents as a string, or \c NULL on failure or empty file
+ *
+ * \note It would be simpler to call \c pcmk__file_contents() directly without
+ *       trimming trailing whitespace. However, this would change hashes for
+ *       existing value files that have trailing whitespace. Similarly, if we
+ *       trim trailing whitespace, it would make sense to trim leading
+ *       whitespace, but this changes existing hashes.
+ */
 static char *
-read_local_file(char *local_file)
+read_file_trimmed(const char *filename)
 {
-    FILE *fp = fopen(local_file, "r");
-    char buf[MAX_VALUE_LEN+1];
-    char *p;
+    char *p = NULL;
+    char *buf = NULL;
+    int rc = pcmk__file_contents(filename, &buf);
 
-    if (!fp) {
-        if (errno != ENOENT) {
-            crm_perror(LOG_ERR, "cannot open %s" , local_file);
-        }
+    if (rc != pcmk_rc_ok) {
+        crm_err("Failed to read %s: %s", filename, pcmk_rc_str(rc));
+        free(buf);
         return NULL;
     }
 
-    if (!fgets(buf, MAX_VALUE_LEN, fp)) {
-        crm_perror(LOG_ERR, "cannot read %s", local_file);
-        fclose(fp);
+    if (buf == NULL) {
+        crm_err("File %s is empty", filename);
         return NULL;
     }
-    fclose(fp);
 
     // Strip trailing white space
     for (p = buf + strlen(buf) - 1; (p >= buf) && isspace(*p); p--);
-    *(p+1) = '\0';
-    return strdup(buf);
+    *(p + 1) = '\0';
+
+    return buf;
+}
+
+/*!
+ * \internal
+ * \brief Read checksum from a file and compare against calculated checksum
+ *
+ * \param[in] filename      File containing stored checksum
+ * \param[in] secret_value  String to calculate checksum from
+ * \param[in] rsc_id        Resource ID (for logging only)
+ * \param[in] param         Parameter name (for logging only)
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+validate_hash(const char *filename, const char *secret_value,
+              const char *rsc_id, const char *param)
+{
+    char *stored = NULL;
+    char *calculated = NULL;
+    int rc = pcmk_rc_ok;
+
+    stored = read_file_trimmed(filename);
+    if (stored == NULL) {
+        crm_err("Could not read md5 sum for resource %s parameter '%s' from "
+                "file '%s'",
+                rsc_id, param, filename);
+        rc = ENOENT;
+        goto done;
+    }
+
+    calculated = crm_md5sum(secret_value);
+    if (calculated == NULL) {
+        // Should be impossible
+        rc = EINVAL;
+        goto done;
+    }
+
+    crm_trace("Stored hash: %s, calculated hash: %s", stored, calculated);
+
+    if (!pcmk__str_eq(stored, calculated, pcmk__str_casei)) {
+        crm_err("Calculated md5 sum for resource %s parameter '%s' does not "
+                "match stored md5 sum",
+                rsc_id, param);
+        rc = pcmk_rc_cib_corrupt;
+    }
+
+done:
+    free(stored);
+    free(calculated);
+    return rc;
 }
 
 /*!
@@ -95,98 +128,68 @@ read_local_file(char *local_file)
 int
 pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 {
-    char local_file[FILENAME_MAX+1], *start_pname;
-    char hash_file[FILENAME_MAX+1], *hash;
-    GList *secret_params = NULL, *l;
-    char *key, *pvalue, *secret_value;
+    GHashTableIter iter;
+    char *param = NULL;
+    char *value = NULL;
+    GString *filename = NULL;
+    gsize dir_len = 0;
     int rc = pcmk_rc_ok;
 
     if (params == NULL) {
         return pcmk_rc_ok;
     }
 
-    /* secret_params could be cached with the resource;
-     * there are also parameters sent with operations
-     * which cannot be cached
-     */
-    g_hash_table_foreach(params, add_secret_params, &secret_params);
-    if (secret_params == NULL) { // No secret parameters found
-        return pcmk_rc_ok;
-    }
+    // Some params are sent with operations, so we cannot cache secret params
+    g_hash_table_iter_init(&iter, params);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &param,
+                                  (gpointer *) &value)) {
+        char *secret_value = NULL;
+        int hash_rc = pcmk_rc_ok;
 
-    crm_debug("Replace secret parameters for resource %s", rsc_id);
-
-    if (snprintf(local_file, FILENAME_MAX, PCMK__CIB_SECRETS_DIR "/%s/", rsc_id)
-            > FILENAME_MAX) {
-        crm_err("Can't replace secret parameters for %s: file name size exceeded",
-                rsc_id);
-        return ENAMETOOLONG;
-    }
-    start_pname = local_file + strlen(local_file);
-
-    for (l = g_list_first(secret_params); l; l = g_list_next(l)) {
-        key = (char *)(l->data);
-        pvalue = g_hash_table_lookup(params, key);
-        if (!pvalue) { /* this cannot really happen */
-            crm_err("odd, no parameter %s for rsc %s found now", key, rsc_id);
+        if (!pcmk__str_eq(value, "lrm://", pcmk__str_none)) {
+            // Not a secret parameter
             continue;
         }
 
-        if ((strlen(key) + strlen(local_file)) >= FILENAME_MAX-2) {
-            crm_err("%s: parameter name %s too big", rsc_id, key);
-            rc = ENAMETOOLONG;
-            continue;
+        if (filename == NULL) {
+            // First secret parameter. Fill in directory path for use with all.
+            crm_debug("Replacing secret parameters for resource %s", rsc_id);
+
+            filename = g_string_sized_new(128);
+            pcmk__g_strcat(filename, PCMK__CIB_SECRETS_DIR "/", rsc_id, "/",
+                           NULL);
+            dir_len = filename->len;
+
+        } else {
+            // Reset filename to the resource's secrets directory path
+            g_string_truncate(filename, dir_len);
         }
 
-        strcpy(start_pname, key);
-        secret_value = read_local_file(local_file);
-        if (!secret_value) {
-            crm_err("secret for rsc %s parameter %s not found in %s",
-                    rsc_id, key, PCMK__CIB_SECRETS_DIR);
+        // Path to file containing secret value for this parameter
+        g_string_append(filename, param);
+        secret_value = read_file_trimmed(filename->str);
+        if (secret_value == NULL) {
+            crm_err("Secret value for resource %s parameter '%s' not found in "
+                    PCMK__CIB_SECRETS_DIR,
+                    rsc_id, param);
             rc = ENOENT;
             continue;
         }
 
-        strcpy(hash_file, local_file);
-        if (strlen(hash_file) + 5 > FILENAME_MAX) {
-            crm_err("cannot build such a long name "
-                    "for the sign file: %s.sign", hash_file);
+        // Path to file containing md5 sum for this parameter
+        g_string_append(filename, ".sign");
+        hash_rc = validate_hash(filename->str, secret_value, rsc_id, param);
+        if (hash_rc != pcmk_rc_ok) {
+            rc = hash_rc;
             free(secret_value);
-            rc = ENAMETOOLONG;
             continue;
-
-        } else {
-            strcat(hash_file, ".sign");
-            hash = read_local_file(hash_file);
-            if (hash == NULL) {
-                crm_err("md5 sum for rsc %s parameter %s "
-                        "cannot be read from %s", rsc_id, key, hash_file);
-                free(secret_value);
-                rc = ENOENT;
-                continue;
-
-            } else if (!check_md5_hash(hash, secret_value)) {
-                crm_err("md5 sum for rsc %s parameter %s "
-                        "does not match", rsc_id, key);
-                free(secret_value);
-                free(hash);
-                rc = pcmk_rc_cib_corrupt;
-                continue;
-            }
-            free(hash);
         }
-        g_hash_table_replace(params, strdup(key), secret_value);
+
+        g_hash_table_iter_replace(&iter, (gpointer) secret_value);
     }
-    g_list_free(secret_params);
+
+    if (filename != NULL) {
+        g_string_free(filename, TRUE);
+    }
     return rc;
-}
-
-static void
-add_secret_params(gpointer key, gpointer value, gpointer user_data)
-{
-    GList **lp = (GList **)user_data;
-
-    if (is_magic_value((char *)value)) {
-        *lp = g_list_append(*lp, (char *)key);
-    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -168,7 +168,7 @@ pcmk__find_action_config(const pcmk_resource_t *rsc, const char *action_name,
  *
  * \return Newly allocated action
  * \note This function takes ownership of \p key. It is the caller's
- *       responsibility to free the return value with pe_free_action().
+ *       responsibility to free the return value using pcmk__free_action().
  */
 static pcmk_action_t *
 new_action(char *key, const char *task, pcmk_resource_t *rsc,
@@ -239,7 +239,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
  *
  * \param[in]     action_xml  XML of action's configuration in CIB (if any)
  * \param[in,out] node_attrs  Table of node attributes (for rule evaluation)
- * \param[in,out] scheduler   Cluster working set (for rule evaluation)
+ * \param[in,out] scheduler   Scheduler data (for rule evaluation)
  *
  * \return Newly allocated hash table of action-specific instance parameters
  */
@@ -250,16 +250,13 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
 {
     GHashTable *params = pcmk__strkey_table(free, free);
 
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = node_attrs,
+    const pcmk_rule_input_t rule_input = {
         .now = scheduler->priv->now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
+        .node_attrs = node_attrs,
     };
 
     pe__unpack_dataset_nvpairs(action_xml, PCMK_XE_INSTANCE_ATTRIBUTES,
-                               &rule_data, params, NULL, scheduler);
+                               &rule_input, params, NULL, scheduler);
     return params;
 }
 
@@ -392,7 +389,7 @@ update_resource_action_runnable(pcmk_action_t *action,
                 break;
 
             case pcmk_no_quorum_freeze:
-                if (!rsc->priv->fns->active(rsc, TRUE)
+                if (!rsc->priv->fns->active(rsc, true)
                     || (rsc->priv->next_role > rsc->priv->orig_role)) {
                     pcmk__rsc_debug(rsc, "%s on %s is unrunnable (no quorum)",
                                     action->uuid,
@@ -687,25 +684,16 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *timeout_spec = NULL;
     const char *str = NULL;
 
-    pe_rsc_eval_data_t rsc_rule_data = {
-        .standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
-        .provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
-        .agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE),
-    };
-
-    pe_op_eval_data_t op_rule_data = {
-        .op_name = action_name,
-        .interval = interval_ms,
-    };
-
-    pe_rule_eval_data_t rule_data = {
+    const pcmk_rule_input_t rule_input = {
         /* Node attributes are not set because node expressions are not allowed
          * for meta-attributes
          */
         .now = rsc->priv->scheduler->priv->now,
-        .match_data = NULL,
-        .rsc_data = &rsc_rule_data,
-        .op_data = &op_rule_data,
+        .rsc_standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
+        .rsc_provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
+        .rsc_agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE),
+        .op_name = action_name,
+        .op_interval_ms = interval_ms,
     };
 
     meta = pcmk__strkey_table(free, free);
@@ -713,7 +701,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     if (action_config != NULL) {
         // <op> <meta_attributes> take precedence over defaults
         pe__unpack_dataset_nvpairs(action_config, PCMK_XE_META_ATTRIBUTES,
-                                   &rule_data, meta, NULL,
+                                   &rule_input, meta, NULL,
                                    rsc->priv->scheduler);
 
         /* Anything set as an <op> XML property has highest precedence.
@@ -752,7 +740,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // Cluster-wide <op_defaults> <meta_attributes>
     pe__unpack_dataset_nvpairs(rsc->priv->scheduler->priv->op_defaults,
-                               PCMK_XE_META_ATTRIBUTES, &rule_data, meta, NULL,
+                               PCMK_XE_META_ATTRIBUTES, &rule_input, meta, NULL,
                                rsc->priv->scheduler);
 
     g_hash_table_remove(meta, PCMK_XA_ID);
@@ -776,7 +764,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
      */
 
     // Check for pcmk_monitor_timeout
-    if (pcmk_is_set(pcmk_get_ra_caps(rsc_rule_data.standard),
+    if (pcmk_is_set(pcmk_get_ra_caps(rule_input.rsc_standard),
                     pcmk_ra_cap_fence_params)
         && (pcmk__str_eq(action_name, PCMK_ACTION_START, pcmk__str_none)
             || pcmk_is_probe(action_name, interval_ms))) {
@@ -895,6 +883,10 @@ pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
                              "%s of %s to 'stop' because 'fence' is not "
                              "valid when fencing is disabled",
                              action_name, rsc->id);
+            /* @TODO This should probably do
+            g_hash_table_remove(meta, PCMK_META_ON_FAIL);
+            like the other "Resetting" spots, to avoid repeating the message
+            */
             on_fail = pcmk__on_fail_stop;
             desc = "stop resource";
         }
@@ -1355,28 +1347,6 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     }
 
     return stonith_op;
-}
-
-void
-pe_free_action(pcmk_action_t *action)
-{
-    if (action == NULL) {
-        return;
-    }
-    g_list_free_full(action->actions_before, free);
-    g_list_free_full(action->actions_after, free);
-    if (action->extra) {
-        g_hash_table_destroy(action->extra);
-    }
-    if (action->meta) {
-        g_hash_table_destroy(action->meta);
-    }
-    pcmk__free_node_copy(action->node);
-    free(action->cancel_task);
-    free(action->reason);
-    free(action->task);
-    free(action->uuid);
-    free(action);
 }
 
 enum pcmk__action_type

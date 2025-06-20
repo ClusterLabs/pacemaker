@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <glib.h>                   // gboolean, gchar, etc.
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -283,8 +285,8 @@ add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 
 gboolean
 add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    char *name = NULL;
-    char *value = NULL;
+    gchar *name = NULL;
+    gchar *value = NULL;
     int rc = 0;
     gboolean retval = TRUE;
 
@@ -292,8 +294,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
 
     rc = pcmk__scan_nvpair(optarg, &name, &value);
 
-    if (rc != 2) {
-        rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__RC_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_rc_str(rc));
         retval = FALSE;
     } else {
@@ -306,8 +307,8 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
         pcmk__insert_dup(options.params, name, value);
     }
 
-    free(name);
-    free(value);
+    g_free(name);
+    g_free(value);
     return retval;
 }
 
@@ -555,7 +556,7 @@ main(int argc, char **argv)
 
     out->quiet = args->quiet;
 
-    st = stonith_api_new();
+    st = stonith__api_new();
     if (st == NULL) {
         rc = -ENOMEM;
     } else if (!no_connect) {
@@ -569,7 +570,7 @@ main(int argc, char **argv)
 
     switch (action) {
         case 'I':
-            rc = pcmk__fence_installed(out, st, options.timeout*1000);
+            rc = pcmk__fence_installed(out, st);
             if (rc != pcmk_rc_ok) {
                 out->err(out, "Failed to list installed devices: %s", pcmk_rc_str(rc));
             }
@@ -609,12 +610,12 @@ main(int argc, char **argv)
             if (options.params != NULL) {
                 g_hash_table_iter_init(&iter, options.params);
                 while (g_hash_table_iter_next(&iter, &key, &val)) {
-                    params = stonith_key_value_add(params, key, val);
+                    params = stonith__key_value_add(params, key, val);
                 }
             }
             rc = st->cmds->register_device(st, st_opts, device, NULL, options.agent,
                                            params);
-            stonith_key_value_freeall(params, 1, 1);
+            stonith__key_value_freeall(params, true, true);
 
             rc = pcmk_legacy2rc(rc);
             if (rc != pcmk_rc_ok) {
@@ -718,7 +719,7 @@ main(int argc, char **argv)
 
     if (st != NULL) {
         st->cmds->disconnect(st);
-        stonith_api_delete(st);
+        stonith__api_free(st);
     }
 
     return exit_code;

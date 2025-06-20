@@ -1,7 +1,7 @@
 """Test environment classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["EnvFactory"]
-__copyright__ = "Copyright 2014-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
@@ -27,8 +27,9 @@ class Environment:
 
     # pylint doesn't understand that self._rsh is callable (it stores the
     # singleton instance of RemoteExec, as returned by the getInstance method
-    # of RemoteFactory).  It's possible we could fix this with type annotations,
-    # but those were introduced with python 3.5 and we only support python 3.4.
+    # of RemoteFactory).
+    # @TODO See if type annotations fix this.
+
     # I think we could also fix this by getting rid of the getInstance methods,
     # but that's a project for another day.  For now, just disable the warning.
     # pylint: disable=not-callable
@@ -100,8 +101,7 @@ class Environment:
 
         keys.sort()
         for key in keys:
-            s = "Environment[%s]" % key
-            self._logger.debug("{key:35}: {val}".format(key=s, val=str(self[key])))
+            self._logger.debug(f"{f'Environment[{key}]':35}: {str(self[key])}")
 
     def keys(self):
         """Return a list of all environment keys stored in this instance."""
@@ -144,10 +144,12 @@ class Environment:
                 # GoodThing(tm).
                 try:
                     n = node.strip()
+                    # @TODO This only handles IPv4, use getaddrinfo() instead
+                    # (here and in _discover())
                     socket.gethostbyname_ex(n)
                     self._nodes.append(n)
                 except socket.herror:
-                    self._logger.log("%s not found in DNS... aborting" % node)
+                    self._logger.log(f"{node} not found in DNS... aborting")
                     raise
 
             self._filter_nodes()
@@ -172,7 +174,7 @@ class Environment:
             self.data["Stack"] = "corosync 2+"
 
         else:
-            raise ValueError("Unknown stack: %s" % name)
+            raise ValueError(f"Unknown stack: {name}")
 
     def _get_stack_short(self):
         """Return the short name for the currently set cluster stack."""
@@ -182,8 +184,8 @@ class Environment:
         if self.data["Stack"] == "corosync 2+":
             return "crm-corosync"
 
-        LogFactory().log("Unknown stack: %s" % self["stack"])
-        raise ValueError("Unknown stack: %s" % self["stack"])
+        LogFactory().log(f"Unknown stack: {self['stack']}")
+        raise ValueError(f"Unknown stack: {self['stack']}")
 
     def _detect_systemd(self):
         """Detect whether systemd is in use on the target node."""
@@ -210,22 +212,22 @@ class Environment:
         """Disable the given service on the given node."""
         if self["have_systemd"]:
             # Systemd
-            (rc, _) = self._rsh(node, "systemctl disable %s" % service)
+            (rc, _) = self._rsh(node, f"systemctl disable {service}")
             return rc
 
         # SYS-V
-        (rc, _) = self._rsh(node, "chkconfig %s off" % service)
+        (rc, _) = self._rsh(node, f"chkconfig {service} off")
         return rc
 
     def enable_service(self, node, service):
         """Enable the given service on the given node."""
         if self["have_systemd"]:
             # Systemd
-            (rc, _) = self._rsh(node, "systemctl enable %s" % service)
+            (rc, _) = self._rsh(node, f"systemctl enable {service}")
             return rc
 
         # SYS-V
-        (rc, _) = self._rsh(node, "chkconfig %s on" % service)
+        (rc, _) = self._rsh(node, f"chkconfig {service} on")
         return rc
 
     def service_is_enabled(self, node, service):
@@ -237,11 +239,11 @@ class Environment:
             # explicitly "enabled" instead of the return code. For example it returns
             # 0 if the service is "static" or "indirect", but they don't really count
             # as "enabled".
-            (rc, _) = self._rsh(node, "systemctl is-enabled %s | grep enabled" % service)
+            (rc, _) = self._rsh(node, f"systemctl is-enabled {service} | grep enabled")
             return rc == 0
 
         # SYS-V
-        (rc, _) = self._rsh(node, "chkconfig --list | grep -e %s.*on" % service)
+        (rc, _) = self._rsh(node, f"chkconfig --list | grep -e {service}.*on")
         return rc == 0
 
     def _detect_at_boot(self):
@@ -266,17 +268,18 @@ class Environment:
             if not self["IPBase"]:
                 self["IPBase"] = " fe80::1234:56:7890:1000"
                 self._logger.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
-                self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
+                self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
                 return
 
             # pylint thinks self["IPBase"] is a list, not a string, which causes it
             # to error out because a list doesn't have split().
             # pylint: disable=no-member
-            if int(self["IPBase"].split('.')[3]) >= 240:
-                self._logger.log("Could not determine an offset for IPaddr resources. Upper bound is too high: %s %s"
-                                 % (self["IPBase"], self["IPBase"].split('.')[3]))
+            last_part = self["IPBase"].split('.')[3]
+
+            if int(last_part) >= 240:
+                self._logger.log(f"Could not determine an offset for IPaddr resources. Upper bound is too high: {self['IPBase']} {last_part}")
                 self["IPBase"] = " fe80::1234:56:7890:1000"
-                self._logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
+                self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
 
     def _filter_nodes(self):
         """
@@ -287,11 +290,8 @@ class Environment:
         """
         if self["node-limit"] > 0:
             if len(self["nodes"]) > self["node-limit"]:
-                # pylint thinks self["node-limit"] is a list even though we initialize
-                # it as an int in __init__ and treat it as an int everywhere.
-                # pylint: disable=bad-string-format-type
-                self._logger.log("Limiting the number of nodes configured=%d (max=%d)"
-                                 % (len(self["nodes"]), self["node-limit"]))
+                self._logger.log(f"Limiting the number of nodes configured={len(self['nodes'])} "
+                                 f"(max={self['node-limit']})")
 
                 while len(self["nodes"]) > self["node-limit"]:
                     self["nodes"].pop(len(self["nodes"]) - 1)
@@ -330,7 +330,7 @@ class Environment:
         if not argv:
             argv = sys.argv[1:]
 
-        parser = argparse.ArgumentParser(epilog="%s -g virt1 -r --stonith ssh --schema pacemaker-2.0 500" % sys.argv[0])
+        parser = argparse.ArgumentParser(epilog=f"{sys.argv[0]} -g virt1 -r --stonith ssh --schema pacemaker-2.0 500")
 
         grp1 = parser.add_argument_group("Common options")
         grp1.add_argument("-g", "--dsh-group", "--group",
@@ -428,7 +428,7 @@ class Environment:
                           help="Use QARSH to access nodes instead of SSH")
         grp4.add_argument("--schema",
                           metavar="SCHEMA",
-                          default="pacemaker-%s" % BuildOptions.CIB_SCHEMA_VERSION,
+                          default=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}",
                           help="Create a CIB conforming to the given schema")
         grp4.add_argument("--seed",
                           metavar="SEED",
@@ -505,10 +505,10 @@ class Environment:
             self["nodes"] = []
 
         if args.group:
-            self["OutputFile"] = "%s/cluster-%s.log" % (os.environ['HOME'], args.dsh_group)
+            self["OutputFile"] = f"{os.environ['HOME']}/cluster-{args.dsh_group}.log"
             LogFactory().add_file(self["OutputFile"], "CTS")
 
-            dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args.dsh_group)
+            dsh_file = f"{os.environ['HOME']}/.dsh/group/{args.dsh_group}"
 
             if os.path.isfile(dsh_file):
                 self["nodes"] = []
@@ -520,7 +520,7 @@ class Environment:
                         if not stripped.startswith('#'):
                             self["nodes"].append(stripped)
             else:
-                print("Unknown DSH group: %s" % args.dsh_group)
+                print(f"Unknown DSH group: {args.dsh_group}")
 
         # Everything else either can't have a default set in an add_argument
         # call (likely because we don't want to always have a value set for it)
@@ -561,24 +561,24 @@ class Environment:
                     self["stonith-type"] = "fence_openstack"
 
                     print("Obtaining OpenStack credentials from the current environment")
-                    self["stonith-params"] = "region=%s,tenant=%s,auth=%s,user=%s,password=%s" % (
-                        os.environ['OS_REGION_NAME'],
-                        os.environ['OS_TENANT_NAME'],
-                        os.environ['OS_AUTH_URL'],
-                        os.environ['OS_USERNAME'],
-                        os.environ['OS_PASSWORD']
-                    )
+                    region = os.environ['OS_REGION_NAME']
+                    tenant = os.environ['OS_TENANT_NAME']
+                    auth = os.environ['OS_AUTH_URL']
+                    user = os.environ['OS_USERNAME']
+                    password = os.environ['OS_PASSWORD']
+
+                    self["stonith-params"] = f"region={region},tenant={tenant},auth={auth},user={user},password={password}"
 
                 elif args.fencing == "rhevm":
                     self["stonith-type"] = "fence_rhevm"
 
                     print("Obtaining RHEV-M credentials from the current environment")
-                    self["stonith-params"] = "login=%s,passwd=%s,ipaddr=%s,ipport=%s,ssl=1,shell_timeout=10" % (
-                        os.environ['RHEVM_USERNAME'],
-                        os.environ['RHEVM_PASSWORD'],
-                        os.environ['RHEVM_SERVER'],
-                        os.environ['RHEVM_PORT'],
-                    )
+                    user = os.environ['RHEVM_USERNAME']
+                    password = os.environ['RHEVM_PASSWORD']
+                    server = os.environ['RHEVM_SERVER']
+                    port = os.environ['RHEVM_PORT']
+
+                    self["stonith-params"] = f"login={user},passwd={password},ipaddr={server},ipport={port},ssl=1,shell_timeout=10"
 
         if args.ip:
             self["CIBResource"] = True
@@ -621,7 +621,7 @@ class Environment:
         for kv in args.set:
             (name, value) = kv.split("=")
             self[name] = value
-            print("Setting %s = %s" % (name, value))
+            print(f"Setting {name} = {value}")
 
 
 class EnvFactory:

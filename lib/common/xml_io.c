@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,6 +18,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/xmlIO.h>               // xmlOutputBuffer*
+#include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -57,8 +58,6 @@ decompress_file(const char *filename)
         goto done;
     }
 
-    // cppcheck seems not to understand the abort-logic in pcmk__realloc
-    // cppcheck-suppress memleak
     do {
         int read_len = 0;
 
@@ -122,7 +121,7 @@ pcmk__xml_read(const char *filename)
         char *input = decompress_file(filename);
 
         if (input != NULL) {
-            output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+            output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
                                     XML_PARSE_NOBLANKS);
             free(input);
         }
@@ -184,7 +183,7 @@ pcmk__xml_parse(const char *input)
     xmlCtxtResetLastError(ctxt);
     xmlSetGenericErrorFunc(ctxt, pcmk__log_xmllib_err);
 
-    output = xmlCtxtReadDoc(ctxt, (pcmkXmlStr) input, NULL, NULL,
+    output = xmlCtxtReadDoc(ctxt, (const xmlChar *) input, NULL, NULL,
                             XML_PARSE_NOBLANKS);
     if (output != NULL) {
         pcmk__xml_new_private_data((xmlNode *) output);
@@ -354,46 +353,6 @@ dump_xml_comment(const xmlNode *data, uint32_t options, GString *buffer,
 
 /*!
  * \internal
- * \brief Get a string representation of an XML element type
- *
- * \param[in] type  XML element type
- *
- * \return String representation of \p type
- */
-static const char *
-xml_element_type_text(xmlElementType type)
-{
-    static const char *const element_type_names[] = {
-        [XML_ELEMENT_NODE]       = "element",
-        [XML_ATTRIBUTE_NODE]     = "attribute",
-        [XML_TEXT_NODE]          = "text",
-        [XML_CDATA_SECTION_NODE] = "CDATA section",
-        [XML_ENTITY_REF_NODE]    = "entity reference",
-        [XML_ENTITY_NODE]        = "entity",
-        [XML_PI_NODE]            = "PI",
-        [XML_COMMENT_NODE]       = "comment",
-        [XML_DOCUMENT_NODE]      = "document",
-        [XML_DOCUMENT_TYPE_NODE] = "document type",
-        [XML_DOCUMENT_FRAG_NODE] = "document fragment",
-        [XML_NOTATION_NODE]      = "notation",
-        [XML_HTML_DOCUMENT_NODE] = "HTML document",
-        [XML_DTD_NODE]           = "DTD",
-        [XML_ELEMENT_DECL]       = "element declaration",
-        [XML_ATTRIBUTE_DECL]     = "attribute declaration",
-        [XML_ENTITY_DECL]        = "entity declaration",
-        [XML_NAMESPACE_DECL]     = "namespace declaration",
-        [XML_XINCLUDE_START]     = "XInclude start",
-        [XML_XINCLUDE_END]       = "XInclude end",
-    };
-
-    if ((type < 0) || (type >= PCMK__NELEM(element_type_names))) {
-        return "unrecognized type";
-    }
-    return element_type_names[type];
-}
-
-/*!
- * \internal
  * \brief Create a string representation of an XML object
  *
  * libxml2's \c xmlNodeDumpOutput() doesn't allow filtering, doesn't escape
@@ -437,7 +396,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             break;
         default:
             crm_warn("Cannot convert XML %s node to text " QB_XS " type=%d",
-                     xml_element_type_text(data->type), data->type);
+                     pcmk__xml_element_type_text(data->type), data->type);
             break;
     }
 }

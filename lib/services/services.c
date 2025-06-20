@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -250,6 +250,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
     return pcmk_rc_ok;
 }
 
+// Takes ownership of params
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
                         const char *provider, const char *agent,
@@ -595,6 +596,11 @@ services_action_free(svc_action_t * op)
     }
 
     free(op->opaque->exit_reason);
+
+#if SUPPORT_SYSTEMD
+    free(op->opaque->job_path);
+#endif  // SUPPORT_SYSTEMD
+
     free(op->opaque);
     free(op->rsc);
     free(op->action);
@@ -1224,6 +1230,20 @@ services__set_result(svc_action_t *action, int agent_status,
         free(action->opaque->exit_reason);
         action->opaque->exit_reason = (reason == NULL)? NULL : strdup(reason);
     }
+}
+
+/*!
+ * \internal
+ * \brief Set a \c pcmk__action_result_t based on a \c svc_action_t
+ *
+ * \param[in]     action  Service action whose result to copy
+ * \param[in,out] result  Action result object to set
+ */
+void
+services__copy_result(const svc_action_t *action, pcmk__action_result_t *result)
+{
+    pcmk__set_result(result, action->rc, action->status,
+                     action->opaque->exit_reason);
 }
 
 /*!

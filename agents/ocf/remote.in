@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:remote OCF resource agent
 #
-# Copyright 2013-2023 the Pacemaker project contributors
+# Copyright 2013-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -56,7 +56,7 @@ meta_data() {
   <actions>
     <action name="start"         timeout="60s" />
     <action name="stop"          timeout="60s" />
-    <action name="monitor"       timeout="30s" />
+    <action name="monitor"       timeout="30s" interval="30s" />
     <action name="migrate_to"    timeout="60s" />
     <action name="migrate_from"  timeout="60s" />
     <action name="reload"        timeout="60s" />

@@ -1,7 +1,7 @@
 """Stop the cluster manager on a given node."""
 
 __all__ = ["StopTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -79,8 +79,8 @@ class StopTest(CTSTest):
                 self.debug(line)
 
             for regex in watch.unmatched:
-                self._logger.log("ERROR: Shutdown pattern not found: %s" % regex)
-                unmatched_str += "%s||" % regex
+                self._logger.log(f"ERROR: Shutdown pattern not found: {regex}")
+                unmatched_str += f"{regex}||"
                 failreason = "Missing shutdown pattern"
 
         self._cm.cluster_stable(self._env["DeadTime"])
@@ -89,7 +89,7 @@ class StopTest(CTSTest):
             return self.success()
 
         if len(watch.unmatched) >= self._cm.upcount():
-            return self.failure("no match against (%s)" % unmatched_str)
+            return self.failure(f"no match against ({unmatched_str})")
 
         if failreason is None:
             return self.success()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,7 +40,9 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
+// @TODO This should be guint
 long long stonith_watchdog_timeout_ms = 0;
+
 GList *stonith_watchdog_targets = NULL;
 
 static GMainLoop *mainloop = NULL;
@@ -98,12 +100,38 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    request = pcmk__client_data2xml(c, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&c->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        request = pcmk__client_data2xml(c, &id, &flags);
+        g_byte_array_free(c->buffer, TRUE);
+        c->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (c->buffer != NULL) {
+            g_byte_array_free(c->buffer, TRUE);
+            c->buffer = NULL;
+        }
+
+        return 0;
+    }
+
     if (request == NULL) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
-
 
     op = crm_element_value(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
@@ -191,9 +219,8 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
 
 #if SUPPORT_COROSYNC
 static void
-stonith_peer_ais_callback(cpg_handle_t handle,
-                          const struct cpg_name *groupName,
-                          uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
+                   uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     xmlNode *xml = NULL;
     const char *from = NULL;
@@ -251,28 +278,34 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
     }
 }
 
-uint64_t
-get_stonith_flag(const char *name)
+/*!
+ * \internal
+ * \brief Parse a fencer client notification type string to a flag
+ *
+ * \param[in] type  Notification type string
+ *
+ * \return Flag corresponding to \p type, or \c fenced_nf_none if none exists
+ */
+enum fenced_notify_flags
+fenced_parse_notify_flag(const char *type)
 {
-    if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
-        return st_callback_notify_fence;
-
-    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_ADD, pcmk__str_casei)) {
-        return st_callback_device_add;
-
-    } else if (pcmk__str_eq(name, STONITH_OP_DEVICE_DEL, pcmk__str_casei)) {
-        return st_callback_device_del;
-
-    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY,
-                            pcmk__str_none)) {
-        return st_callback_notify_history;
-
-    } else if (pcmk__str_eq(name, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
-                            pcmk__str_none)) {
-        return st_callback_notify_history_synced;
-
+    if (pcmk__str_eq(type, PCMK__VALUE_ST_NOTIFY_FENCE, pcmk__str_none)) {
+        return fenced_nf_fence_result;
     }
-    return st_callback_unknown;
+    if (pcmk__str_eq(type, STONITH_OP_DEVICE_ADD, pcmk__str_none)) {
+        return fenced_nf_device_registered;
+    }
+    if (pcmk__str_eq(type, STONITH_OP_DEVICE_DEL, pcmk__str_none)) {
+        return fenced_nf_device_removed;
+    }
+    if (pcmk__str_eq(type, PCMK__VALUE_ST_NOTIFY_HISTORY, pcmk__str_none)) {
+        return fenced_nf_history_changed;
+    }
+    if (pcmk__str_eq(type, PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
+                     pcmk__str_none)) {
+        return fenced_nf_history_synced;
+    }
+    return fenced_nf_none;
 }
 
 static void
@@ -294,7 +327,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (pcmk_is_set(client->flags, get_stonith_flag(type))) {
+    if (pcmk_is_set(client->flags, fenced_parse_notify_flag(type))) {
         int rc = pcmk__ipc_send_xml(client, 0, update_msg,
                                     crm_ipc_server_event);
 
@@ -376,9 +409,8 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
  * \internal
  * \brief Send notifications for a configuration change to subscribed clients
  *
- * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD,
- *                    \c STONITH_OP_DEVICE_DEL, \c STONITH_OP_LEVEL_ADD, or
- *                    \c STONITH_OP_LEVEL_DEL)
+ * \param[in] op      Notification type (\c STONITH_OP_DEVICE_ADD or
+ *                    \c STONITH_OP_DEVICE_DEL)
  * \param[in] result  Operation result
  * \param[in] desc    Description of what changed (either device ID or string
  *                    representation of level
@@ -436,7 +468,7 @@ stonith_cleanup(void)
     pcmk__client_cleanup();
     free_stonith_remote_op_list();
     free_topology_list();
-    free_device_list();
+    fenced_free_device_table();
     free_metadata_cache();
     fenced_unregister_handlers();
 }
@@ -615,7 +647,7 @@ main(int argc, char **argv)
 #if SUPPORT_COROSYNC
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
         pcmk_cluster_set_destroy_fn(cluster, stonith_peer_cs_destroy);
-        pcmk_cpg_set_deliver_fn(cluster, stonith_peer_ais_callback);
+        pcmk_cpg_set_deliver_fn(cluster, handle_cpg_message);
         pcmk_cpg_set_confchg_fn(cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
@@ -633,7 +665,7 @@ main(int argc, char **argv)
         setup_cib();
     }
 
-    init_device_list();
+    fenced_init_device_table();
     init_topology_list();
 
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);

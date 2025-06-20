@@ -1,11 +1,21 @@
-Contents
---------
+Pacemaker Python Module
+=======================
 
-The APIs are documented here in submodules, but each submodule class is
-included at the top level, so code should import directly from the
-``pacemaker`` module. For example, use ``from pacemaker import BuildOptions``,
-not ``from pacemaker.buildoptions import BuildOptions``.
+This is the Python interface to the `Pacemaker <https://clusterlabs.org/projects/pacemaker/>`_
+project.  At the moment, it doesn't do very much but we are planning to expand
+its capabilities over time.
 
 .. toctree::
+   :maxdepth: 2
 
    api
+
+
+.. only:: builder_epub or builder_html or builder_pdf
+
+   Index
+   =====
+
+   * :ref:`genindex`
+   * :ref:`modindex`
+   * :ref:`search`

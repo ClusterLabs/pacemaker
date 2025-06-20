@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -338,23 +338,23 @@ crm_time_get_seconds(const crm_time_t *dt)
         return 0;
     }
 
+    // @TODO This is inefficient if dt is already in UTC
     utc = crm_get_utc_time(dt);
     if (utc == NULL) {
         return 0;
     }
 
+    // @TODO We should probably use <= if dt is a duration
     for (lpc = 1; lpc < utc->years; lpc++) {
         long long dmax = year_days(lpc);
 
         in_seconds += DAY_SECONDS * dmax;
     }
 
-    /* utc->months is an offset that can only be set for a duration.
-     * By definition, the value is variable depending on the date to
-     * which it is applied.
-     *
-     * Force 30-day months so that something vaguely sane happens
-     * for anyone that tries to use a month in this way.
+    /* utc->months can be set only for durations. By definition, the value
+     * varies depending on the (unknown) start date to which the duration will
+     * be applied. Assume 30-day months so that something vaguely sane happens
+     * in this case.
      */
     if (utc->months > 0) {
         in_seconds += DAY_SECONDS * 30 * (long long) (utc->months);
@@ -2096,6 +2096,10 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         }
 
         tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
+        if (tmp_fmt_s == NULL) {
+            return NULL;
+        }
+
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"

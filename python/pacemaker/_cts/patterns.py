@@ -1,7 +1,7 @@
 """Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["PatternSelector"]
-__copyright__ = "Copyright 2008-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import argparse
@@ -37,11 +37,15 @@ class BasePatterns:
             # transition error logging their own error message, which should
             # always be the case.
             r"pacemaker-schedulerd.* Calculated transition .*/pe-error",
+
+            # This message comes up periodically but doesn't actually seem to
+            # be related to any specific test failure, so just ignore it.
+            r"pacemaker-based.* Local CIB .* differs from",
         ]
 
         self._commands = {
             "StatusCmd": "crmadmin -t 60 -S %s 2>/dev/null",
-            "CibQuery": "cibadmin -Ql",
+            "CibQuery": "cibadmin -Q",
             "CibAddXml": "cibadmin --modify -c --xml-text %s",
             "CibDelXpath": "cibadmin --delete --xpath %s",
             "RscRunning": BuildOptions.DAEMON_DIR + "/cts-exec-helper -R -r %s",
@@ -95,7 +99,7 @@ class BasePatterns:
         if key in self._components:
             return self._components[key]
 
-        print("Unknown component '%s' for %s" % (key, self._name))
+        print(f"Unknown component '{key}' for {self._name}")
         return []
 
     def get_patterns(self, key):
@@ -116,7 +120,7 @@ class BasePatterns:
         if key == "Components":
             return self._components
 
-        print("Unknown pattern '%s' for %s" % (key, self._name))
+        print(f"Unknown pattern '{key}' for {self._name}")
         return None
 
     def __getitem__(self, key):
@@ -127,7 +131,7 @@ class BasePatterns:
         if key in self._search:
             return self._search[key]
 
-        print("Unknown template '%s' for %s" % (key, self._name))
+        print(f"Unknown template '{key}' for {self._name}")
         return None
 
 
@@ -256,7 +260,7 @@ class Corosync2Patterns(BasePatterns):
             # exit before losing the cluster connection.
             r"pacemakerd.*:\s*warning:.*Lost connection to cluster layer",
             r"pacemaker-attrd.*:\s*(crit|error):.*Lost connection to (Corosync process group|the CIB manager)",
-            r"pacemaker-based.*:\s*(crit|error):.*Lost connection to cluster layer",
+            r"pacemaker-based.*:\s*crit:.*Exiting immediately after losing connection to cluster layer",
             r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"pacemaker-fenced.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"schedulerd.*Scheduling node .* for fencing",

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -229,6 +229,16 @@ static const pcmk__cluster_option_t cluster_options[] = {
     },
 
     // Fencing-related options
+    {
+        PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_VALUE_FALSE, pcmk__valid_boolean,
+        pcmk__opt_schedulerd|pcmk__opt_advanced,
+        N_("Whether remote nodes can be fenced without quorum"),
+        N_("By default, an inquorate node can not fence Pacemaker Remote nodes "
+           "that are part of its partition as long as the cluster thinks they "
+           "can be restarted.  If true, inquorate nodes will be able to fence "
+           "remote nodes regardless."),
+     },
     {
         PCMK_OPT_STONITH_ENABLED, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,

@@ -1,7 +1,7 @@
 """Create a split brain cluster and verify a resource is multiply managed."""
 
 __all__ = ["SplitBrainTest"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time
@@ -53,17 +53,17 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log("Node %s not in %r from %r" % (node, self._env["nodes"], partition))
+                self._logger.log(f"Node {node} not in {self._env['nodes']!r} from {partition!r}")
 
         if not other_nodes:
             return
 
-        self.debug("Creating partition: %r" % partition)
-        self.debug("Everyone else: %r" % other_nodes)
+        self.debug(f"Creating partition: {partition!r}")
+        self.debug(f"Everyone else: {other_nodes!r}")
 
         for node in partition:
             if not self._cm.isolate_node(node, other_nodes):
-                self._logger.log("Could not isolate %s" % node)
+                self._logger.log(f"Could not isolate {node}")
                 return
 
     def _heal_partition(self, partition):
@@ -74,13 +74,13 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log("Node %s not in %r" % (node, self._env["nodes"]))
+                self._logger.log(f"Node {node} not in {self._env['nodes']!r}")
 
         if len(other_nodes) == 0:
             return
 
-        self.debug("Healing partition: %r" % partition)
-        self.debug("Everyone else: %r" % other_nodes)
+        self.debug(f"Healing partition: {partition!r}")
+        self.debug(f"Everyone else: {other_nodes!r}")
 
         for node in partition:
             self._cm.unisolate_node(node, other_nodes)
@@ -112,9 +112,9 @@ class SplitBrainTest(CTSTest):
                 break
             # else, try again
 
-        self.debug("Created %d partitions" % p_max)
+        self.debug(f"Created {p_max} partitions")
         for (key, val) in partitions.items():
-            self.debug("Partition[%s]:\t%r" % (key, val))
+            self.debug(f"Partition[{key}]:\t{val!r}")
 
         # Disabling STONITH to reduce test complexity for now
         self._rsh(node, "crm_attribute -V -n stonith-enabled -v false")

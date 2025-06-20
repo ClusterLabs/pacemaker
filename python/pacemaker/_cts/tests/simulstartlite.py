@@ -1,7 +1,7 @@
 """Simultaneously start stopped nodes."""
 
 __all__ = ["SimulStartLite"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -36,7 +36,7 @@ class SimulStartLite(CTSTest):
     def __call__(self, dummy):
         """Return whether starting all stopped nodes more or less simultaneously succeeds."""
         self.incr("calls")
-        self.debug("Setup: %s" % self.name)
+        self.debug(f"Setup: {self.name}")
 
         # We ignore the "node" parameter...
         node_list = []
@@ -78,26 +78,26 @@ class SimulStartLite(CTSTest):
 
             # Remove node_list messages from watch.unmatched
             for node in node_list:
-                self._logger.debug("Dealing with stonith operations for %s" % node_list)
+                self._logger.debug(f"Dealing with stonith operations for {node_list}")
                 if watch.unmatched:
                     try:
                         watch.unmatched.remove(uppat % node)
                     except ValueError:
-                        self.debug("Already matched: %s" % (uppat % node))
+                        self.debug(f"Already matched: {uppat % node}")
 
                     try:
                         watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
                     except ValueError:
-                        self.debug("Already matched: %s" % (self.templates["Pat:InfraUp"] % node))
+                        self.debug(f"Already matched: {self.templates['Pat:InfraUp'] % node}")
 
                     try:
                         watch.unmatched.remove(self.templates["Pat:PacemakerUp"] % node)
                     except ValueError:
-                        self.debug("Already matched: %s" % (self.templates["Pat:PacemakerUp"] % node))
+                        self.debug(f"Already matched: {self.templates['Pat:PacemakerUp'] % node}")
 
             if watch.unmatched:
                 for regex in watch.unmatched:
-                    self._logger.log("Warn: Startup pattern not found: %s" % regex)
+                    self._logger.log(f"Warn: Startup pattern not found: {regex}")
 
             if not self._cm.cluster_stable():
                 return self.failure("Cluster did not stabilize")
@@ -110,7 +110,7 @@ class SimulStartLite(CTSTest):
                 unstable.append(node)
 
         if did_fail:
-            return self.failure("Unstarted nodes exist: %s" % unstable)
+            return self.failure(f"Unstarted nodes exist: {unstable}")
 
         unstable = []
         for node in self._env["nodes"]:
@@ -119,7 +119,7 @@ class SimulStartLite(CTSTest):
                 unstable.append(node)
 
         if did_fail:
-            return self.failure("Unstable cluster nodes exist: %s" % unstable)
+            return self.failure(f"Unstable cluster nodes exist: {unstable}")
 
         return self.success()
 

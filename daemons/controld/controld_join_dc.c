@@ -657,19 +657,20 @@ do_dc_join_finalize(long long action,
     if (pcmk_is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         // Send our CIB out to everyone
         sync_from = pcmk__str_copy(controld_globals.cluster->priv->node_name);
-        crm_debug("Finalizing join-%d for %d node%s (sync'ing from local CIB)",
-                  current_join_id, count_finalizable,
-                  pcmk__plural_s(count_finalizable));
-        crm_log_xml_debug(max_generation_xml, "Requested CIB version");
-
     } else {
         // Ask for the agreed best CIB
         sync_from = pcmk__str_copy(max_generation_from);
-        crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB from %s)",
-                   current_join_id, count_finalizable,
-                   pcmk__plural_s(count_finalizable), sync_from);
-        crm_log_xml_notice(max_generation_xml, "Requested CIB version");
     }
+    crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB %s.%s.%s "
+               "with schema %s and feature set %s from %s)",
+               current_join_id, count_finalizable,
+               pcmk__plural_s(count_finalizable),
+               crm_element_value(max_generation_xml, PCMK_XA_ADMIN_EPOCH),
+               crm_element_value(max_generation_xml, PCMK_XA_EPOCH),
+               crm_element_value(max_generation_xml, PCMK_XA_NUM_UPDATES),
+               crm_element_value(max_generation_xml, PCMK_XA_VALIDATE_WITH),
+               crm_element_value(max_generation_xml, PCMK_XA_CRM_FEATURE_SET),
+               sync_from);
     crmd_join_phase_log(LOG_DEBUG);
 
     rc = controld_globals.cib_conn->cmds->sync_from(controld_globals.cib_conn,
@@ -920,7 +921,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
      */
     crm_trace("Updating node name and UUID in CIB for %s", join_to);
     tmp1 = pcmk__xe_create(NULL, PCMK_XE_NODE);
-    crm_xml_add(tmp1, PCMK_XA_ID, pcmk__cluster_node_uuid(join_node));
+    crm_xml_add(tmp1, PCMK_XA_ID, pcmk__cluster_get_xml_id(join_node));
     crm_xml_add(tmp1, PCMK_XA_UNAME, join_to);
     fsa_cib_anon_update(PCMK_XE_NODES, tmp1);
     pcmk__xml_free(tmp1);

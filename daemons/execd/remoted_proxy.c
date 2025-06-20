@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,13 @@ static qb_ipcs_service_t *pacemakerd_ipcs = NULL;
 
 // An IPC provider is a cluster node controller connecting as a client
 static GList *ipc_providers = NULL;
-/* ipc clients == things like cibadmin, crm_resource, connecting locally */
+
+
+/* ipc clients == things like cibadmin, crm_resource, connecting locally
+ *
+ * @TODO This should be unnecessary (pcmk__foreach_ipc_client() should be
+ * sufficient)
+ */
 static GHashTable *ipc_clients = NULL;
 
 /*!
@@ -200,7 +206,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 
         crm_element_value_int(xml, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
         crm_trace("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
-        rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, FALSE);
+        rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, crm_ipc_flags_none);
 
         CRM_LOG_ASSERT(msg_id == ipc_client->request_id);
         ipc_client->request_id = 0;
@@ -221,6 +227,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 static int32_t
 ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
+    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
@@ -247,7 +254,33 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      * This function is receiving a request from connection
      * 1 and forwarding it to connection 2.
      */
-    request = pcmk__client_data2xml(client, data, &id, &flags);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        request = pcmk__client_data2xml(client, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
+        }
+
+        return 0;
+    }
 
     if (!request) {
         return 0;

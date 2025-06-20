@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -96,7 +96,6 @@ extern "C" {
 #endif
 
 /*!
- * \enum pcmk_rc_e
  * \brief Return codes for Pacemaker API functions
  *
  * Any Pacemaker API function documented as returning a "standard Pacemaker
@@ -111,6 +110,8 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_ipc_more            = -1041,
+    pcmk_rc_no_dc               = -1040,
     pcmk_rc_compression         = -1039,
     pcmk_rc_ns_resolution       = -1038,
     pcmk_rc_no_transaction      = -1037,
@@ -162,7 +163,6 @@ enum pcmk_rc_e {
 
 
 /*!
- * \enum ocf_exitcode
  * \brief Exit status codes for resource agents
  *
  * The OCF Resource Agent API standard enumerates the possible exit status codes
@@ -201,7 +201,6 @@ enum ocf_exitcode {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 /*!
- * \enum crm_exit_e
  * \brief Exit status codes for tools and daemons
  *
  * We want well-specified (i.e. OS-invariant) exit status codes for our daemons
@@ -225,6 +224,9 @@ enum ocf_exitcode {
  * tldp.org recommends 64-113 for application use.
  *
  * We try to overlap with the above conventions when practical.
+ *
+ * NOTE: When new exit codes are added here, remember to also update
+ * python/pacemaker/exitstatus.py.
  */
 typedef enum crm_exit_e {
     // Common convention
@@ -273,6 +275,7 @@ typedef enum crm_exit_e {
     CRM_EX_NOT_YET_IN_EFFECT    = 111, //!< Requested item is not in effect
     CRM_EX_INDETERMINATE        = 112, //!< Could not determine status
     CRM_EX_UNSATISFIED          = 113, //!< Requested item does not satisfy constraints
+    CRM_EX_NO_DC                = 114, //!< DC is not yet elected, e.g. right after cluster restart
 
     // Other
     CRM_EX_TIMEOUT              = 124, //!< Convention from timeout(1)
@@ -297,7 +300,6 @@ typedef enum crm_exit_e {
 } crm_exit_t;
 
 /*!
- * \enum pcmk_exec_status
  * \brief Execution status
  *
  * These codes are used to specify the result of the attempt to execute an
@@ -324,7 +326,6 @@ enum pcmk_exec_status {
 };
 
 /*!
- * \enum pcmk_result_type
  * \brief Types of Pacemaker result codes
  *
  * A particular integer can have different meanings within different Pacemaker

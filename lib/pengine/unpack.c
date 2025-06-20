@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,8 +11,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <glib.h>
 #include <time.h>
+
+#include <glib.h>
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/crm.h>
 #include <crm/services.h>
@@ -20,7 +23,6 @@
 #include <crm/common/xml_internal.h>
 
 #include <crm/common/util.h>
-#include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
 
@@ -202,14 +204,14 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 static void
 set_if_xpath(uint64_t flag, const char *xpath, pcmk_scheduler_t *scheduler)
 {
-    xmlXPathObjectPtr result = NULL;
+    xmlXPathObject *result = NULL;
 
     if (!pcmk_is_set(scheduler->flags, flag)) {
-        result = xpath_search(scheduler->input, xpath);
-        if (result && (numXpathResults(result) > 0)) {
+        result = pcmk__xpath_search(scheduler->input->doc, xpath);
+        if (pcmk__xpath_num_results(result) > 0) {
             pcmk__set_scheduler_flags(scheduler, flag);
         }
-        freeXpathObject(result);
+        xmlXPathFreeObject(result);
     }
 }
 
@@ -219,19 +221,15 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     const char *value = NULL;
     GHashTable *config_hash = pcmk__strkey_table(free, free);
 
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
+    const pcmk_rule_input_t rule_input = {
         .now = scheduler->priv->now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
     };
 
     scheduler->priv->options = config_hash;
 
-    pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET, &rule_data,
-                               config_hash, PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS,
-                               scheduler);
+    pe__unpack_dataset_nvpairs(config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                               &rule_input, config_hash,
+                               PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, scheduler);
 
     pcmk__validate_cluster_options(config_hash);
 
@@ -338,10 +336,12 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     switch (scheduler->no_quorum_policy) {
         case pcmk_no_quorum_freeze:
-            crm_debug("On loss of quorum: Freeze resources");
+            crm_debug("On loss of quorum: "
+                      "Freeze resources that require quorum");
             break;
         case pcmk_no_quorum_stop:
-            crm_debug("On loss of quorum: Stop ALL resources");
+            crm_debug("On loss of quorum: "
+                      "Stop resources that require quorum");
             break;
         case pcmk_no_quorum_demote:
             crm_debug("On loss of quorum: "
@@ -421,6 +421,14 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     } else {
         crm_trace("Fence pending nodes after %s",
                   pcmk__readable_interval(scheduler->priv->node_pending_ms));
+    }
+
+    set_config_flag(scheduler, PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM,
+                    pcmk__sched_fence_remote_no_quorum);
+    if (pcmk_is_set(scheduler->flags, pcmk__sched_fence_remote_no_quorum)) {
+        crm_trace("Pacemaker Remote nodes may be fenced without quorum");
+    } else {
+        crm_trace("Pacemaker Remote nodes require quorum to be fenced");
     }
 
     return TRUE;
@@ -525,6 +533,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pcmk_scheduler_t *data
     const char *remote_allow_migrate=NULL;
     const char *is_managed = NULL;
 
+    // @TODO This doesn't handle rules or id-ref
     for (attr_set = pcmk__xe_first_child(xml_obj, PCMK_XE_META_ATTRIBUTES,
                                          NULL, NULL);
          attr_set != NULL;
@@ -1489,7 +1498,7 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
          * avoid fencing is that effective time minus this value is less than
          * the pending node timeout.
          */
-        return member? (long long) get_effective_time(scheduler) : 0LL;
+        return member? (long long) pcmk__scheduler_epoch_time(scheduler) : 0LL;
 
     } else {
         long long when_member = 0LL;
@@ -1635,12 +1644,12 @@ pending_too_long(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         time_t timeout = when_member
                          + pcmk__timeout_ms2s(scheduler->priv->node_pending_ms);
 
-        if (get_effective_time(node->priv->scheduler) >= timeout) {
+        if (pcmk__scheduler_epoch_time(node->priv->scheduler) >= timeout) {
             return true; // Node has timed out
         }
 
         // Node is pending, but still has time
-        pe__update_recheck_time(timeout, scheduler, "pending node timeout");
+        pcmk__update_recheck_time(timeout, scheduler, "pending node timeout");
     }
     return false;
 }
@@ -2528,8 +2537,12 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     } else if ((rsc->priv->history_id != NULL)
                && (strchr(rsc->priv->history_id, ':') != NULL)) {
-        /* Only do this for older status sections that included instance numbers
-         * Otherwise stopped instances will appear as orphans
+        /* @COMPAT This is for older (<1.1.8) status sections that included
+         * instance numbers, otherwise stopped instances are considered orphans.
+         *
+         * @TODO We should be able to drop this, but some old regression tests
+         * will need to be updated. Double-check that this is not still needed
+         * for unique clones (which may have been later converted to anonymous).
          */
         pcmk__rsc_trace(rsc, "Clearing history ID %s for %s (stopped)",
                         rsc->priv->history_id, rsc->id);
@@ -2687,7 +2700,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
                                  &lock_time) == pcmk_ok) && (lock_time != 0)) {
 
         if ((scheduler->priv->shutdown_lock_ms > 0U)
-            && (get_effective_time(scheduler)
+            && (pcmk__scheduler_epoch_time(scheduler)
                 > (lock_time + pcmk__timeout_ms2s(scheduler->priv->shutdown_lock_ms)))) {
             pcmk__rsc_info(rsc, "Shutdown lock for %s on %s expired",
                            rsc->id, pcmk__node_name(node));
@@ -2963,8 +2976,7 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
         g_string_append_c(xpath, ']');
     }
 
-    xml = get_xpath_object((const char *) xpath->str, scheduler->input,
-                           LOG_DEBUG);
+    xml = pcmk__xpath_find_one(scheduler->input->doc, xpath->str, LOG_DEBUG);
     g_string_free(xpath, TRUE);
 
     if (xml && target_rc >= 0) {
@@ -2995,8 +3007,7 @@ find_lrm_resource(const char *rsc_id, const char *node_name,
                    SUB_XPATH_LRM_RESOURCE "[@" PCMK_XA_ID "='", rsc_id, "']",
                    NULL);
 
-    xml = get_xpath_object((const char *) xpath->str, scheduler->input,
-                           LOG_DEBUG);
+    xml = pcmk__xpath_find_one(scheduler->input->doc, xpath->str, LOG_DEBUG);
 
     g_string_free(xpath, TRUE);
     return xml;
@@ -3015,7 +3026,7 @@ static bool
 unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
 {
     bool result = false;
-    xmlXPathObjectPtr search;
+    xmlXPathObject *search;
     char *xpath = NULL;
 
     xpath = crm_strdup_printf(XPATH_NODE_STATE "[@" PCMK_XA_UNAME "='%s']"
@@ -3024,9 +3035,9 @@ unknown_on_node(pcmk_resource_t *rsc, const char *node_name)
                               "[@" PCMK__XA_RC_CODE "!='%d']",
                               node_name, rsc->id, PCMK_OCF_UNKNOWN);
 
-    search = xpath_search(rsc->priv->scheduler->input, xpath);
-    result = (numXpathResults(search) == 0);
-    freeXpathObject(search);
+    search = pcmk__xpath_search(rsc->priv->scheduler->input->doc, xpath);
+    result = (pcmk__xpath_num_results(search) == 0);
+    xmlXPathFreeObject(search);
     free(xpath);
     return result;
 }
@@ -3819,6 +3830,11 @@ static void
 remap_operation(struct action_history *history,
                 enum pcmk__on_fail *on_fail, bool expired)
 {
+    /* @TODO It would probably also be a good idea to map an exit status of
+     * CRM_EX_PROMOTED or CRM_EX_DEGRADED_PROMOTED to CRM_EX_OK for promote
+     * actions
+     */
+
     bool is_probe = false;
     int orig_exit_status = history->exit_status;
     int orig_exec_status = history->execution_status;
@@ -4028,8 +4044,7 @@ should_clear_for_param_change(const xmlNode *xml_op, const char *task,
              * substitute addr parameters for the REMOTE_CONTAINER_HACK.
              * When that's needed, defer the check until later.
              */
-            pe__add_param_check(xml_op, rsc, node, pcmk__check_last_failure,
-                                rsc->priv->scheduler);
+            pcmk__add_param_check(xml_op, rsc, node, pcmk__check_last_failure);
 
         } else {
             pcmk__op_digest_t *digest_data = NULL;
@@ -4159,7 +4174,7 @@ check_operation_expiry(struct action_history *history)
          * timestamp
          */
 
-        time_t now = get_effective_time(scheduler);
+        time_t now = pcmk__scheduler_epoch_time(scheduler);
         time_t last_failure = 0;
 
         // Is this particular operation history older than the failure timeout?
@@ -4185,8 +4200,8 @@ check_operation_expiry(struct action_history *history)
                   (long long) last_failure);
         last_failure += expiration_sec + 1;
         if (unexpired_fail_count && (now < last_failure)) {
-            pe__update_recheck_time(last_failure, scheduler,
-                                    "fail count expiration");
+            pcmk__update_recheck_time(last_failure, scheduler,
+                                      "fail count expiration");
         }
     }
 
@@ -4902,13 +4917,8 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
 {
     const char *cluster_name = NULL;
     const char *dc_id = crm_element_value(scheduler->input, PCMK_XA_DC_UUID);
-
-    pe_rule_eval_data_t rule_data = {
-        .node_hash = NULL,
+    const pcmk_rule_input_t rule_input = {
         .now = scheduler->priv->now,
-        .match_data = NULL,
-        .rsc_data = NULL,
-        .op_data = NULL
     };
 
     pcmk__insert_dup(node->priv->attrs,
@@ -4942,17 +4952,17 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
         GHashTable *unpacked = pcmk__strkey_table(free, free);
 
         pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES,
-                                   &rule_data, unpacked, NULL, scheduler);
+                                   &rule_input, unpacked, NULL, scheduler);
         g_hash_table_foreach_steal(unpacked, insert_attr, node->priv->attrs);
         g_hash_table_destroy(unpacked);
 
     } else {
         pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES,
-                                   &rule_data, node->priv->attrs, NULL,
+                                   &rule_input, node->priv->attrs, NULL,
                                    scheduler);
     }
 
-    pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_data,
+    pe__unpack_dataset_nvpairs(xml_obj, PCMK_XE_UTILIZATION, &rule_input,
                                node->priv->utilization, NULL, scheduler);
 
     if (pcmk__node_attr(node, CRM_ATTR_SITE_NAME, NULL,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -211,8 +211,8 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     }
 
     if (secure_list != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_secure, attr_in_string,
-                                       (void *) secure_list);
+        pcmk__xe_remove_matching_attrs(data->params_secure, false,
+                                       attr_in_string, (void *) secure_list);
     }
     if (old_version
         && pcmk_is_set(pcmk_get_ra_caps(class),
@@ -222,8 +222,8 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
          * versions of DC, the controller will not hash them. That means we have
          * to filter them out before calculating our hash for comparison.
          */
-        pcmk__xe_remove_matching_attrs(data->params_secure, is_fence_param,
-                                       NULL);
+        pcmk__xe_remove_matching_attrs(data->params_secure, false,
+                                       is_fence_param, NULL);
     }
     pcmk__filter_op_for_digest(data->params_secure);
 
@@ -274,11 +274,10 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     // Then filter out reloadable parameters, if any
     value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);
     if (value != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_restart, attr_not_in_string,
-                                       (void *) value);
+        pcmk__xe_remove_matching_attrs(data->params_restart, false,
+                                       attr_not_in_string, (void *) value);
     }
 
-    value = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
     data->digest_restart_calc = pcmk__digest_operation(data->params_restart);
 }
 
@@ -412,13 +411,15 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                                          pcmk__sched_sanitized),
                              scheduler);
 
-    if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
+    if (!pcmk__str_eq(data->digest_restart_calc, digest_restart,
+                      pcmk__str_null_matches)) {
         pcmk__rsc_info(rsc,
-                       "Parameters to %ums-interval %s action for %s on %s "
-                       "changed: hash was %s vs. now %s (restart:%s) %s",
-                       interval_ms, task, rsc->id, pcmk__node_name(node),
-                       pcmk__s(digest_restart, "missing"),
-                       data->digest_restart_calc, op_version,
+                       "Parameter change for %s-interval %s of %s on %s "
+                       "requires restart (hash now %s vs. %s "
+                       "with op feature set %s for transition %s)",
+                       pcmk__readable_interval(interval_ms), task, rsc->id,
+                       pcmk__node_name(node), data->digest_restart_calc,
+                       pcmk__s(digest_restart, "missing"), op_version,
                        crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
         data->rc = pcmk__digest_restart;
 

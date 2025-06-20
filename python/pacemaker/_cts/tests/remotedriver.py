@@ -1,7 +1,7 @@
 """Base classes for CTS tests."""
 
 __all__ = ["RemoteDriver"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -98,9 +98,9 @@ class RemoteDriver(CTSTest):
         delete command.
         """
         othernode = self._get_other_node(node)
-        (rc, _) = self._rsh(othernode, "crm_resource -D -r %s -t primitive" % rsc)
+        (rc, _) = self._rsh(othernode, f"crm_resource -D -r {rsc} -t primitive")
         if rc != 0:
-            self.fail("Removal of resource '%s' failed" % rsc)
+            self.fail(f"Removal of resource '{rsc}' failed")
 
     def _add_rsc(self, node, rsc_xml):
         """
@@ -110,7 +110,7 @@ class RemoteDriver(CTSTest):
         add command.
         """
         othernode = self._get_other_node(node)
-        (rc, _) = self._rsh(othernode, "cibadmin -C -o resources -X '%s'" % rsc_xml)
+        (rc, _) = self._rsh(othernode, f"cibadmin -C -o resources -X '{rsc_xml}'")
         if rc != 0:
             self.fail("resource creation failed")
 
@@ -121,13 +121,13 @@ class RemoteDriver(CTSTest):
         The given `node` is the cluster node on which we should *not* run the
         add command.
         """
-        rsc_xml = """
-<primitive class="ocf" id="%(node)s" provider="heartbeat" type="Dummy">
-  <meta_attributes id="%(node)s-meta_attributes"/>
+        rsc_xml = f"""
+<primitive class="ocf" id="{self._remote_rsc}" provider="heartbeat" type="Dummy">
+  <meta_attributes id="{self._remote_rsc}-meta_attributes"/>
   <operations>
-    <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
+    <op id="{self._remote_rsc}-monitor-interval-20s" interval="20s" name="monitor"/>
   </operations>
-</primitive>""" % {"node": self._remote_rsc}
+</primitive>"""
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:
@@ -140,26 +140,26 @@ class RemoteDriver(CTSTest):
         The given `node` is the cluster node on which we should *not* run the
         add command.
         """
-        rsc_xml = """
-<primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
-  <instance_attributes id="%(node)s-instance_attributes">
-    <nvpair id="%(node)s-instance_attributes-server" name="server" value="%(server)s"/>
-""" % {"node": self._remote_node, "server": node}
+        rsc_xml = f"""
+<primitive class="ocf" id="{self._remote_node}" provider="pacemaker" type="remote">
+  <instance_attributes id="{self._remote_node}-instance_attributes">
+    <nvpair id="{self._remote_node}-instance_attributes-server" name="server" value="{node}"/>
+"""
 
         if self._remote_use_reconnect_interval:
             # Set reconnect interval on resource
-            rsc_xml += """
-    <nvpair id="%s-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
-""" % self._remote_node
+            rsc_xml += f"""
+    <nvpair id="{self._remote_node}-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
+"""
 
-        rsc_xml += """
+        rsc_xml += f"""
   </instance_attributes>
   <operations>
-    <op id="%(node)s-start"       name="start"   interval="0"   timeout="120s"/>
-    <op id="%(node)s-monitor-20s" name="monitor" interval="20s" timeout="45s"/>
+    <op id="{self._remote_node}-start"       name="start"   interval="0"   timeout="120s"/>
+    <op id="{self._remote_node}-monitor-20s" name="monitor" interval="20s" timeout="45s"/>
   </operations>
 </primitive>
-""" % {"node": self._remote_node}
+"""
 
         self._add_rsc(node, rsc_xml)
         if not self.failed:
@@ -227,17 +227,17 @@ class RemoteDriver(CTSTest):
         self._disable_services(node)
 
         # make sure the resource doesn't already exist for some reason
-        self._rsh(node, "crm_resource -D -r %s -t primitive" % self._remote_rsc)
-        self._rsh(node, "crm_resource -D -r %s -t primitive" % self._remote_node)
+        self._rsh(node, f"crm_resource -D -r {self._remote_rsc} -t primitive")
+        self._rsh(node, f"crm_resource -D -r {self._remote_node} -t primitive")
 
         if not self._stop(node):
-            self.fail("Failed to shutdown cluster node %s" % node)
+            self.fail(f"Failed to shutdown cluster node {node}")
             return
 
         self._start_pcmk_remote(node)
 
         if not self._pcmk_started:
-            self.fail("Failed to start pacemaker_remote on node %s" % node)
+            self.fail(f"Failed to start pacemaker_remote on node {node}")
             return
 
         # Convert node to baremetal now that it has shutdown the cluster stack
@@ -256,7 +256,7 @@ class RemoteDriver(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.fail("Unmatched patterns: %s" % watch.unmatched)
+            self.fail(f"Unmatched patterns: {watch.unmatched}")
 
     def migrate_connection(self, node):
         """Move the remote connection resource to any other available node."""
@@ -272,7 +272,7 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
-        (rc, _) = self._rsh(node, "crm_resource -M -r %s" % self._remote_node, verbose=1)
+        (rc, _) = self._rsh(node, f"crm_resource -M -r {self._remote_node}", verbose=1)
         if rc != 0:
             self.fail("failed to move remote node connection resource")
             return
@@ -281,7 +281,7 @@ class RemoteDriver(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.fail("Unmatched patterns: %s" % watch.unmatched)
+            self.fail(f"Unmatched patterns: {watch.unmatched}")
 
     def fail_rsc(self, node):
         """
@@ -309,7 +309,7 @@ class RemoteDriver(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.fail("Unmatched patterns during rsc fail: %s" % watch.unmatched)
+            self.fail(f"Unmatched patterns during rsc fail: {watch.unmatched}")
 
     def fail_connection(self, node):
         """
@@ -339,7 +339,7 @@ class RemoteDriver(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.fail("Unmatched patterns: %s" % watch.unmatched)
+            self.fail(f"Unmatched patterns: {watch.unmatched}")
             return
 
         self.debug("Waiting for the remote node to come back up")
@@ -358,7 +358,7 @@ class RemoteDriver(CTSTest):
         # start the remote node again watch it integrate back into cluster.
         self._start_pcmk_remote(node)
         if not self._pcmk_started:
-            self.fail("Failed to start pacemaker_remote on node %s" % node)
+            self.fail(f"Failed to start pacemaker_remote on node {node}")
             return
 
         self.debug("Waiting for remote node to rejoin cluster after being fenced.")
@@ -367,7 +367,7 @@ class RemoteDriver(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.fail("Unmatched patterns: %s" % watch.unmatched)
+            self.fail(f"Unmatched patterns: {watch.unmatched}")
 
     def _add_dummy_rsc(self, node):
         """Add a dummy resource that runs on the Pacemaker Remote node."""
@@ -388,7 +388,7 @@ class RemoteDriver(CTSTest):
         self._add_primitive_rsc(node)
 
         # force that rsc to prefer the remote node.
-        (rc, _) = self._cm.rsh(node, "crm_resource -M -r %s -N %s -f" % (self._remote_rsc, self._remote_node), verbose=1)
+        (rc, _) = self._cm.rsh(node, f"crm_resource -M -r {self._remote_rsc} -N {self._remote_node} -f", verbose=1)
         if rc != 0:
             self.fail("Failed to place remote resource on remote node.")
             return
@@ -397,7 +397,7 @@ class RemoteDriver(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.fail("Unmatched patterns: %s" % watch.unmatched)
+            self.fail(f"Unmatched patterns: {watch.unmatched}")
 
     def test_attributes(self, node):
         """Verify that attributes can be set on the Pacemaker Remote node."""
@@ -406,17 +406,17 @@ class RemoteDriver(CTSTest):
 
         # This verifies permanent attributes can be set on a remote-node. It also
         # verifies the remote-node can edit its own cib node section remotely.
-        (rc, line) = self._cm.rsh(node, "crm_attribute -l forever -n testattr -v testval -N %s" % self._remote_node, verbose=1)
+        (rc, line) = self._cm.rsh(node, f"crm_attribute -l forever -n testattr -v testval -N {self._remote_node}", verbose=1)
         if rc != 0:
-            self.fail("Failed to set remote-node attribute. rc:%s output:%s" % (rc, line))
+            self.fail(f"Failed to set remote-node attribute. rc:{rc} output:{line}")
             return
 
-        (rc, _) = self._cm.rsh(node, "crm_attribute -l forever -n testattr -q -N %s" % self._remote_node, verbose=1)
+        (rc, _) = self._cm.rsh(node, f"crm_attribute -l forever -n testattr -q -N {self._remote_node}", verbose=1)
         if rc != 0:
             self.fail("Failed to get remote-node attribute")
             return
 
-        (rc, _) = self._cm.rsh(node, "crm_attribute -l forever -n testattr -D -N %s" % self._remote_node, verbose=1)
+        (rc, _) = self._cm.rsh(node, f"crm_attribute -l forever -n testattr -D -N {self._remote_node}", verbose=1)
         if rc != 0:
             self.fail("Failed to delete remote-node attribute")
 
@@ -449,19 +449,19 @@ class RemoteDriver(CTSTest):
             if self._remote_rsc_added:
                 # Remove dummy resource added for remote node tests
                 self.debug("Cleaning up dummy rsc put on remote node")
-                self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_rsc)
+                self._rsh(self._get_other_node(node), f"crm_resource -U -r {self._remote_rsc}")
                 self._del_rsc(node, self._remote_rsc)
 
             if self._remote_node_added:
                 # Remove remote node's connection resource
                 self.debug("Cleaning up remote node connection resource")
-                self._rsh(self._get_other_node(node), "crm_resource -U -r %s" % self._remote_node)
+                self._rsh(self._get_other_node(node), f"crm_resource -U -r {self._remote_node}")
                 self._del_rsc(node, self._remote_node)
 
             watch.look_for_all()
 
         if watch.unmatched:
-            self.fail("Unmatched patterns: %s" % watch.unmatched)
+            self.fail(f"Unmatched patterns: {watch.unmatched}")
 
         self._stop_pcmk_remote(node)
 
@@ -471,7 +471,7 @@ class RemoteDriver(CTSTest):
         if self._remote_node_added:
             # Remove remote node itself
             self.debug("Cleaning up node entry for remote node")
-            self._rsh(self._get_other_node(node), "crm_node --force --remove %s" % self._remote_node)
+            self._rsh(self._get_other_node(node), f"crm_node --force --remove {self._remote_node}")
 
     def _setup_env(self, node):
         """
@@ -479,7 +479,7 @@ class RemoteDriver(CTSTest):
 
         This involves generating a key and copying it to all nodes in the cluster.
         """
-        self._remote_node = "remote-%s" % node
+        self._remote_node = f"remote-{node}"
 
         # we are assuming if all nodes have a key, that it is
         # the right key... If any node doesn't have a remote
@@ -490,13 +490,13 @@ class RemoteDriver(CTSTest):
         # create key locally
         (handle, keyfile) = tempfile.mkstemp(".cts")
         os.close(handle)
-        subprocess.check_call(["dd", "if=/dev/urandom", "of=%s" % keyfile, "bs=4096", "count=1"],
+        subprocess.check_call(["dd", "if=/dev/urandom", f"of={keyfile}", "bs=4096", "count=1"],
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # sync key throughout the cluster
         for n in self._env["nodes"]:
             self._rsh(n, "mkdir -p --mode=0750 /etc/pacemaker")
-            self._rsh.copy(keyfile, "root@%s:/etc/pacemaker/authkey" % n)
+            self._rsh.copy(keyfile, f"root@{n}:/etc/pacemaker/authkey")
             self._rsh(n, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
             self._rsh(n, "chmod 0640 /etc/pacemaker/authkey")
 

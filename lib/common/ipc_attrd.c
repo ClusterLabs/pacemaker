@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+
+#include <libxml/xmlstring.h>               // xmlChar
 
 #include <crm/crm.h>
 #include <crm/common/attrs_internal.h>
@@ -85,7 +87,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
      * backward compatibility with attribute managers <2.1.3 that didn't set it.
      */
     if (pcmk__str_eq(value, PCMK__ATTRD_CMD_QUERY, pcmk__str_null_matches)) {
-        if (!xmlHasProp(reply, (pcmkXmlStr) PCMK__XA_ATTR_NAME)) {
+        if (!xmlHasProp(reply, (const xmlChar *) PCMK__XA_ATTR_NAME)) {
             status = ENXIO; // Most likely, the attribute doesn't exist
             goto done;
         }
@@ -148,6 +150,8 @@ create_attrd_op(const char *user_name)
 static int
 connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
 {
+    static const int max_retries = 5;
+    int remaining_attempts = max_retries;
     int rc = pcmk_rc_ok;
     bool created_api = false;
     enum pcmk_ipc_dispatch dispatch = pcmk_ipc_dispatch_sync;
@@ -162,10 +166,19 @@ connect_and_send_attrd_request(pcmk_ipc_api_t *api, const xmlNode *request)
         dispatch = api->dispatch_type;
     }
 
-    rc = pcmk__connect_ipc(api, dispatch, 5);
-    if (rc == pcmk_rc_ok) {
-        rc = pcmk__send_ipc_request(api, request);
-    }
+    // If attrd is killed and is being restarted we will temporarily get
+    // ECONNREFUSED on connect if it is already dead or ENOTCONN if it died
+    // after we connected to it. We should wait a bit and retry in those cases.
+    do {
+        if (rc == ENOTCONN || rc == ECONNREFUSED) {
+            sleep(max_retries - remaining_attempts);
+        }
+        rc = pcmk__connect_ipc(api, dispatch, remaining_attempts);
+        if (rc == pcmk_rc_ok) {
+            rc = pcmk__send_ipc_request(api, request);
+        }
+        remaining_attempts--;
+    } while ((rc == ENOTCONN || rc == ECONNREFUSED) && remaining_attempts >= 0);
 
     if (created_api) {
         pcmk_free_ipc_api(api);
@@ -201,7 +214,7 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
               pcmk__s(resource, "all resources"), pcmk__s(node, "all nodes"));
 
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
     crm_xml_add(request, PCMK__XA_ATTR_RESOURCE, resource);
     crm_xml_add(request, PCMK__XA_ATTR_CLEAR_OPERATION, operation);
     crm_xml_add(request, PCMK__XA_ATTR_CLEAR_INTERVAL, interval_spec);
@@ -257,7 +270,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
 
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
     pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -297,7 +310,7 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
 
     crm_xml_add(request, PCMK__XA_ATTR_NAME, name);
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_QUERY);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
     pcmk__xml_free(request);
@@ -321,7 +334,7 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
     request = create_attrd_op(NULL);
 
     crm_xml_add(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_REFRESH);
-    pcmk__xe_add_node(request, node, 0);
+    crm_xml_add(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
 
@@ -361,7 +374,7 @@ populate_update_op(xmlNode *op, const char *node, const char *name, const char *
 
     crm_xml_add(op, PCMK__XA_ATTR_VALUE, value);
     crm_xml_add(op, PCMK__XA_ATTR_DAMPENING, dampen);
-    pcmk__xe_add_node(op, node, 0);
+    crm_xml_add(op, PCMK__XA_ATTR_HOST, node);
     crm_xml_add(op, PCMK__XA_ATTR_SET, set);
     crm_xml_add_int(op, PCMK__XA_ATTR_IS_REMOTE,
                     pcmk_is_set(options, pcmk__node_attr_remote));

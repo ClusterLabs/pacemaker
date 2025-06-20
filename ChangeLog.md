@@ -405,7 +405,7 @@
 * **libcrmservice:** drop header `services_compat.h`
 * **libcrmservice:** deprecate function `services_ocf_exitcode_str()`
 * **libcrmservice:** drop enums (including all their values) `nagios_exitcode`
-  and `op_status` 
+  and `op_status`
 * **libcrmservice:** drop defined constants `F_LRMD_ALERT`, `F_LRMD_ALERT_ID`,
   `F_LRMD_ALERT_PATH`, `F_LRMD_CALLBACK_TOKEN`, `F_LRMD_CALLDATA`,
   `F_LRMD_CALLID`, `F_LRMD_CALLOPTS`, `F_LRMD_CLASS`, `F_LRMD_CLIENTID`,

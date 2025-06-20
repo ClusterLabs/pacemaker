@@ -24,28 +24,6 @@ static pid_t sbd_pid = 0;
 
 /*!
  * \internal
- * \brief Trigger a sysrq command if supported on current platform
- *
- * \param[in] t  Sysrq command to trigger
- */
-static void
-sysrq_trigger(char t)
-{
-#if HAVE_LINUX_PROCFS
-    // Root can always write here, regardless of kernel.sysrq value
-    FILE *procf = fopen("/proc/sysrq-trigger", "a");
-
-    if (procf == NULL) {
-        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
-    } else {
-        fprintf(procf, "%c\n", t);
-        fclose(procf);
-    }
-#endif // HAVE_LINUX_PROCFS
-}
-
-/*!
- * \internal
  * \brief Tell pacemakerd to panic the local host
  *
  * \param[in] ppid  Process ID of parent process
@@ -57,7 +35,6 @@ panic_local_nonroot(pid_t ppid)
         crm_emerg("Escalating panic to " PCMK__SERVER_PACEMAKERD "[%lld]",
                   (long long) ppid);
     } else { // Signal (non-parent) pacemakerd if possible
-#if HAVE_LINUX_PROCFS
         ppid = pcmk__procfs_pid_of(PCMK__SERVER_PACEMAKERD);
         if (ppid > 0) {
             union sigval signal_value;
@@ -69,12 +46,9 @@ panic_local_nonroot(pid_t ppid)
                 crm_emerg("Exiting after signal failure: %s", strerror(errno));
             }
         } else {
-#endif
             crm_emerg("Exiting with no known " PCMK__SERVER_PACEMAKERD
                       "process");
-#if HAVE_LINUX_PROCFS
         }
-#endif
     }
     crm_exit(CRM_EX_PANIC);
 }
@@ -102,13 +76,13 @@ panic_local(void)
 
     if (pcmk__str_empty(full_panic_action)
         || pcmk__str_eq(panic_action, PCMK_VALUE_REBOOT, pcmk__str_none)) {
-        sysrq_trigger('b');
+        pcmk__sysrq_trigger('b');
 
     } else if (pcmk__str_eq(panic_action, PCMK_VALUE_CRASH, pcmk__str_none)) {
-        sysrq_trigger('c');
+        pcmk__sysrq_trigger('c');
 
     } else if (pcmk__str_eq(panic_action, PCMK_VALUE_OFF, pcmk__str_none)) {
-        sysrq_trigger('o');
+        pcmk__sysrq_trigger('o');
 #ifdef RB_POWER_OFF
         reboot_cmd = RB_POWER_OFF;
 #elif defined(RB_POWEROFF)
@@ -118,7 +92,7 @@ panic_local(void)
         crm_warn("Using default '" PCMK_VALUE_REBOOT "' for local option PCMK_"
                  PCMK__ENV_PANIC_ACTION " because '%s' is not a valid value",
                  full_panic_action);
-        sysrq_trigger('b');
+        pcmk__sysrq_trigger('b');
     }
 
     // sysrq failed or is not supported on this platform, so fall back to reboot
@@ -189,40 +163,32 @@ pcmk__panic(const char *reason)
 pid_t
 pcmk__locate_sbd(void)
 {
-    char *pidfile = NULL;
-    char *sbd_path = NULL;
+    const char *pidfile = PCMK__RUN_DIR "/sbd.pid";
     int rc;
 
     if(sbd_pid > 1) {
         return sbd_pid;
     }
 
-    /* Look for the pid file */
-    pidfile = crm_strdup_printf(PCMK__RUN_DIR "/sbd.pid");
-    sbd_path = crm_strdup_printf("%s/sbd", SBIN_DIR);
-
     /* Read the pid file */
-    rc = pcmk__pidfile_matches(pidfile, 0, sbd_path, &sbd_pid);
+    rc = pcmk__pidfile_matches(pidfile, 0, SBIN_DIR "/sbd", &sbd_pid);
     if (rc == pcmk_rc_ok) {
         crm_trace("SBD detected at pid %lld (via PID file %s)",
                   (long long) sbd_pid, pidfile);
-
-#if HAVE_LINUX_PROCFS
     } else {
         /* Fall back to /proc for systems that support it */
         sbd_pid = pcmk__procfs_pid_of("sbd");
-        crm_trace("SBD detected at pid %lld (via procfs)",
-                  (long long) sbd_pid);
-#endif // HAVE_LINUX_PROCFS
+
+        if (sbd_pid != 0) {
+            crm_trace("SBD detected at pid %lld (via procfs)",
+                      (long long) sbd_pid);
+        }
     }
 
     if(sbd_pid < 0) {
         sbd_pid = 0;
         crm_trace("SBD not detected");
     }
-
-    free(pidfile);
-    free(sbd_path);
 
     return sbd_pid;
 }
