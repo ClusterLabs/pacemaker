@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,18 +38,22 @@ const char *
 pcmk__node_attr_target(const char *name)
 {
     if (name == NULL || pcmk__strcase_any_of(name, "auto", "localhost", NULL)) {
-        char buf[128] = OCF_RESKEY_PREFIX;
-        size_t offset = sizeof(OCF_RESKEY_PREFIX) - 1;
+        char *buf = NULL;
         char *target_var = crm_meta_name(PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
         char *phys_var = crm_meta_name(PCMK__META_PHYSICAL_HOST);
         const char *target = NULL;
         const char *host_physical = NULL;
 
-        snprintf(buf + offset, sizeof(buf) - offset, "%s", target_var);
+        buf = crm_strdup_printf(OCF_RESKEY_PREFIX "%s", target_var);
         target = getenv(buf);
+        free(buf);
 
-        snprintf(buf + offset, sizeof(buf) - offset, "%s", phys_var);
+        buf = crm_strdup_printf(OCF_RESKEY_PREFIX "%s", phys_var);
         host_physical = getenv(buf);
+        free(buf);
+
+        free(target_var);
+        free(phys_var);
 
         // It is important to use the name by which the scheduler knows us
         if (host_physical
@@ -63,8 +67,6 @@ pcmk__node_attr_target(const char *name)
                 name = host_pcmk;
             }
         }
-        free(target_var);
-        free(phys_var);
 
         // TODO? Call pcmk__cluster_local_node_name() if name == NULL
         // (currently would require linkage against libcrmcluster)
