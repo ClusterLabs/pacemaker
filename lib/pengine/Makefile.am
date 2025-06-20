@@ -22,14 +22,14 @@ noinst_HEADERS		= pe_status_private.h
 
 if BUILD_DEPRECATED_LIBS
 lib_LTLIBRARIES		+= libpe_rules.la
-libpe_rules_la_LDFLAGS	= -version-info 51:0:0
+libpe_rules_la_LDFLAGS	= -version-info 51:1:0
 libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules_compat.c
 endif
 
-libpe_status_la_LDFLAGS	= -version-info 56:0:0
+libpe_status_la_LDFLAGS	= -version-info 56:1:0
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
