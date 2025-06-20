@@ -1,3 +1,120 @@
+# Pacemaker-3.0.1 (20 Jun 2025)
+* 757 commits with 283 files changed, 11593 insertions(+), 7746 deletions(-)
+
+## Features added since Pacemaker-3.0.0
+
+* **daemons:** Convert all daemons to support large IPC messages.
+* **daemons:** Enable TLS support for Pacemaker Remote nodes.
+* **daemons:** Set up X509 auth in based if enabled.
+* **libcib:** Enable TLS certs for remote CIB operations.
+* **libcrmcommon:** Add flags for multipart messages.
+* **libcrmcommon:** Support large IPC messages and server events.
+* **liblrmd:** Enable TLS support for Pacemaker Remote clients.
+* **libpacemaker:** Reset scheduler object in `pcmk_simulate()`
+* **libs:** Log if a TLS certificate is close to expiration.
+* **sysconfig:** Add env settings needed for X509 authentication.
+* **sysconfig:** Document using certificates for remote nodes.
+* **tools:** Deprecate `cibadmin --sync-call`
+
+## Fixes since Pacemaker-3.0.0
+
+* **build:** Fix default pacemaker-remoted path on Fedora >= 42
+* **controller:** avoid memory leak when updating join phase
+* **crmadmin:** return error if DC is not elected
+* **libcib:** Don't match element based on XPath matching an attribute
+* **libcib:** Don't send `CRM_OP_REGISTER` from `cib_remote` client
+* **libcrmcluster:** prevent external callers from triggering assertion when connecting to cluster
+* **libcrmcluster:** restore CPG header size compatibility
+* **libcrmcommon:** Add retries on connect to avoid fatal errors
+* **libcrmcommon:** Elements should never match if IDs differ
+* **libcrmcommon:** provide a description for `pcmk_rc_no_dc` return code
+* **libcrmcommon:** Sort schema transformations on non-glibc systems
+* **libcrmservice:** consider a monitor pending if LoadUnit receives no reply from systemd
+* **libpacemaker:** Prevent CIB growth during `crm_simulate --profile`
+* **libpacemaker:** set fail-count to INFINITY for fatal failures
+* **libpe_status:** consider parents of an unmanaged resource active on the node
+* **libpe_status:** Make `cluster_status()` idempotent
+* **pacemaker-attrd:** make a peer learn our node name once it has joined
+* **pacemaker-attrd:** prevent segfault if a peer leaves when its name is unknown yet
+* **pacemaker-attrd:** remember names of peers from attribute update in case unknown
+* **scheduler:** avoid memory leak in bundles
+* **scheduler:** avoid memory leak when freeing node copies
+* **tools:** Avoid crash in `crm_simulate --profile`
+* **tools:** validate `stonith_admin --timeout` value
+* **various:** Correctly detect completion of systemd start/stop actions
+* **xml:** Ensure ACL permissions are valid after XSL transformations
+* **xml:** Preserve ACL reference behavior for replaced constraints
+
+## Public API changes since Pacemaker-3.0.0
+
+* **fencer:** Don't automatically pass nodeid as parameter
+* **libcrmcommon:** add `pcmk_common_cleanup()`
+* **libcrmcommon:** add `pcmk_free_scheduler()`
+* **libcrmcommon:** add `pcmk_new_scheduler()`
+* **libcrmcommon:** add `pcmk_reset_scheduler()`
+* **libcrmcommon:** Deprecate `crm_foreach_xpath_result()`
+* **libcrmcommon:** Deprecate `crm_ipc_compressed.`
+* **libcrmcommon:** Deprecate dedupXpathResults()
+* **libcrmcommon:** Deprecate freeXpathObject()
+* **libcrmcommon:** Deprecate getXpathResult()
+* **libcrmcommon:** Deprecate `get_xpath_object()`
+* **libcrmcommon:** Deprecate `max_size` parameter to `mainloop_add_ipc_client.`
+* **libcrmcommon:** Deprecate numXpathResults()
+* **libcrmcommon:** Deprecate pcmkXmlStr
+* **libcrmcommon:** Deprecate `xml_accept_changes()`
+* **libcrmcommon:** Deprecate `xml_calculate_changes()`
+* **libcrmcommon:** Deprecate `xml_calculate_significant_changes()`
+* **libcrmcommon:** Deprecate `xml_document_dirty()`
+* **libcrmcommon:** Deprecate `xml_tracking_changes()`
+* **libcrmcommon:** Deprecate `xml_track_changes()`
+* **libcrmcommon:** Deprecate `xpath_search()`
+* **libcrmcommon:** Ignore the `max_size` parameter in `crm_ipc_new.`
+* **libcrmcommon:** Introduce the `pcmk_rc_ipc_more` error code.
+* **libcrmcommon:** Map `pcmk_rc_cib_corrupt` to `CRM_EX_CONFIG.`
+* **liblrmd:** Ignore provider for stonith-class resource metadata calls
+* **libpacemaker:** Document that `pcmk_fence_installed()` ignores timeout
+* **libpe_rules,libpe_status:** deprecate crm/pengine/common.h header
+* **libpe_rules,libpe_status:** deprecate struct `pe_match_data` and `pe_match_data_t`
+* **libpe_rules,libpe_status:** deprecate struct `pe_op_eval_data` and `pe_op_eval_data_t`
+* **libpe_rules,libpe_status:** deprecate struct `pe_re_match_data` and `pe_re_match_data_t`
+* **libpe_rules,libpe_status:** deprecate struct `pe_rsc_eval_data` and `pe_rsc_eval_data_t`
+* **libpe_rules,libpe_status:** deprecate struct `pe_rule_eval_data` and `pe_rule_eval_data_t`
+* **libpe_rules:** deprecate crm/pengine/rules.h header
+* **libpe_rules:** deprecate `pe_eval_nvpairs()`
+* **libpe_rules:** deprecate `pe_unpack_nvpairs()`
+* **libpe_status:** deprecate `cleanup_calculations()`
+* **libpe_status:** deprecate `pe_free_working_set()`
+* **libpe_status:** deprecate `pe_new_working_set()`
+* **libpe_status:** deprecate `pe_reset_working_set()`
+* **libpe_status:** deprecate `set_working_set_defaults()`
+* **libstonithd:** Deprecate enum `op_state` and its values
+* **libstonithd:** Deprecate enum `stonith_call_options` and its values
+* **libstonithd:** Deprecate enum `stonith_namespace` and its values
+* **libstonithd:** Deprecate enum `stonith_state`
+* **libstonithd:** Deprecate `stonith_action_str()`
+* **libstonithd:** Deprecate `stonith_agent_exists()`
+* **libstonithd:** Deprecate `stonith_api_connect_retry()`
+* **libstonithd:** Deprecate `stonith_api_delete()`
+* **libstonithd:** Deprecate `stonith_api_new()`
+* **libstonithd:** Deprecate `stonith_api_operations_t`
+* **libstonithd:** Deprecate `stonith_callback_data_t`
+* **libstonithd:** Deprecate `stonith_dispatch()`
+* **libstonithd:** Deprecate `stonith_dump_pending_callbacks()`
+* **libstonithd:** Deprecate `stonith_event_t` and struct `stonith_event_s`
+* **libstonithd:** Deprecate `stonith_get_namespace()`
+* **libstonithd:** Deprecate `stonith_history_free()`
+* **libstonithd:** Deprecate `stonith_history_t`
+* **libstonithd:** Deprecate `stonith_key_value_add()`
+* **libstonithd:** Deprecate `stonith_key_value_freeall()`
+* **libstonithd:** Deprecate `stonith_key_value_t`
+* **libstonithd:** Deprecate `stonith_namespace2text()`
+* **libstonithd:** Deprecate `stonith_op_state_str()`
+* **libstonithd:** Deprecate `stonith_t` and struct `stonith_s`
+* **libstonithd:** Deprecate `stonith_text2namespace()`
+* **libstonithd:** Ignore `namespace_s` in stonith API metadata method
+* **libstonithd:** Ignore `namespace_s` in stonith API validate method
+* **Python:** add `PACEMAKER_CONFIG_DIR` to BuildOptions
+
 # Pacemaker-3.0.0 (08 Jan 2025)
 * 2039 commits with 659 files changed, 23924 insertions(+), 32384 deletions(-)
 
