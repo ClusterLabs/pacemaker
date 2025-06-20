@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -160,8 +160,6 @@ static GOptionEntry api_call_entries[] = {
 static GMainLoop *mainloop = NULL;
 static lrmd_t *lrmd_conn = NULL;
 
-static char event_buf_v0[1024];
-
 static crm_exit_t
 test_exit(crm_exit_t exit_code)
 {
@@ -174,15 +172,6 @@ test_exit(crm_exit_t exit_code)
         printf(fmt "\n" , ##args);  \
     }
 
-#define report_event(event)                                             \
-    snprintf(event_buf_v0, sizeof(event_buf_v0), "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s op_status:%s", \
-             lrmd_event_type2str(event->type),                          \
-             event->rsc_id,                                             \
-             event->op_type ? event->op_type : "none",                  \
-             crm_exit_str((crm_exit_t) event->rc),                      \
-             pcmk_exec_status_str(event->op_status));                   \
-    crm_info("%s", event_buf_v0);
-
 static void
 test_shutdown(int nsig)
 {
@@ -193,12 +182,20 @@ test_shutdown(int nsig)
 static void
 read_events(lrmd_event_data_t * event)
 {
-    report_event(event);
-    if (options.listen) {
-        if (pcmk__str_eq(options.listen, event_buf_v0, pcmk__str_casei)) {
-            print_result("LISTEN EVENT SUCCESSFUL");
-            test_exit(CRM_EX_OK);
-        }
+    char buf[1024] = { '\0', };
+
+    pcmk__assert(snprintf(buf, sizeof(buf),
+                          "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s "
+                          "op_status:%s",
+                          lrmd_event_type2str(event->type), event->rsc_id,
+                          pcmk__s(event->op_type, "none"),
+                          crm_exit_str((crm_exit_t) event->rc),
+                          pcmk_exec_status_str(event->op_status)) >= 0);
+    crm_info("%s", buf);
+
+    if (options.listen && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
+        print_result("LISTEN EVENT SUCCESSFUL");
+        test_exit(CRM_EX_OK);
     }
 
     if (exec_call_id && (event->call_id == exec_call_id)) {
