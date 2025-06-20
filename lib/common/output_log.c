@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -200,19 +200,14 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     int len = 0;
     va_list ap;
     private_data_t *priv = NULL;
-    char prefix[LINE_MAX] = { 0 };
-    int offset = 0;
+    GString *prefix = NULL;
     char* buffer = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
-    for (GList* gIter = priv->prefixes->head; gIter; gIter = gIter->next) {
-        if (strcmp(prefix, "") != 0) {
-            offset += snprintf(prefix + offset, LINE_MAX - offset, ": %s", (char *)gIter->data);
-        } else {
-            offset = snprintf(prefix, LINE_MAX, "%s", (char *)gIter->data);
-        }
+    for (GList *iter = priv->prefixes->head; iter != NULL; iter = iter->next) {
+        pcmk__add_separated_word(&prefix, 128, (const char *) iter->data, ": ");
     }
 
     va_start(ap, format);
@@ -220,21 +215,22 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     pcmk__assert(len >= 0);
     va_end(ap);
 
-    if (strcmp(buffer, "") != 0) { /* We don't want empty messages */
-        if ((name != NULL) && (strcmp(name, "") != 0)) {
-            if (strcmp(prefix, "") != 0) {
-                logger(priv, "%s: %s: %s", prefix, name, buffer);
+    if (!pcmk__str_empty(buffer)) { // We don't want empty messages
+        if (!pcmk__str_empty(name)) {
+            if (prefix != NULL) {
+                logger(priv, "%s: %s: %s", prefix->str, name, buffer);
             } else {
                 logger(priv, "%s: %s", name, buffer);
             }
         } else {
-            if (strcmp(prefix, "") != 0) {
-                logger(priv, "%s: %s", prefix, buffer);
+            if (prefix != NULL) {
+                logger(priv, "%s: %s", prefix->str, buffer);
             } else {
                 logger(priv, "%s", buffer);
             }
         }
     }
+    g_string_free(prefix, TRUE);
     free(buffer);
 }
 
