@@ -257,44 +257,43 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
 #  ifdef HAVE_PROGNAME
     /* Differentiate ourselves in the 'ps' output */
     {
-        char *p;
-        int i, maxlen;
-        char *LastArgv = NULL;
-        const char *name = "pcmk-init";
+#define PROG_NAME "pcmk-init"
+        char *p = NULL;
+        int maxlen = 0;
+        char *last_argv = argv[0] + strlen(argv[0]);
 
-        for (i = 0; i < argc; i++) {
-            if (!i || (LastArgv + 1 == argv[i]))
-                LastArgv = argv[i] + strlen(argv[i]);
-        }
-
-        for (i = 0; envp[i] != NULL; i++) {
-            if ((LastArgv + 1) == envp[i]) {
-                LastArgv = envp[i] + strlen(envp[i]);
+        for (int i = 1; i < argc; i++) {
+            if (argv[i] == (last_argv + 1)) {
+                last_argv = argv[i] + strlen(argv[i]);
             }
         }
 
-        maxlen = (LastArgv - argv[0]) - 2;
+        for (int i = 0; envp[i] != NULL; i++) {
+            if (envp[i] == (last_argv + 1)) {
+                last_argv = envp[i] + strlen(envp[i]);
+            }
+        }
 
-        i = strlen(name);
+        maxlen = (last_argv - argv[0]) - 2;
 
         /* We can overwrite individual argv[] arguments */
-        snprintf(argv[0], maxlen, "%s", name);
+        snprintf(argv[0], maxlen, "%s", PROG_NAME);
 
         /* Now zero out everything else */
-        p = &argv[0][i];
-        while (p < LastArgv) {
+        p = &argv[0][sizeof(PROG_NAME) - 1];
+        while (p < last_argv) {
             *p++ = '\0';
         }
         argv[1] = NULL;
     }
+#undef PROG_NAME
 #  endif // HAVE_PROGNAME
 
     while (1) {
-        int sig;
-        size_t i;
+        int sig = 0;
 
         sigwait(&set, &sig);
-        for (i = 0; i < PCMK__NELEM(sigmap); i++) {
+        for (int i = 0; i < PCMK__NELEM(sigmap); i++) {
             if (sigmap[i].sig == sig) {
                 sigmap[i].handler();
                 break;
