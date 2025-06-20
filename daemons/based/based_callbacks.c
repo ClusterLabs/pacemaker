@@ -414,7 +414,8 @@ cib_digester_cb(gpointer data)
         free(ping_digest);
         ping_digest = NULL;
         ping_modified_since = FALSE;
-        snprintf(buffer, 32, "%" PRIu64, ping_seq);
+        pcmk__assert(snprintf(buffer, 32, "%" PRIu64, ping_seq) >= 0);
+
         crm_trace("Requesting peer digests (%s)", buffer);
 
         crm_xml_add(ping, PCMK__XA_T, PCMK__VALUE_CIB);
