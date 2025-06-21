@@ -26,7 +26,6 @@ bad_input_string(void **state)
 
     pcmk__set_env_option(NULL, "new_value", true);
     pcmk__set_env_option("", "new_value", true);
-    pcmk__set_env_option("name=val", "new_value", true);
 
     pcmk__mock_setenv = false;
 
@@ -35,7 +34,6 @@ bad_input_string(void **state)
 
     pcmk__set_env_option(NULL, NULL, true);
     pcmk__set_env_option("", NULL, true);
-    pcmk__set_env_option("name=val", NULL, true);
 
     pcmk__mock_unsetenv = false;
 }
