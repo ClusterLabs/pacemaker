@@ -107,8 +107,8 @@ pcmk__pid_active(pid_t pid, const char *daemon)
  *
  * \return Standard Pacemaker return code
  */
-int
-pcmk__read_pidfile(const char *filename, pid_t *pid)
+static int
+read_pidfile(const char *filename, pid_t *pid)
 {
     int fd;
     struct stat sbuf;
@@ -173,7 +173,7 @@ pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
                       const char *expected_name, pid_t *pid)
 {
     pid_t pidfile_pid = 0;
-    int rc = pcmk__read_pidfile(filename, &pidfile_pid);
+    int rc = read_pidfile(filename, &pidfile_pid);
 
     if (pid) {
         *pid = pidfile_pid;
