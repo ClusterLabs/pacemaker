@@ -1116,6 +1116,7 @@ pcmk__env_option(const char *option)
 }
 
 /*!
+ * \internal
  * \brief Set or unset a Pacemaker environment variable option
  *
  * Set an environment variable option with a \c "PCMK_" prefix and optionally
@@ -1137,8 +1138,7 @@ pcmk__set_env_option(const char *option, const char *value, bool compat)
     // @COMPAT Drop support for "HA_" options eventually
     static const char *const prefixes[] = { "PCMK", "HA" };
 
-    CRM_CHECK(!pcmk__str_empty(option) && (strchr(option, '=') == NULL),
-              return);
+    CRM_CHECK(!pcmk__str_empty(option), return);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
         char *env_name = crm_strdup_printf("%s_%s", prefixes[i], option);
