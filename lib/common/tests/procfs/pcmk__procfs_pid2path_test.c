@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,72 +18,67 @@
 #include <errno.h>
 
 static void
-no_exe_file(void **state)
+assert_pid2path_one(int errno_to_set, const char *link_contents, char **dest,
+                    int reference_rc)
 {
-    size_t len = PATH_MAX;
-    char *path = pcmk__assert_alloc(len, sizeof(char));
-
-    // Set readlink() errno and link contents
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_value(__wrap_readlink, buf, path);
-    expect_value(__wrap_readlink, bufsize, len - 1);
-    will_return(__wrap_readlink, ENOENT);
-    will_return(__wrap_readlink, NULL);
+    expect_value(__wrap_readlink, bufsize, PATH_MAX);
+    will_return(__wrap_readlink, errno_to_set);
+    will_return(__wrap_readlink, link_contents);
 
-    assert_int_equal(pcmk__procfs_pid2path(1000, path, len), ENOENT);
+    assert_int_equal(pcmk__procfs_pid2path(1000, dest), reference_rc);
 
     pcmk__mock_readlink = false;
+}
 
-    free(path);
+static void
+assert_pid2path(int errno_to_set, const char *link_contents, int reference_rc,
+                const char *reference_result)
+{
+    char *dest = NULL;
+
+    assert_pid2path_one(errno_to_set, link_contents, NULL, reference_rc);
+    assert_pid2path_one(errno_to_set, link_contents, &dest, reference_rc);
+
+    if (reference_result == NULL) {
+        assert_null(dest);
+    } else {
+        assert_string_equal(dest, reference_result);
+        free(dest);
+    }
+}
+
+static void
+no_exe_file(void **state)
+{
+    assert_pid2path(ENOENT, NULL, ENOENT, NULL);
 }
 
 static void
 contents_too_long(void **state)
 {
-    size_t len = 10;
-    char *path = pcmk__assert_alloc(len, sizeof(char));
+    // String length equals PATH_MAX
+    char *long_path = crm_strdup_printf("%0*d", PATH_MAX, 0);
 
-    // Set readlink() errno and link contents
-    pcmk__mock_readlink = true;
-
-    expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_value(__wrap_readlink, buf, path);
-    expect_value(__wrap_readlink, bufsize, len - 1);
-    will_return(__wrap_readlink, 0);
-    will_return(__wrap_readlink, "/more/than/10/characters");
-
-    assert_int_equal(pcmk__procfs_pid2path(1000, path, len),
-                     ENAMETOOLONG);
-
-    pcmk__mock_readlink = false;
-
-    free(path);
+    assert_pid2path(0, long_path, ENAMETOOLONG, NULL);
+    free(long_path);
 }
 
 static void
 contents_ok(void **state)
 {
-    size_t len = PATH_MAX;
-    char *path = pcmk__assert_alloc(len, sizeof(char));
+    char *real_path = pcmk__str_copy("/ok");
 
-    // Set readlink() errno and link contents
-    pcmk__mock_readlink = true;
+    assert_pid2path(0, real_path, pcmk_rc_ok, real_path);
+    free(real_path);
 
-    expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_value(__wrap_readlink, buf, path);
-    expect_value(__wrap_readlink, bufsize, len - 1);
-    will_return(__wrap_readlink, 0);
-    will_return(__wrap_readlink, "/ok");
+    // String length equals PATH_MAX - 1
+    real_path = crm_strdup_printf("%0*d", PATH_MAX - 1, 0);
 
-    assert_int_equal(pcmk__procfs_pid2path((pid_t) 1000, path, len),
-                     pcmk_rc_ok);
-    assert_string_equal(path, "/ok");
-
-    pcmk__mock_readlink = false;
-
-    free(path);
+    assert_pid2path(0, real_path, pcmk_rc_ok, real_path);
+    free(real_path);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
