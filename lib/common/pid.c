@@ -47,10 +47,11 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         /* make sure PID hasn't been reused by another process
            XXX: might still be just a zombie, which could confuse decisions */
         bool checked_through_kill = (rc == 0);
-        char exe_path[PATH_MAX] = { '\0', };
+        bool paths_equal = false;
+        char *exe_path = NULL;
         char *myexe_path = NULL;
 
-        rc = pcmk__procfs_pid2path(pid, exe_path, sizeof(exe_path));
+        rc = pcmk__procfs_pid2path(pid, &exe_path);
         if (rc != pcmk_rc_ok) {
             if (rc != EACCES) {
                 // Check again to filter out races
@@ -84,9 +85,10 @@ pcmk__pid_active(pid_t pid, const char *daemon)
             myexe_path = pcmk__str_copy(daemon);
         }
 
-        rc = strcmp(exe_path, myexe_path);
+        paths_equal = pcmk__str_eq(exe_path, myexe_path, pcmk__str_none);
+        free(exe_path);
         free(myexe_path);
-        if (rc == 0) {
+        if (paths_equal) {
             return pcmk_rc_ok;
         }
     }
