@@ -202,7 +202,7 @@ int
 pcmk__procfs_pid2path(pid_t pid, char **path)
 {
 #if HAVE_LINUX_PROCFS
-    char procfs_exe_path[PATH_MAX];
+    char *procfs_path = NULL;
     ssize_t link_rc;
 
     /* The readlink(2) man page recommends calling lstat() to get the required
@@ -213,12 +213,11 @@ pcmk__procfs_pid2path(pid_t pid, char **path)
 
     pcmk__assert((path == NULL) || (*path == NULL));
 
-    if (snprintf(procfs_exe_path, PATH_MAX, "/proc/%lld/exe",
-                 (long long) pid) >= PATH_MAX) {
-        return ENAMETOOLONG; // Truncated (shouldn't be possible in practice)
-    }
+    procfs_path = crm_strdup_printf("/proc/%lld/exe", (long long) pid);
 
-    link_rc = readlink(procfs_exe_path, real_path, sizeof(real_path));
+    link_rc = readlink(procfs_path, real_path, sizeof(real_path));
+    free(procfs_path);
+
     if (link_rc < 0) {
         return errno;
     } else if (link_rc >= sizeof(real_path)) {
