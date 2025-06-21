@@ -1098,10 +1098,6 @@ crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
     return added;
 }
 
-// Maximum size of null-terminated string representation of 64-bit integer
-// -9223372036854775808
-#define LLSTRSIZE 21
-
 /*!
  * \brief Create an XML attribute with specified name and long long int value
  *
@@ -1113,18 +1109,16 @@ crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
  * \param[in]     value  Attribute value to set
  *
  * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if xml or name are \c NULL or empty.
- *       This does not support greater than 64-bit values.
+ * \note This does nothing if \p xml or \p name is \c NULL or empty.
  */
 const char *
 crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
 {
-    char s[LLSTRSIZE] = { '\0', };
+    char *str = crm_strdup_printf("%lld", value);
+    const char *result = crm_xml_add(xml, name, str);
 
-    if (snprintf(s, LLSTRSIZE, "%lld", (long long) value) == LLSTRSIZE) {
-        return NULL;
-    }
-    return crm_xml_add(xml, name, s);
+    free(str);
+    return result;
 }
 
 /*!
