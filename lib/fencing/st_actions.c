@@ -133,10 +133,11 @@ make_args(const char *agent, const char *action, const char *target,
 
     // Add action to arguments (using an alias if requested)
     if (device_args) {
-        char buffer[512];
+        char *buffer = crm_strdup_printf("pcmk_%s_action", action);
 
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_action", action);
         value = g_hash_table_lookup(device_args, buffer);
+        free(buffer);
+
         if (value) {
             crm_debug("Substituting '%s' for fence action %s targeting %s",
                       value, action, pcmk__s(target, "no node"));
@@ -270,11 +271,10 @@ stonith__action_create(const char *agent, const char *action_name,
                      "Initialization bug in fencing library");
 
     if (device_args) {
-        char buffer[512];
-        const char *value = NULL;
+        char *buffer = crm_strdup_printf("pcmk_%s_retries", action_name);
+        const char *value = g_hash_table_lookup(device_args, buffer);
 
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_retries", action_name);
-        value = g_hash_table_lookup(device_args, buffer);
+        free(buffer);
 
         if (value) {
             action->max_retries = atoi(value);
