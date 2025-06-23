@@ -738,7 +738,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
     const char *prov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
 
-    char ra_name[LINE_MAX];
+    char *ra_name = NULL;
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
     const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, true));
@@ -761,9 +761,11 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     // Resource information
-    snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
-             ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
-             crm_element_value(rsc->priv->xml, PCMK_XA_TYPE));
+    ra_name = crm_strdup_printf("%s%s%s:%s", class,
+                                ((prov == NULL)? "" : ":"),
+                                ((prov == NULL)? "" : prov),
+                                crm_element_value(rsc->priv->xml,
+                                                  PCMK_XA_TYPE));
 
     target_role = g_hash_table_lookup(rsc->priv->meta,
                                       PCMK_META_TARGET_ROLE);
@@ -791,6 +793,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                                   PCMK_XA_LOCKED_TO, locked_to,
                                   PCMK_XA_DESCRIPTION, desc,
                                   NULL);
+    free(ra_name);
     free(nodes_running_on);
 
     pcmk__assert(rc == pcmk_rc_ok);
