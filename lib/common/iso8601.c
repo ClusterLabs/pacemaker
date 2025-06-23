@@ -2222,8 +2222,8 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
  *
  * \return Readable version of \p interval_ms
  *
- * \note The return value is a pointer to static memory that will be
- *       overwritten by later calls to this function.
+ * \note The return value is a pointer to static memory that may be overwritten
+ *       by later calls to this function.
  */
 const char *
 pcmk__readable_interval(guint interval_ms)
@@ -2234,41 +2234,43 @@ pcmk__readable_interval(guint interval_ms)
 #define MS_IN_D (MS_IN_H * 24)
 #define MAXSTR sizeof("..d..h..m..s...ms")
     static char str[MAXSTR];
-    int offset = 0;
+    GString *buf = NULL;
 
-    str[0] = '\0';
+    if (interval_ms == 0) {
+        return "0s";
+    }
+
+    buf = g_string_sized_new(128);
+
     if (interval_ms >= MS_IN_D) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%ud",
-                           interval_ms / MS_IN_D);
+        g_string_append_printf(buf, "%ud", interval_ms / MS_IN_D);
         interval_ms -= (interval_ms / MS_IN_D) * MS_IN_D;
     }
     if (interval_ms >= MS_IN_H) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%uh",
-                           interval_ms / MS_IN_H);
+        g_string_append_printf(buf, "%uh", interval_ms / MS_IN_H);
         interval_ms -= (interval_ms / MS_IN_H) * MS_IN_H;
     }
     if (interval_ms >= MS_IN_M) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%um",
-                           interval_ms / MS_IN_M);
+        g_string_append_printf(buf, "%um", interval_ms / MS_IN_M);
         interval_ms -= (interval_ms / MS_IN_M) * MS_IN_M;
     }
 
     // Ns, N.NNNs, or NNNms
     if (interval_ms >= MS_IN_S) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%u",
-                           interval_ms / MS_IN_S);
+        g_string_append_printf(buf, "%u", interval_ms / MS_IN_S);
         interval_ms -= (interval_ms / MS_IN_S) * MS_IN_S;
+
         if (interval_ms > 0) {
-            offset += snprintf(str + offset, MAXSTR - offset, ".%03u",
-                               interval_ms);
+            g_string_append_printf(buf, ".%03u", interval_ms);
         }
-        (void) snprintf(str + offset, MAXSTR - offset, "s");
+        g_string_append_c(buf, 's');
 
     } else if (interval_ms > 0) {
-        (void) snprintf(str + offset, MAXSTR - offset, "%ums", interval_ms);
-
-    } else if (str[0] == '\0') {
-        strcpy(str, "0s");
+        g_string_append_printf(buf, "%ums", interval_ms);
     }
+
+    pcmk__assert(buf->len < sizeof(str));
+    strncpy(str, buf->str, sizeof(str) - 1);
+    g_string_free(buf, TRUE);
     return str;
 }
