@@ -518,7 +518,8 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
     static volatile int counter = 1;
     static volatile time_t last = 0;
 
-    char buffer[NAME_MAX];
+    char *buffer = NULL;
+    int rc = 0;
     time_t now = time(NULL);
 
     if (blackbox_file_prefix == NULL) {
@@ -535,7 +536,8 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
                 return;
             }
 
-            snprintf(buffer, NAME_MAX, "%s.%d", blackbox_file_prefix, counter++);
+            buffer = crm_strdup_printf("%s.%d", blackbox_file_prefix,
+                                       counter++);
             if (nsig == SIGTRAP) {
                 crm_notice("Blackbox dump requested, please see %s for contents", buffer);
 
@@ -548,7 +550,13 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
             }
 
             last = now;
-            qb_log_blackbox_write_to_file(buffer);
+
+            rc = qb_log_blackbox_write_to_file(buffer);
+            if (rc < 0) {
+                // System errno
+                crm_err("Failed to write blackbox file %s: %s", buffer,
+                        strerror(-rc));
+            }
 
             /* Flush the existing contents
              * A size change would also work
@@ -567,6 +575,8 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
             raise(nsig);
             break;
     }
+
+    free(buffer);
 }
 
 static const char *
