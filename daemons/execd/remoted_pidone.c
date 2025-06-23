@@ -256,6 +256,10 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
 
 #  ifdef HAVE_PROGNAME
     /* Differentiate ourselves in the 'ps' output */
+
+    /* @TODO This seems way too complicated, and it's unclear why we're
+     * overwriting envp and why that's safe to do.
+     */
     {
 #define PROG_NAME "pcmk-init"
         char *p = NULL;
@@ -277,7 +281,7 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
         maxlen = (last_argv - argv[0]) - 2;
 
         /* We can overwrite individual argv[] arguments */
-        snprintf(argv[0], maxlen, "%s", PROG_NAME);
+        pcmk__assert(snprintf(argv[0], maxlen, "%s", PROG_NAME) >= 0);
 
         /* Now zero out everything else */
         p = &argv[0][sizeof(PROG_NAME) - 1];
