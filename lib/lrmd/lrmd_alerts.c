@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -126,8 +126,6 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
     bool any_success = FALSE, any_failure = FALSE;
     const char *kind_s = pcmk__alert_flag2text(kind);
     pcmk__time_hr_t *now = NULL;
-    char timestamp_epoch[20];
-    char timestamp_usec[7];
     time_t epoch = 0;
 
     params = alert_key2param(params, PCMK__alert_key_kind, kind_s);
@@ -171,6 +169,9 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
 
         if (now) {
             char *timestamp = pcmk__time_format_hr(entry->tstamp_format, now);
+            char *timestamp_epoch = crm_strdup_printf("%lld",
+                                                      (long long) epoch);
+            char *timestamp_usec = crm_strdup_printf("%06d", now->useconds);
 
             if (timestamp) {
                 copy_params = alert_key2param(copy_params,
@@ -179,15 +180,14 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
                 free(timestamp);
             }
 
-            snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%lld",
-                     (long long) epoch);
             copy_params = alert_key2param(copy_params,
                                           PCMK__alert_key_timestamp_epoch,
                                           timestamp_epoch);
-            snprintf(timestamp_usec, sizeof(timestamp_usec), "%06d", now->useconds);
             copy_params = alert_key2param(copy_params,
                                           PCMK__alert_key_timestamp_usec,
                                           timestamp_usec);
+            free(timestamp_epoch);
+            free(timestamp_usec);
         }
 
         copy_params = alert_envvar2params(copy_params, entry);
