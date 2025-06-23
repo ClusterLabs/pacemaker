@@ -390,10 +390,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     if (private->encrypted) {
+#ifdef HAVE_GNUTLS_GNUTLS_H
         int tls_rc = GNUTLS_E_SUCCESS;
 
         /* initialize GnuTls lib */
-#ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote_gnutls_credentials_init == FALSE) {
             crm_gnutls_global_init();
             gnutls_anon_allocate_client_credentials(&anon_cred_c);
