@@ -411,10 +411,17 @@ set_ocf_env(const char *key, const char *value, gpointer user_data)
 static void
 set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
-    char buffer[500];
+    const char *ckey = key;
 
-    snprintf(buffer, sizeof(buffer), strcmp(key, "OCF_CHECK_LEVEL") != 0 ? "OCF_RESKEY_%s" : "%s", (char *)key);
-    set_ocf_env(buffer, value, user_data);
+    if (pcmk__str_eq(ckey, "OCF_CHECK_LEVEL", pcmk__str_none)) {
+        set_ocf_env(ckey, value, user_data);
+
+    } else {
+        char *buffer = crm_strdup_printf("OCF_RESKEY_%s", ckey);
+
+        set_ocf_env(buffer, value, user_data);
+        free(buffer);
+    }
 }
 
 static void
@@ -1404,7 +1411,6 @@ services_os_get_single_directory_list(const char *root, gboolean files, gboolean
     GList *list = NULL;
     struct dirent **namelist = NULL;
     int entries = 0, lpc = 0;
-    char buffer[PATH_MAX];
 
     entries = scandir(root, &namelist, NULL, alphasort);
     if (entries <= 0) {
@@ -1412,16 +1418,20 @@ services_os_get_single_directory_list(const char *root, gboolean files, gboolean
     }
 
     for (lpc = 0; lpc < entries; lpc++) {
+        char *buffer = NULL;
         struct stat sb;
+        int rc = 0;
 
         if ('.' == namelist[lpc]->d_name[0]) {
             free(namelist[lpc]);
             continue;
         }
 
-        snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
+        buffer = crm_strdup_printf("%s/%s", root, namelist[lpc]->d_name);
+        rc = stat(buffer, &sb);
+        free(buffer);
 
-        if (stat(buffer, &sb)) {
+        if (rc != 0) {
             continue;
         }
 
