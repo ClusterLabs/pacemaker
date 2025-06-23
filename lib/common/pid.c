@@ -229,7 +229,16 @@ pcmk__lock_pidfile(const char *filename, const char *name)
         return errno;
     }
 
-    snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1, (long long) mypid);
+    /* @FIXME If the string representation of the max PID is longer than
+     * sizeof(buf), then the PID will be truncated. The read and write
+     * buffers should be large enough to hold the max PID on all systems.
+     *
+     * Also, if the max PID's string representation is longer than
+     * (LOCKSTRLEN - 1), then snprintf() will return a value greater than
+     * (LOCKSTRLEN - 1).
+     */
+    pcmk__assert(snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1,
+                 (long long) mypid) >= (LOCKSTRLEN - 1));
     rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 
