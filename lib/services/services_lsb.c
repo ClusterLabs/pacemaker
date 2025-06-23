@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,7 +102,7 @@ lsb_meta_helper_get_value(const char *line, gchar **value, const char *prefix)
 int
 services__get_lsb_metadata(const char *type, char **output)
 {
-    char ra_pathname[PATH_MAX] = { 0, };
+    char *ra_pathname = NULL;
     FILE *fp = NULL;
     char buffer[1024] = { 0, };
     gchar *provides = NULL;
@@ -117,14 +117,15 @@ services__get_lsb_metadata(const char *type, char **output)
     bool in_header = FALSE;
 
     if (type[0] == '/') {
-        snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
+        ra_pathname = pcmk__str_copy(type);
     } else {
-        snprintf(ra_pathname, sizeof(ra_pathname), "%s/%s",
-                 PCMK__LSB_INIT_DIR, type);
+        ra_pathname = crm_strdup_printf(PCMK__LSB_INIT_DIR "/%s", type);
     }
 
     crm_trace("Looking into %s", ra_pathname);
     fp = fopen(ra_pathname, "r");
+    free(ra_pathname);
+
     if (fp == NULL) {
         return -errno;
     }
