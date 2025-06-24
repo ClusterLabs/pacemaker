@@ -1623,7 +1623,7 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
 #ifdef HAVE_QB_IPCC_CONNECT_ASYNC
     pollfd.events = POLLIN;
     do {
-        poll_rc = poll(&pollfd, 1, 2000);
+        poll_rc = poll(&pollfd, 1, 5000);
     } while ((poll_rc == -1) && (errno == EINTR));
 
     /* If poll() failed, given that disconnect function is not registered yet,
