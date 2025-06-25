@@ -580,7 +580,7 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         return;
     }
 
-    digest = pcmk__digest_operation(restart);
+    digest = pcmk__digest_op_params(restart);
     /* Add PCMK__XA_OP_FORCE_RESTART and PCMK__XA_OP_RESTART_DIGEST to indicate
      * the resource supports reload, no matter if it actually supports any
      * reloadable parameters
@@ -618,7 +618,7 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     list = build_parameter_list(op, metadata, ra_param_private, &secure);
 
     if (list != NULL) {
-        digest = pcmk__digest_operation(secure);
+        digest = pcmk__digest_op_params(secure);
         crm_xml_add(update, PCMK__XA_OP_SECURE_PARAMS,
                     (const char *) list->str);
         crm_xml_add(update, PCMK__XA_OP_SECURE_DIGEST, digest);
