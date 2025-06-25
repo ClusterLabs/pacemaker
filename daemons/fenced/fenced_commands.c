@@ -1334,7 +1334,7 @@ device_has_duplicate(const fenced_device_t *device)
         return NULL;
     }
 
-    // Use pcmk__digest_operation() here?
+    // Find a way to share logic with pcmk__digest_op_params() here?
     if (device_params_diff(device->params, dup->params) ||
         device_params_diff(dup->params, device->params)) {
         return NULL;

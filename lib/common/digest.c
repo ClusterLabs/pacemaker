@@ -120,16 +120,21 @@ pcmk__digest_on_disk_cib(const xmlNode *input)
 
 /*!
  * \internal
- * \brief Calculate and return digest of an operation XML element
+ * \brief Calculate and return digest of a \c PCMK_XE_PARAMETERS element
+ *
+ * This is intended for parameters of a resource operation (also known as
+ * resource action). A \c PCMK_XE_PARAMETERS element from a different source
+ * (for example, resource agent metadata) may have child elements, which are not
+ * allowed here.
  *
  * The digest is invariant to changes in the order of XML attributes.
  *
- * \param[in] input  Root of XML to digest (must have no children)
+ * \param[in] input  XML element to digest (must have no children)
  *
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_operation(const xmlNode *input)
+pcmk__digest_op_params(const xmlNode *input)
 {
     /* Switching to v2 digests would likely cause restarts during rolling
      * upgrades.
