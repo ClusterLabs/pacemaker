@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,6 +215,7 @@ extern "C" {
 #define PCMK_XE_TIMING                      "timing"
 #define PCMK_XE_TIMINGS                     "timings"
 #define PCMK_XE_TRANSITION                  "transition"
+#define PCMK_XE_UPDATED                     "updated"
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_UTILIZATIONS                "utilizations"
 #define PCMK_XE_VALIDATE                    "validate"
