@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2024 the Pacemaker project contributors
+# Copyright 2019-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -55,7 +55,7 @@ changes: summary
 	@printf "\n## Fixes since $(LAST_RELEASE)\n\n"
 	@"$(GIT)" log --pretty=format:'%s' --no-merges			\
 		--abbrev-commit $(LAST_RELEASE)..HEAD			\
-		| sed -n -e 's/^ *\(Fix\|High\|Bug\): */* /p'		\
+		| sed -n -e 's/^ *\(Fix\|High\|Med\|Low\|Bug\): */* /p'		\
 		| sed -e 's/\(\(pacemaker-\)?based\):/CIB:/'		\
 		      -e 's/\(\(pacemaker-\)?execd\):/executor:/'	\
 		      -e 's/\(\(pacemaker-\)?controld\):/controller:/'	\

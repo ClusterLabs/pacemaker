@@ -157,9 +157,9 @@ coverity-corp: $(COVHTML)
 # Remove all outputs regardless of tag
 .PHONY: coverity-clean
 coverity-clean:
-	-rm -rf "$(abs_builddir)"/coverity-*			\
-		"$(abs_builddir)"/$(PACKAGE)-coverity-*.tgz	\
-		"$(abs_builddir)"/*.coverity
+	-rm -rf "$(abs_top_builddir)"/coverity-*			\
+		"$(abs_top_builddir)"/$(PACKAGE)-coverity-*.tgz	\
+		"$(abs_top_builddir)"/*.coverity
 
 
 ## cppcheck
@@ -181,6 +181,7 @@ CPPCHECK_OUT = $(abs_top_builddir)/cppcheck.out
 cppcheck:
 	cppcheck $(CPPCHECK_ARGS) -I $(top_srcdir)/include	\
 		-I $(top_srcdir)/lib/common 			\
+		--check-level=exhaustive 			\
 		--include=/usr/include/qb/qblog.h 		\
 		--output-file=$(CPPCHECK_OUT)			\
 		--max-configs=30 --inline-suppr -q		\
