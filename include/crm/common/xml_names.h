@@ -157,6 +157,7 @@ extern "C" {
 #define PCMK_XE_PACEMAKERD                  "pacemakerd"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
+#define PCMK_XE_PATCHSET                    "patchset"
 #define PCMK_XE_PERIOD                      "period"
 #define PCMK_XE_PODMAN                      "podman"
 #define PCMK_XE_PORT_MAPPING                "port-mapping"
