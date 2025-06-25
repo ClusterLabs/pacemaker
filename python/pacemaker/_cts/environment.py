@@ -453,9 +453,6 @@ class Environment:
                           metavar="PROCS",
                           default="pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd",
                           help="Run valgrind against the given space-separated list of processes")
-        grp4.add_argument("--valgrind-tests",
-                          action="store_true",
-                          help="Include tests using valgrind")
         grp4.add_argument("--warn-inactive",
                           action="store_true",
                           help="Warn if a resource is assigned to an inactive node")
@@ -492,7 +489,6 @@ class Environment:
         self["stonith-type"] = args.stonith_type
         self["unsafe-tests"] = not args.no_unsafe_tests
         self["valgrind-procs"] = args.valgrind_procs
-        self["valgrind-tests"] = args.valgrind_tests
         self["warn-inactive"] = args.warn_inactive
 
         # Nodes and groups are mutually exclusive, so their defaults cannot be

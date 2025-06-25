@@ -60,7 +60,6 @@ class CTSTest:
         self.is_experimental = False
         self.is_loop = False
         self.is_unsafe = False
-        self.is_valgrind = False
         self.passed = True
 
     def log(self, args):
@@ -227,9 +226,6 @@ class CTSTest:
             return False
 
         if self.is_unsafe and not self._env["unsafe-tests"]:
-            return False
-
-        if self.is_valgrind and not self._env["valgrind-tests"]:
             return False
 
         if self.is_experimental and not self._env["experimental-tests"]:
