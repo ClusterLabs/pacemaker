@@ -14,7 +14,7 @@
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/unittest_internal.h>
 
-#define DATE_S "2024-01-02"
+#define DATE_S "2024-06-02"
 #define TIME_S "03:04:05"
 #define OFFSET_S "+00:00"
 #define TEST_TIME pcmk__time_hr_new(DATE_S " " TIME_S " " OFFSET_S)
@@ -96,7 +96,8 @@ static void
 without_frac(void **state)
 {
     assert_hr_format("%Y-%m-%d %H:%M:%S", DATE_S " " TIME_S, NULL, 0);
-    assert_hr_format("%H:%M %a %b %d", "03:04 Tue Jan 02", NULL, 0);
+
+    assert_hr_format("%H:%M %a %b %d", "03:04 Sun Jun 02", NULL, 0);
     assert_hr_format("%H:%M:%S", TIME_S, NULL, 0);
     assert_hr_format("The time is %H:%M right now",
                      "The time is 03:04 right now", NULL, 0);

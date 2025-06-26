@@ -1909,7 +1909,12 @@ ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
     *target = (struct tm) {
         .tm_year = source->years - 1900,
+
+        /* source->days is day of year, but we assign it to tm_mday instead of
+         * tm_yday. mktime() fixes it. See the mktime(3) man page for details.
+         */
         .tm_mday = source->days,
+
         .tm_sec = source->seconds % 60,
         .tm_min = ( source->seconds / 60 ) % 60,
         .tm_hour = source->seconds / HOUR_SECONDS,
