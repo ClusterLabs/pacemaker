@@ -2385,10 +2385,46 @@ class CrmDiffRegressionTest(RegressionTest):
     @property
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
+
+        old_file = f"{cts_cli_data}/crm_diff_old.xml"
+        new_file = f"{cts_cli_data}/crm_diff_new.xml"
+        patch_file = f"{cts_cli_data}/crm_diff_patchset.xml"
+
+        with open(f"{cts_cli_data}/crm_diff_old.xml", "r") as file:
+            old_str = f"'{file.read()}'"
+        with open(f"{cts_cli_data}/crm_diff_new.xml", "r") as file:
+            new_str = f"'{file.read()}'"
+
         return [
-            Test("Create an XML patchset",
-                 f"crm_diff -o {cts_cli_data}/crm_diff_old.xml -n {cts_cli_data}/crm_diff_new.xml",
-                 expected_rc=ExitStatus.ERROR)
+            Test("Create an XML patchset from files",
+                 f"crm_diff -o {old_file} -n {new_file}",
+                 expected_rc=ExitStatus.ERROR),
+            Test("Create an XML patchset from strings",
+                 f"crm_diff -O {old_str} -N {new_str}",
+                 expected_rc=ExitStatus.ERROR),
+            Test("Create an XML patchset from old file, new string",
+                 f"crm_diff -o {old_file} -N {new_str}",
+                 expected_rc=ExitStatus.ERROR),
+            Test("Create an XML patchset from old string, new file",
+                 f"crm_diff -O {old_str} -n {new_file}",
+                 expected_rc=ExitStatus.ERROR),
+
+            Test("Create an XML patchset from files",
+                 f"crm_diff -o {old_file} -n {new_file} --cib",
+                 expected_rc=ExitStatus.ERROR),
+            Test("Create an XML patchset from files",
+                 f"crm_diff -o {old_file} -n {new_file} --no-version",
+                 expected_rc=ExitStatus.ERROR),
+            Test("Create an XML patchset from files",
+                 f"crm_diff -o {old_file} -n {new_file} --cib --no-version",
+                 expected_rc=ExitStatus.USAGE),
+
+            Test("Apply an XML patchset to a file",
+                 f"crm_diff -o {old_file} -p {patch_file}"),
+            Test("Apply an XML patchset to a string",
+                 f"crm_diff -O {old_str} -p {patch_file}"),
+            Test("Apply an XML patchset to a file",
+                 f"crm_diff -o {old_file} -p {patch_file} --cib"),
         ]
 
 
