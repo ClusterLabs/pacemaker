@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,6 +12,7 @@ include $(top_srcdir)/mk/common.mk
 headerdir=$(pkgincludedir)/crm/common
 
 header_HEADERS = acl.h 			\
+		 acl_compat.h		\
 		 actions.h		\
 		 agents.h 		\
 		 cib.h 			\

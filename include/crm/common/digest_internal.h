@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,11 +41,11 @@ typedef struct {
     char *digest_restart_calc;      // Digest of params_restart
 } pcmk__op_digest_t;
 
-char *pcmk__digest_on_disk_cib(xmlNode *input);
-char *pcmk__digest_operation(xmlNode *input);
-char *pcmk__digest_xml(xmlNode *input, bool filter);
+char *pcmk__digest_on_disk_cib(const xmlNode *input);
+char *pcmk__digest_op_params(const xmlNode *input);
+char *pcmk__digest_xml(const xmlNode *input, bool filter);
 
-bool pcmk__verify_digest(xmlNode *input, const char *expected);
+bool pcmk__verify_digest(const xmlNode *input, const char *expected);
 
 #ifdef __cplusplus
 }

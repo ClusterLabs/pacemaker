@@ -58,7 +58,7 @@
  * \return Newly allocated buffer containing dumped XML
  */
 static GString *
-dump_xml_for_digest(xmlNodePtr xml)
+dump_xml_for_digest(const xmlNode *xml)
 {
     GString *buffer = g_string_sized_new(1024);
 
@@ -81,7 +81,7 @@ dump_xml_for_digest(xmlNodePtr xml)
  * \note Example return value: "c048eae664dba840e1d2060f00299e9d"
  */
 static char *
-calculate_xml_digest_v1(xmlNode *input)
+calculate_xml_digest_v1(const xmlNode *input)
 {
     GString *buffer = dump_xml_for_digest(input);
     char *digest = NULL;
@@ -107,7 +107,7 @@ calculate_xml_digest_v1(xmlNode *input)
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_on_disk_cib(xmlNode *input)
+pcmk__digest_on_disk_cib(const xmlNode *input)
 {
     /* Always use the v1 format for on-disk digests.
      * * Switching to v2 affects even full-restart upgrades, so it would be a
@@ -120,27 +120,36 @@ pcmk__digest_on_disk_cib(xmlNode *input)
 
 /*!
  * \internal
- * \brief Calculate and return digest of an operation XML element
+ * \brief Calculate and return digest of a \c PCMK_XE_PARAMETERS element
  *
- * The digest is invariant to changes in the order of XML attributes, provided
- * that \p input has no children.
+ * This is intended for parameters of a resource operation (also known as
+ * resource action). A \c PCMK_XE_PARAMETERS element from a different source
+ * (for example, resource agent metadata) may have child elements, which are not
+ * allowed here.
  *
- * \param[in] input  Root of XML to digest
+ * The digest is invariant to changes in the order of XML attributes.
+ *
+ * \param[in] input  XML element to digest (must have no children)
  *
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_operation(xmlNode *input)
+pcmk__digest_op_params(const xmlNode *input)
 {
     /* Switching to v2 digests would likely cause restarts during rolling
      * upgrades.
      *
      * @TODO Confirm this. Switch to v2 if safe, or drop this TODO otherwise.
      */
-    xmlNode *sorted = pcmk__xml_copy(NULL, input);
     char *digest = NULL;
+    xmlNode *sorted = NULL;
 
+    pcmk__assert(input->children == NULL);
+
+    sorted = pcmk__xe_create(NULL, (const char *) input->name);
+    pcmk__xe_copy_attrs(sorted, input, pcmk__xaf_none);
     pcmk__xe_sort_attrs(sorted);
+
     digest = calculate_xml_digest_v1(sorted);
 
     pcmk__xml_free(sorted);
@@ -157,7 +166,7 @@ pcmk__digest_operation(xmlNode *input)
  * \return Newly allocated string containing digest
  */
 char *
-pcmk__digest_xml(xmlNode *xml, bool filter)
+pcmk__digest_xml(const xmlNode *xml, bool filter)
 {
     /* @TODO Filtering accounts for significant CPU usage. Consider removing if
      * possible.
@@ -197,7 +206,7 @@ pcmk__digest_xml(xmlNode *xml, bool filter)
  * \return true if digests match, false on mismatch or error
  */
 bool
-pcmk__verify_digest(xmlNode *input, const char *expected)
+pcmk__verify_digest(const xmlNode *input, const char *expected)
 {
     char *calculated = NULL;
     bool passed;

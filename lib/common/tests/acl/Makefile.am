@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2024 the Pacemaker project contributors
+# Copyright 2021-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -15,7 +15,6 @@ include $(top_srcdir)/mk/unittest.mk
 
 check_PROGRAMS = pcmk__is_user_in_group_test 	\
 		 pcmk_acl_required_test 	\
-		 xml_acl_denied_test 		\
-		 xml_acl_enabled_test
+		 xml_acl_denied_test
 
 TESTS = $(check_PROGRAMS)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -390,7 +390,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         }
 
         if(diff) {
-            xml_patch_versions(diff, add, del);
+            pcmk__xml_patchset_versions(diff, del, add);
             for(search = reason; search; search = search->parent) {
                 if (pcmk__xe_is(search, PCMK_XE_CHANGE)) {
                     change = search;

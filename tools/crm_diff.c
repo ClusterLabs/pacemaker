@@ -150,7 +150,7 @@ log_patch_cib_versions(xmlNode *patch)
     const char *fmt = NULL;
     const char *digest = NULL;
 
-    xml_patch_versions(patch, add, del);
+    pcmk__xml_patchset_versions(patch, del, add);
     fmt = crm_element_value(patch, PCMK_XA_FORMAT);
     digest = crm_element_value(patch, PCMK__XA_DIGEST);
 
@@ -198,9 +198,8 @@ generate_patch(xmlNode *object_original, xmlNode *object_new, const char *xml_fi
         return pcmk_rc_ok;  // No changes
     }
 
-    patchset_process_digest(output, object_original, object_new, as_cib);
-
     if (as_cib) {
+        pcmk__xml_patchset_add_digest(output, object_new);
         log_patch_cib_versions(output);
 
     } else if (no_version) {

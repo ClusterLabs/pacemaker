@@ -161,7 +161,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 
     pcmk__filter_op_for_digest(data->params_all);
 
-    data->digest_all_calc = pcmk__digest_operation(data->params_all);
+    data->digest_all_calc = pcmk__digest_op_params(data->params_all);
 }
 
 // Return true if XML attribute name is a Pacemaker-defined fencing parameter
@@ -238,7 +238,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                              CRM_META "_" PCMK_META_TIMEOUT);
     }
 
-    data->digest_secure_calc = pcmk__digest_operation(data->params_secure);
+    data->digest_secure_calc = pcmk__digest_op_params(data->params_secure);
 }
 
 /*!
@@ -278,7 +278,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
                                        attr_not_in_string, (void *) value);
     }
 
-    data->digest_restart_calc = pcmk__digest_operation(data->params_restart);
+    data->digest_restart_calc = pcmk__digest_op_params(data->params_restart);
 }
 
 /*!
