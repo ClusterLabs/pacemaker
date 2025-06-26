@@ -55,6 +55,7 @@ version_pairs_last = $(wordlist \
 # Names of API schemas that form the choices for pacemaker-result content
 API_request_base	= command-output	\
 			  crm_attribute 	\
+			  crm_diff 		\
 			  crm_error 		\
 			  crm_mon 		\
 			  crm_node 		\
