@@ -399,7 +399,6 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
  * preceded by:
  *
  *     expect_*(__wrap_readlink, path[, ...]);
- *     expect_*(__wrap_readlink, buf[, ...]);
  *     expect_*(__wrap_readlink, bufsize[, ...]);
  *     will_return(__wrap_readlink, errno_to_set);
  *     will_return(__wrap_readlink, link_contents);
@@ -419,7 +418,6 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
         const char *contents = NULL;
 
         check_expected_ptr(path);
-        check_expected(buf);
         check_expected(bufsize);
         errno = mock_type(int);
         contents = mock_ptr_type(const char *);

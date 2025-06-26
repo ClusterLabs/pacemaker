@@ -1515,28 +1515,24 @@ pe__bundle_replica_output_html(pcmk__output_t *out,
                                pcmk__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
-    pcmk_resource_t *rsc = replica->child;
+    const pcmk_resource_t *child_rsc = replica->child;
+    const pcmk_resource_t *remote_rsc = replica->remote;
+    GString *buffer = g_string_sized_new(128);
 
-    int offset = 0;
-    char buffer[LINE_MAX];
-
-    if(rsc == NULL) {
-        rsc = replica->container;
+    if (child_rsc == NULL) {
+        child_rsc = replica->container;
+    }
+    if (remote_rsc == NULL) {
+        remote_rsc = replica->container;
     }
 
-    if (replica->remote) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->remote));
-    } else {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->container));
-    }
-    if (replica->ipaddr) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
-                           replica->ipaddr);
+    g_string_append(buffer, rsc_printable_id(remote_rsc));
+    if (replica->ipaddr != NULL) {
+        pcmk__g_strcat(buffer, " (", replica->ipaddr, ")", NULL);
     }
 
-    pe__common_output_html(out, rsc, buffer, node, show_opts);
+    pe__common_output_html(out, child_rsc, buffer->str, node, show_opts);
+    g_string_free(buffer, TRUE);
 }
 
 /*!
@@ -1679,28 +1675,24 @@ pe__bundle_replica_output_text(pcmk__output_t *out,
                                pcmk__bundle_replica_t *replica,
                                pcmk_node_t *node, uint32_t show_opts)
 {
-    const pcmk_resource_t *rsc = replica->child;
+    const pcmk_resource_t *child_rsc = replica->child;
+    const pcmk_resource_t *remote_rsc = replica->remote;
+    GString *buffer = g_string_sized_new(128);
 
-    int offset = 0;
-    char buffer[LINE_MAX];
-
-    if(rsc == NULL) {
-        rsc = replica->container;
+    if (child_rsc == NULL) {
+        child_rsc = replica->container;
+    }
+    if (remote_rsc == NULL) {
+        remote_rsc = replica->container;
     }
 
-    if (replica->remote) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->remote));
-    } else {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s",
-                           rsc_printable_id(replica->container));
-    }
-    if (replica->ipaddr) {
-        offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)",
-                           replica->ipaddr);
+    g_string_append(buffer, rsc_printable_id(remote_rsc));
+    if (replica->ipaddr != NULL) {
+        pcmk__g_strcat(buffer, " (", replica->ipaddr, ")", NULL);
     }
 
-    pe__common_output_text(out, rsc, buffer, node, show_opts);
+    pe__common_output_text(out, child_rsc, buffer->str, node, show_opts);
+    g_string_free(buffer, TRUE);
 }
 
 PCMK__OUTPUT_ARGS("bundle", "uint32_t", "pcmk_resource_t *", "GList *",

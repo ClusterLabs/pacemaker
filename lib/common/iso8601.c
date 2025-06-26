@@ -479,60 +479,58 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
  * \internal
  * \brief Print "<seconds>.<microseconds>" to a buffer
  *
- * \param[in]     sec     Seconds
- * \param[in]     usec    Microseconds (must be of same sign as \p sec and of
- *                        absolute value less than \p QB_TIME_US_IN_SEC)
- * \param[in,out] buf     Result buffer
- * \param[in,out] offset  Current offset within \p buf
+ * \param[in]     sec   Seconds
+ * \param[in]     usec  Microseconds (must be of same sign as \p sec and of
+ *                      absolute value less than \c QB_TIME_US_IN_SEC)
+ * \param[in,out] buf   Result buffer
  */
 static inline void
-sec_usec_as_string(long long sec, int usec, char *buf, size_t *offset)
+sec_usec_as_string(long long sec, int usec, GString *buf)
 {
-    *offset += snprintf(buf + *offset, DATE_MAX - *offset, "%s%lld.%06d",
-                        ((sec == 0) && (usec < 0))? "-" : "",
-                        sec, QB_ABS(usec));
+    /* A negative value smaller than -1 second should have the negative sign
+     * before the 0, not before the usec part
+     */
+    if ((sec == 0) && (usec < 0)) {
+        g_string_append_c(buf, '-');
+    }
+    g_string_append_printf(buf, "%lld.%06d", sec, QB_ABS(usec));
 }
 
 /*!
  * \internal
  * \brief Get a string representation of a duration
  *
- * \param[in]  dt         Time object to interpret as a duration
- * \param[in]  usec       Microseconds to add to \p dt
- * \param[in]  show_usec  Whether to include microseconds in \p result
- * \param[out] result     Where to store the result string
+ * \param[in]     dt         Time object to interpret as a duration
+ * \param[in]     usec       Microseconds to add to \p dt
+ * \param[in]     show_usec  Whether to include microseconds in \p buf
+ * \param[in,out] buf        Result buffer
  */
 static void
-crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
-                       char *result)
+duration_as_string(const crm_time_t *dt, int usec, bool show_usec, GString *buf)
 {
-    size_t offset = 0;
-
     pcmk__assert(valid_sec_usec(dt->seconds, usec));
 
     if (dt->years) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%4d year%s ",
-                           dt->years, pcmk__plural_s(dt->years));
+        g_string_append_printf(buf, "%4d year%s ",
+                               dt->years, pcmk__plural_s(dt->years));
     }
     if (dt->months) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%2d month%s ",
-                           dt->months, pcmk__plural_s(dt->months));
+        g_string_append_printf(buf, "%2d month%s ",
+                               dt->months, pcmk__plural_s(dt->months));
     }
     if (dt->days) {
-        offset += snprintf(result + offset, DATE_MAX - offset, "%2d day%s ",
-                           dt->days, pcmk__plural_s(dt->days));
+        g_string_append_printf(buf, "%2d day%s ",
+                               dt->days, pcmk__plural_s(dt->days));
     }
 
     // At least print seconds (and optionally usecs)
-    if ((offset == 0) || (dt->seconds != 0) || (show_usec && (usec != 0))) {
+    if ((buf->len == 0) || (dt->seconds != 0) || (show_usec && (usec != 0))) {
         if (show_usec) {
-            sec_usec_as_string(dt->seconds, usec, result, &offset);
+            sec_usec_as_string(dt->seconds, usec, buf);
         } else {
-            offset += snprintf(result + offset, DATE_MAX - offset, "%d",
-                               dt->seconds);
+            g_string_append_printf(buf, "%d", dt->seconds);
         }
-        offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
-                           pcmk__plural_s(dt->seconds));
+        g_string_append_printf(buf, " second%s", pcmk__plural_s(dt->seconds));
     }
 
     // More than one minute, so provide a more readable breakdown into units
@@ -546,32 +544,37 @@ crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
         crm_time_get_sec(dt->seconds, &h, &m, &s);
         print_sec_component = ((s != 0) || (show_usec && (u != 0)));
 
-        offset += snprintf(result + offset, DATE_MAX - offset, " (");
+        g_string_append(buf, " (");
 
         if (h) {
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%" PRIu32 " hour%s%s", h, pcmk__plural_s(h),
-                               ((m != 0) || print_sec_component)? " " : "");
+            g_string_append_printf(buf, "%" PRIu32 " hour%s",
+                                   h, pcmk__plural_s(h));
+
+            if ((m != 0) || print_sec_component) {
+                g_string_append_c(buf, ' ');
+            }
         }
 
         if (m) {
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%" PRIu32 " minute%s%s", m, pcmk__plural_s(m),
-                               print_sec_component? " " : "");
+            g_string_append_printf(buf, "%" PRIu32 " minute%s",
+                                   m, pcmk__plural_s(m));
+
+            if (print_sec_component) {
+                g_string_append_c(buf, ' ');
+            }
         }
 
         if (print_sec_component) {
             if (show_usec) {
-                sec_usec_as_string(s, u, result, &offset);
+                sec_usec_as_string(s, u, buf);
             } else {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%" PRIu32, s);
+                g_string_append_printf(buf, "%" PRIu32, s);
             }
-            offset += snprintf(result + offset, DATE_MAX - offset, " second%s",
-                               pcmk__plural_s(dt->seconds));
+            g_string_append_printf(buf, " second%s",
+                                   pcmk__plural_s(dt->seconds));
         }
 
-        offset += snprintf(result + offset, DATE_MAX - offset, ")");
+        g_string_append_c(buf, ')');
     }
 }
 
@@ -579,35 +582,36 @@ crm_duration_as_string(const crm_time_t *dt, int usec, bool show_usec,
  * \internal
  * \brief Get a string representation of a time object
  *
- * \param[in]  dt      Time to convert to string
- * \param[in]  usec    Microseconds to add to \p dt
- * \param[in]  flags   Group of \p crm_time_* string format options
- * \param[out] result  Where to store the result string
+ * \param[in] dt     Time to convert to string
+ * \param[in] usec   Microseconds to add to \p dt
+ * \param[in] flags  Group of \c crm_time_* string format options
  *
- * \note \p result must be of size \p DATE_MAX or larger.
+ * \return Newly allocated string representation of \p dt plus \p usec
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
  */
-static void
-time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
-                      char *result)
+static char *
+time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 {
     crm_time_t *utc = NULL;
-    size_t offset = 0;
+    GString *buf = NULL;
+    char *result = NULL;
 
     if (!crm_time_is_defined(dt)) {
-        strcpy(result, "<undefined time>");
-        return;
+        return pcmk__str_copy("<undefined time>");
     }
 
     pcmk__assert(valid_sec_usec(dt->seconds, usec));
+
+    buf = g_string_sized_new(128);
 
     /* Simple cases: as duration, seconds, or seconds since epoch.
      * These never depend on time zone.
      */
 
     if (pcmk_is_set(flags, crm_time_log_duration)) {
-        crm_duration_as_string(dt, usec, pcmk_is_set(flags, crm_time_usecs),
-                               result);
-        return;
+        duration_as_string(dt, usec, pcmk_is_set(flags, crm_time_usecs), buf);
+        goto done;
     }
 
     if (pcmk_any_flags_set(flags, crm_time_seconds|crm_time_epoch)) {
@@ -620,11 +624,11 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
         }
 
         if (pcmk_is_set(flags, crm_time_usecs)) {
-            sec_usec_as_string(seconds, usec, result, &offset);
+            sec_usec_as_string(seconds, usec, buf);
         } else {
-            snprintf(result, DATE_MAX, "%lld", seconds);
+            g_string_append_printf(buf, "%lld", seconds);
         }
-        return;
+        goto done;
     }
 
     // Convert to UTC if local timezone was not requested
@@ -643,9 +647,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             uint32_t d = 0;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
-                                   y, w, d);
+                g_string_append_printf(buf,
+                                       "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
+                                       y, w, d);
             }
 
         } else if (pcmk_is_set(flags, crm_time_ordinal)) { // YYYY-DDD
@@ -653,8 +657,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             uint32_t d = 0;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%" PRIu32 "-%.3" PRIu32, y, d);
+                g_string_append_printf(buf, "%" PRIu32 "-%.3" PRIu32, y, d);
             }
 
         } else { // YYYY-MM-DD
@@ -663,9 +666,9 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
             uint32_t d = 0;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
-                                   y, m, d);
+                g_string_append_printf(buf,
+                                       "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+                                       y, m, d);
             }
         }
     }
@@ -673,33 +676,36 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
     if (pcmk_is_set(flags, crm_time_log_timeofday)) {
         uint32_t h = 0, m = 0, s = 0;
 
-        if (offset > 0) {
-            offset += snprintf(result + offset, DATE_MAX - offset, " ");
+        if (buf->len > 0) {
+            g_string_append_c(buf, ' ');
         }
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
-                               h, m, s);
+            g_string_append_printf(buf,
+                                   "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+                                   h, m, s);
 
             if (pcmk_is_set(flags, crm_time_usecs)) {
-                offset += snprintf(result + offset, DATE_MAX - offset,
-                                   ".%06" PRIu32, QB_ABS(usec));
+                g_string_append_printf(buf, ".%06" PRIu32, QB_ABS(usec));
             }
         }
 
         if (pcmk_is_set(flags, crm_time_log_with_timezone)
             && (dt->offset != 0)) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
-            offset += snprintf(result + offset, DATE_MAX - offset,
-                               " %c%.2" PRIu32 ":%.2" PRIu32,
-                               ((dt->offset < 0)? '-' : '+'), h, m);
+            g_string_append_printf(buf, " %c%.2" PRIu32 ":%.2" PRIu32,
+                                   ((dt->offset < 0)? '-' : '+'), h, m);
+
         } else {
-            offset += snprintf(result + offset, DATE_MAX - offset, "Z");
+            g_string_append_c(buf, 'Z');
         }
     }
 
+done:
     crm_time_free(utc);
+    result = pcmk__str_copy(buf->str);
+    g_string_free(buf, TRUE);
+    return result;
 }
 
 /*!
@@ -713,10 +719,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags,
 char *
 crm_time_as_string(const crm_time_t *dt, int flags)
 {
-    char result[DATE_MAX] = { '\0', };
-
-    time_as_string_common(dt, 0, flags, result);
-    return pcmk__str_copy(result);
+    return time_as_string_common(dt, 0, flags);
 }
 
 /*!
@@ -2017,10 +2020,10 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
 
 /*!
  * \internal
- * \brief Expand a date/time format string, including %N for nanoseconds
+ * \brief Expand a date/time format string, including %N for fractional seconds
  *
- * \param[in] format  Date/time format string as per strftime(3) with the
- *                    addition of %N for nanoseconds
+ * \param[in] format  Date/time format string as per \c strftime(3) with the
+ *                    addition of %N for fractional seconds
  * \param[in] hr_dt   Time value to format
  *
  * \return Newly allocated string with formatted string
@@ -2030,10 +2033,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 {
     int scanned_pos = 0; // How many characters of format have been parsed
     int printed_pos = 0; // How many characters of format have been processed
-    size_t date_len = 0;
-
-    char nano_s[10] = { '\0', };
-    char date_s[128] = { '\0', };
+    GString *buf = NULL;
+    char *result = NULL;
 
     struct tm tm = { 0, };
     crm_time_t dt = { 0, };
@@ -2041,14 +2042,15 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     if (format == NULL) {
         return NULL;
     }
+    buf = g_string_sized_new(128);
     pcmk__time_set_hr_dt(&dt, hr_dt);
     ha_get_tm_time(&tm, &dt);
-    sprintf(nano_s, "%06d000", hr_dt->useconds);
 
     while (format[scanned_pos] != '\0') {
-        int fmt_pos;            // Index after last character to pass as-is
-        int nano_digits = 0;    // Length of %N field width (if any)
-        char *tmp_fmt_s = NULL;
+        int fmt_pos = 0;        // Index after last character to pass as-is
+        int frac_digits = 0;    // %N specifier's width field value (if any)
+        gchar *tmp_fmt_s = NULL;
+        char date_s[128] = { '\0', };
         size_t nbytes = 0;
 
         // Look for next format specifier
@@ -2062,7 +2064,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         } else {
             fmt_pos = mark_s - format; // Index of %
 
-            // Skip % and any field width
+            // Skip % and any width field
             scanned_pos = fmt_pos + 1;
             while (isdigit(format[scanned_pos])) {
                 scanned_pos++;
@@ -2074,12 +2076,26 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
                     break;
 
                 case 'N': // %[width]N
+                    /* Fractional seconds. This was supposed to represent
+                     * nanoseconds. However, we only store times at microsecond
+                     * resolution, and the width field support makes this a
+                     * general fractional component specifier rather than a
+                     * nanoseconds specifier.
+                     *
+                     * Further, since we cap the width at 6 digits, a user
+                     * cannot display times at greater than microsecond
+                     * resolution.
+                     *
+                     * A leading zero in the width field is ignored, not treated
+                     * as "use zero-padding." For example, "%03N" and "%3N"
+                     * produce the same result.
+                     */
                     scanned_pos++;
 
-                    // Parse field width
-                    nano_digits = atoi(&format[fmt_pos + 1]);
-                    nano_digits = QB_MAX(nano_digits, 0);
-                    nano_digits = QB_MIN(nano_digits, 6);
+                    // Parse width field
+                    frac_digits = atoi(&format[fmt_pos + 1]);
+                    frac_digits = QB_MAX(frac_digits, 0);
+                    frac_digits = QB_MIN(frac_digits, 6);
                     break;
 
                 default: // Some other specifier
@@ -2091,47 +2107,52 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
             }
         }
 
-        if (date_len >= sizeof(date_s)) {
-            return NULL; // No room for remaining string
-        }
-
-        tmp_fmt_s = strndup(&format[printed_pos], fmt_pos - printed_pos);
-        if (tmp_fmt_s == NULL) {
-            return NULL;
-        }
+        tmp_fmt_s = g_strndup(&format[printed_pos], fmt_pos - printed_pos);
 
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-        nbytes = strftime(&date_s[date_len], sizeof(date_s) - date_len,
-                          tmp_fmt_s, &tm);
+        nbytes = strftime(date_s, sizeof(date_s), tmp_fmt_s, &tm);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
 #endif
-        free(tmp_fmt_s);
+        g_free(tmp_fmt_s);
         if (nbytes == 0) { // Would overflow buffer
-            return NULL;
+            g_string_truncate(buf, 0);
+            goto done;
         }
-        date_len += nbytes;
+
+        g_string_append(buf, date_s);
         printed_pos = scanned_pos;
-        if (nano_digits != 0) {
-            int nc = 0;
+        if (frac_digits != 0) {
+            // Descending powers of 10 (10^5 down to 10^0)
+            static const int powers[6] = { 1e5, 1e4, 1e3, 1e2, 1e1, 1e0 };
 
-            if (date_len >= sizeof(date_s)) {
-                return NULL; // No room to add nanoseconds
-            }
-            nc = snprintf(&date_s[date_len], sizeof(date_s) - date_len,
-                          "%.*s", nano_digits, nano_s);
+            // Sanity check to ensure array access is in bounds
+            pcmk__assert((frac_digits > 0) && (frac_digits <= 6));
 
-            if ((nc < 0) || (nc == (sizeof(date_s) - date_len))) {
-                return NULL; // Error or would overflow buffer
-            }
-            date_len += nc;
+            /* Append fractional seconds at the requested resolution, truncated
+             * toward zero. We're basically converting from microseconds to
+             * another unit here. For example, suppose the width field
+             * (frac_digits) is 3. This means "use millisecond resolution." Then
+             * we need to divide our microseconds value by 10^3, which is
+             * powers[3 - 1].
+             *
+             * If the width field is 6 (microsecond resolution), then we divide
+             * our microseconds value by 10^0 == 1, which is powers[6 - 1].
+             */
+            g_string_append_printf(buf, "%0*d", frac_digits,
+                                   hr_dt->useconds / powers[frac_digits - 1]);
         }
     }
 
-    return (date_len == 0)? NULL : pcmk__str_copy(date_s);
+done:
+    if (buf->len > 0) {
+        result = pcmk__str_copy(buf->str);
+    }
+    g_string_free(buf, TRUE);
+    return result;
 }
 
 /*!
@@ -2184,15 +2205,13 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
 {
     struct timespec tmp_ts;
     crm_time_t dt;
-    char result[DATE_MAX] = { 0 };
 
     if (ts == NULL) {
         qb_util_timespec_from_epoch_get(&tmp_ts);
         ts = &tmp_ts;
     }
     crm_time_set_timet(&dt, &ts->tv_sec);
-    time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags, result);
-    return pcmk__str_copy(result);
+    return time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags);
 }
 
 /*!
@@ -2203,8 +2222,8 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
  *
  * \return Readable version of \p interval_ms
  *
- * \note The return value is a pointer to static memory that will be
- *       overwritten by later calls to this function.
+ * \note The return value is a pointer to static memory that may be overwritten
+ *       by later calls to this function.
  */
 const char *
 pcmk__readable_interval(guint interval_ms)
@@ -2215,41 +2234,43 @@ pcmk__readable_interval(guint interval_ms)
 #define MS_IN_D (MS_IN_H * 24)
 #define MAXSTR sizeof("..d..h..m..s...ms")
     static char str[MAXSTR];
-    int offset = 0;
+    GString *buf = NULL;
 
-    str[0] = '\0';
+    if (interval_ms == 0) {
+        return "0s";
+    }
+
+    buf = g_string_sized_new(128);
+
     if (interval_ms >= MS_IN_D) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%ud",
-                           interval_ms / MS_IN_D);
+        g_string_append_printf(buf, "%ud", interval_ms / MS_IN_D);
         interval_ms -= (interval_ms / MS_IN_D) * MS_IN_D;
     }
     if (interval_ms >= MS_IN_H) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%uh",
-                           interval_ms / MS_IN_H);
+        g_string_append_printf(buf, "%uh", interval_ms / MS_IN_H);
         interval_ms -= (interval_ms / MS_IN_H) * MS_IN_H;
     }
     if (interval_ms >= MS_IN_M) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%um",
-                           interval_ms / MS_IN_M);
+        g_string_append_printf(buf, "%um", interval_ms / MS_IN_M);
         interval_ms -= (interval_ms / MS_IN_M) * MS_IN_M;
     }
 
     // Ns, N.NNNs, or NNNms
     if (interval_ms >= MS_IN_S) {
-        offset += snprintf(str + offset, MAXSTR - offset, "%u",
-                           interval_ms / MS_IN_S);
+        g_string_append_printf(buf, "%u", interval_ms / MS_IN_S);
         interval_ms -= (interval_ms / MS_IN_S) * MS_IN_S;
+
         if (interval_ms > 0) {
-            offset += snprintf(str + offset, MAXSTR - offset, ".%03u",
-                               interval_ms);
+            g_string_append_printf(buf, ".%03u", interval_ms);
         }
-        (void) snprintf(str + offset, MAXSTR - offset, "s");
+        g_string_append_c(buf, 's');
 
     } else if (interval_ms > 0) {
-        (void) snprintf(str + offset, MAXSTR - offset, "%ums", interval_ms);
-
-    } else if (str[0] == '\0') {
-        strcpy(str, "0s");
+        g_string_append_printf(buf, "%ums", interval_ms);
     }
+
+    pcmk__assert(buf->len < sizeof(str));
+    strncpy(str, buf->str, sizeof(str) - 1);
+    g_string_free(buf, TRUE);
     return str;
 }
