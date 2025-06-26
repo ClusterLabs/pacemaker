@@ -450,7 +450,7 @@ class Test:
 
     def _log_test_failed(self, app, rc):
         """Log a message when a test fails."""
-        self._output.append(f"* Failed (rc={rc:.3d}): {app:<23} - {self.desc}")
+        self._output.append(f"* Failed (rc={rc:03d}): {app:<23} - {self.desc}")
 
     def _log_test_passed(self, app):
         """Log a message when a test passes."""
