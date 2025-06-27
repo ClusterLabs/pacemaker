@@ -125,6 +125,7 @@ with_frac(void **state)
     assert_hr_format("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".000000", NULL,
                      0);
     assert_hr_format("%H:%M:%S.%6N", TIME_S ".000000", NULL, 0);
+    assert_hr_format("%H:%M:%S.%6N %H", TIME_S ".000000 " HOUR_S, NULL, 0);
     assert_hr_format("%H:%M:%S.%3N", TIME_S ".000", NULL, 0);
     assert_hr_format("%H:%M:%S.%0N", TIME_S ".", NULL, 0);
     assert_hr_format("%H:%M:%S.%N", TIME_S ".", NULL, 0);
@@ -135,6 +136,7 @@ with_frac(void **state)
     assert_hr_format("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".123456", NULL,
                      usec);
     assert_hr_format("%H:%M:%S.%6N", TIME_S ".123456", NULL, usec);
+    assert_hr_format("%H:%M:%S.%6N %M", TIME_S ".123456 " MINUTE_S, NULL, usec);
     assert_hr_format("%H:%M:%S.%5N", TIME_S ".12345", NULL, usec);
     assert_hr_format("%H:%M:%S.%4N", TIME_S ".1234", NULL, usec);
     assert_hr_format("%H:%M:%S.%3N", TIME_S ".123", NULL, usec);
@@ -151,6 +153,7 @@ with_frac(void **state)
     assert_hr_format("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".000789", NULL,
                      usec);
     assert_hr_format("%H:%M:%S.%6N", TIME_S ".000789", NULL, usec);
+    assert_hr_format("%H:%M:%S.%6N %S", TIME_S ".000789 " SECOND_S, NULL, usec);
     assert_hr_format("%H:%M:%S.%5N", TIME_S ".00078", NULL, usec);
     assert_hr_format("%H:%M:%S.%4N", TIME_S ".0007", NULL, usec);
     assert_hr_format("%H:%M:%S.%3N", TIME_S ".000", NULL, usec);
