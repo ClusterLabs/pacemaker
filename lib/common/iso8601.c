@@ -1915,10 +1915,11 @@ ha_get_tm_time(struct tm *target, const crm_time_t *source)
          */
         .tm_mday = source->days,
 
-        .tm_sec = source->seconds % 60,
-        .tm_min = ( source->seconds / 60 ) % 60,
-        .tm_hour = source->seconds / HOUR_SECONDS,
-        .tm_isdst = -1, /* don't adjust */
+        // mktime() converts this to hours/minutes/seconds appropriately
+        .tm_sec = source->seconds,
+
+        // Don't adjust DST here; let mktime() try to determine DST status
+        .tm_isdst = -1,
 
 #if defined(HAVE_STRUCT_TM_TM_GMTOFF)
         .tm_gmtoff = source->offset
