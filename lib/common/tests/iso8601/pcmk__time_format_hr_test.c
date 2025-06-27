@@ -15,8 +15,14 @@
 #include <crm/common/unittest_internal.h>
 
 #define DATE_S "2024-06-02"
-#define TIME_S "03:04:05"
+
+#define HOUR_S "03"
+#define MINUTE_S "04"
+#define SECOND_S "05"
+#define TIME_S HOUR_S ":" MINUTE_S ":" SECOND_S
+
 #define OFFSET_S "+00:00"
+
 #define TEST_TIME pcmk__time_hr_new(DATE_S " " TIME_S " " OFFSET_S)
 
 /*!
@@ -97,11 +103,12 @@ without_frac(void **state)
 {
     assert_hr_format("%Y-%m-%d %H:%M:%S", DATE_S " " TIME_S, NULL, 0);
 
-    assert_hr_format("%H:%M %a %b %d", "03:04 Sun Jun 02", NULL, 0);
+    assert_hr_format("%H:%M %a %b %d", HOUR_S ":" MINUTE_S " Sun Jun 02", NULL,
+                     0);
     assert_hr_format("%H:%M:%S", TIME_S, NULL, 0);
     assert_hr_format("The time is %H:%M right now",
-                     "The time is 03:04 right now", NULL, 0);
-    assert_hr_format("%3S seconds", "005 seconds",
+                     "The time is " HOUR_S ":" MINUTE_S " right now", NULL, 0);
+    assert_hr_format("%3S seconds", "0" SECOND_S " seconds",
                      // *BSD strftime() doesn't support field widths
                      "3S seconds", 0);
 
