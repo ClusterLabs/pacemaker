@@ -1904,30 +1904,6 @@ crm_time_add_years(crm_time_t * a_time, int extra)
     }
 }
 
-static void
-ha_get_tm_time(struct tm *target, const pcmk__time_hr_t *source)
-{
-    *target = (struct tm) {
-        .tm_year = source->years - 1900,
-
-        /* source->days is day of year, but we assign it to tm_mday instead of
-         * tm_yday. mktime() fixes it. See the mktime(3) man page for details.
-         */
-        .tm_mday = source->days,
-
-        // mktime() converts this to hours/minutes/seconds appropriately
-        .tm_sec = source->seconds,
-
-        // Don't adjust DST here; let mktime() try to determine DST status
-        .tm_isdst = -1,
-
-#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
-        .tm_gmtoff = source->offset
-#endif
-    };
-    mktime(target);
-}
-
 /* The high-resolution variant of time object was added to meet an immediate
  * need, and is kept internal API.
  *
@@ -2000,15 +1976,103 @@ pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
     free(hr_dt);
 }
 
+static void
+ha_get_tm_time(struct tm *target, const pcmk__time_hr_t *source)
+{
+    *target = (struct tm) {
+        .tm_year = source->years - 1900,
+
+        /* source->days is day of year, but we assign it to tm_mday instead of
+         * tm_yday. mktime() fixes it. See the mktime(3) man page for details.
+         */
+        .tm_mday = source->days,
+
+        // mktime() converts this to hours/minutes/seconds appropriately
+        .tm_sec = source->seconds,
+
+        // Don't adjust DST here; let mktime() try to determine DST status
+        .tm_isdst = -1,
+
+#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
+        .tm_gmtoff = source->offset
+#endif
+    };
+    mktime(target);
+}
+
 /*!
  * \internal
- * \brief Expand a date/time format string, including %N for fractional seconds
+ * \brief Convert a <tt>struct tm</tt> to a \c GDateTime
  *
- * \param[in] format  Date/time format string as per \c strftime(3) with the
- *                    addition of %N for fractional seconds
+ * \param[in] tm      Time object to convert
+ * \param[in] offset  Offset from UTC (in seconds)
+ *
+ * \return Newly allocated \c GDateTime object corresponding to \p tm, or
+ *         \c NULL on error
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_date_time_unref().
+ */
+static GDateTime *
+get_g_date_time(const struct tm *tm, int offset)
+{
+    // Accept an offset argument in case tm lacks a tm_gmtoff member
+    char buf[sizeof("+hh:mm")] = { '\0', };
+    const char *offset_s = NULL;
+
+    GTimeZone *tz = NULL;
+    GDateTime *dt = NULL;
+
+    if (QB_ABS(offset) <= DAY_SECONDS) {
+        uint32_t hours = 0;
+        uint32_t minutes = 0;
+        uint32_t seconds = 0;
+        int rc = 0;
+
+        crm_time_get_sec(offset, &hours, &minutes, &seconds);
+
+        rc = snprintf(buf, sizeof(buf), "%c%02" PRIu32 ":%02" PRIu32,
+                      ((offset >= 0)? '+' : '-'), hours, minutes);
+        pcmk__assert(rc == (sizeof(buf) - 1));
+        offset_s = buf;
+
+    } else {
+        // offset out of range; use NULL as offset_s
+        CRM_LOG_ASSERT(QB_ABS(offset) <= DAY_SECONDS);
+    }
+
+    /* @FIXME @COMPAT As of glib 2.68, g_time_zone_new() is deprecated in favor
+     * of g_time_zone_new_identifier(). However, calling
+     * g_time_zone_new_identifier() results in compiler warnings, even on a
+     * system with glib 2.84 installed. It is unclear why.
+     *
+     * The *_new_identifier() function was added (and the *_new() function
+     * deprecated) in version 2.68. They have the same signature. Ideally, we
+     * would choose which function to call here and below based the installed
+     * glib version using a CPP guard.
+     */
+    tz = g_time_zone_new(offset_s);
+    dt = g_date_time_new(tz, tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+                         tm->tm_hour, tm->tm_min, tm->tm_sec);
+    g_time_zone_unref(tz);
+
+    return dt;
+}
+
+/*!
+ * \internal
+ * \brief Expand a date/time format string, with support for fractional seconds
+ *
+ * \param[in] format  Date/time format string compatible with
+ *                    \c g_date_time_format(), with additional support for
+ *                    \c "%N" for fractional seconds
  * \param[in] hr_dt   Time value to format
  *
- * \return Newly allocated string with formatted string
+ * \return Newly allocated string with formatted string, or \c NULL on error
+ *
+ * \note This function falls back to trying \c strftime() with a fixed-size
+ *       buffer if \c g_date_time_format() fails. This fallback will be removed
+ *       in a future release.
  */
 char *
 pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
@@ -2019,19 +2083,25 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     char *result = NULL;
 
     struct tm tm = { 0, };
+    GDateTime *gdt = NULL;
 
     if (format == NULL) {
         return NULL;
     }
+
     buf = g_string_sized_new(128);
+
     ha_get_tm_time(&tm, hr_dt);
+    gdt = get_g_date_time(&tm, hr_dt->offset);
+    if (gdt == NULL) {
+        goto done;
+    }
 
     while (format[scanned_pos] != '\0') {
         int fmt_pos = 0;        // Index after last character to pass as-is
         int frac_digits = 0;    // %N specifier's width field value (if any)
         gchar *tmp_fmt_s = NULL;
-        char date_s[128] = { '\0', };
-        size_t nbytes = 0;
+        gchar *date_s = NULL;
 
         // Look for next format specifier
         const char *mark_s = strchr(&format[scanned_pos], '%');
@@ -2088,23 +2158,47 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
         }
 
         tmp_fmt_s = g_strndup(&format[printed_pos], fmt_pos - printed_pos);
+        date_s = g_date_time_format(gdt, tmp_fmt_s);
+
+        if (date_s == NULL) {
+            char compat_date_s[1024] = { '\0' };
+            size_t nbytes = 0;
+
+            // @COMPAT Drop this fallback
+            crm_warn("Could not format time using format string '%s' with "
+                     "g_date_time_format(); trying strftime(). In a future "
+                     "release, use of strftime() as a fallback will be removed",
+                     format);
 
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
-#endif
-        nbytes = strftime(date_s, sizeof(date_s), tmp_fmt_s, &tm);
+#endif  // HAVE_FORMAT_NONLITERAL
+            nbytes = strftime(compat_date_s, sizeof(compat_date_s), tmp_fmt_s,
+                              &tm);
 #ifdef HAVE_FORMAT_NONLITERAL
 #pragma GCC diagnostic pop
-#endif
-        g_free(tmp_fmt_s);
-        if (nbytes == 0) { // Would overflow buffer
-            g_string_truncate(buf, 0);
-            goto done;
+#endif  // HAVE_FORMAT_NONLITERAL
+
+            if (nbytes == 0) {
+                // Truncation, empty string, or error; impossible to discern
+                crm_err("Could not format time using format string '%s'",
+                        format);
+
+                // Ensure we return NULL
+                g_string_truncate(buf, 0);
+                g_free(tmp_fmt_s);
+                goto done;
+            }
+            date_s = g_strdup(compat_date_s);
         }
 
         g_string_append(buf, date_s);
+        g_free(date_s);
+        g_free(tmp_fmt_s);
+
         printed_pos = scanned_pos;
+
         if (frac_digits != 0) {
             // Descending powers of 10 (10^5 down to 10^0)
             static const int powers[6] = { 1e5, 1e4, 1e3, 1e2, 1e1, 1e0 };
@@ -2132,6 +2226,10 @@ done:
         result = pcmk__str_copy(buf->str);
     }
     g_string_free(buf, TRUE);
+
+    if (gdt != NULL) {
+        g_date_time_unref(gdt);
+    }
     return result;
 }
 

@@ -77,6 +77,11 @@ static void
 no_specifiers(void **state)
 {
     assert_hr_format("no specifiers", "no specifiers", NULL, 0);
+
+    /* @COMPAT The following four tests will fail when we remove the fallback
+     * to strftime(). g_date_time_format() requires a literal '%' to be escaped
+     * as "%%".
+     */
     assert_hr_format("this has a literal % in it",
                      "this has a literal % in it",
                      // *BSD strftime() strips single %
@@ -108,6 +113,10 @@ without_frac(void **state)
     assert_hr_format("%H:%M:%S", TIME_S, NULL, 0);
     assert_hr_format("The time is %H:%M right now",
                      "The time is " HOUR_S ":" MINUTE_S " right now", NULL, 0);
+
+    /* @COMPAT This test will fail when we remove the fallback to strftime().
+     * g_date_time_format() doesn't support field widths.
+     */
     assert_hr_format("%3S seconds", "0" SECOND_S " seconds",
                      // *BSD strftime() doesn't support field widths
                      "3S seconds", 0);
