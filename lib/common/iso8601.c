@@ -1936,27 +1936,20 @@ ha_get_tm_time(struct tm *target, const pcmk__time_hr_t *source)
  *       crm_time_t, pcmk__time_hr_t, and struct timespec (in lrmd_cmd_t).
  */
 
-pcmk__time_hr_t *
-pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
+static pcmk__time_hr_t *
+time_to_hr(const crm_time_t *dt)
 {
     pcmk__time_hr_t *hr_dt = NULL;
 
-    if (dt) {
-        hr_dt = target;
-        if (hr_dt == NULL) {
-            hr_dt = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
-        }
+    pcmk__assert(dt != NULL);
 
-        *hr_dt = (pcmk__time_hr_t) {
-            .years = dt->years,
-            .months = dt->months,
-            .days = dt->days,
-            .seconds = dt->seconds,
-            .offset = dt->offset,
-            .duration = dt->duration
-        };
-    }
-
+    hr_dt = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
+    hr_dt->years = dt->years;
+    hr_dt->months = dt->months;
+    hr_dt->days = dt->days;
+    hr_dt->seconds = dt->seconds;
+    hr_dt->offset = dt->offset;
+    hr_dt->duration = dt->duration;
     return hr_dt;
 }
 
@@ -1980,10 +1973,8 @@ pcmk__time_hr_now(time_t *epoch)
         *epoch = tv.tv_sec;
     }
     crm_time_set_timet(&dt, &(tv.tv_sec));
-    hr = pcmk__time_hr_convert(NULL, &dt);
-    if (hr != NULL) {
-        hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
-    }
+    hr = time_to_hr(&dt);
+    hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
     return hr;
 }
 
@@ -1995,10 +1986,9 @@ pcmk__time_hr_new(const char *date_time)
     if (date_time == NULL) {
         hr_dt = pcmk__time_hr_now(NULL);
     } else {
-        crm_time_t *dt;
+        crm_time_t *dt = parse_date(date_time);
 
-        dt = parse_date(date_time);
-        hr_dt = pcmk__time_hr_convert(NULL, dt);
+        hr_dt = time_to_hr(dt);
         crm_time_free(dt);
     }
     return hr_dt;

@@ -22,8 +22,6 @@ extern "C" {
 
 typedef struct pcmk__time_us pcmk__time_hr_t;
 
-pcmk__time_hr_t *pcmk__time_hr_convert(pcmk__time_hr_t *target,
-                                       const crm_time_t *dt);
 pcmk__time_hr_t *pcmk__time_hr_now(time_t *epoch);
 pcmk__time_hr_t *pcmk__time_hr_new(const char *date_time);
 void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
