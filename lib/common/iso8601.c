@@ -1905,7 +1905,7 @@ crm_time_add_years(crm_time_t * a_time, int extra)
 }
 
 static void
-ha_get_tm_time(struct tm *target, const crm_time_t *source)
+ha_get_tm_time(struct tm *target, const pcmk__time_hr_t *source)
 {
     *target = (struct tm) {
         .tm_year = source->years - 1900,
@@ -1958,20 +1958,6 @@ pcmk__time_hr_convert(pcmk__time_hr_t *target, const crm_time_t *dt)
     }
 
     return hr_dt;
-}
-
-void
-pcmk__time_set_hr_dt(crm_time_t *target, const pcmk__time_hr_t *hr_dt)
-{
-    pcmk__assert((target != NULL) && (hr_dt != NULL));
-    *target = (crm_time_t) {
-        .years = hr_dt->years,
-        .months = hr_dt->months,
-        .days = hr_dt->days,
-        .seconds = hr_dt->seconds,
-        .offset = hr_dt->offset,
-        .duration = hr_dt->duration
-    };
 }
 
 /*!
@@ -2043,14 +2029,12 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
     char *result = NULL;
 
     struct tm tm = { 0, };
-    crm_time_t dt = { 0, };
 
     if (format == NULL) {
         return NULL;
     }
     buf = g_string_sized_new(128);
-    pcmk__time_set_hr_dt(&dt, hr_dt);
-    ha_get_tm_time(&tm, &dt);
+    ha_get_tm_time(&tm, hr_dt);
 
     while (format[scanned_pos] != '\0') {
         int fmt_pos = 0;        // Index after last character to pass as-is
