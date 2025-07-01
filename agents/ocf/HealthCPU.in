@@ -16,7 +16,6 @@
 ################################
 #
 # TODO: Enter default values
-#       Error handling in getting uptime
 #
 ##################################
 
@@ -121,6 +120,10 @@ healthcpu_monitor() {
     if [ -f "${OCF_RESKEY_state}" ]; then
 
         IDLE=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]id" '{ print $4 }')
+        if [ $? -ne 0 ]; then
+            ocf_log err "Could not get CPU idleness"
+            return $OCF_DEGRADED
+        fi
 
         if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
             attrd_updater -n "#health-cpu" -B "red" -d "${OCF_RESKEY_dampening}"
