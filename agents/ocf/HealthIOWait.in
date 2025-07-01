@@ -116,6 +116,10 @@ agent_monitor() {
     # That is THREE states, not just yes/no.
     if [ -f "${OCF_RESKEY_state}" ]; then
         WAIT=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]wa" '{ print $5 }')
+        if [ $? -ne 0 ]; then
+            ocf_log err "Could not get CPU I/O wait time"
+            return $OCF_DEGRADED
+        fi
 
         if [ $WAIT -gt ${OCF_RESKEY_red_limit} ] ; then
             attrd_updater -n "#health-iowait" -B "red" -d "${OCF_RESKEY_dampening}"
