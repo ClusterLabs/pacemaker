@@ -285,34 +285,51 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     return xml_create_patchset_v2(source, target);
 }
 
+/*!
+ * \internal
+ * \brief Add a digest of a patchset's target XML to the patchset
+ *
+ * \param[in,out] patchset  XML patchset
+ * \param[in]     target    Target XML
+ */
 void
-patchset_process_digest(xmlNode *patch, xmlNode *source, xmlNode *target,
-                        bool with_digest)
+pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target)
 {
     char *digest = NULL;
 
-    if ((patch == NULL) || (source == NULL) || (target == NULL)
-        || !with_digest) {
-        return;
-    }
+    CRM_CHECK((patchset != NULL) && (target != NULL), return);
 
-    /* We should always call pcmk__xml_commit_changes() before calculating a
-     * digest. Otherwise, with an on-tracking dirty target, we could get a wrong
-     * digest.
+    /* If tracking is enabled and the document is dirty, we could get an
+     * incorrect digest. Call pcmk__xml_commit_changes() before calling this.
      */
-    CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
+    CRM_CHECK(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty),
+              return);
 
     digest = pcmk__digest_xml(target, true);
 
-    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
+    crm_xml_add(patchset, PCMK__XA_DIGEST, digest);
     free(digest);
-
-    return;
 }
 
-// Get CIB versions used for additions and deletions in a patchset
-bool
-xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+/*!
+ * \internal
+ * \brief Get the source and target CIB versions from an XML patchset
+ *
+ * Each output object will contain, in order, the following version fields from
+ * the source and target, respectively:
+ * * \c PCMK_XA_ADMIN_EPOCH
+ * * \c PCMK_XA_EPOCH
+ * * \c PCMK_XA_NUM_UPDATES
+ *
+ * \param[in]  patchset  XML patchset
+ * \param[out] source    Where to store versions from source CIB
+ * \param[out] target    Where to store versions from target CIB
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
+                            int target[3])
 {
     static const char *const vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
@@ -320,34 +337,41 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
         PCMK_XA_NUM_UPDATES,
     };
 
-    const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
-                                                  NULL, NULL);
-    const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
-                                                 NULL);
-    const xmlNode *target = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL,
-                                                 NULL);
-    int format = 1;
+    int format = 0;
+    const xmlNode *version = NULL;
+    const xmlNode *source_xml = NULL;
+    const xmlNode *target_xml = NULL;
+
+    CRM_CHECK((patchset != NULL) && (source != NULL) && (target != NULL),
+              return EINVAL);
 
     crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_err("Unknown patch format: %d", format);
-        return -EINVAL;
+        return EINVAL;
     }
 
-    if (source != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(source, vfields[i], &(del[i]));
-            crm_trace("Got %d for del[%s]", del[i], vfields[i]);
-        }
+    version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION, NULL, NULL);
+    source_xml = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL, NULL);
+    target_xml = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL, NULL);
+
+    if ((source_xml == NULL) || (target_xml == NULL)) {
+        return EINVAL;
     }
 
-    if (target != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(target, vfields[i], &(add[i]));
-            crm_trace("Got %d for add[%s]", add[i], vfields[i]);
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        if (crm_element_value_int(source_xml, vfields[i], &(source[i])) != 0) {
+            return EINVAL;
         }
+        crm_trace("Got %d for source[%s]", source[i], vfields[i]);
+
+        if (crm_element_value_int(target_xml, vfields[i], &(target[i])) != 0) {
+            return EINVAL;
+        }
+        crm_trace("Got %d for target[%s]", target[i], vfields[i]);
     }
-    return pcmk_ok;
+
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -368,6 +392,7 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
     int this[] = { 0, 0, 0 };
     int add[] = { 0, 0, 0 };
     int del[] = { 0, 0, 0 };
+    int rc = pcmk_rc_ok;
 
     const char *vfields[] = {
         PCMK_XA_ADMIN_EPOCH,
@@ -391,7 +416,10 @@ xml_patch_version_check(const xmlNode *xml, const xmlNode *patchset)
         del[lpc] = this[lpc];
     }
 
-    xml_patch_versions(patchset, add, del);
+    rc = pcmk__xml_patchset_versions(patchset, del, add);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
 
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
         if (this[lpc] < del[lpc]) {
@@ -829,6 +857,18 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a given CIB element was modified in a CIB patchset
+ *
+ * \param[in] patchset  CIB XML patchset
+ * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
+ *                      to \c PCMK_XE_CIB). Supported values include any CIB
+ *                      element supported by \c pcmk__cib_abs_xpath_for().
+ *
+ * \retval \c true if \p element was modified
+ * \retval \c false otherwise
+ */
 bool
 pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 {
@@ -883,3 +923,72 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
     free(element_regex);
     return rc;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/xml_compat.h>
+
+// Return value of true means failure; false means success
+bool
+xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
+{
+    static const char *const vfields[] = {
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
+    };
+
+    const xmlNode *version = pcmk__xe_first_child(patchset, PCMK_XE_VERSION,
+                                                  NULL, NULL);
+    const xmlNode *source = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL,
+                                                 NULL);
+    const xmlNode *target = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL,
+                                                 NULL);
+    int format = 1;
+
+    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    if (format != 2) {
+        crm_err("Unknown patch format: %d", format);
+        return true;
+    }
+
+    if (source != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_element_value_int(source, vfields[i], &(del[i]));
+            crm_trace("Got %d for del[%s]", del[i], vfields[i]);
+        }
+    }
+
+    if (target != NULL) {
+        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+            crm_element_value_int(target, vfields[i], &(add[i]));
+            crm_trace("Got %d for add[%s]", add[i], vfields[i]);
+        }
+    }
+    return false;
+}
+
+void
+patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                        const xmlNode *target, bool with_digest)
+{
+    char *digest = NULL;
+
+    if ((patch == NULL) || (source == NULL) || (target == NULL)
+        || !with_digest) {
+        return;
+    }
+
+    CRM_LOG_ASSERT(!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty));
+
+    digest = pcmk__digest_xml(target, true);
+
+    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
+    free(digest);
+
+    return;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
