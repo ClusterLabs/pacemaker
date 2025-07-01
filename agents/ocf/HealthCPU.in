@@ -127,13 +127,27 @@ healthcpu_monitor() {
 
         if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
             attrd_updater -n "#health-cpu" -B "red" -d "${OCF_RESKEY_dampening}"
+            rc=$?
+
+            if [ $rc -ne 0 ]; then
+                ocf_log err "Could not set #health-cpu attribute: $(crm_error -X $rc)"
+                return $OCF_DEGRADED
+            fi
+
             return $OCF_SUCCESS
         fi
 
         if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
             attrd_updater -n "#health-cpu" -B "yellow" -d "${OCF_RESKEY_dampening}"
+            rc=$?
         else
             attrd_updater -n "#health-cpu" -B "green" -d "${OCF_RESKEY_dampening}"
+            rc=$?
+        fi
+
+        if [ $rc -ne 0 ]; then
+            ocf_log err "Could not set #health-cpu attribute: $(crm_error -X $rc)"
+            return $OCF_DEGRADED
         fi
 
         return $OCF_SUCCESS
