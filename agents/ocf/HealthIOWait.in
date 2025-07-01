@@ -123,13 +123,27 @@ agent_monitor() {
 
         if [ $WAIT -gt ${OCF_RESKEY_red_limit} ] ; then
             attrd_updater -n "#health-iowait" -B "red" -d "${OCF_RESKEY_dampening}"
+            rc=$?
+
+            if [ $rc -ne 0 ]; then
+                ocf_log err "Could not set #health-iowait attribute: $(crm_error -X $rc)"
+                return $OCF_DEGRADED
+            fi
+
             return $OCF_SUCCESS
         fi
 
         if [ $WAIT -gt ${OCF_RESKEY_yellow_limit} ] ; then
             attrd_updater -n "#health-iowait" -B "yellow" -d "${OCF_RESKEY_dampening}"
+            rc=$?
         else
             attrd_updater -n "#health-iowait" -B "green" -d "${OCF_RESKEY_dampening}"
+            rc=$?
+        fi
+
+        if [ $rc -ne 0 ]; then
+            ocf_log err "Could not set #health-iowait attribute: $(crm_error -X $rc)"
+            return $OCF_DEGRADED
         fi
 
         return $OCF_SUCCESS
