@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthCPU resource agent
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -121,21 +121,15 @@ healthcpu_monitor() {
     if [ -f "${OCF_RESKEY_state}" ]; then
 
         IDLE=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]id" '{ print $4 }')
-        # echo "System idle: " $IDLE
-        # echo "$OCF_RESKEY_red_limit"
-        # echo $OCF_RESKEY_yellow_limit
 
         if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
-            # echo "System state RED!"
             attrd_updater -n "#health-cpu" -B "red" -d "${OCF_RESKEY_dampening}"
             return $OCF_SUCCESS
         fi
 
         if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
-            # echo "System state yellow."
             attrd_updater -n "#health-cpu" -B "yellow" -d "${OCF_RESKEY_dampening}"
         else
-            # echo "System state green."
             attrd_updater -n "#health-cpu" -B "green" -d "${OCF_RESKEY_dampening}"
         fi
 
