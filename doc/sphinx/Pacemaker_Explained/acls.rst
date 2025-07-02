@@ -67,7 +67,7 @@ particular portions of the CIB. A role is configured with an ``acl_role``
 element in the CIB ``acls`` section.
    
 .. table:: **Properties of an acl_role element**
-   :widths: 1 3
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -94,7 +94,7 @@ An ``acl_role`` element may contain any number of ``acl_permission`` elements.
    pair: acl_permission; XML element
 
 .. table:: **Properties of an acl_permission element**
-   :widths: 1 3
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -195,7 +195,7 @@ ACL targets correspond to user accounts on the system.
    pair: acl_target; XML element
 
 .. table:: **Properties of an acl_target element**
-   :widths: 1 3
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -227,7 +227,7 @@ groups apply to all users in that group *(since 2.1.5)*.
    pair: acl_group; XML element
 
 .. table:: **Properties of an acl_group element**
-   :widths: 1 3
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -265,7 +265,7 @@ elements.
    pair: role; XML element
 
 .. table:: **Properties of a role element**
-   :widths: 1 3
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |

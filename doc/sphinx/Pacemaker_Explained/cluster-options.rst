@@ -73,7 +73,7 @@ We will refer to a set of options and its enclosing element as a *block*.
 
 .. list-table:: **Properties of an Option Block's Enclosing Element**
    :class: longtable
-   :widths: 2 2 3 5
+   :widths: 15 15 15 55
    :header-rows: 1
 
    * - Name
@@ -171,7 +171,7 @@ holds. So the decision was made to place them in an easy-to-find location.
 
 .. list-table:: **CIB Properties**
    :class: longtable
-   :widths: 2 2 2 5
+   :widths: 20 15 10 55
    :header-rows: 1
 
    * - Name
@@ -310,7 +310,7 @@ values, by running the ``man pacemaker-schedulerd`` and
 
 .. list-table:: **Cluster Options**
    :class: longtable
-   :widths: 2 2 2 5
+   :widths: 25 13 12 50
    :header-rows: 1
 
    * - Name

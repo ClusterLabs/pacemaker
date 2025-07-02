@@ -86,7 +86,7 @@ Group Properties
 ________________
 
 .. table:: **Properties of a Group Resource**
-   :widths: 1 4
+   :widths: 25 75
 
    +-------------+------------------------------------------------------------------+
    | Field       | Description                                                      |
@@ -212,7 +212,7 @@ Clone Properties
 ________________
    
 .. table:: **Properties of a Clone Resource**
-   :widths: 1 4
+   :widths: 25 75
 
    +-------------+------------------------------------------------------------------+
    | Field       | Description                                                      |
@@ -243,7 +243,7 @@ _____________
    
 .. table:: **Clone-specific configuration options**
    :class: longtable
-   :widths: 1 1 3
+   :widths: 20 20 60
 
    +-------------------+-----------------+-------------------------------------------------------+
    | Field             | Default         | Description                                           |
@@ -694,7 +694,7 @@ Bundle Properties
 _________________
    
 .. table:: **XML Attributes of a bundle Element**
-   :widths: 1 4
+   :widths: 25 75
 
    +-------------+------------------------------------------------------------------+
    | Field       | Description                                                      |
@@ -726,7 +726,7 @@ ___________________________
    
 .. table:: **XML attributes of a docker or podman Element**
    :class: longtable
-   :widths: 2 3 4
+   :widths: 15 40 45
    
    +-------------------+------------------------------------+---------------------------------------------------+
    | Attribute         | Default                            | Description                                       |
@@ -837,7 +837,7 @@ A bundle may optionally contain one ``<network>`` element.
    single: bundle; network
    
 .. table:: **XML attributes of a network Element**
-   :widths: 2 1 5
+   :widths: 20 20 60
    
    +----------------+---------+------------------------------------------------------------+
    | Attribute      | Default | Description                                                |
@@ -917,7 +917,7 @@ Additionally, a ``network`` element may optionally contain one or more
 ``port-mapping`` elements.
    
 .. table:: **Attributes of a port-mapping Element**
-   :widths: 2 1 5
+   :widths: 20 20 60
    
    +---------------+-------------------+------------------------------------------------------+
    | Attribute     | Default           | Description                                          |
@@ -985,7 +985,7 @@ has no properties of its own, but may contain one or more ``storage-mapping``
 elements.
    
 .. table:: **Attributes of a storage-mapping Element**
-   :widths: 2 1 5
+   :widths: 20 20 60
    
    +-----------------+---------+-------------------------------------------------------------+
    | Attribute       | Default | Description                                                 |

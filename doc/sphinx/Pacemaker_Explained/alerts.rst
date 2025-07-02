@@ -92,7 +92,7 @@ whether and how Pacemaker calls them.
    
 .. table:: **Meta-Attributes of an Alert or Recipient**
    :class: longtable
-   :widths: 1 1 3
+   :widths: 20 20 60
    
    +------------------+---------------+-----------------------------------------------------+
    | Meta-Attribute   | Default       | Description                                         |
@@ -237,7 +237,7 @@ element.
 
 .. list-table:: **Possible alert filters**
    :class: longtable
-   :widths: 1 3
+   :widths: 25 75
    :header-rows: 1
 
    * - Name

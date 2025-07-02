@@ -154,7 +154,7 @@ The table below lists special resource meta-attributes that may be set for any
 fencing resource.
 
 .. table:: **Additional Properties of Fencing Resources**
-   :widths: 2 1 2 4
+   :widths: 10 10 10 70
 
 
    +----------------------+---------+--------------------+----------------------------------------+
@@ -181,7 +181,7 @@ for ``pacemaker-fenced``.
 
 .. list-table:: **Additional Properties of Fencing Resources**
    :class: longtable
-   :widths: 2 1 2 4
+   :widths: 22 10 20 48
    :header-rows: 1
 
    * - Name
@@ -1077,7 +1077,7 @@ Some possible uses of topologies include:
 
 .. table:: **Attributes of a fencing-level Element**
    :class: longtable
-   :widths: 1 4
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------------------------------------+
    | Attribute        | Description                                                                             |
