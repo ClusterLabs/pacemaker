@@ -179,10 +179,10 @@ holds. So the decision was made to place them in an easy-to-find location.
      - Default
      - Description
    * - .. _admin_epoch:
-       
+
        .. index::
           pair: admin_epoch; cib
-       
+
        admin_epoch
      - :ref:`nonnegative integer <nonnegative_integer>`
      - 0
@@ -192,30 +192,30 @@ holds. So the decision was made to place them in an easy-to-find location.
        very important. ``admin_epoch`` is never modified by the cluster; you
        can use this to make the configurations on any inactive nodes obsolete.
    * - .. _epoch:
-       
+
        .. index::
           pair: epoch; cib
-       
+
        epoch
      - :ref:`nonnegative integer <nonnegative_integer>`
      - 0
      - The cluster increments this every time the CIB's configuration section
        is updated.
    * - .. _num_updates:
-       
+
        .. index::
           pair: num_updates; cib
-       
+
        num_updates
      - :ref:`nonnegative integer <nonnegative_integer>`
      - 0
      - The cluster increments this every time the CIB's configuration or status
        sections are updated, and resets it to 0 when epoch changes.
    * - .. _validate_with:
-       
+
        .. index::
           pair: validate-with; cib
-       
+
        validate-with
      - :ref:`enumeration <enumeration>`
      -
@@ -225,10 +225,10 @@ holds. So the decision was made to place them in an easy-to-find location.
        names of schema files installed on the local machine (for example,
        "pacemaker-3.9")
    * - .. _remote_tls_port:
-       
+
        .. index::
           pair: remote-tls-port; cib
-       
+
        remote-tls-port
      - :ref:`port <port>`
      -
@@ -237,10 +237,10 @@ holds. So the decision was made to place them in an easy-to-find location.
        the cluster. No key is used, so this should be used only on a protected
        network where man-in-the-middle attacks can be avoided.
    * - .. _remote_clear_port:
-       
+
        .. index::
           pair: remote-clear-port; cib
-       
+
        remote-clear-port
      - :ref:`port <port>`
      -
@@ -249,20 +249,20 @@ holds. So the decision was made to place them in an easy-to-find location.
        in the cluster. No encryption is used, so this should be used only on a
        protected network.
    * - .. _cib_last_written:
-       
+
        .. index::
           pair: cib-last-written; cib
-       
+
        cib-last-written
      - :ref:`date/time <date_time>`
      -
      - Indicates when the configuration was last written to disk. Maintained by
        the cluster; for informational purposes only.
    * - .. _have_quorum:
-       
+
        .. index::
           pair: have-quorum; cib
-       
+
        have-quorum
      - :ref:`boolean <boolean>`
      -
@@ -270,20 +270,20 @@ holds. So the decision was made to place them in an easy-to-find location.
        response is determined by ``no-quorum-policy`` (see below). Maintained
        by the cluster.
    * - .. _dc_uuid:
-       
+
        .. index::
           pair: dc-uuid; cib
-       
+
        dc-uuid
      - :ref:`text <text>`
      -
      - Node ID of the cluster's current designated controller (DC). Used and
        maintained by the cluster.
    * - .. _execution_date:
-       
+
        .. index::
           pair: execution-date; cib
-       
+
        execution-date
      - :ref:`epoch time <epoch_time>`
      -
@@ -318,10 +318,10 @@ values, by running the ``man pacemaker-schedulerd`` and
      - Default
      - Description
    * - .. _cluster_name:
-       
+
        .. index::
           pair: cluster option; cluster-name
-       
+
        cluster-name
      - :ref:`text <text>`
      -
@@ -333,20 +333,20 @@ values, by running the ``man pacemaker-schedulerd`` and
        by certain resource agents (for example, the ``ocf:heartbeat:GFS2``
        agent stores the cluster name in filesystem meta-data).
    * - .. _dc_version:
-       
+
        .. index::
           pair: cluster option; dc-version
-       
+
        dc-version
      - :ref:`version <version>`
      - *detected*
      - Version of Pacemaker on the cluster's designated controller (DC).
        Maintained by the cluster, and intended for diagnostic purposes.
    * - .. _cluster_infrastructure:
-       
+
        .. index::
           pair: cluster option; cluster-infrastructure
-       
+
        cluster-infrastructure
      - :ref:`text <text>`
      - *detected*
@@ -354,15 +354,15 @@ values, by running the ``man pacemaker-schedulerd`` and
        Maintained by the cluster, and intended for informational and diagnostic
        purposes.
    * - .. _no_quorum_policy:
-       
+
        .. index::
           pair: cluster option; no-quorum-policy
-       
+
        no-quorum-policy
      - :ref:`enumeration <enumeration>`
      - stop
      - What to do when the cluster does not have quorum. Allowed values:
-       
+
        * ``ignore:`` continue all resource management
        * ``freeze:`` continue resource management, but don't recover resources
          from nodes not in the affected partition
@@ -373,10 +373,10 @@ values, by running the ``man pacemaker-schedulerd`` and
          *(since 2.1.9)*
        * ``suicide:`` same as ``fence`` *(deprecated since 2.1.9)*
    * - .. _batch_limit:
-       
+
        .. index::
           pair: cluster option; batch-limit
-       
+
        batch-limit
      - :ref:`integer <integer>`
      - 0
@@ -386,10 +386,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        dynamically calculated limit only when any node has high load. If -1,
        the cluster will not impose any limit.
    * - .. _migration_limit:
-       
+
        .. index::
           pair: cluster option; migration-limit
-       
+
        migration-limit
      - :ref:`integer <integer>`
      - -1
@@ -397,10 +397,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        cluster is allowed to execute in parallel on a node. A value of -1 means
        unlimited.
    * - .. _load_threshold:
-       
+
        .. index::
           pair: cluster option; load-threshold
-       
+
        load-threshold
      - :ref:`percentage <percentage>`
      - 80%
@@ -408,10 +408,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        cluster will slow down its recovery process when the amount of system
        resources used (currently CPU) approaches this limit.
    * - .. _node_action_limit:
-       
+
        .. index::
           pair: cluster option; node-action-limit
-       
+
        node-action-limit
      - :ref:`integer <integer>`
      - 0
@@ -420,10 +420,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        per node. :ref:`PCMK_node_action_limit <pcmk_node_action_limit>`
        overrides this option on a per-node basis.
    * - .. _symmetric_cluster:
-       
+
        .. index::
           pair: cluster option; symmetric-cluster
-       
+
        symmetric-cluster
      - :ref:`boolean <boolean>`
      - true
@@ -431,20 +431,20 @@ values, by running the ``man pacemaker-schedulerd`` and
        is allowed to run on a node only if a
        :ref:`location constraint <location-constraint>` enables it.
    * - .. _stop_all_resources:
-       
+
        .. index::
           pair: cluster option; stop-all-resources
-       
+
        stop-all-resources
      - :ref:`boolean <boolean>`
      - false
      - Whether all resources should be disallowed from running (can be useful
        during maintenance or troubleshooting)
    * - .. _stop_orphan_resources:
-       
+
        .. index::
           pair: cluster option; stop-orphan-resources
-       
+
        stop-orphan-resources
      - :ref:`boolean <boolean>`
      - true
@@ -453,20 +453,20 @@ values, by running the ``man pacemaker-schedulerd`` and
        :ref:`is-managed <is_managed>` (that is, even unmanaged resources will
        be stopped when orphaned if this value is ``true``).
    * - .. _stop_orphan_actions:
-       
+
        .. index::
           pair: cluster option; stop-orphan-actions
-       
+
        stop-orphan-actions
      - :ref:`boolean <boolean>`
      - true
      - Whether recurring :ref:`operations <operation>` that have been deleted
        from the configuration should be cancelled
    * - .. _start_failure_is_fatal:
-      
+
        .. index::
           pair: cluster option; start-failure-is-fatal
-      
+
        start-failure-is-fatal
      - :ref:`boolean <boolean>`
      - true
@@ -475,20 +475,20 @@ values, by running the ``man pacemaker-schedulerd`` and
        decide whether the node is still eligible based on the resource's
        current failure count and ``migration-threshold``.
    * - .. _enable_startup_probes:
-      
+
        .. index::
           pair: cluster option; enable-startup-probes
-      
+
        enable-startup-probes
      - :ref:`boolean <boolean>`
      - true
      - Whether the cluster should check the pre-existing state of resources
        when the cluster starts
    * - .. _maintenance_mode:
-      
+
        .. index::
           pair: cluster option; maintenance-mode
-      
+
        maintenance-mode
      - :ref:`boolean <boolean>`
      - false
@@ -500,19 +500,19 @@ values, by running the ``man pacemaker-schedulerd`` and
        resource meta-attributes, and :ref:`enabled <op_enabled>` operation
        meta-attribute.
    * - .. _stonith_enabled:
-      
+
        .. index::
           pair: cluster option; stonith-enabled
-      
+
        stonith-enabled
      - :ref:`boolean <boolean>`
      - true
      - Whether the cluster is allowed to fence nodes (for example, failed nodes
        and nodes with resources that can't be stopped).
-       
+
        If true, at least one fence device must be configured before resources
        are allowed to run.
-       
+
        If false, unresponsive nodes are immediately assumed to be running no
        resources, and resource recovery on online nodes starts without any
        further protection (which can mean *data loss* if the unresponsive node
@@ -523,30 +523,30 @@ values, by running the ``man pacemaker-schedulerd`` and
        requests initiated externally (such as with the ``stonith_admin``
        command-line tool).
    * - .. _stonith_action:
-      
+
        .. index::
           pair: cluster option; stonith-action
-      
+
        stonith-action
      - :ref:`enumeration <enumeration>`
      - reboot
      - Action the cluster should send to the fence agent when a node must be
        fenced. Allowed values are ``reboot`` and ``off``.
    * - .. _stonith_timeout:
-      
+
        .. index::
           pair: cluster option; stonith-timeout
-      
+
        stonith-timeout
      - :ref:`duration <duration>`
      - 60s
      - How long to wait for ``on``, ``off``, and ``reboot`` fence actions to
        complete by default.
    * - .. _stonith_max_attempts:
-      
+
        .. index::
           pair: cluster option; stonith-max-attempts
-      
+
        stonith-max-attempts
      - :ref:`score <score>`
      - 10
@@ -570,17 +570,17 @@ values, by running the ``man pacemaker-schedulerd`` and
        performed via SBD without requiring a fencing resource explicitly
        configured.
    * - .. _stonith_watchdog_timeout:
-      
+
        .. index::
           pair: cluster option; stonith-watchdog-timeout
-      
+
        stonith-watchdog-timeout
      - :ref:`timeout <timeout>`
      - 0
      - If nonzero, and the cluster detects ``have-watchdog`` as ``true``, then
        watchdog-based self-fencing will be performed via SBD when fencing is
        required.
-       
+
        If this is set to a positive value, lost nodes are assumed to achieve
        self-fencing within this much time.
 
@@ -594,19 +594,19 @@ values, by running the ``man pacemaker-schedulerd`` and
        If this is set to a negative value, the cluster will use twice the local
        value of the ``SBD_WATCHDOG_TIMEOUT`` environment variable if that is
        positive, or otherwise treat this as 0.
-       
+
        **Warning:** When used, this timeout must be larger than
        ``SBD_WATCHDOG_TIMEOUT`` on all nodes that use watchdog-based SBD, and
        Pacemaker will refuse to start on any of those nodes where this is not
        true for the local value or SBD is not active. When this is set to a
        negative value, ``SBD_WATCHDOG_TIMEOUT`` must be set to the same value
        on all nodes that use SBD, otherwise data corruption or loss could occur.
-       
+
    * - .. _concurrent-fencing:
-      
+
        .. index::
           pair: cluster option; concurrent-fencing
-      
+
        concurrent-fencing
      - :ref:`boolean <boolean>`
      - false
@@ -616,10 +616,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        itself such as recurring device monitors and ``status`` and ``list``
        commands, are not limited by this option.
    * - .. _fence_reaction:
-      
+
        .. index::
           pair: cluster option; fence-reaction
-      
+
        fence-reaction
      - :ref:`enumeration <enumeration>`
      - stop
@@ -632,10 +632,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        failure. The default is likely to be changed to ``panic`` in a future
        release. *(since 2.0.3)*
    * - .. _priority_fencing_delay:
-      
+
        .. index::
           pair: cluster option; priority-fencing-delay
-      
+
        priority-fencing-delay
      - :ref:`duration <duration>`
      - 0
@@ -651,10 +651,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        than (safely twice) the maximum delay from those parameters. *(since
        2.0.4)*
    * - .. _node_pending_timeout:
-      
+
        .. index::
           pair: cluster option; node-pending-timeout
-      
+
        node-pending-timeout
      - :ref:`duration <duration>`
      - 0
@@ -663,10 +663,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        managing resources. A value of 0 means never fence pending nodes. Setting the value to 2h means fence nodes after 2 hours. 
        *(since 2.1.7)*
    * - .. _cluster_delay:
-      
+
        .. index::
           pair: cluster option; cluster-delay
-      
+
        cluster-delay
      - :ref:`duration <duration>`
      - 60s
@@ -675,10 +675,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        node within this time (beyond the action's own timeout). The ideal value
        will depend on the speed and load of your network and cluster nodes.
    * - .. _dc_deadtime:
-      
+
        .. index::
           pair: cluster option; dc-deadtime
-      
+
        dc-deadtime
      - :ref:`duration <duration>`
      - 20s
@@ -686,10 +686,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        ideal value will depend on the speed and load of your network and
        cluster nodes.
    * - .. _cluster_ipc_limit:
-      
+
        .. index::
           pair: cluster option; cluster-ipc-limit
-      
+
        cluster-ipc-limit
      - :ref:`nonnegative integer <nonnegative_integer>`
      - 500
@@ -699,10 +699,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        of nodes. The default of 500 is also the minimum. Raise this if you see
        "Evicting client" log messages for cluster daemon process IDs.
    * - .. _pe_error_series_max:
-      
+
        .. index::
           pair: cluster option; pe-error-series-max
-      
+
        pe-error-series-max
      - :ref:`integer <integer>`
      - -1
@@ -710,10 +710,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        can be helpful during troubleshooting and when reporting issues. A
        negative value means save all inputs, and 0 means save none.
    * - .. _pe_warn_series_max:
-      
+
        .. index::
           pair: cluster option; pe-warn-series-max
-      
+
        pe-warn-series-max
      - :ref:`integer <integer>`
      - 5000
@@ -721,10 +721,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        inputs can be helpful during troubleshooting and when reporting issues.
        A negative value means save all inputs, and 0 means save none.
    * - .. _pe_input_series_max:
-      
+
        .. index::
           pair: cluster option; pe-input-series-max
-      
+
        pe-input-series-max
      - :ref:`integer <integer>`
      - 4000
@@ -732,20 +732,20 @@ values, by running the ``man pacemaker-schedulerd`` and
        helpful during troubleshooting and when reporting issues. A negative
        value means save all inputs, and 0 means save none.
    * - .. _enable_acl:
-      
+
        .. index::
           pair: cluster option; enable-acl
-      
+
        enable-acl
      - :ref:`boolean <boolean>`
      - false
      - Whether :ref:`access control lists <acl>` should be used to authorize
        CIB modifications
    * - .. _placement_strategy:
-      
+
        .. index::
           pair: cluster option; placement-strategy
-      
+
        placement-strategy
      - :ref:`enumeration <enumeration>`
      - default
@@ -753,10 +753,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        :ref:`utilization`). Allowed values are ``default``, ``utilization``,
        ``balanced``, and ``minimal``.
    * - .. _node_health_strategy:
-      
+
        .. index::
           pair: cluster option; node-health-strategy
-      
+
        node-health-strategy
      - :ref:`enumeration <enumeration>`
      - none
@@ -764,20 +764,20 @@ values, by running the ``man pacemaker-schedulerd`` and
        attributes. Allowed values are ``none``, ``migrate-on-red``,
        ``only-green``, ``progressive``, and ``custom``.
    * - .. _node_health_base:
-      
+
        .. index::
           pair: cluster option; node-health-base
-      
+
        node-health-base
      - :ref:`score <score>`
      - 0
      - The base health score assigned to a node. Only used when
        ``node-health-strategy`` is ``progressive``.
    * - .. _node_health_green:
-      
+
        .. index::
           pair: cluster option; node-health-green
-      
+
        node-health-green
      - :ref:`score <score>`
      - 0
@@ -785,10 +785,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        Only used when ``node-health-strategy`` is ``progressive`` or
        ``custom``.
    * - .. _node_health_yellow:
-      
+
        .. index::
           pair: cluster option; node-health-yellow
-      
+
        node-health-yellow
      - :ref:`score <score>`
      - 0
@@ -796,10 +796,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        Only used when ``node-health-strategy`` is ``progressive`` or
        ``custom``.
    * - .. _node_health_red:
-      
+
        .. index::
           pair: cluster option; node-health-red
-      
+
        node-health-red
      - :ref:`score <score>`
      - -INFINITY
@@ -807,10 +807,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        Only used when ``node-health-strategy`` is ``progressive`` or
        ``custom``.
    * - .. _cluster_recheck_interval:
-      
+
        .. index::
           pair: cluster option; cluster-recheck-interval
-      
+
        cluster-recheck-interval
      - :ref:`duration <duration>`
      - 15min
@@ -818,7 +818,7 @@ values, by running the ``man pacemaker-schedulerd`` and
        recheck the cluster for failure-timeout settings and most time-based
        rules *(since 2.0.3)*. However, it will also recheck the cluster after
        this amount of inactivity. This has three main effects:
-       
+
        * :ref:`Rules <rules>` using ``date_spec`` are guaranteed to be checked
          only this often.
        * If :ref:`fencing <fencing>` fails enough to reach
@@ -828,13 +828,13 @@ values, by running the ``man pacemaker-schedulerd`` and
          scheduler incorrectly determines only some of the actions needed to
          react to a particular event, it will often correctly determine the
          rest after at most this time.
-       
+
        A value of 0 disables this polling.
    * - .. _shutdown_lock:
-      
+
        .. index::
           pair: cluster option; shutdown-lock
-      
+
        shutdown-lock
      - :ref:`boolean <boolean>`
      - false
@@ -855,10 +855,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        not if Pacemaker Remote is stopped on the remote node without disabling
        the connection resource). *(since 2.0.4)*
    * - .. _shutdown_lock_limit:
-      
+
        .. index::
           pair: cluster option; shutdown-lock-limit
-      
+
        shutdown-lock-limit
      - :ref:`duration <duration>`
      - 0
@@ -868,10 +868,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        not rejoined. (This works with remote nodes only if their connection
        resource's ``target-role`` is set to ``Stopped``.) *(since 2.0.4)*
    * - .. _startup_fencing:
-      
+
        .. index::
           pair: cluster option; startup-fencing
-      
+
        startup-fencing
      - :ref:`boolean <boolean>`
      - true
@@ -881,10 +881,10 @@ values, by running the ``man pacemaker-schedulerd`` and
        acts as a grace period before this fencing, since a DC must be elected
        to schedule fencing.
    * - .. _election_timeout:
-      
+
        .. index::
           pair: cluster option; election-timeout
-      
+
        election-timeout
      - :ref:`duration <duration>`
      - 2min
@@ -892,40 +892,40 @@ values, by running the ``man pacemaker-schedulerd`` and
        of starting an election, the node that initiated the election will
        declare itself the winner.
    * - .. _shutdown_escalation:
-      
+
        .. index::
           pair: cluster option; shutdown-escalation
-      
+
        shutdown-escalation
      - :ref:`duration <duration>`
      - 20min
      - *Advanced Use Only:* The controller will exit immediately if a shutdown
        does not complete within this much time.
    * - .. _join_integration_timeout:
-      
+
        .. index::
           pair: cluster option; join-integration-timeout
-      
+
        join-integration-timeout
      - :ref:`duration <duration>`
      - 3min
      - *Advanced Use Only:* If you need to adjust this value, it probably
        indicates the presence of a bug.
    * - .. _join_finalization_timeout:
-      
+
        .. index::
           pair: cluster option; join-finalization-timeout
-      
+
        join-finalization-timeout
      - :ref:`duration <duration>`
      - 30min
      - *Advanced Use Only:* If you need to adjust this value, it probably
        indicates the presence of a bug.
    * - .. _transition_delay:
-      
+
        .. index::
           pair: cluster option; transition-delay
-      
+
        transition-delay
      - :ref:`duration <duration>`
      - 0s

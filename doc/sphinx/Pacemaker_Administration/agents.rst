@@ -39,7 +39,7 @@ overwritten by) the agents shipped by existing providers.
 So, for example, if you choose the provider name of big-corp and want a new
 resource named big-app, you would create a resource agent called
 ``/usr/lib/ocf/resource.d/big-corp/big-app`` and define a resource:
- 
+
 .. code-block: xml
 
    <primitive id="custom-app" class="ocf" provider="big-corp" type="big-app"/>
@@ -1101,13 +1101,13 @@ ______________
 The relevant part of the
 `LSB specifications <http://refspecs.linuxfoundation.org/lsb.shtml>`_
 includes a description of all the return codes listed here.
-    
+
 Assuming `some_service` is configured correctly and currently
 inactive, the following sequence will help you determine if it is
 LSB-compatible:
 
 #. Start (stopped):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service start ; echo "result: $?"
@@ -1117,7 +1117,7 @@ LSB-compatible:
      usual output)?
 
 #. Status (running):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service status ; echo "result: $?"
@@ -1128,7 +1128,7 @@ LSB-compatible:
      usual output)?
 
 #. Start (running):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service start ; echo "result: $?"
@@ -1138,7 +1138,7 @@ LSB-compatible:
       script's usual output)?
 
 #. Stop (running):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service stop ; echo "result: $?"
@@ -1148,7 +1148,7 @@ LSB-compatible:
      script's usual output)?
 
 #. Status (stopped):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service status ; echo "result: $?"
@@ -1159,7 +1159,7 @@ LSB-compatible:
      script's usual output)?
 
 #. Stop (stopped):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service stop ; echo "result: $?"

@@ -34,32 +34,32 @@ Each context that supports rules may contain a single ``rule`` element.
    :class: longtable
    :widths: 15 15 10 60
    :header-rows: 1
-   
+
    * - Name
      - Type
      - Default
      - Description
-   
+
    * - .. _rule_id:
-     
+
        .. index::
           pair: rule; id
-        
+
        id
      - :ref:`id <id>`
      -
      - A unique name for this element (required)
    * - .. _boolean_op:
-     
+
        .. index::
           pair: rule; boolean-op
-        
+
        boolean-op
      - :ref:`enumeration <enumeration>`
      - ``and``
      - How to combine conditions if this rule contains more than one. Allowed
        values:
-       
+
        * ``and``: the rule is satisfied only if all conditions are satisfied
        * ``or``: the rule is satisfied if any condition is satisfied
 
@@ -132,7 +132,7 @@ It may contain a ``date_spec`` or ``duration`` element depending on the
 
        id
      - :ref:`id <id>`
-     - 
+     -
      - A unique name for this element (required)
    * - .. _date_expression_start:
 
@@ -141,7 +141,7 @@ It may contain a ``date_spec`` or ``duration`` element depending on the
 
        start
      - :ref:`ISO 8601 <iso8601>`
-     - 
+     -
      - The beginning of the desired time range. Meaningful with an
        ``operation`` of ``in_range`` or ``gt``.
    * - .. _date_expression_end:
@@ -151,7 +151,7 @@ It may contain a ``date_spec`` or ``duration`` element depending on the
 
        end
      - :ref:`ISO 8601 <iso8601>`
-     - 
+     -
      - The end of the desired time range. Meaningful with an ``operation`` of
        ``in_range`` or ``lt``.
    * - .. _date_expression_operation:
@@ -208,7 +208,7 @@ combination of dates and times that satisfy the expression.
 
        id
      - :ref:`id <id>`
-     - 
+     -
      - A unique name for this element (required)
    * - .. _date_spec_seconds:
 
@@ -217,7 +217,7 @@ combination of dates and times that satisfy the expression.
 
        seconds
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current time's
        second is within this range. Allowed integers: 0 to 59.
    * - .. _date_spec_minutes:
@@ -227,7 +227,7 @@ combination of dates and times that satisfy the expression.
 
        minutes
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current time's
        minute is within this range. Allowed integers: 0 to 59.
    * - .. _date_spec_hours:
@@ -237,7 +237,7 @@ combination of dates and times that satisfy the expression.
 
        hours
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current time's
        hour is within this range. Allowed integers: 0 to 23 where 0 is midnight
        and 23 is 11 p.m.
@@ -248,7 +248,7 @@ combination of dates and times that satisfy the expression.
 
        monthdays
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        day of the month is in this range. Allowed integers: 1 to 31.
    * - .. _date_spec_weekdays:
@@ -258,7 +258,7 @@ combination of dates and times that satisfy the expression.
 
        weekdays
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        ordinal day of the week is in this range. Allowed integers: 1-7 (where 1
        is Monday and  7 is Sunday).
@@ -269,7 +269,7 @@ combination of dates and times that satisfy the expression.
 
        yeardays
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        ordinal day of the year is in this range. Allowed integers: 1-366.
    * - .. _date_spec_months:
@@ -279,7 +279,7 @@ combination of dates and times that satisfy the expression.
 
        months
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        month is in this range. Allowed integers: 1-12 where 1 is January and 12
        is December.
@@ -290,7 +290,7 @@ combination of dates and times that satisfy the expression.
 
        weeks
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        ordinal week of the year is in this range. Allowed integers: 1-53.
    * - .. _date_spec_years:
@@ -300,7 +300,7 @@ combination of dates and times that satisfy the expression.
 
        years
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        year according to the Gregorian calendar is in this range.
    * - .. _date_spec_weekyears:
@@ -310,7 +310,7 @@ combination of dates and times that satisfy the expression.
 
        weekyears
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        year in which the week started (according to the ISO 8601 standard) is
        in this range.
@@ -321,7 +321,7 @@ combination of dates and times that satisfy the expression.
 
        moon
      - :ref:`range <range>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the current date's
        phase of the moon is in this range. Allowed values are 0 to 7 where 0 is
        the new moon and 4 is the full moon. *(deprecated since 2.1.6)*
@@ -371,7 +371,7 @@ ending value for ``in_range`` operations when ``end`` is not supplied.
 
        id
      - :ref:`id <id>`
-     - 
+     -
      - A unique name for this element (required)
    * - .. _duration_seconds:
 
@@ -544,40 +544,40 @@ node attribute. It is allowed in rules in location constraints and in
    :class: longtable
    :widths: 15 15 30 40
    :header-rows: 1
-   
+
    * - Name
      - Type
      - Default
      - Description
-   
+
    * - .. _expression_id:
-     
+
        .. index::
           pair: expression; id
-        
+
        id
      - :ref:`id <id>`
      -
      - A unique name for this element (required)
    * - .. _expression_attribute:
-     
+
        .. index::
           pair: expression; attribute
-        
+
        attribute
      - :ref:`text <text>`
      -
      - Name of the node attribute to test (required)
    * - .. _expression_operation:
-     
+
        .. index::
           pair: expression; operation
-        
+
        operation
      - :ref:`enumeration <enumeration>`
-     - 
+     -
      - The comparison to perform (required). Allowed values:
-       
+
        * ``defined:`` The expression is satisfied if the node has the named
          attribute
        * ``not_defined:`` The expression is satisfied if the node does not have
@@ -595,10 +595,10 @@ node attribute. It is allowed in rules in location constraints and in
        * ``ne:`` The expression is satisfied if the node attribute value is not
          equal to the reference value
    * - .. _expression_type:
-     
+
        .. index::
           pair: expression; type
-        
+
        type
      - :ref:`enumeration <enumeration>`
      - The default type for ``lt``, ``gt``, ``lte``, and ``gte`` operations is
@@ -612,25 +612,25 @@ node attribute. It is allowed in rules in location constraints and in
        comparison. ``number`` performs a double-precision floating-point
        comparison *(32-bit integer before 2.0.5)*.
    * - .. _expression_value:
-     
+
        .. index::
           pair: expression; value
-        
+
        value
      - :ref:`text <text>`
      -
      - Reference value to compare node attribute against (used only with, and
        required for, operations other than ``defined`` and ``not_defined``)
    * - .. _expression_value_source:
-     
+
        .. index::
           pair: expression; value-source
-        
+
        value-source
      - :ref:`enumeration <enumeration>`
      - ``literal``
      - How the reference value is obtained. Allowed values:
-       
+
        * ``literal``: ``value`` contains the literal reference value to compare
        * ``param``: ``value`` contains the name of a resource parameter to
          compare (valid only in the context of a location constraint)
@@ -699,7 +699,7 @@ element.
 
        id
      - :ref:`id <id>`
-     - 
+     -
      - A unique name for this element (required)
    * - .. _rsc_expression_class:
 
@@ -708,7 +708,7 @@ element.
 
        class
      - :ref:`text <text>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the resource's agent
        standard matches this value
    * - .. _rsc_expression_provider:
@@ -718,7 +718,7 @@ element.
 
        provider
      - :ref:`text <text>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the resource's agent
        provider matches this value
    * - .. _rsc_expression_type:
@@ -728,7 +728,7 @@ element.
 
        type
      - :ref:`text <text>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the resource's agent
        type matches this value
 
@@ -783,7 +783,7 @@ on a resource operation name and interval. It is allowed in rules in a
 
        id
      - :ref:`id <id>`
-     - 
+     -
      - A unique name for this element (required)
    * - .. _op_expression_name:
 
@@ -792,7 +792,7 @@ on a resource operation name and interval. It is allowed in rules in a
 
        name
      - :ref:`text <text>`
-     - 
+     -
      - The expression is satisfied only if the operation's name matches this
        value (required)
    * - .. _op_expression_interval:
@@ -802,7 +802,7 @@ on a resource operation name and interval. It is allowed in rules in a
 
        interval
      - :ref:`duration <duration>`
-     - 
+     -
      - If this is set, the expression is satisfied only if the operation's
        interval matches this value
 
@@ -848,17 +848,17 @@ attributes. These have an effect only when set for the constraint's top-level
    :class: longtable
    :widths: 20 15 10 55
    :header-rows: 1
-   
+
    * - Name
      - Type
      - Default
      - Description
-   
+
    * - .. _rule_role:
-     
+
        .. index::
           pair: rule; role
-        
+
        role
      - :ref:`enumeration <enumeration>`
      - ``Started``
@@ -866,25 +866,25 @@ attributes. These have an effect only when set for the constraint's top-level
        as if ``role`` were set to this in the ``rsc_location`` element.
 
    * - .. _rule_score:
-     
+
        .. index::
           pair: rule; score
-        
+
        score
      - :ref:`score <score>`
-     - 
+     -
      - If this is set in the constraint's top-level rule, the constraint acts
        as if ``score`` were set to this in the ``rsc_location`` element.
        Only one of ``score`` and ``score-attribute`` may be set.
 
    * - .. _rule_score_attribute:
-     
+
        .. index::
           pair: rule; score-attribute
-        
+
        score-attribute
      - :ref:`text <text>`
-     - 
+     -
      - If this is set in the constraint's top-level rule, the constraint acts
        as if ``score`` were set to the value of this node attribute on each
        node where the rule is satisfied. Only one of ``score`` and

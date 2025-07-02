@@ -7,7 +7,7 @@ Install |CFS_DISTRO| |CFS_DISTRO_VER|
 Boot the Install Image
 ______________________
 
-Download the latest |CFS_DISTRO| |CFS_DISTRO_VER| DVD ISO by navigating to 
+Download the latest |CFS_DISTRO| |CFS_DISTRO_VER| DVD ISO by navigating to
 the |CFS_DISTRO| `mirrors list <https://mirrors.almalinux.org/isos.html>`_,
 selecting the latest 9.x version for your machine's architecture, selecting a
 download mirror that's close to you, and finally selecting the latest .iso file
@@ -192,13 +192,13 @@ Ensure that the machine has the static IP address you configured earlier.
 	link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
 	inet 127.0.0.1/8 scope host lo
 	   valid_lft forever preferred_lft forever
-	inet6 ::1/128 scope host 
+	inet6 ::1/128 scope host
 	   valid_lft forever preferred_lft forever
     2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
 	link/ether 52:54:00:32:cf:a9 brd ff:ff:ff:ff:ff:ff
 	inet 192.168.122.101/24 brd 192.168.122.255 scope global noprefixroute enp1s0
 	   valid_lft forever preferred_lft forever
-	inet6 fe80::c3e1:3ba:959:fa96/64 scope link noprefixroute 
+	inet6 fe80::c3e1:3ba:959:fa96/64 scope link noprefixroute
 	   valid_lft forever preferred_lft forever
 
 .. NOTE::
@@ -219,7 +219,7 @@ Next, ensure that the routes are as expected:
 .. code-block:: console
 
     [root@pcmk-1 ~]# ip route
-    default via 192.168.122.1 dev enp1s0 proto static metric 100 
+    default via 192.168.122.1 dev enp1s0 proto static metric 100
     192.168.122.0/24 dev enp1s0 proto kernel scope link src 192.168.122.101 metric 100
 
 If there is no line beginning with ``default via``, then use ``nmcli`` to add a
@@ -238,7 +238,7 @@ testing whether we can reach the gateway we configured.
     [root@pcmk-1 ~]# ping -c 1 192.168.122.1
     PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
     64 bytes from 192.168.122.1: icmp_seq=1 ttl=64 time=0.492 ms
-    
+
     --- 192.168.122.1 ping statistics ---
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
     rtt min/avg/max/mdev = 0.492/0.492/0.492/0.000 ms
@@ -250,7 +250,7 @@ Now try something external; choose a location you know should be available.
     [root@pcmk-1 ~]# ping -c 1 www.clusterlabs.org
     PING mx1.clusterlabs.org (95.217.104.78) 56(84) bytes of data.
     64 bytes from mx1.clusterlabs.org (95.217.104.78): icmp_seq=1 ttl=54 time=134 ms
-    
+
     --- mx1.clusterlabs.org ping statistics ---
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
     rtt min/avg/max/mdev = 133.987/133.987/133.987/0.000 ms
@@ -269,11 +269,11 @@ From another host, check whether we can see the new host at all:
     [gchin@gchin ~]$ ping -c 1 192.168.122.101
     PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
     64 bytes from 192.168.122.101: icmp_seq=1 ttl=64 time=0.344 ms
-    
+
     --- 192.168.122.101 ping statistics ---
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
     rtt min/avg/max/mdev = 0.344/0.344/0.344/0.000 ms
-    
+
 Next, login as ``root`` via SSH.
 
 .. code-block:: console
@@ -283,9 +283,9 @@ Next, login as ``root`` via SSH.
     ECDSA key fingerprint is SHA256:NBvcRrPDLIt39Rf0Tz4/f2Rd/FA5wUiDOd9bZ9QWWjo.
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     Warning: Permanently added '192.168.122.101' (ECDSA) to the list of known hosts.
-    root@192.168.122.101's password: 
+    root@192.168.122.101's password:
     Last login: Tue Jan 10 20:46:30 2021
-    [root@pcmk-1 ~]# 
+    [root@pcmk-1 ~]#
 
 Apply Updates
 _____________
@@ -351,7 +351,7 @@ Confirm that you can communicate between the two new nodes:
     64 bytes from 192.168.122.102: icmp_seq=1 ttl=64 time=1.22 ms
     64 bytes from 192.168.122.102: icmp_seq=2 ttl=64 time=0.795 ms
     64 bytes from 192.168.122.102: icmp_seq=3 ttl=64 time=0.751 ms
-    
+
     --- 192.168.122.102 ping statistics ---
     3 packets transmitted, 3 received, 0% packet loss, time 2054ms
     rtt min/avg/max/mdev = 0.751/0.923/1.224/0.214 ms
@@ -378,7 +378,7 @@ We can now verify the setup by again using ``ping``:
     64 bytes from pcmk-2.localdomain (192.168.122.102): icmp_seq=1 ttl=64 time=0.295 ms
     64 bytes from pcmk-2.localdomain (192.168.122.102): icmp_seq=2 ttl=64 time=0.616 ms
     64 bytes from pcmk-2.localdomain (192.168.122.102): icmp_seq=3 ttl=64 time=0.809 ms
-    
+
     --- pcmk-2.localdomain ping statistics ---
     3 packets transmitted, 3 received, 0% packet loss, time 2043ms
     rtt min/avg/max/mdev = 0.295/0.573/0.809/0.212 ms
@@ -444,10 +444,10 @@ Install the key on the other node:
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     /usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
     /usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
-    root@pcmk-2's password: 
-    
+    root@pcmk-2's password:
+
     Number of key(s) added: 1
-    
+
     Now try logging into the machine, with:   "ssh 'pcmk-2'"
     and check to make sure that only the key(s) you wanted were added.
 

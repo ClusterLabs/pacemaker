@@ -14,7 +14,7 @@ When copyright notices are added to a file, they should look like this:
 .. note:: **Copyright Notice Format**
 
    | Copyright *YYYY[-YYYY]* the Pacemaker project contributors
-   | 
+   |
    | The version control history for this file may have further details.
 
 The first *YYYY* is the year the file was *originally* published. The original

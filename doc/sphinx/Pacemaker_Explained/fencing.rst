@@ -195,7 +195,7 @@ for ``pacemaker-fenced``.
 
        stonith-timeout
      - :ref:`timeout <timeout>`
-     - 
+     -
      - This is not used by Pacemaker (see the ``pcmk_reboot_timeout``,
        ``pcmk_off_timeout``, etc., properties instead), but it may be used by
        Linux-HA fence agents.
@@ -206,7 +206,7 @@ for ``pacemaker-fenced``.
 
        pcmk_host_map
      - :ref:`text <text>`
-     - 
+     -
      - A mapping of node names to ports for devices that do not understand the
        node names. For example, ``node1:1;node2:2,3`` tells the cluster to use
        port 1 for ``node1`` and ports 2 and 3 for ``node2``. If
@@ -220,7 +220,7 @@ for ``pacemaker-fenced``.
 
        pcmk_host_list
      - :ref:`text <text>`
-     - 
+     -
      - Comma-separated list of nodes that can be targeted by this device (for
        example, ``node1,node2,node3``). If pcmk_host_check is ``static-list``,
        either this or ``pcmk_host_map`` must be set.
@@ -1134,7 +1134,7 @@ Some possible uses of topologies include:
             <!-- For pcmk-1, try poison-pill and fail back to power -->
             <fencing-level id="f-p1.1" target="pcmk-1" index="1" devices="poison-pill"/>
             <fencing-level id="f-p1.2" target="pcmk-1" index="2" devices="power"/>
-      
+
             <!-- For pcmk-2, try disk and network, and fail back to power -->
             <fencing-level id="f-p2.1" target="pcmk-2" index="1" devices="disk,network"/>
             <fencing-level id="f-p2.2" target="pcmk-2" index="2" devices="power"/>

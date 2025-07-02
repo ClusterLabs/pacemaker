@@ -72,7 +72,7 @@ Frequently Asked Questions
 
 :Q: How should I format my Git commit messages?
 :A: An example is "Feature: scheduler: wobble the frizzle better".
-   
+
     * The first part is the type of change, used to automatically generate the
       change log for the next release. Commit messages with the following will
       be included in the change log:
@@ -91,15 +91,15 @@ Frequently Asked Questions
         change log entry
       * **Refactor** for refactoring-only code changes
       * **Build** for build process changes
-    
+
     * The next part is the name of the component(s) being changed, for example,
       **controller** or **libcrmcommon** (it's more free-form, so don't sweat
       getting it exact).
-    
+
     * The rest briefly describes the change. The git project recommends the
       entire summary line stay under 50 characters, but more is fine if needed
       for clarity.
-      
+
     * Except for the most simple and obvious of changes, the summary should be
       followed by a blank line and a longer explanation of *why* the change was
       made.

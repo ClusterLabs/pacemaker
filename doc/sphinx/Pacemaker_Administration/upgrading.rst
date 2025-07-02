@@ -378,7 +378,7 @@ A more cautious approach would proceed like this:
       code. These will often be installed in a location such as
       ``/usr/share/pacemaker``, or may be obtained from the
       `source repository <https://github.com/ClusterLabs/pacemaker/tree/main/xml>`_.
-          
+
    #. Run the conversion scripts that apply to your older version, for example:
 
       .. code-block:: none
