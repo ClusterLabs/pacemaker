@@ -235,7 +235,7 @@ overhead, you may select which types of events the agent should receive.
 Alert filters are configured within a ``select`` element inside an ``alert``
 element.
 
-.. list-table:: **Possible alert filters**
+.. list-table:: **Possible Alert Filters**
    :class: longtable
    :widths: 25 75
    :header-rows: 1

@@ -66,7 +66,7 @@ An ACL *role* is a collection of permissions allowing or denying access to
 particular portions of the CIB. A role is configured with an ``acl_role``
 element in the CIB ``acls`` section.
 
-.. table:: **Properties of an acl_role element**
+.. table:: **Properties of an acl_role Element**
    :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
@@ -93,7 +93,7 @@ An ``acl_role`` element may contain any number of ``acl_permission`` elements.
    single: Access Control List (ACL); acl_permission
    pair: acl_permission; XML element
 
-.. table:: **Properties of an acl_permission element**
+.. table:: **Properties of an acl_permission Element**
    :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
@@ -194,7 +194,7 @@ ACL targets correspond to user accounts on the system.
    single: Access Control List (ACL); acl_target
    pair: acl_target; XML element
 
-.. table:: **Properties of an acl_target element**
+.. table:: **Properties of an acl_target Element**
    :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
@@ -226,7 +226,7 @@ groups apply to all users in that group *(since 2.1.5)*.
    single: Access Control List (ACL); acl_group
    pair: acl_group; XML element
 
-.. table:: **Properties of an acl_group element**
+.. table:: **Properties of an acl_group Element**
    :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
@@ -264,7 +264,7 @@ elements.
    single: Access Control List (ACL); role
    pair: role; XML element
 
-.. table:: **Properties of a role element**
+.. table:: **Properties of a role Element**
    :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
