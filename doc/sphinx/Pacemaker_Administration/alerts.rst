@@ -9,14 +9,14 @@ Alert Agents
 
 Using the Sample Alert Agents
 #############################
-   
+
 Pacemaker provides several sample alert agents, installed in
 ``/usr/share/pacemaker/alerts`` by default.
-   
+
 While these sample scripts may be copied and used as-is, they are provided
 mainly as templates to be edited to suit your purposes. See their source code
 for the full set of instance attributes they support.
-   
+
 .. topic:: Sending cluster events as SNMP v2c traps
 
    .. code-block:: xml
@@ -105,7 +105,7 @@ for the full set of instance attributes they support.
 
 Writing an Alert Agent
 ######################
-   
+
 .. index::
    single: alert; environment variables
    single: environment variable; alert agents
@@ -114,12 +114,12 @@ Writing an Alert Agent
    :class: longtable
    :widths: 30 50 20
    :header-rows: 1
-   
+
    * - Environment Variable
      - Description
      - Alert Types
    * - .. _CRM_alert_kind:
-       
+
        .. index::
           single: environment variable; CRM_alert_kind
           single: CRM_alert_kind
@@ -138,11 +138,11 @@ Writing an Alert Agent
      - Name of affected node
      - all
    * - .. _CRM_alert_node_sequence:
-     
+
        .. index::
           single: environment variable; CRM_alert_node_sequence
           single: CRM_alert_node_sequence
-       
+
        CRM_alert_node_sequence
      - A sequence number increased whenever an alert is being issued on the
        local node, which can be used to reference the order in which alerts
@@ -151,20 +151,20 @@ Writing an Alert Agent
        events. This number has no cluster-wide meaning.
      - all
    * - .. _CRM_alert_recipient:
-     
+
        .. index::
           single: environment variable; CRM_alert_recipient
           single: CRM_alert_recipient
-       
+
        CRM_alert_recipient
      - The configured recipient
      - all
    * - .. _CRM_alert_timestamp:
-     
+
        .. index::
           single: environment variable; CRM_alert_timestamp
           single: CRM_alert_timestamp
-       
+
        CRM_alert_timestamp
      - A timestamp created prior to executing the agent, in the format
        specified by the ``timestamp-format`` meta-attribute.  This allows the
@@ -173,11 +173,11 @@ Writing an Alert Agent
        potentially be delayed due to system load, etc.).
      - all
    * - .. _CRM_alert_timestamp_epoch:
-     
+
        .. index::
           single: environment variable; CRM_alert_timestamp_epoch
           single: CRM_alert_timestamp_epoch
-       
+
        CRM_alert_timestamp_epoch
      - The same time as ``CRM_alert_timestamp``, expressed as the integer
        number of seconds since January 1, 1970. This (along with
@@ -185,30 +185,30 @@ Writing an Alert Agent
        to format time in a specific way rather than let the user configure it.
      - all
    * - .. _CRM_alert_timestamp_usec:
-     
+
        .. index::
           single: environment variable; CRM_alert_timestamp_usec
           single: CRM_alert_timestamp_usec
-       
+
        CRM_alert_timestamp_usec
      - The same time as ``CRM_alert_timestamp``, expressed as the integer
        number of microseconds since ``CRM_alert_timestamp_epoch``.
      - all
    * - .. _CRM_alert_version:
-     
+
        .. index::
           single: environment variable; CRM_alert_version
           single: CRM_alert_version
-       
+
        CRM_alert_version
      - The version of Pacemaker sending the alert
      - all
    * - .. _CRM_alert_desc:
-     
+
        .. index::
           single: environment variable; CRM_alert_desc
           single: CRM_alert_desc
-       
+
        CRM_alert_desc
      - Detail about event. For ``node`` alerts, this is the node's current
        state (``member`` or ``lost``). For ``fencing`` alerts, this is a
@@ -217,38 +217,38 @@ Writing an Alert Agent
        is a readable string equivalent of ``CRM_alert_status``.
      - ``node``, ``fencing``, ``resource``
    * - .. _CRM_alert_nodeid:
-     
+
        .. index::
           single: environment variable; CRM_alert_nodeid
           single: CRM_alert_nodeid
-       
+
        CRM_alert_nodeid
      - ID of node whose status changed
      - ``node``
    * - .. _CRM_alert_rc:
-     
+
        .. index::
           single: environment variable; CRM_alert_rc
           single: CRM_alert_rc
-       
+
        CRM_alert_rc
      - The numerical return code of the fencing or resource operation
      - ``fencing``, ``resource``
    * - .. _CRM_alert_task:
-     
+
        .. index::
           single: environment variable; CRM_alert_task
           single: CRM_alert_task
-       
+
        CRM_alert_task
      - The requested fencing or resource operation
      - ``fencing``, ``resource``
    * - .. _CRM_alert_exec_time:
-     
+
        .. index::
           single: environment variable; CRM_alert_exec_time
           single: CRM_alert_exec_time
-       
+
        CRM_alert_exec_time
      - The (wall-clock) time, in milliseconds, that it took to execute the
        action. If the action timed out, ``CRM_alert_status`` will be 2,
@@ -256,84 +256,84 @@ Writing an Alert Agent
        action timeout. May not be supported on all platforms. *(since 2.0.1)*
      - ``resource``
    * - .. _CRM_alert_interval:
-     
+
        .. index::
           single: environment variable; CRM_alert_interval
           single: CRM_alert_interval
-       
+
        CRM_alert_interval
      - The interval of the resource operation
      - ``resource``
    * - .. _CRM_alert_rsc:
-     
+
        .. index::
           single: environment variable; CRM_alert_rsc
           single: CRM_alert_rsc
-       
+
        CRM_alert_rsc
      - The name of the affected resource
      - ``resource``
    * - .. _CRM_alert_status:
-     
+
        .. index::
           single: environment variable; CRM_alert_status
           single: CRM_alert_status
-       
+
        CRM_alert_status
      - A numerical code used by Pacemaker to represent the operation result
      - ``resource``
    * - .. _CRM_alert_target_rc:
-     
+
        .. index::
           single: environment variable; CRM_alert_target_rc
           single: CRM_alert_target_rc
-       
+
        CRM_alert_target_rc
      - The expected numerical return code of the operation
      - ``resource``
    * - .. _CRM_alert_attribute_name:
-     
+
        .. index::
           single: environment variable; CRM_alert_attribute_name
           single: CRM_alert_attribute_name
-       
+
        CRM_alert_attribute_name
      - The name of the node attribute that changed
      - ``attribute``
    * - .. _CRM_alert_attribute_value:
-     
+
        .. index::
           single: environment variable; CRM_alert_attribute_value
           single: CRM_alert_attribute_value
-       
+
        CRM_alert_attribute_value
      - The new value of the node attribute that changed
      - ``attribute``
 
 Special concerns when writing alert agents:
-   
+
 * Alert agents may be called with no recipient (if none is configured),
   so the agent must be able to handle this situation, even if it
   only exits in that case. (Users may modify the configuration in
   stages, and add a recipient later.)
-   
+
 * If more than one recipient is configured for an alert, the alert agent will
   be called once per recipient. If an agent is not able to run concurrently, it
   should be configured with only a single recipient. The agent is free,
   however, to interpret the recipient as a list.
-   
+
 * When a cluster event occurs, all alerts are fired off at the same time as
   separate processes. Depending on how many alerts and recipients are
   configured, and on what is done within the alert agents,
   a significant load burst may occur. The agent could be written to take
   this into consideration, for example by queueing resource-intensive actions
   into some other instance, instead of directly executing them.
-   
+
 * Alert agents are run as the |CRM_DAEMON_USER| user, which has a minimal set
   of permissions. If an agent requires additional privileges, it is
   recommended to configure ``sudo`` to allow the agent to run the necessary
   commands as another user with the appropriate privileges.
-   
+
 * As always, take care to validate and sanitize user-configured parameters,
   such as ``CRM_alert_timestamp`` (whose content is specified by the
   user-configured ``timestamp-format``), ``CRM_alert_recipient,`` and all

@@ -26,7 +26,7 @@ being managed.
 
 .. index::
    single: resource; standard
- 
+
 Resource Standards
 ##################
 
@@ -265,7 +265,7 @@ behave and can be easily set using the ``--meta`` option of the
      - Description
 
    * - .. _meta_priority:
-       
+
        .. index::
           single: priority; resource option
           single: resource; option, priority
@@ -277,7 +277,7 @@ behave and can be easily set using the ``--meta`` option of the
        resources in order to keep higher-priority ones active.
 
    * - .. _meta_critical:
-       
+
        .. index::
           single: critical; resource option
           single: resource; option, critical
@@ -292,7 +292,7 @@ behave and can be easily set using the ``--meta`` option of the
        :ref:`s-coloc-influence`. *(since 2.1.0)*
 
    * - .. _meta_target_role:
-       
+
        .. index::
           single: target-role; resource option
           single: resource; option, target-role
@@ -314,7 +314,7 @@ behave and can be easily set using the ``--meta`` option of the
 
    * - .. _meta_is_managed:
        .. _is_managed:
-       
+
        .. index::
           single: is-managed; resource option
           single: resource; option, is-managed
@@ -328,7 +328,7 @@ behave and can be easily set using the ``--meta`` option of the
 
    * - .. _meta_maintenance:
        .. _rsc_maintenance:
-       
+
        .. index::
           single: maintenance; resource option
           single: resource; option, maintenance
@@ -344,7 +344,7 @@ behave and can be easily set using the ``--meta`` option of the
 
    * - .. _meta_resource_stickiness:
        .. _resource-stickiness:
-       
+
        .. index::
           single: resource-stickiness; resource option
           single: resource; option, resource-stickiness
@@ -359,7 +359,7 @@ behave and can be easily set using the ``--meta`` option of the
 
    * - .. _meta_requires:
        .. _requires:
-       
+
        .. index::
           single: requires; resource option
           single: resource; option, requires
@@ -383,7 +383,7 @@ behave and can be easily set using the ``--meta`` option of the
          :ref:`unfenced <unfencing>`.
 
    * - .. _meta_migration_threshold:
-       
+
        .. index::
           single: migration-threshold; resource option
           single: resource; option, migration-threshold
@@ -401,7 +401,7 @@ behave and can be easily set using the ``--meta`` option of the
        ``start-failure-is-fatal`` is ``false``.
 
    * - .. _meta_failure_timeout:
-       
+
        .. index::
           single: failure-timeout; resource option
           single: resource; option, failure-timeout
@@ -422,7 +422,7 @@ behave and can be easily set using the ``--meta`` option of the
        or days is reasonable.
 
    * - .. _meta_multiple_active:
-       
+
        .. index::
           single: multiple-active; resource option
           single: resource; option, multiple-active
@@ -445,7 +445,7 @@ behave and can be easily set using the ``--meta`` option of the
          ordered after this will still need to be restarted) *(since 2.1.3)*
 
    * - .. _meta_allow_migrate:
-       
+
        .. index::
           single: allow-migrate; resource option
           single: resource; option, allow-migrate
@@ -457,7 +457,7 @@ behave and can be easily set using the ``--meta`` option of the
        needs to be moved (see :ref:`live-migration`)
 
    * - .. _meta_allow_unhealthy_nodes:
-       
+
        .. index::
           single: allow-unhealthy-nodes; resource option
           single: resource; option, allow-unhealthy-nodes
@@ -470,7 +470,7 @@ behave and can be easily set using the ``--meta`` option of the
        2.1.3)*
 
    * - .. _meta_container_attribute_target:
-       
+
        .. index::
           single: container-attribute-target; resource option
           single: resource; option, container-attribute-target
@@ -678,7 +678,7 @@ built-in **ocf:pacemaker:remote** resource agent.
      - Description
 
    * - .. _remote_server:
-       
+
        .. index::
           pair: remote node; server
 
@@ -690,7 +690,7 @@ built-in **ocf:pacemaker:remote** resource agent.
        this address.
 
    * - .. _remote_port:
-       
+
        .. index::
           pair: remote node; port
 
@@ -702,7 +702,7 @@ built-in **ocf:pacemaker:remote** resource agent.
        this port.
 
    * - .. _remote_reconnect_interval:
-       
+
        .. index::
           pair: remote node; reconnect_interval
 
@@ -749,7 +749,7 @@ node.
      - Description
 
    * - .. _meta_remote_node:
-       
+
        .. index::
           single: remote-node; resource option
           single: resource; option, remote-node
@@ -762,7 +762,7 @@ node.
        started. This value *must not* be the same as any resource or node ID.
 
    * - .. _meta_remote_addr:
-       
+
        .. index::
           single: remote-addr; resource option
           single: resource; option, remote-addr
@@ -775,7 +775,7 @@ node.
        configured to accept connections on this address.
 
    * - .. _meta_remote_port:
-       
+
        .. index::
           single: remote-port; resource option
           single: resource; option, remote-port
@@ -788,7 +788,7 @@ node.
        configured to listen on this port.
 
    * - .. _meta_remote_connect_timeout:
-       
+
        .. index::
           single: remote-connect-timeout; resource option
           single: resource; option, remote-connect-timeout

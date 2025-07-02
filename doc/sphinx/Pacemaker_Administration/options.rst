@@ -79,7 +79,7 @@ Pacemaker uses several environment variables set on the client side.
           single: environment variable; CIB_ca_file
 
        CIB_ca_file
-     - 
+     -
      - If this, :ref:`CIB_cert_file <CIB_cert_file>`, and
        :ref:`CIB_key_file <CIB_key_file>` are set, remote CIB administration
        will be encrypted using X.509 (SSL/TLS) certificates, with this root
@@ -93,7 +93,7 @@ Pacemaker uses several environment variables set on the client side.
           single: environment variable; CIB_cert_file
 
        CIB_cert_file
-     - 
+     -
      - If this, :ref:`CIB_ca_file <CIB_ca_file>`, and
        :ref:`CIB_key_file <CIB_key_file>` are set, remote CIB administration
        will be encrypted using X.509 (SSL/TLS) certificates, with this
@@ -107,7 +107,7 @@ Pacemaker uses several environment variables set on the client side.
           single: environment variable; CIB_key_file
 
        CIB_key_file
-     - 
+     -
      - If this, :ref:`CIB_ca_file <CIB_ca_file>`, and
        :ref:`CIB_cert_file <CIB_cert_file>` are set, remote CIB administration
        will be encrypted using X.509 (SSL/TLS) certificates, with this
@@ -121,7 +121,7 @@ Pacemaker uses several environment variables set on the client side.
           single: environment variable; CIB_crl_file
 
        CIB_crl_file
-     - 
+     -
      - If this, :ref:`CIB_ca_file <CIB_ca_file>`,
        :ref:`CIB_cert_file <CIB_cert_file>`, and
        :ref:`CIB_key_file <CIB_key_file>` are all set, then certificates listed

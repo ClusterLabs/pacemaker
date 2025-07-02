@@ -50,7 +50,7 @@ that will make our lives easier:
 .. code-block:: console
 
     # dnf install -y pacemaker pcs psmisc policycoreutils-python3
-    
+
 .. NOTE::
 
     This document uses ``pcs`` for cluster management. Other alternatives,
@@ -206,10 +206,10 @@ Start by taking some time to familiarize yourself with what ``pcs`` can do.
 .. code-block:: console
 
     [root@pcmk-1 ~]# pcs
-    
+
     Usage: pcs [-f file] [-h] [commands]...
     Control and configure pacemaker and corosync.
-    
+
     Options:
         -h, --help         Display usage and exit.
         -f file            Perform actions on file instead of active CIB.
