@@ -83,6 +83,7 @@ There are three approaches to upgrading a cluster, each with advantages and
 disadvantages.
 
 .. table:: **Upgrade Methods**
+   :widths: 16 14 14 14 14 14 14
 
    +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
    | Method                                            | Available| Can be   | Service| Service | Exercises| Allows   |
@@ -194,7 +195,7 @@ when upgrading a cluster node.
 
 .. list-table:: **Version Compatibility for Cluster Nodes**
    :class: longtable
-   :widths: 1 1
+   :widths: 50 50
    :header-rows: 1
 
    * - Version Being Installed
@@ -213,7 +214,7 @@ least the minimum version listed in the table below.
 
 .. list-table:: **Cluster Node Version Compatibility for Pacemaker Remote Nodes**
    :class: longtable
-   :widths: 1 1
+   :widths: 50 50
    :header-rows: 1
 
    * - Pacemaker Remote Version
