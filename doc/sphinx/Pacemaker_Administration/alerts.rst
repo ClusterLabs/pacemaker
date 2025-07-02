@@ -112,7 +112,7 @@ Writing an Alert Agent
 
 .. list-table:: **Environment variables passed to alert agents**
    :class: longtable
-   :widths: 1 3 1
+   :widths: 30 50 20
    :header-rows: 1
    
    * - Environment Variable

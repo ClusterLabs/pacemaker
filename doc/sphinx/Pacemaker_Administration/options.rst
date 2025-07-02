@@ -11,7 +11,7 @@ Pacemaker uses several environment variables set on the client side.
 
 .. list-table:: **Client-side Environment Variables**
    :class: longtable
-   :widths: 2 4 5
+   :widths: 20 30 50
    :header-rows: 1
 
    * - Environment Variable
