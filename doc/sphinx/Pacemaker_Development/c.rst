@@ -20,17 +20,20 @@ Code Organization
 
 Pacemaker's C code is organized as follows:
 
-+-----------------+-----------------------------------------------------------+
-| Directory       | Contents                                                  |
-+=================+===========================================================+
-| daemons         | the Pacemaker daemons (pacemakerd, pacemaker-based, etc.) |
-+-----------------+-----------------------------------------------------------+
-| include         | header files for library APIs                             |
-+-----------------+-----------------------------------------------------------+
-| lib             | libraries                                                 |
-+-----------------+-----------------------------------------------------------+
-| tools           | command-line tools                                        |
-+-----------------+-----------------------------------------------------------+
+.. list-table:: **C Code Organization**
+   :widths: 25 75
+   :header-rows: 1
+
+   * - Directory
+     - Contents
+   * - daemons
+     - the Pacemaker daemons (pacemakerd, pacemaker-based, etc.)
+   * - include
+     - header files for library APIs
+   * - lib
+     - libraries
+   * - tools
+     - command-line tools
 
 Source file names should be unique across the entire project, to allow for
 individual tracing via ``PCMK_trace_files``.
@@ -43,70 +46,103 @@ individual tracing via ``PCMK_trace_files``.
 Pacemaker Libraries
 ###################
 
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| Library       | Symbol  | Source        | API Headers               | Description                         |
-|               | prefix  | location      |                           |                                     |
-+===============+=========+===============+===========================+=====================================+
-| libcib        | cib     | lib/cib       | | include/crm/cib.h       | .. index::                          |
-|               |         |               | | include/crm/cib/*       |    single: C library; libcib        |
-|               |         |               |                           |    single: libcib                   |
-|               |         |               |                           |                                     |
-|               |         |               |                           | API for pacemaker-based IPC and     |
-|               |         |               |                           | the CIB                             |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| libcrmcluster | pcmk    | lib/cluster   | | include/crm/cluster.h   | .. index::                          |
-|               |         |               | | include/crm/cluster/*   |    single: C library; libcrmcluster |
-|               |         |               |                           |    single: libcrmcluster            |
-|               |         |               |                           |                                     |
-|               |         |               |                           | Abstract interface to underlying    |
-|               |         |               |                           | cluster layer                       |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| libcrmcommon  | pcmk    | lib/common    | | include/crm/common/*    | .. index::                          |
-|               |         |               | | some of include/crm/*   |    single: C library; libcrmcommon  |
-|               |         |               |                           |    single: libcrmcommon             |
-|               |         |               |                           |                                     |
-|               |         |               |                           | Everything else                     |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| libcrmservice | svc     | lib/services  | | include/crm/services.h  | .. index::                          |
-|               |         |               |                           |    single: C library; libcrmservice |
-|               |         |               |                           |    single: libcrmservice            |
-|               |         |               |                           |                                     |
-|               |         |               |                           | Abstract interface to supported     |
-|               |         |               |                           | resource types (OCF, LSB, etc.)     |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| liblrmd       | lrmd    | lib/lrmd      | | include/crm/lrmd*.h     | .. index::                          |
-|               |         |               |                           |    single: C library; liblrmd       |
-|               |         |               |                           |    single: liblrmd                  |
-|               |         |               |                           |                                     |
-|               |         |               |                           | API for pacemaker-execd IPC         |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| libpacemaker  | pcmk    | lib/pacemaker | | include/pacemaker*.h    | .. index::                          |
-|               |         |               | | include/pcmki/*         |    single: C library; libpacemaker  |
-|               |         |               |                           |    single: libpacemaker             |
-|               |         |               |                           |                                     |
-|               |         |               |                           | High-level APIs equivalent to       |
-|               |         |               |                           | command-line tool capabilities      |
-|               |         |               |                           | (and high-level internal APIs)      |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| libpe_rules   | pe      | lib/pengine   | | include/crm/pengine/*   | .. index::                          |
-|               |         |               |                           |    single: C library; libpe_rules   |
-|               |         |               |                           |    single: libpe_rules              |
-|               |         |               |                           |                                     |
-|               |         |               |                           | Deprecated APIs related to          |
-|               |         |               |                           | evaluating rules                    |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| libpe_status  | pe      | lib/pengine   | | include/crm/pengine/*   | .. index::                          |
-|               |         |               |                           |    single: C library; libpe_status  |
-|               |         |               |                           |    single: libpe_status             |
-|               |         |               |                           |                                     |
-|               |         |               |                           | Low-level scheduler functionality   |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
-| libstonithd   | stonith | lib/fencing   | | include/crm/stonith-ng.h| .. index::                          |
-|               |         |               | | include/crm/fencing/*   |    single: C library; libstonithd   |
-|               |         |               |                           |    single: libstonithd              |
-|               |         |               |                           |                                     |
-|               |         |               |                           | API for pacemaker-fenced IPC        |
-+---------------+---------+---------------+---------------------------+-------------------------------------+
+.. list-table:: **C Libraries**
+   :class: longtable
+   :widths: 15 10 15 25 35
+   :header-rows: 1
+
+   * - Library
+     - Symbol Prefix
+     - Source Location
+     - API Headers
+     - Description
+   * - libcib
+     - cib
+     - lib/cib
+     - | include/crm/cib.h
+       | include/crm/cib/
+     - .. index::
+          single: C library; libcib
+          single: libcib
+
+       API for pacemaker-based IPC and the CIB
+   * - libcrmcluster
+     - pcmk
+     - lib/cluster
+     - | include/crm/cluster.h
+       | include/crm/cluster/
+     - .. index::
+          single: C library; libcrmcluster
+          single: libcrmcluster
+
+       Abstract interface to underlying cluster layer
+   * - libcrmcommon
+     - pcmk
+     - lib/common
+     - | include/crm/common/
+       | some of include/crm/
+     - .. index::
+          single: C library; libcrmcommon
+          single: libcrmcommon
+
+       Everything else
+   * - libcrmservice
+     - services, svc
+     - lib/services
+     - include/crm/services.h
+     - .. index::
+          single: C library; libcrmservice
+          single: libcrmservice
+
+       Abstract interface to supported resource types (OCF, LSB, etc.)
+   * - liblrmd
+     - lrmd
+     - lib/lrmd
+     - include/crm/lrmd*.h
+     - .. index::
+          single: C library; liblrmd
+          single: liblrmd
+
+       API for pacemaker-execd IPC
+   * - libpacemaker
+     - pcmk
+     - lib/pacemaker
+     - | include/pacemaker*.h
+       | include/pcmki/
+     - .. index::
+          single: C library; libpacemaker
+          single: libpacemaker
+
+       High-level APIs equivalent to command-line tool capabilities
+       (and high-level internal APIs)
+   * - libpe_rules
+     - pe
+     - lib/pengine
+     - include/crm/pengine/
+     - .. index::
+          single: C library; libpe_rules
+          single: libpe_rules
+
+       Deprecated APIs related to evaluating rules
+   * - libpe_status
+     - pe
+     - lib/pengine
+     - include/crm/pengine/
+     - .. index::
+          single: C library; libpe_status
+          single: libpe_status
+
+       Low-level scheduler functionality
+   * - libstonithd
+     - stonith
+     - lib/fencing
+     - | include/crm/stonith-ng.h
+       | include/crm/fencing
+     - .. index::
+          single: C library; libstonithd
+          single: libstonithd
+
+       API for pacemaker-fenced IPC
 
 
 Public versus Internal APIs
