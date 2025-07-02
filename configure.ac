@@ -1088,18 +1088,6 @@ AC_DEFINE_UNQUOTED(XMLLINT_PATH, "$XMLLINT_PATH", xmllint command)
 
 REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
-AC_MSG_CHECKING([whether __progname and __progname_full are available])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
-                                [[__progname = "foo";
-                                  __progname_full = "foo bar";]])],
-               [
-                   have_progname="yes"
-                   AC_DEFINE(HAVE_PROGNAME, 1,
-                             [Define to 1 if processes can change their name])
-               ],
-               [have_progname="no"])
-AC_MSG_RESULT([$have_progname])
-
 dnl ========================================================================
 dnl Headers
 dnl ========================================================================
