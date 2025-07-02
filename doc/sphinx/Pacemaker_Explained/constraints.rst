@@ -40,7 +40,7 @@ ___________________
 
 .. list-table:: **Attributes of a rsc_location Element**
    :class: longtable
-   :widths: 1 1 1 4
+   :widths: 15 15 10 60
    :header-rows: 1
 
    * - Name
@@ -321,7 +321,7 @@ ___________________
 
 .. table:: **Attributes of a rsc_order Element**
    :class: longtable
-   :widths: 1 2 4
+   :widths: 15 30 55
 
    +--------------+----------------------------+-------------------------------------------------------------------+
    | Field        | Default                    | Description                                                       |
@@ -479,7 +479,7 @@ _____________________
 
 .. table:: **Attributes of a rsc_colocation Constraint**
    :class: longtable
-   :widths: 2 2 5
+   :widths: 15 30 55
 
    +----------------+----------------+--------------------------------------------------------+
    | Field          | Default        | Description                                            |
@@ -712,7 +712,7 @@ have an effect in all contexts.
 
 .. table:: **Attributes of a resource_set Element**
    :class: longtable
-   :widths: 2 2 5
+   :widths: 15 15 70
 
    +-------------+------------------+--------------------------------------------------------+
    | Field       | Default          | Description                                            |

@@ -295,7 +295,7 @@ unset to be false, and anything else to be an error.
 
 .. table:: **Node attributes with special significance**
    :class: longtable
-   :widths: 1 2
+   :widths: 30 70
 
    +----------------------------+-----------------------------------------------------+
    | Name                       | Description                                         |
@@ -434,7 +434,7 @@ an indicator of node health. Node health attributes may have one of the
 following values:
 
 .. table:: **Allowed Values for Node Health Attributes**
-   :widths: 1 4
+   :widths: 25 75
 
    +------------+--------------------------------------------------------------+
    | Value      | Intended significance                                        |
@@ -494,7 +494,7 @@ and ``green`` to scores.
 Allowed values are:
 
 .. table:: **Node Health Strategies**
-   :widths: 1 4
+   :widths: 25 75
 
    +----------------+----------------------------------------------------------+
    | Value          | Effect                                                   |

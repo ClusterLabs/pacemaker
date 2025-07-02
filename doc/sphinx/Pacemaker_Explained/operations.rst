@@ -53,7 +53,7 @@ If not specified, the default from the table below is used.
 
 .. list-table:: **Operation Properties**
    :class: longtable
-   :widths: 2 2 3 4
+   :widths: 17 13 30 40
    :header-rows: 1
 
    * - Name

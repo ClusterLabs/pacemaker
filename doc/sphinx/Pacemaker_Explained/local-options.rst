@@ -16,7 +16,7 @@ of the following types:
 
 .. list-table:: **Configuration Value Types**
    :class: longtable
-   :widths: 1 3
+   :widths: 25 75
    :header-rows: 1
 
    * - Type
@@ -203,7 +203,7 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
 
 .. list-table:: **Local Options**
    :class: longtable
-   :widths: 2 2 2 5
+   :widths: 25 15 10 50
    :header-rows: 1
 
    * - Name

@@ -168,7 +168,7 @@ These values tell the cluster which resource agent to use for the resource,
 where to find that resource agent and what standards it conforms to.
 
 .. table:: **Properties of a Primitive Resource**
-   :widths: 1 4
+   :widths: 25 75
 
    +-------------+------------------------------------------------------------------+
    | Field       | Description                                                      |
@@ -256,7 +256,7 @@ behave and can be easily set using the ``--meta`` option of the
 
 .. list-table:: **Meta-attributes of a Primitive Resource**
    :class: longtable
-   :widths: 2 2 3 5
+   :widths: 20 15 20 45
    :header-rows: 1
 
    * - Name
@@ -669,7 +669,7 @@ built-in **ocf:pacemaker:remote** resource agent.
 
 .. list-table:: **ocf:pacemaker:remote Instance Attributes**
    :class: longtable
-   :widths: 2 2 3 5
+   :widths: 25 10 15 50
    :header-rows: 1
 
    * - Name
@@ -740,7 +740,7 @@ node.
 
 .. list-table:: **Guest node meta-attributes**
    :class: longtable
-   :widths: 2 2 3 5
+   :widths: 25 10 20 45
    :header-rows: 1
 
    * - Name
