@@ -39,7 +39,7 @@ allow the cluster to determine whether the node is healthy.
    
 .. list-table:: **Attributes of a node_state Element**
    :class: longtable
-   :widths: 1 1 3
+   :widths: 20 20 60
    :header-rows: 1
 
    * - Name
@@ -185,7 +185,7 @@ recorded, just enough to determine the resource's state.)
 
 .. list-table:: **Attributes of an lrm_rsc_op element**
    :class: longtable
-   :widths: 1 1 3
+   :widths: 20 20 60
    :header-rows: 1
 
    * - Name

@@ -32,7 +32,7 @@ Each context that supports rules may contain a single ``rule`` element.
 
 .. list-table:: **Attributes of a rule Element**
    :class: longtable
-   :widths: 2 2 2 5
+   :widths: 15 15 10 60
    :header-rows: 1
    
    * - Name
@@ -118,7 +118,7 @@ It may contain a ``date_spec`` or ``duration`` element depending on the
 
 .. list-table:: **Attributes of a date_expression Element**
    :class: longtable
-   :widths: 1 1 1 4
+   :widths: 15 15 20 50
    :header-rows: 1
 
    * - Name
@@ -194,7 +194,7 @@ combination of dates and times that satisfy the expression.
 
 .. list-table:: **Attributes of a date_spec Element**
    :class: longtable
-   :widths: 1 1 1 4
+   :widths: 15 15 10 60
    :header-rows: 1
 
    * - Name
@@ -357,7 +357,7 @@ ending value for ``in_range`` operations when ``end`` is not supplied.
 
 .. list-table:: **Attributes of a duration Element**
    :class: longtable
-   :widths: 1 1 1 4
+   :widths: 15 15 10 60
    :header-rows: 1
 
    * - Name
@@ -542,7 +542,7 @@ node attribute. It is allowed in rules in location constraints and in
 
 .. list-table:: **Attributes of an expression Element**
    :class: longtable
-   :widths: 1 1 3 5
+   :widths: 15 15 30 40
    :header-rows: 1
    
    * - Name
@@ -645,7 +645,7 @@ in rule expressions.
 
 .. list-table:: **Built-in Node Attributes**
    :class: longtable
-   :widths: 1 4
+   :widths: 25 75
    :header-rows: 1
 
    * - Name
@@ -685,7 +685,7 @@ element.
 
 .. list-table:: **Attributes of a rsc_expression Element**
    :class: longtable
-   :widths: 1 1 1 4
+   :widths: 15 15 10 60
    :header-rows: 1
 
    * - Name
@@ -769,7 +769,7 @@ on a resource operation name and interval. It is allowed in rules in a
 
 .. list-table:: **Attributes of an op_expression Element**
    :class: longtable
-   :widths: 1 1 1 4
+   :widths: 15 15 10 60
    :header-rows: 1
 
    * - Name
@@ -846,7 +846,7 @@ attributes. These have an effect only when set for the constraint's top-level
 
 .. list-table:: **Extra Attributes of a rule Element in a Location Constraint**
    :class: longtable
-   :widths: 2 2 1 5
+   :widths: 20 15 10 55
    :header-rows: 1
    
    * - Name
