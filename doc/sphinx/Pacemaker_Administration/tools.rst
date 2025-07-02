@@ -489,6 +489,7 @@ To understand the differences, it helps to understand the various types of node
 attribute.
 
 .. table:: **Types of Node Attributes**
+   :widths: 20 16 16 16 16 16
 
    +-----------+----------+-------------------+------------------+----------------+----------------+
    | Type      | Recorded | Recorded in       | Survive full     | Manageable by  | Manageable by  |
