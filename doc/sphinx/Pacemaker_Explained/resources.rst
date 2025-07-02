@@ -254,7 +254,7 @@ Meta-attributes are used by the cluster to decide how a resource should
 behave and can be easily set using the ``--meta`` option of the
 **crm_resource** command.
 
-.. list-table:: **Meta-attributes of a Primitive Resource**
+.. list-table:: **Meta-Attributes of a Primitive Resource**
    :class: longtable
    :widths: 20 15 20 45
    :header-rows: 1
@@ -738,7 +738,7 @@ supported by **VirtualDomain** may be used to create guest nodes; if the guest
 can survive the hypervisor being fenced, it is unsuitable for use as a guest
 node.
 
-.. list-table:: **Guest node meta-attributes**
+.. list-table:: **Guest Node Meta-Attributes**
    :class: longtable
    :widths: 25 10 20 45
    :header-rows: 1

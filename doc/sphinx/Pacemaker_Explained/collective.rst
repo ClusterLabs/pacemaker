@@ -241,7 +241,7 @@ _____________
 :ref:`Options <resource_options>` inherited from primitive resources:
 ``priority, target-role, is-managed``
 
-.. table:: **Clone-specific configuration options**
+.. table:: **Clone-Specific Configuration Options**
    :class: longtable
    :widths: 20 20 60
 
@@ -724,7 +724,7 @@ A bundle must contain exactly one ``docker`` or ``podman`` element.
 Bundle Container Properties
 ___________________________
 
-.. table:: **XML attributes of a docker or podman Element**
+.. table:: **XML Attributes of a docker or podman Element**
    :class: longtable
    :widths: 15 40 45
 
@@ -836,7 +836,7 @@ A bundle may optionally contain one ``<network>`` element.
    pair: XML element; network
    single: bundle; network
 
-.. table:: **XML attributes of a network Element**
+.. table:: **XML Attributes of a network Element**
    :widths: 20 20 60
 
    +----------------+---------+------------------------------------------------------------+

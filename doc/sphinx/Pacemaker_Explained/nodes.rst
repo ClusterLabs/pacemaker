@@ -293,7 +293,7 @@ For true/false values, the cluster considers a value of "1", "y", "yes", "on",
 or "true" (case-insensitively) to be true, "0", "n", "no", "off", "false", or
 unset to be false, and anything else to be an error.
 
-.. table:: **Node attributes with special significance**
+.. table:: **Node Attributes With Special Significance**
    :class: longtable
    :widths: 30 70
 

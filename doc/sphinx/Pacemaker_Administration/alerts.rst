@@ -110,7 +110,7 @@ Writing an Alert Agent
    single: alert; environment variables
    single: environment variable; alert agents
 
-.. list-table:: **Environment variables passed to alert agents**
+.. list-table:: **Environment Variables Passed to Alert Agents**
    :class: longtable
    :widths: 30 50 20
    :header-rows: 1

@@ -183,7 +183,7 @@ Each ``lrm_resource`` element contains an ``lrm_rsc_op`` element for each
 recorded action performed for that resource on that node. (Not all actions are
 recorded, just enough to determine the resource's state.)
 
-.. list-table:: **Attributes of an lrm_rsc_op element**
+.. list-table:: **Attributes of an lrm_rsc_op Element**
    :class: longtable
    :widths: 20 20 60
    :header-rows: 1
