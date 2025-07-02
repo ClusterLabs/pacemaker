@@ -193,7 +193,7 @@ load_env_vars(const char *filename)
 }
 
 void
-remoted_spawn_pidone(int argc, char **argv, char **envp)
+remoted_spawn_pidone(int argc, char **argv)
 {
     sigset_t set;
 
@@ -254,47 +254,25 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
     /* Parent becomes the reaper of zombie processes */
     /* Safe to initialize logging now if needed */
 
-#  ifdef HAVE_PROGNAME
-    /* Differentiate ourselves in the 'ps' output */
-    {
-        char *p;
-        int i, maxlen;
-        char *LastArgv = NULL;
-        const char *name = "pcmk-init";
-
-        for (i = 0; i < argc; i++) {
-            if (!i || (LastArgv + 1 == argv[i]))
-                LastArgv = argv[i] + strlen(argv[i]);
-        }
-
-        for (i = 0; envp[i] != NULL; i++) {
-            if ((LastArgv + 1) == envp[i]) {
-                LastArgv = envp[i] + strlen(envp[i]);
-            }
-        }
-
-        maxlen = (LastArgv - argv[0]) - 2;
-
-        i = strlen(name);
-
-        /* We can overwrite individual argv[] arguments */
-        snprintf(argv[0], maxlen, "%s", name);
-
-        /* Now zero out everything else */
-        p = &argv[0][i];
-        while (p < LastArgv) {
-            *p++ = '\0';
-        }
-        argv[1] = NULL;
+    /* Differentiate the parent from the child, which does the real
+     * pacemaker-remoted work, in the output of the `ps` command.
+     *
+     * strncpy() pads argv[0] with '\0' after copying "pcmk-init" if there is
+     * more space to fill. In practice argv[0] should always be longer than
+     * "pcmk-init", but use strlen() for safety to ensure null termination.
+     *
+     * Zero out the other argv members.
+     */
+    strncpy(argv[0], "pcmk-init", strlen(argv[0]));
+    for (int i = 1; i < argc; i++) {
+        memset(argv[i], '\0', strlen(argv[i]));
     }
-#  endif // HAVE_PROGNAME
 
     while (1) {
-        int sig;
-        size_t i;
+        int sig = 0;
 
         sigwait(&set, &sig);
-        for (i = 0; i < PCMK__NELEM(sigmap); i++) {
+        for (int i = 0; i < PCMK__NELEM(sigmap); i++) {
             if (sigmap[i].sig == sig) {
                 sigmap[i].handler();
                 break;

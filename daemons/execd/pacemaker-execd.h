@@ -96,7 +96,7 @@ void ipc_proxy_remove_provider(pcmk__client_t *client);
 void ipc_proxy_forward_client(pcmk__client_t *client, xmlNode *xml);
 pcmk__client_t *ipc_proxy_get_provider(void);
 int ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy);
-void remoted_spawn_pidone(int argc, char **argv, char **envp);
+void remoted_spawn_pidone(int argc, char **argv);
 void remoted_request_cib_schema_files(void);
 #endif
 
