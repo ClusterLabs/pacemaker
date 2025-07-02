@@ -193,7 +193,7 @@ load_env_vars(const char *filename)
 }
 
 void
-remoted_spawn_pidone(int argc, char **argv, char **envp)
+remoted_spawn_pidone(int argc, char **argv)
 {
     sigset_t set;
 
@@ -254,42 +254,19 @@ remoted_spawn_pidone(int argc, char **argv, char **envp)
     /* Parent becomes the reaper of zombie processes */
     /* Safe to initialize logging now if needed */
 
-    /* Differentiate ourselves in the 'ps' output */
-
-    /* @TODO This seems way too complicated, and it's unclear why we're
-     * overwriting envp and why that's safe to do.
+    /* Differentiate the parent from the child, which does the real
+     * pacemaker-remoted work, in the output of the `ps` command.
+     *
+     * strncpy() pads argv[0] with '\0' after copying "pcmk-init" if there is
+     * more space to fill. In practice argv[0] should always be longer than
+     * "pcmk-init", but use strlen() for safety to ensure null termination.
+     *
+     * Zero out the other argv members.
      */
-    {
-#define PROG_NAME "pcmk-init"
-        char *p = NULL;
-        int maxlen = 0;
-        char *last_argv = argv[0] + strlen(argv[0]);
-
-        for (int i = 1; i < argc; i++) {
-            if (argv[i] == (last_argv + 1)) {
-                last_argv = argv[i] + strlen(argv[i]);
-            }
-        }
-
-        for (int i = 0; envp[i] != NULL; i++) {
-            if (envp[i] == (last_argv + 1)) {
-                last_argv = envp[i] + strlen(envp[i]);
-            }
-        }
-
-        maxlen = (last_argv - argv[0]) - 2;
-
-        /* We can overwrite individual argv[] arguments */
-        pcmk__assert(snprintf(argv[0], maxlen, "%s", PROG_NAME) >= 0);
-
-        /* Now zero out everything else */
-        p = &argv[0][sizeof(PROG_NAME) - 1];
-        while (p < last_argv) {
-            *p++ = '\0';
-        }
-        argv[1] = NULL;
+    strncpy(argv[0], "pcmk-init", strlen(argv[0]));
+    for (int i = 1; i < argc; i++) {
+        memset(argv[i], '\0', strlen(argv[i]));
     }
-#undef PROG_NAME
 
     while (1) {
         int sig = 0;

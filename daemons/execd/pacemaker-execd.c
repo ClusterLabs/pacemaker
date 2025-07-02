@@ -449,7 +449,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 }
 
 int
-main(int argc, char **argv, char **envp)
+main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -467,7 +467,7 @@ main(int argc, char **argv, char **envp)
 
 #ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
-    remoted_spawn_pidone(argc, argv, envp);
+    remoted_spawn_pidone(argc, argv);
 #endif
 
     args = pcmk__new_common_args(SUMMARY);
