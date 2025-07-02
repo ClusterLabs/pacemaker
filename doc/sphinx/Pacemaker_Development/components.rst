@@ -40,7 +40,7 @@ progresses from the DC's point of view as follows:
 
 * The DC sends the node a `join offer` (``CRM_OP_JOIN_OFFER``), and the node
   proceeds to ``controld_join_welcomed``. This can happen in three ways:
-  
+
   * The joining node will send a `join announce` (``CRM_OP_JOIN_ANNOUNCE``) at
     its controller startup, and the DC will reply to that with a join offer.
   * When the DC's peer status callback notices that the node has joined the

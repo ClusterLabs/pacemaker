@@ -92,7 +92,7 @@ The log messages immediately before the "saving inputs" message will include
 any actions that the scheduler thinks need to be done.
 
 .. important::
-   
+
    Any actions that have already been initiated must complete (or time out)
    before a new transition can be calculated.
 

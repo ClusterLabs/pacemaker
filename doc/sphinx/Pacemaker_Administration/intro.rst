@@ -6,7 +6,7 @@ The Scope of this Document
 
 The purpose of this document is to help system administrators learn how to
 manage a Pacemaker cluster.
-      
+
 System administrators may be interested in other parts of the
 `Pacemaker documentation set <https://www.clusterlabs.org/pacemaker/doc/>`_
 such as *Clusters from Scratch*, a step-by-step guide to setting up an example

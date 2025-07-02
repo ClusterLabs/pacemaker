@@ -22,7 +22,7 @@ One of the most common elements of a cluster is a set of resources
 that need to be located together, start sequentially, and stop in the
 reverse order.  To simplify this configuration, we support the concept
 of groups.
-   
+
 .. topic:: A group of two primitive resources
 
    .. code-block:: xml
@@ -34,26 +34,26 @@ of groups.
           </instance_attributes>
          </primitive>
          <primitive id="Email" class="systemd" type="exim"/>
-      </group> 
-   
+      </group>
+
 Although the example above contains only two resources, there is no
 limit to the number of resources a group can contain.  The example is
 also sufficient to explain the fundamental properties of a group:
-   
+
 * Resources are started in the order they appear in (**Public-IP** first,
   then **Email**)
 * Resources are stopped in the reverse order to which they appear in
   (**Email** first, then **Public-IP**)
-   
+
 If a resource in the group can't run anywhere, then nothing after that
 is allowed to run, too.
-   
+
 * If **Public-IP** can't run anywhere, neither can **Email**;
 * but if **Email** can't run anywhere, this does not affect **Public-IP**
   in any way
-   
+
 The group above is logically equivalent to writing:
-   
+
 .. topic:: How the cluster sees a group resource
 
    .. code-block:: xml
@@ -71,7 +71,7 @@ The group above is logically equivalent to writing:
             <rsc_colocation id="xxx" rsc="Email" with-rsc="Public-IP" score="INFINITY"/>
             <rsc_order id="yyy" first="Public-IP" then="Email"/>
          </constraints>
-      </configuration> 
+      </configuration>
 
 Obviously as the group grows bigger, the reduced configuration effort
 can become significant.
@@ -101,7 +101,7 @@ ________________
    | description | .. index::                                                       |
    |             |    single: group; attribute, description                         |
    |             |    single: attribute; description (group)                        |
-   |             |    single: description; group attribute                          |   
+   |             |    single: description; group attribute                          |
    |             |                                                                  |
    |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
@@ -112,26 +112,26 @@ _____________
 Groups inherit the ``priority``, ``target-role``, and ``is-managed`` properties
 from primitive resources. See :ref:`resource_options` for information about
 those properties.
-   
+
 Group Instance Attributes
 _________________________
 
 Groups have no instance attributes. However, any that are set for the group
 object will be inherited by the group's children.
-   
+
 Group Contents
 ______________
 
 Groups may only contain a collection of cluster resources (see
 :ref:`primitive-resource`).  To refer to a child of a group resource, just use
 the child's ``id`` instead of the group's.
-   
+
 Group Constraints
 _________________
-   
+
 Although it is possible to reference a group's children in
 constraints, it is usually preferable to reference the group itself.
-   
+
 .. topic:: Some constraints involving groups
 
    .. code-block:: xml
@@ -140,14 +140,14 @@ constraints, it is usually preferable to reference the group itself.
           <rsc_location id="group-prefers-node1" rsc="shortcut" node="node1" score="500"/>
           <rsc_colocation id="webserver-with-group" rsc="Webserver" with-rsc="shortcut"/>
           <rsc_order id="start-group-then-webserver" first="Webserver" then="shortcut"/>
-      </constraints> 
+      </constraints>
 
 .. index::
    pair: resource-stickiness; group
 
 Group Stickiness
 ________________
-   
+
 Stickiness, the measure of how much a resource wants to stay where it
 is, is additive in groups.  Every active resource of the group will
 contribute its stickiness value to the group's total.  So if the
@@ -158,7 +158,7 @@ current location with a score of 500.
 .. index::
    single: clone
    single: resource; clone
-   
+
 .. _s-resource-clone:
 
 Clones - Resources That Can Have Multiple Active Instances
@@ -167,16 +167,16 @@ Clones - Resources That Can Have Multiple Active Instances
 *Clone* resources are resources that can have more than one copy active at the
 same time. This allows you, for example, to run a copy of a daemon on every
 node. You can clone any primitive or group resource [#]_.
-   
+
 Anonymous versus Unique Clones
 ______________________________
-   
+
 A clone resource is configured to be either *anonymous* or *globally unique*.
-   
+
 Anonymous clones are the simplest. These behave completely identically
 everywhere they are running. Because of this, there can be only one instance of
 an anonymous clone active per node.
-         
+
 The instances of globally unique clones are distinct entities. All instances
 are launched identically, but one instance of the clone is not identical to any
 other instance, whether running on the same node or a different node. As an
@@ -200,17 +200,17 @@ Services that support such a special role have various terms for the special
 role and the default role: primary and secondary, master and replica,
 controller and worker, etc. Pacemaker uses the terms *promoted* and
 *unpromoted* to be agnostic to what the service calls them or what they do.
-   
+
 All that Pacemaker cares about is that an instance comes up in the unpromoted role
 when started, and the resource agent supports the ``promote`` and ``demote`` actions
 to manage entering and exiting the promoted role.
 
 .. index::
    pair: XML element; clone
-   
+
 Clone Properties
 ________________
-   
+
 .. table:: **Properties of a Clone Resource**
    :widths: 25 75
 
@@ -227,7 +227,7 @@ ________________
    | description | .. index::                                                       |
    |             |    single: clone; attribute, description                         |
    |             |    single: attribute; description (clone)                        |
-   |             |    single: description; clone attribute                          |   
+   |             |    single: description; clone attribute                          |
    |             |                                                                  |
    |             | Arbitrary text for user's use (ignored by Pacemaker)             |
    +-------------+------------------------------------------------------------------+
@@ -240,7 +240,7 @@ _____________
 
 :ref:`Options <resource_options>` inherited from primitive resources:
 ``priority, target-role, is-managed``
-   
+
 .. table:: **Clone-specific configuration options**
    :class: longtable
    :widths: 20 20 60
@@ -349,7 +349,7 @@ _____________
    |                   |                 | is the number of instances that can be promoted at    |
    |                   |                 | one time on a single node (up to ``clone-node-max``)  |
    +-------------------+-----------------+-------------------------------------------------------+
-   
+
 .. note:: **Deprecated Terminology**
 
    In older documentation and online examples, you may see promotable clones
@@ -363,12 +363,12 @@ _____________
    * Using ``Master`` as a role name instead of ``Promoted``
    * Using ``Slave`` as a role name instead of ``Unpromoted``
 
-   
+
 Clone Contents
 ______________
-   
+
 Clones must contain exactly one primitive or group resource.
-   
+
 .. topic:: A clone that runs a web server on all nodes
 
    .. code-block:: xml
@@ -379,32 +379,32 @@ Clones must contain exactly one primitive or group resource.
                  <op id="apache-monitor" name="monitor" interval="30"/>
               </operations>
           </primitive>
-      </clone> 
+      </clone>
 
 .. warning::
 
    You should never reference the name of a clone's child (the primitive or group
    resource being cloned). If you think you need to do this, you probably need to
    re-evaluate your design.
-   
+
 Clone Instance Attribute
 ________________________
-   
+
 Clones have no instance attributes; however, any that are set here will be
 inherited by the clone's child.
-   
+
 .. index::
    single: clone; constraint
 
 Clone Constraints
 _________________
-   
+
 In most cases, a clone will have a single instance on each active cluster
 node.  If this is not the case, you can indicate which nodes the
 cluster should preferentially assign copies to with resource location
 constraints.  These constraints are written no differently from those
 for primitive resources except that the clone's **id** is used.
-   
+
 .. topic:: Some constraints involving clones
 
    .. code-block:: xml
@@ -413,8 +413,8 @@ for primitive resources except that the clone's **id** is used.
           <rsc_location id="clone-prefers-node1" rsc="apache-clone" node="node1" score="500"/>
           <rsc_colocation id="stats-with-clone" rsc="apache-stats" with="apache-clone"/>
           <rsc_order id="start-clone-then-stats" first="apache-clone" then="apache-stats"/>
-      </constraints> 
-   
+      </constraints>
+
 Ordering constraints behave slightly differently for clones.  In the
 example above, ``apache-stats`` will wait until all copies of ``apache-clone``
 that need to be started have done so before being started itself.
@@ -431,7 +431,7 @@ Colocation between clones is also possible.  If one clone **A** is colocated
 with another clone **B**, the set of allowed locations for **A** is limited to
 nodes on which **B** is (or will be) active.  Placement is then performed
 normally.
-   
+
 .. index::
    single: promotable clone; constraint
 
@@ -439,13 +439,13 @@ normally.
 
 Promotable Clone Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   
+
 For promotable clone resources, the ``first-action`` and/or ``then-action`` fields
 for ordering constraints may be set to ``promote`` or ``demote`` to constrain the
 promoted role, and colocation constraints may contain ``rsc-role`` and/or
 ``with-rsc-role`` fields.
 
-.. topic:: Constraints involving promotable clone resources       
+.. topic:: Constraints involving promotable clone resources
 
    .. code-block:: xml
 
@@ -458,7 +458,7 @@ promoted role, and colocation constraints may contain ``rsc-role`` and/or
          <rsc_order id="start-db-before-backup" first="database" then="backup"/>
          <rsc_order id="promote-db-then-app" first="database" first-action="promote"
            then="myApp" then-action="start"/>
-      </constraints> 
+      </constraints>
 
 In the example above, **myApp** will wait until one of the database
 copies has been started and promoted before being started
@@ -479,7 +479,7 @@ possible.  In such cases, the set of allowed locations for the **rsc**
 clone is (after role filtering) limited to nodes on which the
 ``with-rsc`` promotable clone resource is (or will be) in the specified role.
 Placement is then performed as normal.
-   
+
 Using Promotable Clone Resources in Colocation Sets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -489,7 +489,7 @@ inside a colocation constraint, the resource set may take a ``role`` attribute.
 In the following example, an instance of **B** may be promoted only on a node
 where **A** is in the promoted role. Additionally, resources **C** and **D**
 must be located on a node where both **A** and **B** are promoted.
-   
+
 .. topic:: Colocate C and D with A's and B's promoted instances
 
    .. code-block:: xml
@@ -506,7 +506,7 @@ must be located on a node where both **A** and **B** are promoted.
             </resource_set>
           </rsc_colocation>
       </constraints>
-   
+
 Using Promotable Clone Resources in Ordered Sets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -530,25 +530,25 @@ attribute.
             </resource_set>
           </rsc_order>
       </constraints>
-   
+
 In the above example, **B** cannot be promoted until **A** has been promoted.
 Additionally, resources **C** and **D** must wait until **A** and **B** have
 been promoted before they can start.
 
 .. index::
    pair: resource-stickiness; clone
-   
+
 .. _s-clone-stickiness:
 
 Clone Stickiness
 ________________
-   
+
 To achieve stable assignments, clones are slightly sticky by default. If no
 value for ``resource-stickiness`` is provided, the clone will use a value of 1.
 Being a small value, it causes minimal disturbance to the score calculations of
 other resources but is enough to prevent Pacemaker from needlessly moving
 instances around the cluster.
-   
+
 .. note::
 
    For globally unique clones, this may result in multiple instances of the
@@ -557,7 +557,7 @@ instances around the cluster.
    If you do not want this behavior, specify a ``resource-stickiness`` of 0
    for the clone temporarily and let the cluster adjust, then set it back
    to 1 if you want the default behavior to apply again.
-   
+
 .. important::
 
    If ``resource-stickiness`` is set in the ``rsc_defaults`` section, it will
@@ -574,7 +574,7 @@ active, but also that its actual role matches its intended one.
 
 Define two monitoring actions: the usual one will cover the unpromoted role,
 and an additional one with ``role="Promoted"`` will cover the promoted role.
-   
+
 .. topic:: Monitoring both states of a promotable clone resource
 
    .. code-block:: xml
@@ -589,8 +589,8 @@ and an additional one with ``role="Promoted"`` will cover the promoted role.
            <op id="public-ip-promoted-check" name="monitor" interval="61" role="Promoted"/>
           </operations>
          </primitive>
-      </clone> 
-   
+      </clone>
+
 .. important::
 
    It is crucial that *every* monitor operation has a different interval!
@@ -599,7 +599,7 @@ and an additional one with ``role="Promoted"`` will cover the promoted role.
    had the same monitor interval for both roles, Pacemaker would ignore the
    role when checking the status -- which would cause unexpected return
    codes, and therefore unnecessary complications.
-   
+
 .. _s-promotion-scores:
 
 Determining Which Instance is Promoted
@@ -618,7 +618,7 @@ ways:
 
 * Constraints: Location constraints can indicate which nodes are most preferred
   to be promoted.
-   
+
 .. topic:: Explicitly preferring node1 to be promoted
 
    .. code-block:: xml
@@ -627,14 +627,14 @@ ways:
           <rule id="promoted-rule" score="100" role="Promoted">
             <expression id="promoted-exp" attribute="#uname" operation="eq" value="node1"/>
           </rule>
-      </rsc_location> 
+      </rsc_location>
 
 .. index:
    single: bundle
    single: resource; bundle
    pair: container; Docker
    pair: container; podman
-   
+
 .. _s-resource-bundle:
 
 Bundles - Containerized Resources
@@ -643,10 +643,10 @@ Bundles - Containerized Resources
 Pacemaker supports a special syntax for launching a service inside a
 `container <https://en.wikipedia.org/wiki/Operating-system-level_virtualization>`_
 with any infrastructure it requires: the *bundle*.
-   
+
 Pacemaker bundles support `Docker <https://www.docker.com/>`_ and
 `podman <https://podman.io/>`_ *(since 2.0.1)* container technologies. [#]_
-   
+
 .. topic:: A bundle for a containerized web server
 
    .. code-block:: xml
@@ -677,7 +677,7 @@ Pacemaker bundles support `Docker <https://www.docker.com/>`_ and
 
 Bundle Prerequisites
 ____________________
-   
+
 Before configuring a bundle in Pacemaker, the user must install the appropriate
 container launch technology (Docker or podman), and supply a fully configured
 container image, on every node allowed to run the bundle.
@@ -689,10 +689,10 @@ the bundle.
 
 .. index::
    pair: XML element; bundle
-   
+
 Bundle Properties
 _________________
-   
+
 .. table:: **XML Attributes of a bundle Element**
    :widths: 25 75
 
@@ -720,14 +720,14 @@ A bundle must contain exactly one ``docker`` or ``podman`` element.
 .. index::
    pair: XML element; docker
    pair: XML element; podman
-   
+
 Bundle Container Properties
 ___________________________
-   
+
 .. table:: **XML attributes of a docker or podman Element**
    :class: longtable
    :widths: 15 40 45
-   
+
    +-------------------+------------------------------------+---------------------------------------------------+
    | Attribute         | Default                            | Description                                       |
    +===================+====================================+===================================================+
@@ -815,30 +815,30 @@ ___________________________
    |                   |                                    | Extra command-line options to pass to the         |
    |                   |                                    | ``docker run`` or ``podman run`` command          |
    +-------------------+------------------------------------+---------------------------------------------------+
-   
+
 .. note::
 
    Considerations when using cluster configurations or container images from
    Pacemaker 1.1:
-   
+
    * If the container image has a pre-2.0.0 version of Pacemaker, set ``run-command``
      to ``/usr/sbin/pacemaker_remoted`` (note the underbar instead of dash).
-   
+
    * ``masters`` is accepted as an alias for ``promoted-max``, but is deprecated since
      2.0.0, and support for it will be removed in a future version.
 
 Bundle Network Properties
 _________________________
-   
+
 A bundle may optionally contain one ``<network>`` element.
 
 .. index::
    pair: XML element; network
    single: bundle; network
-   
+
 .. table:: **XML attributes of a network Element**
    :widths: 20 20 60
-   
+
    +----------------+---------+------------------------------------------------------------+
    | Attribute      | Default | Description                                                |
    +================+=========+============================================================+
@@ -901,7 +901,7 @@ A bundle may optionally contain one ``<network>`` element.
    |                |         | environment variable set on the host or in the container   |
    |                |         | is ignored for bundle connections.                         |
    +----------------+---------+------------------------------------------------------------+
-   
+
 .. _s-resource-bundle-note-replica-names:
 
 .. note::
@@ -912,13 +912,13 @@ A bundle may optionally contain one ``<network>`` element.
 
 .. index::
    pair: XML element; port-mapping
-   
+
 Additionally, a ``network`` element may optionally contain one or more
 ``port-mapping`` elements.
-   
+
 .. table:: **Attributes of a port-mapping Element**
    :widths: 20 20 60
-   
+
    +---------------+-------------------+------------------------------------------------------+
    | Attribute     | Default           | Description                                          |
    +===============+===================+======================================================+
@@ -974,19 +974,19 @@ Additionally, a ``network`` element may optionally contain one or more
    pair: XML element; storage
    pair: XML element; storage-mapping
    single: bundle; storage
-   
+
 .. _s-bundle-storage:
 
 Bundle Storage Properties
 _________________________
-   
+
 A bundle may optionally contain one ``storage`` element. A ``storage`` element
 has no properties of its own, but may contain one or more ``storage-mapping``
 elements.
-   
+
 .. table:: **Attributes of a storage-mapping Element**
    :widths: 20 20 60
-   
+
    +-----------------+---------+-------------------------------------------------------------+
    | Attribute       | Default | Description                                                 |
    +=================+=========+=============================================================+
@@ -1036,13 +1036,13 @@ elements.
    |                 |         | A comma-separated list of file system mount                 |
    |                 |         | options to use when mapping the storage                     |
    +-----------------+---------+-------------------------------------------------------------+
-   
+
 .. note::
 
    Pacemaker does not define the behavior if the source directory does not already
    exist on the host. However, it is expected that the container technology and/or
    its resource agent will create the source directory in that case.
-   
+
 .. note::
 
    If the bundle contains a ``primitive``,
@@ -1051,12 +1051,12 @@ elements.
    and ``source-dir-root=/var/log/pacemaker/bundles target-dir=/var/log`` into the
    container, so it is not necessary to specify those paths in a
    ``storage-mapping``.
-   
+
 .. important::
 
    The ``PCMK_authkey_location`` environment variable must not be set to anything
    other than the default of ``/etc/pacemaker/authkey`` on any node in the cluster.
-   
+
 .. important::
 
    If SELinux is used in enforcing mode on the host, you must ensure the container
@@ -1066,10 +1066,10 @@ elements.
 
 .. index::
    single: bundle; primitive
-   
+
 Bundle Primitive
 ________________
-   
+
 A bundle may optionally contain one :ref:`primitive <primitive-resource>`
 resource. The primitive may have operations, instance attributes, and
 meta-attributes defined, as usual.
@@ -1085,12 +1085,12 @@ If the bundle has more than one container instance (replica), the primitive
 resource will function as an implicit :ref:`clone <s-resource-clone>` -- a
 :ref:`promotable clone <s-resource-promotable>` if the bundle has ``promoted-max``
 greater than zero.
-    
+
 .. note::
 
    If you want to pass environment variables to a bundle's Pacemaker Remote
    connection or primitive, you have two options:
-   
+
    * Environment variables whose value is the same regardless of the underlying host
      may be set using the container element's ``options`` attribute.
    * If you want variables to have host-specific values, you can use the
@@ -1099,12 +1099,12 @@ greater than zero.
      Pacemaker Remote will parse this file as a shell-like format, with
      variables set as NAME=VALUE, ignoring blank lines and comments starting
      with "#".
-   
+
 .. important::
 
    When a bundle has a ``primitive``, Pacemaker on all cluster nodes must be able to
    contact Pacemaker Remote inside the bundle's containers.
-   
+
    * The containers must have an accessible network (for example, ``network`` should
      not be set to "none" with a ``primitive``).
    * The default, using a distinct network space inside the container, works in
@@ -1114,7 +1114,7 @@ greater than zero.
      ``network`` to "host"), a unique ``control-port`` should be specified for each
      bundle. Any firewall must allow access from all cluster nodes to the
      ``control-port`` on all cluster and remote node IPs.
-   
+
 .. index::
    single: bundle; node attributes
 
@@ -1122,7 +1122,7 @@ greater than zero.
 
 Bundle Node Attributes
 ______________________
-   
+
 If the bundle has a ``primitive``, the primitive's resource agent may want to set
 node attributes such as :ref:`promotion scores <s-promotion-scores>`. However, with
 containers, it is not apparent which node should get the attribute.
@@ -1148,31 +1148,31 @@ environment variables to the primitive's resource agent that allow it to set
 node attributes appropriately: ``CRM_meta_container_attribute_target`` (identical
 to the meta-attribute value) and ``CRM_meta_physical_host`` (the name of the
 underlying host).
-   
+
 .. note::
 
    When called by a resource agent, the ``attrd_updater`` and ``crm_attribute``
    commands will automatically check those environment variables and set
    attributes appropriately.
-   
+
 .. index::
    single: bundle; meta-attributes
 
 Bundle Meta-Attributes
 ______________________
-   
+
 Any meta-attribute set on a bundle will be inherited by the bundle's
 primitive and any resources implicitly created by Pacemaker for the bundle.
 
 This includes options such as ``priority``, ``target-role``, and ``is-managed``. See
 :ref:`resource_options` for more information.
-   
+
 Bundles support clone meta-attributes including ``notify``, ``ordered``, and
 ``interleave``.
 
 Limitations of Bundles
 ______________________
-   
+
 Restarting pacemaker while a bundle is unmanaged or the cluster is in
 maintenance mode may cause the bundle to fail.
 

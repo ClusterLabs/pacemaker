@@ -12,7 +12,7 @@ For those that are allergic to XML, multiple higher-level front-ends
 (both command-line and GUI) are available. These tools will not be covered
 in this document, though the concepts explained here should make the
 functionality of these tools more easily understood.
-      
+
 Users may be interested in other parts of the
 `Pacemaker documentation set <https://www.clusterlabs.org/pacemaker/doc/>`_,
 such as *Clusters from Scratch*, a step-by-step guide to setting up an

@@ -223,10 +223,10 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        ``pam_start``).
 
    * - .. _pcmk_logfacility:
-       
+
        .. index::
           pair: node option; PCMK_logfacility
-       
+
        PCMK_logfacility
      - :ref:`enumeration <enumeration>`
      - daemon

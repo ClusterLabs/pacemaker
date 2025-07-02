@@ -48,23 +48,23 @@ ___________________
      - Default
      - Description
    * - .. rsc_location_id:
-       
+
        .. index::
           single: rsc_location; attribute, id
           single: attribute; id (rsc_location)
           single: id; rsc_location attribute
-       
+
        id
      - :ref:`id <id>`
      -
      - A unique name for the constraint (required)
    * - .. rsc_location_rsc:
-       
+
        .. index::
           single: rsc_location; attribute, rsc
           single: attribute; rsc (rsc_location)
           single: rsc; rsc_location attribute
-       
+
        rsc
      - :ref:`id <id>`
      -
@@ -72,12 +72,12 @@ ___________________
        constraint must either have a ``rsc``, have a ``rsc-pattern``, or
        contain at least one resource set.
    * - .. rsc_pattern:
-       
+
        .. index::
           single: rsc_location; attribute, rsc-pattern
           single: attribute; rsc-pattern (rsc_location)
           single: rsc-pattern; rsc_location attribute
-       
+
        rsc-pattern
      - :ref:`text <text>`
      -
@@ -93,12 +93,12 @@ ___________________
        must either have a ``rsc``, have a ``rsc-pattern``, or contain at least
        one resource set.
    * - .. rsc_location_node:
-       
+
        .. index::
           single: rsc_location; attribute, node
           single: attribute; node (rsc_location)
           single: node; rsc_location attribute
-       
+
        node
      - :ref:`text <text>`
      -
@@ -106,12 +106,12 @@ ___________________
        constraint must either have a ``node`` and ``score``, or contain at
        least one rule.
    * - .. rsc_location_score:
-       
+
        .. index::
           single: rsc_location; attribute, score
           single: attribute; score (rsc_location)
           single: score; rsc_location attribute
-       
+
        score
      - :ref:`score <score>`
      -
@@ -122,12 +122,12 @@ ___________________
        constraint must either have a ``node`` and ``score``, or contain at
        least one rule.
    * - .. rsc_location_role:
-       
+
        .. index::
           single: rsc_location; attribute, role
           single: attribute; role (rsc_location)
           single: role; rsc_location attribute
-       
+
        role
      - :ref:`enumeration <enumeration>`
      - ``Started``
@@ -135,7 +135,7 @@ ___________________
        :ref:`promotable clones <s-resource-promotable>`, is allowed only if
        ``rsc`` or ``rsc-pattern`` is set, and is ignored if the constraint
        contains a rule. Allowed values:
-       
+
        * ``Started`` or ``Unpromoted``: The constraint affects the location of
          all instances of the resource. (A promoted instance must start in the
          unpromoted role before being promoted, so any location requirement for
@@ -145,12 +145,12 @@ ___________________
          promoted.
 
    * - .. resource_discovery:
-       
+
        .. index::
           single: rsc_location; attribute, resource-discovery
           single: attribute; resource-discovery (rsc_location)
           single: resource-discovery; rsc_location attribute
-       
+
        resource-discovery
      - :ref:`enumeration <enumeration>`
      - always
@@ -165,7 +165,7 @@ ___________________
        Pacemaker Remote is used to scale a cluster to hundreds of nodes,
        limiting resource discovery to allowed nodes can significantly boost
        performance. Allowed values:
-       
+
        * ``always:`` Always perform resource discovery for the specified
          resource on this node.
        * ``never:`` Never perform resource discovery for the specified resource

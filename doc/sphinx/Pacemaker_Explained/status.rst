@@ -370,7 +370,7 @@ recorded, just enough to determine the resource's state.)
 
 Simple Operation History Example
 ________________________________
-           
+
 .. topic:: A monitor operation (determines current state of the ``apcstonith`` resource)
 
    .. code-block:: xml
@@ -391,7 +391,7 @@ operation) for the ``apcstonith`` resource.
 The cluster schedules probes for every configured resource on a node when
 the node first starts, in order to determine the resource's current state
 before it takes any further action.
-       
+
 From the ``transition-key``, we can see that this was the 22nd action of
 the 2nd graph produced by this instance of the controller
 (2668bbeb-06d5-40f9-936d-24cb7f87006a).
@@ -402,10 +402,10 @@ that the cluster expects to find the resource inactive. By looking at the
 
 As that is the only action recorded for this node, we can conclude that
 the cluster started the resource elsewhere.
-   
+
 Complex Operation History Example
 _________________________________
-           
+
 .. topic:: Resource history of a ``pingd`` clone with multiple entries
 
    .. code-block:: xml
@@ -432,7 +432,7 @@ _________________________________
           transition-key="23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a"
           last-rc-change="1239008085" exec-time="20" queue-time="0"/>
         </lrm_resource>
-   
+
 When more than one history entry exists, it is important to first sort
 them by ``call-id`` before interpreting them.
 

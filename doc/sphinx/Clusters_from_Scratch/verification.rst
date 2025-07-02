@@ -68,17 +68,17 @@ Next, check the membership and quorum APIs:
 
 .. code-block:: console
 
-    [root@pcmk-1 ~]# corosync-cmapctl | grep members 
+    [root@pcmk-1 ~]# corosync-cmapctl | grep members
     runtime.members.1.config_version (u64) = 0
-    runtime.members.1.ip (str) = r(0) ip(192.168.122.101) 
+    runtime.members.1.ip (str) = r(0) ip(192.168.122.101)
     runtime.members.1.join_count (u32) = 1
     runtime.members.1.status (str) = joined
     runtime.members.2.config_version (u64) = 0
-    runtime.members.2.ip (str) = r(0) ip(192.168.122.102) 
+    runtime.members.2.ip (str) = r(0) ip(192.168.122.102)
     runtime.members.2.join_count (u32) = 1
     runtime.members.2.status (str) = joined
 
-    [root@pcmk-1 ~]# pcs status corosync 
+    [root@pcmk-1 ~]# pcs status corosync
 
     Membership information
     ----------------------
