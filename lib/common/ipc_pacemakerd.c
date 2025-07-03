@@ -256,7 +256,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
             pcmk__str_eq(crm_element_value(msg_data, PCMK_XA_RESULT), "ok",
                          pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
 
-        pcmk__xe_get_time(msg_data, PCMK_XA_CRM_TIMESTAMP,
+        pcmk__xe_get_time(msg_data, PCMK__XA_CRM_TIMESTAMP,
                           &reply_data.data.ping.last_good);
         if (reply_data.data.ping.last_good < 0) {
             reply_data.data.ping.last_good = 0;
