@@ -4,8 +4,6 @@ Clusters from Scratch
 *Step-by-Step Instructions for Building Your First High-Availability Cluster*
 
 
-Abstract
---------
 This document provides a step-by-step guide to building a simple high-availability
 cluster using Pacemaker.
 
@@ -21,9 +19,6 @@ Given the graphical nature of the install process, a number of screenshots are
 included. However, the guide is primarily composed of commands, the reasons for
 executing them, and their expected outputs.
 
-
-Table of Contents
------------------
 
 .. toctree::
    :maxdepth: 3
@@ -41,9 +36,5 @@ Table of Contents
    ap-configuration
    ap-corosync-conf
    ap-reading
-
-Index
------
-
-* :ref:`genindex`
-* :ref:`search`
+   :ref:`genindex`
+   :ref:`search`
