@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthIOWait resource agent
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -87,7 +87,7 @@ END
 #######################################################################
 
 agent_usage() {
-        cat <<END
+    cat <<END
 usage: $0 {start|stop|monitor|reload-agent|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
@@ -97,7 +97,7 @@ END
 agent_start() {
     agent_monitor
     if [ $? -eq $OCF_SUCCESS ]; then
-      return $OCF_SUCCESS
+        return $OCF_SUCCESS
     fi
     touch "${OCF_RESKEY_state}"
 }
@@ -111,29 +111,45 @@ agent_stop() {
 }
 
 agent_monitor() {
-        # Monitor _MUST!_ differentiate correctly between running
-        # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
-        # That is THREE states, not just yes/no.
-        if [ -f "${OCF_RESKEY_state}" ]; then
-          WAIT=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]wa" '{ print $5 }')
-          # echo "System iowait: " $WAIT
-          # echo $OCF_RESKEY_yellow_limit
-          if [ $WAIT -gt ${OCF_RESKEY_red_limit} ] ; then
-            # echo "System state RED!"
-            attrd_updater -n "#health-iowait" -B "red" -d "${OCF_RESKEY_dampening}"
-            return $OCF_SUCCESS
-          fi
-
-          if [ $WAIT -gt ${OCF_RESKEY_yellow_limit} ] ; then
-            # echo "System state yellow."
-            attrd_updater -n "#health-iowait" -B "yellow" -d "${OCF_RESKEY_dampening}"
-          else
-            # echo "System state green."
-            attrd_updater -n "#health-iowait" -B "green" -d "${OCF_RESKEY_dampening}"
-          fi
-          return $OCF_SUCCESS
+    # Monitor _MUST!_ differentiate correctly between running
+    # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
+    # That is THREE states, not just yes/no.
+    if [ -f "${OCF_RESKEY_state}" ]; then
+        WAIT=$(top -b -n2 | grep Cpu | tail -1 | awk -F",|.[0-9][ %]wa" '{ print $5 }')
+        if [ $? -ne 0 ]; then
+            ocf_log err "Could not get CPU I/O wait time"
+            return $OCF_DEGRADED
         fi
-        return $OCF_NOT_RUNNING
+
+        if [ $WAIT -gt ${OCF_RESKEY_red_limit} ] ; then
+            attrd_updater -n "#health-iowait" -B "red" -d "${OCF_RESKEY_dampening}"
+            rc=$?
+
+            if [ $rc -ne 0 ]; then
+                ocf_log err "Could not set #health-iowait attribute: $(crm_error -X $rc)"
+                return $OCF_DEGRADED
+            fi
+
+            return $OCF_SUCCESS
+        fi
+
+        if [ $WAIT -gt ${OCF_RESKEY_yellow_limit} ] ; then
+            attrd_updater -n "#health-iowait" -B "yellow" -d "${OCF_RESKEY_dampening}"
+            rc=$?
+        else
+            attrd_updater -n "#health-iowait" -B "green" -d "${OCF_RESKEY_dampening}"
+            rc=$?
+        fi
+
+        if [ $rc -ne 0 ]; then
+            ocf_log err "Could not set #health-iowait attribute: $(crm_error -X $rc)"
+            return $OCF_DEGRADED
+        fi
+
+        return $OCF_SUCCESS
+    fi
+
+    return $OCF_NOT_RUNNING
 }
 
 agent_reload_agent() {
@@ -153,7 +169,6 @@ is_writable_dir() {
 }
 
 agent_validate() {
-
     is_integer "$OCF_RESKEY_yellow_limit" && is_integer "$OCF_RESKEY_red_limit"
     if [ $? -ne 0 ]; then
         return $OCF_ERR_CONFIGURED
@@ -162,7 +177,7 @@ agent_validate() {
     if [ "$OCF_CHECK_LEVEL" = "10" ]; then
         is_writable_dir "$OCF_RESKEY_state"
         if [ $? -ne 0 ]; then
-          return $OCF_ERR_ARGS
+            return $OCF_ERR_ARGS
         fi
     fi
 
@@ -174,20 +189,20 @@ agent_validate() {
 
 if [ -z "$OCF_RESKEY_state" ]; then
     if [ "${OCF_RESKEY_CRM_meta_globally_unique}" = "false" ]; then
-      state="${HA_VARRUN%%/}/HealthIoWait-${OCF_RESOURCE_INSTANCE}.state"
-      #Strip off the trailing clone marker
-      OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
+        state="${HA_VARRUN%%/}/HealthIoWait-${OCF_RESOURCE_INSTANCE}.state"
+        # Strip off the trailing clone marker
+        OCF_RESKEY_state=$(echo $state | sed s/:[0-9][0-9]*\.state/.state/)
     else
-      OCF_RESKEY_state="${HA_VARRUN%%/}/HealthIoWait-${OCF_RESOURCE_INSTANCE}.state"
+        OCF_RESKEY_state="${HA_VARRUN%%/}/HealthIoWait-${OCF_RESOURCE_INSTANCE}.state"
     fi
 fi
 
 if [ -z "${OCF_RESKEY_red_limit}" ] ; then
-  OCF_RESKEY_red_limit=15
+    OCF_RESKEY_red_limit=15
 fi
 
 if [ -z "${OCF_RESKEY_yellow_limit}" ] ; then
-  OCF_RESKEY_yellow_limit=10
+    OCF_RESKEY_yellow_limit=10
 fi
 
 case $__OCF_ACTION in

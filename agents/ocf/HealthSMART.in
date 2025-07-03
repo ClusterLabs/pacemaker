@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:HealthSMART resource agent
 #
-# Copyright 2009-2023 the Pacemaker project contributors
+# Copyright 2009-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -141,24 +141,52 @@ check_temperature() {
         if [ $1 -lt ${lower_red_limit} ] ; then
             ocf_log info "Drive ${DRIVE} ${DEVICE} too cold: ${1} C"
             attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
+            rc=$?
+
+            if [ $rc -ne 0 ]; then
+                ocf_log err "Could not set #health-smart attribute: $(crm_error -X $rc)"
+                return $OCF_DEGRADED
+            fi
+
             return 1
         fi
 
         if [ $1 -gt ${upper_red_limit} ] ; then
             ocf_log info "Drive ${DRIVE} ${DEVICE} too hot: ${1} C"
             attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
+            rc=$?
+
+            if [ $rc -ne 0 ]; then
+                ocf_log err "Could not set #health-smart attribute: $(crm_error -X $rc)"
+                return $OCF_DEGRADED
+            fi
+
             return 1
         fi
 
         if [ $1 -lt ${lower_yellow_limit} ] ; then
             ocf_log info "Drive ${DRIVE} ${DEVICE} quite cold: ${1} C"
             attrd_updater -n "#health-smart" -B "yellow" -d "${OCF_RESKEY_dampen}"
+            rc=$?
+
+            if [ $rc -ne 0 ]; then
+                ocf_log err "Could not set #health-smart attribute: $(crm_error -X $rc)"
+                return $OCF_DEGRADED
+            fi
+
             return 1
         fi
 
         if [ $1 -gt ${upper_yellow_limit} ] ; then
             ocf_log info "Drive ${DRIVE} ${DEVICE} quite hot: ${1} C"
             attrd_updater -n "#health-smart" -B "yellow" -d "${OCF_RESKEY_dampen}"
+            rc=$?
+
+            if [ $rc -ne 0 ]; then
+                ocf_log err "Could not set #health-smart attribute: $(crm_error -X $rc)"
+                return $OCF_DEGRADED
+            fi
+
             return 1
         fi
     fi
@@ -281,6 +309,13 @@ HealthSMART_monitor() {
                 "${OCF_RESKEY_smartctl}" -d "${DEVICE}" -H ${DRIVE} | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
                     attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
+                    rc=$?
+
+                    if [ $rc -ne 0 ]; then
+                        ocf_log err "Could not set #health-smart attribute: $(crm_error -X $rc)"
+                        return $OCF_DEGRADED
+                    fi
+
                     return $OCF_SUCCESS
                 fi
 
@@ -293,6 +328,13 @@ HealthSMART_monitor() {
                 "${OCF_RESKEY_smartctl}" -H "${DRIVE}" | grep -q "SMART overall-health self-assessment test result: PASSED"
                 if [ $? -ne 0 ]; then
                     attrd_updater -n "#health-smart" -B "red" -d "${OCF_RESKEY_dampen}"
+                    rc=$?
+
+                    if [ $rc -ne 0 ]; then
+                        ocf_log err "Could not set #health-smart attribute: $(crm_error -X $rc)"
+                        return $OCF_DEGRADED
+                    fi
+
                     return $OCF_SUCCESS
                 fi
 
@@ -304,6 +346,12 @@ HealthSMART_monitor() {
         done
 
         attrd_updater -n "#health-smart" -B "green" -d "${OCF_RESKEY_dampen}"
+        rc=$?
+        if [ $rc -ne 0 ]; then
+            ocf_log err "Could not set #health-smart attribute: $(crm_error -X $rc)"
+            return $OCF_DEGRADED
+        fi
+
         return $OCF_SUCCESS
     fi
 
