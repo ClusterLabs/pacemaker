@@ -85,26 +85,26 @@ mount, an IP address, and an application that uses them.
 Group Properties
 ________________
 
-.. table:: **Properties of a Group Resource**
+.. list-table:: **Properties of a Group Resource**
    :widths: 25 75
+   :header-rows: 1
 
-   +-------------+------------------------------------------------------------------+
-   | Field       | Description                                                      |
-   +=============+==================================================================+
-   | id          | .. index::                                                       |
-   |             |    single: group; property, id                                   |
-   |             |    single: property; id (group)                                  |
-   |             |    single: id; group property                                    |
-   |             |                                                                  |
-   |             | A unique name for the group                                      |
-   +-------------+------------------------------------------------------------------+
-   | description | .. index::                                                       |
-   |             |    single: group; attribute, description                         |
-   |             |    single: attribute; description (group)                        |
-   |             |    single: description; group attribute                          |
-   |             |                                                                  |
-   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
-   +-------------+------------------------------------------------------------------+
+   * - Field
+     - Description
+   * - id
+     - .. index::
+          single: group; property, id
+          single: property; id (group)
+          single: id; group property
+
+       A unique name for the group
+   * - description
+     - .. index::
+          single: group; attribute, description
+          single: attribute; description (group)
+          single: description; group attribute
+
+       Arbitrary text for user's use (ignored by Pacemaker)
 
 Group Options
 _____________
@@ -211,26 +211,26 @@ to manage entering and exiting the promoted role.
 Clone Properties
 ________________
 
-.. table:: **Properties of a Clone Resource**
+.. list-table:: **Properties of a Clone Resource**
    :widths: 25 75
+   :header-rows: 1
 
-   +-------------+------------------------------------------------------------------+
-   | Field       | Description                                                      |
-   +=============+==================================================================+
-   | id          | .. index::                                                       |
-   |             |    single: clone; property, id                                   |
-   |             |    single: property; id (clone)                                  |
-   |             |    single: id; clone property                                    |
-   |             |                                                                  |
-   |             | A unique name for the clone                                      |
-   +-------------+------------------------------------------------------------------+
-   | description | .. index::                                                       |
-   |             |    single: clone; attribute, description                         |
-   |             |    single: attribute; description (clone)                        |
-   |             |    single: description; clone attribute                          |
-   |             |                                                                  |
-   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
-   +-------------+------------------------------------------------------------------+
+   * - Field
+     - Description
+   * - id
+     - .. index::
+          single: clone; property, id
+          single: property; id (clone)
+          single: id; clone property
+
+       A unique name for the clone
+   * - description
+     - .. index::
+          single: clone; attribute, description
+          single: attribute; description (clone)
+          single: description; clone attribute
+
+       Arbitrary text for user's use (ignored by Pacemaker)
 
 .. index::
    pair: options; clone
@@ -241,114 +241,114 @@ _____________
 :ref:`Options <resource_options>` inherited from primitive resources:
 ``priority, target-role, is-managed``
 
-.. table:: **Clone-Specific Configuration Options**
+.. list-table:: **Clone-Specific Configuration Options**
    :class: longtable
    :widths: 20 20 60
+   :header-rows: 1
 
-   +-------------------+-----------------+-------------------------------------------------------+
-   | Field             | Default         | Description                                           |
-   +===================+=================+=======================================================+
-   | globally-unique   | **true** if     |  .. index::                                           |
-   |                   | clone-node-max  |     single: clone; option, globally-unique            |
-   |                   | is greater than |     single: option; globally-unique (clone)           |
-   |                   | 1 *(since*      |     single: globally-unique; clone option             |
-   |                   | *3.0.0)*,       |                                                       |
-   |                   | otherwise       | If **true**, each clone instance performs a           |
-   |                   | **false**       | distinct function, such that a single node can run    |
-   |                   |                 | more than one instance at the same time               |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | clone-max         | 0               | .. index::                                            |
-   |                   |                 |    single: clone; option, clone-max                   |
-   |                   |                 |    single: option; clone-max (clone)                  |
-   |                   |                 |    single: clone-max; clone option                    |
-   |                   |                 |                                                       |
-   |                   |                 | The maximum number of clone instances that can        |
-   |                   |                 | be started across the entire cluster. If 0, the       |
-   |                   |                 | number of nodes in the cluster will be used.          |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | clone-node-max    | 1               | .. index::                                            |
-   |                   |                 |    single: clone; option, clone-node-max              |
-   |                   |                 |    single: option; clone-node-max (clone)             |
-   |                   |                 |    single: clone-node-max; clone option               |
-   |                   |                 |                                                       |
-   |                   |                 | If the clone is globally unique, this is the maximum  |
-   |                   |                 | number of clone instances that can be started         |
-   |                   |                 | on a single node                                      |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | clone-min         | 0               | .. index::                                            |
-   |                   |                 |    single: clone; option, clone-min                   |
-   |                   |                 |    single: option; clone-min (clone)                  |
-   |                   |                 |    single: clone-min; clone option                    |
-   |                   |                 |                                                       |
-   |                   |                 | Require at least this number of clone instances       |
-   |                   |                 | to be runnable before allowing resources              |
-   |                   |                 | depending on the clone to be runnable. A value        |
-   |                   |                 | of 0 means require all clone instances to be          |
-   |                   |                 | runnable.                                             |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | notify            | false           | .. index::                                            |
-   |                   |                 |    single: clone; option, notify                      |
-   |                   |                 |    single: option; notify (clone)                     |
-   |                   |                 |    single: notify; clone option                       |
-   |                   |                 |                                                       |
-   |                   |                 | Call the resource agent's **notify** action for       |
-   |                   |                 | all active instances, before and after starting       |
-   |                   |                 | or stopping any clone instance. The resource          |
-   |                   |                 | agent must support this action.                       |
-   |                   |                 | Allowed values: **false**, **true**                   |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | ordered           | false           | .. index::                                            |
-   |                   |                 |    single: clone; option, ordered                     |
-   |                   |                 |    single: option; ordered (clone)                    |
-   |                   |                 |    single: ordered; clone option                      |
-   |                   |                 |                                                       |
-   |                   |                 | If **true**, clone instances must be started          |
-   |                   |                 | sequentially instead of in parallel.                  |
-   |                   |                 | Allowed values: **false**, **true**                   |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | interleave        | false           | .. index::                                            |
-   |                   |                 |    single: clone; option, interleave                  |
-   |                   |                 |    single: option; interleave (clone)                 |
-   |                   |                 |    single: interleave; clone option                   |
-   |                   |                 |                                                       |
-   |                   |                 | When this clone is ordered relative to another        |
-   |                   |                 | clone, if this option is **false** (the default),     |
-   |                   |                 | the ordering is relative to *all* instances of        |
-   |                   |                 | the other clone, whereas if this option is            |
-   |                   |                 | **true**, the ordering is relative only to            |
-   |                   |                 | instances on the same node.                           |
-   |                   |                 | Allowed values: **false**, **true**                   |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | promotable        | false           | .. index::                                            |
-   |                   |                 |    single: clone; option, promotable                  |
-   |                   |                 |    single: option; promotable (clone)                 |
-   |                   |                 |    single: promotable; clone option                   |
-   |                   |                 |                                                       |
-   |                   |                 | If **true**, clone instances can perform a            |
-   |                   |                 | special role that Pacemaker will manage via the       |
-   |                   |                 | resource agent's **promote** and **demote**           |
-   |                   |                 | actions. The resource agent must support these        |
-   |                   |                 | actions.                                              |
-   |                   |                 | Allowed values: **false**, **true**                   |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | promoted-max      | 1               | .. index::                                            |
-   |                   |                 |    single: clone; option, promoted-max                |
-   |                   |                 |    single: option; promoted-max (clone)               |
-   |                   |                 |    single: promoted-max; clone option                 |
-   |                   |                 |                                                       |
-   |                   |                 | If ``promotable`` is **true**, the number of          |
-   |                   |                 | instances that can be promoted at one time            |
-   |                   |                 | across the entire cluster                             |
-   +-------------------+-----------------+-------------------------------------------------------+
-   | promoted-node-max | 1               | .. index::                                            |
-   |                   |                 |    single: clone; option, promoted-node-max           |
-   |                   |                 |    single: option; promoted-node-max (clone)          |
-   |                   |                 |    single: promoted-node-max; clone option            |
-   |                   |                 |                                                       |
-   |                   |                 | If the clone is promotable and globally unique, this  |
-   |                   |                 | is the number of instances that can be promoted at    |
-   |                   |                 | one time on a single node (up to ``clone-node-max``)  |
-   +-------------------+-----------------+-------------------------------------------------------+
+   * - Field
+     - Default
+     - Description
+   * - globally-unique
+     - **true** if clone-node-max is greater than 1 *(since 3.0.0)*, otherwise
+       **false**
+     - .. index::
+          single: clone; option, globally-unique
+          single: option; globally-unique (clone)
+          single: globally-unique; clone option
+
+       If **true**, each clone instance performs a distinct function, such that
+       a single node can run more than one instance at the same time
+   * - clone-max
+     - 0
+     - .. index::
+          single: clone; option, clone-max
+          single: option; clone-max (clone)
+          single: clone-max; clone option
+
+       The maximum number of clone instances that can be started across the
+       entire cluster. If 0, the number of nodes in the cluster will be used.
+   * - clone-node-max
+     - 1
+     - .. index::
+          single: clone; option, clone-node-max
+          single: option; clone-node-max (clone)
+          single: clone-node-max; clone option
+
+       If the clone is globally unique, this is the maximum number of clone
+       instances that can be started on a single node
+   * - clone-min
+     - 0
+     - .. index::
+          single: clone; option, clone-min
+          single: option; clone-min (clone)
+          single: clone-min; clone option
+
+       Require at least this number of clone instances to be runnable before
+       allowing resources depending on the clone to be runnable. A value of
+       0 means require all clone instances to be runnable.
+   * - notify
+     - false
+     - .. index::
+          single: clone; option, notify
+          single: option; notify (clone)
+          single: notify; clone option
+
+       Call the resource agent's **notify** action for all active instances,
+       before and after starting or stopping any clone instance. The
+       resource agent must support this action.  Allowed values: **false**,
+       **true**
+   * - ordered
+     - false
+     - .. index::
+          single: clone; option, ordered
+          single: option; ordered (clone)
+          single: ordered; clone option
+
+       If **true**, clone instances must be started sequentially instead of
+       in parallel.  Allowed values: **false**, **true**
+   * - interleave
+     - false
+     - .. index::
+          single: clone; option, interleave
+          single: option; interleave (clone)
+          single: interleave; clone option
+
+       When this clone is ordered relative to another clone, if this option is
+       **false** (the default), the ordering is relative to *all* instances of
+       the other clone, whereas if this option is **true**, the ordering is
+       relative only to instances on the same node.  Allowed values: **false**,
+       **true**
+   * - promotable
+     - false
+     - .. index::
+          single: clone; option, promotable
+          single: option; promotable (clone)
+          single: promotable; clone option
+
+       If **true**, clone instances can perform a special role that Pacemaker
+       will manage via the resource agent's **promote** and **demote** actions.
+       The resource agent must support these actions.  Allowed values:
+       **false**, **true**
+   * - promoted-max
+     - 1
+     - .. index::
+          single: clone; option, promoted-max
+          single: option; promoted-max (clone)
+          single: promoted-max; clone option
+
+       If ``promotable`` is **true**, the number of instances that can be
+       promoted at one time across the entire cluster
+   * - promoted-node-max
+     - 1
+     - .. index::
+          single: clone; option, promoted-node-max
+          single: option; promoted-node-max (clone)
+          single: promoted-node-max; clone option
+
+       If the clone is promotable and globally unique, this is the number of
+       instances that can be promoted at one time on a single node (up to
+       ``clone-node-max``)
 
 .. note:: **Deprecated Terminology**
 
@@ -693,26 +693,26 @@ the bundle.
 Bundle Properties
 _________________
 
-.. table:: **XML Attributes of a bundle Element**
+.. list-table:: **XML Attributes of a bundle Element**
    :widths: 25 75
+   :header-rows: 1
 
-   +-------------+------------------------------------------------------------------+
-   | Field       | Description                                                      |
-   +=============+==================================================================+
-   | id          | .. index::                                                       |
-   |             |    single: bundle; attribute, id                                 |
-   |             |    single: attribute; id (bundle)                                |
-   |             |    single: id; bundle attribute                                  |
-   |             |                                                                  |
-   |             | A unique name for the bundle (required)                          |
-   +-------------+------------------------------------------------------------------+
-   | description | .. index::                                                       |
-   |             |    single: bundle; attribute, description                        |
-   |             |    single: attribute; description (bundle)                       |
-   |             |    single: description; bundle attribute                         |
-   |             |                                                                  |
-   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
-   +-------------+------------------------------------------------------------------+
+   * - Field
+     - Description
+   * - id
+     - .. index::
+          single: bundle; attribute, id
+          single: attribute; id (bundle)
+          single: id; bundle attribute
+
+       A unique name for the bundle (required)
+   * - description
+     - .. index::
+          single: bundle; attribute, description
+          single: attribute; description (bundle)
+          single: description; bundle attribute
+
+       Arbitrary text for user's use (ignored by Pacemaker)
 
 
 A bundle must contain exactly one ``docker`` or ``podman`` element.
@@ -724,97 +724,100 @@ A bundle must contain exactly one ``docker`` or ``podman`` element.
 Bundle Container Properties
 ___________________________
 
-.. table:: **XML Attributes of a docker or podman Element**
+.. list-table:: **XML Attributes of a docker or podman Element**
    :class: longtable
    :widths: 15 40 45
+   :header-rows: 1
 
-   +-------------------+------------------------------------+---------------------------------------------------+
-   | Attribute         | Default                            | Description                                       |
-   +===================+====================================+===================================================+
-   | image             |                                    | .. index::                                        |
-   |                   |                                    |    single: docker; attribute, image               |
-   |                   |                                    |    single: attribute; image (docker)              |
-   |                   |                                    |    single: image; docker attribute                |
-   |                   |                                    |    single: podman; attribute, image               |
-   |                   |                                    |    single: attribute; image (podman)              |
-   |                   |                                    |    single: image; podman attribute                |
-   |                   |                                    |                                                   |
-   |                   |                                    | Container image tag (required)                    |
-   +-------------------+------------------------------------+---------------------------------------------------+
-   | replicas          | Value of ``promoted-max``          | .. index::                                        |
-   |                   | if that is positive, else 1        |    single: docker; attribute, replicas            |
-   |                   |                                    |    single: attribute; replicas (docker)           |
-   |                   |                                    |    single: replicas; docker attribute             |
-   |                   |                                    |    single: podman; attribute, replicas            |
-   |                   |                                    |    single: attribute; replicas (podman)           |
-   |                   |                                    |    single: replicas; podman attribute             |
-   |                   |                                    |                                                   |
-   |                   |                                    | A positive integer specifying the number of       |
-   |                   |                                    | container instances to launch                     |
-   +-------------------+------------------------------------+---------------------------------------------------+
-   | replicas-per-host | 1                                  | .. index::                                        |
-   |                   |                                    |    single: docker; attribute, replicas-per-host   |
-   |                   |                                    |    single: attribute; replicas-per-host (docker)  |
-   |                   |                                    |    single: replicas-per-host; docker attribute    |
-   |                   |                                    |    single: podman; attribute, replicas-per-host   |
-   |                   |                                    |    single: attribute; replicas-per-host (podman)  |
-   |                   |                                    |    single: replicas-per-host; podman attribute    |
-   |                   |                                    |                                                   |
-   |                   |                                    | A positive integer specifying the number of       |
-   |                   |                                    | container instances allowed to run on a           |
-   |                   |                                    | single node                                       |
-   +-------------------+------------------------------------+---------------------------------------------------+
-   | promoted-max      | 0                                  | .. index::                                        |
-   |                   |                                    |    single: docker; attribute, promoted-max        |
-   |                   |                                    |    single: attribute; promoted-max (docker)       |
-   |                   |                                    |    single: promoted-max; docker attribute         |
-   |                   |                                    |    single: podman; attribute, promoted-max        |
-   |                   |                                    |    single: attribute; promoted-max (podman)       |
-   |                   |                                    |    single: promoted-max; podman attribute         |
-   |                   |                                    |                                                   |
-   |                   |                                    | A non-negative integer that, if positive,         |
-   |                   |                                    | indicates that the containerized service          |
-   |                   |                                    | should be treated as a promotable service,        |
-   |                   |                                    | with this many replicas allowed to run the        |
-   |                   |                                    | service in the promoted role                      |
-   +-------------------+------------------------------------+---------------------------------------------------+
-   | network           |                                    | .. index::                                        |
-   |                   |                                    |    single: docker; attribute, network             |
-   |                   |                                    |    single: attribute; network (docker)            |
-   |                   |                                    |    single: network; docker attribute              |
-   |                   |                                    |    single: podman; attribute, network             |
-   |                   |                                    |    single: attribute; network (podman)            |
-   |                   |                                    |    single: network; podman attribute              |
-   |                   |                                    |                                                   |
-   |                   |                                    | If specified, this will be passed to the          |
-   |                   |                                    | ``docker run`` or ``podman run`` command as the   |
-   |                   |                                    | network setting for the container.                |
-   +-------------------+------------------------------------+---------------------------------------------------+
-   | run-command       | ``/usr/sbin/pacemaker-remoted`` if | .. index::                                        |
-   |                   | bundle contains a **primitive**,   |    single: docker; attribute, run-command         |
-   |                   | otherwise none                     |    single: attribute; run-command (docker)        |
-   |                   |                                    |    single: run-command; docker attribute          |
-   |                   |                                    |    single: podman; attribute, run-command         |
-   |                   |                                    |    single: attribute; run-command (podman)        |
-   |                   |                                    |    single: run-command; podman attribute          |
-   |                   |                                    |                                                   |
-   |                   |                                    | This command will be run inside the container     |
-   |                   |                                    | when launching it ("PID 1"). If the bundle        |
-   |                   |                                    | contains a **primitive**, this command *must*     |
-   |                   |                                    | start ``pacemaker-remoted`` (but could, for       |
-   |                   |                                    | example, be a script that does other stuff, too). |
-   +-------------------+------------------------------------+---------------------------------------------------+
-   | options           |                                    | .. index::                                        |
-   |                   |                                    |    single: docker; attribute, options             |
-   |                   |                                    |    single: attribute; options (docker)            |
-   |                   |                                    |    single: options; docker attribute              |
-   |                   |                                    |    single: podman; attribute, options             |
-   |                   |                                    |    single: attribute; options (podman)            |
-   |                   |                                    |    single: options; podman attribute              |
-   |                   |                                    |                                                   |
-   |                   |                                    | Extra command-line options to pass to the         |
-   |                   |                                    | ``docker run`` or ``podman run`` command          |
-   +-------------------+------------------------------------+---------------------------------------------------+
+   * - Attribute
+     - Default
+     - Description
+   * - image
+     -
+     - .. index::
+          single: docker; attribute, image
+          single: attribute; image (docker)
+          single: image; docker attribute
+          single: podman; attribute, image
+          single: attribute; image (podman)
+          single: image; podman attribute
+
+       Container image tag (required)
+   * - replicas
+     - Value of ``promoted-max`` if that is positive, else 1
+     - .. index::
+          single: docker; attribute, replicas
+          single: attribute; replicas (docker)
+          single: replicas; docker attribute
+          single: podman; attribute, replicas
+          single: attribute; replicas (podman)
+          single: replicas; podman attribute
+
+       A positive integer specifying the number of container instances to launch
+   * - replicas-per-host
+     - 1
+     - .. index::
+          single: docker; attribute, replicas-per-host
+          single: attribute; replicas-per-host (docker)
+          single: replicas-per-host; docker attribute
+          single: podman; attribute, replicas-per-host
+          single: attribute; replicas-per-host (podman)
+          single: replicas-per-host; podman attribute
+
+       A positive integer specifying the number of container instances allowed
+       to run on a single node
+   * - promoted-max
+     - 0
+     - .. index::
+          single: docker; attribute, promoted-max
+          single: attribute; promoted-max (docker)
+          single: promoted-max; docker attribute
+          single: podman; attribute, promoted-max
+          single: attribute; promoted-max (podman)
+          single: promoted-max; podman attribute
+
+       A non-negative integer that, if positive, indicates that the containerized
+       service should be treated as a promotable service, with this many replicas
+       allowed to run the service in the promoted role
+   * - network
+     -
+     - .. index::
+          single: docker; attribute, network
+          single: attribute; network (docker)
+          single: network; docker attribute
+          single: podman; attribute, network
+          single: attribute; network (podman)
+          single: network; podman attribute
+
+       If specified, this will be passed to the ``docker run`` or ``podman run``
+       command as the network setting for the container.
+   * - run-command
+     - ``/usr/sbin/pacemaker-remoted`` if bundle contains a **primitive**,
+       otherwise none
+     - .. index::
+          single: docker; attribute, run-command
+          single: attribute; run-command (docker)
+          single: run-command; docker attribute
+          single: podman; attribute, run-command
+          single: attribute; run-command (podman)
+          single: run-command; podman attribute
+
+       This command will be run inside the container when launching it ("PID 1").
+       If the bundle contains a **primitive**, this command *must* start
+       ``pacemaker-remoted`` (but could, for example, be a script that does
+       other stuff, too).
+   * - options
+     -
+     - .. index::
+          single: docker; attribute, options
+          single: attribute; options (docker)
+          single: options; docker attribute
+          single: podman; attribute, options
+          single: attribute; options (podman)
+          single: options; podman attribute
+
+       Extra command-line options to pass to the ``docker run`` or
+       ``podman run`` command
 
 .. note::
 
@@ -836,71 +839,72 @@ A bundle may optionally contain one ``<network>`` element.
    pair: XML element; network
    single: bundle; network
 
-.. table:: **XML Attributes of a network Element**
+.. list-table:: **XML Attributes of a network Element**
+   :class: longtable
    :widths: 20 20 60
+   :header-rows: 1
 
-   +----------------+---------+------------------------------------------------------------+
-   | Attribute      | Default | Description                                                |
-   +================+=========+============================================================+
-   | add-host       | TRUE    | .. index::                                                 |
-   |                |         |    single: network; attribute, add-host                    |
-   |                |         |    single: attribute; add-host (network)                   |
-   |                |         |    single: add-host; network attribute                     |
-   |                |         |                                                            |
-   |                |         | If TRUE, and ``ip-range-start`` is used, Pacemaker will    |
-   |                |         | automatically ensure that ``/etc/hosts`` inside the        |
-   |                |         | containers has entries for each                            |
-   |                |         | :ref:`replica name <s-resource-bundle-note-replica-names>` |
-   |                |         | and its assigned IP.                                       |
-   +----------------+---------+------------------------------------------------------------+
-   | ip-range-start |         | .. index::                                                 |
-   |                |         |    single: network; attribute, ip-range-start              |
-   |                |         |    single: attribute; ip-range-start (network)             |
-   |                |         |    single: ip-range-start; network attribute               |
-   |                |         |                                                            |
-   |                |         | If specified, Pacemaker will create an implicit            |
-   |                |         | ``ocf:heartbeat:IPaddr2`` resource for each container      |
-   |                |         | instance, starting with this IP address, using up to       |
-   |                |         | ``replicas`` sequential addresses. These addresses can be  |
-   |                |         | used from the host's network to reach the service inside   |
-   |                |         | the container, though it is not visible within the         |
-   |                |         | container itself. Only IPv4 addresses are currently        |
-   |                |         | supported.                                                 |
-   +----------------+---------+------------------------------------------------------------+
-   | host-netmask   | 32      | .. index::                                                 |
-   |                |         |    single: network; attribute; host-netmask                |
-   |                |         |    single: attribute; host-netmask (network)               |
-   |                |         |    single: host-netmask; network attribute                 |
-   |                |         |                                                            |
-   |                |         | If ``ip-range-start`` is specified, the IP addresses       |
-   |                |         | are created with this CIDR netmask (as a number of bits).  |
-   +----------------+---------+------------------------------------------------------------+
-   | host-interface |         | .. index::                                                 |
-   |                |         |    single: network; attribute; host-interface              |
-   |                |         |    single: attribute; host-interface (network)             |
-   |                |         |    single: host-interface; network attribute               |
-   |                |         |                                                            |
-   |                |         | If ``ip-range-start`` is specified, the IP addresses are   |
-   |                |         | created on this host interface (by default, it will be     |
-   |                |         | determined from the IP address).                           |
-   +----------------+---------+------------------------------------------------------------+
-   | control-port   | 3121    | .. index::                                                 |
-   |                |         |    single: network; attribute; control-port                |
-   |                |         |    single: attribute; control-port (network)               |
-   |                |         |    single: control-port; network attribute                 |
-   |                |         |                                                            |
-   |                |         | If the bundle contains a ``primitive``, the cluster will   |
-   |                |         | use this integer TCP port for communication with           |
-   |                |         | Pacemaker Remote inside the container. Changing this is    |
-   |                |         | useful when the container is unable to listen on the       |
-   |                |         | default port, for example, when the container uses the     |
-   |                |         | host's network rather than ``ip-range-start`` (in which    |
-   |                |         | case ``replicas-per-host`` must be 1), or when the bundle  |
-   |                |         | may run on a Pacemaker Remote node that is already         |
-   |                |         | listening on the default port. Any ``PCMK_remote_port``    |
-   |                |         | environment variable set on the host or in the container   |
-   |                |         | is ignored for bundle connections.                         |
-   +----------------+---------+------------------------------------------------------------+
+   * - Attribute
+     - Default
+     - Description
+   * - add-host
+     - TRUE
+     - .. index::
+          single: network; attribute, add-host
+          single: attribute; add-host (network)
+          single: add-host; network attribute
+
+       If TRUE, and ``ip-range-start`` is used, Pacemaker will automatically
+       ensure that ``/etc/hosts`` inside the containers has entries for each
+       :ref:`replica name <s-resource-bundle-note-replica-names>` and its
+       assigned IP.
+   * - ip-range-start
+     -
+     - .. index::
+          single: network; attribute, ip-range-start
+          single: attribute; ip-range-start (network)
+          single: ip-range-start; network attribute
+
+       If specified, Pacemaker will create an implicit ``ocf:heartbeat:IPaddr2``
+       resource for each container instance, starting with this IP address,
+       using up to ``replicas`` sequential addresses. These addresses can be
+       used from the host's network to reach the service inside the container,
+       though it is not visible within the container itself. Only IPv4
+       addresses are currently supported.
+   * - host-netmask
+     - 32
+     - .. index::
+          single: network; attribute; host-netmask
+          single: attribute; host-netmask (network)
+          single: host-netmask; network attribute
+
+       If ``ip-range-start`` is specified, the IP addresses are created with
+       this CIDR netmask (as a number of bits).
+   * - host-interface
+     -
+     - .. index::
+          single: network; attribute; host-interface
+          single: attribute; host-interface (network)
+          single: host-interface; network attribute
+
+       If ``ip-range-start`` is specified, the IP addresses are created on this
+       host interface (by default, it will be determined from the IP address).
+   * - control-port
+     - 3121
+     - .. index::
+          single: network; attribute; control-port
+          single: attribute; control-port (network)
+          single: control-port; network attribute
+
+       If the bundle contains a ``primitive``, the cluster will use this integer
+       TCP port for communication with Pacemaker Remote inside the container.
+       Changing this is useful when the container is unable to listen on the
+       default port, for example, when the container uses the host's network
+       rather than ``ip-range-start`` (in which case ``replicas-per-host`` must
+       be 1), or when the bundle may run on a Pacemaker Remote node that is
+       already listening on the default port. Any ``PCMK_remote_port``
+       environment variable set on the host or in the container is ignored for
+       bundle connections.
 
 .. _s-resource-bundle-note-replica-names:
 
@@ -916,53 +920,54 @@ A bundle may optionally contain one ``<network>`` element.
 Additionally, a ``network`` element may optionally contain one or more
 ``port-mapping`` elements.
 
-.. table:: **Attributes of a port-mapping Element**
+.. list-table:: **Attributes of a port-mapping Element**
+   :class: longtable
    :widths: 20 20 60
+   :header-rows: 1
 
-   +---------------+-------------------+------------------------------------------------------+
-   | Attribute     | Default           | Description                                          |
-   +===============+===================+======================================================+
-   | id            |                   | .. index::                                           |
-   |               |                   |    single: port-mapping; attribute, id               |
-   |               |                   |    single: attribute; id (port-mapping)              |
-   |               |                   |    single: id; port-mapping attribute                |
-   |               |                   |                                                      |
-   |               |                   | A unique name for the port mapping (required)        |
-   +---------------+-------------------+------------------------------------------------------+
-   | port          |                   | .. index::                                           |
-   |               |                   |    single: port-mapping; attribute, port             |
-   |               |                   |    single: attribute; port (port-mapping)            |
-   |               |                   |    single: port; port-mapping attribute              |
-   |               |                   |                                                      |
-   |               |                   | If this is specified, connections to this TCP port   |
-   |               |                   | number on the host network (on the container's       |
-   |               |                   | assigned IP address, if ``ip-range-start`` is        |
-   |               |                   | specified) will be forwarded to the container        |
-   |               |                   | network. Exactly one of ``port`` or ``range``        |
-   |               |                   | must be specified in a ``port-mapping``.             |
-   +---------------+-------------------+------------------------------------------------------+
-   | internal-port | value of ``port`` | .. index::                                           |
-   |               |                   |    single: port-mapping; attribute, internal-port    |
-   |               |                   |    single: attribute; internal-port (port-mapping)   |
-   |               |                   |    single: internal-port; port-mapping attribute     |
-   |               |                   |                                                      |
-   |               |                   | If ``port`` and this are specified, connections      |
-   |               |                   | to ``port`` on the host's network will be            |
-   |               |                   | forwarded to this port on the container network.     |
-   +---------------+-------------------+------------------------------------------------------+
-   | range         |                   | .. index::                                           |
-   |               |                   |    single: port-mapping; attribute, range            |
-   |               |                   |    single: attribute; range (port-mapping)           |
-   |               |                   |    single: range; port-mapping attribute             |
-   |               |                   |                                                      |
-   |               |                   | If this is specified, connections to these TCP       |
-   |               |                   | port numbers (expressed as *first_port*-*last_port*) |
-   |               |                   | on the host network (on the container's assigned IP  |
-   |               |                   | address, if ``ip-range-start`` is specified) will    |
-   |               |                   | be forwarded to the same ports in the container      |
-   |               |                   | network. Exactly one of ``port`` or ``range``        |
-   |               |                   | must be specified in a ``port-mapping``.             |
-   +---------------+-------------------+------------------------------------------------------+
+   * - Attribute
+     - Default
+     - Description
+   * - id
+     -
+     - .. index::
+          single: port-mapping; attribute, id
+          single: attribute; id (port-mapping)
+          single: id; port-mapping attribute
+
+       A unique name for the port mapping (required)
+   * - port
+     -
+     - .. index::
+          single: port-mapping; attribute, port
+          single: attribute; port (port-mapping)
+          single: port; port-mapping attribute
+
+       If this is specified, connections to this TCP port number on the host
+       network (on the container's assigned IP address, if ``ip-range-start``
+       is specified) will be forwarded to the container network. Exactly one
+       of ``port`` or ``range`` must be specified in a ``port-mapping``.
+   * - internal-port
+     - value of ``port``
+     - .. index::
+          single: port-mapping; attribute, internal-port
+          single: attribute; internal-port (port-mapping)
+          single: internal-port; port-mapping attribute
+
+       If ``port`` and this are specified, connections to ``port`` on the host's
+       network will be forwarded to this port on the container network.
+   * - range
+     -
+     - .. index::
+          single: port-mapping; attribute, range
+          single: attribute; range (port-mapping)
+          single: range; port-mapping attribute
+
+       If this is specified, connections to these TCP port numbers (expressed as
+       *first_port*-*last_port*) on the host network (on the container's
+       assigned IP address, if ``ip-range-start`` is specified) will be forwarded
+       to the same ports in the container network. Exactly one of ``port`` or
+       ``range`` must be specified in a ``port-mapping``.
 
 .. note::
 
@@ -984,58 +989,63 @@ A bundle may optionally contain one ``storage`` element. A ``storage`` element
 has no properties of its own, but may contain one or more ``storage-mapping``
 elements.
 
-.. table:: **Attributes of a storage-mapping Element**
+.. list-table:: **Attributes of a storage-mapping Element**
+   :class: longtable
    :widths: 20 20 60
+   :header-rows: 1
 
-   +-----------------+---------+-------------------------------------------------------------+
-   | Attribute       | Default | Description                                                 |
-   +=================+=========+=============================================================+
-   | id              |         | .. index::                                                  |
-   |                 |         |    single: storage-mapping; attribute, id                   |
-   |                 |         |    single: attribute; id (storage-mapping)                  |
-   |                 |         |    single: id; storage-mapping attribute                    |
-   |                 |         |                                                             |
-   |                 |         | A unique name for the storage mapping (required)            |
-   +-----------------+---------+-------------------------------------------------------------+
-   | source-dir      |         | .. index::                                                  |
-   |                 |         |    single: storage-mapping; attribute, source-dir           |
-   |                 |         |    single: attribute; source-dir (storage-mapping)          |
-   |                 |         |    single: source-dir; storage-mapping attribute            |
-   |                 |         |                                                             |
-   |                 |         | The absolute path on the host's filesystem that will be     |
-   |                 |         | mapped into the container. Exactly one of ``source-dir``    |
-   |                 |         | and ``source-dir-root`` must be specified in a              |
-   |                 |         | ``storage-mapping``.                                        |
-   +-----------------+---------+-------------------------------------------------------------+
-   | source-dir-root |         | .. index::                                                  |
-   |                 |         |    single: storage-mapping; attribute, source-dir-root      |
-   |                 |         |    single: attribute; source-dir-root (storage-mapping)     |
-   |                 |         |    single: source-dir-root; storage-mapping attribute       |
-   |                 |         |                                                             |
-   |                 |         | The start of a path on the host's filesystem that will      |
-   |                 |         | be mapped into the container, using a different             |
-   |                 |         | subdirectory on the host for each container instance.       |
-   |                 |         | The subdirectory will be named the same as the              |
-   |                 |         | :ref:`replica name <s-resource-bundle-note-replica-names>`. |
-   |                 |         | Exactly one of ``source-dir`` and ``source-dir-root``       |
-   |                 |         | must be specified in a ``storage-mapping``.                 |
-   +-----------------+---------+-------------------------------------------------------------+
-   | target-dir      |         | .. index::                                                  |
-   |                 |         |    single: storage-mapping; attribute, target-dir           |
-   |                 |         |    single: attribute; target-dir (storage-mapping)          |
-   |                 |         |    single: target-dir; storage-mapping attribute            |
-   |                 |         |                                                             |
-   |                 |         | The path name within the container where the host           |
-   |                 |         | storage will be mapped (required)                           |
-   +-----------------+---------+-------------------------------------------------------------+
-   | options         |         | .. index::                                                  |
-   |                 |         |    single: storage-mapping; attribute, options              |
-   |                 |         |    single: attribute; options (storage-mapping)             |
-   |                 |         |    single: options; storage-mapping attribute               |
-   |                 |         |                                                             |
-   |                 |         | A comma-separated list of file system mount                 |
-   |                 |         | options to use when mapping the storage                     |
-   +-----------------+---------+-------------------------------------------------------------+
+   * - Attribute
+     - Default
+     - Description
+   * - id
+     -
+     - .. index::
+          single: storage-mapping; attribute, id
+          single: attribute; id (storage-mapping)
+          single: id; storage-mapping attribute
+
+       A unique name for the storage mapping (required)
+   * - source-dir
+     -
+     - .. index::
+          single: storage-mapping; attribute, source-dir
+          single: attribute; source-dir (storage-mapping)
+          single: source-dir; storage-mapping attribute
+
+       The absolute path on the host's filesystem that will be mapped into the
+       container. Exactly one of ``source-dir`` and ``source-dir-root`` must be
+       specified in a ``storage-mapping``.
+   * - source-dir-root
+     -
+     - .. index::
+          single: storage-mapping; attribute, source-dir-root
+          single: attribute; source-dir-root (storage-mapping)
+          single: source-dir-root; storage-mapping attribute
+
+       The start of a path on the host's filesystem that will be mapped into the
+       container, using a different subdirectory on the host for each container
+       instance.  The subdirectory will be named the same as the
+       :ref:`replica name <s-resource-bundle-note-replica-names>`.  Exactly one
+       of ``source-dir`` and ``source-dir-root`` must be specified in a
+       ``storage-mapping``.
+   * - target-dir
+     -
+     - .. index::
+          single: storage-mapping; attribute, target-dir
+          single: attribute; target-dir (storage-mapping)
+          single: target-dir; storage-mapping attribute
+
+       The path name within the container where the host storage will be mapped
+       (required)
+   * - options
+     -
+     - .. index::
+          single: storage-mapping; attribute, options
+          single: attribute; options (storage-mapping)
+          single: options; storage-mapping attribute
+
+       A comma-separated list of file system mount options to use when mapping
+       the storage
 
 .. note::
 

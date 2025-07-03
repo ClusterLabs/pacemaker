@@ -82,25 +82,38 @@ Upgrading Cluster Software
 There are three approaches to upgrading a cluster, each with advantages and
 disadvantages.
 
-.. table:: **Upgrade Methods**
+.. list-table:: **Upgrade Methods**
    :widths: 16 14 14 14 14 14 14
+   :header-rows: 1
 
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-   | Method                                            | Available| Can be   | Service| Service | Exercises| Allows   |
-   |                                                   | between  | used with| outage | recovery| failover | change of|
-   |                                                   | all      | Pacemaker| during | during  | logic    | messaging|
-   |                                                   | versions | Remote   | upgrade| upgrade |          | layer    |
-   |                                                   |          | nodes    |        |         |          | [#]_     |
-   +===================================================+==========+==========+========+=========+==========+==========+
-   | Complete cluster shutdown                         | yes      | yes      | always | N/A     | no       | yes      |
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-   | Rolling (node by node)                            | no       | yes      | always | yes     | yes      | no       |
-   |                                                   |          |          | [#]_   |         |          |          |
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-   | Detach and reattach                               | yes      | no       | only   | no      | no       | yes      |
-   |                                                   |          |          | due to |         |          |          |
-   |                                                   |          |          | failure|         |          |          |
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
+   * - Method
+     - Available between all versions
+     - Can be used with Pacemaker Remote nodes
+     - Service outage during upgrade
+     - Service recovery during upgrade
+     - Exercises failover logic
+     - Allows change of messaging layer [#]_
+   * - Complete cluster shutdown
+     - yes
+     - yes
+     - always
+     - N/A
+     - no
+     - yes
+   * - Rolling (node by node)
+     - no
+     - yes
+     - always [#]_
+     - yes
+     - yes
+     - no
+   * - Detach and reattach
+     - yes
+     - no
+     - only due to failure
+     - no
+     - no
+     - yes
 
 
 .. index::

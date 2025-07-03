@@ -488,20 +488,34 @@ defaults, and operation defaults.
 To understand the differences, it helps to understand the various types of node
 attribute.
 
-.. table:: **Types of Node Attributes**
+.. list-table:: **Types of Node Attributes**
    :widths: 20 16 16 16 16 16
+   :header-rows: 1
 
-   +-----------+----------+-------------------+------------------+----------------+----------------+
-   | Type      | Recorded | Recorded in       | Survive full     | Manageable by  | Manageable by  |
-   |           | in CIB?  | attribute manager | cluster restart? | crm_attribute? | attrd_updater? |
-   |           |          | memory?           |                  |                |                |
-   +===========+==========+===================+==================+================+================+
-   | permanent | yes      | no                | yes              | yes            | no             |
-   +-----------+----------+-------------------+------------------+----------------+----------------+
-   | transient | yes      | yes               | no               | yes            | yes            |
-   +-----------+----------+-------------------+------------------+----------------+----------------+
-   | private   | no       | yes               | no               | no             | yes            |
-   +-----------+----------+-------------------+------------------+----------------+----------------+
+   * - Type
+     - Recorded in CIB?
+     - Recorded in attribute manager memory?
+     - Survive full cluster restart?
+     - Manageable by by crm_attribute?
+     - Manageable by attrd_updater?
+   * - permanent
+     - yes
+     - no
+     - yes
+     - yes
+     - no
+   * - transient
+     - yes
+     - yes
+     - no
+     - yes
+     - yes
+   * - private
+     - no
+     - yes
+     - no
+     - no
+     - yes
 
 As you can see from the table above, ``crm_attribute`` can manage permanent and
 transient node attributes, while ``attrd_updater`` can manage transient and

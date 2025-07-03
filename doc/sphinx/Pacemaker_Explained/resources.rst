@@ -167,46 +167,46 @@ Resource Properties
 These values tell the cluster which resource agent to use for the resource,
 where to find that resource agent and what standards it conforms to.
 
-.. table:: **Properties of a Primitive Resource**
+.. list-table:: **Properties of a Primitive Resource**
    :widths: 25 75
+   :header-rows: 1
 
-   +-------------+------------------------------------------------------------------+
-   | Field       | Description                                                      |
-   +=============+==================================================================+
-   | id          | .. index::                                                       |
-   |             |    single: id; resource                                          |
-   |             |    single: resource; property, id                                |
-   |             |                                                                  |
-   |             | Your name for the resource                                       |
-   +-------------+------------------------------------------------------------------+
-   | class       | .. index::                                                       |
-   |             |    single: class; resource                                       |
-   |             |    single: resource; property, class                             |
-   |             |                                                                  |
-   |             | The standard the resource agent conforms to. Allowed values:     |
-   |             | ``lsb``, ``ocf``, ``service``, ``stonith``, and ``systemd``      |
-   +-------------+------------------------------------------------------------------+
-   | description | .. index::                                                       |
-   |             |    single: description; resource                                 |
-   |             |    single: resource; property, description                       |
-   |             |                                                                  |
-   |             | Arbitrary text for user's use (ignored by Pacemaker)             |
-   +-------------+------------------------------------------------------------------+
-   | type        | .. index::                                                       |
-   |             |    single: type; resource                                        |
-   |             |    single: resource; property, type                              |
-   |             |                                                                  |
-   |             | The name of the Resource Agent you wish to use. E.g.             |
-   |             | ``IPaddr`` or ``Filesystem``                                     |
-   +-------------+------------------------------------------------------------------+
-   | provider    | .. index::                                                       |
-   |             |    single: provider; resource                                    |
-   |             |    single: resource; property, provider                          |
-   |             |                                                                  |
-   |             | The OCF spec allows multiple vendors to supply the same resource |
-   |             | agent. To use the OCF resource agents supplied by the Heartbeat  |
-   |             | project, you would specify ``heartbeat`` here.                   |
-   +-------------+------------------------------------------------------------------+
+   * - Field
+     - Description
+   * - id
+     - .. index::
+          single: id; resource
+          single: resource; property, id
+
+       Your name for the resource
+   * - class
+     - .. index::
+          single: class; resource
+          single: resource; property, class
+
+       The standard the resource agent conforms to. Allowed values: ``lsb``,
+       ``ocf``, ``service``, ``stonith``, and ``systemd``
+   * - description
+     - .. index::
+          single: description; resource
+          single: resource; property, description
+
+       Arbitrary text for user's use (ignored by Pacemaker)
+   * - type
+     - .. index::
+          single: type; resource
+          single: resource; property, type
+
+       The name of the Resource Agent you wish to use. E.g.  ``IPaddr`` or
+       ``Filesystem``
+   * - provider
+     - .. index::
+          single: provider; resource
+          single: resource; property, provider
+
+       The OCF spec allows multiple vendors to supply the same resource agent.
+       To use the OCF resource agents supplied by the Heartbeat project, you
+       would specify ``heartbeat`` here.
 
 The XML definition of a resource can be queried with the **crm_resource** tool.
 For example:

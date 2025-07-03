@@ -90,47 +90,50 @@ Alert Meta-Attributes
 As with resources, meta-attributes can be configured for alerts to change
 whether and how Pacemaker calls them.
 
-.. table:: **Meta-Attributes of an Alert or Recipient**
+.. list-table:: **Meta-Attributes of an Alert or Recipient**
    :class: longtable
    :widths: 20 20 60
+   :header-rows: 1
 
-   +------------------+---------------+-----------------------------------------------------+
-   | Meta-Attribute   | Default       | Description                                         |
-   +==================+===============+=====================================================+
-   | description      |               | .. index::                                          |
-   |                  |               |    single: acl_permission; description (attribute)  |
-   |                  |               |    single: description; acl_permission attribute    |
-   |                  |               |    single: attribute; description (acl_permission)  |
-   |                  |               |                                                     |
-   |                  |               | Arbitrary text for user's use (ignored by Pacemaker)|
-   +------------------+---------------+-----------------------------------------------------+
-   | enabled          | true          | .. index::                                          |
-   |                  |               |    single: alert; meta-attribute, enabled           |
-   |                  |               |    single: meta-attribute; enabled (alert)          |
-   |                  |               |    single: enabled; alert meta-attribute            |
-   |                  |               |                                                     |
-   |                  |               | If false for an alert, the alert will not be used.  |
-   |                  |               | If true for an alert and false for a particular     |
-   |                  |               | recipient of that alert, that recipient will not be |
-   |                  |               | used. *(since 2.1.6)*                               |
-   +------------------+---------------+-----------------------------------------------------+
-   | timestamp-format | %H:%M:%S.%06N | .. index::                                          |
-   |                  |               |    single: alert; meta-attribute, timestamp-format  |
-   |                  |               |    single: meta-attribute; timestamp-format (alert) |
-   |                  |               |    single: timestamp-format; alert meta-attribute   |
-   |                  |               |                                                     |
-   |                  |               | Format the cluster will use when sending the        |
-   |                  |               | event's timestamp to the agent. This is a string as |
-   |                  |               | used with the ``date(1)`` command.                  |
-   +------------------+---------------+-----------------------------------------------------+
-   | timeout          | 30s           | .. index::                                          |
-   |                  |               |    single: alert; meta-attribute, timeout           |
-   |                  |               |    single: meta-attribute; timeout (alert)          |
-   |                  |               |    single: timeout; alert meta-attribute            |
-   |                  |               |                                                     |
-   |                  |               | If the alert agent does not complete within this    |
-   |                  |               | amount of time, it will be terminated.              |
-   +------------------+---------------+-----------------------------------------------------+
+   * - Meta-Attribute
+     - Default
+     - Description
+   * - description
+     -
+     - .. index::
+          single: acl_permission; description (attribute)
+          single: description; acl_permission attribute
+          single: attribute; description (acl_permission)
+
+       Arbitrary text for user's use (ignored by Pacemaker)
+   * - enabled
+     - true
+     - .. index::
+          single: alert; meta-attribute, enabled
+          single: meta-attribute; enabled (alert)
+          single: enabled; alert meta-attribute
+
+       If false for an alert, the alert will not be used.  If true for an alert
+       and false for a particular recipient of that alert, that recipient will
+       not be used. *(since 2.1.6)*
+   * - timestamp-format
+     - %H:%M:%S.%06N
+     - .. index::
+          single: alert; meta-attribute, timestamp-format
+          single: meta-attribute; timestamp-format (alert)
+          single: timestamp-format; alert meta-attribute
+
+       Format the cluster will use when sending the event's timestamp to the
+       agent. This is a string as used with the ``date(1)`` command.
+   * - timeout
+     - 30s
+     - .. index::
+          single: alert; meta-attribute, timeout
+          single: meta-attribute; timeout (alert)
+          single: timeout; alert meta-attribute
+
+       If the alert agent does not complete within this amount of time, it
+       will be terminated.
 
 Meta-attributes can be configured per alert and/or per recipient.
 
