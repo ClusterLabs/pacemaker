@@ -87,3 +87,5 @@ class BuildOptions:
 
     XMLLINT_PATH = "@XMLLINT_PATH@"
     """Path to the xmllint program."""
+
+# vim: set filetype=python:

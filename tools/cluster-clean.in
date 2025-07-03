@@ -97,3 +97,5 @@ cluster-helper $target -- logger -i -p daemon.info __clean_logs__
 
 #touch $cluster_log
 echo `date` ": Clean complete"
+
+# vim: set filetype=sh:

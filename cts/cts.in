@@ -402,3 +402,5 @@ else
     export cluster_name cluster_hosts cluster_log
     screen -S cts-$cluster_name bash
 fi
+
+# vim: set filetype=sh:

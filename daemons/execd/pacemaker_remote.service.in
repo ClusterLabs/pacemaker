@@ -50,3 +50,5 @@ Restart=on-failure
 # crm_perror() writes directly to stderr, so ignore it here
 # to avoid double-logging with the wrong format
 StandardError=null
+
+# vim: set filetype=systemd:

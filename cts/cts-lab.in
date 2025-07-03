@@ -133,4 +133,4 @@ if __name__ == '__main__':
     rc = environment.run(scenario, iters)
     sys.exit(rc)
 
-# vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:
+# vim: set filetype=python:

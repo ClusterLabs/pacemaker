@@ -199,3 +199,5 @@ elif [ $command = xargs ]; then
 	eval `echo $* | sed 's@'$replace'@'$n'@'`
     done
 fi
+
+# vim: set filetype=sh:

@@ -1734,4 +1734,4 @@ class CtsScheduler:
 if __name__ == "__main__":
     sys.exit(CtsScheduler().run())
 
-# vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:
+# vim: set filetype=python:

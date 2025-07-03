@@ -478,4 +478,4 @@ else
     fatal "Not sure what to do, no tests or time ranges to extract"
 fi
 
-# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
+# vim: set filetype=sh:

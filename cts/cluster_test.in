@@ -173,3 +173,5 @@ printf "\nAll set to go for %d iterations!\n" "$CTS_numtests"
 
 echo Now paste the following command into this shell:
 echo "@PYTHON@ `dirname "$0"`/cts-lab -L \"$CTS_logfile\" --syslog-facility \"$CTS_logfacility\" --no-unsafe-tests --stack \"$CTS_stack\" $CTS_adv --at-boot \"$CTS_boot\" $cts_extra \"$CTS_numtests\" --nodes \"$CTS_node_list\""
+
+# vim: set filetype=sh:

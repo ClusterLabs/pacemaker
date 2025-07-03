@@ -882,4 +882,4 @@ elif [ "$REPORT_MASTER" != "$REPORT_TARGET" ]; then
     fi
 fi
 
-# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
+# vim: set filetype=sh:
