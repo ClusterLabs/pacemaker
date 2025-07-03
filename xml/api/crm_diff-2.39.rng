@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-crm_diff" />
+    </start>
+
+    <define name="element-crm_diff">
+        <choice>
+            <ref name="element-patchset" />
+            <ref name="element-updated" />
+        </choice>
+    </define>
+
+    <define name="element-patchset">
+        <element name="patchset">
+            <!-- CDATA block containing XML patchset (see diff schema) -->
+            <text/>
+        </element>
+    </define>
+
+    <define name="element-updated">
+        <element name="updated">
+            <!-- CDATA block containing updated XML after applying patch -->
+            <text/>
+        </element>
+    </define>
+</grammar>
