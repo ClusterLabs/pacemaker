@@ -158,37 +158,35 @@ Normally, the ping resource should run on all cluster nodes, which means that
 you'll need to create a clone. A template for this can be found below, along
 with a description of the most interesting parameters.
 
-.. table:: **Commonly Used ocf:pacemaker:ping Resource Parameters**
+.. list-table:: **Commonly Used ocf:pacemaker:ping Resource Parameters**
    :widths: 20 80
+   :header-rows: 1
 
-   +--------------------+--------------------------------------------------------------+
-   | Resource Parameter | Description                                                  |
-   +====================+==============================================================+
-   | dampen             | .. index::                                                   |
-   |                    |    single: ocf:pacemaker:ping resource; dampen parameter     |
-   |                    |    single: dampen; ocf:pacemaker:ping resource parameter     |
-   |                    |                                                              |
-   |                    | The time to wait (dampening) for further changes to occur.   |
-   |                    | Use this to prevent a resource from bouncing around the      |
-   |                    | cluster when cluster nodes notice the loss of connectivity   |
-   |                    | at slightly different times.                                 |
-   +--------------------+--------------------------------------------------------------+
-   | multiplier         | .. index::                                                   |
-   |                    |    single: ocf:pacemaker:ping resource; multiplier parameter |
-   |                    |    single: multiplier; ocf:pacemaker:ping resource parameter |
-   |                    |                                                              |
-   |                    | The number of connected ping nodes gets multiplied by this   |
-   |                    | value to get a score. Useful when there are multiple ping    |
-   |                    | nodes configured.                                            |
-   +--------------------+--------------------------------------------------------------+
-   | host_list          | .. index::                                                   |
-   |                    |    single: ocf:pacemaker:ping resource; host_list parameter  |
-   |                    |    single: host_list; ocf:pacemaker:ping resource parameter  |
-   |                    |                                                              |
-   |                    | The machines to contact in order to determine the current    |
-   |                    | connectivity status. Allowed values include resolvable DNS   |
-   |                    | connectivity host names, IPv4 addresses, and IPv6 addresses. |
-   +--------------------+--------------------------------------------------------------+
+   * - Resource Parameter
+     - Description
+   * - dampen
+     - .. index::
+          single: ocf:pacemaker:ping resource; dampen parameter
+          single: dampen; ocf:pacemaker:ping resource parameter
+
+       The time to wait (dampening) for further changes to occur.  Use this to
+       prevent a resource from bouncing around the cluster when cluster nodes
+       notice the loss of connectivity at slightly different times.
+   * - multiplier
+     - .. index::
+          single: ocf:pacemaker:ping resource; multiplier parameter
+          single: multiplier; ocf:pacemaker:ping resource parameter
+
+       The number of connected ping nodes gets multiplied by this value to get
+       a score. Useful when there are multiple ping nodes configured.
+   * - host_list
+     - .. index::
+          single: ocf:pacemaker:ping resource; host_list parameter
+          single: host_list; ocf:pacemaker:ping resource parameter
+
+       The machines to contact in order to determine the current connectivity
+       status. Allowed values include resolvable DNS connectivity host names,
+       IPv4 addresses, and IPv6 addresses.
 
 .. topic:: Example ping resource that checks node connectivity once every minute
 
