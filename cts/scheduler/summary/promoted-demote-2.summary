@@ -25,8 +25,8 @@ Transition Summary:
   * Start      r192.168.122.106     (                        pcmk-2 )
   * Start      r192.168.122.107     (                        pcmk-2 )
   * Start      lsb-dummy            (                        pcmk-2 )
-  * Recover    stateful-1:0         (             Unpromoted pcmk-1 )
   * Promote    stateful-1:1         ( Unpromoted -> Promoted pcmk-2 )
+  * Recover    stateful-1:0         (             Unpromoted pcmk-1 )
 
 Executing Cluster Transition:
   * Resource action: stateful-1:0    cancel=15000 on pcmk-2

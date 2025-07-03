@@ -63,9 +63,9 @@ Executing Cluster Transition:
   * Resource action: rabbitmq        monitor=10000 on messaging-1
   * Resource action: galera          monitor=10000 on galera-2
   * Resource action: galera          monitor=10000 on galera-0
-  * Pseudo action:   redis_post_notify_stop_0
   * Resource action: redis           notify on controller-0
   * Resource action: redis           notify on controller-2
+  * Pseudo action:   redis_post_notify_stop_0
   * Pseudo action:   redis-master_confirmed-pre_notify_stop_0
   * Pseudo action:   redis-master_stop_0
   * Pseudo action:   haproxy-clone_stop_0
@@ -84,11 +84,11 @@ Executing Cluster Transition:
   * Pseudo action:   ip-172.17.4.11_stop_0
   * Resource action: redis           notify on controller-0
   * Resource action: redis           notify on controller-2
+  * Pseudo action:   redis_notified_0
   * Pseudo action:   redis-master_confirmed-post_notify_stopped_0
   * Resource action: ip-172.17.1.14  start on controller-2
   * Resource action: ip-172.17.1.17  start on controller-2
   * Resource action: ip-172.17.4.11  start on controller-2
-  * Pseudo action:   redis_notified_0
   * Resource action: ip-172.17.1.14  monitor=10000 on controller-2
   * Resource action: ip-172.17.1.17  monitor=10000 on controller-2
   * Resource action: ip-172.17.4.11  monitor=10000 on controller-2
