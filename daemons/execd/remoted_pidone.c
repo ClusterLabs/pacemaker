@@ -61,135 +61,129 @@ static struct {
 
 /*!
  * \internal
- * \brief Check a line of text for a valid environment variable name
+ * \brief Check whether a string is a valid environment variable name
  *
- * \param[in]  line  Text to check
- * \param[out] first  First character of valid name if found, NULL otherwise
- * \param[out] last   Last character of valid name if found, NULL otherwise
+ * \param[in] name  String to check
  *
- * \return TRUE if valid name found, FALSE otherwise
+ * \return \c true if \p name is a valid name, or \c false otherwise
  * \note It's reasonable to impose limitations on environment variable names
  *       beyond what C or setenv() does: We only allow names that contain only
  *       [a-zA-Z0-9_] characters and do not start with a digit.
  */
 static bool
-find_env_var_name(char *line, char **first, char **last)
+valid_env_var_name(const gchar *name)
 {
-    // Skip leading whitespace
-    *first = line;
-    while (isspace(**first)) {
-        ++*first;
+    if (!isalpha(*name) && (*name != '_')) {
+        // Invalid first character
+        return false;
     }
 
-    if (isalpha(**first) || (**first == '_')) { // Valid first character
-        *last = *first;
-        while (isalnum(*(*last + 1)) || (*(*last + 1) == '_')) {
-            ++*last;
-        }
-        return TRUE;
-    }
-
-    *first = *last = NULL;
-    return FALSE;
+    // The rest of the characters must be alphanumeric or underscores
+    for (name++; isalnum(*name) || (*name == '_'); name++);
+    return *name == '\0';
 }
 
+#define CONTAINER_ENV_FILE "/etc/pacemaker/pcmk-init.env"
+
 static void
-load_env_vars(const char *filename)
+load_env_vars(void)
 {
     /* We haven't forked or initialized logging yet, so don't leave any file
      * descriptors open, and don't log -- silently ignore errors.
      */
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(CONTAINER_ENV_FILE, "r");
+    char *line = NULL;
+    size_t buf_size = 0;
 
-    if (fp != NULL) {
-        char line[LINE_MAX] = { '\0', };
-
-        while (fgets(line, LINE_MAX, fp) != NULL) {
-            char *name = NULL;
-            char *end = NULL;
-            char *value = NULL;
-            char *quote = NULL;
-
-            // Look for valid name immediately followed by equals sign
-            if (find_env_var_name(line, &name, &end) && (*++end == '=')) {
-
-                // Null-terminate name, and advance beyond equals sign
-                *end++ = '\0';
-
-                // Check whether value is quoted
-                if ((*end == '\'') || (*end == '"')) {
-                    quote = end++;
-                }
-                value = end;
-
-                if (quote) {
-                    /* Value is remaining characters up to next non-backslashed
-                     * matching quote character.
-                     */
-                    while (((*end != *quote) || (*(end - 1) == '\\'))
-                           && (*end != '\0')) {
-                        end++;
-                    }
-                    if (*end == *quote) {
-                        // Null-terminate value, and advance beyond close quote
-                        *end++ = '\0';
-                    } else {
-                        // Matching closing quote wasn't found
-                        value = NULL;
-                    }
-
-                } else {
-                    /* Value is remaining characters up to next non-backslashed
-                     * whitespace.
-                     */
-                    while ((!isspace(*end) || (*(end - 1) == '\\'))
-                           && (*end != '\0')) {
-                        ++end;
-                    }
-
-                    if (end == (line + LINE_MAX - 1)) {
-                        // Line was too long
-                        value = NULL;
-                    }
-                    // Do NOT null-terminate value (yet)
-                }
-
-                /* We have a valid name and value, and end is now the character
-                 * after the closing quote or the first whitespace after the
-                 * unquoted value. Make sure the rest of the line is just
-                 * whitespace or a comment.
-                 */
-                if (value) {
-                    char *value_end = end;
-
-                    while (isspace(*end) && (*end != '\n')) {
-                        ++end;
-                    }
-                    if ((*end == '\n') || (*end == '#')) {
-                        if (quote == NULL) {
-                            // Now we can null-terminate an unquoted value
-                            *value_end = '\0';
-                        }
-
-                        // Don't overwrite (bundle options take precedence)
-                        // coverity[tainted_string] This can't easily be changed right now
-                        setenv(name, value, 0);
-
-                    } else {
-                        value = NULL;
-                    }
-                }
-            }
-
-            if ((value == NULL) && (strchr(line, '\n') == NULL)) {
-                // Eat remainder of line beyond LINE_MAX
-                if (fscanf(fp, "%*[^\n]\n") == EOF) {
-                    value = NULL; // Don't care, make compiler happy
-                }
-            }
-        }
-        fclose(fp);
+    if (fp == NULL) {
+        return;
     }
+
+    while (getline(&line, &buf_size, fp) != -1) {
+        gchar *name = NULL;
+        gchar *value = NULL;
+        gchar *end = NULL;
+        gchar *comment = NULL;
+
+        // Strip leading and trailing whitespace
+        g_strstrip(line);
+
+        if ((pcmk__scan_nvpair(line, &name, &value) != pcmk_rc_ok)
+            || !valid_env_var_name(name)) {
+            goto cleanup_loop;
+        }
+
+        if ((*value == '\'') || (*value == '"')) {
+            char quote = *value;
+
+            // Strip the leading quote
+            *value = ' ';
+            g_strchug(value);
+
+            /* Value is remaining characters up to next non-backslashed matching
+             * quote character.
+             */
+            for (end = value;
+                 (*end != '\0') && ((*end != quote) || (*(end - 1) == '\\'));
+                 end++);
+
+            if (*end != quote) {
+                // Matching closing quote wasn't found
+                goto cleanup_loop;
+            }
+
+            // Discard closing quote and advance to check for trailing garbage
+            *end++ = '\0';
+
+        } else {
+            /* Value is remaining characters up to next non-backslashed
+             * whitespace.
+             */
+            for (end = value;
+                 (*end != '\0') && (!isspace(*end) || (*(end - 1) == '\\'));
+                 end++);
+        }
+
+        /* We have a valid name and value, and end is now the character after
+         * the closing quote or the first whitespace after the unquoted value.
+         * Make sure the rest of the line, if any, is just optional whitespace
+         * followed by a comment.
+         */
+
+        // Strip trailing comment beginning with '#'
+        comment = strchr(end, '#');
+        if (comment != NULL) {
+            *comment = '\0';
+        }
+
+        // Strip any remaining trailing whitespace from value
+        g_strchomp(end);
+
+        if (*end != '\0') {
+            // Found garbage after value
+            goto cleanup_loop;
+        }
+
+        // Don't overwrite (bundle options take precedence)
+        // coverity[tainted_string] Can't easily be changed right now
+        setenv(name, value, 0);
+
+cleanup_loop:
+        g_free(name);
+        g_free(value);
+        errno = 0;
+    }
+
+    // getline() returns -1 on EOF (expected) or error
+    if (errno != 0) {
+        int rc = errno;
+
+        crm_err("Error while reading environment variables from "
+                CONTAINER_ENV_FILE ": %s",
+                pcmk_rc_str(rc));
+    }
+    fclose(fp);
+    free(line);
 }
 
 void
@@ -221,7 +215,7 @@ remoted_spawn_pidone(int argc, char **argv)
      * To allow for that, look for a special file containing a shell-like syntax
      * of name/value pairs, and export those into the environment.
      */
-    load_env_vars("/etc/pacemaker/pcmk-init.env");
+    load_env_vars();
 
     if (strcmp(pid1, "vars") == 0) {
         return;
