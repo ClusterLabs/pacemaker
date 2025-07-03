@@ -9,7 +9,7 @@ Access Control Lists (ACLs)
 By default, the ``root`` user or any user in the |CRM_DAEMON_GROUP| group can
 modify Pacemaker's CIB without restriction. Pacemaker offers *access control
 lists (ACLs)* to provide more fine-grained authorization.
-   
+
 .. important::
 
    Being able to modify the CIB's resource section allows a user to run any
@@ -18,7 +18,7 @@ lists (ACLs)* to provide more fine-grained authorization.
 
 ACL Prerequisites
 #################
-   
+
 In order to use ACLs:
 
 * The ``enable-acl`` :ref:`cluster option <cluster_options>` must be set to
@@ -35,7 +35,7 @@ In order to use ACLs:
   with ACL support. If you are using an older release, your installation
   supports ACLs only if the output of the command ``pacemakerd --features``
   contains ``acls``. In newer versions, ACLs are always enabled.
-   
+
 .. important::
 
    ``enable-acl`` should be set either by the root user, or as part of a batch
@@ -53,7 +53,7 @@ ACL Configuration
 ACLs are specified within an ``acls`` element of the CIB. The ``acls`` element
 may contain any number of ``acl_role``, ``acl_target``, and ``acl_group``
 elements.
-   
+
 
 .. index::
    single: Access Control List (ACL); acl_role
@@ -65,9 +65,9 @@ ACL Roles
 An ACL *role* is a collection of permissions allowing or denying access to
 particular portions of the CIB. A role is configured with an ``acl_role``
 element in the CIB ``acls`` section.
-   
-.. table:: **Properties of an acl_role element**
-   :widths: 1 3
+
+.. table:: **Properties of an acl_role Element**
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -88,13 +88,13 @@ element in the CIB ``acls`` section.
    +------------------+-----------------------------------------------------------+
 
 An ``acl_role`` element may contain any number of ``acl_permission`` elements.
-   
+
 .. index::
    single: Access Control List (ACL); acl_permission
    pair: acl_permission; XML element
 
-.. table:: **Properties of an acl_permission element**
-   :widths: 1 3
+.. table:: **Properties of an acl_permission Element**
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -171,31 +171,31 @@ An ``acl_role`` element may contain any number of ``acl_permission`` elements.
 
    * Permissions are applied to the selected XML element's entire XML subtree
      (all elements enclosed within it).
-   
+
    * Write permission grants the ability to create, modify, or remove the
      element and its subtree, and also the ability to create any "scaffolding"
      elements (enclosing elements that do not have attributes other than an
      ID).
-   
+
    * Permissions for more specific matches (more deeply nested elements) take
      precedence over more general ones.
-   
+
    * If multiple permissions are configured for the same match (for example, in
      different roles applied to the same user), any ``deny`` permission takes
      precedence, then ``write``, then lastly ``read``.
-   
+
 
 ACL Targets and Groups
 ######################
-   
+
 ACL targets correspond to user accounts on the system.
 
 .. index::
    single: Access Control List (ACL); acl_target
    pair: acl_target; XML element
 
-.. table:: **Properties of an acl_target element**
-   :widths: 1 3
+.. table:: **Properties of an acl_target Element**
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -221,13 +221,13 @@ ACL targets correspond to user accounts on the system.
 
 ACL groups correspond to groups on the system. Any role configured for these
 groups apply to all users in that group *(since 2.1.5)*.
-   
+
 .. index::
    single: Access Control List (ACL); acl_group
    pair: acl_group; XML element
 
-.. table:: **Properties of an acl_group element**
-   :widths: 1 3
+.. table:: **Properties of an acl_group Element**
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -264,8 +264,8 @@ elements.
    single: Access Control List (ACL); role
    pair: role; XML element
 
-.. table:: **Properties of a role element**
-   :widths: 1 3
+.. table:: **Properties of a role Element**
+   :widths: 25 75
 
    +------------------+-----------------------------------------------------------+
    | Attribute        | Description                                               |
@@ -285,7 +285,7 @@ elements.
    the CIB, regardless of ACLs. For all other user accounts, when ``enable-acl``
    is true, permission to all parts of the CIB is denied by default (permissions
    must be explicitly granted).
-   
+
 
 ACLs and Pacemaker Remote Nodes
 ###############################
@@ -298,117 +298,117 @@ and ``pacemaker-remote`` as the role.
 
 ACL Examples
 ############
-   
+
 .. code-block:: xml
 
    <acls>
-   
+
       <acl_role id="read_all">
           <acl_permission id="read_all-cib" kind="read" xpath="/cib" />
       </acl_role>
-   
+
       <acl_role id="operator">
-   
+
           <acl_permission id="operator-maintenance-mode" kind="write"
               xpath="//crm_config//nvpair[@name='maintenance-mode']" />
-   
+
           <acl_permission id="operator-maintenance-attr" kind="write"
               xpath="//nvpair[@name='maintenance']" />
-   
+
           <acl_permission id="operator-target-role" kind="write"
               xpath="//resources//meta_attributes/nvpair[@name='target-role']" />
-   
+
           <acl_permission id="operator-is-managed" kind="write"
               xpath="//resources//nvpair[@name='is-managed']" />
-   
+
           <acl_permission id="operator-rsc_location" kind="write"
               object-type="rsc_location" />
-   
+
       </acl_role>
-   
+
       <acl_role id="administrator">
           <acl_permission id="administrator-cib" kind="write" xpath="/cib" />
       </acl_role>
-   
+
       <acl_role id="minimal">
-   
+
           <acl_permission id="minimal-standby" kind="read"
               description="allow reading standby node attribute (permanent or transient)"
               xpath="//instance_attributes/nvpair[@name='standby']"/>
-   
+
           <acl_permission id="minimal-maintenance" kind="read"
               description="allow reading maintenance node attribute (permanent or transient)"
               xpath="//nvpair[@name='maintenance']"/>
-   
+
           <acl_permission id="minimal-target-role" kind="read"
               description="allow reading resource target roles"
               xpath="//resources//meta_attributes/nvpair[@name='target-role']"/>
-   
+
           <acl_permission id="minimal-is-managed" kind="read"
               description="allow reading resource managed status"
               xpath="//resources//meta_attributes/nvpair[@name='is-managed']"/>
-   
+
           <acl_permission id="minimal-deny-instance-attributes" kind="deny"
               xpath="//instance_attributes"/>
-   
+
           <acl_permission id="minimal-deny-meta-attributes" kind="deny"
               xpath="//meta_attributes"/>
-   
+
           <acl_permission id="minimal-deny-operations" kind="deny"
               xpath="//operations"/>
-   
+
           <acl_permission id="minimal-deny-utilization" kind="deny"
               xpath="//utilization"/>
-   
+
           <acl_permission id="minimal-nodes" kind="read"
               description="allow reading node names/IDs (attributes are denied separately)"
               xpath="/cib/configuration/nodes"/>
-   
+
           <acl_permission id="minimal-resources" kind="read"
               description="allow reading resource names/agents (parameters are denied separately)"
               xpath="/cib/configuration/resources"/>
-   
+
           <acl_permission id="minimal-deny-constraints" kind="deny"
               xpath="/cib/configuration/constraints"/>
-   
+
           <acl_permission id="minimal-deny-topology" kind="deny"
               xpath="/cib/configuration/fencing-topology"/>
-   
+
           <acl_permission id="minimal-deny-op_defaults" kind="deny"
               xpath="/cib/configuration/op_defaults"/>
-   
+
           <acl_permission id="minimal-deny-rsc_defaults" kind="deny"
               xpath="/cib/configuration/rsc_defaults"/>
-   
+
           <acl_permission id="minimal-deny-alerts" kind="deny"
               xpath="/cib/configuration/alerts"/>
-   
+
           <acl_permission id="minimal-deny-acls" kind="deny"
               xpath="/cib/configuration/acls"/>
-   
+
           <acl_permission id="minimal-cib" kind="read"
               description="allow reading cib element and crm_config/status sections"
               xpath="/cib"/>
-   
+
       </acl_role>
-   
+
       <acl_target id="alice">
          <role id="minimal"/>
       </acl_target>
-   
+
       <acl_target id="bob">
          <role id="read_all"/>
       </acl_target>
-   
+
       <acl_target id="carol">
          <role id="read_all"/>
          <role id="operator"/>
       </acl_target>
-   
+
       <acl_target id="dave">
          <role id="administrator"/>
       </acl_target>
-   
+
    </acls>
 
 In the above example, the user ``alice`` has the minimal permissions necessary

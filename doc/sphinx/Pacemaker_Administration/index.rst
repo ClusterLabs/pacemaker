@@ -4,14 +4,8 @@ Pacemaker Administration
 *Managing Pacemaker Clusters*
 
 
-Abstract
---------
-This document has instructions and tips for system administrators who
-manage high-availability clusters using Pacemaker.
-
-
-Table of Contents
------------------
+This document has instructions and tips for system administrators who manage
+high-availability clusters using Pacemaker.
 
 .. toctree::
    :maxdepth: 3
@@ -30,10 +24,5 @@ Table of Contents
    alerts
    agents
    pcs-crmsh
-
-
-Index
------
-
-* :ref:`genindex`
-* :ref:`search`
+   :ref:`genindex`
+   :ref:`search`

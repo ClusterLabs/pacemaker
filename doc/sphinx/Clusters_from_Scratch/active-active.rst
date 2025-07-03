@@ -258,7 +258,7 @@ being fenced every time quorum is lost.
 
 To address this situation, set ``no-quorum-policy`` to ``freeze`` when GFS2 is
 in use. This means that when quorum is lost, the remaining partition will do
-nothing until quorum is regained. 
+nothing until quorum is regained.
 
 .. code-block:: console
 

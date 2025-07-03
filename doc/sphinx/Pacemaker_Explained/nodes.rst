@@ -293,120 +293,99 @@ For true/false values, the cluster considers a value of "1", "y", "yes", "on",
 or "true" (case-insensitively) to be true, "0", "n", "no", "off", "false", or
 unset to be false, and anything else to be an error.
 
-.. table:: **Node attributes with special significance**
+.. list-table:: **Node Attributes With Special Significance**
    :class: longtable
-   :widths: 1 2
+   :widths: 30 70
+   :header-rows: 1
 
-   +----------------------------+-----------------------------------------------------+
-   | Name                       | Description                                         |
-   +============================+=====================================================+
-   | fail-count-*               | .. index::                                          |
-   |                            |    pair: node attribute; fail-count                 |
-   |                            |                                                     |
-   |                            | Attributes whose names start with                   |
-   |                            | ``fail-count-`` are managed by the cluster          |
-   |                            | to track how many times particular resource         |
-   |                            | operations have failed on this node. These          |
-   |                            | should be queried and cleared via the               |
-   |                            | ``crm_failcount`` or                                |
-   |                            | ``crm_resource --cleanup`` commands rather          |
-   |                            | than directly.                                      |
-   +----------------------------+-----------------------------------------------------+
-   | last-failure-*             | .. index::                                          |
-   |                            |    pair: node attribute; last-failure               |
-   |                            |                                                     |
-   |                            | Attributes whose names start with                   |
-   |                            | ``last-failure-`` are managed by the cluster        |
-   |                            | to track when particular resource operations        |
-   |                            | have most recently failed on this node.             |
-   |                            | These should be cleared via the                     |
-   |                            | ``crm_failcount`` or                                |
-   |                            | ``crm_resource --cleanup`` commands rather          |
-   |                            | than directly.                                      |
-   +----------------------------+-----------------------------------------------------+
-   | maintenance                | .. _node_maintenance:                               |
-   |                            |                                                     |
-   |                            | .. index::                                          |
-   |                            |    pair: node attribute; maintenance                |
-   |                            |                                                     |
-   |                            | If true, the cluster will not start or stop any     |
-   |                            | resources on this node. Any resources active on the |
-   |                            | node become unmanaged, and any recurring operations |
-   |                            | for those resources (except those specifying        |
-   |                            | ``role`` as ``Stopped``) will be paused. The        |
-   |                            | :ref:`maintenance-mode <maintenance_mode>` cluster  |
-   |                            | option, if true, overrides this. If this attribute  |
-   |                            | is true, it overrides the                           |
-   |                            | :ref:`is-managed <is_managed>` and                  |
-   |                            | :ref:`maintenance <rsc_maintenance>`                |
-   |                            | meta-attributes of affected resources and           |
-   |                            | :ref:`enabled <op_enabled>` meta-attribute for      |
-   |                            | affected recurring actions. Pacemaker should not be |
-   |                            | restarted on a node that is in single-node          |
-   |                            | maintenance mode.                                   |
-   +----------------------------+-----------------------------------------------------+
-   | probe_complete             | .. index::                                          |
-   |                            |    pair: node attribute; probe_complete             |
-   |                            |                                                     |
-   |                            | This is managed by the cluster to detect            |
-   |                            | when nodes need to be reprobed, and should          |
-   |                            | never be used directly.                             |
-   +----------------------------+-----------------------------------------------------+
-   | resource-discovery-enabled | .. index::                                          |
-   |                            |    pair: node attribute; resource-discovery-enabled |
-   |                            |                                                     |
-   |                            | If the node is a remote node, fencing is enabled,   |
-   |                            | and this attribute is explicitly set to false       |
-   |                            | (unset means true in this case), resource discovery |
-   |                            | (probes) will not be done on this node. This is     |
-   |                            | highly discouraged; the ``resource-discovery``      |
-   |                            | location constraint property is preferred for this  |
-   |                            | purpose.                                            |
-   +----------------------------+-----------------------------------------------------+
-   | shutdown                   | .. index::                                          |
-   |                            |    pair: node attribute; shutdown                   |
-   |                            |                                                     |
-   |                            | This is managed by the cluster to orchestrate the   |
-   |                            | shutdown of a node, and should never be used        |
-   |                            | directly.                                           |
-   +----------------------------+-----------------------------------------------------+
-   | site-name                  | .. index::                                          |
-   |                            |    pair: node attribute; site-name                  |
-   |                            |                                                     |
-   |                            | If set, this will be used as the value of the       |
-   |                            | ``#site-name`` node attribute used in rules. (If    |
-   |                            | not set, the value of the ``cluster-name`` cluster  |
-   |                            | option will be used as ``#site-name`` instead.)     |
-   +----------------------------+-----------------------------------------------------+
-   | standby                    | .. index::                                          |
-   |                            |    pair: node attribute; standby                    |
-   |                            |                                                     |
-   |                            | If true, the node is in standby mode. This is       |
-   |                            | typically set and queried via the ``crm_standby``   |
-   |                            | command rather than directly.                       |
-   +----------------------------+-----------------------------------------------------+
-   | terminate                  | .. index::                                          |
-   |                            |    pair: node attribute; terminate                  |
-   |                            |                                                     |
-   |                            | If the value is true or begins with any nonzero     |
-   |                            | number, the node will be fenced. This is typically  |
-   |                            | set by tools rather than directly.                  |
-   +----------------------------+-----------------------------------------------------+
-   | #digests-*                 | .. index::                                          |
-   |                            |    pair: node attribute; #digests                   |
-   |                            |                                                     |
-   |                            | Attributes whose names start with ``#digests-`` are |
-   |                            | managed by the cluster to detect when               |
-   |                            | :ref:`unfencing` needs to be redone, and should     |
-   |                            | never be used directly.                             |
-   +----------------------------+-----------------------------------------------------+
-   | #node-unfenced             | .. index::                                          |
-   |                            |    pair: node attribute; #node-unfenced             |
-   |                            |                                                     |
-   |                            | When the node was last unfenced (as seconds since   |
-   |                            | the epoch). This is managed by the cluster and      |
-   |                            | should never be used directly.                      |
-   +----------------------------+-----------------------------------------------------+
+   * - Name
+     - Description
+   * - fail-count-*
+     - .. index::
+          pair: node attribute; fail-count
+
+       Attributes whose names start with ``fail-count-`` are managed by the
+       cluster to track how many times particular resource operations have
+       failed on this node. These should be queried and cleared via the
+       ``crm_failcount`` or ``crm_resource --cleanup`` commands rather than
+       directly.
+   * - last-failure-*
+     - .. index::
+          pair: node attribute; last-failure
+
+       Attributes whose names start with ``last-failure-`` are managed by the
+       cluster to track when particular resource operations have most recently
+       failed on this node.  These should be cleared via the ``crm_failcount``
+       or ``crm_resource --cleanup`` commands rather than directly.
+   * - maintenance
+     - .. _node_maintenance:
+
+       .. index::
+          pair: node attribute; maintenance
+
+       If true, the cluster will not start or stop any resources on this node.
+       Any resources active on the node become unmanaged, and any recurring
+       operations for those resources (except those specifying ``role`` as
+       ``Stopped``) will be paused. The :ref:`maintenance-mode <maintenance_mode>`
+       cluster option, if true, overrides this. If this attribute is true, it
+       overrides the :ref:`is-managed <is_managed>` and
+       :ref:`maintenance <rsc_maintenance>` meta-attributes of affected resources
+       and :ref:`enabled <op_enabled>` meta-attribute for affected recurring
+       actions. Pacemaker should not be restarted on a node that is in
+       single-node maintenance mode.
+   * - probe_complete
+     - .. index::
+          pair: node attribute; probe_complete
+
+       This is managed by the cluster to detect when nodes need to be reprobed,
+       and should never be used directly.
+   * - resource-discovery-enabled
+     - .. index::
+          pair: node attribute; resource-discovery-enabled
+
+       If the node is a remote node, fencing is enabled, and this attribute is
+       explicitly set to false (unset means true in this case), resource
+       discovery (probes) will not be done on this node. This is highly
+       discouraged; the ``resource-discovery`` location constraint property is
+       preferred for this purpose.
+   * - shutdown
+     - .. index::
+          pair: node attribute; shutdown
+
+       This is managed by the cluster to orchestrate the shutdown of a node, and
+       should never be used directly.
+   * - site-name
+     - .. index::
+          pair: node attribute; site-name
+
+       If set, this will be used as the value of the ``#site-name`` node
+       attribute used in rules. (If not set, the value of the ``cluster-name``
+       cluster option will be used as ``#site-name`` instead.)
+   * - standby
+     - .. index::
+          pair: node attribute; standby
+
+       If true, the node is in standby mode. This is typically set and queried
+       via the ``crm_standby`` command rather than directly.
+   * - terminate
+     - .. index::
+          pair: node attribute; terminate
+
+       If the value is true or begins with any nonzero number, the node will be
+       fenced. This is typically set by tools rather than directly.
+   * - #digests-*
+     - .. index::
+          pair: node attribute; #digests
+
+       Attributes whose names start with ``#digests-`` are managed by the cluster
+       to detect when :ref:`unfencing` needs to be redone, and should never be
+       used directly.
+   * - #node-unfenced
+     - .. index::
+          pair: node attribute; #node-unfenced
+
+       When the node was last unfenced (as seconds since the epoch). This is
+       managed by the cluster and should never be used directly.
 
 .. index::
    single: node; health
@@ -433,38 +412,37 @@ Pacemaker will treat any node attribute whose name starts with ``#health`` as
 an indicator of node health. Node health attributes may have one of the
 following values:
 
-.. table:: **Allowed Values for Node Health Attributes**
-   :widths: 1 4
+.. list-table:: **Allowed Values for Node Health Attributes**
+   :widths: 25 75
+   :header-rows: 1
 
-   +------------+--------------------------------------------------------------+
-   | Value      | Intended significance                                        |
-   +============+==============================================================+
-   | ``red``    | .. index::                                                   |
-   |            |    single: red; node health attribute value                  |
-   |            |    single: node attribute; health (red)                      |
-   |            |                                                              |
-   |            | This indicator is unhealthy                                  |
-   +------------+--------------------------------------------------------------+
-   | ``yellow`` | .. index::                                                   |
-   |            |    single: yellow; node health attribute value               |
-   |            |    single: node attribute; health (yellow)                   |
-   |            |                                                              |
-   |            | This indicator is close to unhealthy (whether worsening or   |
-   |            | recovering)                                                  |
-   +------------+--------------------------------------------------------------+
-   | ``green``  | .. index::                                                   |
-   |            |    single: green; node health attribute value                |
-   |            |    single: node attribute; health (green)                    |
-   |            |                                                              |
-   |            | This indicator is healthy                                    |
-   +------------+--------------------------------------------------------------+
-   | *integer*  | .. index::                                                   |
-   |            |    single: score; node health attribute value                |
-   |            |    single: node attribute; health (score)                    |
-   |            |                                                              |
-   |            | A numeric score to apply to all resources on this node (0 or |
-   |            | positive is healthy, negative is unhealthy)                  |
-   +------------+--------------------------------------------------------------+
+   * - Value
+     - Intended significance
+   * - ``red``
+     - .. index::
+          single: red; node health attribute value
+          single: node attribute; health (red)
+
+       This indicator is unhealthy
+   * - ``yellow``
+     - .. index::
+          single: yellow; node health attribute value
+          single: node attribute; health (yellow)
+
+       This indicator is close to unhealthy (whether worsening or recovering)
+   * - ``green``
+     - .. index::
+          single: green; node health attribute value
+          single: node attribute; health (green)
+
+       This indicator is healthy
+   * - *integer*
+     - .. index::
+          single: score; node health attribute value
+          single: node attribute; health (score)
+
+       A numeric score to apply to all resources on this node (0 or positive is
+       healthy, negative is unhealthy)
 
 .. note::
 
@@ -493,58 +471,54 @@ and ``green`` to scores.
 
 Allowed values are:
 
-.. table:: **Node Health Strategies**
-   :widths: 1 4
+.. list-table:: **Node Health Strategies**
+   :widths: 25 75
+   :header-rows: 1
 
-   +----------------+----------------------------------------------------------+
-   | Value          | Effect                                                   |
-   +================+==========================================================+
-   | none           | .. index::                                               |
-   |                |    single: node-health-strategy; none                    |
-   |                |    single: none; node-health-strategy value              |
-   |                |                                                          |
-   |                | Do not track node health attributes at all.              |
-   +----------------+----------------------------------------------------------+
-   | migrate-on-red | .. index::                                               |
-   |                |    single: node-health-strategy; migrate-on-red          |
-   |                |    single: migrate-on-red; node-health-strategy value    |
-   |                |                                                          |
-   |                | Assign the value of ``-INFINITY`` to ``red``, and 0 to   |
-   |                | ``yellow`` and ``green``. This will cause all resources  |
-   |                | to move off the node if any attribute is ``red``.        |
-   +----------------+----------------------------------------------------------+
-   | only-green     | .. index::                                               |
-   |                |    single: node-health-strategy; only-green              |
-   |                |    single: only-green; node-health-strategy value        |
-   |                |                                                          |
-   |                | Assign the value of ``-INFINITY`` to ``red`` and         |
-   |                | ``yellow``, and 0 to ``green``. This will cause all      |
-   |                | resources to move off the node if any attribute is       |
-   |                | ``red`` or ``yellow``.                                   |
-   +----------------+----------------------------------------------------------+
-   | progressive    | .. index::                                               |
-   |                |    single: node-health-strategy; progressive             |
-   |                |    single: progressive; node-health-strategy value       |
-   |                |                                                          |
-   |                | Assign the value of the ``node-health-red`` cluster      |
-   |                | option to ``red``, the value of ``node-health-yellow``   |
-   |                | to ``yellow``, and the value of ``node-health-green`` to |
-   |                | ``green``. Each node is additionally assigned a score of |
-   |                | ``node-health-base`` (this allows resources to start     |
-   |                | even if some attributes are ``yellow``). This strategy   |
-   |                | gives the administrator finer control over how important |
-   |                | each value is.                                           |
-   +----------------+----------------------------------------------------------+
-   | custom         | .. index::                                               |
-   |                |    single: node-health-strategy; custom                  |
-   |                |    single: custom; node-health-strategy value            |
-   |                |                                                          |
-   |                | Track node health attributes using the same values as    |
-   |                | ``progressive`` for ``red``, ``yellow``, and ``green``,  |
-   |                | but do not take them into account. The administrator is  |
-   |                | expected to implement a policy by defining :ref:`rules`  |
-   |                | referencing node health attributes.                      |
-   +----------------+----------------------------------------------------------+
+   * - Value
+     - Effect
+   * - none
+     - .. index::
+          single: node-health-strategy; none
+          single: none; node-health-strategy value
+
+       Do not track node health attributes at all.
+   * - migrate-on-red
+     - .. index::
+          single: node-health-strategy; migrate-on-red
+          single: migrate-on-red; node-health-strategy value
+
+       Assign the value of ``-INFINITY`` to ``red``, and 0 to ``yellow`` and
+       ``green``. This will cause all resources to move off the node if any
+       attribute is ``red``.
+   * - only-green
+     - .. index::
+          single: node-health-strategy; only-green
+          single: only-green; node-health-strategy value
+
+       Assign the value of ``-INFINITY`` to ``red`` and ``yellow``, and 0 to
+       ``green``. This will cause all resources to move off the node if any
+       attribute is ``red`` or ``yellow``.
+   * - progressive
+     - .. index::
+          single: node-health-strategy; progressive
+          single: progressive; node-health-strategy value
+
+       Assign the value of the ``node-health-red`` cluster option to ``red``,
+       the value of ``node-health-yellow`` to ``yellow``, and the value of
+       ``node-health-green`` to ``green``. Each node is additionally assigned a
+       score of ``node-health-base`` (this allows resources to start even if
+       some attributes are ``yellow``). This strategy gives the administrator
+       finer control over how important each value is.
+   * - custom
+     - .. index::
+          single: node-health-strategy; custom
+          single: custom; node-health-strategy value
+
+       Track node health attributes using the same values as ``progressive`` for
+       ``red``, ``yellow``, and ``green``, but do not take them into account.
+       The administrator is expected to implement a policy by defining :ref:`rules`
+       referencing node health attributes.
 
 
 Exempting a Resource from Health Restrictions
