@@ -7,3 +7,5 @@ ExecStart=@CRM_DAEMON_DIR@/pacemaker-cts-dummyd %i
 
 [Install]
 DefaultInstance=0
+
+# vim: set filetype=systemd:

@@ -198,3 +198,5 @@ for clusize in $SERIES; do
 	msg "Statistics for $clusize-node cluster saved"
 done
 msg "Tests done for series $SERIES, output in $CSV and $STATS"
+
+# vim: set filetype=sh:

@@ -83,3 +83,5 @@ esac
 rc=$?
 echo "`basename $0` $1 : $rc"
 exit $rc
+
+# vim: set filetype=sh:

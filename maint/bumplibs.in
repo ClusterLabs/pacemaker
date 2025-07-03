@@ -296,3 +296,5 @@ done
 
 # Show all proposed changes
 git --no-pager diff --color -w
+
+# vim: set filetype=sh:

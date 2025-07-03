@@ -174,3 +174,5 @@ stop)
 esac
 
 exit $rtrn
+
+# vim: set filetype=sh:
