@@ -74,7 +74,7 @@ char *pcmk__format_nvpair(const char *name, const char *value,
 
 pid_t pcmk__procfs_pid_of(const char *name);
 unsigned int pcmk__procfs_num_cores(void);
-int pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size);
+int pcmk__procfs_pid2path(pid_t pid, char **path);
 bool pcmk__procfs_has_pids(void);
 DIR *pcmk__procfs_fd_dir(void);
 void pcmk__sysrq_trigger(char t);
@@ -101,7 +101,6 @@ bool pcmk__throttle_load_avg(float *load);
  */
 int pcmk__pid_active(pid_t pid, const char *daemon);
 
-int pcmk__read_pidfile(const char *filename, pid_t *pid);
 int pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
                           const char *expected_name, pid_t *pid);
 int pcmk__lock_pidfile(const char *filename, const char *name);

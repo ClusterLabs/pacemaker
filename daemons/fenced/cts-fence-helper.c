@@ -497,7 +497,8 @@ test_async_monitor(int check_event)
 static void
 test_register_async_devices(int check_event)
 {
-    char buf[16] = { 0, };
+    char *off_timeout_s = pcmk__itoa(MAINLOOP_DEFAULT_TIMEOUT
+                                     + CUSTOM_TIMEOUT_ADDITION);
     stonith_key_value_t *params = NULL;
 
     params = stonith__key_value_add(params, PCMK_STONITH_HOST_MAP,
@@ -518,12 +519,12 @@ test_register_async_devices(int check_event)
                                     "custom_timeout_node1=1,2");
     params = stonith__key_value_add(params, "mode", "fail");
     params = stonith__key_value_add(params, "delay", "1000");
-    snprintf(buf, sizeof(buf) - 1, "%d", MAINLOOP_DEFAULT_TIMEOUT + CUSTOM_TIMEOUT_ADDITION);
-    params = stonith__key_value_add(params, "pcmk_off_timeout", buf);
+    params = stonith__key_value_add(params, "pcmk_off_timeout", off_timeout_s);
     st->cmds->register_device(st, st_opts, "false_custom_timeout", "stonith-ng", "fence_dummy",
                               params);
     stonith__key_value_freeall(params, true, true);
 
+    free(off_timeout_s);
     mainloop_test_done(__func__, true);
 }
 
