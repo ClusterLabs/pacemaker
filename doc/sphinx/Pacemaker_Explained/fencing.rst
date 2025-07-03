@@ -153,21 +153,22 @@ Special Meta-Attributes for Fencing Resources
 The table below lists special resource meta-attributes that may be set for any
 fencing resource.
 
-.. table:: **Additional Properties of Fencing Resources**
+.. list-table:: **Additional Properties of Fencing Resources**
    :widths: 10 10 10 70
+   :header-rows: 1
 
+   * - Field
+     - Type
+     - Default
+     - Description
+   * - provides
+     - string
+     -
+     - .. index::
+          single: provides
 
-   +----------------------+---------+--------------------+----------------------------------------+
-   | Field                | Type    | Default            | Description                            |
-   +======================+=========+====================+========================================+
-   | provides             | string  |                    | .. index::                             |
-   |                      |         |                    |    single: provides                    |
-   |                      |         |                    |                                        |
-   |                      |         |                    | Any special capability provided by the |
-   |                      |         |                    | fence device. Currently, only one such |
-   |                      |         |                    | capability is meaningful:              |
-   |                      |         |                    | :ref:`unfencing <unfencing>`.          |
-   +----------------------+---------+--------------------+----------------------------------------+
+       Any special capability provided by the fence device. Currently, only one
+       such capability is meaningful: :ref:`unfencing <unfencing>`.
 
 .. _fencing-attributes:
 
@@ -235,7 +236,8 @@ for ``pacemaker-fenced``.
      - The method Pacemaker should use to determine which nodes can be targeted
        by this device. Allowed values:
 
-       * ``static-list:`` targets are listed in the ``pcmk_host_list`` or ``pcmk_host_map`` attribute
+       * ``static-list:`` targets are listed in the ``pcmk_host_list`` or
+         ``pcmk_host_map`` attribute
        * ``dynamic-list:`` query the device via the agent's ``list`` action
        * ``status:`` query the device via the agent's ``status`` action
        * ``none:`` assume the device can fence any node
@@ -1075,53 +1077,53 @@ Some possible uses of topologies include:
 * Wait up to a certain time for a kernel dump to complete, then cut power to
   the node
 
-.. table:: **Attributes of a fencing-level Element**
+.. list-table:: **Attributes of a fencing-level Element**
    :class: longtable
    :widths: 25 75
+   :header-rows: 1
 
-   +------------------+-----------------------------------------------------------------------------------------+
-   | Attribute        | Description                                                                             |
-   +==================+=========================================================================================+
-   | id               | .. index::                                                                              |
-   |                  |    pair: fencing-level; id                                                              |
-   |                  |                                                                                         |
-   |                  | A unique name for this element (required)                                               |
-   +------------------+-----------------------------------------------------------------------------------------+
-   | target           | .. index::                                                                              |
-   |                  |    pair: fencing-level; target                                                          |
-   |                  |                                                                                         |
-   |                  | The name of a single node to which this level applies                                   |
-   +------------------+-----------------------------------------------------------------------------------------+
-   | target-pattern   | .. index::                                                                              |
-   |                  |    pair: fencing-level; target-pattern                                                  |
-   |                  |                                                                                         |
-   |                  | An extended regular expression (as defined in `POSIX                                    |
-   |                  | <https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04>`_) |
-   |                  | matching the names of nodes to which this level applies                                 |
-   +------------------+-----------------------------------------------------------------------------------------+
-   | target-attribute | .. index::                                                                              |
-   |                  |    pair: fencing-level; target-attribute                                                |
-   |                  |                                                                                         |
-   |                  | The name of a node attribute that is set (to ``target-value``) for nodes to which this  |
-   |                  | level applies                                                                           |
-   +------------------+-----------------------------------------------------------------------------------------+
-   | target-value     | .. index::                                                                              |
-   |                  |    pair: fencing-level; target-value                                                    |
-   |                  |                                                                                         |
-   |                  | The node attribute value (of ``target-attribute``) that is set for nodes to which this  |
-   |                  | level applies                                                                           |
-   +------------------+-----------------------------------------------------------------------------------------+
-   | index            | .. index::                                                                              |
-   |                  |    pair: fencing-level; index                                                           |
-   |                  |                                                                                         |
-   |                  | The order in which to attempt the levels. Levels are attempted in ascending order       |
-   |                  | *until one succeeds*. Valid values are 1 through 9.                                     |
-   +------------------+-----------------------------------------------------------------------------------------+
-   | devices          | .. index::                                                                              |
-   |                  |    pair: fencing-level; devices                                                         |
-   |                  |                                                                                         |
-   |                  | A comma-separated list of devices that must all be tried for this level                 |
-   +------------------+-----------------------------------------------------------------------------------------+
+   * - Attribute
+     - Description
+   * - id
+     - .. index::
+          pair: fencing-level; id
+
+       A unique name for this element (required)
+   * - target
+     - .. index::
+          pair: fencing-level; target
+
+       The name of a single node to which this level applies
+   * - target-pattern
+     - .. index::
+          pair: fencing-level; target-pattern
+
+       An extended regular expression (as defined in `POSIX
+       <https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04>`_)
+       matching the names of nodes to which this level applies
+   * - target-attribute
+     - .. index::
+          pair: fencing-level; target-attribute
+
+       The name of a node attribute that is set (to ``target-value``) for nodes to which this
+       level applies
+   * - target-value
+     - .. index::
+          pair: fencing-level; target-value
+
+       The node attribute value (of ``target-attribute``) that is set for nodes to which this
+       level applies
+   * - index
+     - .. index::
+          pair: fencing-level; index
+
+       The order in which to attempt the levels. Levels are attempted in ascending order
+       *until one succeeds*. Valid values are 1 through 9.
+   * - devices
+     - .. index::
+          pair: fencing-level; devices
+
+       A comma-separated list of devices that must all be tried for this level
 
 .. note:: **Fencing topology with different devices for different nodes**
 
