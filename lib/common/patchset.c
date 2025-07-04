@@ -321,6 +321,10 @@ pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target)
  * * \c PCMK_XA_EPOCH
  * * \c PCMK_XA_NUM_UPDATES
  *
+ * If source versions or target versions are absent from the patchset, then
+ * \p source and \p target (respectively) are left unmodified. This is not
+ * treated as an error. An unparsable version is an error, however.
+ *
  * \param[in]  patchset  XML patchset
  * \param[out] source    Where to store versions from source CIB
  * \param[out] target    Where to store versions from target CIB
@@ -355,20 +359,51 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
     source_xml = pcmk__xe_first_child(version, PCMK_XE_SOURCE, NULL, NULL);
     target_xml = pcmk__xe_first_child(version, PCMK_XE_TARGET, NULL, NULL);
 
-    if ((source_xml == NULL) || (target_xml == NULL)) {
-        return EINVAL;
-    }
-
+    /* @COMPAT Consider requiring source_xml and target_xml to be non-NULL. As
+     * of pcs version 0.10.8, pcs creates a patchset using crm_diff
+     * --no-version. The behavior and documentation of the crm_diff options
+     * --cib and --no-version are questionable and should be re-examined. Even
+     * without --no-version, crm_diff does not update the target version in the
+     * generated patchset. So a diff based on a manual CIB XML edit is likely to
+     * have unchanged version numbers. (Pacemaker tools bump the CIB versions
+     * automatically when editing the CIB.)
+     *
+     * Until then, we may be applying a patchset that has no version info. We
+     * will allow either source version or target version to be missing (even
+     * though both should be present or both should be missing). However, return
+     * an error if any of the three vfields is missing from a source or target
+     * version element that is present. That level of sanity check should be
+     * okay.
+     *
+     * We leave the destination arrays unmodified in case of absent versions,
+     * instead of setting them to some default value like { 0, 0, 0 }.
+     * xml_patch_version_check() sets its own defaults in case of absent
+     * versions.
+     */
     for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-        if (crm_element_value_int(source_xml, vfields[i], &(source[i])) != 0) {
-            return EINVAL;
-        }
-        crm_trace("Got %d for source[%s]", source[i], vfields[i]);
+        if (source_xml != NULL) {
+            if (crm_element_value_int(source_xml, vfields[i],
+                                      &(source[i])) != 0) {
+                return EINVAL;
+            }
+            crm_trace("Got source[%s]=%d", vfields[i], source[i]);
 
-        if (crm_element_value_int(target_xml, vfields[i], &(target[i])) != 0) {
-            return EINVAL;
+        } else {
+            crm_trace("No source versions found; keeping source[%s]=%d",
+                      vfields[i], source[i]);
         }
-        crm_trace("Got %d for target[%s]", target[i], vfields[i]);
+
+        if (target_xml != NULL) {
+            if (crm_element_value_int(target_xml, vfields[i],
+                                      &(target[i])) != 0) {
+                return EINVAL;
+            }
+            crm_trace("Got target[%s]=%d", vfields[i], target[i]);
+
+        } else {
+            crm_trace("No target versions found; keeping target[%s]=%d",
+                      vfields[i], target[i]);
+        }
     }
 
     return pcmk_rc_ok;
