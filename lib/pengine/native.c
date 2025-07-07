@@ -738,7 +738,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
     const char *prov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
 
-    char ra_name[LINE_MAX];
+    char *ra_name = NULL;
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
     const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, true));
@@ -761,9 +761,11 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     // Resource information
-    snprintf(ra_name, LINE_MAX, "%s%s%s:%s", class,
-             ((prov == NULL)? "" : ":"), ((prov == NULL)? "" : prov),
-             crm_element_value(rsc->priv->xml, PCMK_XA_TYPE));
+    ra_name = crm_strdup_printf("%s%s%s:%s", class,
+                                ((prov == NULL)? "" : ":"),
+                                ((prov == NULL)? "" : prov),
+                                crm_element_value(rsc->priv->xml,
+                                                  PCMK_XA_TYPE));
 
     target_role = g_hash_table_lookup(rsc->priv->meta,
                                       PCMK_META_TARGET_ROLE);
@@ -791,6 +793,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                                   PCMK_XA_LOCKED_TO, locked_to,
                                   PCMK_XA_DESCRIPTION, desc,
                                   NULL);
+    free(ra_name);
     free(nodes_running_on);
 
     pcmk__assert(rc == pcmk_rc_ok);
@@ -956,8 +959,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
         const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
         const char *kind = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
 
-        int offset = 0;
-        char buffer[LINE_MAX];
+        GString *buffer = NULL;
 
         int *rsc_counter = NULL;
         int *active_counter = NULL;
@@ -966,25 +968,26 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
             continue;
         }
 
-        offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
+        buffer = g_string_sized_new(128);
+
+        g_string_append(buffer, class);
         if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
             const char *prov = crm_element_value(rsc->priv->xml,
                                                  PCMK_XA_PROVIDER);
 
             if (prov != NULL) {
-                offset += snprintf(buffer + offset, LINE_MAX - offset,
-                                   ":%s", prov);
+                pcmk__g_strcat(buffer, ":", prov, NULL);
             }
         }
-        offset += snprintf(buffer + offset, LINE_MAX - offset, ":%s", kind);
-        CRM_LOG_ASSERT(offset > 0);
+        pcmk__g_strcat(buffer, ":", kind, NULL);
 
         if (rsc_table) {
-            rsc_counter = g_hash_table_lookup(rsc_table, buffer);
+            rsc_counter = g_hash_table_lookup(rsc_table, buffer->str);
             if (rsc_counter == NULL) {
                 rsc_counter = pcmk__assert_alloc(1, sizeof(int));
                 *rsc_counter = 0;
-                g_hash_table_insert(rsc_table, strdup(buffer), rsc_counter);
+                g_hash_table_insert(rsc_table, strdup(buffer->str),
+                                    rsc_counter);
             }
             (*rsc_counter)++;
         }
@@ -1010,15 +1013,18 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
                                         node_table);
                 }
 
-                active_counter = g_hash_table_lookup(node_table, buffer);
+                active_counter = g_hash_table_lookup(node_table, buffer->str);
                 if (active_counter == NULL) {
                     active_counter = pcmk__assert_alloc(1, sizeof(int));
                     *active_counter = 0;
-                    g_hash_table_insert(node_table, strdup(buffer), active_counter);
+                    g_hash_table_insert(node_table, strdup(buffer->str),
+                                        active_counter);
                 }
                 (*active_counter)++;
             }
         }
+
+        g_string_free(buffer, TRUE);
     }
 }
 

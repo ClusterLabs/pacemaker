@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,9 +13,6 @@
 
 #include <float.h>  // DBL_MAX, etc.
 #include <math.h>   // fabs()
-
-// Ensure plenty of characters for %f display
-#define LOCAL_BUF_SIZE 2 * DBL_MAX_10_EXP
 
 /*
  * assert_float_equal doesn't exist for older versions of cmocka installed on some
@@ -85,8 +82,8 @@ no_result_variable(void **state)
 static void
 typical_case(void **state)
 {
-    char str[LOCAL_BUF_SIZE];
-    double result;
+    char *buf = NULL;
+    double result = 0;
 
     assert_int_equal(pcmk__scan_double("0.0", &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, 0.0, DBL_EPSILON);
@@ -97,38 +94,42 @@ typical_case(void **state)
     assert_int_equal(pcmk__scan_double("-1.0", &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, -1.0, DBL_EPSILON);
 
-    snprintf(str, LOCAL_BUF_SIZE, "%f", DBL_MAX);
-    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_ok);
+    buf = crm_strdup_printf("%f", DBL_MAX);
+    assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, DBL_MAX, DBL_EPSILON);
+    free(buf);
 
-    snprintf(str, LOCAL_BUF_SIZE, "%f", -DBL_MAX);
-    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_ok);
+    buf = crm_strdup_printf("%f", -DBL_MAX);
+    assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), pcmk_rc_ok);
     assert_float_equal(result, -DBL_MAX, DBL_EPSILON);
+    free(buf);
 }
 
 static void
 double_overflow(void **state)
 {
-    char str[LOCAL_BUF_SIZE];
+    char *buf = NULL;
     double result;
 
     /*
      * 1e(DBL_MAX_10_EXP + 1) produces an inf value
      * Can't use assert_float_equal() because (inf - inf) == NaN
      */
-    snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MAX_10_EXP + 1);
-    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), EOVERFLOW);
+    buf = crm_strdup_printf("1e%d", DBL_MAX_10_EXP + 1);
+    assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), EOVERFLOW);
     assert_true(result > DBL_MAX);
+    free(buf);
 
-    snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MAX_10_EXP + 1);
-    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), EOVERFLOW);
+    buf = crm_strdup_printf("-1e%d", DBL_MAX_10_EXP + 1);
+    assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL), EOVERFLOW);
     assert_true(result < -DBL_MAX);
+    free(buf);
 }
 
 static void
 double_underflow(void **state)
 {
-    char str[LOCAL_BUF_SIZE];
+    char *buf = NULL;
     double result;
 
     /*
@@ -137,15 +138,19 @@ double_underflow(void **state)
      *
      * C99/C11: result will be **no greater than** DBL_MIN
      */
-    snprintf(str, LOCAL_BUF_SIZE, "1e%d", DBL_MIN_10_EXP - 1);
-    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_underflow);
+    buf = crm_strdup_printf("1e%d", DBL_MIN_10_EXP - 1);
+    assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL),
+                     pcmk_rc_underflow);
     assert_true(result >= 0.0);
     assert_true(result <= DBL_MIN);
+    free(buf);
 
-    snprintf(str, LOCAL_BUF_SIZE, "-1e%d", DBL_MIN_10_EXP - 1);
-    assert_int_equal(pcmk__scan_double(str, &result, NULL, NULL), pcmk_rc_underflow);
+    buf = crm_strdup_printf("-1e%d", DBL_MIN_10_EXP - 1);
+    assert_int_equal(pcmk__scan_double(buf, &result, NULL, NULL),
+                     pcmk_rc_underflow);
     assert_true(result <= 0.0);
     assert_true(result >= -DBL_MIN);
+    free(buf);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -196,46 +196,39 @@ log_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
 
 G_GNUC_PRINTF(3, 4)
 static void
-log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
-    int len = 0;
+log_list_item(pcmk__output_t *out, const char *name, const char *format, ...)
+{
+    gsize old_len = 0;
     va_list ap;
     private_data_t *priv = NULL;
-    char prefix[LINE_MAX] = { 0 };
-    int offset = 0;
-    char* buffer = NULL;
+    GString *buffer = g_string_sized_new(128);
 
-    pcmk__assert((out != NULL) && (out->priv != NULL));
+    pcmk__assert((out != NULL) && (out->priv != NULL) && (format != NULL));
     priv = out->priv;
 
-    for (GList* gIter = priv->prefixes->head; gIter; gIter = gIter->next) {
-        if (strcmp(prefix, "") != 0) {
-            offset += snprintf(prefix + offset, LINE_MAX - offset, ": %s", (char *)gIter->data);
-        } else {
-            offset = snprintf(prefix, LINE_MAX, "%s", (char *)gIter->data);
-        }
+    // Message format: [<prefix1>[: <prefix2>...]: ]][<name>: ]<body>
+
+    for (const GList *iter = priv->prefixes->head; iter != NULL;
+         iter = iter->next) {
+
+        pcmk__g_strcat(buffer, (const char *) iter->data, ": ", NULL);
     }
 
+    if (!pcmk__str_empty(name)) {
+        pcmk__g_strcat(buffer, name, ": ", NULL);
+    }
+
+    old_len = buffer->len;
     va_start(ap, format);
-    len = vasprintf(&buffer, format, ap);
-    pcmk__assert(len >= 0);
+    g_string_append_vprintf(buffer, format, ap);
     va_end(ap);
 
-    if (strcmp(buffer, "") != 0) { /* We don't want empty messages */
-        if ((name != NULL) && (strcmp(name, "") != 0)) {
-            if (strcmp(prefix, "") != 0) {
-                logger(priv, "%s: %s: %s", prefix, name, buffer);
-            } else {
-                logger(priv, "%s: %s", name, buffer);
-            }
-        } else {
-            if (strcmp(prefix, "") != 0) {
-                logger(priv, "%s: %s", prefix, buffer);
-            } else {
-                logger(priv, "%s", buffer);
-            }
-        }
+    if (buffer->len > old_len) {
+        // Don't log a message with an empty body
+        logger(priv, "%s", buffer->str);
     }
-    free(buffer);
+
+    g_string_free(buffer, TRUE);
 }
 
 static void

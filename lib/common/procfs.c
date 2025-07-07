@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -192,33 +192,46 @@ pcmk__procfs_num_cores(void)
  * \internal
  * \brief Get the executable path corresponding to a process ID
  *
- * \param[in]  pid        Process ID to check
- * \param[out] path       Where to store executable path
- * \param[in]  path_size  Size of \p path in characters (ideally PATH_MAX)
+ * \param[in]  pid   Process ID to check
+ * \param[out] path  Where to store executable path (can be \c NULL)
  *
  * \return Standard Pacemaker error code (as possible errno values from
  *         readlink())
  */
 int
-pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
+pcmk__procfs_pid2path(pid_t pid, char **path)
 {
 #if HAVE_LINUX_PROCFS
-    char procfs_exe_path[PATH_MAX];
+    char *procfs_path = NULL;
     ssize_t link_rc;
 
-    if (snprintf(procfs_exe_path, PATH_MAX, "/proc/%lld/exe",
-                 (long long) pid) >= PATH_MAX) {
-        return ENAMETOOLONG; // Truncated (shouldn't be possible in practice)
-    }
+    /* The readlink(2) man page recommends calling lstat() to get the required
+     * buffer size, and then dynamically allocate the buffer. However,
+     * st_size == 0 for symlinks under /proc. So we use PATH_MAX.
+     */
+    char real_path[PATH_MAX] = { '\0', };
 
-    link_rc = readlink(procfs_exe_path, path, path_size - 1);
+    pcmk__assert((path == NULL) || (*path == NULL));
+
+    procfs_path = crm_strdup_printf("/proc/%lld/exe", (long long) pid);
+
+    link_rc = readlink(procfs_path, real_path, sizeof(real_path));
+    free(procfs_path);
+
     if (link_rc < 0) {
         return errno;
-    } else if (link_rc >= (path_size - 1)) {
+    } else if (link_rc >= sizeof(real_path)) {
         return ENAMETOOLONG;
     }
 
-    path[link_rc] = '\0';
+    if (path != NULL) {
+        /* Make Coverity happy; we already zero-initialized real_path, and we
+         * returned ENAMETOOLONG if it's no longer null-terminated
+         */
+        real_path[link_rc] = '\0';
+
+        *path = pcmk__str_copy(real_path);
+    }
     return pcmk_rc_ok;
 #else
     return EOPNOTSUPP;
@@ -239,9 +252,7 @@ pcmk__procfs_has_pids(void)
     static bool checked = false;
 
     if (!checked) {
-        char path[PATH_MAX];
-
-        have_pids = pcmk__procfs_pid2path(getpid(), path, sizeof(path)) == pcmk_rc_ok;
+        have_pids = pcmk__procfs_pid2path(getpid(), NULL) == pcmk_rc_ok;
         checked = true;
     }
     return have_pids;

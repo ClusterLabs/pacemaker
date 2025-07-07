@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,9 +47,11 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         /* make sure PID hasn't been reused by another process
            XXX: might still be just a zombie, which could confuse decisions */
         bool checked_through_kill = (rc == 0);
-        char exe_path[PATH_MAX], myexe_path[PATH_MAX];
+        bool paths_equal = false;
+        char *exe_path = NULL;
+        char *myexe_path = NULL;
 
-        rc = pcmk__procfs_pid2path(pid, exe_path, sizeof(exe_path));
+        rc = pcmk__procfs_pid2path(pid, &exe_path);
         if (rc != pcmk_rc_ok) {
             if (rc != EACCES) {
                 // Check again to filter out races
@@ -78,13 +80,15 @@ pcmk__pid_active(pid_t pid, const char *daemon)
         }
 
         if (daemon[0] != '/') {
-            rc = snprintf(myexe_path, sizeof(myexe_path), CRM_DAEMON_DIR"/%s",
-                          daemon);
+            myexe_path = crm_strdup_printf(CRM_DAEMON_DIR "/%s", daemon);
         } else {
-            rc = snprintf(myexe_path, sizeof(myexe_path), "%s", daemon);
+            myexe_path = pcmk__str_copy(daemon);
         }
 
-        if (rc > 0 && rc < sizeof(myexe_path) && !strcmp(exe_path, myexe_path)) {
+        paths_equal = pcmk__str_eq(exe_path, myexe_path, pcmk__str_none);
+        free(exe_path);
+        free(myexe_path);
+        if (paths_equal) {
             return pcmk_rc_ok;
         }
     }
@@ -103,8 +107,8 @@ pcmk__pid_active(pid_t pid, const char *daemon)
  *
  * \return Standard Pacemaker return code
  */
-int
-pcmk__read_pidfile(const char *filename, pid_t *pid)
+static int
+read_pidfile(const char *filename, pid_t *pid)
 {
     int fd;
     struct stat sbuf;
@@ -169,7 +173,7 @@ pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
                       const char *expected_name, pid_t *pid)
 {
     pid_t pidfile_pid = 0;
-    int rc = pcmk__read_pidfile(filename, &pidfile_pid);
+    int rc = read_pidfile(filename, &pidfile_pid);
 
     if (pid) {
         *pid = pidfile_pid;
@@ -225,7 +229,16 @@ pcmk__lock_pidfile(const char *filename, const char *name)
         return errno;
     }
 
-    snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1, (long long) mypid);
+    /* @FIXME If the string representation of the max PID is longer than
+     * sizeof(buf), then the PID will be truncated. The read and write
+     * buffers should be large enough to hold the max PID on all systems.
+     *
+     * Also, if the max PID's string representation is longer than
+     * (LOCKSTRLEN - 1), then snprintf() will return a value greater than
+     * (LOCKSTRLEN - 1).
+     */
+    pcmk__assert(snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1,
+                 (long long) mypid) >= (LOCKSTRLEN - 1));
     rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 

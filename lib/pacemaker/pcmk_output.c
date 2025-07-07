@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2359,7 +2359,9 @@ result_code_text(pcmk__output_t *out, va_list args)
      */
     if (code_width == 0) {
         long long most_negative = pcmk_rc_error - (long long) pcmk__n_rc + 1;
-        code_width = (int) snprintf(NULL, 0, "%lld", most_negative);
+
+        code_width = snprintf(NULL, 0, "%lld", most_negative);
+        pcmk__assert(code_width >= 0);
     }
 
     if ((name != NULL) && (desc != NULL)) {

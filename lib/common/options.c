@@ -1073,42 +1073,31 @@ static const pcmk__cluster_option_t primitive_meta[] = {
  * \internal
  * \brief Get the value of a Pacemaker environment variable option
  *
- * If an environment variable option is set, with either a PCMK_ or (for
- * backward compatibility) HA_ prefix, log and return the value.
+ * If an environment variable option is set, with either a \c "PCMK_" or (for
+ * backward compatibility) \c "HA_" prefix, log and return the value.
  *
  * \param[in] option  Environment variable name (without prefix)
  *
- * \return Value of environment variable option, or NULL in case of
- *         option name too long or value not found
+ * \return Value of environment variable, or \c NULL if not set
  */
 const char *
 pcmk__env_option(const char *option)
 {
-    const char *const prefixes[] = {"PCMK_", "HA_"};
-    char env_name[NAME_MAX];
-    const char *value = NULL;
+    // @COMPAT Drop support for "HA_" options eventually
+    static const char *const prefixes[] = { "PCMK", "HA" };
 
     CRM_CHECK(!pcmk__str_empty(option), return NULL);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+        char *env_name = crm_strdup_printf("%s_%s", prefixes[i], option);
+        const char *value = getenv(env_name);
 
-        if (rv < 0) {
-            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
-                    strerror(errno));
-            return NULL;
-        }
-
-        if (rv >= sizeof(env_name)) {
-            crm_trace("\"%s%s\" is too long", prefixes[i], option);
-            continue;
-        }
-
-        value = getenv(env_name);
         if (value != NULL) {
             crm_trace("Found %s = %s", env_name, value);
+            free(env_name);
             return value;
         }
+        free(env_name);
     }
 
     crm_trace("Nothing found for %s", option);
@@ -1116,6 +1105,7 @@ pcmk__env_option(const char *option)
 }
 
 /*!
+ * \internal
  * \brief Set or unset a Pacemaker environment variable option
  *
  * Set an environment variable option with a \c "PCMK_" prefix and optionally
@@ -1135,38 +1125,29 @@ void
 pcmk__set_env_option(const char *option, const char *value, bool compat)
 {
     // @COMPAT Drop support for "HA_" options eventually
-    const char *const prefixes[] = {"PCMK_", "HA_"};
-    char env_name[NAME_MAX];
+    static const char *const prefixes[] = { "PCMK", "HA" };
 
-    CRM_CHECK(!pcmk__str_empty(option) && (strchr(option, '=') == NULL),
-              return);
+    CRM_CHECK(!pcmk__str_empty(option), return);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
-
-        if (rv < 0) {
-            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
-                    strerror(errno));
-            return;
-        }
-
-        if (rv >= sizeof(env_name)) {
-            crm_trace("\"%s%s\" is too long", prefixes[i], option);
-            continue;
-        }
+        char *env_name = crm_strdup_printf("%s_%s", prefixes[i], option);
+        int rc = 0;
 
         if (value != NULL) {
             crm_trace("Setting %s to %s", env_name, value);
-            rv = setenv(env_name, value, 1);
+            rc = setenv(env_name, value, 1);
         } else {
             crm_trace("Unsetting %s", env_name);
-            rv = unsetenv(env_name);
+            rc = unsetenv(env_name);
         }
 
-        if (rv < 0) {
-            crm_err("Failed to %sset %s: %s", (value != NULL)? "" : "un",
-                    env_name, strerror(errno));
+        if (rc < 0) {
+            int err = errno;
+
+            crm_err("Failed to %sset %s: %s", ((value != NULL)? "" : "un"),
+                    env_name, strerror(err));
         }
+        free(env_name);
 
         if (!compat && (value != NULL)) {
             // For set, don't proceed to HA_<option> unless compat is enabled
