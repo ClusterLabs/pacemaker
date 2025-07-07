@@ -932,8 +932,13 @@ crmadmin_node(pcmk__output_t *out, va_list args)
     bool bash_export = va_arg(args, int);
 
     if (bash_export) {
-        return out->info(out, "export %s=%s",
-                         pcmk__s(name, "<null>"), pcmk__s(value, ""));
+        int rc = pcmk_rc_ok;
+        gchar *replaced = g_strcanon(g_strdup(pcmk__s(name, "<null>")),
+                                     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_", '_');
+
+        rc = out->info(out, "export %s=%s", replaced, pcmk__s(value, ""));
+        g_free(replaced);
+        return rc;
     } else {
         return out->info(out, "%s node: %s (%s)", type ? type : "cluster",
                          pcmk__s(name, "<null>"), pcmk__s(value, "<null>"));
