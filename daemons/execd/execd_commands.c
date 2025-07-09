@@ -547,8 +547,8 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 }
 
-static xmlNode *
-create_lrmd_reply(const char *origin, int rc, int call_id)
+xmlNode *
+execd_create_reply(const char *origin, int rc, int call_id)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_LRMD_REPLY);
 
@@ -696,8 +696,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     pcmk__xml_free(notify);
 }
 
-static void
-send_generic_notify(int rc, xmlNode * request)
+void
+execd_send_generic_notify(int rc, xmlNode *request)
 {
     if (pcmk__ipc_client_count() != 0) {
         int call_id = 0;
@@ -1564,7 +1564,7 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     pcmk__assert(reply != NULL);
 
-    *reply = create_lrmd_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    *reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
     crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
@@ -1620,7 +1620,7 @@ execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
 
     CRM_LOG_ASSERT(reply != NULL);
 
-    *reply = create_lrmd_reply(__func__, rc, call_id);
+    *reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
     if (rsc) {
         crm_xml_add(*reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
         crm_xml_add(*reply, PCMK__XA_LRMD_CLASS, rsc->class);
@@ -1856,7 +1856,7 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         }
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
+    reply = execd_create_reply(__func__, rc, call_id);
 
     // If resource ID is not specified, check all resources
     if (rsc_id == NULL) {
@@ -1988,7 +1988,7 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         int send_rc = pcmk_rc_ok;
 
         if (reply == NULL) {
-            reply = create_lrmd_reply(__func__, rc, call_id);
+            reply = execd_create_reply(__func__, rc, call_id);
         }
         send_rc = lrmd_server_send_reply(client, id, reply);
         pcmk__xml_free(reply);
@@ -1999,6 +1999,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     }
 
     if (do_notify) {
-        send_generic_notify(rc, request);
+        execd_send_generic_notify(rc, request);
     }
 }
