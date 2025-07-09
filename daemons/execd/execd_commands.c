@@ -1931,13 +1931,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         } else {
             rc = -EACCES;
         }
-    } else if (pcmk__str_eq(op, LRMD_OP_ALERT_EXEC, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_alert_exec(client, id, request);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_GET_RECURRING, pcmk__str_none)) {
         if (allowed) {
             reply = process_lrmd_get_recurring(request, call_id);
