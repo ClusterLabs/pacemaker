@@ -92,6 +92,19 @@ handle_alert_exec_request(pcmk__request_t *request)
 }
 
 static xmlNode *
+handle_poke_request(pcmk__request_t *request)
+{
+    int call_id = 0;
+    xmlNode *reply = NULL;
+
+    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+
+    /* Create a generic reply since this doesn't create a more specific one */
+    reply = execd_create_reply(__func__, pcmk_ok, call_id);
+    return reply;
+}
+
+static xmlNode *
 handle_rsc_cancel_request(pcmk__request_t *request)
 {
     int call_id = 0;
@@ -232,7 +245,7 @@ handle_rsc_reg_request(pcmk__request_t *request)
 static bool
 requires_notify(const char *command)
 {
-    return pcmk__str_any_of(command, LRMD_OP_RSC_REG, NULL);
+    return pcmk__str_any_of(command, LRMD_OP_POKE, LRMD_OP_RSC_REG, NULL);
 }
 
 static void
@@ -241,6 +254,7 @@ execd_register_handlers(void)
     pcmk__server_command_t handlers[] = {
         { CRM_OP_REGISTER, handle_register_request },
         { LRMD_OP_ALERT_EXEC, handle_alert_exec_request },
+        { LRMD_OP_POKE, handle_poke_request },
         { LRMD_OP_RSC_CANCEL, handle_rsc_cancel_request },
         { LRMD_OP_RSC_EXEC, handle_rsc_exec_request },
         { LRMD_OP_RSC_INFO, handle_rsc_info_request },
