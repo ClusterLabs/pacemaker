@@ -1512,11 +1512,11 @@ free_rsc(gpointer data)
     free(rsc);
 }
 
-static int
-process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
-                    xmlNode **reply)
+int
+execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
+                     xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     time_t now = time(NULL);
     const char *protocol_version =
         crm_element_value(request, PCMK__XA_LRMD_PROTOCOL_VERSION);
@@ -1525,7 +1525,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     if (compare_version(protocol_version, LRMD_COMPATIBLE_PROTOCOL) < 0) {
         crm_err("Cluster API version must be greater than or equal to %s, not %s",
                 LRMD_COMPATIBLE_PROTOCOL, protocol_version);
-        rc = -EPROTO;
+        rc = EPROTO;
     }
 
     if (pcmk__xe_attr_is_true(request, PCMK__XA_LRMD_IS_IPC_PROVIDER)) {
@@ -1555,14 +1555,16 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
                 remoted_request_cib_schema_files();
             }
         } else {
-            rc = -EACCES;
+            rc = EACCES;
         }
 #else
-        rc = -EPROTONOSUPPORT;
+        rc = EPROTONOSUPPORT;
 #endif
     }
 
-    *reply = create_lrmd_reply(__func__, rc, call_id);
+    pcmk__assert(reply != NULL);
+
+    *reply = create_lrmd_reply(__func__, pcmk_rc2legacy(rc), call_id);
     crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
@@ -1899,9 +1901,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
 #else
         rc = -EPROTONOSUPPORT;
 #endif
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        rc = process_lrmd_signon(client, request, call_id, &reply);
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
         if (allowed) {
