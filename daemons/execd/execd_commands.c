@@ -1598,35 +1598,37 @@ process_lrmd_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
     return rc;
 }
 
-static xmlNode *
-process_lrmd_get_rsc_info(xmlNode *request, int call_id)
+int
+execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    xmlNode *reply = NULL;
     lrmd_rsc_t *rsc = NULL;
 
     if (rsc_id == NULL) {
-        rc = -ENODEV;
+        rc = ENODEV;
     } else {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
             crm_info("Agent information for '%s' not in cache", rsc_id);
-            rc = -ENODEV;
+            rc = ENODEV;
         }
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
+    CRM_LOG_ASSERT(reply != NULL);
+
+    *reply = create_lrmd_reply(__func__, rc, call_id);
     if (rsc) {
-        crm_xml_add(reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
-        crm_xml_add(reply, PCMK__XA_LRMD_CLASS, rsc->class);
-        crm_xml_add(reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
-        crm_xml_add(reply, PCMK__XA_LRMD_TYPE, rsc->type);
+        crm_xml_add(*reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
+        crm_xml_add(*reply, PCMK__XA_LRMD_CLASS, rsc->class);
+        crm_xml_add(*reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
+        crm_xml_add(*reply, PCMK__XA_LRMD_TYPE, rsc->type);
     }
-    return reply;
+
+    return rc;
 }
 
 static int
@@ -1906,13 +1908,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         if (allowed) {
             rc = process_lrmd_rsc_register(client, id, request);
             do_notify = 1;
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_INFO, pcmk__str_none)) {
-        if (allowed) {
-            reply = process_lrmd_get_rsc_info(request, call_id);
         } else {
             rc = -EACCES;
         }
