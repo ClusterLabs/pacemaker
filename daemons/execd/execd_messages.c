@@ -37,6 +37,37 @@ static GHashTable *execd_handlers = NULL;
 static int lrmd_call_id = 0;
 
 static xmlNode *
+handle_ipc_fwd_request(pcmk__request_t *request)
+{
+    int call_id = 0;
+    int rc = pcmk_rc_ok;
+    xmlNode *reply = NULL;
+
+#ifdef PCMK__COMPILE_REMOTE
+    bool allowed = pcmk_is_set(request->ipc_client->flags,
+                               pcmk__client_privileged);
+
+    if (!allowed) {
+        pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
+                         PCMK_EXEC_ERROR, NULL);
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 request->op, pcmk__client_name(request->ipc_client));
+        return NULL;
+    }
+
+    ipc_proxy_forward_client(request->ipc_client, request->xml);
+#else
+    rc = EPROTONOSUPPORT;
+#endif
+
+    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+
+    /* Create a generic reply since forwarding doesn't create a more specific one */
+    reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    return reply;
+}
+
+static xmlNode *
 handle_register_request(pcmk__request_t *request)
 {
     int call_id = 0;
@@ -355,6 +386,7 @@ static void
 execd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
+        { CRM_OP_IPC_FWD, handle_ipc_fwd_request },
         { CRM_OP_REGISTER, handle_register_request },
         { LRMD_OP_ALERT_EXEC, handle_alert_exec_request },
         { LRMD_OP_CHECK, handle_check_request },
