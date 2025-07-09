@@ -35,10 +35,31 @@
 static GHashTable *execd_handlers = NULL;
 static int lrmd_call_id = 0;
 
+static xmlNode *
+handle_register_request(pcmk__request_t *request)
+{
+    int call_id = 0;
+    int rc = pcmk_rc_ok;
+    xmlNode *reply = NULL;
+
+    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    rc = execd_process_signon(request->ipc_client, request->xml, call_id, &reply);
+
+    if (rc != pcmk_rc_ok) {
+        pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
+                         pcmk_rc_str(rc));
+        return NULL;
+    }
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return reply;
+}
+
 static void
 execd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
+        { CRM_OP_REGISTER, handle_register_request },
         { NULL, NULL },
     };
 
