@@ -1886,29 +1886,10 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
-    if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
-#ifdef PCMK__COMPILE_REMOTE
-        /* Certain IPC commands may be done only by privileged users (i.e. root or
-         * hacluster), because they would otherwise provide a means of bypassing
-         * ACLs.
-         */
-        bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
-
-        if (allowed) {
-            ipc_proxy_forward_client(client, request);
-        } else {
-            rc = -EACCES;
-        }
-#else
-        rc = -EPROTONOSUPPORT;
-#endif
-        do_reply = 1;
-    } else {
-        rc = -EOPNOTSUPP;
-        do_reply = 1;
-        crm_err("Unknown IPC request '%s' from client %s",
-                op, pcmk__client_name(client));
-    }
+    rc = -EOPNOTSUPP;
+    do_reply = 1;
+    crm_err("Unknown IPC request '%s' from client %s",
+            op, pcmk__client_name(client));
 
     if (rc == -EACCES) {
         crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
