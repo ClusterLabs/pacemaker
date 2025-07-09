@@ -27,6 +27,7 @@
 #include <crm/common/ipc_internal.h>        // pcmk__client_s, pcmk__find_client
 #include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
 #include <crm/common/strings.h>             // crm_strdup_printf
+#include <crm/common/util.h>                // pcmk_is_set
 #include <crm/common/xml_element.h>         // crm_xml_add, crm_element_value
 #include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*, pcmk__xe_is
 
@@ -55,11 +56,47 @@ handle_register_request(pcmk__request_t *request)
     return reply;
 }
 
+static xmlNode *
+handle_rsc_info_request(pcmk__request_t *request)
+{
+    int call_id = 0;
+    int rc = pcmk_rc_ok;
+    bool allowed = pcmk_is_set(request->ipc_client->flags,
+                               pcmk__client_privileged);
+    xmlNode *reply = NULL;
+
+    if (!allowed) {
+        pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
+                         PCMK_EXEC_ERROR, NULL);
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 request->op, pcmk__client_name(request->ipc_client));
+        return NULL;
+    }
+
+    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+
+    /* This returns ENODEV if the resource isn't in the cache which will be
+     * logged as an error.  However, this isn't fatal to the client - it may
+     * querying to see if the resource exists before deciding to register it.
+     */
+    rc = execd_process_get_rsc_info(request->xml, call_id, &reply);
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    } else {
+        pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
+                         pcmk_rc_str(rc));
+    }
+
+    return reply;
+}
+
 static void
 execd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { CRM_OP_REGISTER, handle_register_request },
+        { LRMD_OP_RSC_INFO, handle_rsc_info_request },
         { NULL, NULL },
     };
 
