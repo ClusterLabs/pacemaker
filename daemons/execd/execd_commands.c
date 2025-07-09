@@ -1913,9 +1913,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
             rc = -EACCES;
         }
         do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
-        do_notify = 1;
-        do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
         if (allowed) {
             xmlNode *wrapper = pcmk__xe_first_child(request,
