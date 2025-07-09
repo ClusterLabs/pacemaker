@@ -1664,8 +1664,8 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
     return rc;
 }
 
-static int
-process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
+int
+execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request)
 {
     lrmd_rsc_t *rsc = NULL;
     lrmd_cmd_t *cmd = NULL;
@@ -1673,25 +1673,24 @@ process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    int call_id;
 
     if (!rsc_id) {
-        return -EINVAL;
+        return EINVAL;
     }
+
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
         crm_info("Resource '%s' not found (%d active resources)",
                  rsc_id, g_hash_table_size(rsc_list));
-        return -ENODEV;
+        return ENODEV;
     }
 
     cmd = create_lrmd_cmd(request, client);
-    call_id = cmd->call_id;
 
     /* Don't reference cmd after handing it off to be scheduled.
      * The cmd could get merged and freed. */
     schedule_lrmd_cmd(rsc, cmd);
 
-    return call_id;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -1910,13 +1909,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
             if (rc == pcmk_ok || rc == -EINPROGRESS) {
                 do_notify = 1;
             }
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_exec(client, id, request);
         } else {
             rc = -EACCES;
         }
