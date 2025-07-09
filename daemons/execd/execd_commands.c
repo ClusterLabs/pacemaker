@@ -1630,11 +1630,10 @@ execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
     return rc;
 }
 
-static int
-process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
-                            xmlNode *request)
+int
+execd_process_rsc_unregister(pcmk__client_t *client, xmlNode *request)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     lrmd_rsc_t *rsc = NULL;
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
@@ -1642,21 +1641,21 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
     const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     if (!rsc_id) {
-        return -ENODEV;
+        return ENODEV;
     }
 
     rsc = g_hash_table_lookup(rsc_list, rsc_id);
     if (rsc == NULL) {
         crm_info("Ignoring unregistration of resource '%s', which is not registered",
                  rsc_id);
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
         crm_trace("Operation (%p) still in progress for unregistered resource %s",
                   rsc->active, rsc_id);
-        rc = -EINPROGRESS;
+        rc = EINPROGRESS;
     }
 
     g_hash_table_remove(rsc_list, rsc_id);
@@ -1884,17 +1883,17 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
     int do_notify = 0;
     xmlNode *reply = NULL;
 
-    /* Certain IPC commands may be done only by privileged users (i.e. root or
-     * hacluster), because they would otherwise provide a means of bypassing
-     * ACLs.
-     */
-    bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
-
     crm_trace("Processing %s operation from %s", op, client->id);
     crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
     if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
 #ifdef PCMK__COMPILE_REMOTE
+        /* Certain IPC commands may be done only by privileged users (i.e. root or
+         * hacluster), because they would otherwise provide a means of bypassing
+         * ACLs.
+         */
+        bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
+
         if (allowed) {
             ipc_proxy_forward_client(client, request);
         } else {
@@ -1903,17 +1902,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
 #else
         rc = -EPROTONOSUPPORT;
 #endif
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_unregister(client, id, request);
-            /* don't notify anyone about failed un-registers */
-            if (rc == pcmk_ok || rc == -EINPROGRESS) {
-                do_notify = 1;
-            }
-        } else {
-            rc = -EACCES;
-        }
         do_reply = 1;
     } else {
         rc = -EOPNOTSUPP;

@@ -311,10 +311,44 @@ handle_rsc_reg_request(pcmk__request_t *request)
     return reply;
 }
 
-static bool
-requires_notify(const char *command)
+static xmlNode *
+handle_rsc_unreg_request(pcmk__request_t *request)
 {
-    return pcmk__str_any_of(command, LRMD_OP_POKE, LRMD_OP_RSC_REG, NULL);
+    int call_id = 0;
+    int rc = pcmk_rc_ok;
+    bool allowed = pcmk_is_set(request->ipc_client->flags,
+                               pcmk__client_privileged);
+    xmlNode *reply = NULL;
+
+    if (!allowed) {
+        pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
+                         PCMK_EXEC_ERROR, NULL);
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 request->op, pcmk__client_name(request->ipc_client));
+        return NULL;
+    }
+
+    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+
+    rc = execd_process_rsc_unregister(request->ipc_client, request->xml);
+
+    /* Create a generic reply since unregistering a resource doesn't create
+     * a more specific one.
+     */
+    reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return reply;
+}
+
+static bool
+requires_notify(const char *command, int rc)
+{
+    if (pcmk__str_eq(command, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
+        /* Don't notify about failed unregisters */
+        return (rc == pcmk_ok) || (rc == -EINPROGRESS);
+    } else {
+        return pcmk__str_any_of(command, LRMD_OP_POKE, LRMD_OP_RSC_REG, NULL);
+    }
 }
 
 static void
@@ -330,6 +364,7 @@ execd_register_handlers(void)
         { LRMD_OP_RSC_EXEC, handle_rsc_exec_request },
         { LRMD_OP_RSC_INFO, handle_rsc_info_request },
         { LRMD_OP_RSC_REG, handle_rsc_reg_request },
+        { LRMD_OP_RSC_UNREG, handle_rsc_unreg_request },
         { NULL, NULL },
     };
 
@@ -534,17 +569,20 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
         }
 
         if (reply != NULL) {
+            int reply_rc = pcmk_ok;
+
             rc = lrmd_server_send_reply(c, id, reply);
             if (rc != pcmk_rc_ok) {
                 crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
                          pcmk__client_name(c), pcmk_rc_str(rc), rc);
             }
 
-            pcmk__xml_free(reply);
-
-            if (requires_notify(request.op)) {
-                execd_send_generic_notify(pcmk_ok, request.xml);
+            crm_element_value_int(reply, PCMK__XA_LRMD_RC, &reply_rc);
+            if (requires_notify(request.op, reply_rc)) {
+                execd_send_generic_notify(reply_rc, request.xml);
             }
+
+            pcmk__xml_free(reply);
         }
 
         reason = request.result.exit_reason;

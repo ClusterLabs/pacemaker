@@ -118,6 +118,7 @@ int execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply);
 int execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request);
 int execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request);
 void execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request);
+int execd_process_rsc_unregister(pcmk__client_t *client, xmlNode *request);
 int execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
                          xmlNode **reply);
 
