@@ -91,12 +91,47 @@ handle_rsc_info_request(pcmk__request_t *request)
     return reply;
 }
 
+static xmlNode *
+handle_rsc_reg_request(pcmk__request_t *request)
+{
+    int call_id = 0;
+    bool allowed = pcmk_is_set(request->ipc_client->flags,
+                               pcmk__client_privileged);
+    xmlNode *reply = NULL;
+
+    if (!allowed) {
+        pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
+                         PCMK_EXEC_ERROR, NULL);
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 request->op, pcmk__client_name(request->ipc_client));
+        return NULL;
+    }
+
+    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+
+    execd_process_rsc_register(request->ipc_client, request->ipc_id, request->xml);
+
+    /* Create a generic reply since registering a resource doesn't create
+     * a more specific one.
+     */
+    reply = execd_create_reply(__func__, pcmk_ok, call_id);
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return reply;
+}
+
+static bool
+requires_notify(const char *command)
+{
+    return pcmk__str_any_of(command, LRMD_OP_RSC_REG, NULL);
+}
+
 static void
 execd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { CRM_OP_REGISTER, handle_register_request },
         { LRMD_OP_RSC_INFO, handle_rsc_info_request },
+        { LRMD_OP_RSC_REG, handle_rsc_reg_request },
         { NULL, NULL },
     };
 
@@ -308,6 +343,10 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
             }
 
             pcmk__xml_free(reply);
+
+            if (requires_notify(request.op)) {
+                execd_send_generic_notify(pcmk_ok, request.xml);
+            }
         }
 
         reason = request.result.exit_reason;

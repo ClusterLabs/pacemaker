@@ -1577,25 +1577,24 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     return rc;
 }
 
-static int
-process_lrmd_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
+void
+execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
-    int rc = pcmk_ok;
     lrmd_rsc_t *rsc = build_rsc_from_xml(request);
     lrmd_rsc_t *dup = g_hash_table_lookup(rsc_list, rsc->rsc_id);
 
     if (dup &&
         pcmk__str_eq(rsc->class, dup->class, pcmk__str_casei) &&
-        pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) && pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
+        pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) &&
+        pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
         crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
         free_rsc(rsc);
-        return rc;
+        return;
     }
 
     g_hash_table_replace(rsc_list, rsc->rsc_id, rsc);
     crm_info("Cached agent information for '%s'", rsc->rsc_id);
-    return rc;
 }
 
 int
@@ -1903,14 +1902,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
 #else
         rc = -EPROTONOSUPPORT;
 #endif
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_register(client, id, request);
-            do_notify = 1;
-        } else {
-            rc = -EACCES;
-        }
         do_reply = 1;
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
         if (allowed) {
