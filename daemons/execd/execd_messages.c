@@ -92,6 +92,44 @@ handle_alert_exec_request(pcmk__request_t *request)
 }
 
 static xmlNode *
+handle_check_request(pcmk__request_t *request)
+{
+    bool allowed = pcmk_is_set(request->ipc_client->flags,
+                               pcmk__client_privileged);
+    xmlNode *wrapper = NULL;
+    xmlNode *data = NULL;
+    const char *timeout = NULL;
+
+    if (!allowed) {
+        pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
+                         PCMK_EXEC_ERROR, NULL);
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 request->op, pcmk__client_name(request->ipc_client));
+        return NULL;
+    }
+
+    wrapper = pcmk__xe_first_child(request->xml,
+                                   PCMK__XE_LRMD_CALLDATA,
+                                   NULL, NULL);
+    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
+    if (data == NULL) {
+        pcmk__set_result(&request->result, CRM_EX_SOFTWARE, PCMK_EXEC_INVALID,
+                         NULL);
+        return NULL;
+    }
+
+    timeout = crm_element_value(data, PCMK__XA_LRMD_WATCHDOG);
+    /* FIXME: This just exits on certain conditions, which seems like a pretty
+     * extreme reaction for a daemon to take.
+     */
+    pcmk__valid_stonith_watchdog_timeout(timeout);
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
+}
+
+static xmlNode *
 handle_get_recurring_request(pcmk__request_t *request)
 {
     int call_id = 0;
@@ -285,6 +323,7 @@ execd_register_handlers(void)
     pcmk__server_command_t handlers[] = {
         { CRM_OP_REGISTER, handle_register_request },
         { LRMD_OP_ALERT_EXEC, handle_alert_exec_request },
+        { LRMD_OP_CHECK, handle_check_request },
         { LRMD_OP_GET_RECURRING, handle_get_recurring_request },
         { LRMD_OP_POKE, handle_poke_request },
         { LRMD_OP_RSC_CANCEL, handle_rsc_cancel_request },

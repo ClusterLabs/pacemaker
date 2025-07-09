@@ -1915,21 +1915,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
             rc = -EACCES;
         }
         do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
-        if (allowed) {
-            xmlNode *wrapper = pcmk__xe_first_child(request,
-                                                    PCMK__XE_LRMD_CALLDATA,
-                                                    NULL, NULL);
-            xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-            const char *timeout = NULL;
-
-            CRM_LOG_ASSERT(data != NULL);
-            timeout = crm_element_value(data, PCMK__XA_LRMD_WATCHDOG);
-            pcmk__valid_stonith_watchdog_timeout(timeout);
-        } else {
-            rc = -EACCES;
-        }
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
