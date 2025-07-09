@@ -115,6 +115,7 @@ xmlNode *execd_create_reply(const char *origin, int rc, int call_id);
 void execd_send_generic_notify(int rc, xmlNode *request);
 
 int execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply);
+int execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request);
 int execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request);
 void execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request);
 int execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,

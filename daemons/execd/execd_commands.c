@@ -1711,7 +1711,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
      *    never existed.
      */
     if (!rsc) {
-        return -ENODEV;
+        return ENODEV;
     }
 
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
@@ -1720,7 +1720,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         if (action_matches(cmd, action, interval_ms)) {
             cmd->result.execution_status = PCMK_EXEC_CANCELLED;
             cmd_finalize(cmd, rsc);
-            return pcmk_ok;
+            return pcmk_rc_ok;
         }
     }
 
@@ -1735,7 +1735,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
                 }
-                return pcmk_ok;
+                return pcmk_rc_ok;
             }
         }
     } else if (services_action_cancel(rsc_id,
@@ -1745,10 +1745,10 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
          * this action was cancelled, which will destroy the cmd and remove
          * it from the recurring_op list. Do not do that in this function
          * if the service library says it cancelled it. */
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
-    return -EOPNOTSUPP;
+    return EOPNOTSUPP;
 }
 
 static void
@@ -1790,8 +1790,8 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
     g_list_free(cmd_list);
 }
 
-static int
-process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
+int
+execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request)
 {
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
@@ -1803,7 +1803,7 @@ process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
     crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     return cancel_op(rsc_id, action, interval_ms);
@@ -1909,13 +1909,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
             if (rc == pcmk_ok || rc == -EINPROGRESS) {
                 do_notify = 1;
             }
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_CANCEL, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_cancel(client, id, request);
         } else {
             rc = -EACCES;
         }
