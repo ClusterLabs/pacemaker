@@ -1826,13 +1826,12 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
     }
 }
 
-static xmlNode *
-process_lrmd_get_recurring(xmlNode *request, int call_id)
+int
+execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const char *rsc_id = NULL;
     lrmd_rsc_t *rsc = NULL;
-    xmlNode *reply = NULL;
     xmlNode *rsc_xml = NULL;
 
     // Resource ID is optional
@@ -1850,11 +1849,13 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         if (rsc == NULL) {
             crm_info("Resource '%s' not found (%d active resources)",
                      rsc_id, g_hash_table_size(rsc_list));
-            rc = -ENODEV;
+            rc = ENODEV;
         }
     }
 
-    reply = execd_create_reply(__func__, rc, call_id);
+    CRM_LOG_ASSERT(reply != NULL);
+
+    *reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
 
     // If resource ID is not specified, check all resources
     if (rsc_id == NULL) {
@@ -1864,12 +1865,13 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         g_hash_table_iter_init(&iter, rsc_list);
         while (g_hash_table_iter_next(&iter, (gpointer *) &key,
                                       (gpointer *) &rsc)) {
-            add_recurring_op_xml(reply, rsc);
+            add_recurring_op_xml(*reply, rsc);
         }
     } else if (rsc) {
-        add_recurring_op_xml(reply, rsc);
+        add_recurring_op_xml(*reply, rsc);
     }
-    return reply;
+
+    return rc;
 }
 
 void
@@ -1928,13 +1930,6 @@ process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
         } else {
             rc = -EACCES;
         }
-    } else if (pcmk__str_eq(op, LRMD_OP_GET_RECURRING, pcmk__str_none)) {
-        if (allowed) {
-            reply = process_lrmd_get_recurring(request, call_id);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
     } else {
         rc = -EOPNOTSUPP;
         do_reply = 1;
