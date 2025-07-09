@@ -102,7 +102,7 @@ alert_complete(svc_action_t *action)
 }
 
 int
-process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
+execd_process_alert_exec(pcmk__client_t *client, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 
@@ -114,17 +114,17 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
                                                PCMK__XA_LRMD_ALERT_PATH);
     svc_action_t *action = NULL;
     int alert_timeout = 0;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     GHashTable *params = NULL;
     struct alert_cb_s *cb_data = NULL;
 
     if ((alert_id == NULL) || (alert_path == NULL) ||
         (client == NULL) || (client->id == NULL)) { /* hint static analyzer */
-        rc = -EINVAL;
+        rc = EINVAL;
         goto err;
     }
     if (draining_alerts) {
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
     crm_element_value_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
@@ -144,12 +144,13 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
                                    alert_sequence_no, cb_data);
     if (action->rc != PCMK_OCF_UNKNOWN) {
-        rc = -E2BIG;
+        rc = E2BIG;
         goto err;
     }
 
     rc = services_action_user(action, CRM_DAEMON_USER);
     if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
         goto err;
     }
 
@@ -157,7 +158,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     if (services_alert_async(action, alert_complete) == FALSE) {
         services_action_free(action);
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
 
 err:
     if (cb_data) {

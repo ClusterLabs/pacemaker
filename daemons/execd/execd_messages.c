@@ -57,6 +57,41 @@ handle_register_request(pcmk__request_t *request)
 }
 
 static xmlNode *
+handle_alert_exec_request(pcmk__request_t *request)
+{
+    int call_id = 0;
+    int rc = pcmk_rc_ok;
+    bool allowed = pcmk_is_set(request->ipc_client->flags,
+                               pcmk__client_privileged);
+    xmlNode *reply = NULL;
+
+    if (!allowed) {
+        pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
+                         PCMK_EXEC_ERROR, NULL);
+        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+                 request->op, pcmk__client_name(request->ipc_client));
+        return NULL;
+    }
+
+    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+
+    rc = execd_process_alert_exec(request->ipc_client, request->xml);
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    } else {
+        pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
+                         pcmk_rc_str(rc));
+    }
+
+    /* Create a generic reply since executing an alert doesn't create a
+     * more specific one.
+     */
+    reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    return reply;
+}
+
+static xmlNode *
 handle_rsc_cancel_request(pcmk__request_t *request)
 {
     int call_id = 0;
@@ -205,6 +240,7 @@ execd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { CRM_OP_REGISTER, handle_register_request },
+        { LRMD_OP_ALERT_EXEC, handle_alert_exec_request },
         { LRMD_OP_RSC_CANCEL, handle_rsc_cancel_request },
         { LRMD_OP_RSC_EXEC, handle_rsc_exec_request },
         { LRMD_OP_RSC_INFO, handle_rsc_info_request },
