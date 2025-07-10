@@ -68,6 +68,13 @@ static GOptionEntry operation_entries[] = {
 };
 
 static GOptionEntry addl_entries[] = {
+    /* @FIXME Revisit --cib and --no-version and consider deprecating or
+     * renaming --cib, as well as improving the help text. --cib does things
+     * other than include version details. Also, even with --cib, we call
+     * xml_create_patchset() with manage_versions=false in generate_patch(). So
+     * we don't update the target versions in the patchset, and we don't drop
+     * the versions from the patchset unless --no-version is given.
+     */
     { "cib", 'c', 0, G_OPTION_ARG_NONE, &options.as_cib,
       "Compare/patch the inputs as a CIB (includes versions details)",
       NULL },
