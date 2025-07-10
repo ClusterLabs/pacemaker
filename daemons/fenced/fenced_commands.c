@@ -746,9 +746,10 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
     if (delay_max > 0) {
         cmd->start_delay += delay_base;
 
+        // Add random offset so that delay_base <= cmd->start_delay <= delay_max
         if (delay_max > delay_base) {
             // coverity[dont_call] Doesn't matter that rand() is predictable
-            cmd->start_delay += rand() % (delay_max - delay_base);
+            cmd->start_delay += rand() % (delay_max - delay_base + 1);
         }
     }
 
