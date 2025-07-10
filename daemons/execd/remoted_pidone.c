@@ -83,6 +83,80 @@ valid_env_var_name(const gchar *name)
     return *name == '\0';
 }
 
+static void
+load_env_var_line(char *line)
+{
+    gchar *name = NULL;
+    gchar *value = NULL;
+    gchar *end = NULL;
+    gchar *comment = NULL;
+
+    // Strip leading and trailing whitespace
+    g_strstrip(line);
+
+    if ((pcmk__scan_nvpair(line, &name, &value) != pcmk_rc_ok)
+        || !valid_env_var_name(name)) {
+        goto done;
+    }
+
+    if ((*value == '\'') || (*value == '"')) {
+        const char quote = *value;
+
+        // Strip the leading quote
+        *value = ' ';
+        g_strchug(value);
+
+        /* Value is remaining characters up to next non-backslashed matching
+         * quote character.
+         */
+        for (end = value;
+             (*end != '\0') && ((*end != quote) || (*(end - 1) == '\\'));
+             end++);
+
+        if (*end != quote) {
+            // Matching closing quote wasn't found
+            goto done;
+        }
+
+        // Discard closing quote and advance to check for trailing garbage
+        *end++ = '\0';
+
+    } else {
+        // Value is remaining characters up to next non-backslashed whitespace
+        for (end = value;
+             (*end != '\0') && (!isspace(*end) || (*(end - 1) == '\\'));
+             end++);
+    }
+
+    /* We have a valid name and value, and end is now the character after the
+     * closing quote or the first whitespace after the unquoted value. Make sure
+     * the rest of the line, if any, is just optional whitespace followed by a
+     * comment.
+     */
+
+    // Strip trailing comment beginning with '#'
+    comment = strchr(end, '#');
+    if (comment != NULL) {
+        *comment = '\0';
+    }
+
+    // Strip any remaining trailing whitespace from value
+    g_strchomp(end);
+
+    if (*end != '\0') {
+        // Found garbage after value
+        goto done;
+    }
+
+    // Don't overwrite (bundle options take precedence)
+    // coverity[tainted_string] Can't easily be changed right now
+    setenv(name, value, 0);
+
+done:
+    g_free(name);
+    g_free(value);
+}
+
 #define CONTAINER_ENV_FILE "/etc/pacemaker/pcmk-init.env"
 
 static void
@@ -100,77 +174,7 @@ load_env_vars(void)
     }
 
     while (getline(&line, &buf_size, fp) != -1) {
-        gchar *name = NULL;
-        gchar *value = NULL;
-        gchar *end = NULL;
-        gchar *comment = NULL;
-
-        // Strip leading and trailing whitespace
-        g_strstrip(line);
-
-        if ((pcmk__scan_nvpair(line, &name, &value) != pcmk_rc_ok)
-            || !valid_env_var_name(name)) {
-            goto cleanup_loop;
-        }
-
-        if ((*value == '\'') || (*value == '"')) {
-            const char quote = *value;
-
-            // Strip the leading quote
-            *value = ' ';
-            g_strchug(value);
-
-            /* Value is remaining characters up to next non-backslashed matching
-             * quote character.
-             */
-            for (end = value;
-                 (*end != '\0') && ((*end != quote) || (*(end - 1) == '\\'));
-                 end++);
-
-            if (*end != quote) {
-                // Matching closing quote wasn't found
-                goto cleanup_loop;
-            }
-
-            // Discard closing quote and advance to check for trailing garbage
-            *end++ = '\0';
-
-        } else {
-            /* Value is remaining characters up to next non-backslashed
-             * whitespace.
-             */
-            for (end = value;
-                 (*end != '\0') && (!isspace(*end) || (*(end - 1) == '\\'));
-                 end++);
-        }
-
-        /* We have a valid name and value, and end is now the character after
-         * the closing quote or the first whitespace after the unquoted value.
-         * Make sure the rest of the line, if any, is just optional whitespace
-         * followed by a comment.
-         */
-
-        // Strip trailing comment beginning with '#'
-        comment = strchr(end, '#');
-        if (comment != NULL) {
-            *comment = '\0';
-        }
-
-        // Strip any remaining trailing whitespace from value
-        g_strchomp(end);
-
-        if (*end != '\0') {
-            // Found garbage after value
-            goto cleanup_loop;
-        }
-
-        // Don't overwrite (bundle options take precedence)
-        // coverity[tainted_string] Can't easily be changed right now
-        setenv(name, value, 0);
-
-cleanup_loop:
-        g_free(name);
-        g_free(value);
+        load_env_var_line(line);
         errno = 0;
     }
 
