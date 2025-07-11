@@ -40,7 +40,6 @@
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *stonith_api = NULL;
-int lrmd_call_id = 0;
 time_t start_time;
 
 static struct {
