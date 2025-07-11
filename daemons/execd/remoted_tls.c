@@ -145,7 +145,7 @@ lrmd_remote_client_msg(gpointer data)
     crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
     crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
-    process_lrmd_message(client, id, request);
+    execd_process_message(client, id, client->flags, request);
     pcmk__xml_free(request);
 
     return 0;

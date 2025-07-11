@@ -102,8 +102,13 @@ void remoted_spawn_pidone(int argc, char **argv);
 void remoted_request_cib_schema_files(void);
 #endif
 
+void execd_unregister_handlers(void);
+
 int process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id,
                             xmlNode *request);
 void lrmd_drain_alerts(GMainLoop *mloop);
+
+void execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags,
+                          xmlNode *msg);
 
 #endif // PACEMAKER_EXECD__H

@@ -10,24 +10,50 @@
 #include <crm_internal.h>
 
 #include <errno.h>                          // ENOMEM
+#include <stdbool.h>                        // bool
 #include <stddef.h>                         // NULL, size_t
 #include <stdint.h>                         // int32_t, uint32_t
+#include <stdlib.h>                         // free
 #include <sys/types.h>                      // gid_t, uid_t
 
 #include <glib.h>                           // g_byte_array_free, FALSE
 #include <libxml/parser.h>                  // xmlNode
 #include <qb/qbipcs.h>                      // qb_ipcs_connection_t, qb_ipcs_service_handlers
+#include <qb/qblog.h>                       // QB_XS
 
-#include <crm/common/internal.h>            // pcmk__xml_free
+#include <crm/crm.h>                        // CRM_SYSTEM_LRMD
+#include <crm/common/internal.h>            // pcmk__process_request, pcmk__xml_free
 #include <crm/common/ipc.h>                 // crm_ipc_flags
 #include <crm/common/ipc_internal.h>        // pcmk__client_s, pcmk__find_client
 #include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
+#include <crm/common/strings.h>             // crm_strdup_printf
 #include <crm/common/xml_element.h>         // crm_xml_add, crm_element_value
-#include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*
+#include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*, pcmk__xe_is
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
 
 extern int lrmd_call_id;
+
+static GHashTable *execd_handlers = NULL;
+
+static void
+execd_register_handlers(void)
+{
+    pcmk__server_command_t handlers[] = {
+        { NULL, NULL },
+    };
+
+    execd_handlers = pcmk__register_handlers(handlers);
+}
+
+void
+execd_unregister_handlers(void)
+{
+    if (execd_handlers != NULL) {
+        g_hash_table_destroy(execd_handlers);
+        execd_handlers = NULL;
+    }
+}
 
 static int32_t
 lrmd_ipc_accept(qb_ipcs_connection_t *qbc, uid_t uid, gid_t gid)
@@ -125,7 +151,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
     crm_xml_add(msg, PCMK__XA_LRMD_CLIENTNAME, client->name);
     crm_xml_add_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
-    process_lrmd_message(client, id, msg);
+    execd_process_message(client, id, flags, msg);
     pcmk__xml_free(msg);
     return 0;
 }
@@ -162,3 +188,99 @@ struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
     .connection_closed = lrmd_ipc_closed,
     .connection_destroyed = lrmd_ipc_destroy
 };
+
+static bool
+invalid_msg(xmlNode *msg)
+{
+    const char *to = crm_element_value(msg, PCMK__XA_T);
+
+    /* IPC proxy messages do not get a t="" attribute set on them. */
+    bool invalid = !pcmk__str_eq(to, CRM_SYSTEM_LRMD, pcmk__str_none) &&
+                   !pcmk__xe_is(msg, PCMK__XE_LRMD_IPC_PROXY);
+
+    if (invalid) {
+        crm_info("Ignoring invalid IPC message: to '%s' not " CRM_SYSTEM_LRMD,
+                 pcmk__s(to, ""));
+        crm_log_xml_info(msg, "[Invalid]");
+    }
+
+    return invalid;
+}
+
+void
+execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *msg)
+{
+    int rc = pcmk_rc_ok;
+
+    if (execd_handlers == NULL) {
+        execd_register_handlers();
+    }
+
+    if (invalid_msg(msg)) {
+        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
+    } else {
+        char *log_msg = NULL;
+        const char *reason = NULL;
+        xmlNode *reply = NULL;
+
+        pcmk__request_t request = {
+            .ipc_client     = c,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = crm_element_value_copy(request.xml, PCMK__XA_LRMD_OP);
+        CRM_CHECK(request.op != NULL, return);
+
+        crm_trace("Processing %s operation from %s", request.op, c->id);
+
+        reply = pcmk__process_request(&request, execd_handlers);
+
+        /* FIXME: THIS IS TEMPORARY
+         *
+         * If the above returns NULL (which could be because something bad happened,
+         * or because a message doesn't send a reply, but is most likely because not
+         * all messages have been implemented yet), try falling back to the older
+         * code.  This means we don't have to implement everything before testing.
+         * Memory cleanup isn't important here.  This will be removed.
+         */
+        if (reply == NULL) {
+            crm_trace("Falling back to old function");
+            process_lrmd_message(c, id, request.xml);
+            return;
+        }
+
+        if (reply != NULL) {
+            rc = lrmd_server_send_reply(c, id, reply);
+            if (rc != pcmk_rc_ok) {
+                crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
+                         pcmk__client_name(c), pcmk_rc_str(rc), rc);
+            }
+
+            pcmk__xml_free(reply);
+        }
+
+        reason = request.result.exit_reason;
+
+        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
+                                    request.op, pcmk__request_origin_type(&request),
+                                    pcmk__request_origin(&request),
+                                    pcmk_exec_status_str(request.result.execution_status),
+                                    (reason == NULL)? "" : " (",
+                                    (reason == NULL)? "" : reason,
+                                    (reason == NULL)? "" : ")");
+
+        if (!pcmk__result_ok(&request.result)) {
+            crm_warn("%s", log_msg);
+        } else {
+            crm_debug("%s", log_msg);
+        }
+
+        free(log_msg);
+        pcmk__reset_request(&request);
+    }
+}
