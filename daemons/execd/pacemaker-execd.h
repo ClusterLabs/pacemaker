@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,8 @@
 
 extern GHashTable *rsc_list;
 extern time_t start_time;
+
+extern struct qb_ipcs_service_handlers lrmd_ipc_callbacks;
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;
