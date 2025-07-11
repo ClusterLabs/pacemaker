@@ -189,6 +189,7 @@ exit_executor(void)
 #endif
 
     pcmk__client_cleanup();
+    execd_unregister_handlers();
 
     if (mainloop) {
         lrmd_drain_alerts(mainloop);
