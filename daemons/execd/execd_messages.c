@@ -32,9 +32,8 @@
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
 
-extern int lrmd_call_id;
-
 static GHashTable *execd_handlers = NULL;
+static int lrmd_call_id = 0;
 
 static void
 execd_register_handlers(void)
@@ -127,30 +126,6 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
         return 0;
     }
 
-    /* @TODO functionize some of this to reduce duplication with
-     * lrmd_remote_client_msg()
-     */
-
-    if (!client->name) {
-        const char *value = crm_element_value(msg,
-                                              PCMK__XA_LRMD_CLIENTNAME);
-
-        if (value == NULL) {
-            client->name = pcmk__itoa(pcmk__client_pid(qbc));
-        } else {
-            client->name = pcmk__str_copy(value);
-        }
-    }
-
-    lrmd_call_id++;
-    if (lrmd_call_id < 1) {
-        lrmd_call_id = 1;
-    }
-
-    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
-
     execd_process_message(client, id, flags, msg);
     pcmk__xml_free(msg);
     return 0;
@@ -215,6 +190,19 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
     if (execd_handlers == NULL) {
         execd_register_handlers();
     }
+
+    if (!c->name) {
+        c->name = crm_element_value_copy(msg, PCMK__XA_LRMD_CLIENTNAME);
+    }
+
+    lrmd_call_id++;
+    if (lrmd_call_id < 1) {
+        lrmd_call_id = 1;
+    }
+
+    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTID, c->id);
+    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTNAME, c->name);
+    crm_xml_add_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
     if (invalid_msg(msg)) {
         pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
