@@ -80,7 +80,6 @@ static void
 name_only(void **state)
 {
     assert_scan_nvpair("name", pcmk_rc_bad_nvpair, NULL, NULL);
-    assert_scan_nvpair("name=", pcmk_rc_bad_nvpair, NULL, NULL);
 }
 
 static void
@@ -93,6 +92,9 @@ static void
 valid(void **state)
 {
     assert_scan_nvpair("name=value", pcmk_rc_ok, "name", "value");
+
+    // Empty value
+    assert_scan_nvpair("name=", pcmk_rc_ok, "name", "");
 
     // Whitespace is kept (checking only space characters here)
     assert_scan_nvpair(" name=value", pcmk_rc_ok, " name", "value");
@@ -108,6 +110,7 @@ valid(void **state)
     assert_scan_nvpair("name=value=e\n\n", pcmk_rc_ok, "name", "value=e\n\n");
 
     // Quotes are not treated specially
+    assert_scan_nvpair("name=''", pcmk_rc_ok, "name", "''");
     assert_scan_nvpair("name='value'", pcmk_rc_ok, "name", "'value'");
     assert_scan_nvpair("'name'=value", pcmk_rc_ok, "'name'", "value");
     assert_scan_nvpair("'name=value'", pcmk_rc_ok, "'name", "value'");
