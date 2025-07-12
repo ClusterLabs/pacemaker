@@ -83,76 +83,96 @@ valid_env_var_name(const gchar *name)
     return *name == '\0';
 }
 
+/*!
+ * \internal
+ * \brief Read one environment variable assignment and set the value
+ *
+ * Empty lines and trailing comments are ignored. This function handles
+ * backslashes, single quotes, and double quotes in a manner similar to a POSIX
+ * shell.
+ *
+ * This function has at least two limitations compared to a shell:
+ * * An assignment must be contained within a single line.
+ * * Only one assignment per line is supported.
+ *
+ * It would be possible to get rid of these limitations, but it doesn't seem
+ * worth the trouble of implementation and testing.
+ *
+ * \param[in] line  Line containing an environment variable assignment statement
+ */
 static void
-load_env_var_line(char *line)
+load_env_var_line(const char *line)
 {
+    gint argc = 0;
+    gchar **argv = NULL;
+    GError *error = NULL;
+
     gchar *name = NULL;
     gchar *value = NULL;
-    gchar *end = NULL;
-    gchar *comment = NULL;
 
-    // Strip leading and trailing whitespace
-    g_strstrip(line);
+    int rc = pcmk_rc_ok;
+    const char *reason = NULL;
+    const char *value_to_set = NULL;
 
-    if ((pcmk__scan_nvpair(line, &name, &value) != pcmk_rc_ok)
-        || !valid_env_var_name(name)) {
-        goto done;
-    }
-
-    if ((*value == '\'') || (*value == '"')) {
-        const char quote = *value;
-
-        // Strip the leading quote
-        *value = ' ';
-        g_strchug(value);
-
-        /* Value is remaining characters up to next non-backslashed matching
-         * quote character.
-         */
-        for (end = value;
-             (*end != '\0') && ((*end != quote) || (*(end - 1) == '\\'));
-             end++);
-
-        if (*end != quote) {
-            // Matching closing quote wasn't found
-            goto done;
-        }
-
-        // Discard closing quote and advance to check for trailing garbage
-        *end++ = '\0';
-
-    } else {
-        // Value is remaining characters up to next non-backslashed whitespace
-        for (end = value;
-             (*end != '\0') && (!isspace(*end) || (*(end - 1) == '\\'));
-             end++);
-    }
-
-    /* We have a valid name and value, and end is now the character after the
-     * closing quote or the first whitespace after the unquoted value. Make sure
-     * the rest of the line, if any, is just optional whitespace followed by a
-     * comment.
+    /* g_shell_parse_argv() does the following in a manner similar to the shell:
+     * * tokenizes the value
+     * * strips a trailing '#' comment if one exists
+     * * handles backslashes, single quotes, and double quotes
      */
 
-    // Strip trailing comment beginning with '#'
-    comment = strchr(end, '#');
-    if (comment != NULL) {
-        *comment = '\0';
+    // Ensure the line contains zero or one token besides an optional comment
+    if (!g_shell_parse_argv(line, &argc, NULL, &error)) {
+        // Empty line (or only space/comment) means nothing to do and no error
+        if (error->code != G_SHELL_ERROR_EMPTY_STRING) {
+            reason = error->message;
+        }
+        goto done;
+    }
+    if (argc != 1) {
+        // "argc != 1" for sanity; should imply "argc > 1" by now
+        reason = "line contains garbage";
+        goto done;
     }
 
-    // Strip any remaining trailing whitespace from value
-    g_strchomp(end);
-
-    if (*end != '\0') {
-        // Found garbage after value
+    rc = pcmk__scan_nvpair(line, &name, &value);
+    if (rc != pcmk_rc_ok) {
+        reason = pcmk_rc_str(rc);
         goto done;
+    }
+
+    // Leading whitespace is allowed and ignored. A quoted name is invalid.
+    g_strchug(name);
+    if (!valid_env_var_name(name)) {
+        reason = "invalid environment variable name";
+        goto done;
+    }
+
+    /* Parse the value as the shell would do (stripping outermost quotes, etc.).
+     * Also sanity-check that the value either is empty or consists of one
+     * token. Anything malformed should have been caught by now.
+     */
+    if (!g_shell_parse_argv(value, &argc, &argv, &error)) {
+        // Parse error should mean value is empty
+        CRM_CHECK(error->code == G_SHELL_ERROR_EMPTY_STRING, goto done);
+        value_to_set = "";
+
+    } else {
+        // value wasn't empty, so it should contain one token
+        CRM_CHECK(argc == 1, goto done);
+        value_to_set = argv[0];
     }
 
     // Don't overwrite (bundle options take precedence)
     // coverity[tainted_string] Can't easily be changed right now
-    setenv(name, value, 0);
+    setenv(name, value_to_set, 0);
 
 done:
+    if (reason != NULL) {
+        crm_warn("Failed to perform environment variable assignment '%s': %s",
+                 line, reason);
+    }
+    g_strfreev(argv);
+    g_clear_error(&error);
     g_free(name);
     g_free(value);
 }

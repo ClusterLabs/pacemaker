@@ -124,6 +124,11 @@ pcmk_free_nvpairs(GSList *nvpairs)
 int
 pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 {
+    /* @COMPAT Consider rejecting leading (and possibly trailing) whitespace in
+     * value and stripping outer quotes from value (for example,
+     * using g_shell_unquote()). This would affect stonith_admin and
+     * crm_resource and would simplify remoted_spawn_pidone()'s helpers.
+     */
     gchar **nvpair = NULL;
     int rc = pcmk_rc_ok;
 
