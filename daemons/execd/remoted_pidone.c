@@ -83,78 +83,95 @@ valid_env_var_name(const gchar *name)
     return *name == '\0';
 }
 
+/*!
+ * \internal
+ * \brief Read one environment variable assignment and set the value
+ *
+ * The assignment must be contained within a single line. A trailing comment is
+ * ignored. This function handles backslashes, single quotes, and double quotes
+ * in a manner similar to a POSIX shell.
+ *
+ * \param[in] line  Line containing an environment variable assignment statement
+ */
 static void
-load_env_var_line(char *line)
+load_env_var_line(const char *line)
 {
+    gchar *stripped = NULL;
     gchar *name = NULL;
     gchar *value = NULL;
-    gchar *end = NULL;
-    gchar *comment = NULL;
 
-    // Strip leading and trailing whitespace
-    g_strstrip(line);
+    int rc = pcmk_rc_ok;
+    const char *reason = NULL;
 
-    if ((pcmk__scan_nvpair(line, &name, &value) != pcmk_rc_ok)
-        || !valid_env_var_name(name)) {
+    gint argc = 0;
+    gchar **argv = NULL;
+    GError *error = NULL;
+
+    stripped = g_strstrip(g_strdup(line));
+    if (pcmk__str_empty(stripped) || (stripped[0] == '#')) {
+        // Empty line, nothing to do
         goto done;
     }
 
-    if ((*value == '\'') || (*value == '"')) {
-        const char quote = *value;
-
-        // Strip the leading quote
-        *value = ' ';
-        g_strchug(value);
-
-        /* Value is remaining characters up to next non-backslashed matching
-         * quote character.
-         */
-        for (end = value;
-             (*end != '\0') && ((*end != quote) || (*(end - 1) == '\\'));
-             end++);
-
-        if (*end != quote) {
-            // Matching closing quote wasn't found
-            goto done;
-        }
-
-        // Discard closing quote and advance to check for trailing garbage
-        *end++ = '\0';
-
-    } else {
-        // Value is remaining characters up to next non-backslashed whitespace
-        for (end = value;
-             (*end != '\0') && (!isspace(*end) || (*(end - 1) == '\\'));
-             end++);
+    rc = pcmk__scan_nvpair(stripped, &name, &value);
+    if (rc != pcmk_rc_ok) {
+        reason = pcmk_rc_str(rc);
+        goto done;
     }
 
-    /* We have a valid name and value, and end is now the character after the
-     * closing quote or the first whitespace after the unquoted value. Make sure
-     * the rest of the line, if any, is just optional whitespace followed by a
-     * comment.
+    if (!valid_env_var_name(name)) {
+        reason = "invalid environment variable name";
+        goto done;
+    }
+
+    /* g_shell_parse_argv() does the following in a manner similar to the shell:
+     * * tokenizes the value
+     * * strips a trailing '#' comment if one exists
+     * * handles backslashes, single quotes, and double quotes
+     *
+     * The value is valid only if it consists zero or one token after stripping
+     * the comment (that is, if argc is 0 or 1) and does not have mismatched
+     * quotes.
+     *
+     * For example, the following line is valid, and argc will be set to 1.
+     * (Note that value is everything after "VAR=".)
+     *
+     *      VAR='  some value "with quotes"'   # comment
+     *
+     * We will set VAR to "  some value \"with quotes\"".
+     *
+     * The following line is invalid, and argc will be set to 2.
+     *
+     *      VAR='  some value "with quotes"' more   # comment
+     *
+     * In this case, we will not set a value for VAR.
      */
-
-    // Strip trailing comment beginning with '#'
-    comment = strchr(end, '#');
-    if (comment != NULL) {
-        *comment = '\0';
+    if (!g_shell_parse_argv(value, &argc, &argv, &error)) {
+        reason = error->message;
+        goto done;
     }
-
-    // Strip any remaining trailing whitespace from value
-    g_strchomp(end);
-
-    if (*end != '\0') {
-        // Found garbage after value
+    if (argc > 1) {
+        reason = "garbage after value";
         goto done;
     }
 
-    // Don't overwrite (bundle options take precedence)
+    /* Don't overwrite (bundle options take precedence). argv[0] contains the
+     * value after stripping the trailing comment and processing quotes and
+     * backslashes.
+     */
     // coverity[tainted_string] Can't easily be changed right now
-    setenv(name, value, 0);
+    setenv(name, ((argc == 1)? argv[0] : ""), 0);
 
 done:
+    if (reason != NULL) {
+        crm_warn("Failed to perform environment variable assignment '%s': %s",
+                 line, reason);
+    }
+    g_free(stripped);
     g_free(name);
     g_free(value);
+    g_strfreev(argv);
+    g_clear_error(&error);
 }
 
 #define CONTAINER_ENV_FILE "/etc/pacemaker/pcmk-init.env"
