@@ -133,18 +133,15 @@ pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 
     nvpair = g_strsplit(input, "=", 2);
 
-    /* Check whether nvpair is well-formed (short-circuits if input was split
-     * into fewer than 2 tokens)
-     */
-    if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+    // Check whether nvpair is well-formed: two tokens and non-empty name
+    if ((g_strv_length(nvpair) != 2) || pcmk__str_empty(nvpair[0])) {
         rc = pcmk_rc_bad_nvpair;
         goto done;
     }
 
+    // name and value take ownership of the strings in nvpair
     *name = nvpair[0];
     *value = nvpair[1];
-
-    // name and value took ownership
     nvpair[0] = NULL;
     nvpair[1] = NULL;
 
