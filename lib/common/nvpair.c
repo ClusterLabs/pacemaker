@@ -114,8 +114,7 @@ pcmk_free_nvpairs(GSList *nvpairs)
  *
  * \param[in]  input  Input string, likely from the command line
  * \param[out] name   Everything before the first \c '=' in the input string
- * \param[out] value  Everything after the first \c '=' in the input string,
- *                    minus trailing newlines
+ * \param[out] value  Everything after the first \c '=' in the input string
  *
  * \return Standard Pacemaker return code
  *
@@ -144,7 +143,6 @@ pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 
     *name = nvpair[0];
     *value = nvpair[1];
-    pcmk__trim((char *) *value);
 
     // name and value took ownership
     nvpair[0] = NULL;
