@@ -159,7 +159,6 @@ load_env_var_line(const char *line)
      * value after stripping the trailing comment and processing quotes and
      * backslashes.
      */
-    // coverity[tainted_string] Can't easily be changed right now
     setenv(name, ((argc == 1)? argv[0] : ""), 0);
 
 done:
