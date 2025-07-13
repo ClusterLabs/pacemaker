@@ -163,7 +163,6 @@ load_env_var_line(const char *line)
     }
 
     // Don't overwrite (bundle options take precedence)
-    // coverity[tainted_string] Can't easily be changed right now
     setenv(name, value_to_set, 0);
 
 done:
