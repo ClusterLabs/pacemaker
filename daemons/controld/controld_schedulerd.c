@@ -488,6 +488,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                   (num_cib_op_callbacks() - 1));
         cib_retry_timer = mainloop_timer_add("cib_retry", 1000, FALSE, sleep_timer, NULL);
         mainloop_timer_start(cib_retry_timer);
+        return;
     }
 
     CRM_LOG_ASSERT(output != NULL);
