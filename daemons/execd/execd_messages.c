@@ -382,6 +382,19 @@ requires_notify(const char *command, int rc)
     }
 }
 
+
+static xmlNode *
+handle_unknown_request(pcmk__request_t *request)
+{
+    pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
+                       PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
+
+    pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                        "Unknown IPC request type '%s' (bug?)",
+                        pcmk__s(request->op, ""));
+    return NULL;
+}
+
 static void
 execd_register_handlers(void)
 {
@@ -397,7 +410,7 @@ execd_register_handlers(void)
         { LRMD_OP_RSC_INFO, handle_rsc_info_request },
         { LRMD_OP_RSC_REG, handle_rsc_reg_request },
         { LRMD_OP_RSC_UNREG, handle_rsc_unreg_request },
-        { NULL, NULL },
+        { NULL, handle_unknown_request },
     };
 
     execd_handlers = pcmk__register_handlers(handlers);
@@ -585,20 +598,6 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
         crm_trace("Processing %s operation from %s", request.op, c->id);
 
         reply = pcmk__process_request(&request, execd_handlers);
-
-        /* FIXME: THIS IS TEMPORARY
-         *
-         * If the above returns NULL (which could be because something bad happened,
-         * or because a message doesn't send a reply, but is most likely because not
-         * all messages have been implemented yet), try falling back to the older
-         * code.  This means we don't have to implement everything before testing.
-         * Memory cleanup isn't important here.  This will be removed.
-         */
-        if (reply == NULL) {
-            crm_trace("Falling back to old function");
-            process_lrmd_message(c, id, request.xml);
-            return;
-        }
 
         if (reply != NULL) {
             int reply_rc = pcmk_ok;
