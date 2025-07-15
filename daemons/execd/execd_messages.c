@@ -30,21 +30,21 @@
 extern int lrmd_call_id;
 
 static int32_t
-lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+lrmd_ipc_accept(qb_ipcs_connection_t *qbc, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", c);
-    if (pcmk__new_client(c, uid, gid) == NULL) {
+    crm_trace("Connection %p", qbc);
+    if (pcmk__new_client(qbc, uid, gid) == NULL) {
         return -ENOMEM;
     }
     return 0;
 }
 
 static void
-lrmd_ipc_created(qb_ipcs_connection_t * c)
+lrmd_ipc_created(qb_ipcs_connection_t *qbc)
 {
-    pcmk__client_t *new_client = pcmk__find_client(c);
+    pcmk__client_t *new_client = pcmk__find_client(qbc);
 
-    crm_trace("Connection %p", c);
+    crm_trace("Connection %p", qbc);
     pcmk__assert(new_client != NULL);
     /* Now that the connection is offically established, alert
      * the other clients a new connection exists. */
@@ -53,13 +53,13 @@ lrmd_ipc_created(qb_ipcs_connection_t * c)
 }
 
 static int32_t
-lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
+lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *request = NULL;
+    pcmk__client_t *client = pcmk__find_client(qbc);
+    xmlNode *msg = NULL;
 
     CRM_CHECK(client != NULL, crm_err("Invalid client");
               return FALSE);
@@ -76,7 +76,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        request = pcmk__client_data2xml(client, &id, &flags);
+        msg = pcmk__client_data2xml(client, &id, &flags);
         g_byte_array_free(client->buffer, TRUE);
         client->buffer = NULL;
 
@@ -97,7 +97,7 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     CRM_CHECK(flags & crm_ipc_client_response, crm_err("Invalid client request: %p", client);
               return FALSE);
 
-    if (!request) {
+    if (!msg) {
         return 0;
     }
 
@@ -106,11 +106,11 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      */
 
     if (!client->name) {
-        const char *value = crm_element_value(request,
+        const char *value = crm_element_value(msg,
                                               PCMK__XA_LRMD_CLIENTNAME);
 
         if (value == NULL) {
-            client->name = pcmk__itoa(pcmk__client_pid(c));
+            client->name = pcmk__itoa(pcmk__client_pid(qbc));
         } else {
             client->name = pcmk__str_copy(value);
         }
@@ -121,25 +121,25 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         lrmd_call_id = 1;
     }
 
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
+    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTID, client->id);
+    crm_xml_add(msg, PCMK__XA_LRMD_CLIENTNAME, client->name);
+    crm_xml_add_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
-    process_lrmd_message(client, id, request);
-    pcmk__xml_free(request);
+    process_lrmd_message(client, id, msg);
+    pcmk__xml_free(msg);
     return 0;
 }
 
 static int32_t
-lrmd_ipc_closed(qb_ipcs_connection_t * c)
+lrmd_ipc_closed(qb_ipcs_connection_t *qbc)
 {
-    pcmk__client_t *client = pcmk__find_client(c);
+    pcmk__client_t *client = pcmk__find_client(qbc);
 
     if (client == NULL) {
         return 0;
     }
 
-    crm_trace("Connection %p", c);
+    crm_trace("Connection %p", qbc);
     client_disconnect_cleanup(client->id);
 #ifdef PCMK__COMPILE_REMOTE
     ipc_proxy_remove_provider(client);
@@ -149,10 +149,10 @@ lrmd_ipc_closed(qb_ipcs_connection_t * c)
 }
 
 static void
-lrmd_ipc_destroy(qb_ipcs_connection_t * c)
+lrmd_ipc_destroy(qb_ipcs_connection_t *qbc)
 {
-    lrmd_ipc_closed(c);
-    crm_trace("Connection %p", c);
+    lrmd_ipc_closed(qbc);
+    crm_trace("Connection %p", qbc);
 }
 
 struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
