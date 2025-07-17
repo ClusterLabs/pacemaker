@@ -59,7 +59,7 @@ and see how it responds when you cause or simulate failures.
 
 See the manual page or the output of ``crm_mon --help`` for a full description
 of its many options.
-      
+
 .. topic:: Sample output from crm_mon -1
 
    .. code-block:: none
@@ -78,7 +78,7 @@ of its many options.
       * Active resources:
         * Fencing (stonith:fence_xvm):    Started node1
         * IP	(ocf:heartbeat:IPaddr2):	Started node2
-      
+
 .. topic:: Sample output from crm_mon -n -1
 
    .. code-block:: none
@@ -183,7 +183,7 @@ operating system distribution and how you installed the software.
 
 If you want to modify just one section of the configuration, you can
 query and replace just that section to avoid modifying any others.
-      
+
 .. topic:: Safely using an editor to modify only the resources section
 
    .. code-block:: none
@@ -195,7 +195,7 @@ query and replace just that section to avoid modifying any others.
 To quickly delete a part of the configuration, identify the object you wish to
 delete by XML tag and id. For example, you might search the CIB for all
 STONITH-related configuration:
-      
+
 .. topic:: Searching for STONITH-related configuration items
 
    .. code-block:: none
@@ -249,7 +249,7 @@ a name to make it possible to have more than one.
 
    Read this section and the on-screen instructions carefully; failure to do so
    could result in destroying the cluster's active configuration!
-      
+
 .. topic:: Creating and displaying the active sandbox
 
    .. code-block:: none
@@ -257,7 +257,7 @@ a name to make it possible to have more than one.
       # crm_shadow --create test
       Setting up shadow instance
       Type Ctrl-D to exit the crm_shadow shell
-      shadow[test]: 
+      shadow[test]:
       shadow[test] # crm_shadow --which
       test
 
@@ -266,20 +266,20 @@ instead of talking to the cluster's active configuration. Once you have
 finished experimenting, you can either make the changes active via the
 ``--commit`` option, or discard them using the ``--delete`` option. Again, be
 sure to follow the on-screen instructions carefully!
-      
+
 For a full list of ``crm_shadow`` options and commands, invoke it with the
 ``--help`` option.
 
 .. topic:: Use sandbox to make multiple changes all at once, discard them, and verify real configuration is untouched
 
    .. code-block:: none
-   
+
       shadow[test] # crm_failcount -r rsc_c001n01 -G
       scope=status  name=fail-count-rsc_c001n01 value=0
       shadow[test] # crm_standby --node c001n02 -v on
       shadow[test] # crm_standby --node c001n02 -G
       scope=nodes  name=standby value=on
-   
+
       shadow[test] # cibadmin --erase --force
       shadow[test] # cibadmin --query
       <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="112" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1" dc-uuid="1">
@@ -402,7 +402,7 @@ dependencies.
 ``$FILENAME.svg`` will be the same information in a standard graphical format
 that you can view in your browser or other app of choice. You could, of course,
 use other ``dot`` options to generate other formats.
-      
+
 How to interpret the graphical output:
 
  * Bubbles indicate actions, and arrows indicate ordering dependencies
@@ -424,7 +424,7 @@ How to interpret the graphical output:
    blue, the cluster does not feel the action needs to be executed. If the
    dashed border is red, the cluster would like to execute the action but
    cannot. Any actions depending on an action with a dashed border will not be
-   able to execute. 
+   able to execute.
  * Loops should not happen, and should be reported as a bug if found.
 
 .. topic:: Small Cluster Transition
@@ -488,19 +488,34 @@ defaults, and operation defaults.
 To understand the differences, it helps to understand the various types of node
 attribute.
 
-.. table:: **Types of Node Attributes**
+.. list-table:: **Types of Node Attributes**
+   :widths: 20 16 16 16 16 16
+   :header-rows: 1
 
-   +-----------+----------+-------------------+------------------+----------------+----------------+
-   | Type      | Recorded | Recorded in       | Survive full     | Manageable by  | Manageable by  |
-   |           | in CIB?  | attribute manager | cluster restart? | crm_attribute? | attrd_updater? |
-   |           |          | memory?           |                  |                |                |
-   +===========+==========+===================+==================+================+================+
-   | permanent | yes      | no                | yes              | yes            | no             |
-   +-----------+----------+-------------------+------------------+----------------+----------------+
-   | transient | yes      | yes               | no               | yes            | yes            |
-   +-----------+----------+-------------------+------------------+----------------+----------------+
-   | private   | no       | yes               | no               | no             | yes            |
-   +-----------+----------+-------------------+------------------+----------------+----------------+
+   * - Type
+     - Recorded in CIB?
+     - Recorded in attribute manager memory?
+     - Survive full cluster restart?
+     - Manageable by by crm_attribute?
+     - Manageable by attrd_updater?
+   * - permanent
+     - yes
+     - no
+     - yes
+     - yes
+     - no
+   * - transient
+     - yes
+     - yes
+     - no
+     - yes
+     - yes
+   * - private
+     - no
+     - yes
+     - no
+     - no
+     - yes
 
 As you can see from the table above, ``crm_attribute`` can manage permanent and
 transient node attributes, while ``attrd_updater`` can manage transient and

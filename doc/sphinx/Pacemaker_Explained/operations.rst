@@ -53,7 +53,7 @@ If not specified, the default from the table below is used.
 
 .. list-table:: **Operation Properties**
    :class: longtable
-   :widths: 2 2 3 4
+   :widths: 17 13 30 40
    :header-rows: 1
 
    * - Name
@@ -61,34 +61,34 @@ If not specified, the default from the table below is used.
      - Default
      - Description
    * - .. _op_id:
-       
+
        .. index::
           pair: op; id
           single: id; action property
           single: action; property, id
-       
+
        id
      - :ref:`id <id>`
-     - 
+     -
      - A unique identifier for the XML element *(required)*
    * - .. _op_name:
-       
+
        .. index::
           pair: op; name
           single: name; action property
           single: action; property, name
-       
+
        name
      - :ref:`text <text>`
-     - 
+     -
      - An action name supported by the resource agent *(required)*
    * - .. _op_interval:
-       
+
        .. index::
           pair: op; interval
           single: interval; action property
           single: action; property, interval
-       
+
        interval
      - :ref:`duration <duration>`
      - 0
@@ -99,38 +99,38 @@ If not specified, the default from the table below is used.
        operation to instances that are scheduled as needed during normal
        cluster operation. *(required)*
    * - .. _op_description:
-       
+
        .. index::
           pair: op; description
           single:  description; action property
           single: action; property, description
-       
+
        description
      - :ref:`text <text>`
-     - 
+     -
      - Arbitrary text for user's use (ignored by Pacemaker)
    * - .. _op_role:
-       
+
        .. index::
           pair: op; role
           single: role; action property
           single: action; property, role
-       
+
        role
      - :ref:`enumeration <enumeration>`
-     - 
+     -
      - If this is set, the operation configuration applies only on nodes where
        the cluster expects the resource to be in the specified role. This makes
        sense only for recurring monitors. Allowed values: ``Started``,
        ``Stopped``, and in the case of :ref:`promotable clone resources
        <s-resource-promotable>`, ``Unpromoted`` and ``Promoted``.
    * - .. _op_timeout:
-       
+
        .. index::
           pair: op; timeout
           single: timeout; action property
           single: action; property, timeout
-       
+
        timeout
      - :ref:`timeout <timeout>`
      - 20s
@@ -138,12 +138,12 @@ If not specified, the default from the table below is used.
        time, the action will be considered failed. **Note:** timeouts for
        fencing agents are handled specially (see the :ref:`fencing` chapter).
    * - .. _op_on_fail:
-       
+
        .. index::
           pair: op; on-fail
           single: on-fail; action property
           single: action; property, on-fail
-       
+
        on-fail
      - :ref:`enumeration <enumeration>`
      - * If ``name`` is ``stop``: ``fence`` if
@@ -154,7 +154,7 @@ If not specified, the default from the table below is used.
        * Otherwise: ``restart``
      - How the cluster should respond to a failure of this action. Allowed
        values:
-       
+
        * ``ignore:`` Pretend the resource did not fail
        * ``block:`` Do not perform any further operations on the resource
        * ``stop:`` Stop the resource and leave it stopped
@@ -169,12 +169,12 @@ If not specified, the default from the table below is used.
        * ``standby:`` Put the node on which the resource failed in standby mode
          (forcing *all* resources away)
    * - .. _op_enabled:
-       
+
        .. index::
           pair: op; enabled
           single: enabled; action property
           single: action; property, enabled
-       
+
        enabled
      - :ref:`boolean <boolean>`
      - true
@@ -185,12 +185,12 @@ If not specified, the default from the table below is used.
        recurring operations. Maintenance mode, which does stop configured
        monitors, overrides this setting.
    * - .. _op_interval_origin:
-       
+
        .. index::
           pair: op; interval-origin
           single: interval-origin; action property
           single: action; property, interval-origin
-       
+
        interval-origin
      - :ref:`ISO 8601 <iso8601>`
      -
@@ -202,12 +202,12 @@ If not specified, the default from the table below is used.
        ``interval`` to ``24h``. At most one of ``interval-origin`` and
        ``start-delay`` may be set.
    * - .. _op_start_delay:
-       
+
        .. index::
           pair: op; start-delay
           single: start-delay; action property
           single: action; property, start-delay
-       
+
        start-delay
      - :ref:`duration <duration>`
      -
@@ -223,12 +223,12 @@ If not specified, the default from the table below is used.
        actions needed, then act on the result when it actually runs. At most
        one of ``interval-origin`` and ``start-delay`` may be set.
    * - .. _op_record_pending:
-       
+
        .. index::
           pair: op; record-pending
           single: record-pending; action property
           single: action; property, record-pending
-       
+
        record-pending
      - :ref:`boolean <boolean>`
      - true
@@ -342,7 +342,7 @@ Setting Global Defaults for Operations
 ######################################
 
 You can change the global default values for operation properties
-in a given cluster. These are defined in an ``op_defaults`` section 
+in a given cluster. These are defined in an ``op_defaults`` section
 of the CIB's ``configuration`` section, and can be set with
 ``crm_attribute``.  For example,
 

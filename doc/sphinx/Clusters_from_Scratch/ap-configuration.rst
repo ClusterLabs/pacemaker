@@ -85,7 +85,7 @@ Final Cluster Configuration
      pcmk-1 pcmk-2
     Pacemaker Nodes:
      pcmk-1 pcmk-2
-    
+
     Resources:
      Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
       Attributes: cidr_netmask=24 ip=192.168.122.120
@@ -121,13 +121,13 @@ Final Cluster Configuration
        Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
                    start interval=0s timeout=60s (WebFS-start-interval-0s)
                    stop interval=0s timeout=60s (WebFS-stop-interval-0s)
-    
+
     Stonith Devices:
      Resource: fence_dev (class=stonith type=some_fence_agent)
       Attributes: pcmk_delay_base=pcmk-1:5s;pcmk-2:0s pcmk_host_map=pcmk-1:almalinux9-1;pcmk-2:almalinux9-2
       Operations: monitor interval=60s (fence_dev-monitor-interval-60s)
     Fencing Levels:
-    
+
     Location Constraints:
       Resource: WebSite
         Enabled on:
@@ -143,17 +143,17 @@ Final Cluster Configuration
       WebSite with WebFS-clone (score:INFINITY) (id:colocation-WebSite-WebFS-INFINITY)
       WebFS-clone with dlm-clone (score:INFINITY) (id:colocation-WebFS-dlm-clone-INFINITY)
     Ticket Constraints:
-    
+
     Alerts:
      No alerts defined
-    
+
     Resources Defaults:
       Meta Attrs: build-resource-defaults
         resource-stickiness=100
     Operations Defaults:
       Meta Attrs: op_defaults-meta_attributes
         timeout=240s
-    
+
     Cluster Properties:
      cluster-infrastructure: corosync
      cluster-name: mycluster
@@ -162,10 +162,10 @@ Final Cluster Configuration
      last-lrm-refresh: 1658896047
      no-quorum-policy: freeze
      stonith-enabled: true
-    
+
     Tags:
      No tags defined
-    
+
     Quorum:
       Options:
 

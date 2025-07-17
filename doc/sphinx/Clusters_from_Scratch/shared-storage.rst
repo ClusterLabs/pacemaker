@@ -90,16 +90,16 @@ which is more than sufficient for a single HTML file and (later) GFS2 metadata.
 .. code-block:: console
 
     [root@pcmk-1 ~]# vgs
-      VG               #PV #LV #SN Attr   VSize   VFree  
+      VG               #PV #LV #SN Attr   VSize   VFree
       almalinux_pcmk-1   1   2   0 wz--n- <19.00g <13.00g
 
     [root@pcmk-1 ~]# lvcreate --name drbd-demo --size 512M almalinux_pcmk-1
       Logical volume "drbd-demo" created.
     [root@pcmk-1 ~]# lvs
       LV        VG               Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
-      drbd-demo almalinux_pcmk-1 -wi-a----- 512.00m                                                    
-      root      almalinux_pcmk-1 -wi-ao----   4.00g                                                    
-      swap      almalinux_pcmk-1 -wi-ao----   2.00g  
+      drbd-demo almalinux_pcmk-1 -wi-a----- 512.00m
+      root      almalinux_pcmk-1 -wi-ao----   4.00g
+      swap      almalinux_pcmk-1 -wi-ao----   2.00g
 
 Repeat for the second node, making sure to use the same size:
 
@@ -210,9 +210,9 @@ Run them on one node:
     The server's response is:
 
     you are the 25212th user to install this version
-    
+
 We can confirm DRBD's status on this node:
-    
+
 .. code-block:: console
 
     [root@pcmk-1 ~]# drbdadm status
@@ -596,7 +596,7 @@ it can no longer host resources, and eventually all the resources will move.
         * Promoted: [ pcmk-1 ]
         * Stopped: [ pcmk-2 ]
       * WebFS	(ocf:heartbeat:Filesystem):	 Started pcmk-1
-    
+
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled
@@ -630,7 +630,7 @@ eligible to host resources again.
         * Promoted: [ pcmk-1 ]
         * Unpromoted: [ pcmk-2 ]
       * WebFS	(ocf:heartbeat:Filesystem):	 Started pcmk-1
-    
+
     Daemon Status:
       corosync: active/disabled
       pacemaker: active/disabled

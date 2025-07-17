@@ -82,24 +82,38 @@ Upgrading Cluster Software
 There are three approaches to upgrading a cluster, each with advantages and
 disadvantages.
 
-.. table:: **Upgrade Methods**
+.. list-table:: **Upgrade Methods**
+   :widths: 16 14 14 14 14 14 14
+   :header-rows: 1
 
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-   | Method                                            | Available| Can be   | Service| Service | Exercises| Allows   |
-   |                                                   | between  | used with| outage | recovery| failover | change of|
-   |                                                   | all      | Pacemaker| during | during  | logic    | messaging|
-   |                                                   | versions | Remote   | upgrade| upgrade |          | layer    |
-   |                                                   |          | nodes    |        |         |          | [#]_     |
-   +===================================================+==========+==========+========+=========+==========+==========+
-   | Complete cluster shutdown                         | yes      | yes      | always | N/A     | no       | yes      |
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-   | Rolling (node by node)                            | no       | yes      | always | yes     | yes      | no       |
-   |                                                   |          |          | [#]_   |         |          |          |
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
-   | Detach and reattach                               | yes      | no       | only   | no      | no       | yes      |
-   |                                                   |          |          | due to |         |          |          |
-   |                                                   |          |          | failure|         |          |          |
-   +---------------------------------------------------+----------+----------+--------+---------+----------+----------+
+   * - Method
+     - Available between all versions
+     - Can be used with Pacemaker Remote nodes
+     - Service outage during upgrade
+     - Service recovery during upgrade
+     - Exercises failover logic
+     - Allows change of messaging layer [#]_
+   * - Complete cluster shutdown
+     - yes
+     - yes
+     - always
+     - N/A
+     - no
+     - yes
+   * - Rolling (node by node)
+     - no
+     - yes
+     - always [#]_
+     - yes
+     - yes
+     - no
+   * - Detach and reattach
+     - yes
+     - no
+     - only due to failure
+     - no
+     - no
+     - yes
 
 
 .. index::
@@ -194,7 +208,7 @@ when upgrading a cluster node.
 
 .. list-table:: **Version Compatibility for Cluster Nodes**
    :class: longtable
-   :widths: 1 1
+   :widths: 50 50
    :header-rows: 1
 
    * - Version Being Installed
@@ -213,7 +227,7 @@ least the minimum version listed in the table below.
 
 .. list-table:: **Cluster Node Version Compatibility for Pacemaker Remote Nodes**
    :class: longtable
-   :widths: 1 1
+   :widths: 50 50
    :header-rows: 1
 
    * - Pacemaker Remote Version
@@ -377,7 +391,7 @@ A more cautious approach would proceed like this:
       code. These will often be installed in a location such as
       ``/usr/share/pacemaker``, or may be obtained from the
       `source repository <https://github.com/ClusterLabs/pacemaker/tree/main/xml>`_.
-          
+
    #. Run the conversion scripts that apply to your older version, for example:
 
       .. code-block:: none
