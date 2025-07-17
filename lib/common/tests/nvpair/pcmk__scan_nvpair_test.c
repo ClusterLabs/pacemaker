@@ -80,7 +80,6 @@ static void
 name_only(void **state)
 {
     assert_scan_nvpair("name", pcmk_rc_bad_nvpair, NULL, NULL);
-    assert_scan_nvpair("name=", pcmk_rc_bad_nvpair, NULL, NULL);
 }
 
 static void
@@ -94,27 +93,24 @@ valid(void **state)
 {
     assert_scan_nvpair("name=value", pcmk_rc_ok, "name", "value");
 
-    // Trailing newlines are discarded
-    assert_scan_nvpair("name=value\n\n", pcmk_rc_ok, "name", "value");
-    assert_scan_nvpair("\nname=value\n", pcmk_rc_ok, "\nname", "value");
-    assert_scan_nvpair("name\n=value\n", pcmk_rc_ok, "name\n", "value");
-    assert_scan_nvpair("name=\nvalue\n", pcmk_rc_ok, "name", "\nvalue");
-    assert_scan_nvpair("name=val\nue\n", pcmk_rc_ok, "name", "val\nue");
+    // Empty value
+    assert_scan_nvpair("name=", pcmk_rc_ok, "name", "");
 
-    // Other whitespace is kept (checking only space characters here)
+    // Whitespace is kept (checking only space characters here)
     assert_scan_nvpair(" name=value", pcmk_rc_ok, " name", "value");
     assert_scan_nvpair("name =value", pcmk_rc_ok, "name ", "value");
     assert_scan_nvpair("name= value", pcmk_rc_ok, "name", " value");
     assert_scan_nvpair("name=value ", pcmk_rc_ok, "name", "value ");
     assert_scan_nvpair("name =   value", pcmk_rc_ok, "name ", "   value");
 
-    // Other trailing characters are kept
+    // Trailing characters are kept
     assert_scan_nvpair("name=value=", pcmk_rc_ok, "name", "value=");
-    assert_scan_nvpair("name=value=\n\n", pcmk_rc_ok, "name", "value=");
+    assert_scan_nvpair("name=value=\n\n", pcmk_rc_ok, "name", "value=\n\n");
     assert_scan_nvpair("name=value=e", pcmk_rc_ok, "name", "value=e");
-    assert_scan_nvpair("name=value=e\n\n", pcmk_rc_ok, "name", "value=e");
+    assert_scan_nvpair("name=value=e\n\n", pcmk_rc_ok, "name", "value=e\n\n");
 
     // Quotes are not treated specially
+    assert_scan_nvpair("name=''", pcmk_rc_ok, "name", "''");
     assert_scan_nvpair("name='value'", pcmk_rc_ok, "name", "'value'");
     assert_scan_nvpair("'name'=value", pcmk_rc_ok, "'name'", "value");
     assert_scan_nvpair("'name=value'", pcmk_rc_ok, "'name", "value'");
