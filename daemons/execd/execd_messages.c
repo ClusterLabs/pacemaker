@@ -63,7 +63,7 @@ handle_ipc_fwd_request(pcmk__request_t *request)
     crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     /* Create a generic reply since forwarding doesn't create a more specific one */
-    reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     return reply;
 }
 
@@ -118,7 +118,7 @@ handle_alert_exec_request(pcmk__request_t *request)
     /* Create a generic reply since executing an alert doesn't create a
      * more specific one.
      */
-    reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     return reply;
 }
 
@@ -200,7 +200,7 @@ handle_poke_request(pcmk__request_t *request)
     crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     /* Create a generic reply since this doesn't create a more specific one */
-    reply = execd_create_reply(__func__, pcmk_ok, call_id);
+    reply = execd_create_reply(pcmk_ok, call_id);
     return reply;
 }
 
@@ -235,7 +235,7 @@ handle_rsc_cancel_request(pcmk__request_t *request)
     /* Create a generic reply since canceling a resource doesn't create a
      * more specific one.
      */
-    reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     return reply;
 }
 
@@ -269,11 +269,11 @@ handle_rsc_exec_request(pcmk__request_t *request)
          * this and use it as its return value, which passes back up to the
          * public API function lrmd_api_exec.
          */
-        reply = execd_create_reply(__func__, call_id, call_id);
+        reply = execd_create_reply(call_id, call_id);
     } else {
         pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
                          pcmk_rc_str(rc));
-        reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+        reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     }
 
     return reply;
@@ -337,7 +337,7 @@ handle_rsc_reg_request(pcmk__request_t *request)
     /* Create a generic reply since registering a resource doesn't create
      * a more specific one.
      */
-    reply = execd_create_reply(__func__, pcmk_ok, call_id);
+    reply = execd_create_reply(pcmk_ok, call_id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return reply;
 }
@@ -366,7 +366,7 @@ handle_rsc_unreg_request(pcmk__request_t *request)
     /* Create a generic reply since unregistering a resource doesn't create
      * a more specific one.
      */
-    reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return reply;
 }

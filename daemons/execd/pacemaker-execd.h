@@ -106,8 +106,11 @@ void lrmd_drain_alerts(GMainLoop *mloop);
 void execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags,
                           xmlNode *msg);
 
-xmlNode *execd_create_reply(const char *origin, int rc, int call_id);
+xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);
 void execd_send_generic_notify(int rc, xmlNode *request);
+
+#define execd_create_reply(rc, call_id) \
+    execd_create_reply_as(__func__, (rc), (call_id))
 
 int execd_process_alert_exec(pcmk__client_t *client, xmlNode *request);
 int execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply);
