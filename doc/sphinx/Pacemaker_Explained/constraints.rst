@@ -380,19 +380,19 @@ ___________________
 
        How to enforce the constraint. Allowed values:
 
-       * ``Mandatory:`` ``then-action`` will never be initiated for the
+       * ``Mandatory``: ``then-action`` will never be initiated for the
          ``then`` resource unless and until ``first-action`` successfully
          completes for the ``first`` resource.
 
-       * ``Optional:`` The constraint applies only if both specified resource
+       * ``Optional``: The constraint applies only if both specified resource
          actions are scheduled in the same transition (that is, in response to
          the same cluster state). This means that ``then-action`` is allowed
          on the ``then`` resource regardless of the state of the ``first``
          resource, but if both actions happen to be scheduled at the same time,
          they will be ordered.
 
-       * ``Serialize:`` Ensure that the specified actions are never performed
-         concurrently for the specified resources.  ``First-action`` and
+       * ``Serialize``: Ensure that the specified actions are never performed
+         concurrently for the specified resources.  ``first-action`` and
          ``then-action`` can be executed in either order, but one must complete
          before the other can be initiated.  An example use case is when resource
          start-up puts a high load on the host.
@@ -401,7 +401,7 @@ ___________________
        kind.
      - .. index::
           single: rsc_order; attribute, symmetrical
-          single: attribute; symmetrical (rsc)order)
+          single: attribute; symmetrical (rsc_order)
           single: symmetrical; rsc_order attribute
 
        If true, the reverse of the constraint applies for the opposite action (for
@@ -542,9 +542,9 @@ _____________________
    * - rsc-role
      - Started
      - .. index::
-          single: clone; ordering constraint, rsc-role
-          single: ordering constraint; rsc-role (clone)
-          single: rsc-role; clone ordering constraint
+          single: rsc_colocation; attribute, rsc-role
+          single: attribute; rsc-role (rsc_colocation)
+          single: rsc-role; clone colocation constraint
 
        If ``rsc`` and ``with-rsc`` are specified, and ``rsc`` is a
        :ref:`promotable clone <s-resource-promotable>`, the constraint applies
@@ -554,9 +554,9 @@ _____________________
    * - with-rsc-role
      - Started
      - .. index::
-          single: clone; ordering constraint, with-rsc-role
-          single: ordering constraint; with-rsc-role (clone)
-          single: with-rsc-role; clone ordering constraint
+          single: rsc_colocation; attribute, with-rsc-role
+          single: attribute; with-rsc-role (rsc_colocation)
+          single: with-rsc-role; clone colocation constraint
 
        If ``rsc`` and ``with-rsc`` are specified, and ``with-rsc`` is a
        :ref:`promotable clone <s-resource-promotable>`, the constraint applies
