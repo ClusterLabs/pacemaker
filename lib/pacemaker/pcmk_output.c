@@ -928,15 +928,20 @@ crmadmin_node(pcmk__output_t *out, va_list args)
 {
     const char *type = va_arg(args, const char *);
     const char *name = va_arg(args, const char *);
-    const char *id = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
     bool bash_export = va_arg(args, int);
 
     if (bash_export) {
-        return out->info(out, "export %s=%s",
-                         pcmk__s(name, "<null>"), pcmk__s(id, ""));
+        int rc = pcmk_rc_ok;
+        gchar *replaced = g_strcanon(g_strdup(pcmk__s(name, "<null>")),
+                                     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_", '_');
+
+        rc = out->info(out, "export %s=%s", replaced, pcmk__s(value, ""));
+        g_free(replaced);
+        return rc;
     } else {
         return out->info(out, "%s node: %s (%s)", type ? type : "cluster",
-                         pcmk__s(name, "<null>"), pcmk__s(id, "<null>"));
+                         pcmk__s(name, "<null>"), pcmk__s(value, "<null>"));
     }
 }
 
@@ -950,7 +955,7 @@ crmadmin_node_text(pcmk__output_t *out, va_list args)
     } else {
         const char *type G_GNUC_UNUSED = va_arg(args, const char *);
         const char *name = va_arg(args, const char *);
-        const char *id G_GNUC_UNUSED = va_arg(args, const char *);
+        const char *value G_GNUC_UNUSED = va_arg(args, const char *);
         bool bash_export G_GNUC_UNUSED = va_arg(args, int);
 
         pcmk__formatted_printf(out, "%s\n", pcmk__s(name, "<null>"));
@@ -965,13 +970,13 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
 {
     const char *type = va_arg(args, const char *);
     const char *name = va_arg(args, const char *);
-    const char *id = va_arg(args, const char *);
+    const char *value = va_arg(args, const char *);
     bool bash_export G_GNUC_UNUSED = va_arg(args, int);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                  PCMK_XA_TYPE, pcmk__s(type, "cluster"),
                                  PCMK_XA_NAME, pcmk__s(name, ""),
-                                 PCMK_XA_ID, pcmk__s(id, ""),
+                                 PCMK_XA_ID, pcmk__s(value, ""),
                                  NULL);
     return pcmk_rc_ok;
 }

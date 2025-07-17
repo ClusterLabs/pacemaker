@@ -65,17 +65,17 @@ overcloud-rabbit-2
 =#=#=#= End test: Minimally list all nodes (XML) - OK (0) =#=#=#=
 * Passed: crmadmin              - Minimally list all nodes (XML)
 =#=#=#= Begin test: List all nodes as bash exports =#=#=#=
-export overcloud-controller-0=1
-export overcloud-controller-1=2
-export overcloud-controller-2=3
-export overcloud-galera-0=4
-export overcloud-galera-1=5
-export overcloud-galera-2=6
+export overcloud_controller_0=1
+export overcloud_controller_1=2
+export overcloud_controller_2=3
+export overcloud_galera_0=4
+export overcloud_galera_1=5
+export overcloud_galera_2=6
 export lxc1=lxc1
 export lxc2=lxc2
-export overcloud-rabbit-0=overcloud-rabbit-0
-export overcloud-rabbit-1=overcloud-rabbit-1
-export overcloud-rabbit-2=overcloud-rabbit-2
+export overcloud_rabbit_0=overcloud-rabbit-0
+export overcloud_rabbit_1=overcloud-rabbit-1
+export overcloud_rabbit_2=overcloud-rabbit-2
 =#=#=#= End test: List all nodes as bash exports - OK (0) =#=#=#=
 * Passed: crmadmin              - List all nodes as bash exports
 =#=#=#= Begin test: List cluster nodes =#=#=#=
