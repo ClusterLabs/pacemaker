@@ -548,7 +548,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 }
 
 xmlNode *
-execd_create_reply(const char *origin, int rc, int call_id)
+execd_create_reply_as(const char *origin, int rc, int call_id)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_LRMD_REPLY);
 
@@ -1564,7 +1564,7 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     pcmk__assert(reply != NULL);
 
-    *reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
@@ -1619,7 +1619,7 @@ execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
 
     CRM_LOG_ASSERT(reply != NULL);
 
-    *reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     if (rsc) {
         crm_xml_add(*reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
         crm_xml_add(*reply, PCMK__XA_LRMD_CLASS, rsc->class);
@@ -1854,7 +1854,7 @@ execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
 
     CRM_LOG_ASSERT(reply != NULL);
 
-    *reply = execd_create_reply(__func__, pcmk_rc2legacy(rc), call_id);
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
 
     // If resource ID is not specified, check all resources
     if (rsc_id == NULL) {
