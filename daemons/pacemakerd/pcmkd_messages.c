@@ -149,7 +149,7 @@ handle_unknown_request(pcmk__request_t *request)
 
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                         "Unknown IPC request type '%s' (bug?)",
-                        pcmk__client_name(request->ipc_client));
+                        pcmk__s(request->op, ""));
     return NULL;
 }
 
