@@ -24,7 +24,7 @@ That leads to significant challenges:
 - How do we manage failover between sites?
 
 - How do we deal with high latency in case of resources that need to be
-  stopped? 
+  stopped?
 
 In the following sections, learn how to meet these challenges.
 
@@ -63,7 +63,7 @@ the automated CTR mechanism described below.
 
 A ticket can only be owned by one site at a time. Initially, none
 of the sites has a ticket. Each ticket must be granted once by the cluster
-administrator. 
+administrator.
 
 The presence or absence of tickets for a site is stored in the CIB as a
 cluster status. With regards to a certain ticket, there are only two states
@@ -129,7 +129,7 @@ Configuring Ticket Dependencies
 
 The **rsc_ticket** constraint lets you specify the resources depending on a certain
 ticket. Together with the constraint, you can set a **loss-policy** that defines
-what should happen to the respective resources if the ticket is revoked. 
+what should happen to the respective resources if the ticket is revoked.
 
 The attribute **loss-policy** can have the following values:
 
@@ -188,7 +188,7 @@ resources within a resource set. Each of the resources just depends on
 ``ticketA``.
 
 Referencing resource templates in ``rsc_ticket`` constraints, and even
-referencing them within resource sets, is also supported. 
+referencing them within resource sets, is also supported.
 
 If you want other resources to depend on further tickets, create as many
 constraints as necessary with ``rsc_ticket``.
@@ -204,7 +204,7 @@ If you want to re-distribute a ticket, you should wait for
 the dependent resources to stop cleanly at the previous site before you
 grant the ticket to the new site.
 
-Use the **crm_ticket** command line tool to grant and revoke tickets. 
+Use the **crm_ticket** command line tool to grant and revoke tickets.
 
 To grant a ticket to this site:
 
@@ -222,7 +222,7 @@ To revoke a ticket from this site:
 
    If you are managing tickets manually, use the **crm_ticket** command with
    great care, because it cannot check whether the same ticket is already
-   granted elsewhere. 
+   granted elsewhere.
 
 Granting and Revoking Tickets via a Cluster Ticket Registry
 ___________________________________________________________
@@ -262,19 +262,19 @@ implicitly by being disconnected from the voting body) need to
 relinquish the ticket after a time-out. Thus, it is made sure that a
 ticket will only be re-distributed after it has been relinquished by the
 previous site.  The resources that depend on that ticket will fail over
-to the new site holding the ticket. The nodes that have run the 
+to the new site holding the ticket. The nodes that have run the
 resources before will be treated according to the **loss-policy** you set
 within the **rsc_ticket** constraint.
 
 Before the booth can manage a certain ticket within the multi-site cluster,
 you initially need to grant it to a site manually via the **booth** command-line
 tool. After you have initially granted a ticket to a site, **boothd**
-will take over and manage the ticket automatically.  
+will take over and manage the ticket automatically.
 
 .. important::
 
    The **booth** command-line tool can be used to grant, list, or
-   revoke tickets and can be run on any machine where **boothd** is running. 
+   revoke tickets and can be run on any machine where **boothd** is running.
    If you are managing tickets via Booth, use only **booth** for manual
    intervention, not **crm_ticket**. That ensures the same ticket
    will only be owned by one cluster site at a time.
@@ -286,7 +286,7 @@ Booth Requirements
   Pacemaker.
 
 * Booth must be installed on all cluster nodes and on all arbitrators that will
-  be part of the multi-site cluster. 
+  be part of the multi-site cluster.
 
 * Nodes belonging to the same cluster site should be synchronized via NTP. However,
   time synchronization is not required between the individual cluster sites.

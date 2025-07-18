@@ -39,7 +39,7 @@ overwritten by) the agents shipped by existing providers.
 So, for example, if you choose the provider name of big-corp and want a new
 resource named big-app, you would create a resource agent called
 ``/usr/lib/ocf/resource.d/big-corp/big-app`` and define a resource:
- 
+
 .. code-block: xml
 
    <primitive id="custom-app" class="ocf" provider="big-corp" type="big-app"/>
@@ -55,7 +55,7 @@ All OCF resource agents are required to implement the following actions.
 
 .. list-table:: **Required Actions for OCF Agents**
    :class: longtable
-   :widths: 1 4 3
+   :widths: 15 25 60
    :header-rows: 1
 
    * - Action
@@ -113,7 +113,7 @@ only with advanced resource types such as clones.
 
 .. list-table:: **Optional Actions for OCF Resource Agents**
    :class: longtable:
-   :widths: 1 4 3
+   :widths: 15 45 40
    :header-rows: 1
 
    * - Action
@@ -211,7 +211,7 @@ There are three types of failure recovery:
 
 .. list-table:: **Types of Recovery Performed by the Cluster**
    :class: longtable
-   :widths: 1 5 5
+   :widths: 10 45 45
    :header-rows: 1
 
    * - Type
@@ -256,7 +256,7 @@ have failed, if ``OCF_SUCCESS`` was not the expected return value.
 
 .. list-table:: **OCF Exit Codes and Their Recovery Types**
    :class: longtable
-   :widths: 1 3 6 2
+   :widths: 8 32 50 10
    :header-rows: 1
 
    * - Exit Code
@@ -438,7 +438,7 @@ listed in the table below.
 
 .. list-table:: **OCF Environment Variables**
    :class: longtable
-   :widths: 1 6
+   :widths: 50 50
    :header-rows: 1
 
    * - Environment Variable
@@ -720,7 +720,7 @@ what role it currently believes it to be in.
 
 .. list-table:: **Role Implications of OCF Return Codes**
    :class: longtable
-   :widths: 1 3
+   :widths: 50 50
    :header-rows: 1
 
    * - Monitor Return Code
@@ -769,7 +769,7 @@ cluster and what is about to happen to it.
 
 .. list-table:: **Environment Variables Supplied with Clone Notify Actions**
    :class: longtable
-   :widths: 1 1
+   :widths: 50 50
    :header-rows: 1
 
    * - Variable
@@ -914,7 +914,7 @@ Extra Notifications for Promotable Clones
 
 .. list-table:: **Extra Environment Variables Supplied for Promotable Clones**
    :class: longtable
-   :widths: 1 1
+   :widths: 50 50
    :header-rows: 1
 
    * - Variable
@@ -1101,13 +1101,13 @@ ______________
 The relevant part of the
 `LSB specifications <http://refspecs.linuxfoundation.org/lsb.shtml>`_
 includes a description of all the return codes listed here.
-    
+
 Assuming `some_service` is configured correctly and currently
 inactive, the following sequence will help you determine if it is
 LSB-compatible:
 
 #. Start (stopped):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service start ; echo "result: $?"
@@ -1117,7 +1117,7 @@ LSB-compatible:
      usual output)?
 
 #. Status (running):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service status ; echo "result: $?"
@@ -1128,7 +1128,7 @@ LSB-compatible:
      usual output)?
 
 #. Start (running):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service start ; echo "result: $?"
@@ -1138,7 +1138,7 @@ LSB-compatible:
       script's usual output)?
 
 #. Stop (running):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service stop ; echo "result: $?"
@@ -1148,7 +1148,7 @@ LSB-compatible:
      script's usual output)?
 
 #. Status (stopped):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service status ; echo "result: $?"
@@ -1159,7 +1159,7 @@ LSB-compatible:
      script's usual output)?
 
 #. Stop (stopped):
- 
+
    .. code-block:: none
 
       # /etc/init.d/some_service stop ; echo "result: $?"

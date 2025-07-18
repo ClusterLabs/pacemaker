@@ -45,7 +45,7 @@ each event.
 Alert agents will be called only on cluster nodes. They will be called for
 events involving Pacemaker Remote nodes, but they will never be called *on*
 those nodes.
-   
+
 For more information about sample alert agents provided by Pacemaker and about
 developing custom alert agents, see the *Pacemaker Administration* document.
 
@@ -56,11 +56,11 @@ developing custom alert agents, see the *Pacemaker Administration* document.
 
 Alert Recipients
 ################
-   
+
 Usually, alerts are directed towards a recipient. Thus, each alert may be
 additionally configured with one or more recipients. The cluster will call the
 agent separately for each recipient.
-   
+
 .. topic:: Alert configuration with recipient
 
    .. code-block:: xml
@@ -72,68 +72,71 @@ agent separately for each recipient.
             </alert>
          </alerts>
       </configuration>
-   
+
 In the above example, the cluster will call ``my-script.sh`` for each event,
 passing the recipient ``some-address`` as an environment variable.
 
 The recipient may be anything the alert agent can recognize -- an IP address,
 an e-mail address, a file name, whatever the particular agent supports.
-   
-   
+
+
 .. index::
    single: alert; meta-attributes
    single: meta-attribute; alert meta-attributes
 
 Alert Meta-Attributes
 #####################
-   
+
 As with resources, meta-attributes can be configured for alerts to change
 whether and how Pacemaker calls them.
-   
-.. table:: **Meta-Attributes of an Alert or Recipient**
+
+.. list-table:: **Meta-Attributes of an Alert or Recipient**
    :class: longtable
-   :widths: 1 1 3
-   
-   +------------------+---------------+-----------------------------------------------------+
-   | Meta-Attribute   | Default       | Description                                         |
-   +==================+===============+=====================================================+
-   | description      |               | .. index::                                          |
-   |                  |               |    single: acl_permission; description (attribute)  |
-   |                  |               |    single: description; acl_permission attribute    |
-   |                  |               |    single: attribute; description (acl_permission)  |
-   |                  |               |                                                     |
-   |                  |               | Arbitrary text for user's use (ignored by Pacemaker)|
-   +------------------+---------------+-----------------------------------------------------+
-   | enabled          | true          | .. index::                                          |
-   |                  |               |    single: alert; meta-attribute, enabled           |
-   |                  |               |    single: meta-attribute; enabled (alert)          |
-   |                  |               |    single: enabled; alert meta-attribute            |
-   |                  |               |                                                     |
-   |                  |               | If false for an alert, the alert will not be used.  |
-   |                  |               | If true for an alert and false for a particular     |
-   |                  |               | recipient of that alert, that recipient will not be |
-   |                  |               | used. *(since 2.1.6)*                               |
-   +------------------+---------------+-----------------------------------------------------+
-   | timestamp-format | %H:%M:%S.%06N | .. index::                                          |
-   |                  |               |    single: alert; meta-attribute, timestamp-format  |
-   |                  |               |    single: meta-attribute; timestamp-format (alert) |
-   |                  |               |    single: timestamp-format; alert meta-attribute   |
-   |                  |               |                                                     |
-   |                  |               | Format the cluster will use when sending the        |
-   |                  |               | event's timestamp to the agent. This is a string as |
-   |                  |               | used with the ``date(1)`` command.                  |
-   +------------------+---------------+-----------------------------------------------------+
-   | timeout          | 30s           | .. index::                                          |
-   |                  |               |    single: alert; meta-attribute, timeout           |
-   |                  |               |    single: meta-attribute; timeout (alert)          |
-   |                  |               |    single: timeout; alert meta-attribute            |
-   |                  |               |                                                     |
-   |                  |               | If the alert agent does not complete within this    |
-   |                  |               | amount of time, it will be terminated.              |
-   +------------------+---------------+-----------------------------------------------------+
-   
+   :widths: 20 20 60
+   :header-rows: 1
+
+   * - Meta-Attribute
+     - Default
+     - Description
+   * - description
+     -
+     - .. index::
+          single: acl_permission; description (attribute)
+          single: description; acl_permission attribute
+          single: attribute; description (acl_permission)
+
+       Arbitrary text for user's use (ignored by Pacemaker)
+   * - enabled
+     - true
+     - .. index::
+          single: alert; meta-attribute, enabled
+          single: meta-attribute; enabled (alert)
+          single: enabled; alert meta-attribute
+
+       If false for an alert, the alert will not be used.  If true for an alert
+       and false for a particular recipient of that alert, that recipient will
+       not be used. *(since 2.1.6)*
+   * - timestamp-format
+     - %H:%M:%S.%06N
+     - .. index::
+          single: alert; meta-attribute, timestamp-format
+          single: meta-attribute; timestamp-format (alert)
+          single: timestamp-format; alert meta-attribute
+
+       Format the cluster will use when sending the event's timestamp to the
+       agent. This is a string as used with the ``date(1)`` command.
+   * - timeout
+     - 30s
+     - .. index::
+          single: alert; meta-attribute, timeout
+          single: meta-attribute; timeout (alert)
+          single: timeout; alert meta-attribute
+
+       If the alert agent does not complete within this amount of time, it
+       will be terminated.
+
 Meta-attributes can be configured per alert and/or per recipient.
-   
+
 .. topic:: Alert configuration with meta-attributes
 
    .. code-block:: xml
@@ -160,26 +163,26 @@ Meta-attributes can be configured per alert and/or per recipient.
             </alert>
          </alerts>
       </configuration>
-   
+
 In the above example, the ``my-script.sh`` will get called twice for each
 event, with each call using a 15-second timeout. One call will be passed the
 recipient ``someuser@example.com`` and a timestamp in the format ``%D %H:%M``,
 while the other call will be passed the recipient ``otheruser@example.com`` and
 a timestamp in the format ``%c``.
-   
-   
+
+
 .. index::
    single: alert; instance attributes
    single: instance attribute; alert instance attributes
 
 Alert Instance Attributes
 #########################
-   
+
 As with resource agents, agent-specific configuration values may be configured
 as instance attributes. These will be passed to the agent as additional
 environment variables. The number, names and allowed values of these instance
 attributes are completely up to the particular agent.
-   
+
 .. topic:: Alert configuration with instance attributes
 
    .. code-block:: xml
@@ -200,8 +203,8 @@ attributes are completely up to the particular agent.
             </alert>
          </alerts>
       </configuration>
-   
-   
+
+
 .. index::
    single: alert; filters
    pair: XML element; select
@@ -213,7 +216,7 @@ attributes are completely up to the particular agent.
 
 Alert Filters
 #############
-   
+
 By default, an alert agent will be called for node events, fencing events, and
 resource events. An agent may choose to ignore certain types of events, but
 there is still the overhead of calling it for those events. To eliminate that
@@ -222,9 +225,9 @@ overhead, you may select which types of events the agent should receive.
 Alert filters are configured within a ``select`` element inside an ``alert``
 element.
 
-.. list-table:: **Possible alert filters**
+.. list-table:: **Possible Alert Filters**
    :class: longtable
-   :widths: 1 3
+   :widths: 25 75
    :header-rows: 1
 
    * - Name
@@ -256,11 +259,11 @@ element.
             </alert>
          </alerts>
       </configuration>
-   
+
 With ``<select_attributes>`` (the only event type not enabled by default), the
 agent will receive alerts when a node attribute changes. If you wish the agent
 to be called only when certain attributes change, you can configure that as well.
-   
+
 .. topic:: Alert configuration to be called when certain node attributes change
 
    .. code-block:: xml
@@ -278,7 +281,7 @@ to be called only when certain attributes change, you can configure that as well
             </alert>
          </alerts>
       </configuration>
-   
+
 Node attribute alerts are currently considered experimental. Alerts may be
 limited to attributes set via ``attrd_updater``, and agents may be called
 multiple times with the same attribute value.

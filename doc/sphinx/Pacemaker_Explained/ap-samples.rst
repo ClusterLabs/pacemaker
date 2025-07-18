@@ -3,7 +3,7 @@ Sample Configurations
 
 Empty
 #####
-   
+
 .. topic:: An Empty Configuration
 
    .. code-block:: xml
@@ -17,10 +17,10 @@ Empty
         </configuration>
         <status/>
       </cib>
-   
+
 Simple
 ######
-   
+
 .. topic:: A simple configuration with two nodes, some cluster options and a resource
 
    .. code-block:: xml
@@ -65,14 +65,14 @@ Simple
         </configuration>
         <status/>
       </cib>
-   
+
 In the above example, we have one resource (an IP address) that we check
 every five minutes and will run on host ``c001n01`` until either the
 resource fails 10 times or the host shuts down.
-   
+
 Advanced Configuration
 ######################
-   
+
 .. topic:: An advanced configuration with groups, clones and STONITH
 
    .. code-block:: xml

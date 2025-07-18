@@ -26,7 +26,7 @@ Show Cluster Configuration and Status
 
       crmsh # crm configure show
       pcs   # pcs config
-    
+
 .. topic:: Show Cluster Status
 
    .. code-block:: none
@@ -224,7 +224,7 @@ edited and verified before committing to the live configuration:
 
       crmsh # crm configure rsc_defaults resource-stickiness=100
       pcs   # pcs resource defaults resource-stickiness=100
-    
+
 .. topic:: List Current Operation Defaults
 
    .. code-block:: none
@@ -321,7 +321,7 @@ Manage Constraints
 
       crmsh # crm configure location prefer-pcmk-1 WebSite 50: pcmk-1
       pcs   # pcs constraint location WebSite prefers pcmk-1=50
-    
+
 .. topic:: Create a Location Constraint Based on Role
 
    .. code-block:: none
@@ -336,7 +336,7 @@ Manage Constraints
       crmsh     # crm resource move WebSite pcmk-1
       pcs       # pcs resource move WebSite pcmk-1
       pacemaker # crm_resource -r WebSite --move -N pcmk-1
-    
+
 .. topic:: Move a Resource Away from Its Current Node (by Creating a Location Constraint)
 
    .. code-block:: none

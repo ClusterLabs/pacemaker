@@ -40,7 +40,7 @@ ___________________
 
 .. list-table:: **Attributes of a rsc_location Element**
    :class: longtable
-   :widths: 1 1 1 4
+   :widths: 15 15 10 60
    :header-rows: 1
 
    * - Name
@@ -48,23 +48,23 @@ ___________________
      - Default
      - Description
    * - .. rsc_location_id:
-       
+
        .. index::
           single: rsc_location; attribute, id
           single: attribute; id (rsc_location)
           single: id; rsc_location attribute
-       
+
        id
      - :ref:`id <id>`
      -
      - A unique name for the constraint (required)
    * - .. rsc_location_rsc:
-       
+
        .. index::
           single: rsc_location; attribute, rsc
           single: attribute; rsc (rsc_location)
           single: rsc; rsc_location attribute
-       
+
        rsc
      - :ref:`id <id>`
      -
@@ -72,12 +72,12 @@ ___________________
        constraint must either have a ``rsc``, have a ``rsc-pattern``, or
        contain at least one resource set.
    * - .. rsc_pattern:
-       
+
        .. index::
           single: rsc_location; attribute, rsc-pattern
           single: attribute; rsc-pattern (rsc_location)
           single: rsc-pattern; rsc_location attribute
-       
+
        rsc-pattern
      - :ref:`text <text>`
      -
@@ -93,12 +93,12 @@ ___________________
        must either have a ``rsc``, have a ``rsc-pattern``, or contain at least
        one resource set.
    * - .. rsc_location_node:
-       
+
        .. index::
           single: rsc_location; attribute, node
           single: attribute; node (rsc_location)
           single: node; rsc_location attribute
-       
+
        node
      - :ref:`text <text>`
      -
@@ -106,12 +106,12 @@ ___________________
        constraint must either have a ``node`` and ``score``, or contain at
        least one rule.
    * - .. rsc_location_score:
-       
+
        .. index::
           single: rsc_location; attribute, score
           single: attribute; score (rsc_location)
           single: score; rsc_location attribute
-       
+
        score
      - :ref:`score <score>`
      -
@@ -122,12 +122,12 @@ ___________________
        constraint must either have a ``node`` and ``score``, or contain at
        least one rule.
    * - .. rsc_location_role:
-       
+
        .. index::
           single: rsc_location; attribute, role
           single: attribute; role (rsc_location)
           single: role; rsc_location attribute
-       
+
        role
      - :ref:`enumeration <enumeration>`
      - ``Started``
@@ -135,7 +135,7 @@ ___________________
        :ref:`promotable clones <s-resource-promotable>`, is allowed only if
        ``rsc`` or ``rsc-pattern`` is set, and is ignored if the constraint
        contains a rule. Allowed values:
-       
+
        * ``Started`` or ``Unpromoted``: The constraint affects the location of
          all instances of the resource. (A promoted instance must start in the
          unpromoted role before being promoted, so any location requirement for
@@ -145,12 +145,12 @@ ___________________
          promoted.
 
    * - .. resource_discovery:
-       
+
        .. index::
           single: rsc_location; attribute, resource-discovery
           single: attribute; resource-discovery (rsc_location)
           single: resource-discovery; rsc_location attribute
-       
+
        resource-discovery
      - :ref:`enumeration <enumeration>`
      - always
@@ -165,7 +165,7 @@ ___________________
        Pacemaker Remote is used to scale a cluster to hundreds of nodes,
        limiting resource discovery to allowed nodes can significantly boost
        performance. Allowed values:
-       
+
        * ``always:`` Always perform resource discovery for the specified
          resource on this node.
        * ``never:`` Never perform resource discovery for the specified resource
@@ -319,91 +319,94 @@ resource actions should occur.
 Ordering Properties
 ___________________
 
-.. table:: **Attributes of a rsc_order Element**
+.. list-table:: **Attributes of a rsc_order Element**
    :class: longtable
-   :widths: 1 2 4
+   :widths: 15 30 55
+   :header-rows: 1
 
-   +--------------+----------------------------+-------------------------------------------------------------------+
-   | Field        | Default                    | Description                                                       |
-   +==============+============================+===================================================================+
-   | id           |                            | .. index::                                                        |
-   |              |                            |    single: rsc_order; attribute, id                               |
-   |              |                            |    single: attribute; id (rsc_order)                              |
-   |              |                            |    single: id; rsc_order attribute                                |
-   |              |                            |                                                                   |
-   |              |                            | A unique name for the constraint                                  |
-   +--------------+----------------------------+-------------------------------------------------------------------+
-   | first        |                            | .. index::                                                        |
-   |              |                            |    single: rsc_order; attribute, first                            |
-   |              |                            |    single: attribute; first (rsc_order)                           |
-   |              |                            |    single: first; rsc_order attribute                             |
-   |              |                            |                                                                   |
-   |              |                            | Name of the resource that the ``then`` resource                   |
-   |              |                            | depends on                                                        |
-   +--------------+----------------------------+-------------------------------------------------------------------+
-   | then         |                            | .. index::                                                        |
-   |              |                            |    single: rsc_order; attribute, then                             |
-   |              |                            |    single: attribute; then (rsc_order)                            |
-   |              |                            |    single: then; rsc_order attribute                              |
-   |              |                            |                                                                   |
-   |              |                            | Name of the dependent resource                                    |
-   +--------------+----------------------------+-------------------------------------------------------------------+
-   | first-action | start                      | .. index::                                                        |
-   |              |                            |    single: rsc_order; attribute, first-action                     |
-   |              |                            |    single: attribute; first-action (rsc_order)                    |
-   |              |                            |    single: first-action; rsc_order attribute                      |
-   |              |                            |                                                                   |
-   |              |                            | The action that the ``first`` resource must complete              |
-   |              |                            | before ``then-action`` can be initiated for the ``then``          |
-   |              |                            | resource.  Allowed values: ``start``, ``stop``,                   |
-   |              |                            | ``promote``, ``demote``.                                          |
-   +--------------+----------------------------+-------------------------------------------------------------------+
-   | then-action  | value of ``first-action``  | .. index::                                                        |
-   |              |                            |    single: rsc_order; attribute, then-action                      |
-   |              |                            |    single: attribute; then-action (rsc_order)                     |
-   |              |                            |    single: first-action; rsc_order attribute                      |
-   |              |                            |                                                                   |
-   |              |                            | The action that the ``then`` resource can execute only            |
-   |              |                            | after the ``first-action`` on the ``first`` resource has          |
-   |              |                            | completed.  Allowed values: ``start``, ``stop``,                  |
-   |              |                            | ``promote``, ``demote``.                                          |
-   +--------------+----------------------------+-------------------------------------------------------------------+
-   | kind         | Mandatory                  | .. index::                                                        |
-   |              |                            |    single: rsc_order; attribute, kind                             |
-   |              |                            |    single: attribute; kind (rsc_order)                            |
-   |              |                            |    single: kind; rsc_order attribute                              |
-   |              |                            |                                                                   |
-   |              |                            | How to enforce the constraint. Allowed values:                    |
-   |              |                            |                                                                   |
-   |              |                            | * ``Mandatory:`` ``then-action`` will never be initiated          |
-   |              |                            |   for the ``then`` resource unless and until ``first-action``     |
-   |              |                            |   successfully completes for the ``first`` resource.              |
-   |              |                            |                                                                   |
-   |              |                            | * ``Optional:`` The constraint applies only if both specified     |
-   |              |                            |   resource actions are scheduled in the same transition           |
-   |              |                            |   (that is, in response to the same cluster state). This          |
-   |              |                            |   means that ``then-action`` is allowed on the ``then``           |
-   |              |                            |   resource regardless of the state of the ``first`` resource,     |
-   |              |                            |   but if both actions happen to be scheduled at the same time,    |
-   |              |                            |   they will be ordered.                                           |
-   |              |                            |                                                                   |
-   |              |                            | * ``Serialize:`` Ensure that the specified actions are never      |
-   |              |                            |   performed concurrently for the specified resources.             |
-   |              |                            |   ``First-action`` and ``then-action`` can be executed in either  |
-   |              |                            |   order, but one must complete before the other can be initiated. |
-   |              |                            |   An example use case is when resource start-up puts a high load  |
-   |              |                            |   on the host.                                                    |
-   +--------------+----------------------------+-------------------------------------------------------------------+
-   | symmetrical  | TRUE for ``Mandatory`` and | .. index::                                                        |
-   |              | ``Optional`` kinds. FALSE  |    single: rsc_order; attribute, symmetrical                      |
-   |              | for ``Serialize`` kind.    |    single: attribute; symmetrical (rsc)order)                     |
-   |              |                            |    single: symmetrical; rsc_order attribute                       |
-   |              |                            |                                                                   |
-   |              |                            | If true, the reverse of the constraint applies for the            |
-   |              |                            | opposite action (for example, if B starts after A starts,         |
-   |              |                            | then B stops before A stops).  ``Serialize`` orders cannot        |
-   |              |                            | be symmetrical.                                                   |
-   +--------------+----------------------------+-------------------------------------------------------------------+
+   * - Field
+     - Default
+     - Description
+   * - id
+     -
+     - .. index::
+          single: rsc_order; attribute, id
+          single: attribute; id (rsc_order)
+          single: id; rsc_order attribute
+
+       A unique name for the constraint
+   * - first
+     -
+     - .. index::
+          single: rsc_order; attribute, first
+          single: attribute; first (rsc_order)
+          single: first; rsc_order attribute
+
+       Name of the resource that the ``then`` resource depends on
+   * - then
+     -
+     - .. index::
+          single: rsc_order; attribute, then
+          single: attribute; then (rsc_order)
+          single: then; rsc_order attribute
+
+       Name of the dependent resource
+   * - first-action
+     - start
+     - .. index::
+          single: rsc_order; attribute, first-action
+          single: attribute; first-action (rsc_order)
+          single: first-action; rsc_order attribute
+
+       The action that the ``first`` resource must complete before
+       ``then-action`` can be initiated for the ``then`` resource.  Allowed
+       values: ``start``, ``stop``, ``promote``, ``demote``.
+   * - then-action
+     - value of ``first-action``
+     - .. index::
+          single: rsc_order; attribute, then-action
+          single: attribute; then-action (rsc_order)
+          single: then-action; rsc_order attribute
+
+       The action that the ``then`` resource can execute only after the
+       ``first-action`` on the ``first`` resource has completed.  Allowed
+       values: ``start``, ``stop``, ``promote``, ``demote``.
+   * - kind
+     - Mandatory
+     - .. index::
+          single: rsc_order; attribute, kind
+          single: attribute; kind (rsc_order)
+          single: kind; rsc_order attribute
+
+       How to enforce the constraint. Allowed values:
+
+       * ``Mandatory``: ``then-action`` will never be initiated for the
+         ``then`` resource unless and until ``first-action`` successfully
+         completes for the ``first`` resource.
+
+       * ``Optional``: The constraint applies only if both specified resource
+         actions are scheduled in the same transition (that is, in response to
+         the same cluster state). This means that ``then-action`` is allowed
+         on the ``then`` resource regardless of the state of the ``first``
+         resource, but if both actions happen to be scheduled at the same time,
+         they will be ordered.
+
+       * ``Serialize``: Ensure that the specified actions are never performed
+         concurrently for the specified resources.  ``first-action`` and
+         ``then-action`` can be executed in either order, but one must complete
+         before the other can be initiated.  An example use case is when resource
+         start-up puts a high load on the host.
+   * - symmetrical
+     - TRUE for ``Mandatory`` and ``Optional`` kinds.  FALSE for ``Serialize``
+       kind.
+     - .. index::
+          single: rsc_order; attribute, symmetrical
+          single: attribute; symmetrical (rsc_order)
+          single: symmetrical; rsc_order attribute
+
+       If true, the reverse of the constraint applies for the opposite action (for
+       example, if B starts after A starts, then B stops before A stops).
+       ``Serialize`` orders cannot be symmetrical.
 
 ``Promote`` and ``demote`` apply to :ref:`promotable <s-resource-promotable>`
 clone resources.
@@ -477,99 +480,99 @@ consider whether you should colocate A with B, or B with A.
 Colocation Properties
 _____________________
 
-.. table:: **Attributes of a rsc_colocation Constraint**
+.. list-table:: **Attributes of a rsc_colocation Constraint**
    :class: longtable
-   :widths: 2 2 5
+   :widths: 15 30 55
+   :header-rows: 1
 
-   +----------------+----------------+--------------------------------------------------------+
-   | Field          | Default        | Description                                            |
-   +================+================+========================================================+
-   | id             |                | .. index::                                             |
-   |                |                |    single: rsc_colocation; attribute, id               |
-   |                |                |    single: attribute; id (rsc_colocation)              |
-   |                |                |    single: id; rsc_colocation attribute                |
-   |                |                |                                                        |
-   |                |                | A unique name for the constraint (required).           |
-   +----------------+----------------+--------------------------------------------------------+
-   | rsc            |                | .. index::                                             |
-   |                |                |    single: rsc_colocation; attribute, rsc              |
-   |                |                |    single: attribute; rsc (rsc_colocation)             |
-   |                |                |    single: rsc; rsc_colocation attribute               |
-   |                |                |                                                        |
-   |                |                | The name of a resource that should be located          |
-   |                |                | relative to ``with-rsc``. A colocation constraint must |
-   |                |                | either contain at least one                            |
-   |                |                | :ref:`resource set <s-resource-sets>`, or specify both |
-   |                |                | ``rsc`` and ``with-rsc``.                              |
-   +----------------+----------------+--------------------------------------------------------+
-   | with-rsc       |                | .. index::                                             |
-   |                |                |    single: rsc_colocation; attribute, with-rsc         |
-   |                |                |    single: attribute; with-rsc (rsc_colocation)        |
-   |                |                |    single: with-rsc; rsc_colocation attribute          |
-   |                |                |                                                        |
-   |                |                | The name of the resource used as the colocation        |
-   |                |                | target. The cluster will decide where to put this      |
-   |                |                | resource first and then decide where to put ``rsc``.   |
-   |                |                | A colocation constraint must either contain at least   |
-   |                |                | one :ref:`resource set <s-resource-sets>`, or specify  |
-   |                |                | both ``rsc`` and ``with-rsc``.                         |
-   +----------------+----------------+--------------------------------------------------------+
-   | node-attribute | #uname         | .. index::                                             |
-   |                |                |    single: rsc_colocation; attribute, node-attribute   |
-   |                |                |    single: attribute; node-attribute (rsc_colocation)  |
-   |                |                |    single: node-attribute; rsc_colocation attribute    |
-   |                |                |                                                        |
-   |                |                | If ``rsc`` and ``with-rsc`` are specified, this node   |
-   |                |                | attribute must be the same on the node running ``rsc`` |
-   |                |                | and the node running ``with-rsc`` for the constraint   |
-   |                |                | to be satisfied. (For details, see                     |
-   |                |                | :ref:`s-coloc-attribute`.)                             |
-   +----------------+----------------+--------------------------------------------------------+
-   | score          | 0              | .. index::                                             |
-   |                |                |    single: rsc_colocation; attribute, score            |
-   |                |                |    single: attribute; score (rsc_colocation)           |
-   |                |                |    single: score; rsc_colocation attribute             |
-   |                |                |                                                        |
-   |                |                | Positive values indicate the resources should run on   |
-   |                |                | the same node. Negative values indicate the resources  |
-   |                |                | should run on different nodes. Values of               |
-   |                |                | +/- ``INFINITY`` change "should" to "must".            |
-   +----------------+----------------+--------------------------------------------------------+
-   | rsc-role       | Started        | .. index::                                             |
-   |                |                |    single: clone; ordering constraint, rsc-role        |
-   |                |                |    single: ordering constraint; rsc-role (clone)       |
-   |                |                |    single: rsc-role; clone ordering constraint         |
-   |                |                |                                                        |
-   |                |                | If ``rsc`` and ``with-rsc`` are specified, and ``rsc`` |
-   |                |                | is a :ref:`promotable clone <s-resource-promotable>`,  |
-   |                |                | the constraint applies only to ``rsc`` instances in    |
-   |                |                | this role. Allowed values: ``Started``, ``Stopped``,   |
-   |                |                | ``Promoted``, ``Unpromoted``. For details, see         |
-   |                |                | :ref:`promotable-clone-constraints`.                   |
-   +----------------+----------------+--------------------------------------------------------+
-   | with-rsc-role  | Started        | .. index::                                             |
-   |                |                |    single: clone; ordering constraint, with-rsc-role   |
-   |                |                |    single: ordering constraint; with-rsc-role (clone)  |
-   |                |                |    single: with-rsc-role; clone ordering constraint    |
-   |                |                |                                                        |
-   |                |                | If ``rsc`` and ``with-rsc`` are specified, and         |
-   |                |                | ``with-rsc`` is a                                      |
-   |                |                | :ref:`promotable clone <s-resource-promotable>`, the   |
-   |                |                | constraint applies only to ``with-rsc`` instances in   |
-   |                |                | this role. Allowed values: ``Started``, ``Stopped``,   |
-   |                |                | ``Promoted``, ``Unpromoted``. For details, see         |
-   |                |                | :ref:`promotable-clone-constraints`.                   |
-   +----------------+----------------+--------------------------------------------------------+
-   | influence      | value of       | .. index::                                             |
-   |                | ``critical``   |    single: rsc_colocation; attribute, influence        |
-   |                | meta-attribute |    single: attribute; influence (rsc_colocation)       |
-   |                | for ``rsc``    |    single: influence; rsc_colocation attribute         |
-   |                |                |                                                        |
-   |                |                | Whether to consider the location preferences of        |
-   |                |                | ``rsc`` when ``with-rsc`` is already active. Allowed   |
-   |                |                | values: ``true``, ``false``. For details, see          |
-   |                |                | :ref:`s-coloc-influence`. *(since 2.1.0)*              |
-   +----------------+----------------+--------------------------------------------------------+
+   * - Field
+     - Default
+     - Description
+   * - id
+     -
+     - .. index::
+          single: rsc_colocation; attribute, id
+          single: attribute; id (rsc_colocation)
+          single: id; rsc_colocation attribute
+
+       A unique name for the constraint (required).
+   * - rsc
+     -
+     - .. index::
+          single: rsc_colocation; attribute, rsc
+          single: attribute; rsc (rsc_colocation)
+          single: rsc; rsc_colocation attribute
+
+       The name of a resource that should be located relative to ``with-rsc``.
+       A colocation constraint must either contain at least one :ref:`resource
+       set <s-resource-sets>`, or specify both ``rsc`` and ``with-rsc``.
+   * - with-rsc
+     -
+     - .. index::
+          single: rsc_colocation; attribute, with-rsc
+          single: attribute; with-rsc (rsc_colocation)
+          single: with-rsc; rsc_colocation attribute
+
+       The name of the resource used as the colocation target. The cluster will
+       decide where to put this resource first and then decide where to put
+       ``rsc``.  A colocation constraint must either contain at least one
+       :ref:`resource set <s-resource-sets>`, or specify both ``rsc`` and
+       ``with-rsc``.
+   * - node-attribute
+     - #uname
+     - .. index::
+          single: rsc_colocation; attribute, node-attribute
+          single: attribute; node-attribute (rsc_colocation)
+          single: node-attribute; rsc_colocation attribute
+
+       If ``rsc`` and ``with-rsc`` are specified, this node attribute must be
+       the same on the node running ``rsc`` and the node running ``with-rsc``
+       for the constraint to be satisfied. (For details, see
+       :ref:`s-coloc-attribute`.)
+   * - score
+     - 0
+     - .. index::
+          single: rsc_colocation; attribute, score
+          single: attribute; score (rsc_colocation)
+          single: score; rsc_colocation attribute
+
+       Positive values indicate the resources should run on the same node.
+       Negative values indicate the resources should run on different nodes.
+       Values of +/- ``INFINITY`` change "should" to "must".
+   * - rsc-role
+     - Started
+     - .. index::
+          single: rsc_colocation; attribute, rsc-role
+          single: attribute; rsc-role (rsc_colocation)
+          single: rsc-role; clone colocation constraint
+
+       If ``rsc`` and ``with-rsc`` are specified, and ``rsc`` is a
+       :ref:`promotable clone <s-resource-promotable>`, the constraint applies
+       only to ``rsc`` instances in this role. Allowed values: ``Started``,
+       ``Stopped``, ``Promoted``, ``Unpromoted``. For details, see
+       :ref:`promotable-clone-constraints`.
+   * - with-rsc-role
+     - Started
+     - .. index::
+          single: rsc_colocation; attribute, with-rsc-role
+          single: attribute; with-rsc-role (rsc_colocation)
+          single: with-rsc-role; clone colocation constraint
+
+       If ``rsc`` and ``with-rsc`` are specified, and ``with-rsc`` is a
+       :ref:`promotable clone <s-resource-promotable>`, the constraint applies
+       only to ``with-rsc`` instances in this role. Allowed values: ``Started``,
+       ``Stopped``, ``Promoted``, ``Unpromoted``. For details, see
+       :ref:`promotable-clone-constraints`.
+   * - influence
+     - value of ``critical`` meta-attribute for ``rsc``
+     - .. index::
+          single: rsc_colocation; attribute, influence
+          single: attribute; influence (rsc_colocation)
+          single: influence; rsc_colocation attribute
+
+       Whether to consider the location preferences of ``rsc`` when ``with-rsc``
+       is already active. Allowed values: ``true``, ``false``. For details,
+       see :ref:`s-coloc-influence`. *(since 2.1.0)*
 
 Mandatory Placement
 ___________________
@@ -710,82 +713,84 @@ have an effect in all contexts.
 .. index::
    pair: XML element; resource_set
 
-.. table:: **Attributes of a resource_set Element**
+.. list-table:: **Attributes of a resource_set Element**
    :class: longtable
-   :widths: 2 2 5
+   :widths: 15 15 70
+   :header-rows: 1
 
-   +-------------+------------------+--------------------------------------------------------+
-   | Field       | Default          | Description                                            |
-   +=============+==================+========================================================+
-   | id          |                  | .. index::                                             |
-   |             |                  |    single: resource_set; attribute, id                 |
-   |             |                  |    single: attribute; id (resource_set)                |
-   |             |                  |    single: id; resource_set attribute                  |
-   |             |                  |                                                        |
-   |             |                  | A unique name for the set (required)                   |
-   +-------------+------------------+--------------------------------------------------------+
-   | sequential  | true             | .. index::                                             |
-   |             |                  |    single: resource_set; attribute, sequential         |
-   |             |                  |    single: attribute; sequential (resource_set)        |
-   |             |                  |    single: sequential; resource_set attribute          |
-   |             |                  |                                                        |
-   |             |                  | Whether the members of the set must be acted on in     |
-   |             |                  | order.  Meaningful within ``rsc_order`` and            |
-   |             |                  | ``rsc_colocation``.                                    |
-   +-------------+------------------+--------------------------------------------------------+
-   | require-all | true             | .. index::                                             |
-   |             |                  |    single: resource_set; attribute, require-all        |
-   |             |                  |    single: attribute; require-all (resource_set)       |
-   |             |                  |    single: require-all; resource_set attribute         |
-   |             |                  |                                                        |
-   |             |                  | Whether all members of the set must be active before   |
-   |             |                  | continuing.  With the current implementation, the      |
-   |             |                  | cluster may continue even if only one member of the    |
-   |             |                  | set is started, but if more than one member of the set |
-   |             |                  | is starting at the same time, the cluster will still   |
-   |             |                  | wait until all of those have started before continuing |
-   |             |                  | (this may change in future versions).  Meaningful      |
-   |             |                  | within ``rsc_order``.                                  |
-   +-------------+------------------+--------------------------------------------------------+
-   | role        |                  | .. index::                                             |
-   |             |                  |    single: resource_set; attribute, role               |
-   |             |                  |    single: attribute; role (resource_set)              |
-   |             |                  |    single: role; resource_set attribute                |
-   |             |                  |                                                        |
-   |             |                  | The constraint applies only to resource set members    |
-   |             |                  | that are :ref:`s-resource-promotable` in this          |
-   |             |                  | role.  Meaningful within ``rsc_location``,             |
-   |             |                  | ``rsc_colocation`` and ``rsc_ticket``.                 |
-   |             |                  | Allowed values: ``Started``, ``Promoted``,             |
-   |             |                  | ``Unpromoted``. For details, see                       |
-   |             |                  | :ref:`promotable-clone-constraints`.                   |
-   +-------------+------------------+--------------------------------------------------------+
-   | action      | start            | .. index::                                             |
-   |             |                  |    single: resource_set; attribute, action             |
-   |             |                  |    single: attribute; action (resource_set)            |
-   |             |                  |    single: action; resource_set attribute              |
-   |             |                  |                                                        |
-   |             |                  | The action that applies to *all members* of the set.   |
-   |             |                  | Meaningful within ``rsc_order``. Allowed values:       |
-   |             |                  | ``start``, ``stop``, ``promote``, ``demote``.          |
-   +-------------+------------------+--------------------------------------------------------+
-   | score       |                  | .. index::                                             |
-   |             |                  |    single: resource_set; attribute, score              |
-   |             |                  |    single: attribute; score (resource_set)             |
-   |             |                  |    single: score; resource_set attribute               |
-   |             |                  |                                                        |
-   |             |                  | *Advanced use only.* Use a specific score for this     |
-   |             |                  | set. Meaningful within ``rsc_location`` or             |
-   |             |                  | ``rsc_colocation``.                                    |
-   +-------------+------------------+--------------------------------------------------------+
-   | kind        |                  | .. index::                                             |
-   |             |                  |    single: resource_set; attribute, kind               |
-   |             |                  |    single: attribute; kind (resource_set)              |
-   |             |                  |    single: kind; resource_set attribute                |
-   |             |                  |                                                        |
-   |             |                  | *Advanced use only.* Use a specific kind for this      |
-   |             |                  | set. Meaningful within ``rsc_order``.                  |
-   +-------------+------------------+--------------------------------------------------------+
+   * - Field
+     - Default
+     - Description
+   * - id
+     -
+     - .. index::
+          single: resource_set; attribute, id
+          single: attribute; id (resource_set)
+          single: id; resource_set attribute
+
+       A unique name for the set (required)
+   * - sequential
+     - true
+     - .. index::
+          single: resource_set; attribute, sequential
+          single: attribute; sequential (resource_set)
+          single: sequential; resource_set attribute
+
+       Whether the members of the set must be acted on in order.  Meaningful
+       within ``rsc_order`` and ``rsc_colocation``.
+   * - require-all
+     - true
+     - .. index::
+          single: resource_set; attribute, require-all
+          single: attribute; require-all (resource_set)
+          single: require-all; resource_set attribute
+
+       Whether all members of the set must be active before continuing.  With
+       the current implementation, the cluster may continue even if only one
+       member of the set is started, but if more than one member of the set is
+       starting at the same time, the cluster will still wait until all of
+       those have started before continuing (this may change in future
+       versions).  Meaningful within ``rsc_order``.
+   * - role
+     -
+     - .. index::
+          single: resource_set; attribute, role
+          single: attribute; role (resource_set)
+          single: role; resource_set attribute
+
+       The constraint applies only to resource set members that are
+       :ref:`s-resource-promotable` in this role.  Meaningful within
+       ``rsc_location``, ``rsc_colocation`` and ``rsc_ticket``.  Allowed
+       values: ``Started``, ``Promoted``, ``Unpromoted``. For details, see
+       :ref:`promotable-clone-constraints`.
+   * - action
+     - start
+     - .. index::
+          single: resource_set; attribute, action
+          single: attribute; action (resource_set)
+          single: action; resource_set attribute
+
+       The action that applies to *all members* of the set.  Meaningful within
+       ``rsc_order``. Allowed values: ``start``, ``stop``, ``promote``,
+       ``demote``.
+   * - score
+     -
+     - .. index::
+          single: resource_set; attribute, score
+          single: attribute; score (resource_set)
+          single: score; resource_set attribute
+
+       *Advanced use only.* Use a specific score for this set. Meaningful
+       within ``rsc_location`` or ``rsc_colocation``.
+   * - kind
+     -
+     - .. index::
+          single: resource_set; attribute, kind
+          single: attribute; kind (resource_set)
+          single: kind; resource_set attribute
+
+       *Advanced use only.* Use a specific kind for this set. Meaningful within
+       ``rsc_order``.
 
 Anti-colocation Chains
 ______________________

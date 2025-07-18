@@ -254,11 +254,11 @@ Then instead of duplicating the rule for all your other resources, you can inste
 .. topic:: **Referencing rules from other constraints**
 
    .. code-block:: xml
-   
+
       <rsc_location id="WebDB-connectivity" rsc="WebDB">
          <rule id-ref="ping-prefer-rule"/>
       </rsc_location>
-   
+
 .. important::
 
    The cluster will insist that the ``rule`` exists somewhere.  Attempting
