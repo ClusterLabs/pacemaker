@@ -1,7 +1,8 @@
-* Thu Jun 19 2025 Chris Lumens <clumens@redhat.com> Pacemaker-2.1.10
-- 101 commits with 86 files changed, 1294 insertions(+), 607 deletions(-)
+* Fri Jul 18 2025 Chris Lumens <clumens@redhat.com> Pacemaker-2.1.10
+- 102 commits with 86 files changed, 1295 insertions(+), 608 deletions(-)
 
 - Fixes since Pacemaker-2.1.9
+  + build: Fix building without gnutls
   + build: Fix default pacemaker-remoted path on Fedora >= 42
   + daemons: Fix a bug iterating in get_op_total_timeout.
   + daemons: Fix a toctou bug when fetching additional schemas.
