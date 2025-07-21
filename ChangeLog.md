@@ -1,3 +1,11 @@
+# Pacemaker-3.0.1 (21 Jul 2025)
+* 14 commits with  47 files changed, 1848 insertions(+), 1835 deletions(-)
+
+## Fixes since Pacemaker-3.0.1-rc1
+
+* **build:** Various minor fixes to static analysis checks
+* **docs:** Improve tables and indexing throughout documentation.
+
 # Pacemaker-3.0.1 (20 Jun 2025)
 * 757 commits with 283 files changed, 11593 insertions(+), 7746 deletions(-)
 
