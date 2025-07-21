@@ -413,7 +413,7 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     if (msg == NULL) {
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL,
                            CRM_EX_PROTOCOL);
         return 0;
     }
