@@ -1104,12 +1104,13 @@ greater than zero.
    * Environment variables whose value is the same regardless of the underlying host
      may be set using the container element's ``options`` attribute.
    * If you want variables to have host-specific values, you can use the
-     :ref:`storage-mapping <s-bundle-storage>` element to map a file on the host as
-     ``/etc/pacemaker/pcmk-init.env`` in the container *(since 2.0.3)*.
-     Pacemaker Remote will parse this file as a shell-like format, with
-     variables set as NAME=VALUE, ignoring blank lines and comments starting
-     with "#".
-
+     :ref:`storage-mapping <s-bundle-storage>` element to map a file on the host
+     as |PCMK_INIT_ENV_FILE| in the container *(since 2.0.3)*. Pacemaker Remote
+     will parse this file in a manner similar to a POSIX shell, with variables
+     set as NAME=VALUE, ignoring blank lines and comments starting with ``#``.
+     An assignment may not span multiple lines, and multiple assignments per
+     line are not supported.
+   
 .. important::
 
    When a bundle has a ``primitive``, Pacemaker on all cluster nodes must be able to
