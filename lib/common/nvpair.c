@@ -114,8 +114,7 @@ pcmk_free_nvpairs(GSList *nvpairs)
  *
  * \param[in]  input  Input string, likely from the command line
  * \param[out] name   Everything before the first \c '=' in the input string
- * \param[out] value  Everything after the first \c '=' in the input string,
- *                    minus trailing newlines
+ * \param[out] value  Everything after the first \c '=' in the input string
  *
  * \return Standard Pacemaker return code
  *
@@ -125,6 +124,11 @@ pcmk_free_nvpairs(GSList *nvpairs)
 int
 pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 {
+    /* @COMPAT Consider rejecting leading (and possibly trailing) whitespace in
+     * value and stripping outer quotes from value (for example,
+     * using g_shell_unquote()). This would affect stonith_admin and
+     * crm_resource and would simplify remoted_spawn_pidone()'s helpers.
+     */
     gchar **nvpair = NULL;
     int rc = pcmk_rc_ok;
 
@@ -134,19 +138,15 @@ pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 
     nvpair = g_strsplit(input, "=", 2);
 
-    /* Check whether nvpair is well-formed (short-circuits if input was split
-     * into fewer than 2 tokens)
-     */
-    if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+    // Check whether nvpair is well-formed: two tokens and non-empty name
+    if ((g_strv_length(nvpair) != 2) || pcmk__str_empty(nvpair[0])) {
         rc = pcmk_rc_bad_nvpair;
         goto done;
     }
 
+    // name and value take ownership of the strings in nvpair
     *name = nvpair[0];
     *value = nvpair[1];
-    pcmk__trim((char *) *value);
-
-    // name and value took ownership
     nvpair[0] = NULL;
     nvpair[1] = NULL;
 

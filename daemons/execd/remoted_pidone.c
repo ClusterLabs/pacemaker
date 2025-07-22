@@ -61,135 +61,152 @@ static struct {
 
 /*!
  * \internal
- * \brief Check a line of text for a valid environment variable name
+ * \brief Check whether a string is a valid environment variable name
  *
- * \param[in]  line  Text to check
- * \param[out] first  First character of valid name if found, NULL otherwise
- * \param[out] last   Last character of valid name if found, NULL otherwise
+ * \param[in] name  String to check
  *
- * \return TRUE if valid name found, FALSE otherwise
+ * \return \c true if \p name is a valid name, or \c false otherwise
  * \note It's reasonable to impose limitations on environment variable names
  *       beyond what C or setenv() does: We only allow names that contain only
  *       [a-zA-Z0-9_] characters and do not start with a digit.
  */
 static bool
-find_env_var_name(char *line, char **first, char **last)
+valid_env_var_name(const gchar *name)
 {
-    // Skip leading whitespace
-    *first = line;
-    while (isspace(**first)) {
-        ++*first;
+    if (!isalpha(*name) && (*name != '_')) {
+        // Invalid first character
+        return false;
     }
 
-    if (isalpha(**first) || (**first == '_')) { // Valid first character
-        *last = *first;
-        while (isalnum(*(*last + 1)) || (*(*last + 1) == '_')) {
-            ++*last;
-        }
-        return TRUE;
-    }
-
-    *first = *last = NULL;
-    return FALSE;
+    // The rest of the characters must be alphanumeric or underscores
+    for (name++; isalnum(*name) || (*name == '_'); name++);
+    return *name == '\0';
 }
 
+/*!
+ * \internal
+ * \brief Read one environment variable assignment and set the value
+ *
+ * Empty lines and trailing comments are ignored. This function handles
+ * backslashes, single quotes, and double quotes in a manner similar to a POSIX
+ * shell.
+ *
+ * This function has at least two limitations compared to a shell:
+ * * An assignment must be contained within a single line.
+ * * Only one assignment per line is supported.
+ *
+ * It would be possible to get rid of these limitations, but it doesn't seem
+ * worth the trouble of implementation and testing.
+ *
+ * \param[in] line  Line containing an environment variable assignment statement
+ */
 static void
-load_env_vars(const char *filename)
+load_env_var_line(const char *line)
+{
+    gint argc = 0;
+    gchar **argv = NULL;
+    GError *error = NULL;
+
+    gchar *name = NULL;
+    gchar *value = NULL;
+
+    int rc = pcmk_rc_ok;
+    const char *reason = NULL;
+    const char *value_to_set = NULL;
+
+    /* g_shell_parse_argv() does the following in a manner similar to the shell:
+     * * tokenizes the value
+     * * strips a trailing '#' comment if one exists
+     * * handles backslashes, single quotes, and double quotes
+     */
+
+    // Ensure the line contains zero or one token besides an optional comment
+    if (!g_shell_parse_argv(line, &argc, NULL, &error)) {
+        // Empty line (or only space/comment) means nothing to do and no error
+        if (error->code != G_SHELL_ERROR_EMPTY_STRING) {
+            reason = error->message;
+        }
+        goto done;
+    }
+    if (argc != 1) {
+        // "argc != 1" for sanity; should imply "argc > 1" by now
+        reason = "line contains garbage";
+        goto done;
+    }
+
+    rc = pcmk__scan_nvpair(line, &name, &value);
+    if (rc != pcmk_rc_ok) {
+        reason = pcmk_rc_str(rc);
+        goto done;
+    }
+
+    // Leading whitespace is allowed and ignored. A quoted name is invalid.
+    g_strchug(name);
+    if (!valid_env_var_name(name)) {
+        reason = "invalid environment variable name";
+        goto done;
+    }
+
+    /* Parse the value as the shell would do (stripping outermost quotes, etc.).
+     * Also sanity-check that the value either is empty or consists of one
+     * token. Anything malformed should have been caught by now.
+     */
+    if (!g_shell_parse_argv(value, &argc, &argv, &error)) {
+        // Parse error should mean value is empty
+        CRM_CHECK(error->code == G_SHELL_ERROR_EMPTY_STRING, goto done);
+        value_to_set = "";
+
+    } else {
+        // value wasn't empty, so it should contain one token
+        CRM_CHECK(argc == 1, goto done);
+        value_to_set = argv[0];
+    }
+
+    // Don't overwrite (bundle options take precedence)
+    setenv(name, value_to_set, 0);
+
+done:
+    if (reason != NULL) {
+        crm_warn("Failed to perform environment variable assignment '%s': %s",
+                 line, reason);
+    }
+    g_strfreev(argv);
+    g_clear_error(&error);
+    g_free(name);
+    g_free(value);
+}
+
+#define CONTAINER_ENV_FILE "/etc/pacemaker/pcmk-init.env"
+
+static void
+load_env_vars(void)
 {
     /* We haven't forked or initialized logging yet, so don't leave any file
      * descriptors open, and don't log -- silently ignore errors.
      */
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(CONTAINER_ENV_FILE, "r");
+    char *line = NULL;
+    size_t buf_size = 0;
 
-    if (fp != NULL) {
-        char line[LINE_MAX] = { '\0', };
-
-        while (fgets(line, LINE_MAX, fp) != NULL) {
-            char *name = NULL;
-            char *end = NULL;
-            char *value = NULL;
-            char *quote = NULL;
-
-            // Look for valid name immediately followed by equals sign
-            if (find_env_var_name(line, &name, &end) && (*++end == '=')) {
-
-                // Null-terminate name, and advance beyond equals sign
-                *end++ = '\0';
-
-                // Check whether value is quoted
-                if ((*end == '\'') || (*end == '"')) {
-                    quote = end++;
-                }
-                value = end;
-
-                if (quote) {
-                    /* Value is remaining characters up to next non-backslashed
-                     * matching quote character.
-                     */
-                    while (((*end != *quote) || (*(end - 1) == '\\'))
-                           && (*end != '\0')) {
-                        end++;
-                    }
-                    if (*end == *quote) {
-                        // Null-terminate value, and advance beyond close quote
-                        *end++ = '\0';
-                    } else {
-                        // Matching closing quote wasn't found
-                        value = NULL;
-                    }
-
-                } else {
-                    /* Value is remaining characters up to next non-backslashed
-                     * whitespace.
-                     */
-                    while ((!isspace(*end) || (*(end - 1) == '\\'))
-                           && (*end != '\0')) {
-                        ++end;
-                    }
-
-                    if (end == (line + LINE_MAX - 1)) {
-                        // Line was too long
-                        value = NULL;
-                    }
-                    // Do NOT null-terminate value (yet)
-                }
-
-                /* We have a valid name and value, and end is now the character
-                 * after the closing quote or the first whitespace after the
-                 * unquoted value. Make sure the rest of the line is just
-                 * whitespace or a comment.
-                 */
-                if (value) {
-                    char *value_end = end;
-
-                    while (isspace(*end) && (*end != '\n')) {
-                        ++end;
-                    }
-                    if ((*end == '\n') || (*end == '#')) {
-                        if (quote == NULL) {
-                            // Now we can null-terminate an unquoted value
-                            *value_end = '\0';
-                        }
-
-                        // Don't overwrite (bundle options take precedence)
-                        // coverity[tainted_string] This can't easily be changed right now
-                        setenv(name, value, 0);
-
-                    } else {
-                        value = NULL;
-                    }
-                }
-            }
-
-            if ((value == NULL) && (strchr(line, '\n') == NULL)) {
-                // Eat remainder of line beyond LINE_MAX
-                if (fscanf(fp, "%*[^\n]\n") == EOF) {
-                    value = NULL; // Don't care, make compiler happy
-                }
-            }
-        }
-        fclose(fp);
+    if (fp == NULL) {
+        return;
     }
+
+    while (getline(&line, &buf_size, fp) != -1) {
+        load_env_var_line(line);
+        errno = 0;
+    }
+
+    // getline() returns -1 on EOF (expected) or error
+    if (errno != 0) {
+        int rc = errno;
+
+        crm_err("Error while reading environment variables from "
+                CONTAINER_ENV_FILE ": %s",
+                pcmk_rc_str(rc));
+    }
+    fclose(fp);
+    free(line);
 }
 
 void
@@ -221,7 +238,7 @@ remoted_spawn_pidone(int argc, char **argv)
      * To allow for that, look for a special file containing a shell-like syntax
      * of name/value pairs, and export those into the environment.
      */
-    load_env_vars("/etc/pacemaker/pcmk-init.env");
+    load_env_vars();
 
     if (strcmp(pid1, "vars") == 0) {
         return;

@@ -36,35 +36,6 @@
 
 #include <gnutls/gnutls.h>
 
-/* Swab macros from linux/swab.h */
-#ifdef HAVE_LINUX_SWAB_H
-#  include <linux/swab.h>
-#else
-/*
- * casts are necessary for constants, because we never know how for sure
- * how U/UL/ULL map to __u16, __u32, __u64. At least not in a portable way.
- */
-#define __swab16(x) ((uint16_t)(                                      \
-        (((uint16_t)(x) & (uint16_t)0x00ffU) << 8) |                  \
-        (((uint16_t)(x) & (uint16_t)0xff00U) >> 8)))
-
-#define __swab32(x) ((uint32_t)(                                      \
-        (((uint32_t)(x) & (uint32_t)0x000000ffUL) << 24) |            \
-        (((uint32_t)(x) & (uint32_t)0x0000ff00UL) <<  8) |            \
-        (((uint32_t)(x) & (uint32_t)0x00ff0000UL) >>  8) |            \
-        (((uint32_t)(x) & (uint32_t)0xff000000UL) >> 24)))
-
-#define __swab64(x) ((uint64_t)(                                      \
-        (((uint64_t)(x) & (uint64_t)0x00000000000000ffULL) << 56) |   \
-        (((uint64_t)(x) & (uint64_t)0x000000000000ff00ULL) << 40) |   \
-        (((uint64_t)(x) & (uint64_t)0x0000000000ff0000ULL) << 24) |   \
-        (((uint64_t)(x) & (uint64_t)0x00000000ff000000ULL) <<  8) |   \
-        (((uint64_t)(x) & (uint64_t)0x000000ff00000000ULL) >>  8) |   \
-        (((uint64_t)(x) & (uint64_t)0x0000ff0000000000ULL) >> 24) |   \
-        (((uint64_t)(x) & (uint64_t)0x00ff000000000000ULL) >> 40) |   \
-        (((uint64_t)(x) & (uint64_t)0xff00000000000000ULL) >> 56)))
-#endif
-
 #define REMOTE_MSG_VERSION 1
 #define ENDIAN_LOCAL 0xBADADBBD
 
@@ -96,30 +67,47 @@ struct remote_header_v0 {
 static struct remote_header_v0 *
 localized_remote_header(pcmk__remote_t *remote)
 {
-    struct remote_header_v0 *header = (struct remote_header_v0 *)remote->buffer;
-    if(remote->buffer_offset < sizeof(struct remote_header_v0)) {
+    struct remote_header_v0 *header = NULL;
+
+    if ((remote == NULL) || (remote->buffer == NULL)
+        || (remote->buffer_offset < sizeof(struct remote_header_v0))) {
+
+        // Caller error or we haven't received the full header yet
         return NULL;
+    }
 
-    } else if(header->endian != ENDIAN_LOCAL) {
-        uint32_t endian = __swab32(header->endian);
+    header = (struct remote_header_v0 *) remote->buffer;
+    if (header->endian != ENDIAN_LOCAL) {
+        uint32_t endian_swapped = GUINT32_SWAP_LE_BE(header->endian);
 
-        CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
-        if(endian != ENDIAN_LOCAL) {
-            crm_err("Invalid message detected, endian mismatch: %" PRIx32
-                    " is neither %" PRIx32 " nor the swab'd %" PRIx32,
-                    ENDIAN_LOCAL, header->endian, endian);
-            return NULL;
-        }
+        CRM_CHECK(endian_swapped == ENDIAN_LOCAL,
+                  crm_err("Invalid message detected (endian mismatch): local "
+                          "magic number %" PRIx32 " matches neither the "
+                          "header's magic number %" PRIx32 " nor the "
+                          "byte-swapped form %" PRIx32,
+                          ENDIAN_LOCAL, header->endian, endian_swapped);
+                  return NULL);
 
-        header->id = __swab64(header->id);
-        header->flags = __swab64(header->flags);
-        header->endian = __swab32(header->endian);
+        header->endian = endian_swapped;
+        header->version = GUINT32_SWAP_LE_BE(header->version);
+        header->id = GUINT64_SWAP_LE_BE(header->id);
+        header->flags = GUINT64_SWAP_LE_BE(header->flags);
+        header->size_total = GUINT32_SWAP_LE_BE(header->size_total);
+        header->payload_offset = GUINT32_SWAP_LE_BE(header->payload_offset);
+        header->payload_compressed =
+            GUINT32_SWAP_LE_BE(header->payload_compressed);
+        header->payload_uncompressed =
+            GUINT32_SWAP_LE_BE(header->payload_uncompressed);
+    }
 
-        header->version = __swab32(header->version);
-        header->size_total = __swab32(header->size_total);
-        header->payload_offset = __swab32(header->payload_offset);
-        header->payload_compressed = __swab32(header->payload_compressed);
-        header->payload_uncompressed = __swab32(header->payload_uncompressed);
+    // Sanity checks
+    if (header->payload_offset != sizeof(struct remote_header_v0)) {
+        return NULL;
+    }
+    if ((header->payload_offset
+         + header->payload_compressed
+         + header->payload_uncompressed) != header->size_total) {
+        return NULL;
     }
 
     return header;
@@ -292,6 +280,8 @@ xmlNode *
 pcmk__remote_message_xml(pcmk__remote_t *remote)
 {
     xmlNode *xml = NULL;
+    size_t data_size = 0;
+    const char *payload = NULL;
     struct remote_header_v0 *header = localized_remote_header(remote);
 
     if (header == NULL) {
@@ -339,18 +329,33 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
     /* take ownership of the buffer */
     remote->buffer_offset = 0;
 
-    CRM_LOG_ASSERT(remote->buffer[sizeof(struct remote_header_v0) + header->payload_uncompressed - 1] == 0);
+    data_size = (size_t) header->payload_offset + header->payload_uncompressed;
 
-    xml = pcmk__xml_parse(remote->buffer + header->payload_offset);
-    if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
-        crm_warn("Couldn't parse v%d message, we only understand v%d",
-                 header->version, REMOTE_MSG_VERSION);
+    // Ensure the buffer is as big as it should be
+    CRM_CHECK(remote->buffer_size >= data_size, return NULL);
 
-    } else if (xml == NULL) {
-        crm_err("Couldn't parse: '%.120s'", remote->buffer + header->payload_offset);
+    /* Ensure the buffer is null-terminated (see
+     * pcmk__read_available_remote_data()).
+     *
+     * Note that payload_uncompressed contains the payload size including the
+     * null byte (see pcmk__remote_send_xml()).
+     */
+    CRM_CHECK(remote->buffer[data_size] == '\0', return NULL);
+
+    payload = remote->buffer + header->payload_offset;
+
+    xml = pcmk__xml_parse(payload);
+    if (xml == NULL) {
+        if (header->version > REMOTE_MSG_VERSION) {
+            crm_warn("Couldn't parse v%d message, we only understand v%d",
+                     header->version, REMOTE_MSG_VERSION);
+        } else {
+            crm_err("Couldn't parse: '%.120s'", payload);
+        }
+
+    } else {
+        crm_log_xml_trace(xml, "[remote msg]");
     }
-
-    crm_log_xml_trace(xml, "[remote msg]");
     return xml;
 }
 
