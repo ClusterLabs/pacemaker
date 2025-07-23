@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-_Noreturn void pcmk__cli_help(char cmd);
+_Noreturn void pcmk__cli_help(void);
 
 
 /*

@@ -536,7 +536,7 @@ main(int argc, char **argv)
         /* FIXME: When cibadmin is converted to use formatted output, this can
          * be replaced by out->version with the appropriate boolean flag.
          */
-        pcmk__cli_help('v');
+        pcmk__cli_help();
     }
 
     /* At LOG_ERR, stderr for CIB calls is rather verbose. Several lines like
