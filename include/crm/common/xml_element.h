@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,24 +41,6 @@ int crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest);
 int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
                               const char *name_usec, struct timeval *dest);
 char *crm_element_value_copy(const xmlNode *data, const char *name);
-
-/*!
- * \brief Copy an element from one XML object to another
- *
- * \param[in]     obj1     Source XML
- * \param[in,out] obj2     Destination XML
- * \param[in]     element  Name of element to copy
- *
- * \return Pointer to copied value (from source)
- */
-static inline const char *
-crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2, const char *element)
-{
-    const char *value = crm_element_value(obj1, element);
-
-    crm_xml_add(obj2, element, value);
-    return value;
-}
 
 #ifdef __cplusplus
 }

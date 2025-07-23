@@ -1,9 +1,743 @@
-=#=#=#= Begin test: Create an XML patchset =#=#=#=
+=#=#=#= Begin test: Create an XML patchset from files =#=#=#=
 <diff format="2">
   <version>
     <source admin_epoch="0" epoch="1" num_updates="0"/>
-    <target admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
   </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+=#=#=#= End test: Create an XML patchset from files - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from files
+=#=#=#= Begin test: Create an XML patchset from files (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -n CTS_CLI_DATA/crm_diff_new.xml">
+  <patchset><![CDATA[<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+]]></patchset>
+  <status code="1" message="Error occurred"/>
+</pacemaker-result>
+=#=#=#= End test: Create an XML patchset from files (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from files (XML)
+=#=#=#= Begin test: Create an XML patchset from strings =#=#=#=
+<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+=#=#=#= End test: Create an XML patchset from strings - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from strings
+=#=#=#= Begin test: Create an XML patchset from strings (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -O '&lt;cib crm_feature_set=&quot;3.2.0&quot; validate-with=&quot;pacemaker-3.2&quot; epoch=&quot;1&quot; num_updates=&quot;0&quot; admin_epoch=&quot;0&quot;&gt; &lt;configuration&gt; &lt;!-- test: move this comment to end of configuration --&gt; &lt;crm_config&gt; &lt;cluster_property_set id=&quot;cib-bootstrap-options&quot;&gt; &lt;!-- test: move attribute &quot;value&quot; before &quot;name&quot; --&gt; &lt;nvpair id=&quot;cib-bootstrap-options-cluster-name&quot; name=&quot;cluster-name&quot; value=&quot;mycluster&quot;/&gt; &lt;nvpair id=&quot;cib-bootstrap-options-stonith-enabled&quot; name=&quot;stonith-enabled&quot; value=&quot;1&quot;/&gt; &lt;/cluster_property_set&gt; &lt;/crm_config&gt; &lt;!-- test: delete this comment --&gt; &lt;nodes&gt; &lt;node id=&quot;1&quot; uname=&quot;node1&quot;/&gt; &lt;node id=&quot;2&quot; uname=&quot;node2&quot;/&gt; &lt;node id=&quot;3&quot; uname=&quot;node3&quot;/&gt; &lt;!-- test: add element for node4 --&gt; &lt;/nodes&gt; &lt;!-- test: add a new comment below this one --&gt; &lt;resources&gt; &lt;!-- test: modify this comment --&gt; &lt;primitive id=&quot;Fencing&quot; class=&quot;stonith&quot; type=&quot;fence_xvm&quot;&gt; &lt;meta_attributes id=&quot;Fencing-meta&quot;&gt; &lt;nvpair id=&quot;Fencing-migration-threshold&quot; name=&quot;migration-threshold&quot; value=&quot;5&quot;/&gt; &lt;/meta_attributes&gt; &lt;instance_attributes id=&quot;Fencing-params&quot;&gt; &lt;nvpair id=&quot;Fencing-key_file&quot; name=&quot;key_file&quot; value=&quot;/etc/pacemaker/fence_xvm.key&quot;/&gt; &lt;nvpair id=&quot;Fencing-multicast_address&quot; name=&quot;multicast_address&quot; value=&quot;239.255.100.100&quot;/&gt; &lt;!-- test: modify attribute value to add node4 --&gt; &lt;nvpair id=&quot;Fencing-pcmk_host_list&quot; name=&quot;pcmk_host_list&quot; value=&quot;node1 node2 node3&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: add attribute timeout=&quot;120s&quot; --&gt; &lt;op id=&quot;Fencing-monitor-120s&quot; interval=&quot;120s&quot; name=&quot;monitor&quot;/&gt; &lt;op id=&quot;Fencing-stop-0&quot; interval=&quot;0&quot; name=&quot;stop&quot; timeout=&quot;60s&quot;/&gt; &lt;!-- test: delete element Fencing-start-0 --&gt; &lt;op id=&quot;Fencing-start-0&quot; interval=&quot;0&quot; name=&quot;start&quot; timeout=&quot;60s&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;primitive id=&quot;dummy&quot; class=&quot;ocf&quot; type=&quot;pacemaker&quot; provider=&quot;Dummy&quot;&gt; &lt;instance_attributes id=&quot;dummy-params&quot;&gt; &lt;!-- test: move element dummy-fake below dummy-op_sleep --&gt; &lt;nvpair id=&quot;dummy-fake&quot; name=&quot;fake&quot; value=&quot;0&quot;/&gt; &lt;nvpair id=&quot;dummy-op_sleep&quot; name=&quot;op_sleep&quot; value=&quot;3&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: delete attribute timeout --&gt; &lt;op id=&quot;dummy-monitor-5s&quot; interval=&quot;5s&quot; timeout=&quot;10s&quot; name=&quot;monitor&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;/resources&gt; &lt;constraints/&gt; &lt;/configuration&gt; &lt;status/&gt; &lt;/cib&gt; ' -N '&lt;cib crm_feature_set=&quot;3.2.0&quot; validate-with=&quot;pacemaker-3.2&quot; epoch=&quot;2&quot; num_updates=&quot;0&quot; admin_epoch=&quot;0&quot;&gt; &lt;configuration&gt; &lt;crm_config&gt; &lt;cluster_property_set id=&quot;cib-bootstrap-options&quot;&gt; &lt;!-- test: move attribute &quot;value&quot; before &quot;name&quot; --&gt; &lt;nvpair id=&quot;cib-bootstrap-options-cluster-name&quot; value=&quot;mycluster&quot; name=&quot;cluster-name&quot;/&gt; &lt;nvpair id=&quot;cib-bootstrap-options-stonith-enabled&quot; name=&quot;stonith-enabled&quot; value=&quot;1&quot;/&gt; &lt;/cluster_property_set&gt; &lt;/crm_config&gt; &lt;nodes&gt; &lt;node id=&quot;1&quot; uname=&quot;node1&quot;/&gt; &lt;node id=&quot;2&quot; uname=&quot;node2&quot;/&gt; &lt;node id=&quot;3&quot; uname=&quot;node3&quot;/&gt; &lt;!-- test: add element for node4 --&gt; &lt;node id=&quot;4&quot; uname=&quot;node4&quot;/&gt; &lt;/nodes&gt; &lt;!-- test: add a new comment below this one --&gt; &lt;!-- hello world --&gt; &lt;resources&gt; &lt;!-- test: modify this comment to say something different --&gt; &lt;primitive id=&quot;Fencing&quot; class=&quot;stonith&quot; type=&quot;fence_xvm&quot;&gt; &lt;meta_attributes id=&quot;Fencing-meta&quot;&gt; &lt;nvpair id=&quot;Fencing-migration-threshold&quot; name=&quot;migration-threshold&quot; value=&quot;5&quot;/&gt; &lt;/meta_attributes&gt; &lt;instance_attributes id=&quot;Fencing-params&quot;&gt; &lt;nvpair id=&quot;Fencing-key_file&quot; name=&quot;key_file&quot; value=&quot;/etc/pacemaker/fence_xvm.key&quot;/&gt; &lt;nvpair id=&quot;Fencing-multicast_address&quot; name=&quot;multicast_address&quot; value=&quot;239.255.100.100&quot;/&gt; &lt;!-- test: modify attribute value to add node4 --&gt; &lt;nvpair id=&quot;Fencing-pcmk_host_list&quot; name=&quot;pcmk_host_list&quot; value=&quot;node1 node2 node3 node4&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: add attribute timeout=&quot;120s&quot; --&gt; &lt;op id=&quot;Fencing-monitor-120s&quot; interval=&quot;120s&quot; timeout=&quot;120s&quot; name=&quot;monitor&quot;/&gt; &lt;op id=&quot;Fencing-stop-0&quot; interval=&quot;0&quot; name=&quot;stop&quot; timeout=&quot;60s&quot;/&gt; &lt;!-- test: delete element Fencing-start-0 --&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;primitive id=&quot;dummy&quot; class=&quot;ocf&quot; type=&quot;pacemaker&quot; provider=&quot;Dummy&quot;&gt; &lt;instance_attributes id=&quot;dummy-params&quot;&gt; &lt;!-- test: move element dummy-fake below dummy-op_sleep --&gt; &lt;nvpair id=&quot;dummy-op_sleep&quot; name=&quot;op_sleep&quot; value=&quot;3&quot;/&gt; &lt;nvpair id=&quot;dummy-fake&quot; name=&quot;fake&quot; value=&quot;0&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: delete attribute timeout --&gt; &lt;op id=&quot;dummy-monitor-5s&quot; interval=&quot;5s&quot; name=&quot;monitor&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;/resources&gt; &lt;constraints/&gt; &lt;!-- test: move this comment to end of configuration --&gt; &lt;/configuration&gt; &lt;status/&gt; &lt;/cib&gt; '">
+  <patchset><![CDATA[<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+]]></patchset>
+  <status code="1" message="Error occurred"/>
+</pacemaker-result>
+=#=#=#= End test: Create an XML patchset from strings (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from strings (XML)
+=#=#=#= Begin test: Create an XML patchset from old file, new string =#=#=#=
+<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+=#=#=#= End test: Create an XML patchset from old file, new string - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from old file, new string
+=#=#=#= Begin test: Create an XML patchset from old file, new string (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -N '&lt;cib crm_feature_set=&quot;3.2.0&quot; validate-with=&quot;pacemaker-3.2&quot; epoch=&quot;2&quot; num_updates=&quot;0&quot; admin_epoch=&quot;0&quot;&gt; &lt;configuration&gt; &lt;crm_config&gt; &lt;cluster_property_set id=&quot;cib-bootstrap-options&quot;&gt; &lt;!-- test: move attribute &quot;value&quot; before &quot;name&quot; --&gt; &lt;nvpair id=&quot;cib-bootstrap-options-cluster-name&quot; value=&quot;mycluster&quot; name=&quot;cluster-name&quot;/&gt; &lt;nvpair id=&quot;cib-bootstrap-options-stonith-enabled&quot; name=&quot;stonith-enabled&quot; value=&quot;1&quot;/&gt; &lt;/cluster_property_set&gt; &lt;/crm_config&gt; &lt;nodes&gt; &lt;node id=&quot;1&quot; uname=&quot;node1&quot;/&gt; &lt;node id=&quot;2&quot; uname=&quot;node2&quot;/&gt; &lt;node id=&quot;3&quot; uname=&quot;node3&quot;/&gt; &lt;!-- test: add element for node4 --&gt; &lt;node id=&quot;4&quot; uname=&quot;node4&quot;/&gt; &lt;/nodes&gt; &lt;!-- test: add a new comment below this one --&gt; &lt;!-- hello world --&gt; &lt;resources&gt; &lt;!-- test: modify this comment to say something different --&gt; &lt;primitive id=&quot;Fencing&quot; class=&quot;stonith&quot; type=&quot;fence_xvm&quot;&gt; &lt;meta_attributes id=&quot;Fencing-meta&quot;&gt; &lt;nvpair id=&quot;Fencing-migration-threshold&quot; name=&quot;migration-threshold&quot; value=&quot;5&quot;/&gt; &lt;/meta_attributes&gt; &lt;instance_attributes id=&quot;Fencing-params&quot;&gt; &lt;nvpair id=&quot;Fencing-key_file&quot; name=&quot;key_file&quot; value=&quot;/etc/pacemaker/fence_xvm.key&quot;/&gt; &lt;nvpair id=&quot;Fencing-multicast_address&quot; name=&quot;multicast_address&quot; value=&quot;239.255.100.100&quot;/&gt; &lt;!-- test: modify attribute value to add node4 --&gt; &lt;nvpair id=&quot;Fencing-pcmk_host_list&quot; name=&quot;pcmk_host_list&quot; value=&quot;node1 node2 node3 node4&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: add attribute timeout=&quot;120s&quot; --&gt; &lt;op id=&quot;Fencing-monitor-120s&quot; interval=&quot;120s&quot; timeout=&quot;120s&quot; name=&quot;monitor&quot;/&gt; &lt;op id=&quot;Fencing-stop-0&quot; interval=&quot;0&quot; name=&quot;stop&quot; timeout=&quot;60s&quot;/&gt; &lt;!-- test: delete element Fencing-start-0 --&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;primitive id=&quot;dummy&quot; class=&quot;ocf&quot; type=&quot;pacemaker&quot; provider=&quot;Dummy&quot;&gt; &lt;instance_attributes id=&quot;dummy-params&quot;&gt; &lt;!-- test: move element dummy-fake below dummy-op_sleep --&gt; &lt;nvpair id=&quot;dummy-op_sleep&quot; name=&quot;op_sleep&quot; value=&quot;3&quot;/&gt; &lt;nvpair id=&quot;dummy-fake&quot; name=&quot;fake&quot; value=&quot;0&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: delete attribute timeout --&gt; &lt;op id=&quot;dummy-monitor-5s&quot; interval=&quot;5s&quot; name=&quot;monitor&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;/resources&gt; &lt;constraints/&gt; &lt;!-- test: move this comment to end of configuration --&gt; &lt;/configuration&gt; &lt;status/&gt; &lt;/cib&gt; '">
+  <patchset><![CDATA[<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+]]></patchset>
+  <status code="1" message="Error occurred"/>
+</pacemaker-result>
+=#=#=#= End test: Create an XML patchset from old file, new string (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from old file, new string (XML)
+=#=#=#= Begin test: Create an XML patchset from old string, new file =#=#=#=
+<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+=#=#=#= End test: Create an XML patchset from old string, new file - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from old string, new file
+=#=#=#= Begin test: Create an XML patchset from old string, new file (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -O '&lt;cib crm_feature_set=&quot;3.2.0&quot; validate-with=&quot;pacemaker-3.2&quot; epoch=&quot;1&quot; num_updates=&quot;0&quot; admin_epoch=&quot;0&quot;&gt; &lt;configuration&gt; &lt;!-- test: move this comment to end of configuration --&gt; &lt;crm_config&gt; &lt;cluster_property_set id=&quot;cib-bootstrap-options&quot;&gt; &lt;!-- test: move attribute &quot;value&quot; before &quot;name&quot; --&gt; &lt;nvpair id=&quot;cib-bootstrap-options-cluster-name&quot; name=&quot;cluster-name&quot; value=&quot;mycluster&quot;/&gt; &lt;nvpair id=&quot;cib-bootstrap-options-stonith-enabled&quot; name=&quot;stonith-enabled&quot; value=&quot;1&quot;/&gt; &lt;/cluster_property_set&gt; &lt;/crm_config&gt; &lt;!-- test: delete this comment --&gt; &lt;nodes&gt; &lt;node id=&quot;1&quot; uname=&quot;node1&quot;/&gt; &lt;node id=&quot;2&quot; uname=&quot;node2&quot;/&gt; &lt;node id=&quot;3&quot; uname=&quot;node3&quot;/&gt; &lt;!-- test: add element for node4 --&gt; &lt;/nodes&gt; &lt;!-- test: add a new comment below this one --&gt; &lt;resources&gt; &lt;!-- test: modify this comment --&gt; &lt;primitive id=&quot;Fencing&quot; class=&quot;stonith&quot; type=&quot;fence_xvm&quot;&gt; &lt;meta_attributes id=&quot;Fencing-meta&quot;&gt; &lt;nvpair id=&quot;Fencing-migration-threshold&quot; name=&quot;migration-threshold&quot; value=&quot;5&quot;/&gt; &lt;/meta_attributes&gt; &lt;instance_attributes id=&quot;Fencing-params&quot;&gt; &lt;nvpair id=&quot;Fencing-key_file&quot; name=&quot;key_file&quot; value=&quot;/etc/pacemaker/fence_xvm.key&quot;/&gt; &lt;nvpair id=&quot;Fencing-multicast_address&quot; name=&quot;multicast_address&quot; value=&quot;239.255.100.100&quot;/&gt; &lt;!-- test: modify attribute value to add node4 --&gt; &lt;nvpair id=&quot;Fencing-pcmk_host_list&quot; name=&quot;pcmk_host_list&quot; value=&quot;node1 node2 node3&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: add attribute timeout=&quot;120s&quot; --&gt; &lt;op id=&quot;Fencing-monitor-120s&quot; interval=&quot;120s&quot; name=&quot;monitor&quot;/&gt; &lt;op id=&quot;Fencing-stop-0&quot; interval=&quot;0&quot; name=&quot;stop&quot; timeout=&quot;60s&quot;/&gt; &lt;!-- test: delete element Fencing-start-0 --&gt; &lt;op id=&quot;Fencing-start-0&quot; interval=&quot;0&quot; name=&quot;start&quot; timeout=&quot;60s&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;primitive id=&quot;dummy&quot; class=&quot;ocf&quot; type=&quot;pacemaker&quot; provider=&quot;Dummy&quot;&gt; &lt;instance_attributes id=&quot;dummy-params&quot;&gt; &lt;!-- test: move element dummy-fake below dummy-op_sleep --&gt; &lt;nvpair id=&quot;dummy-fake&quot; name=&quot;fake&quot; value=&quot;0&quot;/&gt; &lt;nvpair id=&quot;dummy-op_sleep&quot; name=&quot;op_sleep&quot; value=&quot;3&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: delete attribute timeout --&gt; &lt;op id=&quot;dummy-monitor-5s&quot; interval=&quot;5s&quot; timeout=&quot;10s&quot; name=&quot;monitor&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;/resources&gt; &lt;constraints/&gt; &lt;/configuration&gt; &lt;status/&gt; &lt;/cib&gt; ' -n CTS_CLI_DATA/crm_diff_new.xml">
+  <patchset><![CDATA[<diff format="2">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+]]></patchset>
+  <status code="1" message="Error occurred"/>
+</pacemaker-result>
+=#=#=#= End test: Create an XML patchset from old string, new file (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset from old string, new file (XML)
+=#=#=#= Begin test: Create an XML patchset as CIB =#=#=#=
+<diff format="2" digest="0d6d28fe674c34988c6fba8dfd7de014">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+=#=#=#= End test: Create an XML patchset as CIB - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset as CIB
+=#=#=#= Begin test: Create an XML patchset as CIB (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -n CTS_CLI_DATA/crm_diff_new.xml --cib">
+  <patchset><![CDATA[<diff format="2" digest="0d6d28fe674c34988c6fba8dfd7de014">
+  <version>
+    <source admin_epoch="0" epoch="1" num_updates="0"/>
+    <target admin_epoch="0" epoch="2" num_updates="0"/>
+  </version>
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib">
+    <change-list>
+      <change-attr name="epoch" operation="set" value="2"/>
+    </change-list>
+    <change-result>
+      <cib epoch="2" num_updates="0" admin_epoch="0"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+]]></patchset>
+  <status code="1" message="Error occurred"/>
+</pacemaker-result>
+=#=#=#= End test: Create an XML patchset as CIB (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset as CIB (XML)
+=#=#=#= Begin test: Create an XML patchset with no versions =#=#=#=
+<diff format="2">
   <change operation="delete" path="/cib/configuration/comment" position="0"/>
   <change operation="delete" path="/cib/configuration/comment" position="1"/>
   <change operation="delete" path="/cib/configuration/comment" position="2"/>
@@ -62,5 +796,620 @@
     <!-- test: move this comment to end of configuration -->
   </change>
 </diff>
-=#=#=#= End test: Create an XML patchset - Error occurred (1) =#=#=#=
-* Passed: crm_diff              - Create an XML patchset
+=#=#=#= End test: Create an XML patchset with no versions - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset with no versions
+=#=#=#= Begin test: Create an XML patchset with no versions (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -n CTS_CLI_DATA/crm_diff_new.xml --no-version">
+  <patchset><![CDATA[<diff format="2">
+  <change operation="delete" path="/cib/configuration/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/comment" position="1"/>
+  <change operation="delete" path="/cib/configuration/comment" position="2"/>
+  <change operation="delete" path="/cib/configuration/resources/comment" position="0"/>
+  <change operation="delete" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-start-0']"/>
+  <change operation="modify" path="/cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-cluster-name']">
+    <change-list>
+      <change-attr name="value" operation="set" value="mycluster"/>
+      <change-attr name="name" operation="set" value="cluster-name"/>
+    </change-list>
+    <change-result>
+      <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration/nodes" position="4">
+    <node id="4" uname="node4"/>
+  </change>
+  <change operation="create" path="/cib/configuration" position="2">
+    <!-- test: add a new comment below this one -->
+  </change>
+  <change operation="create" path="/cib/configuration" position="3">
+    <!-- hello world -->
+  </change>
+  <change operation="create" path="/cib/configuration/resources" position="0">
+    <!-- test: modify this comment to say something different -->
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/instance_attributes[@id='Fencing-params']/nvpair[@id='Fencing-pcmk_host_list']">
+    <change-list>
+      <change-attr name="value" operation="set" value="node1 node2 node3 node4"/>
+    </change-list>
+    <change-result>
+      <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+    </change-result>
+  </change>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='Fencing']/operations/op[@id='Fencing-monitor-120s']">
+    <change-list>
+      <change-attr name="timeout" operation="set" value="120s"/>
+      <change-attr name="name" operation="set" value="monitor"/>
+    </change-list>
+    <change-result>
+      <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-op_sleep']" position="1"/>
+  <change operation="move" path="/cib/configuration/resources/primitive[@id='dummy']/instance_attributes[@id='dummy-params']/nvpair[@id='dummy-fake']" position="2"/>
+  <change operation="modify" path="/cib/configuration/resources/primitive[@id='dummy']/operations/op[@id='dummy-monitor-5s']">
+    <change-list>
+      <change-attr name="name" operation="set" value="monitor"/>
+      <change-attr name="timeout" operation="unset"/>
+    </change-list>
+    <change-result>
+      <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+    </change-result>
+  </change>
+  <change operation="create" path="/cib/configuration" position="6">
+    <!-- test: move this comment to end of configuration -->
+  </change>
+</diff>
+]]></patchset>
+  <status code="1" message="Error occurred"/>
+</pacemaker-result>
+=#=#=#= End test: Create an XML patchset with no versions (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset with no versions (XML)
+=#=#=#= Begin test: Create an XML patchset as CIB, with no versions =#=#=#=
+crm_diff: -u/--no-version incompatible with -c/--cib
+=#=#=#= End test: Create an XML patchset as CIB, with no versions - Incorrect usage (64) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset as CIB, with no versions
+=#=#=#= Begin test: Create an XML patchset as CIB, with no versions (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -n CTS_CLI_DATA/crm_diff_new.xml --cib --no-version">
+  <status code="64" message="Incorrect usage">
+    <errors>
+      <error>crm_diff: -u/--no-version incompatible with -c/--cib</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Create an XML patchset as CIB, with no versions (XML) - Incorrect usage (64) =#=#=#=
+* Passed: crm_diff              - Create an XML patchset as CIB, with no versions (XML)
+=#=#=#= Begin test: Apply an XML patchset to a file =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Apply an XML patchset to a file - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset to a file
+=#=#=#= Begin test: Apply an XML patchset to a file (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -p CTS_CLI_DATA/crm_diff_patchset.xml">
+  <updated><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+]]></updated>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset to a file (XML) - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset to a file (XML)
+=#=#=#= Begin test: Apply an XML patchset to a string =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Apply an XML patchset to a string - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset to a string
+=#=#=#= Begin test: Apply an XML patchset to a string (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -O '&lt;cib crm_feature_set=&quot;3.2.0&quot; validate-with=&quot;pacemaker-3.2&quot; epoch=&quot;1&quot; num_updates=&quot;0&quot; admin_epoch=&quot;0&quot;&gt; &lt;configuration&gt; &lt;!-- test: move this comment to end of configuration --&gt; &lt;crm_config&gt; &lt;cluster_property_set id=&quot;cib-bootstrap-options&quot;&gt; &lt;!-- test: move attribute &quot;value&quot; before &quot;name&quot; --&gt; &lt;nvpair id=&quot;cib-bootstrap-options-cluster-name&quot; name=&quot;cluster-name&quot; value=&quot;mycluster&quot;/&gt; &lt;nvpair id=&quot;cib-bootstrap-options-stonith-enabled&quot; name=&quot;stonith-enabled&quot; value=&quot;1&quot;/&gt; &lt;/cluster_property_set&gt; &lt;/crm_config&gt; &lt;!-- test: delete this comment --&gt; &lt;nodes&gt; &lt;node id=&quot;1&quot; uname=&quot;node1&quot;/&gt; &lt;node id=&quot;2&quot; uname=&quot;node2&quot;/&gt; &lt;node id=&quot;3&quot; uname=&quot;node3&quot;/&gt; &lt;!-- test: add element for node4 --&gt; &lt;/nodes&gt; &lt;!-- test: add a new comment below this one --&gt; &lt;resources&gt; &lt;!-- test: modify this comment --&gt; &lt;primitive id=&quot;Fencing&quot; class=&quot;stonith&quot; type=&quot;fence_xvm&quot;&gt; &lt;meta_attributes id=&quot;Fencing-meta&quot;&gt; &lt;nvpair id=&quot;Fencing-migration-threshold&quot; name=&quot;migration-threshold&quot; value=&quot;5&quot;/&gt; &lt;/meta_attributes&gt; &lt;instance_attributes id=&quot;Fencing-params&quot;&gt; &lt;nvpair id=&quot;Fencing-key_file&quot; name=&quot;key_file&quot; value=&quot;/etc/pacemaker/fence_xvm.key&quot;/&gt; &lt;nvpair id=&quot;Fencing-multicast_address&quot; name=&quot;multicast_address&quot; value=&quot;239.255.100.100&quot;/&gt; &lt;!-- test: modify attribute value to add node4 --&gt; &lt;nvpair id=&quot;Fencing-pcmk_host_list&quot; name=&quot;pcmk_host_list&quot; value=&quot;node1 node2 node3&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: add attribute timeout=&quot;120s&quot; --&gt; &lt;op id=&quot;Fencing-monitor-120s&quot; interval=&quot;120s&quot; name=&quot;monitor&quot;/&gt; &lt;op id=&quot;Fencing-stop-0&quot; interval=&quot;0&quot; name=&quot;stop&quot; timeout=&quot;60s&quot;/&gt; &lt;!-- test: delete element Fencing-start-0 --&gt; &lt;op id=&quot;Fencing-start-0&quot; interval=&quot;0&quot; name=&quot;start&quot; timeout=&quot;60s&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;primitive id=&quot;dummy&quot; class=&quot;ocf&quot; type=&quot;pacemaker&quot; provider=&quot;Dummy&quot;&gt; &lt;instance_attributes id=&quot;dummy-params&quot;&gt; &lt;!-- test: move element dummy-fake below dummy-op_sleep --&gt; &lt;nvpair id=&quot;dummy-fake&quot; name=&quot;fake&quot; value=&quot;0&quot;/&gt; &lt;nvpair id=&quot;dummy-op_sleep&quot; name=&quot;op_sleep&quot; value=&quot;3&quot;/&gt; &lt;/instance_attributes&gt; &lt;operations&gt; &lt;!-- test: delete attribute timeout --&gt; &lt;op id=&quot;dummy-monitor-5s&quot; interval=&quot;5s&quot; timeout=&quot;10s&quot; name=&quot;monitor&quot;/&gt; &lt;/operations&gt; &lt;/primitive&gt; &lt;/resources&gt; &lt;constraints/&gt; &lt;/configuration&gt; &lt;status/&gt; &lt;/cib&gt; ' -p CTS_CLI_DATA/crm_diff_patchset.xml">
+  <updated><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+]]></updated>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset to a string (XML) - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset to a string (XML)
+=#=#=#= Begin test: Apply an XML patchset as CIB =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Apply an XML patchset as CIB - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset as CIB
+=#=#=#= Begin test: Apply an XML patchset as CIB (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -p CTS_CLI_DATA/crm_diff_patchset.xml --cib">
+  <updated><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+]]></updated>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset as CIB (XML) - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset as CIB (XML)
+=#=#=#= Begin test: Apply an XML patchset with no versions =#=#=#=
+Warning: -u/--no-version ignored with -p/--patch
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Apply an XML patchset with no versions - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset with no versions
+=#=#=#= Begin test: Apply an XML patchset with no versions (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -p CTS_CLI_DATA/crm_diff_patchset.xml --no-version">
+  <updated><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <!-- test: move attribute "value" before "name" -->
+        <nvpair id="cib-bootstrap-options-cluster-name" value="mycluster" name="cluster-name"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <!-- test: add element for node4 -->
+      <node id="4" uname="node4"/>
+    </nodes>
+    <!-- test: add a new comment below this one -->
+    <!-- hello world -->
+    <resources>
+      <!-- test: modify this comment to say something different -->
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+          <nvpair id="Fencing-migration-threshold" name="migration-threshold" value="5"/>
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-key_file" name="key_file" value="/etc/pacemaker/fence_xvm.key"/>
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <!-- test: modify attribute value to add node4 -->
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 node3 node4"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: add attribute timeout="120s" -->
+          <op id="Fencing-monitor-120s" interval="120s" timeout="120s" name="monitor"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <!-- test: delete element Fencing-start-0 -->
+        </operations>
+      </primitive>
+      <primitive id="dummy" class="ocf" type="pacemaker" provider="Dummy">
+        <instance_attributes id="dummy-params">
+          <!-- test: move element dummy-fake below dummy-op_sleep -->
+          <nvpair id="dummy-op_sleep" name="op_sleep" value="3"/>
+          <nvpair id="dummy-fake" name="fake" value="0"/>
+        </instance_attributes>
+        <operations>
+          <!-- test: delete attribute timeout -->
+          <op id="dummy-monitor-5s" interval="5s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints/>
+    <!-- test: move this comment to end of configuration -->
+  </configuration>
+  <status/>
+</cib>
+]]></updated>
+  <status code="0" message="OK">
+    <errors>
+      <error>Warning: -u/--no-version ignored with -p/--patch</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset with no versions (XML) - OK (0) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset with no versions (XML)
+=#=#=#= Begin test: Apply an XML patchset as CIB, with no versions =#=#=#=
+crm_diff: -u/--no-version incompatible with -c/--cib
+=#=#=#= End test: Apply an XML patchset as CIB, with no versions - Incorrect usage (64) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset as CIB, with no versions
+=#=#=#= Begin test: Apply an XML patchset as CIB, with no versions (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -p CTS_CLI_DATA/crm_diff_patchset.xml --cib --no-version">
+  <status code="64" message="Incorrect usage">
+    <errors>
+      <error>crm_diff: -u/--no-version incompatible with -c/--cib</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset as CIB, with no versions (XML) - Incorrect usage (64) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset as CIB, with no versions (XML)
+=#=#=#= Begin test: Apply an XML patchset generated as CIB =#=#=#=
+crm_diff: Could not apply patch: Application of update diff failed
+=#=#=#= End test: Apply an XML patchset generated as CIB - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset generated as CIB
+=#=#=#= Begin test: Apply an XML patchset generated as CIB (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -p CTS_CLI_DATA/crm_diff_patchset_cib.xml">
+  <status code="1" message="Error occurred">
+    <errors>
+      <error>crm_diff: Could not apply patch: Application of update diff failed</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset generated as CIB (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset generated as CIB (XML)
+=#=#=#= Begin test: Apply an XML patchset generated as CIB, as CIB =#=#=#=
+crm_diff: Could not apply patch: Application of update diff failed
+=#=#=#= End test: Apply an XML patchset generated as CIB, as CIB - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset generated as CIB, as CIB
+=#=#=#= Begin test: Apply an XML patchset generated as CIB, as CIB (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -p CTS_CLI_DATA/crm_diff_patchset_cib.xml --cib">
+  <status code="1" message="Error occurred">
+    <errors>
+      <error>crm_diff: Could not apply patch: Application of update diff failed</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset generated as CIB, as CIB (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset generated as CIB, as CIB (XML)
+=#=#=#= Begin test: Apply an XML patchset generated as CIB, with no versions =#=#=#=
+Warning: -u/--no-version ignored with -p/--patch
+crm_diff: Could not apply patch: Application of update diff failed
+=#=#=#= End test: Apply an XML patchset generated as CIB, with no versions - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset generated as CIB, with no versions
+=#=#=#= Begin test: Apply an XML patchset generated as CIB, with no versions (XML) =#=#=#=
+<pacemaker-result api-version="X" request="crm_diff --output-as=xml -o CTS_CLI_DATA/crm_diff_old.xml -p CTS_CLI_DATA/crm_diff_patchset_cib.xml --no-version">
+  <status code="1" message="Error occurred">
+    <errors>
+      <error>Warning: -u/--no-version ignored with -p/--patch</error>
+      <error>crm_diff: Could not apply patch: Application of update diff failed</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= End test: Apply an XML patchset generated as CIB, with no versions (XML) - Error occurred (1) =#=#=#=
+* Passed: crm_diff              - Apply an XML patchset generated as CIB, with no versions (XML)

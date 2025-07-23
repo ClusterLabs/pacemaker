@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -157,6 +157,7 @@ extern "C" {
 #define PCMK_XE_PACEMAKERD                  "pacemakerd"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
+#define PCMK_XE_PATCHSET                    "patchset"
 #define PCMK_XE_PERIOD                      "period"
 #define PCMK_XE_PODMAN                      "podman"
 #define PCMK_XE_PORT_MAPPING                "port-mapping"
@@ -214,6 +215,7 @@ extern "C" {
 #define PCMK_XE_TIMING                      "timing"
 #define PCMK_XE_TIMINGS                     "timings"
 #define PCMK_XE_TRANSITION                  "transition"
+#define PCMK_XE_UPDATED                     "updated"
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_UTILIZATIONS                "utilizations"
 #define PCMK_XE_VALIDATE                    "validate"

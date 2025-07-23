@@ -254,6 +254,7 @@ def sanitize_output(s):
         (r'\(crm_time_parse_duration@.*\.c:[0-9]+\)', r'crm_time_parse_duration'),
         (r'\(crm_time_parse_period@.*\.c:[0-9]+\)', r'crm_time_parse_period'),
         (r'\(crm_time_parse_sec@.*\.c:[0-9]+\)', r'crm_time_parse_sec'),
+        (cts_cli_data, r'CTS_CLI_DATA'),
         (r' default="[^"]*"', r' default=""'),
         (r' end="[0-9][-+: 0-9]*Z*"', r' end=""'),
         (r'last_change time=".*"', r'last_change time=""'),
@@ -273,8 +274,6 @@ def sanitize_output(s):
         (r'(@validate-with=pacemaker-)[0-9.]+,', r'\1X,'),
         (r' version="[^"]*"', r' version=""'),
         (r'\(version .*\)', r'(version)'),
-        (r'-x .*cli/(.*)\.xml', r'-x \1.xml'),
-        (r'--xml-file .*cli/(.*)\.xml', r'--xml-file \1.xml'),
     ]
 
     new_output = []
@@ -450,7 +449,7 @@ class Test:
 
     def _log_test_failed(self, app, rc):
         """Log a message when a test fails."""
-        self._output.append(f"* Failed (rc={rc:.3d}): {app:<23} - {self.desc}")
+        self._output.append(f"* Failed (rc={rc:03d}): {app:<23} - {self.desc}")
 
     def _log_test_passed(self, app):
         """Log a message when a test passes."""
@@ -2385,10 +2384,88 @@ class CrmDiffRegressionTest(RegressionTest):
     @property
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
+
+        old_file = f"{cts_cli_data}/crm_diff_old.xml"
+        new_file = f"{cts_cli_data}/crm_diff_new.xml"
+        patch_file = f"{cts_cli_data}/crm_diff_patchset.xml"
+        cib_patch_file = f"{cts_cli_data}/crm_diff_patchset_cib.xml"
+
+        # Enclose the strings in quotes now rather than in the command lines
+        with open(f"{cts_cli_data}/crm_diff_old.xml", "r") as file:
+            old_str = f"'{file.read()}'"
+        with open(f"{cts_cli_data}/crm_diff_new.xml", "r") as file:
+            new_str = f"'{file.read()}'"
+
         return [
-            Test("Create an XML patchset",
-                 f"crm_diff -o {cts_cli_data}/crm_diff_old.xml -n {cts_cli_data}/crm_diff_new.xml",
-                 expected_rc=ExitStatus.ERROR)
+            make_test_group("Create an XML patchset from files",
+                            f"crm_diff -o {old_file} -n {new_file}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset from strings",
+                            f"crm_diff -O {old_str} -N {new_str}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset from old file, new string",
+                            f"crm_diff -o {old_file} -N {new_str}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset from old string, new file",
+                            f"crm_diff -O {old_str} -n {new_file}",
+                            expected_rc=ExitStatus.ERROR),
+
+            make_test_group("Create an XML patchset as CIB",
+                            f"crm_diff -o {old_file} -n {new_file} --cib",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset with no versions",
+                            f"crm_diff -o {old_file} -n {new_file} --no-version",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset as CIB, with no versions",
+                            f"crm_diff -o {old_file} -n {new_file} --cib --no-version",
+                            expected_rc=ExitStatus.USAGE),
+
+            # Patch must be a file (cannot be a string).
+            #
+            # patch_file was generated using the following command:
+            #
+            #     # crm_diff -o {old_file} -n {new_file}
+            #
+            make_test_group("Apply an XML patchset to a file",
+                            f"crm_diff -o {old_file} -p {patch_file}"),
+            make_test_group("Apply an XML patchset to a string",
+                            f"crm_diff -O {old_str} -p {patch_file}"),
+
+            make_test_group("Apply an XML patchset as CIB",
+                            f"crm_diff -o {old_file} -p {patch_file} --cib"),
+            make_test_group("Apply an XML patchset with no versions",
+                            f"crm_diff -o {old_file} -p {patch_file} --no-version"),
+            make_test_group("Apply an XML patchset as CIB, with no versions",
+                            f"crm_diff -o {old_file} -p {patch_file} --cib --no-version",
+                            expected_rc=ExitStatus.USAGE),
+
+            # cib_patch_file was generated using the following command:
+            #
+            #     # crm_diff -o {old_file} -n {new_file} --cib
+            #
+            # Thus a digest was added to the patchset, and attribute position
+            # changes were ignored.
+            #
+            # @FIXME Currently these all fail due to digest mismatch. The issue
+            # goes back to at least Pacemaker 1.1.24. However, note that they
+            # fail with a generic error code, not a digest error code.
+            #
+            # It seems reasonable that a patchset generated by crm_diff should
+            # possible to apply to the old XML using crm_diff.
+            make_test_group("Apply an XML patchset generated as CIB",
+                            f"crm_diff -o {old_file} -p {cib_patch_file}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Apply an XML patchset generated as CIB, as CIB",
+                            f"crm_diff -o {old_file} -p {cib_patch_file} --cib",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Apply an XML patchset generated as CIB, with no versions",
+                            f"crm_diff -o {old_file} -p {cib_patch_file} --no-version",
+                            expected_rc=ExitStatus.ERROR),
+
+            # @TODO We could add tests where the old and new CIBs have the same
+            # version info. In that case, at the time of writing, generating a
+            # patchset with --cib and then trying to apply it will result in
+            # ExitStatus.OLD.
         ]
 
 
