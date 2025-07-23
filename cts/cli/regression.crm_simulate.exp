@@ -1,5 +1,5 @@
 =#=#=#= Begin test: Show allocation scores with crm_simulate =#=#=#=
-<pacemaker-result api-version="X" request="crm_simulate -x crm_mon.xml --show-scores --output-as=xml">
+<pacemaker-result api-version="X" request="crm_simulate -x CTS_CLI_DATA/crm_mon.xml --show-scores --output-as=xml">
   <cluster_status>
     <nodes>
       <node name="cluster01" id="1" online="true" standby="false" standby_onfail="false" maintenance="false" pending="false" unclean="false" health="green" feature_set="&lt;3.15.1" shutdown="false" expected_up="true" is_dc="false" resources_running="7" type="member"/>
