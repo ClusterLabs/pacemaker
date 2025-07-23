@@ -124,7 +124,8 @@ curses_subprocess_output(pcmk__output_t *out, int exit_status,
  * object if version is requested, so this is never called.
  */
 static void
-curses_ver(pcmk__output_t *out, bool extended) {
+curses_ver(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
 }
 

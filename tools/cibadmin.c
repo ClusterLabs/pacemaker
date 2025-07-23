@@ -534,7 +534,7 @@ main(int argc, char **argv)
         pcmk__free_arg_context(context);
 
         /* FIXME: When cibadmin is converted to use formatted output, this can
-         * be replaced by out->version with the appropriate boolean flag.
+         * be replaced by out->version.
          */
         pcmk__cli_help();
     }

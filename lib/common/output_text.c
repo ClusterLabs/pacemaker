@@ -119,17 +119,14 @@ text_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 static void
-text_version(pcmk__output_t *out, bool extended)
+text_version(pcmk__output_t *out)
 {
     pcmk__assert((out != NULL) && (out->dest != NULL));
 
-    if (extended) {
-        fprintf(out->dest, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    } else {
-        fprintf(out->dest, "Pacemaker %s\n", PACEMAKER_VERSION);
-        fprintf(out->dest, "Written by Andrew Beekhof and "
-                           "the Pacemaker project contributors\n");
-    }
+    fprintf(out->dest,
+            "Pacemaker " PACEMAKER_VERSION "\n"
+            "Written by Andrew Beekhof and the Pacemaker project "
+            "contributors\n");
 }
 
 G_GNUC_PRINTF(2, 3)

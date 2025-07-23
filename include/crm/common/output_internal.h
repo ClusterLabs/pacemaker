@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -342,10 +342,9 @@ struct pcmk__output_s {
      * \brief Format version information.  This is useful for the --version
      *        argument of command line tools.
      *
-     * \param[in,out] out      The output functions structure.
-     * \param[in]     extended Add additional version information.
+     * \param[in,out] out  The output functions structure.
      */
-    void (*version) (pcmk__output_t *out, bool extended);
+    void (*version)(pcmk__output_t *out);
 
     /*!
      * \internal

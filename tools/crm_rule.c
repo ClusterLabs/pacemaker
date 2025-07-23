@@ -131,7 +131,7 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(out);
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
