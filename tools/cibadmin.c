@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -49,11 +49,6 @@ static struct {
     gboolean get_node_path;
     gboolean no_children;
     gboolean score_update;
-
-    /* @COMPAT: For "-!" version option. Not advertised nor marked as
-     * deprecated, but accepted.
-     */
-    gboolean extended_version;
 
     // @COMPAT Deprecated since 3.0.0
     gboolean local;
@@ -441,14 +436,6 @@ build_arg_context(pcmk__common_args_t *args)
     const char *desc = NULL;
     GOptionContext *context = NULL;
 
-    GOptionEntry extra_prog_entries[] = {
-        // @COMPAT: Deprecated
-        { "extended-version", '!', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
-          &options.extended_version, "deprecated", NULL },
-
-        { NULL }
-    };
-
     desc = "Examples:\n\n"
            "Query the configuration:\n\n"
            "\t# cibadmin --query\n\n"
@@ -493,8 +480,6 @@ build_arg_context(pcmk__common_args_t *args)
 
     context = pcmk__build_arg_context(args, NULL, NULL, "<command>");
     g_option_context_set_description(context, desc);
-
-    pcmk__add_main_args(context, extra_prog_entries);
 
     pcmk__add_arg_group(context, "commands", "Commands:", "Show command help",
                         command_entries);
@@ -544,17 +529,14 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (args->version || options.extended_version) {
+    if (args->version) {
         g_strfreev(processed_args);
         pcmk__free_arg_context(context);
 
         /* FIXME: When cibadmin is converted to use formatted output, this can
          * be replaced by out->version with the appropriate boolean flag.
-         *
-         * options.extended_version is deprecated and will be removed in a
-         * future release.
          */
-        pcmk__cli_help(options.extended_version? '!' : 'v');
+        pcmk__cli_help('v');
     }
 
     /* At LOG_ERR, stderr for CIB calls is rather verbose. Several lines like
