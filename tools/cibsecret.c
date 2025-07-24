@@ -11,12 +11,22 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>           // umask, S_IRGRP, S_IROTH, ...
+#include <sys/wait.h>           // WEXITSTATUS
+#include <unistd.h>             // geteuid
 
 #include <glib.h>
+#include <libxml/tree.h>        // xmlNode
 
+#include <crm/cib/internal.h>   // cib__signon_query
 #include <crm/common/internal.h>
 #include <crm/common/results.h>
+#include <crm/common/strings.h> // crm_strdup_printf
+#include <crm/common/xml.h>     // crm_element_value, PCMK_XA_*
+
+#include <pacemaker-internal.h> // pcmk__query_node_name
 
 #define SUMMARY "cibsecret - manage sensitive information in Pacemaker CIB"
 
@@ -83,6 +93,50 @@ struct subcommand_entry {
 };
 
 static int
+run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
+{
+    int rc = pcmk_rc_ok;
+    gboolean success = FALSE;
+    GError *error = NULL;
+    gchar *sout = NULL;
+    gchar *serr = NULL;
+    gint status;
+
+    /* A failure here is a failure starting the program (for example, it doesn't
+     * exist on the $PATH), not that it ran but exited with an error code.
+     */
+    success = g_spawn_command_line_sync(cmdline, &sout, &serr, &status, &error);
+    if (!success) {
+        out->err(out, "%s", error->message);
+        rc = pcmk_rc_error;
+        goto done;
+    }
+
+    /* A failure here indicates that the program exited with a non-zero exit
+     * code or due to a fatal signal.
+     */
+    /* @FIXME @COMPAT g_spawn_check_exit_status is deprecated as of glib 2.70
+     * and is replaced with g_spawn_check_wait_status.
+     */
+    success = g_spawn_check_exit_status(status, &error);
+
+    if (!success) {
+        out->err(out, "%s",  error->message);
+        out->subprocess_output(out, WEXITSTATUS(status), sout, serr);
+        rc = pcmk_rc_error;
+    }
+
+done:
+    pcmk__str_update(standard_out, sout);
+
+    g_free(sout);
+    g_free(serr);
+    g_clear_error(&error);
+
+    return rc;
+}
+
+static int
 pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 {
     return pcmk_rc_ok;
@@ -116,6 +170,157 @@ static int
 scp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 {
     return pcmk_rc_ok;
+}
+
+static gchar **
+reachable_hosts(pcmk__output_t *out, GList *all)
+{
+    GPtrArray *reachable = NULL;
+    gchar *path = NULL;
+
+    path = g_find_program_in_path("fping");
+
+    reachable = g_ptr_array_new();
+
+    if ((path == NULL) || (geteuid() != 0)) {
+        for (GList *host = all; host != NULL; host = host->next) {
+            int rc = pcmk_rc_ok;
+            char *cmdline = crm_strdup_printf("ping -c 2 -q %s", (char *) host->data);
+
+            rc = run_cmdline(out, cmdline, NULL);
+
+            free(cmdline);
+
+            if (rc == pcmk_rc_ok) {
+                g_ptr_array_add(reachable, g_strdup(host->data));
+            }
+        }
+
+    } else {
+        GString *all_str = g_string_sized_new(64);
+        gchar **parts = NULL;
+        char *standard_out = NULL;
+        char *cmdline = NULL;
+
+        for (GList *host = all; host != NULL; host = host->next) {
+            pcmk__add_word(&all_str, 64, host->data);
+        }
+
+        cmdline = crm_strdup_printf("fping -a -q %s", all_str->str);
+        run_cmdline(out, cmdline, &standard_out);
+
+        parts = g_strsplit(standard_out, "\n", 0);
+        for (gchar **p = parts; *p != NULL; p++) {
+            if (pcmk__str_empty(*p)) {
+                continue;
+            }
+
+            g_ptr_array_add(reachable, g_strdup(*p));
+        }
+
+        free(cmdline);
+        free(standard_out);
+        g_string_free(all_str, TRUE);
+        g_strfreev(parts);
+    }
+
+    g_free(path);
+    g_ptr_array_add(reachable, NULL);
+    return (char **) g_ptr_array_free(reachable, FALSE);
+}
+
+struct node_data {
+    pcmk__output_t *out;
+    char *local_node;
+    const char *field;
+    GList *all_nodes;
+};
+
+static void
+node_iter_helper(xmlNode *result, void *user_data)
+{
+    struct node_data *data = user_data;
+    const char *uname = pcmk__xe_get(result, PCMK_XA_UNAME);
+    const char *id = pcmk__xe_get(result, data->field);
+    const char *name = pcmk__s(uname, id);
+
+    /* Filter out the local node */
+    if (pcmk__str_eq(name, data->local_node, pcmk__str_null_matches)) {
+        return;
+    }
+
+    data->all_nodes = g_list_append(data->all_nodes, g_strdup(name));
+}
+
+static G_GNUC_UNUSED gchar **
+get_live_peers(pcmk__output_t *out)
+{
+    int rc = pcmk_rc_ok;
+    xmlNode *xml_node = NULL;
+    gchar **reachable = NULL;
+
+    struct node_data nd = {
+        .out = out,
+        .all_nodes = NULL
+    };
+
+    /* Get the local node name. */
+    rc = pcmk__query_node_name(out, 0, &(nd.local_node), 0);
+    if (rc != pcmk_rc_ok) {
+        out->err(out, "Could not get local node name");
+        goto done;
+    }
+
+    /* Get a list of all node names, filtering out the local node. */
+    rc = cib__signon_query(out, NULL, &xml_node);
+    if (rc != pcmk_rc_ok) {
+        out->err(out, "Could not get list of cluster nodes");
+        goto done;
+    }
+
+    nd.field = PCMK_XA_ID;
+    pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
+                               node_iter_helper, &nd);
+    nd.field = PCMK_XA_VALUE;
+    pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_GUEST_NODE_CONFIG,
+                               node_iter_helper, &nd);
+    nd.field = PCMK_XA_ID;
+    pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_REMOTE_NODE_CONFIG,
+                               node_iter_helper, &nd);
+
+    if (nd.all_nodes == NULL) {
+        goto done;
+    }
+
+    /* Get a list of all nodes that respond to pings */
+    reachable = reachable_hosts(out, nd.all_nodes);
+
+    /* Warn the user about any that didn't respond to pings */
+    for (const GList *iter = nd.all_nodes; iter != NULL; iter = iter->next) {
+        bool found = false;
+
+        for (gchar **host = reachable; *host != NULL; host++) {
+            if (pcmk__str_eq(iter->data, *host, pcmk__str_none)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            out->info(out, "Node %s is down - you'll need to update it "
+                      "with `cibsecret sync` later", (char *) iter->data);
+        }
+    }
+
+done:
+    free(nd.local_node);
+    free(xml_node);
+
+    if (nd.all_nodes != NULL) {
+        g_list_free_full(nd.all_nodes, g_free);
+    }
+
+    return reachable;
 }
 
 static int
