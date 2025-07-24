@@ -811,31 +811,31 @@ main(int argc, char **argv)
     }
 
     if (options.acl_render_mode != pcmk__acl_render_none) {
-        xmlDoc *acl_evaled_doc;
+        xmlDoc *acl_evaled_doc = NULL;
+        xmlChar *rendered = NULL;
 
-        rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
-        if (rc == pcmk_rc_ok) {
-            xmlChar *rendered = NULL;
-
-            rc = pcmk__acl_evaled_render(acl_evaled_doc,
-                                         options.acl_render_mode, &rendered);
-            if (rc != pcmk_rc_ok) {
-                exit_code = CRM_EX_CONFIG;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Could not render evaluated access: %s",
-                            pcmk_rc_str(rc));
-                goto done;
-            }
-            printf("%s\n", (char *) rendered);
-            free(rendered);
-
-        } else {
+        rc = pcmk__acl_annotate_permissions(acl_cred, output->doc,
+                                            &acl_evaled_doc);
+        if (rc != pcmk_rc_ok) {
             exit_code = CRM_EX_CONFIG;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not evaluate access per request (%s, error: %s)",
                         acl_cred, pcmk_rc_str(rc));
             goto done;
         }
+
+        rc = pcmk__acl_evaled_render(acl_evaled_doc, options.acl_render_mode,
+                                     &rendered);
+        if (rc != pcmk_rc_ok) {
+            exit_code = CRM_EX_CONFIG;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not render evaluated access: %s",
+                        pcmk_rc_str(rc));
+            goto done;
+        }
+
+        printf("%s\n", (char *) rendered);
+        xmlFree(rendered);
 
     } else {
         print_xml_output(output);
