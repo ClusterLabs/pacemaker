@@ -178,19 +178,65 @@ ssh(pcmk__output_t *out, GList *nodes, const char *cmdline)
 static int
 pscp(pcmk__output_t *out, GList *nodes, const char *to, const char *from)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    GString *hosts = g_string_sized_new(64);
+
+    for (GList *node = nodes; node != NULL; node = node->next) {
+        pcmk__add_separated_word(&hosts, 64, node->data, " ");
+    }
+
+    s = crm_strdup_printf("pscp -H \"%s\" -x \"-pr\" -x StrictHostKeyChecking=no -- \"%s\" \"%s\"",
+                          hosts->str, from, to);
+    rc = run_cmdline(out, s, NULL);
+
+    free(s);
+    g_string_free(hosts, TRUE);
+    return rc;
 }
 
 static int
 pdcp(pcmk__output_t *out, GList *nodes, const char *to, const char *from)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    GString *hosts = g_string_sized_new(64);
+
+    for (GList *node = nodes; node != NULL; node = node->next) {
+        pcmk__add_separated_word(&hosts, 64, node->data, ",");
+    }
+
+    s = crm_strdup_printf("pdcp -pr -w \"%s\" -- \"%s\" \"%s\"", hosts->str,
+                          from, to);
+    setenv("PDSH_SSH_ARGS_APPEND", "\"-o StrictHostKeyChecking=no\"", 1);
+    rc = run_cmdline(out, s, NULL);
+    unsetenv("PDSH_SSH_ARGS_APPEND");
+
+    free(s);
+    g_string_free(hosts, TRUE);
+    return rc;
 }
 
 static int
 scp(pcmk__output_t *out, GList *nodes, const char *to, const char *from)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+
+    for (GList *node = nodes; node != NULL; node = node->next) {
+        int this_rc = pcmk_rc_ok;
+        char *s = crm_strdup_printf("scp -pqr -o StrictHostKeyChecking=no \"%s\" \"%s:%s\"",
+                                    from, (const char *) node->data, to);
+
+        this_rc = run_cmdline(out, s, NULL);
+        if (this_rc != pcmk_rc_ok) {
+            rc = this_rc;
+
+        }
+
+        free(s);
+    }
+
+    return rc;
 }
 
 static bool
