@@ -821,7 +821,7 @@ main(int argc, char **argv)
     }
 
     the_cib = cib_new();
-    rc = cib__signon_attempts(the_cib, cib_command, 5);
+    rc = cib__signon_retry(the_cib, cib_command);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {

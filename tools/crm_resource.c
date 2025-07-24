@@ -2236,7 +2236,7 @@ main(int argc, char **argv)
                         _("Could not create CIB connection"));
             goto done;
         }
-        rc = cib__signon_attempts(cib_conn, cib_command, 5);
+        rc = cib__signon_retry(cib_conn, cib_command);
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);

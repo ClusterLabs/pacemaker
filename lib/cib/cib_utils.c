@@ -914,12 +914,22 @@ done:
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Try to connect to the CIB API, with up to 5 attempts
+ *
+ * \param[in,out] cib   CIB connection object
+ * \param[in]     type  CIB connection type
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-cib__signon_attempts(cib_t *cib, enum cib_conn_type type, int attempts)
+cib__signon_retry(cib_t *cib, enum cib_conn_type type)
 {
+    static const int attempts = 5;
     int rc = pcmk_rc_ok;
 
-    crm_trace("Attempting connection to CIB manager (up to %d time%s)",
+    crm_trace("Attempting connection to CIB API (up to %d time%s)",
               attempts, pcmk__plural_s(attempts));
 
     for (int remaining = attempts - 1; remaining >= 0; --remaining) {
