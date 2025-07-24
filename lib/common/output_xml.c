@@ -275,7 +275,8 @@ xml_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 static void
-xml_version(pcmk__output_t *out, bool extended) {
+xml_version(pcmk__output_t *out)
+{
     const char *author = "Andrew Beekhof and the Pacemaker project "
                          "contributors";
     pcmk__assert(out != NULL);

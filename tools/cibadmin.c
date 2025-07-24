@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,7 +41,7 @@ static struct {
     gchar *cib_user;
     gchar *dest_node;
     gchar *input_file;
-    gchar *input_xml;
+    gchar *input_string;
     gboolean input_stdin;
     bool delete_all;
     gboolean allow_create;
@@ -50,22 +50,71 @@ static struct {
     gboolean no_children;
     gboolean score_update;
 
-    /* @COMPAT: For "-!" version option. Not advertised nor marked as
-     * deprecated, but accepted.
-     */
-    gboolean extended_version;
-
     // @COMPAT Deprecated since 3.0.0
     gboolean local;
 
     // @COMPAT Deprecated since 3.0.1
     gboolean sync_call;
 } options = {
+    .cib_action = PCMK__CIB_REQUEST_QUERY,
     .cmd_options = cib_sync_call,
 };
 
 int do_init(void);
 static int do_work(xmlNode *input, xmlNode **output);
+
+/*!
+ * \internal
+ * \brief Read input XML as specified on the command line
+ *
+ * Precedence is as follows:
+ * 1. Input file
+ * 2. Input string
+ * 3. stdin
+ *
+ * If multiple input sources are given, only the last occurrence of the one with
+ * the highest precedence is tried.
+ *
+ * If no input source is specified, this function does nothing.
+ *
+ * \param[out] input  Where to store parsed input
+ * \param[out] error  Where to store error information
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+read_input(xmlNode **input, GError **error)
+{
+    const char *source = NULL;
+
+    if (options.input_file != NULL) {
+        source = options.input_file;
+        *input = pcmk__xml_read(options.input_file);
+
+    } else if (options.input_string != NULL) {
+        source = "input string";
+        *input = pcmk__xml_parse(options.input_string);
+
+    } else if (options.input_stdin) {
+        source = "stdin";
+        *input = pcmk__xml_read(NULL);
+
+    } else {
+        *input = NULL;
+        return pcmk_rc_ok;
+    }
+
+    if (*input == NULL) {
+        int rc = pcmk_rc_bad_input;
+
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Couldn't parse input from %s", source);
+        return rc;
+    }
+
+    return pcmk_rc_ok;
+}
 
 static void
 print_xml_output(xmlNode * xml)
@@ -316,19 +365,26 @@ static GOptionEntry command_entries[] = {
 };
 
 static GOptionEntry data_entries[] = {
-    /* @COMPAT: These arguments should be last-wins. We can have an enum option
-     * that stores the input type, along with a single string option that stores
-     * the XML string for --xml-text, filename for --xml-file, or NULL for
-     * --xml-pipe.
-     */
-    { "xml-text", 'X', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
-      &options.input_xml, "Retrieve XML from the supplied string", "value" },
-
+    // @COMPAT These arguments should be last-one-wins
     { "xml-file", 'x', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
-      &options.input_file, "Retrieve XML from the named file", "value" },
+      &options.input_file,
+      "Retrieve XML from the named file. Currently this takes precedence\n"
+      INDENT "over --xml-text and --xml-pipe. In a future release, the last\n"
+      INDENT "one specified will be used.",
+      "FILE" },
+
+    { "xml-text", 'X', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
+      &options.input_string,
+      "Retrieve XML from the supplied string. Currently this takes precedence\n"
+      INDENT "over --xml-pipe, but --xml-file overrides this. In a future\n"
+      INDENT "release, the last one specified will be used.",
+      "STRING" },
 
     { "xml-pipe", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.input_stdin, "Retrieve XML from stdin", NULL },
+      &options.input_stdin,
+      "Retrieve XML from stdin. Currently --xml-file and --xml-text override\n"
+      INDENT "this. In a future release, the last one specified will be used.",
+      NULL },
 
     { NULL }
 };
@@ -441,17 +497,11 @@ build_arg_context(pcmk__common_args_t *args)
     const char *desc = NULL;
     GOptionContext *context = NULL;
 
-    GOptionEntry extra_prog_entries[] = {
-        // @COMPAT: Deprecated
-        { "extended-version", '!', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
-          &options.extended_version, "deprecated", NULL },
-
-        { NULL }
-    };
-
     desc = "Examples:\n\n"
            "Query the configuration:\n\n"
            "\t# cibadmin --query\n\n"
+           "or just:\n\n"
+           "\t# cibadmin\n\n"
            "Query just the cluster options configuration:\n\n"
            "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
@@ -491,10 +541,8 @@ build_arg_context(pcmk__common_args_t *args)
            "SEE ALSO:\n"
            " crm(8), pcs(8), crm_shadow(8), crm_diff(8)\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, "<command>");
+    context = pcmk__build_arg_context(args, NULL, NULL, "[<command>]");
     g_option_context_set_description(context, desc);
-
-    pcmk__add_main_args(context, extra_prog_entries);
 
     pcmk__add_arg_group(context, "commands", "Commands:", "Show command help",
                         command_entries);
@@ -509,7 +557,6 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    const char *source = NULL;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
@@ -526,35 +573,25 @@ main(int argc, char **argv)
     }
 
     if (g_strv_length(processed_args) > 1) {
+        gchar *extra = g_strjoinv(" ", processed_args + 1);
         gchar *help = g_option_context_get_help(context, TRUE, NULL);
-        GString *extra = g_string_sized_new(128);
-
-        for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
-            if (extra->len > 0) {
-                g_string_append_c(extra, ' ');
-            }
-            g_string_append(extra, processed_args[lpc]);
-        }
 
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "non-option ARGV-elements: %s\n\n%s", extra->str, help);
+                    "non-option ARGV-elements: %s\n\n%s", extra, help);
+        g_free(extra);
         g_free(help);
-        g_string_free(extra, TRUE);
         goto done;
     }
 
-    if (args->version || options.extended_version) {
+    if (args->version) {
         g_strfreev(processed_args);
         pcmk__free_arg_context(context);
 
         /* FIXME: When cibadmin is converted to use formatted output, this can
-         * be replaced by out->version with the appropriate boolean flag.
-         *
-         * options.extended_version is deprecated and will be removed in a
-         * future release.
+         * be replaced by out->version.
          */
-        pcmk__cli_help(options.extended_version? '!' : 'v');
+        pcmk__cli_help();
     }
 
     /* At LOG_ERR, stderr for CIB calls is rather verbose. Several lines like
@@ -576,16 +613,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (options.cib_action == NULL) {
-        // @COMPAT: Create a default command if other tools have one
-        gchar *help = g_option_context_get_help(context, TRUE, NULL);
-
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Must specify a command option\n\n%s", help);
-        g_free(help);
-        goto done;
-    }
+    pcmk__assert(options.cib_action != NULL);
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
@@ -654,43 +682,15 @@ main(int argc, char **argv)
                               cib_no_children);
     }
 
-    if (options.input_file != NULL) {
-        input = pcmk__xml_read(options.input_file);
-        source = options.input_file;
+    if (read_input(&input, &error) != pcmk_rc_ok) {
+        goto done;
+    }
 
-    } else if (options.input_xml != NULL) {
-        input = pcmk__xml_parse(options.input_xml);
-        source = "input string";
-
-    } else if (options.input_stdin) {
-        input = pcmk__xml_read(NULL);
-        source = "STDIN";
-
-    } else if (options.acl_render_mode != pcmk__acl_render_none) {
-        char *username = pcmk__uid2username(geteuid());
-        bool required = pcmk_acl_required(username);
-
-        free(username);
-
-        if (required) {
-            if (options.force) {
-                fprintf(stderr, "The supplied command can provide skewed"
-                                 " result since it is run under user that also"
-                                 " gets guarded per ACLs on their own right."
-                                 " Continuing since --force flag was"
-                                 " provided.\n");
-
-            } else {
-                exit_code = CRM_EX_UNSAFE;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "The supplied command can provide skewed result "
-                            "since it is run under user that also gets guarded "
-                            "per ACLs in their own right. To accept the risk "
-                            "of such a possible distortion (without even "
-                            "knowing it at this time), use the --force flag.");
-                goto done;
-            }
-        }
+    /* @TODO Since this was added by 99f414d, we have not entered this ACL
+     * render setup section if any input was provided. Is that correct?
+     */
+    if ((input == NULL) && (options.acl_render_mode != pcmk__acl_render_none)) {
+        char *username = NULL;
 
         if (options.cib_user == NULL) {
             exit_code = CRM_EX_USAGE;
@@ -699,9 +699,21 @@ main(int argc, char **argv)
             goto done;
         }
 
-        /* We already stopped/warned ACL-controlled users about consequences.
-         *
-         * Note: acl_cred takes ownership of options.cib_user here.
+        // @COMPAT Fail if pcmk_acl_required(username)
+        username = pcmk__uid2username(geteuid());
+        if (pcmk_acl_required(username)) {
+            fprintf(stderr,
+                    "Warning: cibadmin is being run as user %s, which is "
+                    "subject to ACLs. As a result, ACLs for user %s may be "
+                    "incorrect or incomplete in the output. In a future "
+                    "release, running as a privileged user (root or "
+                    CRM_DAEMON_USER ") will be required for --show-access.\n",
+                    username, options.cib_user);
+        }
+
+        free(username);
+
+        /* Note: acl_cred takes ownership of options.cib_user here.
          * options.cib_user is set to NULL so that the CIB is obtained as the
          * user running the cibadmin command. The CIB must be obtained as a user
          * with full permissions in order to show the CIB correctly annotated
@@ -709,16 +721,6 @@ main(int argc, char **argv)
          */
         acl_cred = options.cib_user;
         options.cib_user = NULL;
-    }
-
-    if (input != NULL) {
-        crm_log_xml_debug(input, "[admin input]");
-
-    } else if (source != NULL) {
-        exit_code = CRM_EX_CONFIG;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Couldn't parse input from %s.", source);
-        goto done;
     }
 
     if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_casei)) {
@@ -804,27 +806,17 @@ main(int argc, char **argv)
         }
     }
 
-    if ((output != NULL)
-        && (options.acl_render_mode != pcmk__acl_render_none)) {
+    if (output == NULL) {
+        goto done;
+    }
 
-        xmlDoc *acl_evaled_doc;
-        rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
-        if (rc == pcmk_rc_ok) {
-            xmlChar *rendered = NULL;
+    if (options.acl_render_mode != pcmk__acl_render_none) {
+        xmlDoc *acl_evaled_doc = NULL;
+        xmlChar *rendered = NULL;
 
-            rc = pcmk__acl_evaled_render(acl_evaled_doc,
-                                         options.acl_render_mode, &rendered);
-            if (rc != pcmk_rc_ok) {
-                exit_code = CRM_EX_CONFIG;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "Could not render evaluated access: %s",
-                            pcmk_rc_str(rc));
-                goto done;
-            }
-            printf("%s\n", (char *) rendered);
-            free(rendered);
-
-        } else {
+        rc = pcmk__acl_annotate_permissions(acl_cred, output->doc,
+                                            &acl_evaled_doc);
+        if (rc != pcmk_rc_ok) {
             exit_code = CRM_EX_CONFIG;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Could not evaluate access per request (%s, error: %s)",
@@ -832,11 +824,22 @@ main(int argc, char **argv)
             goto done;
         }
 
-    } else if (output != NULL) {
+        rc = pcmk__acl_evaled_render(acl_evaled_doc, options.acl_render_mode,
+                                     &rendered);
+        if (rc != pcmk_rc_ok) {
+            exit_code = CRM_EX_CONFIG;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not render evaluated access: %s",
+                        pcmk_rc_str(rc));
+            goto done;
+        }
+
+        printf("%s\n", (char *) rendered);
+        xmlFree(rendered);
+
+    } else {
         print_xml_output(output);
     }
-
-    crm_trace("%s exiting normally", crm_system_name);
 
 done:
     g_strfreev(processed_args);
@@ -845,7 +848,7 @@ done:
     g_free(options.cib_user);
     g_free(options.dest_node);
     g_free(options.input_file);
-    g_free(options.input_xml);
+    g_free(options.input_string);
     free(options.cib_section);
     free(options.validate_with);
 

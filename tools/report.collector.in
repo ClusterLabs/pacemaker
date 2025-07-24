@@ -1,13 +1,16 @@
 #
 # Originally based on hb_report
 # Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
-# Later changes copyright 2010-2024 the Pacemaker project contributors
+# Later changes copyright 2010-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
 # This source code is licensed under the GNU General Public License version 2
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
+
+# Do not run this script directly. It's intended to be invoked only by
+# crm_report.
 
 if
     echo $REPORT_HOME | grep -qs '^/'
@@ -437,7 +440,7 @@ sys_info() {
 
     echo
     cibadmin --version 2>&1 | head -1
-    cibadmin -! 2>&1
+    pacemakerd -F 2>&1
     case $cluster in
 	corosync)
 	    /usr/sbin/corosync -v 2>&1 | head -1

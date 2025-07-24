@@ -19,17 +19,11 @@
 #include <crm/common/xml.h>
 
 void
-pcmk__cli_help(char cmd)
+pcmk__cli_help(void)
 {
-    if (cmd == 'v' || cmd == '$') {
-        printf("Pacemaker %s\n", PACEMAKER_VERSION);
-        printf("Written by Andrew Beekhof and "
-               "the Pacemaker project contributors\n");
-
-    } else if (cmd == '!') {
-        printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    }
-
+    printf("Pacemaker %s\n", PACEMAKER_VERSION);
+    printf("Written by Andrew Beekhof and the Pacemaker project "
+           "contributors\n");
     crm_exit(CRM_EX_OK);
     while(1); // above does not return
 }

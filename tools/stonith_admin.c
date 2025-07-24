@@ -431,7 +431,7 @@ main(int argc, char **argv)
     stonith__register_messages(out);
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 

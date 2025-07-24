@@ -1575,7 +1575,7 @@ main(int argc, char **argv)
     pcmk__register_messages(out, fmt_functions);
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         return clean_up(CRM_EX_OK);
     }
 

@@ -251,7 +251,8 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 static void
-html_version(pcmk__output_t *out, bool extended) {
+html_version(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
 
     pcmk__output_create_xml_text_node(out, "h2", "Version Information");

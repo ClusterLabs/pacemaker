@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,7 +44,8 @@ none_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 static void
-none_version(pcmk__output_t *out, bool extended) {
+none_version(pcmk__output_t *out)
+{
     /* This function intentionally left blank */
 }
 

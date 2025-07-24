@@ -119,20 +119,16 @@ log_reset(pcmk__output_t *out) {
 }
 
 static void
-log_version(pcmk__output_t *out, bool extended) {
+log_version(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
-    if (extended) {
-        logger(priv, "Pacemaker %s (Build: %s): %s",
-               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    } else {
-        logger(priv, "Pacemaker " PACEMAKER_VERSION);
-        logger(priv, "Written by Andrew Beekhof and "
-                     "the Pacemaker project contributors");
-    }
+    logger(priv, "Pacemaker " PACEMAKER_VERSION);
+    logger(priv,
+           "Written by Andrew Beekhof and the Pacemaker project contributors");
 }
 
 G_GNUC_PRINTF(2, 3)
