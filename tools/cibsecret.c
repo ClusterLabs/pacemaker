@@ -195,19 +195,55 @@ ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 static int
 pscp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    gchar *hosts = g_strjoinv(" ", nodes);
+
+    s = crm_strdup_printf("pscp.pssh -H \"%s\" -x \"-pr\" -x \"" SSH_OPTS "\" -- \"%s\" \"%s\"",
+                          hosts, from, to);
+    rc = run_cmdline(out, s, NULL);
+
+    free(s);
+    g_free(hosts);
+    return rc;
 }
 
 static int
 pdcp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    gchar *hosts = g_strjoinv(",", nodes);
+
+    s = crm_strdup_printf("pdcp -pr -w \"%s\" -- \"%s\" \"%s\"", hosts, from, to);
+    setenv("PDSH_SSH_ARGS_APPEND", SSH_OPTS, 1);
+    rc = run_cmdline(out, s, NULL);
+    unsetenv("PDSH_SSH_ARGS_APPEND");
+
+    free(s);
+    g_free(hosts);
+    return rc;
 }
 
 static int
 scp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+
+    for (gchar **node = nodes; *node != NULL; node++) {
+        char *s = crm_strdup_printf("scp -pqr " SSH_OPTS " \"%s\" \"%s:%s\"",
+                                    from, *node, to);
+
+        rc = run_cmdline(out, s, NULL);
+        free(s);
+
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+    }
+
+    return rc;
 }
 
 static gchar **
