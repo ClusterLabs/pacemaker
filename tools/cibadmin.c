@@ -114,19 +114,14 @@ read_input(xmlNode **input, GError **error)
 }
 
 static int
-do_init(void)
+cibadmin_init(void)
 {
-    int rc = pcmk_rc_ok;
-
     cib_conn = cib_new();
-    rc = cib__signon_retry(cib_conn);
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to the CIB: %s", pcmk_rc_str(rc));
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_rc_str(rc));
+    if (cib_conn == NULL) {
+        return ENOMEM;
     }
 
-    return rc;
+    return cib__signon_retry(cib_conn);
 }
 
 static int
@@ -796,15 +791,11 @@ main(int argc, char **argv)
                               cib_score_update);
     }
 
-    rc = do_init();
+    rc = cibadmin_init();
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
-
-        crm_err("Init failed, could not perform requested operations: %s",
-                pcmk_rc_str(rc));
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Init failed, could not perform requested operations: %s",
-                    pcmk_rc_str(rc));
+                    "Could not connect to the CIB API: %s", pcmk_rc_str(rc));
         goto done;
     }
 
