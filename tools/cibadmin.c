@@ -806,10 +806,13 @@ main(int argc, char **argv)
         }
     }
 
-    if ((output != NULL)
-        && (options.acl_render_mode != pcmk__acl_render_none)) {
+    if (output == NULL) {
+        goto done;
+    }
 
+    if (options.acl_render_mode != pcmk__acl_render_none) {
         xmlDoc *acl_evaled_doc;
+
         rc = pcmk__acl_annotate_permissions(acl_cred, output->doc, &acl_evaled_doc);
         if (rc == pcmk_rc_ok) {
             xmlChar *rendered = NULL;
@@ -834,11 +837,9 @@ main(int argc, char **argv)
             goto done;
         }
 
-    } else if (output != NULL) {
+    } else {
         print_xml_output(output);
     }
-
-    crm_trace("%s exiting normally", crm_system_name);
 
 done:
     g_strfreev(processed_args);
