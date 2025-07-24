@@ -690,30 +690,7 @@ main(int argc, char **argv)
      * render setup section if any input was provided. Is that correct?
      */
     if ((input == NULL) && (options.acl_render_mode != pcmk__acl_render_none)) {
-        char *username = pcmk__uid2username(geteuid());
-        bool required = pcmk_acl_required(username);
-
-        free(username);
-
-        if (required) {
-            if (options.force) {
-                fprintf(stderr, "The supplied command can provide skewed"
-                                 " result since it is run under user that also"
-                                 " gets guarded per ACLs on their own right."
-                                 " Continuing since --force flag was"
-                                 " provided.\n");
-
-            } else {
-                exit_code = CRM_EX_UNSAFE;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "The supplied command can provide skewed result "
-                            "since it is run under user that also gets guarded "
-                            "per ACLs in their own right. To accept the risk "
-                            "of such a possible distortion (without even "
-                            "knowing it at this time), use the --force flag.");
-                goto done;
-            }
-        }
+        char *username = NULL;
 
         if (options.cib_user == NULL) {
             exit_code = CRM_EX_USAGE;
@@ -722,9 +699,18 @@ main(int argc, char **argv)
             goto done;
         }
 
-        /* We already stopped/warned ACL-controlled users about consequences.
-         *
-         * Note: acl_cred takes ownership of options.cib_user here.
+        username = pcmk__uid2username(geteuid());
+        if (pcmk_acl_required(username)) {
+            fprintf(stderr,
+                    "Warning: cibadmin is being run as user %s, which is "
+                    "subject to ACLs. As a result, ACLs for user %s may be "
+                    "incorrect or incomplete in the output.\n",
+                    username, options.cib_user);
+        }
+
+        free(username);
+
+        /* Note: acl_cred takes ownership of options.cib_user here.
          * options.cib_user is set to NULL so that the CIB is obtained as the
          * user running the cibadmin command. The CIB must be obtained as a user
          * with full permissions in order to show the CIB correctly annotated
