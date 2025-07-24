@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>              // ENOTCONN
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>             // setenv, unsetenv
@@ -326,7 +327,7 @@ node_iter_helper(xmlNode *result, void *user_data)
     data->all_nodes = g_list_append(data->all_nodes, g_strdup(name));
 }
 
-static G_GNUC_UNUSED gchar **
+static gchar **
 get_live_peers(pcmk__output_t *out)
 {
     int rc = pcmk_rc_ok;
@@ -440,7 +441,48 @@ static int
 subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                 crm_exit_t *exit_code)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    gchar *dirname = NULL;
+    char *cmdline = NULL;
+    gchar **peers = get_live_peers(out);
+    gchar *peer_str = NULL;
+
+    if (peers == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    peer_str = g_strjoinv(" ", peers);
+
+    out->info(out, "Syncing %s to %s ...", PCMK__CIB_SECRETS_DIR, peer_str);
+    g_free(peer_str);
+
+    dirname = g_path_get_dirname(PCMK__CIB_SECRETS_DIR);
+
+    rc = rsh_fn(out, peers, "rm -rf " PCMK__CIB_SECRETS_DIR);
+    if (rc != pcmk_rc_ok) {
+        *exit_code = CRM_EX_ERROR;
+        goto done;
+    }
+
+    cmdline = crm_strdup_printf("mkdir -p %s", dirname);
+    rc = rsh_fn(out, peers, cmdline);
+    free(cmdline);
+
+    if (rc != pcmk_rc_ok) {
+        *exit_code = CRM_EX_ERROR;
+        goto done;
+    }
+
+    rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
+
+    if (rc != pcmk_rc_ok) {
+        *exit_code = CRM_EX_ERROR;
+    }
+
+done:
+    g_strfreev(peers);
+    g_free(dirname);
+    return rc;
 }
 
 static int
