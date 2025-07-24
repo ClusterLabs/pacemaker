@@ -699,12 +699,15 @@ main(int argc, char **argv)
             goto done;
         }
 
+        // @COMPAT Fail if pcmk_acl_required(username)
         username = pcmk__uid2username(geteuid());
         if (pcmk_acl_required(username)) {
             fprintf(stderr,
                     "Warning: cibadmin is being run as user %s, which is "
                     "subject to ACLs. As a result, ACLs for user %s may be "
-                    "incorrect or incomplete in the output.\n",
+                    "incorrect or incomplete in the output. In a future "
+                    "release, running as a privileged user (root or "
+                    CRM_DAEMON_USER ") will be required for --show-access.\n",
                     username, options.cib_user);
         }
 
