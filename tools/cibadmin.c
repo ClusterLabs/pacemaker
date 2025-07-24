@@ -41,7 +41,7 @@ static struct {
     gchar *cib_user;
     gchar *dest_node;
     gchar *input_file;
-    gchar *input_xml;
+    gchar *input_string;
     gboolean input_stdin;
     bool delete_all;
     gboolean allow_create;
@@ -317,7 +317,7 @@ static GOptionEntry data_entries[] = {
      * --xml-pipe.
      */
     { "xml-text", 'X', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
-      &options.input_xml, "Retrieve XML from the supplied string", "value" },
+      &options.input_string, "Retrieve XML from the supplied string", "value" },
 
     { "xml-file", 'x', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
       &options.input_file, "Retrieve XML from the named file", "value" },
@@ -633,8 +633,8 @@ main(int argc, char **argv)
         input = pcmk__xml_read(options.input_file);
         source = options.input_file;
 
-    } else if (options.input_xml != NULL) {
-        input = pcmk__xml_parse(options.input_xml);
+    } else if (options.input_string != NULL) {
+        input = pcmk__xml_parse(options.input_string);
         source = "input string";
 
     } else if (options.input_stdin) {
@@ -820,7 +820,7 @@ done:
     g_free(options.cib_user);
     g_free(options.dest_node);
     g_free(options.input_file);
-    g_free(options.input_xml);
+    g_free(options.input_string);
     free(options.cib_section);
     free(options.validate_with);
 
