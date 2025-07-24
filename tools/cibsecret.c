@@ -116,19 +116,63 @@ done:
 static int
 pssh(pcmk__output_t *out, GList *nodes, const char *cmdline)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    GString *hosts = g_string_sized_new(64);
+
+    for (GList *node = nodes; node != NULL; node = node->next) {
+        pcmk__add_separated_word(&hosts, 64, node->data, " ");
+    }
+
+    s = crm_strdup_printf("pssh -i -H \"%s\" -x StrictHostKeyChecking=no -- \"%s\"",
+                          hosts->str, cmdline);
+    rc = run_cmdline(out, s, NULL);
+
+    free(s);
+    g_string_free(hosts, TRUE);
+    return rc;
 }
 
 static int
 pdsh(pcmk__output_t *out, GList *nodes, const char *cmdline)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    GString *hosts = g_string_sized_new(64);
+
+    for (GList *node = nodes; node != NULL; node = node->next) {
+        pcmk__add_separated_word(&hosts, 64, node->data, ",");
+    }
+
+    s = crm_strdup_printf("pdsh -w \"%s\" -- \"%s\"", hosts->str, cmdline);
+    setenv("PDSH_SSH_ARGS_APPEND", "\"-o StrictHostKeyChecking=no\"", 1);
+    rc = run_cmdline(out, s, NULL);
+    unsetenv("PDSH_SSH_ARGS_APPEND");
+
+    free(s);
+    g_string_free(hosts, TRUE);
+    return rc;
 }
 
 static int
 ssh(pcmk__output_t *out, GList *nodes, const char *cmdline)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+
+    for (GList *node = nodes; node != NULL; node = node->next) {
+        int this_rc = pcmk_rc_ok;
+        char *s = crm_strdup_printf("ssh -o StrictHostKeyChecking=no \"%s\" -- \"%s\"",
+                                    (char *) node->data, cmdline);
+
+        this_rc = run_cmdline(out, s, NULL);
+        if (this_rc != pcmk_rc_ok) {
+            rc = this_rc;
+        }
+
+        free(s);
+    }
+
+    return rc;
 }
 
 static int
