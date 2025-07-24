@@ -60,9 +60,6 @@ static struct {
     .cmd_options = cib_sync_call,
 };
 
-int do_init(void);
-static int do_work(xmlNode *input, xmlNode **output);
-
 /*!
  * \internal
  * \brief Read input XML as specified on the command line
@@ -114,6 +111,42 @@ read_input(xmlNode **input, GError **error)
     }
 
     return pcmk_rc_ok;
+}
+
+static int
+do_init(void)
+{
+    int rc = pcmk_ok;
+
+    cib_conn = cib_new();
+    rc = cib__signon_attempts(cib_conn, cib_command, 5);
+    if (rc != pcmk_ok) {
+        crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
+        fprintf(stderr, "Could not connect to the CIB: %s\n",
+                pcmk_strerror(rc));
+    }
+
+    return rc;
+}
+
+static int
+do_work(xmlNode *input, xmlNode **output)
+{
+    /* construct the request */
+    cib_conn->call_timeout = options.message_timeout_sec;
+    if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
+        && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
+
+        if (status == NULL) {
+            pcmk__xe_create(input, PCMK_XE_STATUS);
+        }
+    }
+
+    crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
+    return cib_internal_op(cib_conn, options.cib_action, options.dest_node,
+                           options.cib_section, input, output,
+                           options.cmd_options, options.cib_user);
 }
 
 static void
@@ -863,40 +896,4 @@ done:
 
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);
-}
-
-static int
-do_work(xmlNode *input, xmlNode **output)
-{
-    /* construct the request */
-    cib_conn->call_timeout = options.message_timeout_sec;
-    if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
-        && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
-
-        if (status == NULL) {
-            pcmk__xe_create(input, PCMK_XE_STATUS);
-        }
-    }
-
-    crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
-    return cib_internal_op(cib_conn, options.cib_action, options.dest_node,
-                           options.cib_section, input, output,
-                           options.cmd_options, options.cib_user);
-}
-
-int
-do_init(void)
-{
-    int rc = pcmk_ok;
-
-    cib_conn = cib_new();
-    rc = cib__signon_attempts(cib_conn, cib_command, 5);
-    if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_strerror(rc));
-    }
-
-    return rc;
 }
