@@ -78,7 +78,8 @@ struct subcommand_entry {
      * it will also take exit_code as an out parameter for the subcommands to
      * set and for us to exit with.
      */
-    int (*handler)(pcmk__output_t *out, crm_exit_t *exit_code);
+    int (*handler)(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                   crm_exit_t *exit_code);
 };
 
 static int
@@ -118,19 +119,22 @@ scp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 }
 
 static int
-subcommand_check(pcmk__output_t *out, crm_exit_t *exit_code)
+subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                 crm_exit_t *exit_code)
 {
     return pcmk_rc_ok;
 }
 
 static int
-subcommand_delete(pcmk__output_t *out, crm_exit_t *exit_code)
+subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                  crm_exit_t *exit_code)
 {
     return pcmk_rc_ok;
 }
 
 static int
-subcommand_get(pcmk__output_t *out, crm_exit_t *exit_code)
+subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+               crm_exit_t *exit_code)
 {
     return pcmk_rc_ok;
 }
@@ -140,25 +144,29 @@ subcommand_get(pcmk__output_t *out, crm_exit_t *exit_code)
  * here at the moment.
  */
 static int
-subcommand_set(pcmk__output_t *out, crm_exit_t *exit_code)
+subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+               crm_exit_t *exit_code)
 {
     return pcmk_rc_ok;
 }
 
 static int
-subcommand_stash(pcmk__output_t *out, crm_exit_t *exit_code)
+subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                 crm_exit_t *exit_code)
 {
     return pcmk_rc_ok;
 }
 
 static int
-subcommand_sync(pcmk__output_t *out, crm_exit_t *exit_code)
+subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                crm_exit_t *exit_code)
 {
     return pcmk_rc_ok;
 }
 
 static int
-subcommand_unstash(pcmk__output_t *out, crm_exit_t *exit_code)
+subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                   crm_exit_t *exit_code)
 {
     return pcmk_rc_ok;
 }
@@ -403,7 +411,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    cmd.handler(out, &exit_code);
+    cmd.handler(out, rsh_fn, rcp_fn, &exit_code);
 
  done:
     g_strfreev(processed_args);
