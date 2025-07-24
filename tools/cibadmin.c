@@ -686,10 +686,7 @@ main(int argc, char **argv)
         options.cib_user = NULL;
     }
 
-    if (input != NULL) {
-        crm_log_xml_debug(input, "[admin input]");
-
-    } else if (source != NULL) {
+    if ((input == NULL) && (source != NULL)) {
         exit_code = CRM_EX_CONFIG;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Couldn't parse input from %s.", source);
