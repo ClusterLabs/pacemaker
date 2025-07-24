@@ -39,6 +39,10 @@ static GOptionEntry entries[] = {
     { NULL }
 };
 
+typedef int (*rsh_fn_t)(pcmk__output_t *out, GList *nodes, const char *cmdline);
+typedef int (*rcp_fn_t)(pcmk__output_t *out, GList *nodes, const char *to,
+                        const char *from);
+
 struct subcommand_entry {
     const char *name;
     int args;
@@ -57,6 +61,42 @@ struct subcommand_entry {
      */
     int (*handler)(pcmk__output_t *out, crm_exit_t *exit_code);
 };
+
+static int
+pssh(pcmk__output_t *out, GList *nodes, const char *cmdline)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+pdsh(pcmk__output_t *out, GList *nodes, const char *cmdline)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+ssh(pcmk__output_t *out, GList *nodes, const char *cmdline)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+pscp(pcmk__output_t *out, GList *nodes, const char *to, const char *from)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+pdcp(pcmk__output_t *out, GList *nodes, const char *to, const char *from)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+scp(pcmk__output_t *out, GList *nodes, const char *to, const char *from)
+{
+    return pcmk_rc_ok;
+}
 
 static int
 subcommand_check(pcmk__output_t *out, crm_exit_t *exit_code)
@@ -116,6 +156,40 @@ static struct subcommand_entry subcommand_table[] = {
       subcommand_unstash },
     { NULL },
 };
+
+static int
+check_environment(pcmk__output_t *out, rsh_fn_t *rsh_fn, rcp_fn_t *rcp_fn,
+                  GError **error)
+{
+    gchar *path = NULL;
+
+    path = g_find_program_in_path("pssh");
+    if (path != NULL) {
+        g_free(path);
+        *rsh_fn = pssh;
+        *rcp_fn = pscp;
+        return pcmk_rc_ok;
+    }
+
+    path = g_find_program_in_path("pdsh");
+    if (path != NULL) {
+        g_free(path);
+        *rsh_fn = pdsh;
+        *rcp_fn = pdcp;
+        return pcmk_rc_ok;
+    }
+
+    path = g_find_program_in_path("ssh");
+    if (path != NULL) {
+        g_free(path);
+        *rsh_fn = ssh;
+        *rcp_fn = scp;
+        return pcmk_rc_ok;
+    }
+
+    out->err(out, "Please install one of pssh, pdsh, or ssh");
+    return pcmk_rc_error;
+}
 
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -215,6 +289,8 @@ main(int argc, char **argv)
     GOptionContext *context = build_arg_context(args, &output_group);
 
     struct subcommand_entry cmd;
+    rsh_fn_t rsh_fn;
+    rcp_fn_t rcp_fn;
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
@@ -279,6 +355,12 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Invalid subcommand given; valid subcommands: "
                     "check, delete, get, set, stash, sync, unstash");
+        goto done;
+    }
+
+    /* Check that we have the tools necessary to manage secrets */
+    if (check_environment(out, &rsh_fn, &rcp_fn, &error) != pcmk_rc_ok) {
+        exit_code = CRM_EX_NOT_INSTALLED;
         goto done;
     }
 
