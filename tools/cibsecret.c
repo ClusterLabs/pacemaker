@@ -617,6 +617,20 @@ static int
 subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                crm_exit_t *exit_code)
 {
+    int rc = subcommand_check(out, rsh_fn, rcp_fn, exit_code);
+    char *value = NULL;
+    const char *rsc = remainder[1];
+    const char *param = remainder[2];
+
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    value = local_files_get(rsc, param);
+    pcmk__assert(value != NULL);
+    out->info(out, "%s", value);
+
+    free(value);
     return pcmk_rc_ok;
 }
 
