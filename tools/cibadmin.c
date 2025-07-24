@@ -511,21 +511,14 @@ main(int argc, char **argv)
     }
 
     if (g_strv_length(processed_args) > 1) {
+        gchar *extra = g_strjoinv(" ", processed_args + 1);
         gchar *help = g_option_context_get_help(context, TRUE, NULL);
-        GString *extra = g_string_sized_new(128);
-
-        for (int lpc = 1; processed_args[lpc] != NULL; lpc++) {
-            if (extra->len > 0) {
-                g_string_append_c(extra, ' ');
-            }
-            g_string_append(extra, processed_args[lpc]);
-        }
 
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "non-option ARGV-elements: %s\n\n%s", extra->str, help);
+                    "non-option ARGV-elements: %s\n\n%s", extra, help);
+        g_free(extra);
         g_free(help);
-        g_string_free(extra, TRUE);
         goto done;
     }
 
