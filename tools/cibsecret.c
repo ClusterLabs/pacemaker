@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -286,7 +287,7 @@ node_iter_helper(xmlNode *result, void *user_data)
     data->nodes = g_list_append(data->nodes, g_strdup(name));
 }
 
-static G_GNUC_UNUSED GList *
+static GList *
 get_live_peers(pcmk__output_t *out)
 {
     int rc = pcmk_rc_ok;
@@ -371,11 +372,62 @@ subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     return pcmk_rc_ok;
 }
 
+/* The shell-based cibsecret.in had this comment for the sync subcommand:
+ *
+ * # TODO: this procedure should be replaced with csync2
+ * # provided that csync2 has already been configured
+ */
 static int
 subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                 crm_exit_t *exit_code)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    GString *peer_str = NULL;
+    gchar *dirname = NULL;
+    char *cmdline = NULL;
+    GList *peers = get_live_peers(out);
+
+    if (peers == NULL) {
+        /* pcmk_rc_node_unknown / CRM_EX_NOHOST might be better here. */
+        *exit_code = CRM_EX_UNAVAILABLE;
+        return ENOTCONN;
+    }
+
+    peer_str = g_string_sized_new(64);
+    for (GList *node = peers; node != NULL; node = node->next) {
+        pcmk__add_separated_word(&peer_str, 64, node->data, " ");
+    }
+
+    out->info(out, "Syncing %s to %s ...", PCMK__CIB_SECRETS_DIR, peer_str->str);
+    g_string_free(peer_str, TRUE);
+
+    dirname = g_path_get_dirname(PCMK__CIB_SECRETS_DIR);
+
+    rc = rsh_fn(out, peers, "rm -rf " PCMK__CIB_SECRETS_DIR);
+    if (rc != pcmk_rc_ok) {
+        *exit_code = CRM_EX_ERROR;
+        goto done;
+    }
+
+    cmdline = crm_strdup_printf("mkdir -p %s", dirname);
+    rc = rsh_fn(out, peers, cmdline);
+    free(cmdline);
+
+    if (rc != pcmk_rc_ok) {
+        *exit_code = CRM_EX_ERROR;
+        goto done;
+    }
+
+    rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
+
+    if (rc != pcmk_rc_ok) {
+        *exit_code = CRM_EX_ERROR;
+    }
+
+done:
+    g_list_free_full(peers, g_free);
+    g_free(dirname);
+    return rc;
 }
 
 static int
