@@ -364,19 +364,26 @@ static GOptionEntry command_entries[] = {
 };
 
 static GOptionEntry data_entries[] = {
-    /* @COMPAT: These arguments should be last-wins. We can have an enum option
-     * that stores the input type, along with a single string option that stores
-     * the XML string for --xml-text, filename for --xml-file, or NULL for
-     * --xml-pipe.
-     */
-    { "xml-text", 'X', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
-      &options.input_string, "Retrieve XML from the supplied string", "value" },
-
+    // @COMPAT These arguments should be last-one-wins
     { "xml-file", 'x', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
-      &options.input_file, "Retrieve XML from the named file", "value" },
+      &options.input_file,
+      "Retrieve XML from the named file. Currently this takes precedence\n"
+      INDENT "over --xml-text and --xml-pipe. In a future release, the last\n"
+      INDENT "one specified will be used.",
+      "FILE" },
+
+    { "xml-text", 'X', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
+      &options.input_string,
+      "Retrieve XML from the supplied string. Currently this takes precedence\n"
+      INDENT "over --xml-pipe, but --xml-file overrides this. In a future\n"
+      INDENT "release, the last one specified will be used.",
+      "STRING" },
 
     { "xml-pipe", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.input_stdin, "Retrieve XML from stdin", NULL },
+      &options.input_stdin,
+      "Retrieve XML from stdin. Currently --xml-file and --xml-text override\n"
+      INDENT "this. In a future release, the last one specified will be used.",
+      NULL },
 
     { NULL }
 };
