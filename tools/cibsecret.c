@@ -10,17 +10,27 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <glib.h>
+#include <libxml/parser.h>
 
+#include <crm/cib/internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/internal.h>
 #include <crm/common/logging_internal.h>
 #include <crm/common/output_internal.h>
 #include <crm/common/results.h>
 #include <crm/common/results_internal.h>
+#include <crm/common/xml.h>
+#include <crm/common/xpath_internal.h>
+#include <pacemaker.h>
+#include <pacemaker-internal.h>
 
 #define SUMMARY "cibsecret - manage sensitive information in Pacemaker CIB"
 
@@ -64,6 +74,46 @@ struct subcommand_entry {
 };
 
 static int
+run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
+{
+    int rc = pcmk_rc_ok;
+    gboolean success = FALSE;
+    GError *error = NULL;
+    gchar *sout = NULL;
+    gchar *serr = NULL;
+    gint status;
+
+    success = g_spawn_command_line_sync(cmdline, &sout, &serr, &status, &error);
+    if (!success) {
+        out->err(out, "%s", error->message);
+        out->err(out, "%s\n%s", sout, serr);
+        rc = pcmk_rc_error;
+        goto done;
+    }
+
+    success = g_spawn_check_exit_status(status, &error);
+    if (!success) {
+        out->err(out, "%s",  error->message);
+        out->err(out, "%s\n%s", sout, serr);
+        rc = pcmk_rc_error;
+    }
+
+done:
+    if (standard_out != NULL) {
+        *standard_out = strdup(sout);
+    }
+
+    g_free(sout);
+    g_free(serr);
+
+    if (error != NULL) {
+        g_error_free(error);
+    }
+
+    return rc;
+}
+
+static int
 pssh(pcmk__output_t *out, GList *nodes, const char *cmdline)
 {
     return pcmk_rc_ok;
@@ -97,6 +147,103 @@ static int
 scp(pcmk__output_t *out, GList *nodes, const char *to, const char *from)
 {
     return pcmk_rc_ok;
+}
+
+static bool
+host_reachable(pcmk__output_t *out, const char *uname)
+{
+    char *cmdline = NULL;
+    int rc = pcmk_rc_ok;
+
+    if (g_find_program_in_path("fping") && geteuid() == 0) {
+        cmdline = crm_strdup_printf("fping %s", uname);
+    } else {
+        cmdline = crm_strdup_printf("ping -c 2 -q %s", uname);
+    }
+
+    rc = run_cmdline(out, cmdline, NULL);
+    free(cmdline);
+    return rc == pcmk_rc_ok;
+}
+
+struct node_data {
+    pcmk__output_t *out;
+    const char *local_node;
+    const char *field;
+    GList *nodes;
+};
+
+static void
+node_iter_helper(xmlNode *result, void *user_data)
+{
+    struct node_data *data = user_data;
+    const char *uname = crm_element_value(result, PCMK_XA_UNAME);
+    const char *id = crm_element_value(result, data->field);
+    const char *name = pcmk__s(uname, id);
+
+    /* Filter out the local node */
+    if (pcmk__str_eq(name, data->local_node, pcmk__str_null_matches)) {
+        return;
+    }
+
+    /* Filter out nodes that aren't pingable, but warn the user */
+    if (!host_reachable(data->out, name)) {
+        data->out->info(data->out, "Node %s is down - you'll need to update it"
+                        "with `cibsecret sync` later", name);
+        return;
+    }
+
+    data->nodes = g_list_append(data->nodes, g_strdup(name));
+}
+
+static G_GNUC_UNUSED GList *
+get_live_peers(pcmk__output_t *out)
+{
+    int rc = pcmk_rc_ok;
+    char *local_name = NULL;
+    xmlNode *xml_node = NULL;
+    GList *retval = NULL;
+
+    struct node_data nd = {
+        .nodes = NULL
+    };
+
+    /* Get the local node name. */
+    rc = pcmk__query_node_name(out, 0, &local_name, 0);
+    if (rc != pcmk_rc_ok) {
+        out->err(out, "Could not get local node name");
+        goto done;
+    }
+
+    nd.local_node = local_name;
+    nd.out = out;
+
+    /* Get a list of all node names, filtering out the local node as well
+     * as those that don't respond to pings.
+     */
+    rc = cib__signon_query(out, NULL, &xml_node);
+    if (rc != pcmk_rc_ok) {
+        out->err(out, "Could not get list of cluster nodes");
+        goto done;
+    }
+
+    nd.field = PCMK_XA_ID;
+    pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
+                               node_iter_helper, &nd);
+    nd.field = PCMK_XA_VALUE;
+    pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_GUEST_NODE_CONFIG,
+                               node_iter_helper, &nd);
+    nd.field = PCMK_XA_ID;
+    pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_REMOTE_NODE_CONFIG,
+                               node_iter_helper, &nd);
+
+done:
+    free(local_name);
+    free(xml_node);
+
+    retval = g_list_copy(nd.nodes);
+    g_list_free(nd.nodes);
+    return retval;
 }
 
 static int
