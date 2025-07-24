@@ -62,6 +62,59 @@ static struct {
 int do_init(void);
 static int do_work(xmlNode *input, xmlNode **output);
 
+/*!
+ * \internal
+ * \brief Read input XML as specified on the command line
+ *
+ * Precedence is as follows:
+ * 1. Input file
+ * 2. Input string
+ * 3. stdin
+ *
+ * If multiple input sources are given, only the last occurrence of the one with
+ * the highest precedence is tried.
+ *
+ * If no input source is specified, this function does nothing.
+ *
+ * \param[out] input  Where to store parsed input
+ * \param[out] error  Where to store error information
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+read_input(xmlNode **input, GError **error)
+{
+    const char *source = NULL;
+
+    if (options.input_file != NULL) {
+        source = options.input_file;
+        *input = pcmk__xml_read(options.input_file);
+
+    } else if (options.input_string != NULL) {
+        source = "input string";
+        *input = pcmk__xml_parse(options.input_string);
+
+    } else if (options.input_stdin) {
+        source = "stdin";
+        *input = pcmk__xml_read(NULL);
+
+    } else {
+        *input = NULL;
+        return pcmk_rc_ok;
+    }
+
+    if (*input == NULL) {
+        int rc = pcmk_rc_bad_input;
+
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Couldn't parse input from %s", source);
+        return rc;
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 print_xml_output(xmlNode * xml)
 {
@@ -494,7 +547,6 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    const char *source = NULL;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
@@ -629,19 +681,14 @@ main(int argc, char **argv)
                               cib_no_children);
     }
 
-    if (options.input_file != NULL) {
-        input = pcmk__xml_read(options.input_file);
-        source = options.input_file;
+    if (read_input(&input, &error) != pcmk_rc_ok) {
+        goto done;
+    }
 
-    } else if (options.input_string != NULL) {
-        input = pcmk__xml_parse(options.input_string);
-        source = "input string";
-
-    } else if (options.input_stdin) {
-        input = pcmk__xml_read(NULL);
-        source = "STDIN";
-
-    } else if (options.acl_render_mode != pcmk__acl_render_none) {
+    /* @TODO Since this was added by 99f414d, we have not entered this ACL
+     * render setup section if any input was provided. Is that correct?
+     */
+    if ((input == NULL) && (options.acl_render_mode != pcmk__acl_render_none)) {
         char *username = pcmk__uid2username(geteuid());
         bool required = pcmk_acl_required(username);
 
@@ -684,13 +731,6 @@ main(int argc, char **argv)
          */
         acl_cred = options.cib_user;
         options.cib_user = NULL;
-    }
-
-    if ((input == NULL) && (source != NULL)) {
-        exit_code = CRM_EX_CONFIG;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Couldn't parse input from %s.", source);
-        goto done;
     }
 
     if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_casei)) {
