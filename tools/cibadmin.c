@@ -126,7 +126,7 @@ print_xml_output(xmlNode * xml)
     }
 
     if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
-        const char *id = crm_element_value(xml, PCMK_XA_ID);
+        const char *id = pcmk__xe_get(xml, PCMK_XA_ID);
 
         if (pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
             xmlNode *child = NULL;

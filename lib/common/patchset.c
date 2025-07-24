@@ -119,7 +119,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
              pIter = pIter->next) {
             nodepriv = pIter->_private;
             if (!pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                value = crm_element_value(xml, (const char *) pIter->name);
+                value = pcmk__xe_get(xml, (const char *) pIter->name);
                 crm_xml_add(result, (const char *)pIter->name, value);
             }
         }
@@ -208,7 +208,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     v = pcmk__xe_create(version, PCMK_XE_SOURCE);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(source, vfields[lpc]);
+        const char *value = pcmk__xe_get(source, vfields[lpc]);
 
         if (value == NULL) {
             value = "1";
@@ -218,7 +218,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     v = pcmk__xe_create(version, PCMK_XE_TARGET);
     for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = crm_element_value(target, vfields[lpc]);
+        const char *value = pcmk__xe_get(target, vfields[lpc]);
 
         if (value == NULL) {
             value = "1";
@@ -274,11 +274,11 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         if (*config_changed) {
             crm_xml_add(target, PCMK_XA_NUM_UPDATES, "0");
 
-            crm_element_value_int(target, PCMK_XA_EPOCH, &counter);
+            pcmk__xe_get_int(target, PCMK_XA_EPOCH, &counter);
             crm_xml_add_int(target, PCMK_XA_EPOCH, counter + 1);
 
         } else {
-            crm_element_value_int(target, PCMK_XA_NUM_UPDATES, &counter);
+            pcmk__xe_get_int(target, PCMK_XA_NUM_UPDATES, &counter);
             crm_xml_add_int(target, PCMK_XA_NUM_UPDATES, counter + 1);
         }
     }
@@ -344,7 +344,7 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
     CRM_CHECK((patchset != NULL) && (source != NULL) && (target != NULL),
               return EINVAL);
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_err("Unknown patch format: %d", format);
         return EINVAL;
@@ -377,8 +377,8 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
      */
     for (int i = 0; i < PCMK__NELEM(vfields); i++) {
         if (source_xml != NULL) {
-            if (crm_element_value_int(source_xml, vfields[i],
-                                      &(source[i])) != 0) {
+            if (pcmk__xe_get_int(source_xml, vfields[i],
+                                 &(source[i])) != pcmk_rc_ok) {
                 return EINVAL;
             }
             crm_trace("Got source[%s]=%d", vfields[i], source[i]);
@@ -389,8 +389,8 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
         }
 
         if (target_xml != NULL) {
-            if (crm_element_value_int(target_xml, vfields[i],
-                                      &(target[i])) != 0) {
+            if (pcmk__xe_get_int(target_xml, vfields[i],
+                                 &(target[i])) != pcmk_rc_ok) {
                 return EINVAL;
             }
             crm_trace("Got target[%s]=%d", vfields[i], target[i]);
@@ -427,7 +427,8 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
          * Preserve behavior for xml_apply_patchset(). Use new behavior in a
          * future replacement.
          */
-        if (crm_element_value_int(cib_root, vfields[i], &(current[i])) == 0) {
+        if (pcmk__xe_get_int(cib_root, vfields[i],
+                             &(current[i])) == pcmk_rc_ok) {
             crm_trace("Got %d for current[%s]%s",
                       current[i], vfields[i],
                       ((current[i] < 0)? ", using 0" : ""));
@@ -628,8 +629,8 @@ sort_change_obj_by_position(gconstpointer a, gconstpointer b)
     int position_a = -1;
     int position_b = -1;
 
-    crm_element_value_int(change_obj_a->change, PCMK_XE_POSITION, &position_a);
-    crm_element_value_int(change_obj_b->change, PCMK_XE_POSITION, &position_b);
+    pcmk__xe_get_int(change_obj_a->change, PCMK_XE_POSITION, &position_a);
+    pcmk__xe_get_int(change_obj_b->change, PCMK_XE_POSITION, &position_b);
 
     if (position_a < position_b) {
         return -1;
@@ -661,8 +662,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
     for (change = pcmk__xml_first_child(patchset); change != NULL;
          change = pcmk__xml_next(change)) {
         xmlNode *match = NULL;
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
         int position = -1;
 
         if (op == NULL) {
@@ -675,7 +676,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
          * PCMK_XE_POSITION
          */
         if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
         }
         match = search_v2_xpath(xml, xpath, position);
         crm_trace("Performing %s on %s with %p", op, xpath, match);
@@ -749,8 +750,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         change = change_obj->change;
 
-        op = crm_element_value(change, PCMK_XA_OPERATION);
-        xpath = crm_element_value(change, PCMK_XA_PATH);
+        op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         crm_trace("Continue performing %s on %s with %p", op, xpath, match);
 
@@ -760,7 +761,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             xmlNode *match_child = NULL;
 
             match_child = match->children;
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
 
             while ((match_child != NULL)
                    && (position != pcmk__xml_position(match_child, pcmk__xf_skip))) {
@@ -781,7 +782,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
         } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
             int position = 0;
 
-            crm_element_value_int(change, PCMK_XE_POSITION, &position);
+            pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
                 xmlNode *match_child = NULL;
                 int p = position;
@@ -852,7 +853,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
         }
     }
 
-    digest = crm_element_value(patchset, PCMK__XA_DIGEST);
+    digest = pcmk__xe_get(patchset, PCMK__XA_DIGEST);
     if (digest != NULL) {
         /* Make original XML available for logging in case result doesn't have
          * expected digest
@@ -861,7 +862,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
     }
 
     if (rc == pcmk_ok) {
-        crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+        pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
 
         if (format != 2) {
             crm_err("Unknown patch format: %d", format);
@@ -922,7 +923,7 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 
     pcmk__assert(patchset != NULL);
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_warn("Unknown patch format: %d", format);
         return false;
@@ -943,8 +944,8 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
                                                       NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, PCMK_XE_CHANGE)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *diff_xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *diff_xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (pcmk__str_eq(diff_xpath, element_regex, pcmk__str_regex)) {
             // Change to an existing element
@@ -983,7 +984,7 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
                                                  NULL);
     int format = 1;
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_err("Unknown patch format: %d", format);
         return true;
@@ -991,14 +992,14 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 
     if (source != NULL) {
         for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(source, vfields[i], &(del[i]));
+            pcmk__xe_get_int(source, vfields[i], &(del[i]));
             crm_trace("Got %d for del[%s]", del[i], vfields[i]);
         }
     }
 
     if (target != NULL) {
         for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-            crm_element_value_int(target, vfields[i], &(add[i]));
+            pcmk__xe_get_int(target, vfields[i], &(add[i]));
             crm_trace("Got %d for add[%s]", add[i], vfields[i]);
         }
     }

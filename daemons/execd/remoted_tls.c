@@ -129,11 +129,10 @@ lrmd_remote_client_msg(gpointer data)
         return 0;
     }
 
-    crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
+    pcmk__xe_get_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
     crm_trace("Processing remote client request %d", id);
     if (!client->name) {
-        client->name = crm_element_value_copy(request,
-                                              PCMK__XA_LRMD_CLIENTNAME);
+        client->name = pcmk__xe_get_copy(request, PCMK__XA_LRMD_CLIENTNAME);
     }
 
     lrmd_call_id++;

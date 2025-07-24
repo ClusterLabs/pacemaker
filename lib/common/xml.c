@@ -1137,7 +1137,7 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
                   const char *old_value)
 {
     xml_doc_private_t *docpriv = new_xml->doc->_private;
-    char *vcopy = crm_element_value_copy(new_xml, attr_name);
+    char *vcopy = pcmk__xe_get_copy(new_xml, attr_name);
 
     crm_trace("XML attribute %s was changed from '%s' to '%s' in %s",
               attr_name, old_value, vcopy, element);
@@ -1211,7 +1211,7 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                              pcmk__xf_skip);
             int old_pos = pcmk__xml_position((xmlNode*) old_attr,
                                              pcmk__xf_skip);
-            const char *new_value = crm_element_value(new_xml, name);
+            const char *new_value = pcmk__xe_get(new_xml, name);
 
             // This attribute isn't new
             pcmk__clear_xml_flags(nodepriv, pcmk__xf_created);

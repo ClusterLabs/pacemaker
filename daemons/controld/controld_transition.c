@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -125,9 +125,9 @@ do_te_invoke(long long action,
     } else if (action & A_TE_INVOKE) {
         ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
         xmlNode *graph_data = input->xml;
-        const char *ref = crm_element_value(input->msg, PCMK_XA_REFERENCE);
-        const char *graph_input = crm_element_value(input->msg,
-                                                    PCMK__XA_CRM_TGRAPH_IN);
+        const char *ref = pcmk__xe_get(input->msg, PCMK_XA_REFERENCE);
+        const char *graph_input = pcmk__xe_get(input->msg,
+                                               PCMK__XA_CRM_TGRAPH_IN);
 
         if (graph_data == NULL) {
             crm_log_xml_err(input->msg, "Bad command");

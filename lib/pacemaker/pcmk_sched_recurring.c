@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,7 +42,7 @@ xe_interval(const xmlNode *xml)
 {
     guint interval_ms = 0U;
 
-    pcmk_parse_interval_spec(crm_element_value(xml, PCMK_META_INTERVAL),
+    pcmk_parse_interval_spec(pcmk__xe_get(xml, PCMK_META_INTERVAL),
                              &interval_ms);
     return interval_ms;
 }
@@ -68,8 +68,7 @@ is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
          op != NULL; op = pcmk__xe_next(op, PCMK_XE_OP)) {
 
         // Check whether action name and interval match
-        if (!pcmk__str_eq(crm_element_value(op, PCMK_XA_NAME), name,
-                          pcmk__str_none)
+        if (!pcmk__str_eq(pcmk__xe_get(op, PCMK_XA_NAME), name, pcmk__str_none)
             || (xe_interval(op) != interval_ms)) {
             continue;
         }
@@ -143,7 +142,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
         return false; // Shouldn't be possible (unless CIB was manually edited)
     }
 
-    op->name = crm_element_value(xml, PCMK_XA_NAME);
+    op->name = pcmk__xe_get(xml, PCMK_XA_NAME);
     if (op_cannot_recur(op->name)) {
         pcmk__config_err("Ignoring %s because %s action cannot be recurring",
                          op->id, pcmk__s(op->name, "unnamed"));
@@ -156,7 +155,7 @@ is_recurring_history(const pcmk_resource_t *rsc, const xmlNode *xml,
     }
 
     // Ensure role is valid if specified
-    role = crm_element_value(xml, PCMK_XA_ROLE);
+    role = pcmk__xe_get(xml, PCMK_XA_ROLE);
     if (role == NULL) {
         op->role = pcmk_role_unknown;
     } else {

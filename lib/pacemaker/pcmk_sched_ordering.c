@@ -75,10 +75,10 @@ static enum pe_order_kind
 get_ordering_type(const xmlNode *xml_obj)
 {
     enum pe_order_kind kind_e = pe_order_kind_mandatory;
-    const char *kind = crm_element_value(xml_obj, PCMK_XA_KIND);
+    const char *kind = pcmk__xe_get(xml_obj, PCMK_XA_KIND);
 
     if (kind == NULL) {
-        const char *score = crm_element_value(xml_obj, PCMK_XA_SCORE);
+        const char *score = pcmk__xe_get(xml_obj, PCMK_XA_SCORE);
 
         kind_e = pe_order_kind_mandatory;
 
@@ -135,8 +135,8 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
     enum pe_order_kind kind = parent_kind; // Default to parent's kind
 
     // Check ordering XML for explicit kind
-    if ((crm_element_value(xml_obj, PCMK_XA_KIND) != NULL)
-        || (crm_element_value(xml_obj, PCMK_XA_SCORE) != NULL)) {
+    if ((pcmk__xe_get(xml_obj, PCMK_XA_KIND) != NULL)
+        || (pcmk__xe_get(xml_obj, PCMK_XA_SCORE) != NULL)) {
         kind = get_ordering_type(xml_obj);
     }
 
@@ -239,7 +239,7 @@ get_ordering_resource(const xmlNode *xml, const char *resource_attr,
                       const pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *rsc = NULL;
-    const char *rsc_id = crm_element_value(xml, resource_attr);
+    const char *rsc_id = pcmk__xe_get(xml, resource_attr);
 
     if (rsc_id == NULL) {
         pcmk__config_err("Ignoring constraint '%s' without %s",
@@ -402,7 +402,7 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     CRM_CHECK(xml_obj != NULL, return);
 
-    id = crm_element_value(xml_obj, PCMK_XA_ID);
+    id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
                          xml_obj->name);
@@ -419,12 +419,12 @@ unpack_simple_rsc_order(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return;
     }
 
-    action_first = crm_element_value(xml_obj, PCMK_XA_FIRST_ACTION);
+    action_first = pcmk__xe_get(xml_obj, PCMK_XA_FIRST_ACTION);
     if (action_first == NULL) {
         action_first = PCMK_ACTION_START;
     }
 
-    action_then = crm_element_value(xml_obj, PCMK_XA_THEN_ACTION);
+    action_then = pcmk__xe_get(xml_obj, PCMK_XA_THEN_ACTION);
     if (action_then == NULL) {
         action_then = action_first;
     }
@@ -568,9 +568,9 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
 
     char *key = NULL;
     const char *id = pcmk__xe_id(set);
-    const char *action = crm_element_value(set, PCMK_XA_ACTION);
-    const char *sequential_s = crm_element_value(set, PCMK_XA_SEQUENTIAL);
-    const char *kind_s = crm_element_value(set, PCMK_XA_KIND);
+    const char *action = pcmk__xe_get(set, PCMK_XA_ACTION);
+    const char *sequential_s = pcmk__xe_get(set, PCMK_XA_SEQUENTIAL);
+    const char *kind_s = pcmk__xe_get(set, PCMK_XA_KIND);
 
     if (action == NULL) {
         action = PCMK_ACTION_START;
@@ -684,8 +684,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     pcmk_resource_t *rsc_1 = NULL;
     pcmk_resource_t *rsc_2 = NULL;
 
-    const char *action_1 = crm_element_value(set1, PCMK_XA_ACTION);
-    const char *action_2 = crm_element_value(set2, PCMK_XA_ACTION);
+    const char *action_1 = pcmk__xe_get(set1, PCMK_XA_ACTION);
+    const char *action_2 = pcmk__xe_get(set2, PCMK_XA_ACTION);
 
     uint32_t flags = pcmk__ar_none;
 
@@ -899,8 +899,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    id_first = crm_element_value(xml_obj, PCMK_XA_FIRST);
-    id_then = crm_element_value(xml_obj, PCMK_XA_THEN);
+    id_first = pcmk__xe_get(xml_obj, PCMK_XA_FIRST);
+    id_then = pcmk__xe_get(xml_obj, PCMK_XA_THEN);
     if ((id_first == NULL) || (id_then == NULL)) {
         return pcmk_rc_ok;
     }
@@ -926,8 +926,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    action_first = crm_element_value(xml_obj, PCMK_XA_FIRST_ACTION);
-    action_then = crm_element_value(xml_obj, PCMK_XA_THEN_ACTION);
+    action_first = pcmk__xe_get(xml_obj, PCMK_XA_FIRST_ACTION);
+    action_then = pcmk__xe_get(xml_obj, PCMK_XA_THEN_ACTION);
 
     *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
@@ -999,8 +999,8 @@ pcmk__unpack_ordering(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
-    const char *invert = crm_element_value(xml_obj, PCMK_XA_SYMMETRICAL);
+    const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
+    const char *invert = pcmk__xe_get(xml_obj, PCMK_XA_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
     enum ordering_symmetry symmetry = get_ordering_symmetry(xml_obj, kind,

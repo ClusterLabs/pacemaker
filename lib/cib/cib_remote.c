@@ -125,7 +125,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             break;
         }
 
-        crm_element_value_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
+        pcmk__xe_get_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
 
         if (reply_id == msg_id) {
             break;
@@ -160,7 +160,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     crm_trace("Synchronous reply received");
 
     /* Start processing the reply... */
-    if (crm_element_value_int(op_reply, PCMK__XA_CIB_RC, &rc) != 0) {
+    if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
         rc = -EPROTO;
     }
 
@@ -246,7 +246,7 @@ cib_remote_callback_dispatch(gpointer user_data)
         return 0;
     }
 
-    type = crm_element_value(msg, PCMK__XA_T);
+    type = pcmk__xe_get(msg, PCMK__XA_T);
 
     crm_trace("Activating %s callbacks...", type);
 
@@ -434,9 +434,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     } else {
         /* grab the token */
-        const char *msg_type = crm_element_value(answer, PCMK__XA_CIB_OP);
-        const char *tmp_ticket = crm_element_value(answer,
-                                                   PCMK__XA_CIB_CLIENTID);
+        const char *msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
+        const char *tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
 
         if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             crm_err("Invalid registration message: %s", msg_type);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -59,7 +59,7 @@ pcmk__condition_type(const xmlNode *condition)
 
     // Expression types based on node attribute name
 
-    name = crm_element_value(condition, PCMK_XA_ATTRIBUTE);
+    name = pcmk__xe_get(condition, PCMK_XA_ATTRIBUTE);
 
     if (pcmk__str_any_of(name, CRM_ATTR_UNAME, CRM_ATTR_KIND, CRM_ATTR_ID,
                          NULL)) {
@@ -112,7 +112,7 @@ check_range(const xmlNode *date_spec, const char *id, const char *attr,
             uint32_t value)
 {
     int rc = pcmk_rc_ok;
-    const char *range = crm_element_value(date_spec, attr);
+    const char *range = pcmk__xe_get(date_spec, attr);
     long long low, high;
 
     if (range == NULL) {
@@ -486,7 +486,7 @@ pcmk__evaluate_date_expression(const xmlNode *date_expression,
         return pcmk_rc_unpack_error;
     }
 
-    op = crm_element_value(date_expression, PCMK_XA_OPERATION);
+    op = pcmk__xe_get(date_expression, PCMK_XA_OPERATION);
     if (pcmk__str_eq(op, PCMK_VALUE_IN_RANGE,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         rc = evaluate_in_range(date_expression, id, now, next_change);
@@ -988,7 +988,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     /* Get name of node attribute to compare (expanding any %0-%9 to
      * regular expression submatches)
      */
-    attr = crm_element_value(expression, PCMK_XA_ATTRIBUTE);
+    attr = pcmk__xe_get(expression, PCMK_XA_ATTRIBUTE);
     if (attr == NULL) {
         pcmk__config_err("Treating " PCMK_XE_EXPRESSION " %s as not passing "
                          "because " PCMK_XA_ATTRIBUTE " was not specified", id);
@@ -1002,7 +1002,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     }
 
     // Get and validate operation
-    op = crm_element_value(expression, PCMK_XA_OPERATION);
+    op = pcmk__xe_get(expression, PCMK_XA_OPERATION);
     comparison = pcmk__parse_comparison(op);
     if (comparison == pcmk__comparison_unknown) {
         // Not possible with schema validation enabled
@@ -1020,7 +1020,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     }
 
     // How reference value is obtained (literal, resource meta-attribute, etc.)
-    source_s = crm_element_value(expression, PCMK_XA_VALUE_SOURCE);
+    source_s = pcmk__xe_get(expression, PCMK_XA_VALUE_SOURCE);
     source = pcmk__parse_source(source_s);
     if (source == pcmk__source_unknown) {
         // Not possible with schema validation enabled
@@ -1032,7 +1032,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     }
 
     // Get and validate reference value
-    value = crm_element_value(expression, PCMK_XA_VALUE);
+    value = pcmk__xe_get(expression, PCMK_XA_VALUE);
     switch (comparison) {
         case pcmk__comparison_defined:
         case pcmk__comparison_undefined:
@@ -1065,7 +1065,7 @@ pcmk__evaluate_attr_expression(const xmlNode *expression,
     }
 
     // Get and validate value type (after expanding reference value)
-    type_s = crm_element_value(expression, PCMK_XA_TYPE);
+    type_s = pcmk__xe_get(expression, PCMK_XA_TYPE);
     type = pcmk__parse_type(type_s, comparison, actual, reference);
     if (type == pcmk__type_unknown) {
         // Not possible with schema validation enabled
@@ -1129,7 +1129,7 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     }
 
     // Compare resource standard
-    standard = crm_element_value(rsc_expression, PCMK_XA_CLASS);
+    standard = pcmk__xe_get(rsc_expression, PCMK_XA_CLASS);
     if ((standard != NULL)
         && !pcmk__str_eq(standard, rule_input->rsc_standard, pcmk__str_none)) {
         crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
@@ -1139,7 +1139,7 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     }
 
     // Compare resource provider
-    provider = crm_element_value(rsc_expression, PCMK_XA_PROVIDER);
+    provider = pcmk__xe_get(rsc_expression, PCMK_XA_PROVIDER);
     if ((provider != NULL)
         && !pcmk__str_eq(provider, rule_input->rsc_provider, pcmk__str_none)) {
         crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
@@ -1149,7 +1149,7 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
     }
 
     // Compare resource agent type
-    type = crm_element_value(rsc_expression, PCMK_XA_TYPE);
+    type = pcmk__xe_get(rsc_expression, PCMK_XA_TYPE);
     if ((type != NULL)
         && !pcmk__str_eq(type, rule_input->rsc_agent, pcmk__str_none)) {
         crm_trace(PCMK_XE_RSC_EXPRESSION " %s is unsatisfied because "
@@ -1197,7 +1197,7 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
     }
 
     // Validate operation name
-    name = crm_element_value(op_expression, PCMK_XA_NAME);
+    name = pcmk__xe_get(op_expression, PCMK_XA_NAME);
     if (name == NULL) { // Not possible with schema validation enabled
         pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
                          "passing because it has no " PCMK_XA_NAME, id);
@@ -1205,7 +1205,7 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
     }
 
     // Validate operation interval
-    interval_s = crm_element_value(op_expression, PCMK_META_INTERVAL);
+    interval_s = pcmk__xe_get(op_expression, PCMK_META_INTERVAL);
     if (pcmk_parse_interval_spec(interval_s, &interval_ms) != pcmk_rc_ok) {
         pcmk__config_err("Treating " PCMK_XE_OP_EXPRESSION " %s as not "
                          "passing because '%s' is not a valid "
@@ -1328,7 +1328,7 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
         return pcmk_rc_unpack_error;
     }
 
-    value = crm_element_value(rule, PCMK_XA_BOOLEAN_OP);
+    value = pcmk__xe_get(rule, PCMK_XA_BOOLEAN_OP);
     combine = pcmk__parse_combine(value);
     switch (combine) {
         case pcmk__combine_and:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -481,13 +481,13 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
     pcmk_resource_t *other = NULL;
     pcmk_resource_t *resource = NULL;
     const char *set_id = pcmk__xe_id(set);
-    const char *role = crm_element_value(set, PCMK_XA_ROLE);
+    const char *role = pcmk__xe_get(set, PCMK_XA_ROLE);
     bool with_previous = false;
     int local_score = score;
     bool sequential = false;
     uint32_t flags = pcmk__coloc_none;
     const char *xml_rsc_id = NULL;
-    const char *score_s = crm_element_value(set, PCMK_XA_SCORE);
+    const char *score_s = pcmk__xe_get(set, PCMK_XA_SCORE);
 
     if (score_s != NULL) {
         int rc = pcmk_parse_score(score_s, &local_score, 0);
@@ -509,8 +509,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
      * resources in a positive-score set are colocated with the previous or next
      * resource.
      */
-    if (pcmk__str_eq(crm_element_value(set, PCMK__XA_ORDERING),
-                     PCMK__VALUE_GROUP,
+    if (pcmk__str_eq(pcmk__xe_get(set, PCMK__XA_ORDERING), PCMK__VALUE_GROUP,
                      pcmk__str_null_matches|pcmk__str_casei)) {
         with_previous = true;
     } else {
@@ -630,8 +629,8 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
     pcmk_resource_t *rsc_2 = NULL;
 
     const char *xml_rsc_id = NULL;
-    const char *role_1 = crm_element_value(set1, PCMK_XA_ROLE);
-    const char *role_2 = crm_element_value(set2, PCMK_XA_ROLE);
+    const char *role_1 = pcmk__xe_get(set1, PCMK_XA_ROLE);
+    const char *role_2 = pcmk__xe_get(set2, PCMK_XA_ROLE);
 
     int rc = pcmk_rc_ok;
     bool sequential = false;
@@ -797,12 +796,11 @@ unpack_simple_colocation(const xmlNode *xml_obj, const char *id, int score,
 {
     uint32_t flags = pcmk__coloc_none;
 
-    const char *dependent_id = crm_element_value(xml_obj, PCMK_XA_RSC);
-    const char *primary_id = crm_element_value(xml_obj, PCMK_XA_WITH_RSC);
-    const char *dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
-    const char *primary_role = crm_element_value(xml_obj,
-                                                 PCMK_XA_WITH_RSC_ROLE);
-    const char *attr = crm_element_value(xml_obj, PCMK_XA_NODE_ATTRIBUTE);
+    const char *dependent_id = pcmk__xe_get(xml_obj, PCMK_XA_RSC);
+    const char *primary_id = pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC);
+    const char *dependent_role = pcmk__xe_get(xml_obj, PCMK_XA_RSC_ROLE);
+    const char *primary_role = pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC_ROLE);
+    const char *attr = pcmk__xe_get(xml_obj, PCMK_XA_NODE_ATTRIBUTE);
 
     pcmk_resource_t *primary = NULL;
     pcmk_resource_t *dependent = NULL;
@@ -873,8 +871,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_ok;
     }
 
-    dependent_id = crm_element_value(xml_obj, PCMK_XA_RSC);
-    primary_id = crm_element_value(xml_obj, PCMK_XA_WITH_RSC);
+    dependent_id = pcmk__xe_get(xml_obj, PCMK_XA_RSC);
+    primary_id = pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC);
     if ((dependent_id == NULL) || (primary_id == NULL)) {
         return pcmk_rc_ok;
     }
@@ -905,8 +903,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         return pcmk_rc_unpack_error;
     }
 
-    dependent_role = crm_element_value(xml_obj, PCMK_XA_RSC_ROLE);
-    primary_role = crm_element_value(xml_obj, PCMK_XA_WITH_RSC_ROLE);
+    dependent_role = pcmk__xe_get(xml_obj, PCMK_XA_RSC_ROLE);
+    primary_role = pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC_ROLE);
 
     *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
@@ -979,7 +977,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     xmlNode *orig_xml = NULL;
     xmlNode *expanded_xml = NULL;
 
-    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+    const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
     const char *score = NULL;
     const char *influence_s = NULL;
 
@@ -998,7 +996,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         xml_obj = expanded_xml;
     }
 
-    score = crm_element_value(xml_obj, PCMK_XA_SCORE);
+    score = pcmk__xe_get(xml_obj, PCMK_XA_SCORE);
     if (score != NULL) {
         int rc = pcmk_parse_score(score, &score_i, 0);
 
@@ -1008,7 +1006,7 @@ pcmk__unpack_colocation(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
             return;
         }
     }
-    influence_s = crm_element_value(xml_obj, PCMK_XA_INFLUENCE);
+    influence_s = pcmk__xe_get(xml_obj, PCMK_XA_INFLUENCE);
 
     for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
          set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {

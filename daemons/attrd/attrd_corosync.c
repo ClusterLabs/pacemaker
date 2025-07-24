@@ -39,7 +39,7 @@ attrd_confirmation(int callid)
 static void
 attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
-    const char *election_op = crm_element_value(xml, PCMK__XA_CRM_TASK);
+    const char *election_op = pcmk__xe_get(xml, PCMK__XA_CRM_TASK);
 
     if (election_op) {
         attrd_handle_election_op(peer, xml);
@@ -64,7 +64,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, PCMK_XA_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
         CRM_CHECK(request.op != NULL, return);
 
         attrd_handle_request(&request);
@@ -81,7 +81,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
              * response so the originating peer knows what they're a confirmation
              * for.
              */
-            crm_element_value_int(xml, PCMK__XA_CALL_ID, &callid);
+            pcmk__xe_get_int(xml, PCMK__XA_CALL_ID, &callid);
             reply = attrd_confirmation(callid);
 
             /* And then send the confirmation back to the originating peer.  This
@@ -234,7 +234,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     bool changed = false;
     attribute_value_t *v = NULL;
     const char *prev_xml_id = NULL;
-    const char *node_xml_id = crm_element_value(xml, PCMK__XA_ATTR_HOST_ID);
+    const char *node_xml_id = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST_ID);
 
     // Create entry for value if not already existing
     v = g_hash_table_lookup(a->values, host);
@@ -254,7 +254,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     }
 
     // If value is for a Pacemaker Remote node, remember that
-    crm_element_value_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
+    pcmk__xe_get_int(xml, PCMK__XA_ATTR_IS_REMOTE, &is_remote);
     if (is_remote) {
         attrd_set_value_flags(v, attrd_value_remote);
         pcmk__assert(pcmk__cluster_lookup_remote_node(host) != NULL);
@@ -310,8 +310,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     } else {
         int is_force_write = 0;
 
-        crm_element_value_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE,
-                              &is_force_write);
+        pcmk__xe_get_int(xml, PCMK__XA_ATTRD_IS_FORCE_WRITE, &is_force_write);
 
         if (is_force_write == 1 && a->timeout_ms && a->timer) {
             /* Save forced writing and set change flag. */
@@ -352,9 +351,9 @@ attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
                       bool filter)
 {
     attribute_t *a = NULL;
-    const char *attr = crm_element_value(xml, PCMK__XA_ATTR_NAME);
-    const char *value = crm_element_value(xml, PCMK__XA_ATTR_VALUE);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
+    const char *attr = pcmk__xe_get(xml, PCMK__XA_ATTR_NAME);
+    const char *value = pcmk__xe_get(xml, PCMK__XA_ATTR_VALUE);
+    const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
 
     if (attr == NULL) {
         crm_warn("Could not update attribute: peer did not specify name");
@@ -453,11 +452,10 @@ void
 attrd_peer_clear_failure(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
-    const char *rsc = crm_element_value(xml, PCMK__XA_ATTR_RESOURCE);
-    const char *host = crm_element_value(xml, PCMK__XA_ATTR_HOST);
-    const char *op = crm_element_value(xml, PCMK__XA_ATTR_CLEAR_OPERATION);
-    const char *interval_spec = crm_element_value(xml,
-                                                  PCMK__XA_ATTR_CLEAR_INTERVAL);
+    const char *rsc = pcmk__xe_get(xml, PCMK__XA_ATTR_RESOURCE);
+    const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
+    const char *op = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_OPERATION);
+    const char *interval_spec = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_INTERVAL);
     guint interval_ms = 0U;
     char *attr = NULL;
     GHashTableIter iter;
@@ -518,8 +516,8 @@ attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
     for (xmlNode *child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, NULL)) {
 
-        attrd_peer_update(peer, child,
-                          crm_element_value(child, PCMK__XA_ATTR_HOST), true);
+        attrd_peer_update(peer, child, pcmk__xe_get(child, PCMK__XA_ATTR_HOST),
+                          true);
     }
 
     if (peer_won) {

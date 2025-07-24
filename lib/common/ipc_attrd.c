@@ -26,7 +26,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
     const char *name = NULL;
     pcmk__attrd_query_pair_t *pair;
 
-    name = crm_element_value(msg_data, PCMK__XA_ATTR_NAME);
+    name = pcmk__xe_get(msg_data, PCMK__XA_ATTR_NAME);
 
     for (xmlNode *node = pcmk__xe_first_child(msg_data, PCMK_XE_NODE, NULL,
                                               NULL);
@@ -34,9 +34,9 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 
         pair = pcmk__assert_alloc(1, sizeof(pcmk__attrd_query_pair_t));
 
-        pair->node = crm_element_value(node, PCMK__XA_ATTR_HOST);
+        pair->node = pcmk__xe_get(node, PCMK__XA_ATTR_HOST);
         pair->name = name;
-        pair->value = crm_element_value(node, PCMK__XA_ATTR_VALUE);
+        pair->value = pcmk__xe_get(node, PCMK__XA_ATTR_VALUE);
         data->data.pairs = g_list_prepend(data->data.pairs, pair);
     }
 }
@@ -44,7 +44,7 @@ set_pairs_data(pcmk__attrd_api_reply_t *data, xmlNode *msg_data)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, PCMK_XA_TASK);
+    const char *command = pcmk__xe_get(request, PCMK_XA_TASK);
 
     return pcmk__str_any_of(command,
                             PCMK__ATTRD_CMD_CLEAR_FAILURE,
@@ -71,7 +71,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     }
 
     /* Do some basic validation of the reply */
-    value = crm_element_value(reply, PCMK__XA_T);
+    value = pcmk__xe_get(reply, PCMK__XA_T);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, PCMK__VALUE_ATTRD, pcmk__str_none)) {
         crm_info("Unrecognizable message from attribute manager: "
@@ -81,7 +81,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    value = crm_element_value(reply, PCMK__XA_SUBT);
+    value = pcmk__xe_get(reply, PCMK__XA_SUBT);
 
     /* Only the query command gets a reply for now. NULL counts as query for
      * backward compatibility with attribute managers <2.1.3 that didn't set it.

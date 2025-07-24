@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -385,10 +385,10 @@ throttle_update(xmlNode *xml)
     int max = 0;
     int mode = 0;
     struct throttle_record_s *r = NULL;
-    const char *from = crm_element_value(xml, PCMK__XA_SRC);
+    const char *from = pcmk__xe_get(xml, PCMK__XA_SRC);
 
-    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MODE, &mode);
-    crm_element_value_int(xml, PCMK__XA_CRM_LIMIT_MAX, &max);
+    pcmk__xe_get_int(xml, PCMK__XA_CRM_LIMIT_MODE, &mode);
+    pcmk__xe_get_int(xml, PCMK__XA_CRM_LIMIT_MAX, &max);
 
     r = g_hash_table_lookup(throttle_records, from);
 

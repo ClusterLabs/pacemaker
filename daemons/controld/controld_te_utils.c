@@ -420,8 +420,8 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         g_string_free(local_path, TRUE);
 
     } else {
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *path = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *path = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if(change == reason) {
             if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
@@ -451,22 +451,20 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
             do_crm_log(level, "Transition %d aborted by %s doing %s %s=%s: %s "
                        QB_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
                        controld_globals.transition_graph->id,
-                       crm_element_value(reason, PCMK_XA_ID), op,
-                       crm_element_value(reason, PCMK_XA_NAME),
-                       crm_element_value(reason, PCMK_XA_VALUE),
+                       pcmk__xe_get(reason, PCMK_XA_ID), op,
+                       pcmk__xe_get(reason, PCMK_XA_NAME),
+                       pcmk__xe_get(reason, PCMK_XA_VALUE),
                        abort_text, add[0], add[1], add[2], fn, line, path,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 
         } else if (pcmk__xe_is(reason, PCMK__XE_LRM_RSC_OP)) {
-            const char *magic = crm_element_value(reason,
-                                                  PCMK__XA_TRANSITION_MAGIC);
+            const char *magic = pcmk__xe_get(reason, PCMK__XA_TRANSITION_MAGIC);
 
             do_crm_log(level, "Transition %d aborted by operation %s '%s' on %s: %s "
                        QB_XS " magic=%s cib=%d.%d.%d source=%s:%d complete=%s",
                        controld_globals.transition_graph->id,
-                       crm_element_value(reason, PCMK__XA_OPERATION_KEY), op,
-                       crm_element_value(reason, PCMK__META_ON_NODE),
-                       abort_text,
+                       pcmk__xe_get(reason, PCMK__XA_OPERATION_KEY), op,
+                       pcmk__xe_get(reason, PCMK__META_ON_NODE), abort_text,
                        magic, add[0], add[1], add[2], fn, line,
                        pcmk__btoa(controld_globals.transition_graph->complete));
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -70,7 +70,7 @@ metadata_cache_reset(GHashTable *mdc)
 static struct ra_param_s *
 ra_param_from_xml(xmlNode *param_xml)
 {
-    const char *param_name = crm_element_value(param_xml, PCMK_XA_NAME);
+    const char *param_name = pcmk__xe_get(param_xml, PCMK_XA_NAME);
     struct ra_param_s *p;
 
     p = pcmk__assert_alloc(1, sizeof(struct ra_param_s));
@@ -161,7 +161,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     for (match = pcmk__xe_first_child(match, PCMK_XE_ACTION, NULL, NULL);
          match != NULL; match = pcmk__xe_next(match, PCMK_XE_ACTION)) {
 
-        const char *action_name = crm_element_value(match, PCMK_XA_NAME);
+        const char *action_name = pcmk__xe_get(match, PCMK_XA_NAME);
 
         if (pcmk__str_eq(action_name, PCMK_ACTION_RELOAD_AGENT,
                          pcmk__str_none)) {
@@ -183,7 +183,7 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
     for (match = pcmk__xe_first_child(match, PCMK_XE_PARAMETER, NULL, NULL);
          match != NULL; match = pcmk__xe_next(match, PCMK_XE_PARAMETER)) {
 
-        const char *param_name = crm_element_value(match, PCMK_XA_NAME);
+        const char *param_name = pcmk__xe_get(match, PCMK_XA_NAME);
 
         if (param_name == NULL) {
             crm_warn("Metadata for %s:%s:%s has parameter without a "

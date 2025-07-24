@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -240,7 +240,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
         return;
     }
 
-    if (crm_element_value_int(xml, PCMK__XA_CALL_ID, &callid) == -1) {
+    if (pcmk__xe_get_int(xml, PCMK__XA_CALL_ID, &callid) != pcmk_rc_ok) {
         crm_warn("Could not get callid from request XML");
         return;
     }
@@ -315,13 +315,13 @@ attrd_request_sync_point(xmlNode *xml)
                                               PCMK__XA_ATTR_SYNC_POINT, NULL);
 
         if (child) {
-            return crm_element_value(child, PCMK__XA_ATTR_SYNC_POINT);
+            return pcmk__xe_get(child, PCMK__XA_ATTR_SYNC_POINT);
         } else {
             return NULL;
         }
 
     } else {
-        return crm_element_value(xml, PCMK__XA_ATTR_SYNC_POINT);
+        return pcmk__xe_get(xml, PCMK__XA_ATTR_SYNC_POINT);
     }
 }
 
@@ -484,7 +484,8 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
         expected_confirmations = pcmk__intkey_table((GDestroyNotify) free_action);
     }
 
-    if (crm_element_value_int(request->xml, PCMK__XA_CALL_ID, &callid) == -1) {
+    if (pcmk__xe_get_int(request->xml, PCMK__XA_CALL_ID,
+                         &callid) != pcmk_rc_ok) {
         crm_err("Could not get callid from xml");
         return;
     }

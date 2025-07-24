@@ -174,9 +174,9 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
 {
     const pcmk_rule_input_t rule_input = {
         .now = scheduler->priv->now,
-        .rsc_standard = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS),
-        .rsc_provider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER),
-        .rsc_agent = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE)
+        .rsc_standard = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS),
+        .rsc_provider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER),
+        .rsc_agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE)
     };
 
     for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->priv->xml);
@@ -249,8 +249,8 @@ get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
 static char *
 template_op_key(xmlNode * op)
 {
-    const char *name = crm_element_value(op, PCMK_XA_NAME);
-    const char *role = crm_element_value(op, PCMK_XA_ROLE);
+    const char *name = pcmk__xe_get(op, PCMK_XA_NAME);
+    const char *role = pcmk__xe_get(op, PCMK_XA_ROLE);
     char *key = NULL;
 
     if ((role == NULL)
@@ -281,7 +281,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
+    template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
@@ -316,7 +316,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     xmlNodeSetName(new_xml, xml_obj->name);
     crm_xml_add(new_xml, PCMK_XA_ID, id);
     crm_xml_add(new_xml, PCMK__META_CLONE,
-                crm_element_value(xml_obj, PCMK__META_CLONE));
+                pcmk__xe_get(xml_obj, PCMK__META_CLONE));
 
     template_ops = pcmk__xe_first_child(new_xml, PCMK_XE_OPERATIONS, NULL,
                                         NULL);
@@ -388,7 +388,7 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         return FALSE;
     }
 
-    template_ref = crm_element_value(xml_obj, PCMK_XA_TEMPLATE);
+    template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         return TRUE;
     }
@@ -707,7 +707,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     crm_log_xml_trace(xml_obj, "[raw XML]");
 
-    id = crm_element_value(xml_obj, PCMK_XA_ID);
+    id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> configuration without " PCMK_XA_ID,
                          xml_obj->name);
@@ -769,7 +769,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     rsc_private->probed_nodes = pcmk__strkey_table(NULL, pcmk__free_node_copy);
     rsc_private->allowed_nodes = pcmk__strkey_table(NULL, pcmk__free_node_copy);
 
-    value = crm_element_value(rsc_private->xml, PCMK__META_CLONE);
+    value = pcmk__xe_get(rsc_private->xml, PCMK__META_CLONE);
     if (value) {
         (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
         pcmk__insert_meta(rsc_private, PCMK__META_CLONE, value);
@@ -901,7 +901,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     unpack_stickiness(*rsc);
     unpack_migration_threshold(*rsc);
 
-    if (pcmk__str_eq(crm_element_value(rsc_private->xml, PCMK_XA_CLASS),
+    if (pcmk__str_eq(pcmk__xe_get(rsc_private->xml, PCMK_XA_CLASS),
                      PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_fencing);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_fence_device);
