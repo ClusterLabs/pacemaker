@@ -35,6 +35,33 @@ static GOptionEntry entries[] = {
     { NULL }
 };
 
+/*!
+ * \internal
+ * \brief A function for running a command on remote hosts
+ *
+ * \param[in,out] out     Output object
+ * \param[in]     nodes   A list of remote hosts
+ * \param[in]     cmdline The command line to run
+ */
+typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline);
+
+/*!
+ * \internal
+ * \brief A function for copying a file to remote hosts
+ *
+ * \param[in,out] out     Output object
+ * \param[in]     nodes   A list of remote hosts
+ * \param[in]     to      The destination path on the remote host
+ * \param[in]     from    The local file (or directory) to copy
+ *
+ * \note \p from can either be a single file or a directory.  It cannot be
+ *       be multiple files in a space-separated string.  If multiple files need
+ *       to be copied, either copy the entire directory at once or call this
+ *       function multiple times.
+ */
+typedef int (*rcp_fn_t)(pcmk__output_t *out, gchar **nodes, const char *to,
+                        const char *from);
+
 struct subcommand_entry {
     const char *name;
     int args;
@@ -53,6 +80,42 @@ struct subcommand_entry {
      */
     int (*handler)(pcmk__output_t *out, crm_exit_t *exit_code);
 };
+
+static int
+pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+pdsh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+pscp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+pdcp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+{
+    return pcmk_rc_ok;
+}
+
+static int
+scp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+{
+    return pcmk_rc_ok;
+}
 
 static int
 subcommand_check(pcmk__output_t *out, crm_exit_t *exit_code)
@@ -116,6 +179,40 @@ static struct subcommand_entry subcommand_table[] = {
       subcommand_unstash },
     { NULL },
 };
+
+static bool
+tools_installed(pcmk__output_t *out, rsh_fn_t *rsh_fn, rcp_fn_t *rcp_fn,
+                GError **error)
+{
+    gchar *path = NULL;
+
+    path = g_find_program_in_path("pssh");
+    if (path != NULL) {
+        g_free(path);
+        *rsh_fn = pssh;
+        *rcp_fn = pscp;
+        return true;
+    }
+
+    path = g_find_program_in_path("pdsh");
+    if (path != NULL) {
+        g_free(path);
+        *rsh_fn = pdsh;
+        *rcp_fn = pdcp;
+        return true;
+    }
+
+    path = g_find_program_in_path("ssh");
+    if (path != NULL) {
+        g_free(path);
+        *rsh_fn = ssh;
+        *rcp_fn = scp;
+        return true;
+    }
+
+    out->err(out, "Please install one of pssh, pdsh, or ssh");
+    return false;
+}
 
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -216,6 +313,8 @@ main(int argc, char **argv)
     GOptionContext *context = build_arg_context(args, &output_group);
 
     struct subcommand_entry cmd;
+    rsh_fn_t rsh_fn;
+    rcp_fn_t rcp_fn;
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
@@ -280,6 +379,12 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Invalid subcommand given; valid subcommands: "
                     "check, delete, get, set, stash, sync, unstash");
+        goto done;
+    }
+
+    /* Check that we have the tools necessary to manage secrets */
+    if (!tools_installed(out, &rsh_fn, &rcp_fn, &error)) {
+        exit_code = CRM_EX_NOT_INSTALLED;
         goto done;
     }
 
