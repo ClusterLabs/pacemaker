@@ -56,6 +56,7 @@ static struct {
     // @COMPAT Deprecated since 3.0.1
     gboolean sync_call;
 } options = {
+    .cib_action = PCMK__CIB_REQUEST_QUERY,
     .cmd_options = cib_sync_call,
 };
 
@@ -499,6 +500,8 @@ build_arg_context(pcmk__common_args_t *args)
     desc = "Examples:\n\n"
            "Query the configuration:\n\n"
            "\t# cibadmin --query\n\n"
+           "or just:\n\n"
+           "\t# cibadmin\n\n"
            "Query just the cluster options configuration:\n\n"
            "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
            "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
@@ -538,7 +541,7 @@ build_arg_context(pcmk__common_args_t *args)
            "SEE ALSO:\n"
            " crm(8), pcs(8), crm_shadow(8), crm_diff(8)\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, "<command>");
+    context = pcmk__build_arg_context(args, NULL, NULL, "[<command>]");
     g_option_context_set_description(context, desc);
 
     pcmk__add_arg_group(context, "commands", "Commands:", "Show command help",
@@ -610,16 +613,7 @@ main(int argc, char **argv)
         }
     }
 
-    if (options.cib_action == NULL) {
-        // @COMPAT: Create a default command if other tools have one
-        gchar *help = g_option_context_get_help(context, TRUE, NULL);
-
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Must specify a command option\n\n%s", help);
-        g_free(help);
-        goto done;
-    }
+    pcmk__assert(options.cib_action != NULL);
 
     if (strcmp(options.cib_action, "empty") == 0) {
         // Output an empty CIB
