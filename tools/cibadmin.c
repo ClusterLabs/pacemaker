@@ -27,7 +27,7 @@ enum cibadmin_section_type {
     cibadmin_section_xpath,
 };
 
-static cib_t *the_cib = NULL;
+static cib_t *cib_conn = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
@@ -793,8 +793,8 @@ main(int argc, char **argv)
             if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
                 xmlNode *obj = NULL;
 
-                if (the_cib->cmds->query(the_cib, NULL, &obj,
-                                         options.cmd_options) == pcmk_ok) {
+                if (cib_conn->cmds->query(cib_conn, NULL, &obj,
+                                          options.cmd_options) == pcmk_ok) {
                     pcmk__update_schema(&obj, NULL, true, false);
                 }
                 pcmk__xml_free(obj);
@@ -856,7 +856,7 @@ done:
     pcmk__xml_free(input);
     pcmk__xml_free(output);
 
-    rc = cib__clean_up_connection(&the_cib);
+    rc = cib__clean_up_connection(&cib_conn);
     if (exit_code == CRM_EX_OK) {
         exit_code = pcmk_rc2exitc(rc);
     }
@@ -869,7 +869,7 @@ static int
 do_work(xmlNode *input, xmlNode **output)
 {
     /* construct the request */
-    the_cib->call_timeout = options.message_timeout_sec;
+    cib_conn->call_timeout = options.message_timeout_sec;
     if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__xe_is(input, PCMK_XE_CIB)) {
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
@@ -880,7 +880,7 @@ do_work(xmlNode *input, xmlNode **output)
     }
 
     crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
-    return cib_internal_op(the_cib, options.cib_action, options.dest_node,
+    return cib_internal_op(cib_conn, options.cib_action, options.dest_node,
                            options.cib_section, input, output,
                            options.cmd_options, options.cib_user);
 }
@@ -890,8 +890,8 @@ do_init(void)
 {
     int rc = pcmk_ok;
 
-    the_cib = cib_new();
-    rc = cib__signon_attempts(the_cib, cib_command, 5);
+    cib_conn = cib_new();
+    rc = cib__signon_attempts(cib_conn, cib_command, 5);
     if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
         fprintf(stderr, "Could not connect to the CIB: %s\n",
