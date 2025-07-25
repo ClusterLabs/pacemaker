@@ -134,35 +134,25 @@ do_work(xmlNode *input, xmlNode **output)
 }
 
 static void
-print_xml_output(xmlNode * xml)
+print_xpath_addresses(const xmlNode *xml)
 {
-    if (!xml) {
-        return;
-    } else if (xml->type != XML_ELEMENT_NODE) {
+    if (xml->type != XML_ELEMENT_NODE) {
         return;
     }
 
-    if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
-        const char *id = crm_element_value(xml, PCMK_XA_ID);
+    if (pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
+        for (const xmlNode *child = xml->children; child != NULL;
+             child = child->next) {
 
-        if (pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
-            xmlNode *child = NULL;
-
-            for (child = xml->children; child; child = child->next) {
-                print_xml_output(child);
-            }
-
-        } else if (id) {
-            printf("%s\n", id);
+            print_xpath_addresses(child);
         }
 
     } else {
-        GString *buf = g_string_sized_new(1024);
+        const char *id = crm_element_value(xml, PCMK_XA_ID);
 
-        pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buf, 0);
-
-        fprintf(stdout, "%s", buf->str);
-        g_string_free(buf, TRUE);
+        if (id != NULL) {
+            printf("%s\n", id);
+        }
     }
 }
 
@@ -849,8 +839,16 @@ main(int argc, char **argv)
         printf("%s\n", (char *) rendered);
         xmlFree(rendered);
 
+    } else if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
+        print_xpath_addresses(output);
+
     } else {
-        print_xml_output(output);
+        GString *buf = g_string_sized_new(1024);
+
+        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+
+        printf("%s", buf->str);
+        g_string_free(buf, TRUE);
     }
 
 done:
