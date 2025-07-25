@@ -339,6 +339,72 @@ done:
     return retval;
 }
 
+static G_GNUC_UNUSED int
+sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+              const char *path)
+{
+    int rc = pcmk_rc_ok;
+    gchar *dirname = NULL;
+    GList *peers = get_live_peers(out);
+    GString *peer_str = NULL;
+    char *cmdline = NULL;
+
+    if (peers == NULL) {
+        return ENOTCONN;
+    }
+
+    peer_str = g_string_sized_new(64);
+    for (GList *node = peers; node != NULL; node = node->next) {
+        pcmk__add_separated_word(&peer_str, 64, node->data, " ");
+    }
+
+    if (pcmk__str_eq(remainder[1], "delete", pcmk__str_none)) {
+        out->info(out, "Deleting %s from %s ...", path, peer_str->str);
+    } else {
+        out->info(out, "Syncing %s to %s ...", path, peer_str->str);
+    }
+
+    dirname = g_path_get_dirname(path);
+
+    cmdline = crm_strdup_printf("mkdir -p %s", dirname);
+    rc = rsh_fn(out, peers, cmdline);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (g_file_test(path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)) {
+        char *sign_path = NULL;
+
+        rc = rcp_fn(out, peers, dirname, path);
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
+
+        sign_path = crm_strdup_printf("%s.sign", path);
+        rc = rcp_fn(out, peers, dirname, sign_path);
+        free(sign_path);
+
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
+    } else {
+        free(cmdline);
+        cmdline = crm_strdup_printf("rm -f %s %s.sign", path, path);
+        rc = rsh_fn(out, peers, cmdline);
+
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
+    }
+
+done:
+    free(cmdline);
+    g_free(dirname);
+    g_string_free(peer_str, TRUE);
+    g_list_free_full(peers, g_free);
+    return pcmk_rc_ok;
+}
+
 static int
 check_cib_rsc(pcmk__output_t *out, const char *rsc)
 {
