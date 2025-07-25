@@ -178,11 +178,11 @@ static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       PCMK__XE_ACK, NULL, CRM_EX_INVALID_PARAM);
+                       PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
 
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                         "Unknown IPC request type '%s' (bug?)",
-                        pcmk__client_name(request->ipc_client));
+                        pcmk__s(request->op, ""));
     return NULL;
 }
 
@@ -265,7 +265,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     if (msg == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 

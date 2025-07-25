@@ -292,7 +292,14 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
             }
         }
 
-        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_ACK, NULL, status);
+        if (status == CRM_EX_OK) {
+            pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_ACK, NULL,
+                               status);
+        } else {
+            pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_NACK, NULL,
+                               status);
+        }
+
         return;
     }
 

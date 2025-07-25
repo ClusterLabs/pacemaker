@@ -547,8 +547,8 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 }
 
-static xmlNode *
-create_lrmd_reply(const char *origin, int rc, int call_id)
+xmlNode *
+execd_create_reply_as(const char *origin, int rc, int call_id)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_LRMD_REPLY);
 
@@ -696,8 +696,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     pcmk__xml_free(notify);
 }
 
-static void
-send_generic_notify(int rc, xmlNode * request)
+void
+execd_send_generic_notify(int rc, xmlNode *request)
 {
     if (pcmk__ipc_client_count() != 0) {
         int call_id = 0;
@@ -1512,11 +1512,11 @@ free_rsc(gpointer data)
     free(rsc);
 }
 
-static int
-process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
-                    xmlNode **reply)
+int
+execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
+                     xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     time_t now = time(NULL);
     const char *protocol_version =
         crm_element_value(request, PCMK__XA_LRMD_PROTOCOL_VERSION);
@@ -1525,7 +1525,7 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     if (compare_version(protocol_version, LRMD_COMPATIBLE_PROTOCOL) < 0) {
         crm_err("Cluster API version must be greater than or equal to %s, not %s",
                 LRMD_COMPATIBLE_PROTOCOL, protocol_version);
-        rc = -EPROTO;
+        rc = EPROTO;
     }
 
     if (pcmk__xe_attr_is_true(request, PCMK__XA_LRMD_IS_IPC_PROVIDER)) {
@@ -1555,14 +1555,16 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
                 remoted_request_cib_schema_files();
             }
         } else {
-            rc = -EACCES;
+            rc = EACCES;
         }
 #else
-        rc = -EPROTONOSUPPORT;
+        rc = EPROTONOSUPPORT;
 #endif
     }
 
-    *reply = create_lrmd_reply(__func__, rc, call_id);
+    pcmk__assert(reply != NULL);
+
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     crm_xml_add(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
@@ -1575,63 +1577,63 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     return rc;
 }
 
-static int
-process_lrmd_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
+void
+execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
-    int rc = pcmk_ok;
     lrmd_rsc_t *rsc = build_rsc_from_xml(request);
     lrmd_rsc_t *dup = g_hash_table_lookup(rsc_list, rsc->rsc_id);
 
     if (dup &&
         pcmk__str_eq(rsc->class, dup->class, pcmk__str_casei) &&
-        pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) && pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
+        pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) &&
+        pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
         crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
         free_rsc(rsc);
-        return rc;
+        return;
     }
 
     g_hash_table_replace(rsc_list, rsc->rsc_id, rsc);
     crm_info("Cached agent information for '%s'", rsc->rsc_id);
-    return rc;
 }
 
-static xmlNode *
-process_lrmd_get_rsc_info(xmlNode *request, int call_id)
+int
+execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    xmlNode *reply = NULL;
     lrmd_rsc_t *rsc = NULL;
 
     if (rsc_id == NULL) {
-        rc = -ENODEV;
+        rc = ENODEV;
     } else {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
             crm_info("Agent information for '%s' not in cache", rsc_id);
-            rc = -ENODEV;
+            rc = ENODEV;
         }
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
+    CRM_LOG_ASSERT(reply != NULL);
+
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     if (rsc) {
-        crm_xml_add(reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
-        crm_xml_add(reply, PCMK__XA_LRMD_CLASS, rsc->class);
-        crm_xml_add(reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
-        crm_xml_add(reply, PCMK__XA_LRMD_TYPE, rsc->type);
+        crm_xml_add(*reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
+        crm_xml_add(*reply, PCMK__XA_LRMD_CLASS, rsc->class);
+        crm_xml_add(*reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
+        crm_xml_add(*reply, PCMK__XA_LRMD_TYPE, rsc->type);
     }
-    return reply;
+
+    return rc;
 }
 
-static int
-process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
-                            xmlNode *request)
+int
+execd_process_rsc_unregister(pcmk__client_t *client, xmlNode *request)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     lrmd_rsc_t *rsc = NULL;
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
@@ -1639,21 +1641,21 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
     const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     if (!rsc_id) {
-        return -ENODEV;
+        return ENODEV;
     }
 
     rsc = g_hash_table_lookup(rsc_list, rsc_id);
     if (rsc == NULL) {
         crm_info("Ignoring unregistration of resource '%s', which is not registered",
                  rsc_id);
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
         crm_trace("Operation (%p) still in progress for unregistered resource %s",
                   rsc->active, rsc_id);
-        rc = -EINPROGRESS;
+        rc = EINPROGRESS;
     }
 
     g_hash_table_remove(rsc_list, rsc_id);
@@ -1661,8 +1663,8 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
     return rc;
 }
 
-static int
-process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
+int
+execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request)
 {
     lrmd_rsc_t *rsc = NULL;
     lrmd_cmd_t *cmd = NULL;
@@ -1670,25 +1672,24 @@ process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    int call_id;
 
     if (!rsc_id) {
-        return -EINVAL;
+        return EINVAL;
     }
+
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
         crm_info("Resource '%s' not found (%d active resources)",
                  rsc_id, g_hash_table_size(rsc_list));
-        return -ENODEV;
+        return ENODEV;
     }
 
     cmd = create_lrmd_cmd(request, client);
-    call_id = cmd->call_id;
 
     /* Don't reference cmd after handing it off to be scheduled.
      * The cmd could get merged and freed. */
     schedule_lrmd_cmd(rsc, cmd);
 
-    return call_id;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -1709,7 +1710,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
      *    never existed.
      */
     if (!rsc) {
-        return -ENODEV;
+        return ENODEV;
     }
 
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
@@ -1718,7 +1719,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         if (action_matches(cmd, action, interval_ms)) {
             cmd->result.execution_status = PCMK_EXEC_CANCELLED;
             cmd_finalize(cmd, rsc);
-            return pcmk_ok;
+            return pcmk_rc_ok;
         }
     }
 
@@ -1733,7 +1734,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
                 }
-                return pcmk_ok;
+                return pcmk_rc_ok;
             }
         }
     } else if (services_action_cancel(rsc_id,
@@ -1743,10 +1744,10 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
          * this action was cancelled, which will destroy the cmd and remove
          * it from the recurring_op list. Do not do that in this function
          * if the service library says it cancelled it. */
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
-    return -EOPNOTSUPP;
+    return EOPNOTSUPP;
 }
 
 static void
@@ -1788,8 +1789,8 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
     g_list_free(cmd_list);
 }
 
-static int
-process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
+int
+execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request)
 {
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
@@ -1801,7 +1802,7 @@ process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
     crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     return cancel_op(rsc_id, action, interval_ms);
@@ -1824,13 +1825,12 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
     }
 }
 
-static xmlNode *
-process_lrmd_get_recurring(xmlNode *request, int call_id)
+int
+execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const char *rsc_id = NULL;
     lrmd_rsc_t *rsc = NULL;
-    xmlNode *reply = NULL;
     xmlNode *rsc_xml = NULL;
 
     // Resource ID is optional
@@ -1848,11 +1848,13 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         if (rsc == NULL) {
             crm_info("Resource '%s' not found (%d active resources)",
                      rsc_id, g_hash_table_size(rsc_list));
-            rc = -ENODEV;
+            rc = ENODEV;
         }
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
+    CRM_LOG_ASSERT(reply != NULL);
+
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
 
     // If resource ID is not specified, check all resources
     if (rsc_id == NULL) {
@@ -1862,149 +1864,11 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         g_hash_table_iter_init(&iter, rsc_list);
         while (g_hash_table_iter_next(&iter, (gpointer *) &key,
                                       (gpointer *) &rsc)) {
-            add_recurring_op_xml(reply, rsc);
+            add_recurring_op_xml(*reply, rsc);
         }
     } else if (rsc) {
-        add_recurring_op_xml(reply, rsc);
-    }
-    return reply;
-}
-
-void
-process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
-{
-    int rc = pcmk_ok;
-    int call_id = 0;
-    const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
-    int do_reply = 0;
-    int do_notify = 0;
-    xmlNode *reply = NULL;
-
-    /* Certain IPC commands may be done only by privileged users (i.e. root or
-     * hacluster), because they would otherwise provide a means of bypassing
-     * ACLs.
-     */
-    bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
-
-    crm_trace("Processing %s operation from %s", op, client->id);
-    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
-
-    if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
-#ifdef PCMK__COMPILE_REMOTE
-        if (allowed) {
-            ipc_proxy_forward_client(client, request);
-        } else {
-            rc = -EACCES;
-        }
-#else
-        rc = -EPROTONOSUPPORT;
-#endif
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        rc = process_lrmd_signon(client, request, call_id, &reply);
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_register(client, id, request);
-            do_notify = 1;
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_INFO, pcmk__str_none)) {
-        if (allowed) {
-            reply = process_lrmd_get_rsc_info(request, call_id);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_unregister(client, id, request);
-            /* don't notify anyone about failed un-registers */
-            if (rc == pcmk_ok || rc == -EINPROGRESS) {
-                do_notify = 1;
-            }
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_exec(client, id, request);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_CANCEL, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_cancel(client, id, request);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
-        do_notify = 1;
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
-        if (allowed) {
-            xmlNode *wrapper = pcmk__xe_first_child(request,
-                                                    PCMK__XE_LRMD_CALLDATA,
-                                                    NULL, NULL);
-            xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-            const char *timeout = NULL;
-
-            CRM_LOG_ASSERT(data != NULL);
-            timeout = crm_element_value(data, PCMK__XA_LRMD_WATCHDOG);
-            pcmk__valid_stonith_watchdog_timeout(timeout);
-        } else {
-            rc = -EACCES;
-        }
-    } else if (pcmk__str_eq(op, LRMD_OP_ALERT_EXEC, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_alert_exec(client, id, request);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_GET_RECURRING, pcmk__str_none)) {
-        if (allowed) {
-            reply = process_lrmd_get_recurring(request, call_id);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else {
-        rc = -EOPNOTSUPP;
-        do_reply = 1;
-        crm_err("Unknown IPC request '%s' from client %s",
-                op, pcmk__client_name(client));
+        add_recurring_op_xml(*reply, rsc);
     }
 
-    if (rc == -EACCES) {
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 op, pcmk__client_name(client));
-    }
-
-    crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",
-              op, client->id, rc, do_reply, do_notify);
-
-    if (do_reply) {
-        int send_rc = pcmk_rc_ok;
-
-        if (reply == NULL) {
-            reply = create_lrmd_reply(__func__, rc, call_id);
-        }
-        send_rc = lrmd_server_send_reply(client, id, reply);
-        pcmk__xml_free(reply);
-        if (send_rc != pcmk_rc_ok) {
-            crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
-                     pcmk__client_name(client), pcmk_rc_str(send_rc), send_rc);
-        }
-    }
-
-    if (do_notify) {
-        send_generic_notify(rc, request);
-    }
+    return rc;
 }
