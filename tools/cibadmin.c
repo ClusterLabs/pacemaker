@@ -58,6 +58,7 @@ static struct {
 } options = {
     .cib_action = PCMK__CIB_REQUEST_QUERY,
     .cmd_options = cib_sync_call,
+    .message_timeout_sec = 30,
 };
 
 /*!
@@ -146,7 +147,6 @@ static int
 do_work(xmlNode *input, xmlNode **output)
 {
     /* construct the request */
-    cib_conn->call_timeout = options.message_timeout_sec;
     if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
         && pcmk__xe_is(input, PCMK_XE_CIB)) {
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
@@ -650,11 +650,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.message_timeout_sec < 1) {
-        // Set default timeout
-        options.message_timeout_sec = 30;
-    }
-
     if (options.section_type == cibadmin_section_xpath) {
         // Enable getting section by XPath
         cib__set_call_options(options.cmd_options, crm_system_name,
@@ -760,6 +755,12 @@ main(int argc, char **argv)
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Could not connect to the CIB API: %s", pcmk_rc_str(rc));
         goto done;
+    }
+
+    cib_conn->call_timeout = options.message_timeout_sec;
+    if (cib_conn->call_timeout < 1) {
+        fprintf(stderr, "Timeout must be positive, defaulting to 30\n");
+        cib_conn->call_timeout = 30;
     }
 
     rc = do_work(input, &output);
