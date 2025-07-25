@@ -162,17 +162,6 @@ do_work(xmlNode *input, xmlNode **output)
                            options.cmd_options, options.cib_user);
 }
 
-// Upgrade requested but already at latest schema
-static void
-report_schema_unchanged(void)
-{
-    const char *err = pcmk_rc_str(pcmk_rc_schema_unchanged);
-
-    crm_info("Upgrade unnecessary: %s\n", err);
-    printf("Upgrade unnecessary: %s\n", err);
-    exit_code = CRM_EX_OK;
-}
-
 /*!
  * \internal
  * \brief Check whether the current CIB action is dangerous
@@ -779,10 +768,10 @@ main(int argc, char **argv)
     if ((rc == pcmk_rc_schema_unchanged)
         && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
 
-        report_schema_unchanged();
+        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(rc));
+        exit_code = CRM_EX_OK;
 
     } else if (rc != pcmk_rc_ok) {
-        crm_err("Call failed: %s", pcmk_rc_str(rc));
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
 
