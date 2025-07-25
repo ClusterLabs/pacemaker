@@ -825,7 +825,42 @@ static int
 subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                  crm_exit_t *exit_code)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    const char *rsc = remainder[1];
+    const char *param = remainder[2];
+    char *value = NULL;
+
+    if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
+        *exit_code = CRM_EX_NOSUCH;
+        rc = ENODEV;
+        goto done;
+    }
+
+    value = get_cib_param(out, rsc, param);
+    if ((value == NULL) || is_secret(value)) {
+        if (value == NULL) {
+            out->err(out, "Nothing to stash for resource %s parameter %s", rsc,
+                     param);
+            *exit_code = CRM_EX_NOSUCH;
+        } else {
+            out->err(out, "Resource %s parameter %s already set as secret", rsc,
+                     param);
+            *exit_code = CRM_EX_EXISTS;
+        }
+
+        rc = EINVAL;
+        goto done;
+    }
+
+    remainder = g_realloc(remainder, sizeof(gchar *) * 5);
+    remainder[3] = g_strdup(value);
+    remainder[4] = NULL;
+
+    rc = subcommand_set(out, rsh_fn, rcp_fn, exit_code);
+
+done:
+    free(value);
+    return rc;
 }
 
 static int
