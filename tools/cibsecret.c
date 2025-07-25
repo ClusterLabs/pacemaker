@@ -14,12 +14,15 @@
 #include <stddef.h>
 #include <stdlib.h>             // setenv, unsetenv
 #include <string.h>
+#include <syslog.h>             // LOG_DEBUG
 #include <sys/stat.h>           // umask, S_IRGRP, S_IROTH, ...
 #include <sys/wait.h>           // WEXITSTATUS
 #include <unistd.h>             // geteuid
 
 #include <glib.h>
-#include <libxml/tree.h>        // xmlNode
+#include <libxml/tree.h>        // xmlNode, xmlNodeGetContent
+#include <libxml/xmlmemory.h>   // xmlFree
+#include <libxml/xmlstring.h>   // xmlChar
 
 #include <crm/cib/internal.h>   // cib__signon_query
 #include <crm/common/internal.h>
@@ -31,6 +34,7 @@
 
 #define SUMMARY "cibsecret - manage sensitive information in Pacemaker CIB"
 
+#define LRM_MAGIC "lrm://"
 #define SSH_OPTS "-o StrictHostKeyChecking=no"
 
 static gchar **remainder = NULL;
@@ -396,6 +400,119 @@ done:
     }
 
     return reachable;
+}
+
+static G_GNUC_UNUSED int
+check_cib_rsc(pcmk__output_t *out, const char *rsc)
+{
+    int rc = pcmk_rc_ok;
+    char *cmdline = NULL;
+
+    if (no_cib) {
+        return rc;
+    }
+
+    cmdline = crm_strdup_printf("crm_resource -r %s -W", rsc);
+    rc = run_cmdline(out, cmdline, NULL);
+
+    free(cmdline);
+    return rc;
+}
+
+static G_GNUC_UNUSED bool
+is_secret(const char *s)
+{
+    if (no_cib) {
+        /* Assume that the secret is in the CIB if we can't connect */
+        return true;
+    }
+
+    return pcmk__str_eq(s, LRM_MAGIC, pcmk__str_none);
+}
+
+static G_GNUC_UNUSED char *
+get_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
+{
+    int rc = pcmk_rc_ok;
+    char *cmdline = NULL;
+    char *standard_out = NULL;
+    char *retval = NULL;
+    char *xpath = NULL;
+    xmlNode *xml = NULL;
+    xmlNode *node = NULL;
+    xmlChar *content = NULL;
+
+    if (no_cib) {
+        return NULL;
+    }
+
+    cmdline = crm_strdup_printf("crm_resource -r %s -g %s --output-as=xml", rsc, param);
+    rc = run_cmdline(out, cmdline, &standard_out);
+
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    xml = pcmk__xml_parse(standard_out);
+
+    if (xml == NULL) {
+        goto done;
+    }
+
+    xpath = crm_strdup_printf("//" PCMK_XE_ITEM "[@" PCMK_XA_NAME "='%s']", param);
+    node = pcmk__xpath_find_one(xml->doc, xpath, LOG_DEBUG);
+
+    if (node == NULL) {
+        goto done;
+    }
+
+    content = xmlNodeGetContent(node);
+
+    if (content != NULL) {
+        retval = pcmk__str_copy((char *) content);
+        xmlFree(content);
+    }
+
+done:
+    free(cmdline);
+    free(standard_out);
+    free(xpath);
+    pcmk__xml_free(xml);
+    return retval;
+}
+
+static G_GNUC_UNUSED int
+remove_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
+{
+    int rc = pcmk_rc_ok;
+    char *cmdline = NULL;
+
+    if (no_cib) {
+        return rc;
+    }
+
+    cmdline = crm_strdup_printf("crm_resource -r %s -d %s", rsc, param);
+    rc = run_cmdline(out, cmdline, NULL);
+    free(cmdline);
+    return rc;
+}
+
+static G_GNUC_UNUSED int
+set_cib_param(pcmk__output_t *out, const char *rsc, const char *param,
+              const char *value)
+{
+    int rc = pcmk_rc_ok;
+    char *cmdline = NULL;
+
+    if (no_cib) {
+        return rc;
+    }
+
+    cmdline = crm_strdup_printf("crm_resource -r %s -p %s -v %s", rsc, param,
+                                value);
+    rc = run_cmdline(out, cmdline, NULL);
+    free(cmdline);
+    return rc;
 }
 
 static int
