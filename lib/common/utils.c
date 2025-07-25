@@ -449,6 +449,8 @@ pcmk__timeout_ms2s(guint timeout_ms)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <gnutls/gnutls.h>          // gnutls_global_init(), etc.
+
 #include <crm/common/util_compat.h>
 
 static void
