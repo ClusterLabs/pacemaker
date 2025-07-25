@@ -456,7 +456,6 @@ connect_real_cib(cib_t **real_cib, GError **error)
     }
 
     rc = cib__signon_retry(*real_cib);
-    rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,

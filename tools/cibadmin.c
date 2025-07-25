@@ -116,14 +116,14 @@ read_input(xmlNode **input, GError **error)
 static int
 do_init(void)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     cib_conn = cib_new();
     rc = cib__signon_retry(cib_conn);
-    if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not connect to the CIB: %s", pcmk_rc_str(rc));
         fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_strerror(rc));
+                pcmk_rc_str(rc));
     }
 
     return rc;
@@ -797,8 +797,7 @@ main(int argc, char **argv)
     }
 
     rc = do_init();
-    if (rc != pcmk_ok) {
-        rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
 
         crm_err("Init failed, could not perform requested operations: %s",

@@ -934,7 +934,7 @@ cib__signon_retry(cib_t *cib)
     for (int remaining = attempts - 1; remaining >= 0; --remaining) {
         rc = cib->cmds->signon(cib, crm_system_name, cib_command);
 
-        if ((rc == pcmk_rc_ok)
+        if ((rc == pcmk_ok)
             || (remaining == 0)
             || ((errno != EAGAIN) && (errno != EALREADY))) {
             break;
@@ -946,7 +946,7 @@ cib__signon_retry(cib_t *cib)
                   remaining, pcmk__plural_s(remaining));
     }
 
-    return rc;
+    return pcmk_legacy2rc(rc);
 }
 
 int

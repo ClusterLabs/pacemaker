@@ -404,8 +404,6 @@ main(int argc, char **argv)
     }
 
     rc = cib__signon_retry(cib_conn);
-    rc = pcmk_legacy2rc(rc);
-
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB: %s",
