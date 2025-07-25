@@ -40,7 +40,6 @@ static struct {
     gint timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
     gchar *cib_user;
-    gchar *dest_node;
     gchar *input_file;
     gchar *input_string;
     gboolean input_stdin;
@@ -50,6 +49,9 @@ static struct {
     gboolean get_node_path;
     gboolean no_children;
     gboolean score_update;
+
+    // @COMPAT Deprecated since 3.0.2
+    gchar *dest_node;
 
     // @COMPAT Deprecated since 3.0.0
     gboolean local;
@@ -472,12 +474,13 @@ static GOptionEntry addl_entries[] = {
       "result",
       NULL },
 
-    { "node", 'N', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.dest_node,
-      "(Advanced) Send command to the specified host", "value" },
-
     // @COMPAT Deprecated since 3.0.0
     { "local", 'l', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.local,
       "(deprecated)", NULL },
+
+    // @COMPAT Deprecated since 3.0.2
+    { "node", 'N', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
+      &options.dest_node, "(deprecated)", "value" },
 
     // @COMPAT Deprecated since 3.0.1
     { "sync-call", 's', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
