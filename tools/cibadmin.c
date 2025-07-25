@@ -8,7 +8,10 @@
  */
 
 #include <crm_internal.h>
-#include <stdio.h>
+
+#include <stdint.h>                         // uint32_t, etc.
+#include <stdio.h>                          // NULL, printf(), etc.
+
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
@@ -47,51 +50,74 @@ enum cibadmin_cmd {
 
 /*!
  * \internal
+ * \brief Flags to define attributes of a given \c cibadmin command
+ */
+enum cibadmin_command_flags {
+    //! This flag has no effect
+    cibadmin_cf_none           = UINT32_C(0),
+
+    /*!
+     * \brief Command is especially unsafe
+     *
+     * Any command that modifies the CIB is unsafe. This flag is for commands
+     * that are likely to be destructive to larger portions of the CIB and to be
+     * used by mistake.
+     */
+    cibadmin_cf_unsafe         = (UINT32_C(1) << 1),
+};
+
+/*!
+ * \internal
  * \brief Information about a \c cibadmin command type
  */
 typedef struct {
     const char *cib_request; //!< Name of request to send to the CIB API
+    uint32_t flags;          //!< Group of <tt>enum cibadmin_command_flags</tt>
 } cibadmin_cmd_info_t;
 
 static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     [cibadmin_cmd_bump] = {
-        PCMK__CIB_REQUEST_BUMP,
+        PCMK__CIB_REQUEST_BUMP, cibadmin_cf_none,
     },
     [cibadmin_cmd_create] = {
-        PCMK__CIB_REQUEST_CREATE,
+        PCMK__CIB_REQUEST_CREATE, cibadmin_cf_none,
     },
     [cibadmin_cmd_delete] = {
-        PCMK__CIB_REQUEST_DELETE,
+        PCMK__CIB_REQUEST_DELETE, cibadmin_cf_none,
     },
     [cibadmin_cmd_delete_all] = {
-        PCMK__CIB_REQUEST_DELETE,
+        PCMK__CIB_REQUEST_DELETE, cibadmin_cf_unsafe,
     },
     [cibadmin_cmd_empty] = {
-        NULL,
+        NULL, cibadmin_cf_none,
     },
     [cibadmin_cmd_erase] = {
-        PCMK__CIB_REQUEST_ERASE,
+        PCMK__CIB_REQUEST_ERASE, cibadmin_cf_unsafe,
     },
     [cibadmin_cmd_md5_sum] = {
-        NULL,
+        NULL, cibadmin_cf_none,
     },
     [cibadmin_cmd_md5_sum_versioned] = {
-        NULL,
+        NULL, cibadmin_cf_none,
     },
     [cibadmin_cmd_modify] = {
-        PCMK__CIB_REQUEST_MODIFY,
+        PCMK__CIB_REQUEST_MODIFY, cibadmin_cf_none,
     },
     [cibadmin_cmd_patch] = {
-        PCMK__CIB_REQUEST_APPLY_PATCH,
+        PCMK__CIB_REQUEST_APPLY_PATCH, cibadmin_cf_none,
     },
     [cibadmin_cmd_query] = {
-        PCMK__CIB_REQUEST_QUERY,
+        PCMK__CIB_REQUEST_QUERY, cibadmin_cf_none,
     },
     [cibadmin_cmd_replace] = {
-        PCMK__CIB_REQUEST_REPLACE,
+        PCMK__CIB_REQUEST_REPLACE, cibadmin_cf_none,
     },
+
+    /* @TODO Ideally, --upgrade wouldn't be considered unsafe if the CIB already
+     * uses the latest schema.
+     */
     [cibadmin_cmd_upgrade] = {
-        PCMK__CIB_REQUEST_UPGRADE,
+        PCMK__CIB_REQUEST_UPGRADE, cibadmin_cf_unsafe,
     },
 };
 
@@ -217,23 +243,6 @@ output_digest(const xmlNode *xml, bool on_disk, GError **error)
     }
     printf("%s\n", pcmk__s(digest, "<null>"));
     free(digest);
-}
-
-/*!
- * \internal
- * \brief Check whether the current command is dangerous
- *
- * \return \c true if \c options.cmd is dangerous, or \c false otherwise
- */
-static inline bool
-cmd_is_dangerous(void)
-{
-    /* @TODO Ideally, --upgrade wouldn't be considered dangerous if the CIB
-     * already uses the latest schema.
-     */
-    return (options.cmd == cibadmin_cmd_delete_all)
-           || (options.cmd == cibadmin_cmd_erase)
-           || (options.cmd == cibadmin_cmd_upgrade);
 }
 
 /*!
@@ -708,7 +717,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (cmd_is_dangerous() && !options.force) {
+    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_unsafe) && !options.force) {
         exit_code = CRM_EX_UNSAFE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "The supplied command is considered dangerous. To prevent "
