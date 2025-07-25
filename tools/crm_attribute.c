@@ -820,10 +820,7 @@ main(int argc, char **argv)
         cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
-    the_cib = cib_new();
-    rc = cib__signon_attempts(the_cib, cib_command, 5);
-    rc = pcmk_legacy2rc(rc);
-
+    rc = cib__create_signon(&the_cib);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,

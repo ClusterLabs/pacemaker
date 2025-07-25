@@ -2229,15 +2229,7 @@ main(int argc, char **argv)
     if (pcmk_is_set(command_info->flags, crm_rsc_requires_cib)
         && !has_cmdline_config()) {
 
-        cib_conn = cib_new();
-        if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
-            exit_code = CRM_EX_DISCONNECT;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Could not create CIB connection"));
-            goto done;
-        }
-        rc = cib__signon_attempts(cib_conn, cib_command, 5);
-        rc = pcmk_legacy2rc(rc);
+        rc = cib__create_signon(&cib_conn);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,

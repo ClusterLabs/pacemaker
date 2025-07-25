@@ -1242,7 +1242,7 @@ class CibadminRegressionTest(RegressionTest):
             # FIXME: The calculated digest is different in certain build environments
             # for unknown reasons.  When this is figured out, remove the part that gets
             # rid of the hash.
-            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1 | sed -e 's/Digest:.*/Digest:/'"),
+            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1"),
             Test("Require --force for CIB erasure", "cibadmin -E",
                  expected_rc=ExitStatus.UNSAFE, update_cib=True),
             Test("Allow CIB erasure with --force", "cibadmin -E --force"),

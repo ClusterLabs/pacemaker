@@ -27,7 +27,7 @@ enum cibadmin_section_type {
     cibadmin_section_xpath,
 };
 
-static cib_t *the_cib = NULL;
+static cib_t *cib_conn = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
@@ -58,10 +58,8 @@ static struct {
 } options = {
     .cib_action = PCMK__CIB_REQUEST_QUERY,
     .cmd_options = cib_sync_call,
+    .message_timeout_sec = 30,
 };
-
-int do_init(void);
-static int do_work(xmlNode *input, xmlNode **output);
 
 /*!
  * \internal
@@ -116,48 +114,33 @@ read_input(xmlNode **input, GError **error)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Output the digest of an XML tree
+ *
+ * \param[in]  xml      XML whose digest to output
+ * \param[in]  on_disk  If \c true, output the on-disk digest of \p xml
+ * \param[out] error    Where to store error
+ */
 static void
-print_xml_output(xmlNode * xml)
+output_digest(const xmlNode *xml, bool on_disk, GError **error)
 {
-    if (!xml) {
-        return;
-    } else if (xml->type != XML_ELEMENT_NODE) {
+    char *digest = NULL;
+
+    if (xml == NULL) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Please supply XML to process with -X, -x, or -p");
         return;
     }
 
-    if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
-        const char *id = crm_element_value(xml, PCMK_XA_ID);
-
-        if (pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
-            xmlNode *child = NULL;
-
-            for (child = xml->children; child; child = child->next) {
-                print_xml_output(child);
-            }
-
-        } else if (id) {
-            printf("%s\n", id);
-        }
-
+    if (on_disk) {
+        digest = pcmk__digest_on_disk_cib(xml);
     } else {
-        GString *buf = g_string_sized_new(1024);
-
-        pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buf, 0);
-
-        fprintf(stdout, "%s", buf->str);
-        g_string_free(buf, TRUE);
+        digest = pcmk__digest_xml(xml, true);
     }
-}
-
-// Upgrade requested but already at latest schema
-static void
-report_schema_unchanged(void)
-{
-    const char *err = pcmk_rc_str(pcmk_rc_schema_unchanged);
-
-    crm_info("Upgrade unnecessary: %s\n", err);
-    printf("Upgrade unnecessary: %s\n", err);
-    exit_code = CRM_EX_OK;
+    printf("%s\n", pcmk__s(digest, "<null>"));
+    free(digest);
 }
 
 /*!
@@ -204,6 +187,17 @@ scope_is_valid(const char *scope)
                             PCMK_XE_ALERTS,
                             PCMK_XE_STATUS,
                             NULL);
+}
+
+static int
+print_xml_id(xmlNode *xml, void *user_data)
+{
+    const char *id = pcmk__xe_id(xml);
+
+    if (id != NULL) {
+        printf("%s\n", id);
+    }
+    return pcmk_rc_ok;
 }
 
 static gboolean
@@ -637,11 +631,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.message_timeout_sec < 1) {
-        // Set default timeout
-        options.message_timeout_sec = 30;
-    }
-
     if (options.section_type == cibadmin_section_xpath) {
         // Enable getting section by XPath
         cib__set_call_options(options.cmd_options, crm_system_name,
@@ -723,39 +712,17 @@ main(int argc, char **argv)
         options.cib_user = NULL;
     }
 
-    if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_casei)) {
-        char *digest = NULL;
-
-        if (input == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Please supply XML to process with -X, -x, or -p");
-            goto done;
-        }
-
-        digest = pcmk__digest_on_disk_cib(input);
-        fprintf(stderr, "Digest: ");
-        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
-        free(digest);
+    if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_none)) {
+        output_digest(input, true, &error);
         goto done;
-
-    } else if (strcmp(options.cib_action, "md5-sum-versioned") == 0) {
-        char *digest = NULL;
-
-        if (input == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Please supply XML to process with -X, -x, or -p");
-            goto done;
-        }
-
-        digest = pcmk__digest_xml(input, true);
-        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
-        free(digest);
+    }
+    if (pcmk__str_eq(options.cib_action, "md5-sum-versioned", pcmk__str_none)) {
+        output_digest(input, false, &error);
         goto done;
+    }
 
-    } else if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
-                            pcmk__str_none)) {
+    if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
+                     pcmk__str_none)) {
         /* @COMPAT When we drop default support for expansion in cibadmin, guard
          * with `if (options.score_update)`
          */
@@ -763,29 +730,43 @@ main(int argc, char **argv)
                               cib_score_update);
     }
 
-    rc = do_init();
-    if (rc != pcmk_ok) {
-        rc = pcmk_legacy2rc(rc);
+    rc = cib__create_signon(&cib_conn);
+    if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
-
-        crm_err("Init failed, could not perform requested operations: %s",
-                pcmk_rc_str(rc));
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Init failed, could not perform requested operations: %s",
-                    pcmk_rc_str(rc));
+                    "Could not connect to the CIB API: %s", pcmk_rc_str(rc));
         goto done;
     }
 
-    rc = do_work(input, &output);
+    cib_conn->call_timeout = options.message_timeout_sec;
+    if (cib_conn->call_timeout < 1) {
+        fprintf(stderr, "Timeout must be positive, defaulting to 30\n");
+        cib_conn->call_timeout = 30;
+    }
+
+    if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_REPLACE,
+                     pcmk__str_none)
+        && pcmk__xe_is(input, PCMK_XE_CIB)) {
+
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
+
+        if (status == NULL) {
+            pcmk__xe_create(input, PCMK_XE_STATUS);
+        }
+    }
+
+    rc = cib_internal_op(cib_conn, options.cib_action, options.dest_node,
+                         options.cib_section, input, &output,
+                         options.cmd_options, options.cib_user);
     rc = pcmk_legacy2rc(rc);
 
     if ((rc == pcmk_rc_schema_unchanged)
         && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
 
-        report_schema_unchanged();
+        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(rc));
+        exit_code = CRM_EX_OK;
 
     } else if (rc != pcmk_rc_ok) {
-        crm_err("Call failed: %s", pcmk_rc_str(rc));
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
 
@@ -793,8 +774,8 @@ main(int argc, char **argv)
             if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
                 xmlNode *obj = NULL;
 
-                if (the_cib->cmds->query(the_cib, NULL, &obj,
-                                         options.cmd_options) == pcmk_ok) {
+                if (cib_conn->cmds->query(cib_conn, NULL, &obj,
+                                          options.cmd_options) == pcmk_ok) {
                     pcmk__update_schema(&obj, NULL, true, false);
                 }
                 pcmk__xml_free(obj);
@@ -837,8 +818,19 @@ main(int argc, char **argv)
         printf("%s\n", (char *) rendered);
         xmlFree(rendered);
 
+    } else if (pcmk_is_set(options.cmd_options, cib_xpath_address)
+               && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
+
+        pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
+                               NULL);
+
     } else {
-        print_xml_output(output);
+        GString *buf = g_string_sized_new(1024);
+
+        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+
+        printf("%s", buf->str);
+        g_string_free(buf, TRUE);
     }
 
 done:
@@ -856,47 +848,11 @@ done:
     pcmk__xml_free(input);
     pcmk__xml_free(output);
 
-    rc = cib__clean_up_connection(&the_cib);
+    rc = cib__clean_up_connection(&cib_conn);
     if (exit_code == CRM_EX_OK) {
         exit_code = pcmk_rc2exitc(rc);
     }
 
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);
-}
-
-static int
-do_work(xmlNode *input, xmlNode **output)
-{
-    /* construct the request */
-    the_cib->call_timeout = options.message_timeout_sec;
-    if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
-        && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
-
-        if (status == NULL) {
-            pcmk__xe_create(input, PCMK_XE_STATUS);
-        }
-    }
-
-    crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
-    return cib_internal_op(the_cib, options.cib_action, options.dest_node,
-                           options.cib_section, input, output,
-                           options.cmd_options, options.cib_user);
-}
-
-int
-do_init(void)
-{
-    int rc = pcmk_ok;
-
-    the_cib = cib_new();
-    rc = cib__signon_attempts(the_cib, cib_command, 5);
-    if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
-                pcmk_strerror(rc));
-    }
-
-    return rc;
 }

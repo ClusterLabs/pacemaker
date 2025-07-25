@@ -444,19 +444,16 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
 static int
 connect_real_cib(cib_t **real_cib, GError **error)
 {
+    const char *active = getenv("CIB_shadow");
     int rc = pcmk_rc_ok;
 
-    *real_cib = cib_new_no_shadow();
-    if (*real_cib == NULL) {
-        rc = ENOMEM;
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not create a CIB connection object");
-        return rc;
+    // Create a non-shadowed CIB connection object and then restore CIB_shadow
+    unsetenv("CIB_shadow");
+    rc = cib__create_signon(real_cib);
+    if (active != NULL) {
+        setenv("CIB_shadow", active, 1);
     }
 
-    rc = cib__signon_attempts(*real_cib, cib_command, 5);
-    rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,

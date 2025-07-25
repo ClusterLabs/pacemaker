@@ -914,18 +914,40 @@ done:
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Create a new CIB connection object and connect to the CIB API
+ *
+ * This function attempts to connect up to 5 times.
+ *
+ * \param[out] cib  Where to store CIB connection object
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The caller is responsible for signing off and freeing the newly
+ *       allocated CIB connection object using the \c signoff() method and
+ *       \c cib_delete().
+ */
 int
-cib__signon_attempts(cib_t *cib, enum cib_conn_type type, int attempts)
+cib__create_signon(cib_t **cib)
 {
+    static const int attempts = 5;
     int rc = pcmk_rc_ok;
 
-    crm_trace("Attempting connection to CIB manager (up to %d time%s)",
+    pcmk__assert((cib != NULL) && (*cib == NULL));
+
+    *cib = cib_new();
+    if (*cib == NULL) {
+        return ENOMEM;
+    }
+
+    crm_trace("Attempting connection to CIB API (up to %d time%s)",
               attempts, pcmk__plural_s(attempts));
 
     for (int remaining = attempts - 1; remaining >= 0; --remaining) {
-        rc = cib->cmds->signon(cib, crm_system_name, type);
+        rc = (*cib)->cmds->signon(*cib, crm_system_name, cib_command);
 
-        if ((rc == pcmk_rc_ok)
+        if ((rc == pcmk_ok)
             || (remaining == 0)
             || ((errno != EAGAIN) && (errno != EALREADY))) {
             break;
@@ -935,6 +957,11 @@ cib__signon_attempts(cib_t *cib, enum cib_conn_type type, int attempts)
         pcmk__sleep_ms((attempts - remaining) * 500);
         crm_debug("Re-attempting connection to CIB manager (%d attempt%s remaining)",
                   remaining, pcmk__plural_s(remaining));
+    }
+
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        cib__clean_up_connection(cib);
     }
 
     return rc;

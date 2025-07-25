@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,7 +39,6 @@ cib_t *cib_file_new(const char *filename);
 cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port,
                       gboolean encrypted);
 
-cib_t *cib_new_no_shadow(void);
 char *get_shadow_file(const char *name);
 cib_t *cib_shadow_new(const char *name);
 
