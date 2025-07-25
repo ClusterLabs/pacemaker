@@ -403,7 +403,7 @@ done:
     return reachable;
 }
 
-static G_GNUC_UNUSED int
+static int
 sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
               const char *path)
 {
@@ -538,7 +538,7 @@ done:
     return retval;
 }
 
-static G_GNUC_UNUSED int
+static int
 remove_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
 {
     int rc = pcmk_rc_ok;
@@ -609,6 +609,31 @@ local_files_getsum(const char *rsc, const char *param)
 }
 
 static int
+local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                   const char *rsc, const char *param)
+{
+    int rc = pcmk_rc_ok;
+    char *lf_file = NULL;
+    char *cmdline = NULL;
+
+    lf_file = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s/%s", rsc, param);
+
+    cmdline = crm_strdup_printf("rm -f %s %s.sign", lf_file, lf_file);
+    rc = run_cmdline(out, cmdline, NULL);
+
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
+
+done:
+    free(lf_file);
+    free(cmdline);
+    return rc;
+}
+
+static int
 subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                  crm_exit_t *exit_code)
 {
@@ -666,7 +691,25 @@ static int
 subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                   crm_exit_t *exit_code)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    const char *rsc = remainder[1];
+    const char *param = remainder[2];
+
+    if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
+        *exit_code = CRM_EX_NOSUCH;
+        rc = ENODEV;
+        goto done;
+    }
+
+    rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = remove_cib_param(out, rsc, param);
+
+done:
+    return rc;
 }
 
 static int
