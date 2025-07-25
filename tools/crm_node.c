@@ -575,11 +575,7 @@ purge_node_from_cib(const char *node_name, long node_id)
     cib_t *cib = NULL;
 
     // Connect to CIB and start a transaction
-    cib = cib_new();
-    if (cib == NULL) {
-        return ENOTCONN;
-    }
-    rc = cib__signon_retry(cib);
+    rc = cib__create_signon(&cib);
     if (rc == pcmk_rc_ok) {
         rc = cib->cmds->init_transaction(cib);
         rc = pcmk_legacy2rc(rc);

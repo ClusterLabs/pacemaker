@@ -449,20 +449,11 @@ connect_real_cib(cib_t **real_cib, GError **error)
 
     // Create a non-shadowed CIB connection object and then restore CIB_shadow
     unsetenv("CIB_shadow");
-    *real_cib = cib_new();
+    rc = cib__create_signon(real_cib);
     if (active != NULL) {
         setenv("CIB_shadow", active, 1);
     }
 
-    if (*real_cib == NULL) {
-        rc = ENOMEM;
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not create a CIB connection object");
-        return rc;
-    }
-
-    rc = cib__signon_retry(*real_cib);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(error, PCMK__EXITC_ERROR, exit_code,

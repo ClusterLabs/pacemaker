@@ -114,17 +114,6 @@ read_input(xmlNode **input, GError **error)
 }
 
 static int
-cibadmin_init(void)
-{
-    cib_conn = cib_new();
-    if (cib_conn == NULL) {
-        return ENOMEM;
-    }
-
-    return cib__signon_retry(cib_conn);
-}
-
-static int
 do_work(xmlNode *input, xmlNode **output)
 {
     /* construct the request */
@@ -791,7 +780,7 @@ main(int argc, char **argv)
                               cib_score_update);
     }
 
-    rc = cibadmin_init();
+    rc = cib__create_signon(&cib_conn);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,

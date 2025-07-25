@@ -396,14 +396,7 @@ main(int argc, char **argv)
     }
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
 
-    cib_conn = cib_new();
-    if (cib_conn == NULL) {
-        exit_code = CRM_EX_DISCONNECT;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB manager");
-        goto done;
-    }
-
-    rc = cib__signon_retry(cib_conn);
+    rc = cib__create_signon(&cib_conn);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB: %s",
