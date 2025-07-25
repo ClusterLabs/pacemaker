@@ -455,7 +455,7 @@ connect_real_cib(cib_t **real_cib, GError **error)
         return rc;
     }
 
-    rc = cib__signon_retry(*real_cib, cib_command);
+    rc = cib__signon_retry(*real_cib);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);

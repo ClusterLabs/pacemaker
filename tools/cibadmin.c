@@ -119,7 +119,7 @@ do_init(void)
     int rc = pcmk_ok;
 
     cib_conn = cib_new();
-    rc = cib__signon_retry(cib_conn, cib_command);
+    rc = cib__signon_retry(cib_conn);
     if (rc != pcmk_ok) {
         crm_err("Could not connect to the CIB: %s", pcmk_strerror(rc));
         fprintf(stderr, "Could not connect to the CIB: %s\n",

@@ -916,15 +916,14 @@ done:
 
 /*!
  * \internal
- * \brief Try to connect to the CIB API, with up to 5 attempts
+ * \brief Try to connect to the CIB API in command mode, with up to 5 attempts
  *
  * \param[in,out] cib   CIB connection object
- * \param[in]     type  CIB connection type
  *
  * \return Standard Pacemaker return code
  */
 int
-cib__signon_retry(cib_t *cib, enum cib_conn_type type)
+cib__signon_retry(cib_t *cib)
 {
     static const int attempts = 5;
     int rc = pcmk_rc_ok;
@@ -933,7 +932,7 @@ cib__signon_retry(cib_t *cib, enum cib_conn_type type)
               attempts, pcmk__plural_s(attempts));
 
     for (int remaining = attempts - 1; remaining >= 0; --remaining) {
-        rc = cib->cmds->signon(cib, crm_system_name, type);
+        rc = cib->cmds->signon(cib, crm_system_name, cib_command);
 
         if ((rc == pcmk_rc_ok)
             || (remaining == 0)

@@ -403,7 +403,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = cib__signon_retry(cib_conn, cib_command);
+    rc = cib__signon_retry(cib_conn);
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {

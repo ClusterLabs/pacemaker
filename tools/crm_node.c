@@ -579,7 +579,7 @@ purge_node_from_cib(const char *node_name, long node_id)
     if (cib == NULL) {
         return ENOTCONN;
     }
-    rc = cib__signon_retry(cib, cib_command);
+    rc = cib__signon_retry(cib);
     if (rc == pcmk_ok) {
         rc = cib->cmds->init_transaction(cib);
     }
