@@ -339,7 +339,7 @@ done:
     return retval;
 }
 
-static G_GNUC_UNUSED int
+static int
 check_cib_rsc(pcmk__output_t *out, const char *rsc)
 {
     int rc = pcmk_rc_ok;
@@ -356,7 +356,7 @@ check_cib_rsc(pcmk__output_t *out, const char *rsc)
     return rc;
 }
 
-static G_GNUC_UNUSED bool
+static bool
 is_secret(const char *s)
 {
     if (no_cib) {
@@ -367,7 +367,7 @@ is_secret(const char *s)
     return pcmk__str_eq(s, LRM_MAGIC, pcmk__str_none);
 }
 
-static G_GNUC_UNUSED char *
+static char *
 get_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
 {
     int rc = pcmk_rc_ok;
@@ -452,11 +452,97 @@ set_cib_param(pcmk__output_t *out, const char *rsc, const char *param,
     return rc;
 }
 
+static char *
+local_files_get(const char *rsc, const char *param)
+{
+    char *lf_file = NULL;
+    gchar *contents = NULL;
+
+    lf_file = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s/%s", rsc, param);
+    if (g_file_get_contents(lf_file, &contents, NULL, NULL)) {
+        char *retval = strdup(contents);
+
+        g_free(contents);
+        free(lf_file);
+        return retval;
+    }
+
+    free(lf_file);
+    return NULL;
+}
+
+static char *
+local_files_getsum(const char *rsc, const char *param)
+{
+    char *lf_file = NULL;
+    gchar *contents = NULL;
+
+    lf_file = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s/%s.sign", rsc, param);
+    if (g_file_get_contents(lf_file, &contents, NULL, NULL)) {
+        char *retval = strdup(contents);
+
+        g_free(contents);
+        free(lf_file);
+        return retval;
+    }
+
+    free(lf_file);
+    return NULL;
+}
+
 static int
 subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                  crm_exit_t *exit_code)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    const char *rsc = remainder[1];
+    const char *param = remainder[2];
+    char *value = NULL;
+    char *calc_sum = NULL;
+    char *local_sum = NULL;
+    char *local_value = NULL;
+
+    if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
+        *exit_code = CRM_EX_NOSUCH;
+        rc = ENODEV;
+        goto done;
+    }
+
+    value = get_cib_param(out, rsc, param);
+    if (value == NULL || !is_secret(value)) {
+        out->err(out, "Resource %s parameter %s not set as secret, nothing to check",
+                 rsc, param);
+        *exit_code = CRM_EX_CONFIG;
+        rc = EINVAL;
+        goto done;
+    }
+
+    local_sum = local_files_getsum(rsc, param);
+    if (local_sum == NULL) {
+        out->err(out, "No checksum for resource %s parameter %s", rsc, param);
+        *exit_code = CRM_EX_OSFILE;
+        rc = ENOENT;
+        goto done;
+    }
+
+    local_value = local_files_get(rsc, param);
+    if (local_value != NULL) {
+        calc_sum = crm_md5sum(local_value);
+    }
+
+    if (local_value == NULL || !pcmk__str_eq(calc_sum, local_sum, pcmk__str_none)) {
+        out->err(out, "Checksum mismatch for resource %s parameter %s", rsc, param);
+        *exit_code = CRM_EX_DIGEST;
+        rc = EINVAL;
+        goto done;
+    }
+
+done:
+    free(local_sum);
+    free(local_value);
+    free(calc_sum);
+    free(value);
+    return rc;
 }
 
 static int
