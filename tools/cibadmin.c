@@ -729,7 +729,6 @@ main(int argc, char **argv)
         }
 
         digest = pcmk__digest_on_disk_cib(input);
-        fprintf(stderr, "Digest: ");
         fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
         free(digest);
         goto done;
