@@ -143,25 +143,6 @@ output_digest(const xmlNode *xml, bool on_disk, GError **error)
     free(digest);
 }
 
-static int
-do_work(xmlNode *input, xmlNode **output)
-{
-    /* construct the request */
-    if ((strcmp(options.cib_action, PCMK__CIB_REQUEST_REPLACE) == 0)
-        && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
-
-        if (status == NULL) {
-            pcmk__xe_create(input, PCMK_XE_STATUS);
-        }
-    }
-
-    crm_trace("Passing \"%s\" to variant_op...", options.cib_action);
-    return cib_internal_op(cib_conn, options.cib_action, options.dest_node,
-                           options.cib_section, input, output,
-                           options.cmd_options, options.cib_user);
-}
-
 /*!
  * \internal
  * \brief Check whether the current CIB action is dangerous
@@ -763,7 +744,20 @@ main(int argc, char **argv)
         cib_conn->call_timeout = 30;
     }
 
-    rc = do_work(input, &output);
+    if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_REPLACE,
+                     pcmk__str_none)
+        && pcmk__xe_is(input, PCMK_XE_CIB)) {
+
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
+
+        if (status == NULL) {
+            pcmk__xe_create(input, PCMK_XE_STATUS);
+        }
+    }
+
+    rc = cib_internal_op(cib_conn, options.cib_action, options.dest_node,
+                         options.cib_section, input, &output,
+                         options.cmd_options, options.cib_user);
     rc = pcmk_legacy2rc(rc);
 
     if ((rc == pcmk_rc_schema_unchanged)
