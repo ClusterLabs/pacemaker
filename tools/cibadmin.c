@@ -45,6 +45,56 @@ enum cibadmin_cmd {
     cibadmin_cmd_max = cibadmin_cmd_upgrade,
 };
 
+/*!
+ * \internal
+ * \brief Information about a \c cibadmin command type
+ */
+typedef struct {
+    const char *cib_request; //!< Name of request to send to the CIB API
+} cibadmin_cmd_info_t;
+
+static const cibadmin_cmd_info_t cibadmin_command_info[] = {
+    [cibadmin_cmd_bump] = {
+        PCMK__CIB_REQUEST_BUMP,
+    },
+    [cibadmin_cmd_create] = {
+        PCMK__CIB_REQUEST_CREATE,
+    },
+    [cibadmin_cmd_delete] = {
+        PCMK__CIB_REQUEST_DELETE,
+    },
+    [cibadmin_cmd_delete_all] = {
+        PCMK__CIB_REQUEST_DELETE,
+    },
+    [cibadmin_cmd_empty] = {
+        NULL,
+    },
+    [cibadmin_cmd_erase] = {
+        PCMK__CIB_REQUEST_ERASE,
+    },
+    [cibadmin_cmd_md5_sum] = {
+        NULL,
+    },
+    [cibadmin_cmd_md5_sum_versioned] = {
+        NULL,
+    },
+    [cibadmin_cmd_modify] = {
+        PCMK__CIB_REQUEST_MODIFY,
+    },
+    [cibadmin_cmd_patch] = {
+        PCMK__CIB_REQUEST_APPLY_PATCH,
+    },
+    [cibadmin_cmd_query] = {
+        PCMK__CIB_REQUEST_QUERY,
+    },
+    [cibadmin_cmd_replace] = {
+        PCMK__CIB_REQUEST_REPLACE,
+    },
+    [cibadmin_cmd_upgrade] = {
+        PCMK__CIB_REQUEST_UPGRADE,
+    },
+};
+
 enum cibadmin_section_type {
     cibadmin_section_all = 0,
     cibadmin_section_scope,
@@ -56,7 +106,6 @@ static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
     enum cibadmin_cmd cmd;
-    const char *cib_action;
     int cmd_options;
     enum cibadmin_section_type section_type;
     char *cib_section;
@@ -84,7 +133,6 @@ static struct {
     gboolean sync_call;
 } options = {
     .cmd = cibadmin_cmd_query,
-    .cib_action = PCMK__CIB_REQUEST_QUERY,
     .cmd_options = cib_sync_call,
     .timeout_sec = DEFAULT_TIMEOUT,
 };
@@ -173,20 +221,19 @@ output_digest(const xmlNode *xml, bool on_disk, GError **error)
 
 /*!
  * \internal
- * \brief Check whether the current CIB action is dangerous
- * \return true if \p options.cib_action is dangerous, or false otherwise
+ * \brief Check whether the current command is dangerous
+ *
+ * \return \c true if \c options.cmd is dangerous, or \c false otherwise
  */
 static inline bool
-cib_action_is_dangerous(void)
+cmd_is_dangerous(void)
 {
     /* @TODO Ideally, --upgrade wouldn't be considered dangerous if the CIB
      * already uses the latest schema.
      */
-    return options.delete_all
-           || pcmk__str_any_of(options.cib_action,
-                               PCMK__CIB_REQUEST_UPGRADE,
-                               PCMK__CIB_REQUEST_ERASE,
-                               NULL);
+    return (options.cmd == cibadmin_cmd_delete_all)
+           || (options.cmd == cibadmin_cmd_erase)
+           || (options.cmd == cibadmin_cmd_upgrade);
 }
 
 /*!
@@ -236,58 +283,45 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     if (pcmk__str_any_of(option_name, "-u", "--upgrade", NULL)) {
         options.cmd = cibadmin_cmd_upgrade;
-        options.cib_action = PCMK__CIB_REQUEST_UPGRADE;
 
     } else if (pcmk__str_any_of(option_name, "-Q", "--query", NULL)) {
         options.cmd = cibadmin_cmd_query;
-        options.cib_action = PCMK__CIB_REQUEST_QUERY;
 
     } else if (pcmk__str_any_of(option_name, "-E", "--erase", NULL)) {
         options.cmd = cibadmin_cmd_erase;
-        options.cib_action = PCMK__CIB_REQUEST_ERASE;
 
     } else if (pcmk__str_any_of(option_name, "-B", "--bump", NULL)) {
         options.cmd = cibadmin_cmd_bump;
-        options.cib_action = PCMK__CIB_REQUEST_BUMP;
 
     } else if (pcmk__str_any_of(option_name, "-C", "--create", NULL)) {
         options.cmd = cibadmin_cmd_create;
-        options.cib_action = PCMK__CIB_REQUEST_CREATE;
 
     } else if (pcmk__str_any_of(option_name, "-M", "--modify", NULL)) {
         options.cmd = cibadmin_cmd_modify;
-        options.cib_action = PCMK__CIB_REQUEST_MODIFY;
 
     } else if (pcmk__str_any_of(option_name, "-P", "--patch", NULL)) {
         options.cmd = cibadmin_cmd_patch;
-        options.cib_action = PCMK__CIB_REQUEST_APPLY_PATCH;
 
     } else if (pcmk__str_any_of(option_name, "-R", "--replace", NULL)) {
         options.cmd = cibadmin_cmd_replace;
-        options.cib_action = PCMK__CIB_REQUEST_REPLACE;
 
     } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
         options.cmd = cibadmin_cmd_delete;
-        options.cib_action = PCMK__CIB_REQUEST_DELETE;
 
     } else if (pcmk__str_any_of(option_name, "-d", "--delete-all", NULL)) {
         options.cmd = cibadmin_cmd_delete_all;
-        options.cib_action = PCMK__CIB_REQUEST_DELETE;
         options.delete_all = true;
 
     } else if (pcmk__str_any_of(option_name, "-a", "--empty", NULL)) {
         options.cmd = cibadmin_cmd_empty;
-        options.cib_action = "empty";
         pcmk__str_update(&options.validate_with, optarg);
 
     } else if (pcmk__str_any_of(option_name, "-5", "--md5-sum", NULL)) {
         options.cmd = cibadmin_cmd_md5_sum;
-        options.cib_action = "md5-sum";
 
     } else if (pcmk__str_any_of(option_name, "-6", "--md5-sum-versioned",
                                 NULL)) {
         options.cmd = cibadmin_cmd_md5_sum_versioned;
-        options.cib_action = "md5-sum-versioned";
 
     } else {
         // Should be impossible
@@ -593,6 +627,7 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
+    const cibadmin_cmd_info_t *cmd_info = NULL;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
@@ -649,9 +684,18 @@ main(int argc, char **argv)
         }
     }
 
-    pcmk__assert(options.cib_action != NULL);
+    // Ensure command is in valid range
+    if ((options.cmd >= 0) && (options.cmd <= cibadmin_cmd_max)) {
+        cmd_info = &cibadmin_command_info[options.cmd];
+    }
+    if (cmd_info == NULL) {
+        exit_code = CRM_EX_SOFTWARE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bug: Unimplemented command: %d", (int) options.cmd);
+        goto done;
+    }
 
-    if (strcmp(options.cib_action, "empty") == 0) {
+    if (options.cmd == cibadmin_cmd_empty) {
         // Output an empty CIB
         GString *buf = g_string_sized_new(1024);
 
@@ -664,7 +708,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (cib_action_is_dangerous() && !options.force) {
+    if (cmd_is_dangerous() && !options.force) {
         exit_code = CRM_EX_UNSAFE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "The supplied command is considered dangerous. To prevent "
@@ -754,17 +798,16 @@ main(int argc, char **argv)
         options.cib_user = NULL;
     }
 
-    if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_none)) {
+    if (options.cmd == cibadmin_cmd_md5_sum) {
         output_digest(input, true, &error);
         goto done;
     }
-    if (pcmk__str_eq(options.cib_action, "md5-sum-versioned", pcmk__str_none)) {
+    if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
         output_digest(input, false, &error);
         goto done;
     }
 
-    if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
-                     pcmk__str_none)) {
+    if (options.cmd == cibadmin_cmd_modify) {
         /* @COMPAT When we drop default support for expansion in cibadmin, guard
          * with `if (options.score_update)`
          */
@@ -787,8 +830,7 @@ main(int argc, char **argv)
         cib_conn->call_timeout = DEFAULT_TIMEOUT;
     }
 
-    if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_REPLACE,
-                     pcmk__str_none)
+    if ((options.cmd == cibadmin_cmd_replace)
         && pcmk__xe_is(input, PCMK_XE_CIB)) {
 
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
@@ -798,13 +840,13 @@ main(int argc, char **argv)
         }
     }
 
-    rc = cib_internal_op(cib_conn, options.cib_action, options.dest_node,
+    rc = cib_internal_op(cib_conn, cmd_info->cib_request, options.dest_node,
                          options.cib_section, input, &output,
                          options.cmd_options, options.cib_user);
     rc = pcmk_legacy2rc(rc);
 
     if ((rc == pcmk_rc_schema_unchanged)
-        && (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0)) {
+        && (options.cmd == cibadmin_cmd_upgrade)) {
 
         printf("Upgrade unnecessary: %s\n", pcmk_rc_str(rc));
         exit_code = CRM_EX_OK;
@@ -814,7 +856,7 @@ main(int argc, char **argv)
         exit_code = pcmk_rc2exitc(rc);
 
         if (rc == pcmk_rc_schema_validation) {
-            if (strcmp(options.cib_action, PCMK__CIB_REQUEST_UPGRADE) == 0) {
+            if (options.cmd == cibadmin_cmd_upgrade) {
                 xmlNode *obj = NULL;
 
                 if (cib_conn->cmds->query(cib_conn, NULL, &obj,
