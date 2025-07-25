@@ -146,7 +146,6 @@ configure
 /tools/cluster-clean
 /tools/cluster-helper
 /tools/cluster-init
-/tools/cibsecret
 /tools/crm_error
 /tools/crm_failcount
 /tools/crm_master
@@ -344,6 +343,7 @@ pacemaker_*.info
 /pengine
 /py-compile
 /scratch
+/tools/cibsecret
 /tools/cluster-init
 /tools/crm_mon.upstart
 /test-driver
