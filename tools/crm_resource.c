@@ -2230,7 +2230,7 @@ main(int argc, char **argv)
         && !has_cmdline_config()) {
 
         cib_conn = cib_new();
-        if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
+        if (cib_conn == NULL) {
             exit_code = CRM_EX_DISCONNECT;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         _("Could not create CIB connection"));
