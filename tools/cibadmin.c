@@ -113,6 +113,35 @@ read_input(xmlNode **input, GError **error)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Output the digest of an XML tree
+ *
+ * \param[in]  xml      XML whose digest to output
+ * \param[in]  on_disk  If \c true, output the on-disk digest of \p xml
+ * \param[out] error    Where to store error
+ */
+static void
+output_digest(const xmlNode *xml, bool on_disk, GError **error)
+{
+    char *digest = NULL;
+
+    if (xml == NULL) {
+        exit_code = CRM_EX_USAGE;
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Please supply XML to process with -X, -x, or -p");
+        return;
+    }
+
+    if (on_disk) {
+        digest = pcmk__digest_on_disk_cib(xml);
+    } else {
+        digest = pcmk__digest_xml(xml, true);
+    }
+    printf("%s\n", pcmk__s(digest, "<null>"));
+    free(digest);
+}
+
 static int
 do_work(xmlNode *input, xmlNode **output)
 {
@@ -718,38 +747,17 @@ main(int argc, char **argv)
         options.cib_user = NULL;
     }
 
-    if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_casei)) {
-        char *digest = NULL;
-
-        if (input == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Please supply XML to process with -X, -x, or -p");
-            goto done;
-        }
-
-        digest = pcmk__digest_on_disk_cib(input);
-        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
-        free(digest);
+    if (pcmk__str_eq(options.cib_action, "md5-sum", pcmk__str_none)) {
+        output_digest(input, true, &error);
         goto done;
-
-    } else if (strcmp(options.cib_action, "md5-sum-versioned") == 0) {
-        char *digest = NULL;
-
-        if (input == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Please supply XML to process with -X, -x, or -p");
-            goto done;
-        }
-
-        digest = pcmk__digest_xml(input, true);
-        fprintf(stdout, "%s\n", pcmk__s(digest, "<null>"));
-        free(digest);
+    }
+    if (pcmk__str_eq(options.cib_action, "md5-sum-versioned", pcmk__str_none)) {
+        output_digest(input, false, &error);
         goto done;
+    }
 
-    } else if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
-                            pcmk__str_none)) {
+    if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_MODIFY,
+                     pcmk__str_none)) {
         /* @COMPAT When we drop default support for expansion in cibadmin, guard
          * with `if (options.score_update)`
          */
