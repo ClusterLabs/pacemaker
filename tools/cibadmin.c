@@ -142,7 +142,6 @@ static struct {
     gchar *input_file;
     gchar *input_string;
     gboolean input_stdin;
-    bool delete_all;
     gboolean allow_create;
     gboolean force;
     gboolean get_node_path;
@@ -288,8 +287,6 @@ static gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
-    options.delete_all = false;
-
     if (pcmk__str_any_of(option_name, "-u", "--upgrade", NULL)) {
         options.cmd = cibadmin_cmd_upgrade;
 
@@ -319,7 +316,6 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     } else if (pcmk__str_any_of(option_name, "-d", "--delete-all", NULL)) {
         options.cmd = cibadmin_cmd_delete_all;
-        options.delete_all = true;
 
     } else if (pcmk__str_any_of(option_name, "-a", "--empty", NULL)) {
         options.cmd = cibadmin_cmd_empty;
@@ -746,7 +742,7 @@ main(int argc, char **argv)
                               cib_can_create);
     }
 
-    if (options.delete_all) {
+    if (options.cmd == cibadmin_cmd_delete_all) {
         // With cibadmin_section_xpath, remove all matching objects
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_multiple);
