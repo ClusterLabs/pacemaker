@@ -19,6 +19,7 @@
 
 #define SUMMARY "query and edit the Pacemaker configuration"
 
+#define DEFAULT_TIMEOUT 30
 #define INDENT "                                "
 
 enum cibadmin_section_type {
@@ -36,7 +37,7 @@ static struct {
     enum cibadmin_section_type section_type;
     char *cib_section;
     char *validate_with;
-    gint message_timeout_sec;
+    gint timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
     gchar *cib_user;
     gchar *dest_node;
@@ -58,7 +59,7 @@ static struct {
 } options = {
     .cib_action = PCMK__CIB_REQUEST_QUERY,
     .cmd_options = cib_sync_call,
-    .message_timeout_sec = 30,
+    .timeout_sec = DEFAULT_TIMEOUT,
 };
 
 /*!
@@ -388,7 +389,7 @@ static GOptionEntry addl_entries[] = {
       "Force the action to be performed", NULL },
 
     { "timeout", 't', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT,
-      &options.message_timeout_sec,
+      &options.timeout_sec,
       "Time (in seconds) to wait before declaring the operation failed",
       "value" },
 
@@ -738,10 +739,11 @@ main(int argc, char **argv)
         goto done;
     }
 
-    cib_conn->call_timeout = options.message_timeout_sec;
+    cib_conn->call_timeout = options.timeout_sec;
     if (cib_conn->call_timeout < 1) {
-        fprintf(stderr, "Timeout must be positive, defaulting to 30\n");
-        cib_conn->call_timeout = 30;
+        fprintf(stderr, "Timeout must be positive, defaulting to %d\n",
+                DEFAULT_TIMEOUT);
+        cib_conn->call_timeout = DEFAULT_TIMEOUT;
     }
 
     if (pcmk__str_eq(options.cib_action, PCMK__CIB_REQUEST_REPLACE,
