@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -516,33 +516,6 @@ cib_shadow_new(const char *shadow)
 }
 
 /*!
- * \brief Create a new CIB connection object, ignoring any active shadow CIB
- *
- * Create a new live, file, or remote CIB connection object based on the values
- * of CIB-related environment variables (CIB_file, CIB_port, CIB_server,
- * CIB_user, and CIB_passwd). The object will not be connected.
- *
- * \return Newly allocated CIB connection object
- * \note The CIB API does not fully support opening multiple CIB connection
- *       objects simultaneously, so the returned object should be treated as a
- *       singleton.
- */
-cib_t *
-cib_new_no_shadow(void)
-{
-    const char *shadow = getenv("CIB_shadow");
-    cib_t *cib = NULL;
-
-    unsetenv("CIB_shadow");
-    cib = cib_new();
-
-    if (shadow != NULL) {
-        setenv("CIB_shadow", shadow, 1);
-    }
-    return cib;
-}
-
-/*!
  * \brief Create a new CIB connection object
  *
  * Create a new live, remote, file, or shadow file CIB connection object based
@@ -769,3 +742,26 @@ cib__lookup_id (int call_id)
 {
     return pcmk__intkey_table_lookup(cib_op_callback_table, call_id);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/cib_compat.h>
+
+cib_t *
+cib_new_no_shadow(void)
+{
+    const char *shadow = getenv("CIB_shadow");
+    cib_t *cib = NULL;
+
+    unsetenv("CIB_shadow");
+    cib = cib_new();
+
+    if (shadow != NULL) {
+        setenv("CIB_shadow", shadow, 1);
+    }
+    return cib;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_CIB_COMPAT__H
 #  define PCMK__CRM_CIB_COMPAT__H
+
+#include <crm/cib/cib_types.h>      // cib_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +28,12 @@ extern "C" {
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
 #define T_CIB_DIFF_NOTIFY "cib_diff_notify"
+
+/*!
+ * \deprecated Save CIB_shadow, unset it, call cib_new(), and restore old
+ *             CIB_shadow instead
+ */
+cib_t *cib_new_no_shadow(void);
 
 #ifdef __cplusplus
 }
