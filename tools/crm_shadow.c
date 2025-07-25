@@ -444,9 +444,16 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
 static int
 connect_real_cib(cib_t **real_cib, GError **error)
 {
+    const char *active = getenv("CIB_shadow");
     int rc = pcmk_rc_ok;
 
-    *real_cib = cib_new_no_shadow();
+    // Create a non-shadowed CIB connection object and then restore CIB_shadow
+    unsetenv("CIB_shadow");
+    *real_cib = cib_new();
+    if (active != NULL) {
+        setenv("CIB_shadow", active, 1);
+    }
+
     if (*real_cib == NULL) {
         rc = ENOMEM;
         exit_code = pcmk_rc2exitc(rc);
