@@ -22,6 +22,29 @@
 #define DEFAULT_TIMEOUT 30
 #define INDENT "                                "
 
+/*!
+ * \internal
+ * \brief Commands for \c cibadmin
+ */
+enum cibadmin_cmd {
+    cibadmin_cmd_bump,
+    cibadmin_cmd_create,
+    cibadmin_cmd_delete,
+    cibadmin_cmd_delete_all,
+    cibadmin_cmd_empty,
+    cibadmin_cmd_erase,
+    cibadmin_cmd_md5_sum,
+    cibadmin_cmd_md5_sum_versioned,
+    cibadmin_cmd_modify,
+    cibadmin_cmd_patch,
+    cibadmin_cmd_query,
+    cibadmin_cmd_replace,
+    cibadmin_cmd_upgrade,
+
+    // Update this when adding new commands
+    cibadmin_cmd_max = cibadmin_cmd_upgrade,
+};
+
 enum cibadmin_section_type {
     cibadmin_section_all = 0,
     cibadmin_section_scope,
@@ -32,6 +55,7 @@ static cib_t *cib_conn = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
+    enum cibadmin_cmd cmd;
     const char *cib_action;
     int cmd_options;
     enum cibadmin_section_type section_type;
@@ -59,6 +83,7 @@ static struct {
     // @COMPAT Deprecated since 3.0.1
     gboolean sync_call;
 } options = {
+    .cmd = cibadmin_cmd_query,
     .cib_action = PCMK__CIB_REQUEST_QUERY,
     .cmd_options = cib_sync_call,
     .timeout_sec = DEFAULT_TIMEOUT,
@@ -210,45 +235,58 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
     options.delete_all = false;
 
     if (pcmk__str_any_of(option_name, "-u", "--upgrade", NULL)) {
+        options.cmd = cibadmin_cmd_upgrade;
         options.cib_action = PCMK__CIB_REQUEST_UPGRADE;
 
     } else if (pcmk__str_any_of(option_name, "-Q", "--query", NULL)) {
+        options.cmd = cibadmin_cmd_query;
         options.cib_action = PCMK__CIB_REQUEST_QUERY;
 
     } else if (pcmk__str_any_of(option_name, "-E", "--erase", NULL)) {
+        options.cmd = cibadmin_cmd_erase;
         options.cib_action = PCMK__CIB_REQUEST_ERASE;
 
     } else if (pcmk__str_any_of(option_name, "-B", "--bump", NULL)) {
+        options.cmd = cibadmin_cmd_bump;
         options.cib_action = PCMK__CIB_REQUEST_BUMP;
 
     } else if (pcmk__str_any_of(option_name, "-C", "--create", NULL)) {
+        options.cmd = cibadmin_cmd_create;
         options.cib_action = PCMK__CIB_REQUEST_CREATE;
 
     } else if (pcmk__str_any_of(option_name, "-M", "--modify", NULL)) {
+        options.cmd = cibadmin_cmd_modify;
         options.cib_action = PCMK__CIB_REQUEST_MODIFY;
 
     } else if (pcmk__str_any_of(option_name, "-P", "--patch", NULL)) {
+        options.cmd = cibadmin_cmd_patch;
         options.cib_action = PCMK__CIB_REQUEST_APPLY_PATCH;
 
     } else if (pcmk__str_any_of(option_name, "-R", "--replace", NULL)) {
+        options.cmd = cibadmin_cmd_replace;
         options.cib_action = PCMK__CIB_REQUEST_REPLACE;
 
     } else if (pcmk__str_any_of(option_name, "-D", "--delete", NULL)) {
+        options.cmd = cibadmin_cmd_delete;
         options.cib_action = PCMK__CIB_REQUEST_DELETE;
 
     } else if (pcmk__str_any_of(option_name, "-d", "--delete-all", NULL)) {
+        options.cmd = cibadmin_cmd_delete_all;
         options.cib_action = PCMK__CIB_REQUEST_DELETE;
         options.delete_all = true;
 
     } else if (pcmk__str_any_of(option_name, "-a", "--empty", NULL)) {
+        options.cmd = cibadmin_cmd_empty;
         options.cib_action = "empty";
         pcmk__str_update(&options.validate_with, optarg);
 
     } else if (pcmk__str_any_of(option_name, "-5", "--md5-sum", NULL)) {
+        options.cmd = cibadmin_cmd_md5_sum;
         options.cib_action = "md5-sum";
 
     } else if (pcmk__str_any_of(option_name, "-6", "--md5-sum-versioned",
                                 NULL)) {
+        options.cmd = cibadmin_cmd_md5_sum_versioned;
         options.cib_action = "md5-sum-versioned";
 
     } else {
