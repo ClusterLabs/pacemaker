@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
-      <rsc_op id="5" operation="promote" operation_key="s0:1_promote_0" on_node="node-1" on_node_uuid="node-1">
+      <rsc_op id="3" operation="promote" operation_key="s0:1_promote_0" on_node="node-1" on_node_uuid="node-1">
         <primitive id="s0" long-id="s0:1" class="ocf" provider="pacemaker" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="node-1" CRM_meta_on_node_uuid="node-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -20,7 +20,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="promote" operation_key="s0:1_promote_0" on_node="node-1" on_node_uuid="node-1"/>
+        <rsc_op id="3" operation="promote" operation_key="s0:1_promote_0" on_node="node-1" on_node_uuid="node-1"/>
       </trigger>
     </inputs>
   </synapse>
