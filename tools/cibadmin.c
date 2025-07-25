@@ -704,6 +704,15 @@ main(int argc, char **argv)
         goto done;
     }
 
+    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_unsafe) && !options.force) {
+        exit_code = CRM_EX_UNSAFE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "The supplied command is considered dangerous. To prevent "
+                    "accidental destruction of the cluster, the --force flag "
+                    "is required in order to proceed.");
+        goto done;
+    }
+
     if (options.cmd == cibadmin_cmd_empty) {
         // Output an empty CIB
         GString *buf = g_string_sized_new(1024);
@@ -714,15 +723,6 @@ main(int argc, char **argv)
         pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
         fprintf(stdout, "%s", buf->str);
         g_string_free(buf, TRUE);
-        goto done;
-    }
-
-    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_unsafe) && !options.force) {
-        exit_code = CRM_EX_UNSAFE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "The supplied command is considered dangerous. To prevent "
-                    "accidental destruction of the cluster, the --force flag "
-                    "is required in order to proceed.");
         goto done;
     }
 
