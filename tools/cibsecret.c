@@ -915,7 +915,44 @@ static int
 subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                    crm_exit_t *exit_code)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    const char *rsc = remainder[1];
+    const char *param = remainder[2];
+    char *local_value = NULL;
+    char *cib_value = NULL;
+
+    local_value = local_files_get(rsc, param);
+    if (local_value == NULL) {
+        out->err(out, "Nothing to unstash for resource %s parameter %s",
+                 rsc, param);
+        *exit_code = CRM_EX_NOSUCH;
+        rc = EINVAL;
+        goto done;
+    }
+
+    if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
+        *exit_code = CRM_EX_NOSUCH;
+        rc = ENODEV;
+        goto done;
+    }
+
+    cib_value = get_cib_param(out, rsc, param);
+    if (!is_secret(cib_value)) {
+        out->info(out, "Resource %s parameter %s is not set as secret, but we "
+                  "have a local value so proceeding anyway", rsc, param);
+    }
+
+    rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = set_cib_param(out, rsc, param, local_value);
+
+done:
+    free(cib_value);
+    free(local_value);
+    return rc;
 }
 
 static struct subcommand_entry subcommand_table[] = {
