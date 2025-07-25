@@ -57,6 +57,14 @@ enum cibadmin_command_flags {
     cibadmin_cf_none           = UINT32_C(0),
 
     /*!
+     * \brief Command requires input
+     *
+     * There is no optional input. Either a command requires input, or it
+     * ignores any input that was provided.
+     */
+    cibadmin_cf_requires_input = (UINT32_C(1) << 0),
+
+    /*!
      * \brief Command is especially unsafe
      *
      * Any command that modifies the CIB is unsafe. This flag is for commands
@@ -64,6 +72,14 @@ enum cibadmin_command_flags {
      * used by mistake.
      */
     cibadmin_cf_unsafe         = (UINT32_C(1) << 1),
+
+    /*!
+     * \brief Command can use an XPath expression instead of input XML
+     *
+     * If \c options.section_type is \c cibadmin_section_xpath, then the command
+     * uses \c options.cib_section rather than reading input XML.
+     */
+    cibadmin_cf_xpath_input    = (UINT32_C(1) << 2),
 };
 
 /*!
@@ -80,13 +96,15 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
         PCMK__CIB_REQUEST_BUMP, cibadmin_cf_none,
     },
     [cibadmin_cmd_create] = {
-        PCMK__CIB_REQUEST_CREATE, cibadmin_cf_none,
+        PCMK__CIB_REQUEST_CREATE, cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_delete] = {
-        PCMK__CIB_REQUEST_DELETE, cibadmin_cf_none,
+        PCMK__CIB_REQUEST_DELETE,
+        cibadmin_cf_requires_input|cibadmin_cf_xpath_input,
     },
     [cibadmin_cmd_delete_all] = {
-        PCMK__CIB_REQUEST_DELETE, cibadmin_cf_unsafe,
+        PCMK__CIB_REQUEST_DELETE,
+        cibadmin_cf_requires_input|cibadmin_cf_unsafe|cibadmin_cf_xpath_input,
     },
     [cibadmin_cmd_empty] = {
         NULL, cibadmin_cf_none,
@@ -95,22 +113,22 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
         PCMK__CIB_REQUEST_ERASE, cibadmin_cf_unsafe,
     },
     [cibadmin_cmd_md5_sum] = {
-        NULL, cibadmin_cf_none,
+        NULL, cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_md5_sum_versioned] = {
-        NULL, cibadmin_cf_none,
+        NULL, cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_modify] = {
-        PCMK__CIB_REQUEST_MODIFY, cibadmin_cf_none,
+        PCMK__CIB_REQUEST_MODIFY, cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_patch] = {
-        PCMK__CIB_REQUEST_APPLY_PATCH, cibadmin_cf_none,
+        PCMK__CIB_REQUEST_APPLY_PATCH, cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_query] = {
         PCMK__CIB_REQUEST_QUERY, cibadmin_cf_none,
     },
     [cibadmin_cmd_replace] = {
-        PCMK__CIB_REQUEST_REPLACE, cibadmin_cf_none,
+        PCMK__CIB_REQUEST_REPLACE, cibadmin_cf_requires_input,
     },
 
     /* @TODO Ideally, --upgrade wouldn't be considered unsafe if the CIB already
@@ -176,42 +194,35 @@ static struct {
  *
  * If no input source is specified, this function does nothing.
  *
- * \param[out] input  Where to store parsed input
- * \param[out] error  Where to store error information
+ * \param[out] input   Where to store parsed input
+ * \param[out] source  Where to store string describing input source
  *
  * \return Standard Pacemaker return code
  */
 static int
-read_input(xmlNode **input, GError **error)
+read_input(xmlNode **input, const char **source)
 {
-    const char *source = NULL;
-
     if (options.input_file != NULL) {
-        source = options.input_file;
+        *source = options.input_file;
         *input = pcmk__xml_read(options.input_file);
 
     } else if (options.input_string != NULL) {
-        source = "input string";
+        *source = "input string";
         *input = pcmk__xml_parse(options.input_string);
 
     } else if (options.input_stdin) {
-        source = "stdin";
+        *source = "stdin";
         *input = pcmk__xml_read(NULL);
 
     } else {
+        *source = NULL;
         *input = NULL;
-        return pcmk_rc_ok;
+        return EINVAL;
     }
 
     if (*input == NULL) {
-        int rc = pcmk_rc_bad_input;
-
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Couldn't parse input from %s", source);
-        return rc;
+        return pcmk_rc_bad_input;
     }
-
     return pcmk_rc_ok;
 }
 
@@ -221,19 +232,11 @@ read_input(xmlNode **input, GError **error)
  *
  * \param[in]  xml      XML whose digest to output
  * \param[in]  on_disk  If \c true, output the on-disk digest of \p xml
- * \param[out] error    Where to store error
  */
 static void
-output_digest(const xmlNode *xml, bool on_disk, GError **error)
+output_digest(const xmlNode *xml, bool on_disk)
 {
     char *digest = NULL;
-
-    if (xml == NULL) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Please supply XML to process with -X, -x, or -p");
-        return;
-    }
 
     if (on_disk) {
         digest = pcmk__digest_on_disk_cib(xml);
@@ -709,6 +712,38 @@ main(int argc, char **argv)
         goto done;
     }
 
+    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_requires_input)) {
+        bool accepts_xpath = pcmk_is_set(cmd_info->flags,
+                                         cibadmin_cf_xpath_input);
+
+        /* If true, use options.cib_section (an XPath expression) instead of
+         * input XML
+         */
+        bool as_xpath = accepts_xpath
+                        && (options.section_type == cibadmin_section_xpath);
+
+        if (!as_xpath) {
+            const char *source = NULL;
+
+            rc = read_input(&input, &source);
+            if (rc == EINVAL) {
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "The supplied command requires %sinput via "
+                            "--xml-file, --xml-text, or --xml-pipe",
+                            (accepts_xpath? "either --xpath or " : ""));
+                goto done;
+            }
+            if (rc != pcmk_rc_ok) {
+                exit_code = pcmk_rc2exitc(rc);
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Couldn't parse input from %s",
+                            pcmk__s(source, "(BUG: null source)"));
+                goto done;
+            }
+        }
+    }
+
     if (options.cmd == cibadmin_cmd_empty) {
         // Output an empty CIB
         GString *buf = g_string_sized_new(1024);
@@ -762,10 +797,6 @@ main(int argc, char **argv)
                               cib_no_children);
     }
 
-    if (read_input(&input, &error) != pcmk_rc_ok) {
-        goto done;
-    }
-
     /* @TODO Since this was added by 99f414d, we have not entered this ACL
      * render setup section if any input was provided. Is that correct?
      */
@@ -804,11 +835,11 @@ main(int argc, char **argv)
     }
 
     if (options.cmd == cibadmin_cmd_md5_sum) {
-        output_digest(input, true, &error);
+        output_digest(input, true);
         goto done;
     }
     if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
-        output_digest(input, false, &error);
+        output_digest(input, false);
         goto done;
     }
 
