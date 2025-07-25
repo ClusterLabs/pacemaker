@@ -133,29 +133,6 @@ do_work(xmlNode *input, xmlNode **output)
                            options.cmd_options, options.cib_user);
 }
 
-static void
-print_xpath_addresses(const xmlNode *xml)
-{
-    if (xml->type != XML_ELEMENT_NODE) {
-        return;
-    }
-
-    if (pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
-        for (const xmlNode *child = xml->children; child != NULL;
-             child = child->next) {
-
-            print_xpath_addresses(child);
-        }
-
-    } else {
-        const char *id = crm_element_value(xml, PCMK_XA_ID);
-
-        if (id != NULL) {
-            printf("%s\n", id);
-        }
-    }
-}
-
 // Upgrade requested but already at latest schema
 static void
 report_schema_unchanged(void)
@@ -211,6 +188,17 @@ scope_is_valid(const char *scope)
                             PCMK_XE_ALERTS,
                             PCMK_XE_STATUS,
                             NULL);
+}
+
+static int
+print_xml_id(xmlNode *xml, void *user_data)
+{
+    const char *id = pcmk__xe_id(xml);
+
+    if (id != NULL) {
+        printf("%s\n", id);
+    }
+    return pcmk_rc_ok;
 }
 
 static gboolean
@@ -839,8 +827,11 @@ main(int argc, char **argv)
         printf("%s\n", (char *) rendered);
         xmlFree(rendered);
 
-    } else if (pcmk_is_set(options.cmd_options, cib_xpath_address)) {
-        print_xpath_addresses(output);
+    } else if (pcmk_is_set(options.cmd_options, cib_xpath_address)
+               && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
+
+        pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
+                               NULL);
 
     } else {
         GString *buf = g_string_sized_new(1024);
