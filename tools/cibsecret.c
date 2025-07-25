@@ -554,7 +554,7 @@ remove_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
     return rc;
 }
 
-static G_GNUC_UNUSED int
+static int
 set_cib_param(pcmk__output_t *out, const char *rsc, const char *param,
               const char *value)
 {
@@ -630,6 +630,53 @@ local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 done:
     free(lf_file);
     free(cmdline);
+    return rc;
+}
+
+static int
+local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
+                const char *rsc, const char *param, const char *value)
+{
+    char *contents = NULL;
+    char *lf_dir = NULL;
+    char *lf_file = NULL;
+    char *sign_file = NULL;
+    char *calc_sum = NULL;
+    int rc = pcmk_rc_ok;
+
+    lf_dir = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s", rsc);
+
+    if (g_mkdir_with_parents(lf_dir, 0700) != 0) {
+        rc = errno;
+        goto done;
+    }
+
+    lf_file = crm_strdup_printf("%s/%s", lf_dir, param);
+    contents = crm_strdup_printf("%s\n", value);
+    if (!g_file_set_contents(lf_file, contents, -1, NULL)) {
+        rc = EIO;
+        goto done;
+    }
+
+    free(contents);
+
+    sign_file = crm_strdup_printf("%s/%s.sign", lf_dir, param);
+    calc_sum = crm_md5sum(value);
+    contents = crm_strdup_printf("%s\n", calc_sum);
+
+    if (!g_file_set_contents(sign_file, contents, -1, NULL)) {
+        rc = EIO;
+        goto done;
+    }
+
+    rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
+
+done:
+    free(contents);
+    free(calc_sum);
+    free(sign_file);
+    free(lf_dir);
+    free(lf_file);
     return rc;
 }
 
@@ -741,7 +788,37 @@ static int
 subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
                crm_exit_t *exit_code)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    const char *rsc = remainder[1];
+    const char *param = remainder[2];
+    const char *value = remainder[3];
+    char *current = NULL;
+
+    if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
+        *exit_code = CRM_EX_NOSUCH;
+        rc = ENODEV;
+        goto done;
+    }
+
+    current = get_cib_param(out, rsc, param);
+    if ((current != NULL) && !pcmk__str_any_of(current, LRM_MAGIC, value, NULL)) {
+        out->err(out, "CIB value <%s> different for %s rsc parameter %s; please "
+                 "delete it first", current, rsc, param);
+        *exit_code = CRM_EX_CONFIG;
+        rc = EINVAL;
+        goto done;
+    }
+
+    rc = local_files_set(out, rsh_fn, rcp_fn, rsc, param, value);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    rc = set_cib_param(out, rsc, param, LRM_MAGIC);
+
+done:
+    free(current);
+    return rc;
 }
 
 static int
