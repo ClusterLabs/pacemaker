@@ -806,12 +806,6 @@ main(int argc, char **argv)
                 "entire CIB.\n", options.cib_section);
     }
 
-    if (options.allow_create) {
-        // Allow target of --modify/-M to be created if it does not exist
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_can_create);
-    }
-
     if (options.cmd == cibadmin_cmd_delete_all) {
         // With cibadmin_section_xpath, remove all matching objects
         cib__set_call_options(options.cmd_options, crm_system_name,
@@ -840,6 +834,12 @@ main(int argc, char **argv)
          */
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_score_update);
+
+        if (options.allow_create) {
+            // Allow target to be created if it does not exist
+            cib__set_call_options(options.cmd_options, crm_system_name,
+                                  cib_can_create);
+        }
     }
 
     rc = cib__create_signon(&cib_conn);
