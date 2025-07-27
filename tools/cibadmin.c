@@ -150,7 +150,6 @@ static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
     enum cibadmin_cmd cmd;
-    int cmd_options;
     enum cibadmin_section_type section_type;
     char *cib_section;
     char *validate_with;
@@ -176,7 +175,6 @@ static struct {
     gboolean sync_call;
 } options = {
     .cmd = cibadmin_cmd_query,
-    .cmd_options = cib_sync_call,
     .timeout_sec = DEFAULT_TIMEOUT,
 };
 
@@ -615,6 +613,7 @@ main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
     const cibadmin_cmd_info_t *cmd_info = NULL;
+    int call_options = cib_sync_call;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
@@ -663,8 +662,7 @@ main(int argc, char **argv)
     set_crm_log_level(LOG_CRIT);
 
     if (args->verbosity > 0) {
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_verbose);
+        cib__set_call_options(call_options, crm_system_name, cib_verbose);
 
         for (int i = 0; i < args->verbosity; i++) {
             crm_bump_log_level(argc, argv);
@@ -795,20 +793,18 @@ main(int argc, char **argv)
 
     if (options.cmd == cibadmin_cmd_delete_all) {
         // With cibadmin_section_xpath, remove all matching objects
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_multiple);
+        cib__set_call_options(call_options, crm_system_name, cib_multiple);
     }
 
     if (options.cmd == cibadmin_cmd_modify) {
         /* @COMPAT When we drop default support for expansion in cibadmin, guard
          * with `if (options.score_update)`
          */
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_score_update);
+        cib__set_call_options(call_options, crm_system_name, cib_score_update);
 
         if (options.allow_create) {
             // Allow target to be created if it does not exist
-            cib__set_call_options(options.cmd_options, crm_system_name,
+            cib__set_call_options(call_options, crm_system_name,
                                   cib_can_create);
         }
     }
@@ -818,13 +814,13 @@ main(int argc, char **argv)
             /* Enable getting node path of XPath query matches. Meaningful only
              * if options.section_type == cibadmin_section_xpath.
              */
-            cib__set_call_options(options.cmd_options, crm_system_name,
+            cib__set_call_options(call_options, crm_system_name,
                                   cib_xpath_address);
         }
 
         if (options.no_children) {
             // When querying an object, don't include its children in the result
-            cib__set_call_options(options.cmd_options, crm_system_name,
+            cib__set_call_options(call_options, crm_system_name,
                                   cib_no_children);
         }
     }
@@ -841,8 +837,7 @@ main(int argc, char **argv)
 
     if (options.section_type == cibadmin_section_xpath) {
         // Enable getting section by XPath
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_xpath);
+        cib__set_call_options(call_options, crm_system_name, cib_xpath);
 
     } else if ((options.section_type == cibadmin_section_scope)
                && !scope_is_valid(options.cib_section)) {
@@ -868,8 +863,8 @@ main(int argc, char **argv)
     }
 
     rc = cib_internal_op(cib_conn, cmd_info->cib_request, options.dest_node,
-                         options.cib_section, input, &output,
-                         options.cmd_options, options.cib_user);
+                         options.cib_section, input, &output, call_options,
+                         options.cib_user);
     rc = pcmk_legacy2rc(rc);
 
     // Handle return code depending on command
@@ -886,7 +881,7 @@ main(int argc, char **argv)
                 xmlNode *obj = NULL;
 
                 if (cib_conn->cmds->query(cib_conn, NULL, &obj,
-                                          options.cmd_options) == pcmk_ok) {
+                                          call_options) == pcmk_ok) {
                     pcmk__update_schema(&obj, NULL, true, false);
                 }
                 pcmk__xml_free(obj);
@@ -935,7 +930,7 @@ main(int argc, char **argv)
         printf("%s\n", (char *) rendered);
         xmlFree(rendered);
 
-    } else if (pcmk_is_set(options.cmd_options, cib_xpath_address)
+    } else if (pcmk_is_set(call_options, cib_xpath_address)
                && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
 
         pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
