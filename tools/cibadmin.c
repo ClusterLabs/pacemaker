@@ -778,6 +778,20 @@ main(int argc, char **argv)
         g_string_free(buf, TRUE);
         goto done;
     }
+    if (options.cmd == cibadmin_cmd_md5_sum) {
+        char *digest = pcmk__digest_on_disk_cib(input);
+
+        printf("%s\n", pcmk__s(digest, "<null>"));
+        free(digest);
+        goto done;
+    }
+    if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
+        char *digest = pcmk__digest_xml(input, true);
+
+        printf("%s\n", pcmk__s(digest, "<null>"));
+        free(digest);
+        goto done;
+    }
 
     if (options.section_type == cibadmin_section_xpath) {
         // Enable getting section by XPath
@@ -816,21 +830,6 @@ main(int argc, char **argv)
         // When querying an object, don't include its children in the result
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_no_children);
-    }
-
-    if (options.cmd == cibadmin_cmd_md5_sum) {
-        char *digest = pcmk__digest_on_disk_cib(input);
-
-        printf("%s\n", pcmk__s(digest, "<null>"));
-        free(digest);
-        goto done;
-    }
-    if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
-        char *digest = pcmk__digest_xml(input, true);
-
-        printf("%s\n", pcmk__s(digest, "<null>"));
-        free(digest);
-        goto done;
     }
 
     if (options.cmd == cibadmin_cmd_modify) {
