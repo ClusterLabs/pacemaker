@@ -228,27 +228,6 @@ read_input(xmlNode **input, const char **source)
 
 /*!
  * \internal
- * \brief Output the digest of an XML tree
- *
- * \param[in]  xml      XML whose digest to output
- * \param[in]  on_disk  If \c true, output the on-disk digest of \p xml
- */
-static void
-output_digest(const xmlNode *xml, bool on_disk)
-{
-    char *digest = NULL;
-
-    if (on_disk) {
-        digest = pcmk__digest_on_disk_cib(xml);
-    } else {
-        digest = pcmk__digest_xml(xml, true);
-    }
-    printf("%s\n", pcmk__s(digest, "<null>"));
-    free(digest);
-}
-
-/*!
- * \internal
  * \brief Determine whether the given CIB scope is valid for \p cibadmin
  *
  * \param[in] scope  Scope to validate
@@ -840,11 +819,17 @@ main(int argc, char **argv)
     }
 
     if (options.cmd == cibadmin_cmd_md5_sum) {
-        output_digest(input, true);
+        char *digest = pcmk__digest_on_disk_cib(input);
+
+        printf("%s\n", pcmk__s(digest, "<null>"));
+        free(digest);
         goto done;
     }
     if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
-        output_digest(input, false);
+        char *digest = pcmk__digest_xml(input, true);
+
+        printf("%s\n", pcmk__s(digest, "<null>"));
+        free(digest);
         goto done;
     }
 
