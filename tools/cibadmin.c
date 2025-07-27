@@ -793,23 +793,24 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.section_type == cibadmin_section_xpath) {
-        // Enable getting section by XPath
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_xpath);
-
-    } else if ((options.section_type == cibadmin_section_scope)
-               && !scope_is_valid(options.cib_section)) {
-        // @COMPAT: Consider requiring --force to proceed
-        fprintf(stderr,
-                "Invalid value '%s' for '--scope'. Operation will apply to the "
-                "entire CIB.\n", options.cib_section);
-    }
-
     if (options.cmd == cibadmin_cmd_delete_all) {
         // With cibadmin_section_xpath, remove all matching objects
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_multiple);
+    }
+
+    if (options.cmd == cibadmin_cmd_modify) {
+        /* @COMPAT When we drop default support for expansion in cibadmin, guard
+         * with `if (options.score_update)`
+         */
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_score_update);
+
+        if (options.allow_create) {
+            // Allow target to be created if it does not exist
+            cib__set_call_options(options.cmd_options, crm_system_name,
+                                  cib_can_create);
+        }
     }
 
     if (options.cmd == cibadmin_cmd_query) {
@@ -828,18 +829,27 @@ main(int argc, char **argv)
         }
     }
 
-    if (options.cmd == cibadmin_cmd_modify) {
-        /* @COMPAT When we drop default support for expansion in cibadmin, guard
-         * with `if (options.score_update)`
-         */
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_score_update);
+    if ((options.cmd == cibadmin_cmd_replace)
+        && pcmk__xe_is(input, PCMK_XE_CIB)) {
 
-        if (options.allow_create) {
-            // Allow target to be created if it does not exist
-            cib__set_call_options(options.cmd_options, crm_system_name,
-                                  cib_can_create);
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
+
+        if (status == NULL) {
+            pcmk__xe_create(input, PCMK_XE_STATUS);
         }
+    }
+
+    if (options.section_type == cibadmin_section_xpath) {
+        // Enable getting section by XPath
+        cib__set_call_options(options.cmd_options, crm_system_name,
+                              cib_xpath);
+
+    } else if ((options.section_type == cibadmin_section_scope)
+               && !scope_is_valid(options.cib_section)) {
+        // @COMPAT: Consider requiring --force to proceed
+        fprintf(stderr,
+                "Invalid value '%s' for '--scope'. Operation will apply to the "
+                "entire CIB.\n", options.cib_section);
     }
 
     rc = cib__create_signon(&cib_conn);
@@ -855,16 +865,6 @@ main(int argc, char **argv)
         fprintf(stderr, "Timeout must be positive, defaulting to %d\n",
                 DEFAULT_TIMEOUT);
         cib_conn->call_timeout = DEFAULT_TIMEOUT;
-    }
-
-    if ((options.cmd == cibadmin_cmd_replace)
-        && pcmk__xe_is(input, PCMK_XE_CIB)) {
-
-        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
-
-        if (status == NULL) {
-            pcmk__xe_create(input, PCMK_XE_STATUS);
-        }
     }
 
     rc = cib_internal_op(cib_conn, cmd_info->cib_request, options.dest_node,
