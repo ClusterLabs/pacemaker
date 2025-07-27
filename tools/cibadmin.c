@@ -818,18 +818,20 @@ main(int argc, char **argv)
                               cib_multiple);
     }
 
-    if (options.get_node_path) {
-        /* Enable getting node path of XPath query matches.
-         * Meaningful only if options.section_type == cibadmin_section_xpath.
-         */
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_xpath_address);
-    }
+    if (options.cmd == cibadmin_cmd_query) {
+        if (options.get_node_path) {
+            /* Enable getting node path of XPath query matches. Meaningful only
+             * if options.section_type == cibadmin_section_xpath.
+             */
+            cib__set_call_options(options.cmd_options, crm_system_name,
+                                  cib_xpath_address);
+        }
 
-    if (options.no_children) {
-        // When querying an object, don't include its children in the result
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_no_children);
+        if (options.no_children) {
+            // When querying an object, don't include its children in the result
+            cib__set_call_options(options.cmd_options, crm_system_name,
+                                  cib_no_children);
+        }
     }
 
     if (options.cmd == cibadmin_cmd_modify) {
