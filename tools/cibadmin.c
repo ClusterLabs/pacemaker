@@ -872,18 +872,17 @@ main(int argc, char **argv)
                          options.cmd_options, options.cib_user);
     rc = pcmk_legacy2rc(rc);
 
-    if ((rc == pcmk_rc_schema_unchanged)
-        && (options.cmd == cibadmin_cmd_upgrade)) {
+    // Handle return code depending on command
+    if (options.cmd == cibadmin_cmd_upgrade) {
+        if (rc == pcmk_rc_schema_unchanged) {
+            printf("Upgrade unnecessary: %s\n", pcmk_rc_str(rc));
+            exit_code = CRM_EX_OK;
 
-        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(rc));
-        exit_code = CRM_EX_OK;
+        } else if (rc != pcmk_rc_ok) {
+            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
+            exit_code = pcmk_rc2exitc(rc);
 
-    } else if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
-        exit_code = pcmk_rc2exitc(rc);
-
-        if (rc == pcmk_rc_schema_validation) {
-            if (options.cmd == cibadmin_cmd_upgrade) {
+            if (rc == pcmk_rc_schema_validation) {
                 xmlNode *obj = NULL;
 
                 if (cib_conn->cmds->query(cib_conn, NULL, &obj,
@@ -891,11 +890,16 @@ main(int argc, char **argv)
                     pcmk__update_schema(&obj, NULL, true, false);
                 }
                 pcmk__xml_free(obj);
-
-            } else if (output != NULL) {
-                // Show validation errors to stderr
-                pcmk__validate_xml(output, NULL, NULL, NULL);
             }
+        }
+
+    } else if (rc != pcmk_rc_ok) {
+        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
+        exit_code = pcmk_rc2exitc(rc);
+
+        if ((rc == pcmk_rc_schema_validation) && (output != NULL)) {
+            // Show validation errors to stderr
+            pcmk__validate_xml(output, NULL, NULL, NULL);
         }
     }
 
