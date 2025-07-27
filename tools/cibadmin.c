@@ -805,13 +805,12 @@ main(int argc, char **argv)
         cib__set_call_options(options.cmd_options, crm_system_name,
                               cib_xpath);
 
-    } else if (options.section_type == cibadmin_section_scope) {
-        if (!scope_is_valid(options.cib_section)) {
-            // @COMPAT: Consider requiring --force to proceed
-            fprintf(stderr,
-                    "Invalid value '%s' for '--scope'. Operation will apply "
-                    "to the entire CIB.\n", options.cib_section);
-        }
+    } else if ((options.section_type == cibadmin_section_scope)
+               && !scope_is_valid(options.cib_section)) {
+        // @COMPAT: Consider requiring --force to proceed
+        fprintf(stderr,
+                "Invalid value '%s' for '--scope'. Operation will apply to the "
+                "entire CIB.\n", options.cib_section);
     }
 
     if (options.allow_create) {
