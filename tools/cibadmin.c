@@ -207,7 +207,16 @@ cibadmin_pre_md5_sum(int *call_options, xmlNode *input, GError **error)
     // Handles entirety of md5_sum command; there is no CIB request
     char *digest = pcmk__digest_on_disk_cib(input);
 
-    printf("%s\n", pcmk__s(digest, "<null>"));
+    if (digest == NULL) {
+        /* On-disk digest should be non-NULL even if input is NULL or empty,
+         * since whitespace gets added before and after dumping the XML
+         */
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_SOFTWARE,
+                    "Bug: Null digest");
+        return CRM_EX_SOFTWARE;
+    }
+
+    printf("%s\n", digest);
     free(digest);
     return CRM_EX_OK;
 }
@@ -219,7 +228,15 @@ cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
     // Handles entirety of md5_sum_versioned command; there is no CIB request
     char *digest = pcmk__digest_xml(input, true);
 
-    printf("%s\n", pcmk__s(digest, "<null>"));
+    if (digest == NULL) {
+        int rc = pcmk_rc_bad_input;
+
+        g_set_error(error, PCMK__RC_ERROR, rc,
+                    "Couldn't compute digest: %s", pcmk_rc_str(rc));
+        return pcmk_rc2exitc(rc);
+    }
+
+    printf("%s\n", digest);
     free(digest);
     return CRM_EX_OK;
 }
