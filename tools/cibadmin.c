@@ -712,6 +712,49 @@ main(int argc, char **argv)
         goto done;
     }
 
+    /* Query is the only command that produces output suitable for ACL
+     * rendering. Ignore --show-access for other commands.
+     */
+    if (options.acl_render_mode != pcmk__acl_render_none) {
+        if (options.cmd == cibadmin_cmd_query) {
+            char *username = NULL;
+
+            if (options.cib_user == NULL) {
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "The supplied command requires -U user specified.");
+                goto done;
+            }
+
+            // @COMPAT Fail if pcmk_acl_required(username)
+            username = pcmk__uid2username(geteuid());
+            if (pcmk_acl_required(username)) {
+                fprintf(stderr,
+                        "Warning: cibadmin is being run as user %s, which is "
+                        "subject to ACLs. As a result, ACLs for user %s may be "
+                        "incorrect or incomplete in the output. In a future "
+                        "release, running as a privileged user (root or "
+                        CRM_DAEMON_USER ") will be required for "
+                        "-S/--show-access.\n",
+                        username, options.cib_user);
+            }
+
+            free(username);
+
+            /* Note: acl_cred takes ownership of options.cib_user here.
+             * options.cib_user is set to NULL so that the CIB is obtained as
+             * the user running the cibadmin command. The CIB must be obtained
+             * as a user with full permissions in order to show the CIB
+             * correctly annotated for the options.cib_user's permissions.
+             */
+            acl_cred = options.cib_user;
+            options.cib_user = NULL;
+
+        } else {
+            options.acl_render_mode = pcmk__acl_render_none;
+        }
+    }
+
     if (pcmk_is_set(cmd_info->flags, cibadmin_cf_requires_input)) {
         bool accepts_xpath = pcmk_is_set(cmd_info->flags,
                                          cibadmin_cf_xpath_input);
@@ -797,43 +840,6 @@ main(int argc, char **argv)
                               cib_no_children);
     }
 
-    /* @TODO Since this was added by 99f414d, we have not entered this ACL
-     * render setup section if any input was provided. Is that correct?
-     */
-    if ((input == NULL) && (options.acl_render_mode != pcmk__acl_render_none)) {
-        char *username = NULL;
-
-        if (options.cib_user == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "The supplied command requires -U user specified.");
-            goto done;
-        }
-
-        // @COMPAT Fail if pcmk_acl_required(username)
-        username = pcmk__uid2username(geteuid());
-        if (pcmk_acl_required(username)) {
-            fprintf(stderr,
-                    "Warning: cibadmin is being run as user %s, which is "
-                    "subject to ACLs. As a result, ACLs for user %s may be "
-                    "incorrect or incomplete in the output. In a future "
-                    "release, running as a privileged user (root or "
-                    CRM_DAEMON_USER ") will be required for --show-access.\n",
-                    username, options.cib_user);
-        }
-
-        free(username);
-
-        /* Note: acl_cred takes ownership of options.cib_user here.
-         * options.cib_user is set to NULL so that the CIB is obtained as the
-         * user running the cibadmin command. The CIB must be obtained as a user
-         * with full permissions in order to show the CIB correctly annotated
-         * for the options.cib_user's permissions.
-         */
-        acl_cred = options.cib_user;
-        options.cib_user = NULL;
-    }
-
     if (options.cmd == cibadmin_cmd_md5_sum) {
         output_digest(input, true);
         goto done;
@@ -912,6 +918,7 @@ main(int argc, char **argv)
         goto done;
     }
 
+    // output is non-NULL, so this is a query or create command
     if (options.acl_render_mode != pcmk__acl_render_none) {
         xmlDoc *acl_evaled_doc = NULL;
         xmlChar *rendered = NULL;
