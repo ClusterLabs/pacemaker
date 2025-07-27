@@ -27,6 +27,21 @@
 
 /*!
  * \internal
+ * \brief How to interpret \c options.cib_section
+ */
+enum cibadmin_section_type {
+    //! No section specified: the command applies to the entire CIB
+    cibadmin_section_all = 0,
+
+    //! Section is the name of the CIB element to which the command applies
+    cibadmin_section_scope,
+
+    //! Section is an XPath expression, and the command applies to matches
+    cibadmin_section_xpath,
+};
+
+/*!
+ * \internal
  * \brief Commands for \c cibadmin
  */
 enum cibadmin_cmd {
@@ -91,6 +106,75 @@ typedef struct {
     uint32_t flags;          //!< Group of <tt>enum cibadmin_command_flags</tt>
 } cibadmin_cmd_info_t;
 
+static struct {
+    enum cibadmin_cmd cmd;
+    enum cibadmin_section_type section_type;
+    char *cib_section;
+    char *validate_with;
+    gint timeout_sec;
+    enum pcmk__acl_render_how acl_render_mode;
+    gchar *cib_user;
+    gchar *input_file;
+    gchar *input_string;
+    gboolean input_stdin;
+    gboolean allow_create;
+    gboolean force;
+    gboolean get_node_path;
+    gboolean no_children;
+    gboolean score_update;
+
+    // @COMPAT Deprecated since 3.0.2
+    gchar *dest_node;
+
+    // @COMPAT Deprecated since 3.0.0
+    gboolean local;
+
+    // @COMPAT Deprecated since 3.0.1
+    gboolean sync_call;
+} options = {
+    .cmd = cibadmin_cmd_query,
+    .timeout_sec = DEFAULT_TIMEOUT,
+};
+
+/*!
+ * \internal
+ * \brief Determine whether the given CIB scope is valid for \p cibadmin
+ *
+ * \param[in] scope  Scope to validate
+ *
+ * \return true if \p scope is valid, or false otherwise
+ * \note An invalid scope applies the operation to the entire CIB.
+ */
+static inline bool
+scope_is_valid(const char *scope)
+{
+    return pcmk__str_any_of(scope,
+                            PCMK_XE_CONFIGURATION,
+                            PCMK_XE_NODES,
+                            PCMK_XE_RESOURCES,
+                            PCMK_XE_CONSTRAINTS,
+                            PCMK_XE_CRM_CONFIG,
+                            PCMK_XE_RSC_DEFAULTS,
+                            PCMK_XE_OP_DEFAULTS,
+                            PCMK_XE_ACLS,
+                            PCMK_XE_FENCING_TOPOLOGY,
+                            PCMK_XE_TAGS,
+                            PCMK_XE_ALERTS,
+                            PCMK_XE_STATUS,
+                            NULL);
+}
+
+static int
+print_xml_id(xmlNode *xml, void *user_data)
+{
+    const char *id = pcmk__xe_id(xml);
+
+    if (id != NULL) {
+        printf("%s\n", id);
+    }
+    return pcmk_rc_ok;
+}
+
 static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     [cibadmin_cmd_bump] = {
         PCMK__CIB_REQUEST_BUMP, cibadmin_cf_none,
@@ -138,130 +222,6 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
         PCMK__CIB_REQUEST_UPGRADE, cibadmin_cf_unsafe,
     },
 };
-
-enum cibadmin_section_type {
-    cibadmin_section_all = 0,
-    cibadmin_section_scope,
-    cibadmin_section_xpath,
-};
-
-static cib_t *cib_conn = NULL;
-static crm_exit_t exit_code = CRM_EX_OK;
-
-static struct {
-    enum cibadmin_cmd cmd;
-    enum cibadmin_section_type section_type;
-    char *cib_section;
-    char *validate_with;
-    gint timeout_sec;
-    enum pcmk__acl_render_how acl_render_mode;
-    gchar *cib_user;
-    gchar *input_file;
-    gchar *input_string;
-    gboolean input_stdin;
-    gboolean allow_create;
-    gboolean force;
-    gboolean get_node_path;
-    gboolean no_children;
-    gboolean score_update;
-
-    // @COMPAT Deprecated since 3.0.2
-    gchar *dest_node;
-
-    // @COMPAT Deprecated since 3.0.0
-    gboolean local;
-
-    // @COMPAT Deprecated since 3.0.1
-    gboolean sync_call;
-} options = {
-    .cmd = cibadmin_cmd_query,
-    .timeout_sec = DEFAULT_TIMEOUT,
-};
-
-/*!
- * \internal
- * \brief Read input XML as specified on the command line
- *
- * Precedence is as follows:
- * 1. Input file
- * 2. Input string
- * 3. stdin
- *
- * If multiple input sources are given, only the last occurrence of the one with
- * the highest precedence is tried.
- *
- * If no input source is specified, this function does nothing.
- *
- * \param[out] input   Where to store parsed input
- * \param[out] source  Where to store string describing input source
- *
- * \return Standard Pacemaker return code
- */
-static int
-read_input(xmlNode **input, const char **source)
-{
-    if (options.input_file != NULL) {
-        *source = options.input_file;
-        *input = pcmk__xml_read(options.input_file);
-
-    } else if (options.input_string != NULL) {
-        *source = "input string";
-        *input = pcmk__xml_parse(options.input_string);
-
-    } else if (options.input_stdin) {
-        *source = "stdin";
-        *input = pcmk__xml_read(NULL);
-
-    } else {
-        *source = NULL;
-        *input = NULL;
-        return EINVAL;
-    }
-
-    if (*input == NULL) {
-        return pcmk_rc_bad_input;
-    }
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
- * \brief Determine whether the given CIB scope is valid for \p cibadmin
- *
- * \param[in] scope  Scope to validate
- *
- * \return true if \p scope is valid, or false otherwise
- * \note An invalid scope applies the operation to the entire CIB.
- */
-static inline bool
-scope_is_valid(const char *scope)
-{
-    return pcmk__str_any_of(scope,
-                            PCMK_XE_CONFIGURATION,
-                            PCMK_XE_NODES,
-                            PCMK_XE_RESOURCES,
-                            PCMK_XE_CONSTRAINTS,
-                            PCMK_XE_CRM_CONFIG,
-                            PCMK_XE_RSC_DEFAULTS,
-                            PCMK_XE_OP_DEFAULTS,
-                            PCMK_XE_ACLS,
-                            PCMK_XE_FENCING_TOPOLOGY,
-                            PCMK_XE_TAGS,
-                            PCMK_XE_ALERTS,
-                            PCMK_XE_STATUS,
-                            NULL);
-}
-
-static int
-print_xml_id(xmlNode *xml, void *user_data)
-{
-    const char *id = pcmk__xe_id(xml);
-
-    if (id != NULL) {
-        printf("%s\n", id);
-    }
-    return pcmk_rc_ok;
-}
 
 static gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
@@ -608,11 +568,60 @@ build_arg_context(pcmk__common_args_t *args)
     return context;
 }
 
+/*!
+ * \internal
+ * \brief Read input XML as specified on the command line
+ *
+ * Precedence is as follows:
+ * 1. Input file
+ * 2. Input string
+ * 3. stdin
+ *
+ * If multiple input sources are given, only the last occurrence of the one with
+ * the highest precedence is tried.
+ *
+ * If no input source is specified, this function does nothing.
+ *
+ * \param[out] input   Where to store parsed input
+ * \param[out] source  Where to store string describing input source
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+read_input(xmlNode **input, const char **source)
+{
+    if (options.input_file != NULL) {
+        *source = options.input_file;
+        *input = pcmk__xml_read(options.input_file);
+
+    } else if (options.input_string != NULL) {
+        *source = "input string";
+        *input = pcmk__xml_parse(options.input_string);
+
+    } else if (options.input_stdin) {
+        *source = "stdin";
+        *input = pcmk__xml_read(NULL);
+
+    } else {
+        *source = NULL;
+        *input = NULL;
+        return EINVAL;
+    }
+
+    if (*input == NULL) {
+        return pcmk_rc_bad_input;
+    }
+    return pcmk_rc_ok;
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
+
     const cibadmin_cmd_info_t *cmd_info = NULL;
+    cib_t *cib_conn = NULL;
     int call_options = cib_sync_call;
     xmlNode *output = NULL;
     xmlNode *input = NULL;
