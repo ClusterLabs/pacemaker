@@ -242,11 +242,23 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
      * specific string like "auto" (but not both) to mean "auto-calculate the
      * timeout." Reject other values that aren't parsable as timeouts.
      */
-    long st_timeout = value? crm_get_msec(value) : 0;
+    long long st_timeout = 0;
+
+    if (value != NULL) {
+        /* @COMPAT So far it has been documented that a negative value is
+         * valid. Parse it as an integer first to avoid the warning from
+         * crm_get_msec().
+         */
+        int rc = pcmk__scan_ll(value, &st_timeout, PCMK__PARSE_INT_DEFAULT);
+
+        if (rc != pcmk_rc_ok || st_timeout >= 0) {
+            st_timeout = crm_get_msec(value);
+        }
+    }
 
     if (st_timeout < 0) {
         st_timeout = pcmk__auto_stonith_watchdog_timeout();
-        crm_debug("Using calculated value %ld for "
+        crm_debug("Using calculated value %lld for "
                   PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
     }

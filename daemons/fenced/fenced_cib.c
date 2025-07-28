@@ -160,8 +160,16 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     if (stonith_watchdog_xml) {
         value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
     }
-    if (value) {
-        timeout_ms = crm_get_msec(value);
+    if (value != NULL) {
+        /* @COMPAT So far it has been documented that a negative value is
+         * valid. Parse it as an integer first to avoid the warning from
+         * crm_get_msec().
+         */
+        int rc = pcmk__scan_ll(value, &timeout_ms, PCMK__PARSE_INT_DEFAULT);
+
+        if (rc != pcmk_rc_ok || timeout_ms >= 0) {
+            timeout_ms = crm_get_msec(value);
+        }
     }
 
     if (timeout_ms < 0) {
