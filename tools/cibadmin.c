@@ -294,32 +294,37 @@ cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
+cibadmin_post_upgrade(cib_t *cib_conn, int call_options, xmlNode *output,
+                      int cib_rc, GError **error)
+{
+    if (cib_rc == pcmk_rc_ok) {
+        return CRM_EX_OK;
+    }
+
+    if (cib_rc == pcmk_rc_schema_unchanged) {
+        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(cib_rc));
+        return CRM_EX_OK;
+    }
+
+    fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(cib_rc));
+
+    if (cib_rc == pcmk_rc_schema_validation) {
+        xmlNode *obj = NULL;
+
+        if (cib_conn->cmds->query(cib_conn, NULL, &obj,
+                                  call_options) == pcmk_ok) {
+            pcmk__update_schema(&obj, NULL, true, false);
+        }
+        pcmk__xml_free(obj);
+    }
+    return pcmk_rc2exitc(cib_rc);
+}
+
+static crm_exit_t
 cibadmin_post_default(cib_t *cib_conn, int call_options, xmlNode *output,
                       int cib_rc, GError **error)
 {
-    // Handle return code depending on command
-    if (options.cmd == cibadmin_cmd_upgrade) {
-        if (cib_rc == pcmk_rc_schema_unchanged) {
-            printf("Upgrade unnecessary: %s\n", pcmk_rc_str(cib_rc));
-            return CRM_EX_OK;
-
-        } else if (cib_rc != pcmk_rc_ok) {
-            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(cib_rc));
-
-            if (cib_rc == pcmk_rc_schema_validation) {
-                xmlNode *obj = NULL;
-
-                if (cib_conn->cmds->query(cib_conn, NULL, &obj,
-                                          call_options) == pcmk_ok) {
-                    pcmk__update_schema(&obj, NULL, true, false);
-                }
-                pcmk__xml_free(obj);
-            }
-
-            return pcmk_rc2exitc(cib_rc);
-        }
-
-    } else if (cib_rc != pcmk_rc_ok) {
+    if (cib_rc != pcmk_rc_ok) {
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(cib_rc));
 
         if ((cib_rc == pcmk_rc_schema_validation)
@@ -535,7 +540,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
      */
     [cibadmin_cmd_upgrade] = {
         PCMK__CIB_REQUEST_UPGRADE,
-        NULL, NULL,
+        NULL, cibadmin_post_upgrade,
         cibadmin_cf_unsafe,
     },
 };
