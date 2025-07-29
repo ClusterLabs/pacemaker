@@ -306,7 +306,8 @@ cibadmin_post_upgrade(cib_t *cib_conn, int call_options, xmlNode *output,
         return CRM_EX_OK;
     }
 
-    fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(cib_rc));
+    g_set_error(error, PCMK__RC_ERROR, cib_rc,
+                "CIB API call failed: %s", pcmk_rc_str(cib_rc));
 
     if (cib_rc == pcmk_rc_schema_validation) {
         xmlNode *obj = NULL;
@@ -325,7 +326,8 @@ cibadmin_post_default(cib_t *cib_conn, int call_options, xmlNode *output,
                       int cib_rc, GError **error)
 {
     if (cib_rc != pcmk_rc_ok) {
-        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(cib_rc));
+        g_set_error(error, PCMK__RC_ERROR, cib_rc,
+                    "CIB API call failed: %s", pcmk_rc_str(cib_rc));
 
         if ((cib_rc == pcmk_rc_schema_validation)
             && pcmk__xe_is(output, PCMK_XE_CIB)) {
