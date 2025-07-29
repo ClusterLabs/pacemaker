@@ -955,6 +955,24 @@ main(int argc, char **argv)
         goto done;
     }
 
+    /* At LOG_ERR, stderr for CIB calls is rather verbose. Several lines like
+     *
+     * (func@file:line)      error: CIB <op> failures   <XML>
+     *
+     * In cibadmin we explicitly output the XML portion without the prefixes. So
+     * we default to LOG_CRIT.
+     */
+    pcmk__cli_init_logging("cibadmin", 0);
+    set_crm_log_level(LOG_CRIT);
+
+    if (args->verbosity > 0) {
+        cib__set_call_options(call_options, crm_system_name, cib_verbose);
+
+        for (int i = 0; i < args->verbosity; i++) {
+            crm_bump_log_level(argc, argv);
+        }
+    }
+
     if (g_strv_length(processed_args) > 1) {
         gchar *extra = g_strjoinv(" ", processed_args + 1);
         gchar *help = g_option_context_get_help(context, TRUE, NULL);
@@ -975,24 +993,6 @@ main(int argc, char **argv)
          * be replaced by out->version.
          */
         pcmk__cli_help();
-    }
-
-    /* At LOG_ERR, stderr for CIB calls is rather verbose. Several lines like
-     *
-     * (func@file:line)      error: CIB <op> failures   <XML>
-     *
-     * In cibadmin we explicitly output the XML portion without the prefixes. So
-     * we default to LOG_CRIT.
-     */
-    pcmk__cli_init_logging("cibadmin", 0);
-    set_crm_log_level(LOG_CRIT);
-
-    if (args->verbosity > 0) {
-        cib__set_call_options(call_options, crm_system_name, cib_verbose);
-
-        for (int i = 0; i < args->verbosity; i++) {
-            crm_bump_log_level(argc, argv);
-        }
     }
 
     // Ensure command is in valid range
