@@ -279,9 +279,13 @@ def sanitize_output(s):
     new_output = []
 
     for line in s:
-        # @TODO Add a way to suppress this message within cibadmin, and then drop
-        # the handling here.
-        if line.startswith("The supplied command can provide skewed result"):
+        # @COMPAT Update when this warning becomes an error. We may need
+        # to restrict the access_render tests to being run as root, and
+        # skip them by default otherwise. This error/warning occurs when
+        # running cibadmin --show-access as a non-privileged user.
+        # However, cts-cli should produce the same output whether the
+        # user is privileged or not.
+        if line.startswith("Warning: cibadmin is being run as user"):
             continue
 
         for (pattern, repl) in replacements:
