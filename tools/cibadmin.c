@@ -382,6 +382,7 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
     }
 
     if ((options.acl_render_mode != pcmk__acl_render_none)
+        && (exit_code == CRM_EX_OK)
         && pcmk__xe_is(output, PCMK_XE_CIB)) {
 
         xmlDoc *acl_evaled_doc = NULL;
