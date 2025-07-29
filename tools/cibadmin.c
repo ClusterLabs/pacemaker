@@ -825,6 +825,18 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+static const pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+
+    { NULL, NULL, NULL }
+};
+
+static const pcmk__message_entry_t fmt_functions[] = {
+    { NULL, NULL, NULL }
+};
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args)
 {
@@ -944,11 +956,16 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
 
+    pcmk__output_t *out = NULL;
+
     GError *error = NULL;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "ANSUXhotx");
     GOptionContext *context = build_arg_context(args);
+
+    pcmk__register_formats(output_group, formats);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
@@ -973,6 +990,15 @@ main(int argc, char **argv)
         }
     }
 
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
     if (g_strv_length(processed_args) > 1) {
         gchar *extra = g_strjoinv(" ", processed_args + 1);
         gchar *help = g_option_context_get_help(context, TRUE, NULL);
@@ -986,14 +1012,11 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-
-        /* FIXME: When cibadmin is converted to use formatted output, this can
-         * be replaced by out->version.
-         */
-        pcmk__cli_help();
+        out->version(out);
+        goto done;
     }
+
+    pcmk__register_messages(out, fmt_functions);
 
     // Ensure command is in valid range
     if ((options.cmd >= 0) && (options.cmd <= cibadmin_cmd_max)) {
@@ -1107,6 +1130,12 @@ done:
     g_free(acl_cred);
     pcmk__xml_free(input);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }
