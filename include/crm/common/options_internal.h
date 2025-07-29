@@ -25,8 +25,6 @@
 extern "C" {
 #endif
 
-_Noreturn void pcmk__cli_help(void);
-
 
 /*
  * Environment variable option handling
