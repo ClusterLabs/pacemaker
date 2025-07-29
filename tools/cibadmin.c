@@ -171,17 +171,6 @@ scope_is_valid(const char *scope)
                             NULL);
 }
 
-static int
-print_xml_id(xmlNode *xml, void *user_data)
-{
-    const char *id = pcmk__xe_id(xml);
-
-    if (id != NULL) {
-        printf("%s\n", id);
-    }
-    return pcmk_rc_ok;
-}
-
 static crm_exit_t
 cibadmin_pre_delete_all(int *call_options, xmlNode *input, GError **error)
 {
@@ -294,6 +283,67 @@ cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
     return CRM_EX_OK;
 }
 
+static int
+print_xml_id(xmlNode *xml, void *user_data)
+{
+    const char *id = pcmk__xe_id(xml);
+
+    if (id != NULL) {
+        printf("%s\n", id);
+    }
+    return pcmk_rc_ok;
+}
+
+static void
+cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
+                    crm_exit_t *exit_code, GError **error)
+{
+    if ((options.acl_render_mode != pcmk__acl_render_none)
+        && (*exit_code == CRM_EX_OK)
+        && pcmk__xe_is(output, PCMK_XE_CIB)) {
+
+        xmlDoc *acl_evaled_doc = NULL;
+        xmlChar *rendered = NULL;
+        int rc = pcmk__acl_annotate_permissions(acl_user, output->doc,
+                                                &acl_evaled_doc);
+
+        if (rc != pcmk_rc_ok) {
+            *exit_code = CRM_EX_CONFIG;
+            g_set_error(error, PCMK__EXITC_ERROR, *exit_code,
+                        "Could not evaluate access per request (%s, error: %s)",
+                        acl_user, pcmk_rc_str(rc));
+            return;
+        }
+
+        rc = pcmk__acl_evaled_render(acl_evaled_doc, options.acl_render_mode,
+                                     &rendered);
+        if (rc != pcmk_rc_ok) {
+            *exit_code = CRM_EX_CONFIG;
+            g_set_error(error, PCMK__EXITC_ERROR, *exit_code,
+                        "Could not render evaluated access: %s",
+                        pcmk_rc_str(rc));
+            return;
+        }
+
+        printf("%s\n", (char *) rendered);
+        xmlFree(rendered);
+
+    } else if (pcmk_is_set(call_options, cib_xpath_address)
+               && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
+
+        pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
+                               NULL);
+
+    } else {
+        GString *buf = g_string_sized_new(1024);
+
+        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+
+        printf("%s", buf->str);
+        g_string_free(buf, TRUE);
+    }
+}
+
 static crm_exit_t
 cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
                         const gchar *acl_user, xmlNode *input, GError **error)
@@ -377,53 +427,8 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
         }
     }
 
-    if (output == NULL) {
-        goto done;
-    }
-
-    if ((options.acl_render_mode != pcmk__acl_render_none)
-        && (exit_code == CRM_EX_OK)
-        && pcmk__xe_is(output, PCMK_XE_CIB)) {
-
-        xmlDoc *acl_evaled_doc = NULL;
-        xmlChar *rendered = NULL;
-
-        rc = pcmk__acl_annotate_permissions(acl_user, output->doc,
-                                            &acl_evaled_doc);
-        if (rc != pcmk_rc_ok) {
-            exit_code = CRM_EX_CONFIG;
-            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not evaluate access per request (%s, error: %s)",
-                        acl_user, pcmk_rc_str(rc));
-            goto done;
-        }
-
-        rc = pcmk__acl_evaled_render(acl_evaled_doc, options.acl_render_mode,
-                                     &rendered);
-        if (rc != pcmk_rc_ok) {
-            exit_code = CRM_EX_CONFIG;
-            g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not render evaluated access: %s",
-                        pcmk_rc_str(rc));
-            goto done;
-        }
-
-        printf("%s\n", (char *) rendered);
-        xmlFree(rendered);
-
-    } else if (pcmk_is_set(call_options, cib_xpath_address)
-               && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
-
-        pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
-                               NULL);
-
-    } else {
-        GString *buf = g_string_sized_new(1024);
-
-        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-
-        printf("%s", buf->str);
-        g_string_free(buf, TRUE);
+    if (output != NULL) {
+        cibadmin_output_xml(output, call_options, acl_user, &exit_code, error);
     }
 
 done:
