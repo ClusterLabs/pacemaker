@@ -18,16 +18,6 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 
-void
-pcmk__cli_help(void)
-{
-    printf("Pacemaker %s\n", PACEMAKER_VERSION);
-    printf("Written by Andrew Beekhof and the Pacemaker project "
-           "contributors\n");
-    crm_exit(CRM_EX_OK);
-    while(1); // above does not return
-}
-
 
 /*
  * Option metadata
