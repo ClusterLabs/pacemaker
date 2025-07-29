@@ -369,7 +369,9 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
         fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
         exit_code = pcmk_rc2exitc(rc);
 
-        if ((rc == pcmk_rc_schema_validation) && (output != NULL)) {
+        if ((rc == pcmk_rc_schema_validation)
+            && pcmk__xe_is(output, PCMK_XE_CIB)) {
+
             // Show validation errors to stderr
             pcmk__validate_xml(output, NULL, NULL, NULL);
         }
