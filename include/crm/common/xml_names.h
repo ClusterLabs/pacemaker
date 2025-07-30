@@ -264,6 +264,7 @@ extern "C" {
 #define PCMK_XA_DEST                        "dest"
 #define PCMK_XA_DEVICE                      "device"
 #define PCMK_XA_DEVICES                     "devices"
+#define PCMK_XA_DIGEST                      "digest"
 #define PCMK_XA_DISABLED                    "disabled"
 #define PCMK_XA_DURATION                    "duration"
 #define PCMK_XA_END                         "end"

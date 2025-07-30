@@ -308,7 +308,7 @@ pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target)
 
     digest = pcmk__digest_xml(target, true);
 
-    crm_xml_add(patchset, PCMK__XA_DIGEST, digest);
+    crm_xml_add(patchset, PCMK_XA_DIGEST, digest);
     free(digest);
 }
 
@@ -853,7 +853,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
         }
     }
 
-    digest = pcmk__xe_get(patchset, PCMK__XA_DIGEST);
+    digest = pcmk__xe_get(patchset, PCMK_XA_DIGEST);
     if (digest != NULL) {
         /* Make original XML available for logging in case result doesn't have
          * expected digest
@@ -1021,7 +1021,7 @@ patchset_process_digest(xmlNode *patch, const xmlNode *source,
 
     digest = pcmk__digest_xml(target, true);
 
-    crm_xml_add(patch, PCMK__XA_DIGEST, digest);
+    crm_xml_add(patch, PCMK_XA_DIGEST, digest);
     free(digest);
 
     return;
