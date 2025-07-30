@@ -389,6 +389,7 @@ cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
     } else if (pcmk_is_set(call_options, cib_xpath_address)
                && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
 
+        // @COMPAT Remove when -e/--node-path is removed
         pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
                                NULL);
 
@@ -758,16 +759,6 @@ static GOptionEntry addl_entries[] = {
       "appear takes effect",
       "value" },
 
-    { "node-path", 'e', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.get_node_path,
-      "When performing XPath queries, return paths of any matches found\n"
-      INDENT "(for example, "
-      "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-      "/" PCMK_XE_RESOURCES "/" PCMK_XE_CLONE
-      "[@" PCMK_XA_ID "='dummy-clone']"
-      "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='dummy']\")",
-      NULL },
-
     { "show-access", 'S', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       show_access_cb,
       "Whether to use syntax highlighting for ACLs (with -Q/--query and "
@@ -822,6 +813,10 @@ static GOptionEntry addl_entries[] = {
     // @COMPAT Deprecated since 3.0.2
     { "node", 'N', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
       &options.dest_node, "(deprecated)", "value" },
+
+    // @COMPAT Deprecated since 3.0.2
+    { "node-path", 'e', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
+      &options.get_node_path, "(deprecated)", NULL },
 
     // @COMPAT Deprecated since 3.0.1
     { "sync-call", 's', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
