@@ -1300,5 +1300,6 @@ done:
         pcmk__output_free(out);
     }
 
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }
