@@ -152,7 +152,6 @@ extern "C" {
 #define PCMK__XA_CRM_TIMESTAMP          "crm-timestamp"
 #define PCMK__XA_CRM_USER               "crm_user"
 #define PCMK__XA_DC_LEAVING             "dc-leaving"
-#define PCMK__XA_DIGEST                 "digest"
 #define PCMK__XA_ELECTION_AGE_SEC       "election-age-sec"
 #define PCMK__XA_ELECTION_AGE_NANO_SEC  "election-age-nano-sec"
 #define PCMK__XA_ELECTION_ID            "election-id"

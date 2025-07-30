@@ -48,7 +48,7 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
 
     if ((add[0] != del[0]) || (add[1] != del[1]) || (add[2] != del[2])) {
         const char *fmt = pcmk__xe_get(patchset, PCMK_XA_FORMAT);
-        const char *digest = pcmk__xe_get(patchset, PCMK__XA_DIGEST);
+        const char *digest = pcmk__xe_get(patchset, PCMK_XA_DIGEST);
 
         out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",

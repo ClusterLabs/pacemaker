@@ -148,7 +148,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
     crm_xml_add(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    crm_xml_add(*answer, PCMK__XA_DIGEST, digest);
+    crm_xml_add(*answer, PCMK_XA_DIGEST, digest);
     crm_xml_add(*answer, PCMK__XA_CIB_PING_ID, seq);
 
     wrapper = pcmk__xe_create(*answer, PCMK__XE_CIB_CALLDATA);
@@ -438,7 +438,7 @@ sync_our_cib(xmlNode * request, gboolean all)
 
     crm_xml_add(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     digest = pcmk__digest_xml(the_cib, true);
-    crm_xml_add(replace_request, PCMK__XA_DIGEST, digest);
+    crm_xml_add(replace_request, PCMK_XA_DIGEST, digest);
 
     wrapper = pcmk__xe_create(replace_request, PCMK__XE_CIB_CALLDATA);
     pcmk__xml_copy(wrapper, the_cib);

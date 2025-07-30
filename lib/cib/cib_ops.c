@@ -340,7 +340,7 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
 
         const char *reason = NULL;
         const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
-        const char *digest = pcmk__xe_get(req, PCMK__XA_DIGEST);
+        const char *digest = pcmk__xe_get(req, PCMK_XA_DIGEST);
 
         if (digest) {
             char *digest_verify = pcmk__digest_xml(input, true);
