@@ -241,6 +241,15 @@ class RemoteExec:
 
         return True
 
+    def exists_on_none(self, filename, hosts):
+        """Return True if specified file does not exist on any specified host."""
+        for host in hosts:
+            (rc, _) = self(host, f"test -r {filename}")
+            if rc == 0:
+                return False
+
+        return True
+
 
 class RemoteFactory:
     """A class for constructing a singleton instance of a RemoteExec object."""
