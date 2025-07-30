@@ -127,6 +127,7 @@ extern "C" {
 #define PCMK_XE_LAST_UPDATE                 "last_update"
 #define PCMK_XE_LIST                        "list"
 #define PCMK_XE_LONGDESC                    "longdesc"
+#define PCMK_XE_MD5_SUM                     "md5-sum"
 #define PCMK_XE_META_ATTRIBUTES             "meta_attributes"
 #define PCMK_XE_METADATA                    "metadata"
 #define PCMK_XE_MODIFICATIONS               "modifications"
