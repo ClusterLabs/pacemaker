@@ -170,7 +170,7 @@ class RemoteExec:
         node        -- The remote machine to run on
         command     -- The command to run, as a string
         synchronous -- Should we wait for the command to complete?
-        verbose     -- If 0, do not lo:g anything.  If 1, log the command and its
+        verbose     -- If 0, do not log anything.  If 1, log the command and its
                        return code but not its output.  If 2, additionally log
                        command output.
 
