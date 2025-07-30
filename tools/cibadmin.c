@@ -216,6 +216,7 @@ cibadmin_pre_md5_sum(pcmk__output_t *out, int *call_options, xmlNode *input,
                      GError **error)
 {
     // Handles entirety of md5_sum command; there is no CIB request
+    int rc = pcmk_rc_ok;
     char *digest = pcmk__digest_on_disk_cib(input);
 
     if (digest == NULL) {
@@ -227,9 +228,9 @@ cibadmin_pre_md5_sum(pcmk__output_t *out, int *call_options, xmlNode *input,
         return CRM_EX_SOFTWARE;
     }
 
-    printf("%s\n", digest);
+    rc = out->message(out, "cibadmin-md5-sum", digest);
     free(digest);
-    return CRM_EX_OK;
+    return pcmk_rc2exitc(rc);
 }
 
 static crm_exit_t
@@ -237,6 +238,7 @@ cibadmin_pre_md5_sum_versioned(pcmk__output_t *out, int *call_options,
                                xmlNode *input, GError **error)
 {
     // Handles entirety of md5_sum_versioned command; there is no CIB request
+    int rc = pcmk_rc_ok;
     char *digest = pcmk__digest_xml(input, true);
 
     if (digest == NULL) {
@@ -247,9 +249,9 @@ cibadmin_pre_md5_sum_versioned(pcmk__output_t *out, int *call_options,
         return pcmk_rc2exitc(rc);
     }
 
-    printf("%s\n", digest);
+    rc = out->message(out, "cibadmin-md5-sum", digest);
     free(digest);
-    return CRM_EX_OK;
+    return pcmk_rc2exitc(rc);
 }
 
 static crm_exit_t
@@ -833,6 +835,34 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+PCMK__OUTPUT_ARGS("cibadmin-md5-sum", "const char *")
+static int
+md5_sum_default(pcmk__output_t *out, va_list args)
+{
+    const char *digest = va_arg(args, const char *);
+
+    if (digest == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return out->info(out, "%s", digest);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-md5-sum", "const char *")
+static int
+md5_sum_xml(pcmk__output_t *out, va_list args)
+{
+    const char *digest = va_arg(args, const char *);
+
+    if (digest == NULL) {
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_create_xml_node(out, PCMK_XE_MD5_SUM,
+                                 PCMK_XA_DIGEST, digest,
+                                 NULL);
+    return pcmk_rc_ok;
+}
+
 static const pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
@@ -842,6 +872,9 @@ static const pcmk__supported_format_t formats[] = {
 };
 
 static const pcmk__message_entry_t fmt_functions[] = {
+    { "cibadmin-md5-sum", "default", md5_sum_default },
+    { "cibadmin-md5-sum", "xml", md5_sum_xml },
+
     { NULL, NULL, NULL }
 };
 
