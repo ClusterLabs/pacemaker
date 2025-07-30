@@ -777,6 +777,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                 }
 
             } else if (options & cib_xpath_address) {
+                // @COMPAT cib_xpath_address is deprecated since 3.0.2
                 char *path = NULL;
                 xmlNode *parent = match;
 
