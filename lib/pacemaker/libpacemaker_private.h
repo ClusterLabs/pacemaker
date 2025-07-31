@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -994,12 +994,35 @@ xmlNode *pcmk__inject_action_result(xmlNode *cib_resource,
 
 // Nodes (pcmk_sched_nodes.c)
 
-G_GNUC_INTERNAL
-bool pcmk__node_available(const pcmk_node_t *node, bool consider_score,
-                          bool consider_guest);
+//! Options for checking node availability
+enum pcmk__node_availability {
+    //! Disallow offline or unclean nodes (always implied)
+    pcmk__node_alive                = 0,
+
+    //! Disallow shutting down, standby, and maintenance nodes
+    pcmk__node_usable               = (1 << 0),
+
+    //! Disallow nodes with zero score
+    pcmk__node_no_zero              = (1 << 1),
+
+    //! Disallow nodes with negative scores
+    pcmk__node_no_negative          = (1 << 2),
+
+    //! Disallow nodes with minus infinity scores
+    pcmk__node_no_banned            = (1 << 3),
+
+    //! Disallow guest nodes whose guest resource is unrunnable
+    pcmk__node_no_unrunnable_guest  = (1 << 4),
+
+    //! Exempt guest nodes from alive and usable checks
+    pcmk__node_exempt_guest         = (1 << 5),
+};
 
 G_GNUC_INTERNAL
-bool pcmk__any_node_available(GHashTable *nodes);
+bool pcmk__node_available(const pcmk_node_t *node, uint32_t flags);
+
+G_GNUC_INTERNAL
+bool pcmk__any_node_available(GHashTable *nodes, uint32_t flags);
 
 G_GNUC_INTERNAL
 GHashTable *pcmk__copy_node_table(GHashTable *nodes);
