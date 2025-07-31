@@ -1974,7 +1974,6 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [tools/crm_master],
                   [tools/crm_report],
                   [tools/crm_standby],
-                  [tools/cibsecret],
                   [tools/pcmk_simtimes],
                   [xml/rng-helper])
 
