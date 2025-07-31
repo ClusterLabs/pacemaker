@@ -40,7 +40,6 @@
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *stonith_api = NULL;
-int lrmd_call_id = 0;
 time_t start_time;
 
 static struct {
@@ -97,108 +96,6 @@ get_stonith_connection(void)
     return stonith_api;
 }
 
-static int32_t
-lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
-{
-    crm_trace("Connection %p", c);
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -ENOMEM;
-    }
-    return 0;
-}
-
-static void
-lrmd_ipc_created(qb_ipcs_connection_t * c)
-{
-    pcmk__client_t *new_client = pcmk__find_client(c);
-
-    crm_trace("Connection %p", c);
-    pcmk__assert(new_client != NULL);
-    /* Now that the connection is offically established, alert
-     * the other clients a new connection exists. */
-
-    notify_of_new_client(new_client);
-}
-
-static int32_t
-lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
-{
-    int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *request = NULL;
-
-    CRM_CHECK(client != NULL, crm_err("Invalid client");
-              return FALSE);
-    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
-              return FALSE);
-
-    rc = pcmk__ipc_msg_append(&client->buffer, data);
-
-    if (rc == pcmk_rc_ipc_more) {
-        /* We haven't read the complete message yet, so just return. */
-        return 0;
-
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        request = pcmk__client_data2xml(client, &id, &flags);
-        g_byte_array_free(client->buffer, TRUE);
-        client->buffer = NULL;
-
-    } else {
-        /* Some sort of error occurred reassembling the message.  All we can
-         * do is clean up, log an error and return.
-         */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
-
-        if (client->buffer != NULL) {
-            g_byte_array_free(client->buffer, TRUE);
-            client->buffer = NULL;
-        }
-
-        return 0;
-    }
-
-    CRM_CHECK(flags & crm_ipc_client_response, crm_err("Invalid client request: %p", client);
-              return FALSE);
-
-    if (!request) {
-        return 0;
-    }
-
-    /* @TODO functionize some of this to reduce duplication with
-     * lrmd_remote_client_msg()
-     */
-
-    if (!client->name) {
-        const char *value = crm_element_value(request,
-                                              PCMK__XA_LRMD_CLIENTNAME);
-
-        if (value == NULL) {
-            client->name = pcmk__itoa(pcmk__client_pid(c));
-        } else {
-            client->name = pcmk__str_copy(value);
-        }
-    }
-
-    lrmd_call_id++;
-    if (lrmd_call_id < 1) {
-        lrmd_call_id = 1;
-    }
-
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
-
-    process_lrmd_message(client, id, request);
-
-    pcmk__xml_free(request);
-    return 0;
-}
-
 /*!
  * \internal
  * \brief Free a client connection, and exit if appropriate
@@ -219,39 +116,6 @@ lrmd_client_destroy(pcmk__client_t *client)
     }
 #endif
 }
-
-static int32_t
-lrmd_ipc_closed(qb_ipcs_connection_t * c)
-{
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        return 0;
-    }
-
-    crm_trace("Connection %p", c);
-    client_disconnect_cleanup(client->id);
-#ifdef PCMK__COMPILE_REMOTE
-    ipc_proxy_remove_provider(client);
-#endif
-    lrmd_client_destroy(client);
-    return 0;
-}
-
-static void
-lrmd_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    lrmd_ipc_closed(c);
-    crm_trace("Connection %p", c);
-}
-
-static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
-    .connection_accept = lrmd_ipc_accept,
-    .connection_created = lrmd_ipc_created,
-    .msg_process = lrmd_ipc_dispatch,
-    .connection_closed = lrmd_ipc_closed,
-    .connection_destroyed = lrmd_ipc_destroy
-};
 
 // \return Standard Pacemaker return code
 int
@@ -324,6 +188,7 @@ exit_executor(void)
 #endif
 
     pcmk__client_cleanup();
+    execd_unregister_handlers();
 
     if (mainloop) {
         lrmd_drain_alerts(mainloop);
