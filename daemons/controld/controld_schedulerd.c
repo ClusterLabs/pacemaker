@@ -27,7 +27,7 @@ static void handle_disconnect(void);
 
 static pcmk_ipc_api_t *schedulerd_api = NULL;
 
-static mainloop_timer_t *cib_retry_timer = NULL;
+static mainloop_timer_t *controld_cib_retry_timer = NULL;
 
 /*!
  * \internal
@@ -362,6 +362,10 @@ do_pe_invoke(long long action,
         register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
         return;
     }
+    if (controld_cib_retry_timer != NULL) {
+        crm_debug("Not invoking scheduler until CIB retry timer expires");
+        return;
+    }
 
     fsa_pe_query = cib_conn->cmds->query(cib_conn, NULL, NULL, cib_none);
 
@@ -451,7 +455,8 @@ sleep_timer(gpointer data)
 {
     controld_set_fsa_action_flags(A_PE_INVOKE);
     controld_trigger_fsa();
-    mainloop_timer_del(cib_retry_timer);
+    mainloop_timer_del(controld_cib_retry_timer);
+    controld_cib_retry_timer = NULL;
     return G_SOURCE_REMOVE;
 }
 
@@ -486,8 +491,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     } else if (num_cib_op_callbacks() > 1) {
         crm_debug("Re-asking for the CIB: %d other peer updates still pending",
                   (num_cib_op_callbacks() - 1));
-        cib_retry_timer = mainloop_timer_add("cib_retry", 1000, FALSE, sleep_timer, NULL);
-        mainloop_timer_start(cib_retry_timer);
+        controld_cib_retry_timer = mainloop_timer_add("cib_retry", 1000, false,
+                                                      sleep_timer, NULL);
+        mainloop_timer_start(controld_cib_retry_timer);
         return;
     }
 
