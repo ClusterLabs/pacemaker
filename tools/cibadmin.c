@@ -368,7 +368,7 @@ cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
         if (rc != pcmk_rc_ok) {
             *exit_code = CRM_EX_CONFIG;
             g_set_error(error, PCMK__EXITC_ERROR, *exit_code,
-                        "Could not evaluate access per request (%s, error: %s)",
+                        "Could not evaluate ACLs for %s: %s",
                         acl_user, pcmk_rc_str(rc));
             return;
         }
@@ -378,8 +378,8 @@ cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
         if (rc != pcmk_rc_ok) {
             *exit_code = CRM_EX_CONFIG;
             g_set_error(error, PCMK__EXITC_ERROR, *exit_code,
-                        "Could not render evaluated access: %s",
-                        pcmk_rc_str(rc));
+                        "Could not render ACLs for %s: %s",
+                        acl_user, pcmk_rc_str(rc));
             return;
         }
 
@@ -1030,7 +1030,7 @@ main(int argc, char **argv)
             if (options.cib_user == NULL) {
                 exit_code = CRM_EX_USAGE;
                 g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                            "The supplied command requires -U user specified.");
+                            "-U/--user is required with -S/--show-access");
                 goto done;
             }
 
