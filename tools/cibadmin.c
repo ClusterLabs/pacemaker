@@ -176,56 +176,57 @@ print_xml_id(xmlNode *xml, void *user_data)
 }
 
 static crm_exit_t
-cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
-                        const gchar *acl_user, xmlNode *input, GError **error)
+cibadmin_pre_default(int *call_options, xmlNode *input, GError **error)
 {
-    int rc = pcmk_rc_ok;
-    crm_exit_t exit_code = CRM_EX_OK;
-
-    cib_t *cib_conn = NULL;
-    xmlNode *output = NULL;
-
     if (options.cmd == cibadmin_cmd_empty) {
-        // Output an empty CIB
+        /* Output an empty CIB.
+         * Handles entirety of empty command; there is no CIB request.
+         */
         GString *buf = g_string_sized_new(1024);
+        xmlNode *output = createEmptyCib(1);
 
-        output = createEmptyCib(1);
         crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
 
         pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
         fprintf(stdout, "%s", buf->str);
+
         g_string_free(buf, TRUE);
-        goto done;
+        pcmk__xml_free(output);
+        return CRM_EX_OK;
     }
     if (options.cmd == cibadmin_cmd_md5_sum) {
+        // Handles entirety of md5_sum command; there is no CIB request
         char *digest = pcmk__digest_on_disk_cib(input);
 
         printf("%s\n", pcmk__s(digest, "<null>"));
         free(digest);
-        goto done;
+        return CRM_EX_OK;
     }
     if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
+        /* Handles entirety of md5_sum_versioned command; there is no CIB
+         * request
+         */
         char *digest = pcmk__digest_xml(input, true);
 
         printf("%s\n", pcmk__s(digest, "<null>"));
         free(digest);
-        goto done;
+        return CRM_EX_OK;
     }
 
     if (options.cmd == cibadmin_cmd_delete_all) {
         // With cibadmin_section_xpath, remove all matching objects
-        cib__set_call_options(call_options, crm_system_name, cib_multiple);
+        cib__set_call_options(*call_options, crm_system_name, cib_multiple);
     }
 
     if (options.cmd == cibadmin_cmd_modify) {
         /* @COMPAT When we drop default support for expansion in cibadmin, guard
          * with `if (options.score_update)`
          */
-        cib__set_call_options(call_options, crm_system_name, cib_score_update);
+        cib__set_call_options(*call_options, crm_system_name, cib_score_update);
 
         if (options.allow_create) {
             // Allow target to be created if it does not exist
-            cib__set_call_options(call_options, crm_system_name,
+            cib__set_call_options(*call_options, crm_system_name,
                                   cib_can_create);
         }
     }
@@ -235,13 +236,13 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
             /* Enable getting node path of XPath query matches. Meaningful only
              * if options.section_type == cibadmin_section_xpath.
              */
-            cib__set_call_options(call_options, crm_system_name,
+            cib__set_call_options(*call_options, crm_system_name,
                                   cib_xpath_address);
         }
 
         if (options.no_children) {
             // When querying an object, don't include its children in the result
-            cib__set_call_options(call_options, crm_system_name,
+            cib__set_call_options(*call_options, crm_system_name,
                                   cib_no_children);
         }
     }
@@ -254,6 +255,24 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
         if (status == NULL) {
             pcmk__xe_create(input, PCMK_XE_STATUS);
         }
+    }
+
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
+                        const gchar *acl_user, xmlNode *input, GError **error)
+{
+    int rc = pcmk_rc_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
+
+    cib_t *cib_conn = NULL;
+    xmlNode *output = NULL;
+
+    exit_code = cibadmin_pre_default(&call_options, input, error);
+    if ((exit_code != CRM_EX_OK) || (cmd_info->cib_request == NULL)) {
+        goto done;
     }
 
     if (options.section_type == cibadmin_section_xpath) {
