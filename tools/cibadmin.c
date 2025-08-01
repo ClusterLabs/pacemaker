@@ -202,16 +202,19 @@ cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
+cibadmin_pre_md5_sum(int *call_options, xmlNode *input, GError **error)
+{
+    // Handles entirety of md5_sum command; there is no CIB request
+    char *digest = pcmk__digest_on_disk_cib(input);
+
+    printf("%s\n", pcmk__s(digest, "<null>"));
+    free(digest);
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
 cibadmin_pre_default(int *call_options, xmlNode *input, GError **error)
 {
-    if (options.cmd == cibadmin_cmd_md5_sum) {
-        // Handles entirety of md5_sum command; there is no CIB request
-        char *digest = pcmk__digest_on_disk_cib(input);
-
-        printf("%s\n", pcmk__s(digest, "<null>"));
-        free(digest);
-        return CRM_EX_OK;
-    }
     if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
         /* Handles entirety of md5_sum_versioned command; there is no CIB
          * request
@@ -444,7 +447,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     },
     [cibadmin_cmd_md5_sum] = {
         NULL,
-        NULL,
+        cibadmin_pre_md5_sum,
         cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_md5_sum_versioned] = {
