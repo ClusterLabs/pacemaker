@@ -1,13 +1,13 @@
 =#=#=#= Begin test: Try to set unrecognized validate-with =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to set unrecognized validate-with - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to set unrecognized validate-with
 =#=#=#= Begin test: Try to remove validate-with attribute =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to remove validate-with attribute - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to remove validate-with attribute
 =#=#=#= Begin test: Try to use rsc_order first-action value disallowed by schema =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use rsc_order first-action value disallowed by schema =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>
@@ -26,7 +26,7 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to use rsc_order first-action value disallowed by schema - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to use rsc_order first-action value disallowed by schema
 =#=#=#= Begin test: Try to use configuration legal only with schema after configured one =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use configuration legal only with schema after configured one =#=#=#=
 <cib epoch="4" num_updates="0" admin_epoch="0">
   <configuration>

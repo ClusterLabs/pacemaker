@@ -1197,7 +1197,7 @@ crm_attribute: Error performing operation: No such device or address
 =#=#=#= End test: Delete nvpair - OK (0) =#=#=#=
 * Passed: cibadmin              - Delete nvpair
 =#=#=#= Begin test: Create operation should fail =#=#=#=
-Call failed: File exists
+cibadmin: CIB API call failed: File exists
 <failed>
   <failed_update id="cib-bootstrap-options" object-type="cluster_property_set" operation="cib_create" reason="File exists">
     <cluster_property_set id="cib-bootstrap-options">
@@ -1783,7 +1783,7 @@ scope=nodes name=cpu value=1
 =#=#=#= End test: Query utilization node attribute - OK (0) =#=#=#=
 * Passed: crm_attribute         - Query utilization node attribute
 =#=#=#= Begin test: Replace operation should fail =#=#=#=
-Call failed: Update was older than existing configuration
+cibadmin: CIB API call failed: Update was older than existing configuration
 =#=#=#= End test: Replace operation should fail - Update was older than existing configuration (103) =#=#=#=
 * Passed: cibadmin              - Replace operation should fail
 =#=#=#= Begin test: Query a nonexistent promotable score attribute =#=#=#=

@@ -267,7 +267,8 @@ crm_md5sum(const char *buffer)
     char *digest = NULL;
     gchar *raw_digest = NULL;
 
-    if (buffer == NULL) {
+    // GLib throws an error and returns NULL if buffer is NULL or empty
+    if (pcmk__str_empty(buffer)) {
         return NULL;
     }
 
