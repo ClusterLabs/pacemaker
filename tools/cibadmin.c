@@ -265,24 +265,25 @@ cibadmin_pre_modify(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
+cibadmin_pre_query(int *call_options, xmlNode *input, GError **error)
+{
+    if (options.get_node_path) {
+        /* Enable getting node path of XPath query matches. Meaningful only with
+         * cibadmin_section_xpath.
+         */
+        cib__set_call_options(*call_options, crm_system_name,
+                              cib_xpath_address);
+    }
+    if (options.no_children) {
+        // Don't include a match's children in the query result
+        cib__set_call_options(*call_options, crm_system_name, cib_no_children);
+    }
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
 cibadmin_pre_default(int *call_options, xmlNode *input, GError **error)
 {
-    if (options.cmd == cibadmin_cmd_query) {
-        if (options.get_node_path) {
-            /* Enable getting node path of XPath query matches. Meaningful only
-             * if options.section_type == cibadmin_section_xpath.
-             */
-            cib__set_call_options(*call_options, crm_system_name,
-                                  cib_xpath_address);
-        }
-
-        if (options.no_children) {
-            // When querying an object, don't include its children in the result
-            cib__set_call_options(*call_options, crm_system_name,
-                                  cib_no_children);
-        }
-    }
-
     if ((options.cmd == cibadmin_cmd_replace)
         && pcmk__xe_is(input, PCMK_XE_CIB)) {
 
@@ -490,7 +491,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     },
     [cibadmin_cmd_query] = {
         PCMK__CIB_REQUEST_QUERY,
-        NULL,
+        cibadmin_pre_query,
         cibadmin_cf_none,
     },
     [cibadmin_cmd_replace] = {
