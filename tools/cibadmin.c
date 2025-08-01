@@ -105,12 +105,22 @@ typedef crm_exit_t (*cibadmin_pre_fn_t)(int *, xmlNode *, GError **);
 
 /*!
  * \internal
+ * \brief Return/output handler for a \c cibadmin command (after CIB API call)
+ */
+typedef crm_exit_t (*cibadmin_post_fn_t)(cib_t *, int, xmlNode *, int,
+                                         GError **);
+
+/*!
+ * \internal
  * \brief Information about a \c cibadmin command type
  */
 typedef struct {
-    const char *cib_request;  //!< Name of request to send to the CIB API
-    cibadmin_pre_fn_t pre_fn; //!< Function to call before CIB API call
-    uint32_t flags;           //!< Group of <tt>enum cibadmin_command_flags</tt>
+    const char *cib_request;    //!< Name of request to send to the CIB API
+    cibadmin_pre_fn_t pre_fn;   //!< Function to call before CIB API call
+    cibadmin_post_fn_t post_fn; //!< Function to call after CIB API call
+
+    //! Group of <tt>enum cibadmin_command_flags</tt>
+    uint32_t flags;
 } cibadmin_cmd_info_t;
 
 static struct {
@@ -283,6 +293,47 @@ cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
     return CRM_EX_OK;
 }
 
+static crm_exit_t
+cibadmin_post_default(cib_t *cib_conn, int call_options, xmlNode *output,
+                      int cib_rc, GError **error)
+{
+    // Handle return code depending on command
+    if (options.cmd == cibadmin_cmd_upgrade) {
+        if (cib_rc == pcmk_rc_schema_unchanged) {
+            printf("Upgrade unnecessary: %s\n", pcmk_rc_str(cib_rc));
+            return CRM_EX_OK;
+
+        } else if (cib_rc != pcmk_rc_ok) {
+            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(cib_rc));
+
+            if (cib_rc == pcmk_rc_schema_validation) {
+                xmlNode *obj = NULL;
+
+                if (cib_conn->cmds->query(cib_conn, NULL, &obj,
+                                          call_options) == pcmk_ok) {
+                    pcmk__update_schema(&obj, NULL, true, false);
+                }
+                pcmk__xml_free(obj);
+            }
+
+            return pcmk_rc2exitc(cib_rc);
+        }
+
+    } else if (cib_rc != pcmk_rc_ok) {
+        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(cib_rc));
+
+        if ((cib_rc == pcmk_rc_schema_validation)
+            && pcmk__xe_is(output, PCMK_XE_CIB)) {
+
+            // Show validation errors to stderr
+            pcmk__validate_xml(output, NULL, NULL, NULL);
+        }
+        return pcmk_rc2exitc(cib_rc);
+    }
+
+    return CRM_EX_OK;
+}
+
 static int
 print_xml_id(xmlNode *xml, void *user_data)
 {
@@ -394,37 +445,12 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
                          options.cib_user);
     rc = pcmk_legacy2rc(rc);
 
-    // Handle return code depending on command
-    if (options.cmd == cibadmin_cmd_upgrade) {
-        if (rc == pcmk_rc_schema_unchanged) {
-            printf("Upgrade unnecessary: %s\n", pcmk_rc_str(rc));
-            exit_code = CRM_EX_OK;
-
-        } else if (rc != pcmk_rc_ok) {
-            fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
-            exit_code = pcmk_rc2exitc(rc);
-
-            if (rc == pcmk_rc_schema_validation) {
-                xmlNode *obj = NULL;
-
-                if (cib_conn->cmds->query(cib_conn, NULL, &obj,
-                                          call_options) == pcmk_ok) {
-                    pcmk__update_schema(&obj, NULL, true, false);
-                }
-                pcmk__xml_free(obj);
-            }
-        }
-
-    } else if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
-        exit_code = pcmk_rc2exitc(rc);
-
-        if ((rc == pcmk_rc_schema_validation)
-            && pcmk__xe_is(output, PCMK_XE_CIB)) {
-
-            // Show validation errors to stderr
-            pcmk__validate_xml(output, NULL, NULL, NULL);
-        }
+    if (cmd_info->post_fn != NULL) {
+        exit_code = cmd_info->post_fn(cib_conn, call_options, output, rc,
+                                      error);
+    } else {
+        exit_code = cibadmin_post_default(cib_conn, call_options, output, rc,
+                                          error);
     }
 
     if (output != NULL) {
@@ -445,62 +471,62 @@ done:
 static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     [cibadmin_cmd_bump] = {
         PCMK__CIB_REQUEST_BUMP,
-        NULL,
+        NULL, NULL,
         cibadmin_cf_none,
     },
     [cibadmin_cmd_create] = {
         PCMK__CIB_REQUEST_CREATE,
-        NULL,
+        NULL, NULL,
         cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_delete] = {
         PCMK__CIB_REQUEST_DELETE,
-        cibadmin_pre_delete_all,
+        cibadmin_pre_delete_all, NULL,
         cibadmin_cf_requires_input|cibadmin_cf_xpath_input,
     },
     [cibadmin_cmd_delete_all] = {
         PCMK__CIB_REQUEST_DELETE,
-        NULL,
+        NULL, NULL,
         cibadmin_cf_requires_input|cibadmin_cf_unsafe|cibadmin_cf_xpath_input,
     },
     [cibadmin_cmd_empty] = {
         NULL,
-        cibadmin_pre_empty,
+        cibadmin_pre_empty, NULL,
         cibadmin_cf_none,
     },
     [cibadmin_cmd_erase] = {
         PCMK__CIB_REQUEST_ERASE,
-        NULL,
+        NULL, NULL,
         cibadmin_cf_unsafe,
     },
     [cibadmin_cmd_md5_sum] = {
         NULL,
-        cibadmin_pre_md5_sum,
+        cibadmin_pre_md5_sum, NULL,
         cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_md5_sum_versioned] = {
         NULL,
-        cibadmin_pre_md5_sum_versioned,
+        cibadmin_pre_md5_sum_versioned, NULL,
         cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_modify] = {
         PCMK__CIB_REQUEST_MODIFY,
-        cibadmin_pre_modify,
+        cibadmin_pre_modify, NULL,
         cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_patch] = {
         PCMK__CIB_REQUEST_APPLY_PATCH,
-        NULL,
+        NULL, NULL,
         cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_query] = {
         PCMK__CIB_REQUEST_QUERY,
-        cibadmin_pre_query,
+        cibadmin_pre_query, NULL,
         cibadmin_cf_none,
     },
     [cibadmin_cmd_replace] = {
         PCMK__CIB_REQUEST_REPLACE,
-        cibadmin_pre_replace,
+        cibadmin_pre_replace, NULL,
         cibadmin_cf_requires_input,
     },
 
@@ -509,7 +535,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
      */
     [cibadmin_cmd_upgrade] = {
         PCMK__CIB_REQUEST_UPGRADE,
-        NULL,
+        NULL, NULL,
         cibadmin_cf_unsafe,
     },
 };
