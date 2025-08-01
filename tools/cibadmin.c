@@ -183,6 +183,14 @@ print_xml_id(xmlNode *xml, void *user_data)
 }
 
 static crm_exit_t
+cibadmin_pre_delete_all(int *call_options, xmlNode *input, GError **error)
+{
+    // Remove all matching objects. Meaningful only with cibadmin_section_xpath.
+    cib__set_call_options(*call_options, crm_system_name, cib_multiple);
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
 cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
 {
     /* Output an empty CIB.
@@ -244,11 +252,6 @@ cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
 static crm_exit_t
 cibadmin_pre_default(int *call_options, xmlNode *input, GError **error)
 {
-    if (options.cmd == cibadmin_cmd_delete_all) {
-        // With cibadmin_section_xpath, remove all matching objects
-        cib__set_call_options(*call_options, crm_system_name, cib_multiple);
-    }
-
     if (options.cmd == cibadmin_cmd_modify) {
         /* @COMPAT When we drop default support for expansion in cibadmin, guard
          * with `if (options.score_update)`
@@ -445,7 +448,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     },
     [cibadmin_cmd_delete] = {
         PCMK__CIB_REQUEST_DELETE,
-        NULL,
+        cibadmin_pre_delete_all,
         cibadmin_cf_requires_input|cibadmin_cf_xpath_input,
     },
     [cibadmin_cmd_delete_all] = {
