@@ -250,21 +250,23 @@ cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
 }
 
 static crm_exit_t
+cibadmin_pre_modify(int *call_options, xmlNode *input, GError **error)
+{
+    /* @COMPAT When we drop default support for expansion in cibadmin, guard
+     * with `if (options.score_update)`
+     */
+    cib__set_call_options(*call_options, crm_system_name, cib_score_update);
+
+    if (options.allow_create) {
+        // Allow target to be created if it does not exist
+        cib__set_call_options(*call_options, crm_system_name, cib_can_create);
+    }
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
 cibadmin_pre_default(int *call_options, xmlNode *input, GError **error)
 {
-    if (options.cmd == cibadmin_cmd_modify) {
-        /* @COMPAT When we drop default support for expansion in cibadmin, guard
-         * with `if (options.score_update)`
-         */
-        cib__set_call_options(*call_options, crm_system_name, cib_score_update);
-
-        if (options.allow_create) {
-            // Allow target to be created if it does not exist
-            cib__set_call_options(*call_options, crm_system_name,
-                                  cib_can_create);
-        }
-    }
-
     if (options.cmd == cibadmin_cmd_query) {
         if (options.get_node_path) {
             /* Enable getting node path of XPath query matches. Meaningful only
@@ -478,7 +480,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     },
     [cibadmin_cmd_modify] = {
         PCMK__CIB_REQUEST_MODIFY,
-        NULL,
+        cibadmin_pre_modify,
         cibadmin_cf_requires_input,
     },
     [cibadmin_cmd_patch] = {
