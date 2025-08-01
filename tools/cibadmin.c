@@ -282,18 +282,15 @@ cibadmin_pre_query(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_default(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
 {
-    if ((options.cmd == cibadmin_cmd_replace)
-        && pcmk__xe_is(input, PCMK_XE_CIB)) {
-
+    if (pcmk__xe_is(input, PCMK_XE_CIB)) {
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
 
         if (status == NULL) {
             pcmk__xe_create(input, PCMK_XE_STATUS);
         }
     }
-
     return CRM_EX_OK;
 }
 
@@ -309,8 +306,6 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
 
     if (cmd_info->pre_fn != NULL) {
         exit_code = cmd_info->pre_fn(&call_options, input, error);
-    } else {
-        exit_code = cibadmin_pre_default(&call_options, input, error);
     }
 
     if ((exit_code != CRM_EX_OK) || (cmd_info->cib_request == NULL)) {
@@ -496,7 +491,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     },
     [cibadmin_cmd_replace] = {
         PCMK__CIB_REQUEST_REPLACE,
-        NULL,
+        cibadmin_pre_replace,
         cibadmin_cf_requires_input,
     },
 
