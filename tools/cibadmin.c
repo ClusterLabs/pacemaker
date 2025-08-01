@@ -183,24 +183,27 @@ print_xml_id(xmlNode *xml, void *user_data)
 }
 
 static crm_exit_t
+cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
+{
+    /* Output an empty CIB.
+     * Handles entirety of empty command; there is no CIB request.
+     */
+    GString *buf = g_string_sized_new(1024);
+    xmlNode *output = createEmptyCib(1);
+
+    crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
+
+    pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+    printf("%s", buf->str);
+
+    g_string_free(buf, TRUE);
+    pcmk__xml_free(output);
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
 cibadmin_pre_default(int *call_options, xmlNode *input, GError **error)
 {
-    if (options.cmd == cibadmin_cmd_empty) {
-        /* Output an empty CIB.
-         * Handles entirety of empty command; there is no CIB request.
-         */
-        GString *buf = g_string_sized_new(1024);
-        xmlNode *output = createEmptyCib(1);
-
-        crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
-
-        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-        printf("%s", buf->str);
-
-        g_string_free(buf, TRUE);
-        pcmk__xml_free(output);
-        return CRM_EX_OK;
-    }
     if (options.cmd == cibadmin_cmd_md5_sum) {
         // Handles entirety of md5_sum command; there is no CIB request
         char *digest = pcmk__digest_on_disk_cib(input);
@@ -431,7 +434,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     },
     [cibadmin_cmd_empty] = {
         NULL,
-        NULL,
+        cibadmin_pre_empty,
         cibadmin_cf_none,
     },
     [cibadmin_cmd_erase] = {
