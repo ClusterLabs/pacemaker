@@ -360,7 +360,7 @@ ipc_connect(data_t *data, enum pcmk_ipc_server server, pcmk_ipc_callback_t cb,
         pcmk_register_ipc_callback(api, cb, data);
     }
 
-    rc = pcmk__connect_ipc_retry_conrefused(api, dispatch_type, 5);
+    rc = pcmk__connect_ipc(api, dispatch_type, 5);
     if (rc != pcmk_rc_ok) {
         if (rc == EREMOTEIO) {
             data->pcmkd_state = pcmk_pacemakerd_state_remote;
