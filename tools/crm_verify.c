@@ -260,14 +260,14 @@ main(int argc, char **argv)
         const char *verbose_hint = "";
 
         if (pcmk__config_has_error) {
-            failure_type = " (with errors)";
+            failure_type = "invalid";
         } else if (pcmk__config_has_warning) {
-            failure_type = " (with warnings)";
+            failure_type = "may need attention";
         }
         if (options.verbosity == 0) {
             verbose_hint = " (-V may provide more detail)";
         }
-        out->err(out, "Configuration invalid%s%s", failure_type, verbose_hint);
+        out->err(out, "Configuration %s%s", failure_type, verbose_hint);
     }
 
     pcmk_free_scheduler(scheduler);
