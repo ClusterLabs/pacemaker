@@ -524,7 +524,7 @@
 =#=#=#= End test: Updated ACL - OK (0) =#=#=#=
 * Passed: cibadmin              - Updated ACL
 =#=#=#= Begin test: unknownguy: Query configuration =#=#=#=
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: unknownguy: Query configuration - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - unknownguy: Query configuration
 =#=#=#= Begin test: unknownguy: Set enable-acl =#=#=#=
@@ -538,11 +538,11 @@ crm_attribute: Error performing operation: Permission denied
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Lack of ACL denies user 'unknownguy' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: unknownguy: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - unknownguy: Create a resource
 =#=#=#= Begin test: l33t-haxor: Query configuration =#=#=#=
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Query configuration - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - l33t-haxor: Query configuration
 =#=#=#= Begin test: l33t-haxor: Set enable-acl =#=#=#=
@@ -556,7 +556,7 @@ crm_attribute: Error performing operation: Permission denied
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Parent ACL denies user 'l33t-haxor' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - l33t-haxor: Create a resource
 =#=#=#= Begin test: niceguy: Query configuration =#=#=#=
@@ -717,7 +717,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bo
 =#=#=#= Begin test: niceguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Create a resource
 =#=#=#= Begin test: root: Query configuration =#=#=#=
@@ -1437,7 +1437,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
 =#=#=#= Begin test: niceguy: Replace - remove acls =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/acls
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - remove acls - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - remove acls
 <cib epoch="17" num_updates="0" admin_epoch="0">
@@ -1523,7 +1523,7 @@ Call failed: Permission denied
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy2']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy2"
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - create resource
 <cib epoch="17" num_updates="0" admin_epoch="0">
@@ -1607,7 +1607,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: niceguy: Replace - modify attribute (deny) =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']/nvpair[@id='cib-bootstrap-options-enable-acl'][@value]
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - modify attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - modify attribute (deny)
 <cib epoch="17" num_updates="0" admin_epoch="0">
@@ -1691,7 +1691,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: niceguy: Replace - delete attribute (deny) =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy_desc']
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - delete attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - delete attribute (deny)
 <cib epoch="17" num_updates="0" admin_epoch="0">
@@ -1775,7 +1775,7 @@ Call failed: Permission denied
 =#=#=#= Begin test: niceguy: Replace - create attribute (deny) =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create attribute (deny) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - create attribute (deny)
 <cib epoch="17" num_updates="0" admin_epoch="0">
@@ -2710,7 +2710,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
 </cib>
 =#=#=#= Begin test: chris: Replace - create attribute (deny overrides allow) =#=#=#=
 pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: chris: Replace - create attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - chris: Replace - create attribute (deny overrides allow)
 <cib epoch="27" num_updates="0" admin_epoch="0">
@@ -2790,7 +2790,7 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: chris: Replace - modify attribute (deny overrides allow) =#=#=#=
 pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy'][@description]
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: chris: Replace - modify attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - chris: Replace - modify attribute (deny overrides allow)
 <cib epoch="27" num_updates="0" admin_epoch="0">
@@ -2870,6 +2870,6 @@ Call failed: Permission denied
 </cib>
 =#=#=#= Begin test: chris: Replace - delete attribute (deny overrides allow) =#=#=#=
 pcmk__check_acl 	trace: Parent ACL denies user 'chris' read/write access to /cib/configuration/resources/primitive[@id='dummy2']
-Call failed: Permission denied
+cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: chris: Replace - delete attribute (deny overrides allow) - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - chris: Replace - delete attribute (deny overrides allow)

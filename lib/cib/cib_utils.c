@@ -780,6 +780,9 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                 const char *section, xmlNode * data,
                 xmlNode ** output_data, int call_options, const char *user_name)
 {
+    /* Note: *output_data gets set only for create and query requests. There are
+     * a lot of opportunities to clean up, clarify, check/enforce things, etc.
+     */
     int (*delegate)(cib_t *cib, const char *op, const char *host,
                     const char *section, xmlNode *data, xmlNode **output_data,
                     int call_options, const char *user_name) = NULL;

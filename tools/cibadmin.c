@@ -8,7 +8,10 @@
  */
 
 #include <crm_internal.h>
-#include <stdio.h>
+
+#include <stdint.h>                         // uint32_t, etc.
+#include <stdio.h>                          // NULL, printf(), etc.
+
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
@@ -21,6 +24,21 @@
 
 #define DEFAULT_TIMEOUT 30
 #define INDENT "                                "
+
+/*!
+ * \internal
+ * \brief How to interpret \c options.cib_section
+ */
+enum cibadmin_section_type {
+    //! No section specified: the command applies to the entire CIB
+    cibadmin_section_all = 0,
+
+    //! Section is the name of the CIB element to which the command applies
+    cibadmin_section_scope,
+
+    //! Section is an XPath expression, and the command applies to matches
+    cibadmin_section_xpath,
+};
 
 /*!
  * \internal
@@ -47,66 +65,66 @@ enum cibadmin_cmd {
 
 /*!
  * \internal
+ * \brief Flags to define attributes of a given \c cibadmin command
+ */
+enum cibadmin_command_flags {
+    //! This flag has no effect
+    cibadmin_cf_none           = UINT32_C(0),
+
+    /*!
+     * \brief Command requires input
+     *
+     * There is no optional input. Either a command requires input, or it
+     * ignores any input that was provided.
+     */
+    cibadmin_cf_requires_input = (UINT32_C(1) << 0),
+
+    /*!
+     * \brief Command is especially unsafe
+     *
+     * Any command that modifies the CIB is unsafe. This flag is for commands
+     * that are likely to be destructive to larger portions of the CIB and to be
+     * used by mistake.
+     */
+    cibadmin_cf_unsafe         = (UINT32_C(1) << 1),
+
+    /*!
+     * \brief Command can use an XPath expression instead of input XML
+     *
+     * If \c options.section_type is \c cibadmin_section_xpath, then the command
+     * uses \c options.cib_section rather than reading input XML.
+     */
+    cibadmin_cf_xpath_input    = (UINT32_C(1) << 2),
+};
+
+/*!
+ * \internal
+ * \brief Setup function for a \c cibadmin command (before any CIB API call)
+ */
+typedef crm_exit_t (*cibadmin_pre_fn_t)(int *, xmlNode *, GError **);
+
+/*!
+ * \internal
+ * \brief Return/output handler for a \c cibadmin command (after CIB API call)
+ */
+typedef crm_exit_t (*cibadmin_post_fn_t)(cib_t *, int, xmlNode *, int,
+                                         GError **);
+
+/*!
+ * \internal
  * \brief Information about a \c cibadmin command type
  */
 typedef struct {
-    const char *cib_request; //!< Name of request to send to the CIB API
+    const char *cib_request;    //!< Name of request to send to the CIB API
+    cibadmin_pre_fn_t pre_fn;   //!< Function to call before CIB API call
+    cibadmin_post_fn_t post_fn; //!< Function to call after CIB API call
+
+    //! Group of <tt>enum cibadmin_command_flags</tt>
+    uint32_t flags;
 } cibadmin_cmd_info_t;
-
-static const cibadmin_cmd_info_t cibadmin_command_info[] = {
-    [cibadmin_cmd_bump] = {
-        PCMK__CIB_REQUEST_BUMP,
-    },
-    [cibadmin_cmd_create] = {
-        PCMK__CIB_REQUEST_CREATE,
-    },
-    [cibadmin_cmd_delete] = {
-        PCMK__CIB_REQUEST_DELETE,
-    },
-    [cibadmin_cmd_delete_all] = {
-        PCMK__CIB_REQUEST_DELETE,
-    },
-    [cibadmin_cmd_empty] = {
-        NULL,
-    },
-    [cibadmin_cmd_erase] = {
-        PCMK__CIB_REQUEST_ERASE,
-    },
-    [cibadmin_cmd_md5_sum] = {
-        NULL,
-    },
-    [cibadmin_cmd_md5_sum_versioned] = {
-        NULL,
-    },
-    [cibadmin_cmd_modify] = {
-        PCMK__CIB_REQUEST_MODIFY,
-    },
-    [cibadmin_cmd_patch] = {
-        PCMK__CIB_REQUEST_APPLY_PATCH,
-    },
-    [cibadmin_cmd_query] = {
-        PCMK__CIB_REQUEST_QUERY,
-    },
-    [cibadmin_cmd_replace] = {
-        PCMK__CIB_REQUEST_REPLACE,
-    },
-    [cibadmin_cmd_upgrade] = {
-        PCMK__CIB_REQUEST_UPGRADE,
-    },
-};
-
-enum cibadmin_section_type {
-    cibadmin_section_all = 0,
-    cibadmin_section_scope,
-    cibadmin_section_xpath,
-};
-
-static cib_t *cib_conn = NULL;
-static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
     enum cibadmin_cmd cmd;
-    int cmd_options;
     enum cibadmin_section_type section_type;
     char *cib_section;
     char *validate_with;
@@ -116,7 +134,6 @@ static struct {
     gchar *input_file;
     gchar *input_string;
     gboolean input_stdin;
-    bool delete_all;
     gboolean allow_create;
     gboolean force;
     gboolean get_node_path;
@@ -133,108 +150,8 @@ static struct {
     gboolean sync_call;
 } options = {
     .cmd = cibadmin_cmd_query,
-    .cmd_options = cib_sync_call,
     .timeout_sec = DEFAULT_TIMEOUT,
 };
-
-/*!
- * \internal
- * \brief Read input XML as specified on the command line
- *
- * Precedence is as follows:
- * 1. Input file
- * 2. Input string
- * 3. stdin
- *
- * If multiple input sources are given, only the last occurrence of the one with
- * the highest precedence is tried.
- *
- * If no input source is specified, this function does nothing.
- *
- * \param[out] input  Where to store parsed input
- * \param[out] error  Where to store error information
- *
- * \return Standard Pacemaker return code
- */
-static int
-read_input(xmlNode **input, GError **error)
-{
-    const char *source = NULL;
-
-    if (options.input_file != NULL) {
-        source = options.input_file;
-        *input = pcmk__xml_read(options.input_file);
-
-    } else if (options.input_string != NULL) {
-        source = "input string";
-        *input = pcmk__xml_parse(options.input_string);
-
-    } else if (options.input_stdin) {
-        source = "stdin";
-        *input = pcmk__xml_read(NULL);
-
-    } else {
-        *input = NULL;
-        return pcmk_rc_ok;
-    }
-
-    if (*input == NULL) {
-        int rc = pcmk_rc_bad_input;
-
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Couldn't parse input from %s", source);
-        return rc;
-    }
-
-    return pcmk_rc_ok;
-}
-
-/*!
- * \internal
- * \brief Output the digest of an XML tree
- *
- * \param[in]  xml      XML whose digest to output
- * \param[in]  on_disk  If \c true, output the on-disk digest of \p xml
- * \param[out] error    Where to store error
- */
-static void
-output_digest(const xmlNode *xml, bool on_disk, GError **error)
-{
-    char *digest = NULL;
-
-    if (xml == NULL) {
-        exit_code = CRM_EX_USAGE;
-        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
-                    "Please supply XML to process with -X, -x, or -p");
-        return;
-    }
-
-    if (on_disk) {
-        digest = pcmk__digest_on_disk_cib(xml);
-    } else {
-        digest = pcmk__digest_xml(xml, true);
-    }
-    printf("%s\n", pcmk__s(digest, "<null>"));
-    free(digest);
-}
-
-/*!
- * \internal
- * \brief Check whether the current command is dangerous
- *
- * \return \c true if \c options.cmd is dangerous, or \c false otherwise
- */
-static inline bool
-cmd_is_dangerous(void)
-{
-    /* @TODO Ideally, --upgrade wouldn't be considered dangerous if the CIB
-     * already uses the latest schema.
-     */
-    return (options.cmd == cibadmin_cmd_delete_all)
-           || (options.cmd == cibadmin_cmd_erase)
-           || (options.cmd == cibadmin_cmd_upgrade);
-}
 
 /*!
  * \internal
@@ -264,6 +181,166 @@ scope_is_valid(const char *scope)
                             NULL);
 }
 
+static crm_exit_t
+cibadmin_pre_delete_all(int *call_options, xmlNode *input, GError **error)
+{
+    // Remove all matching objects. Meaningful only with cibadmin_section_xpath.
+    cib__set_call_options(*call_options, crm_system_name, cib_multiple);
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
+{
+    /* Output an empty CIB.
+     * Handles entirety of empty command; there is no CIB request.
+     */
+    GString *buf = g_string_sized_new(1024);
+    xmlNode *output = createEmptyCib(1);
+
+    crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
+
+    pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+    printf("%s", buf->str);
+
+    g_string_free(buf, TRUE);
+    pcmk__xml_free(output);
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_pre_md5_sum(int *call_options, xmlNode *input, GError **error)
+{
+    // Handles entirety of md5_sum command; there is no CIB request
+    char *digest = pcmk__digest_on_disk_cib(input);
+
+    if (digest == NULL) {
+        /* On-disk digest should be non-NULL even if input is NULL or empty,
+         * since whitespace gets added before and after dumping the XML
+         */
+        g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_SOFTWARE,
+                    "Bug: Null digest");
+        return CRM_EX_SOFTWARE;
+    }
+
+    printf("%s\n", digest);
+    free(digest);
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
+                               GError **error)
+{
+    // Handles entirety of md5_sum_versioned command; there is no CIB request
+    char *digest = pcmk__digest_xml(input, true);
+
+    if (digest == NULL) {
+        int rc = pcmk_rc_bad_input;
+
+        g_set_error(error, PCMK__RC_ERROR, rc,
+                    "Couldn't compute digest: %s", pcmk_rc_str(rc));
+        return pcmk_rc2exitc(rc);
+    }
+
+    printf("%s\n", digest);
+    free(digest);
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_pre_modify(int *call_options, xmlNode *input, GError **error)
+{
+    /* @COMPAT When we drop default support for expansion in cibadmin, guard
+     * with `if (options.score_update)`
+     */
+    cib__set_call_options(*call_options, crm_system_name, cib_score_update);
+
+    if (options.allow_create) {
+        // Allow target to be created if it does not exist
+        cib__set_call_options(*call_options, crm_system_name, cib_can_create);
+    }
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_pre_query(int *call_options, xmlNode *input, GError **error)
+{
+    if (options.get_node_path) {
+        /* Enable getting node path of XPath query matches. Meaningful only with
+         * cibadmin_section_xpath.
+         */
+        cib__set_call_options(*call_options, crm_system_name,
+                              cib_xpath_address);
+    }
+    if (options.no_children) {
+        // Don't include a match's children in the query result
+        cib__set_call_options(*call_options, crm_system_name, cib_no_children);
+    }
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
+{
+    if (pcmk__xe_is(input, PCMK_XE_CIB)) {
+        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
+
+        if (status == NULL) {
+            pcmk__xe_create(input, PCMK_XE_STATUS);
+        }
+    }
+    return CRM_EX_OK;
+}
+
+static crm_exit_t
+cibadmin_post_upgrade(cib_t *cib_conn, int call_options, xmlNode *output,
+                      int cib_rc, GError **error)
+{
+    if (cib_rc == pcmk_rc_ok) {
+        return CRM_EX_OK;
+    }
+
+    if (cib_rc == pcmk_rc_schema_unchanged) {
+        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(cib_rc));
+        return CRM_EX_OK;
+    }
+
+    g_set_error(error, PCMK__RC_ERROR, cib_rc,
+                "CIB API call failed: %s", pcmk_rc_str(cib_rc));
+
+    if (cib_rc == pcmk_rc_schema_validation) {
+        xmlNode *obj = NULL;
+
+        if (cib_conn->cmds->query(cib_conn, NULL, &obj,
+                                  call_options) == pcmk_ok) {
+            pcmk__update_schema(&obj, NULL, true, false);
+        }
+        pcmk__xml_free(obj);
+    }
+    return pcmk_rc2exitc(cib_rc);
+}
+
+static crm_exit_t
+cibadmin_post_default(cib_t *cib_conn, int call_options, xmlNode *output,
+                      int cib_rc, GError **error)
+{
+    if (cib_rc != pcmk_rc_ok) {
+        g_set_error(error, PCMK__RC_ERROR, cib_rc,
+                    "CIB API call failed: %s", pcmk_rc_str(cib_rc));
+
+        if ((cib_rc == pcmk_rc_schema_validation)
+            && pcmk__xe_is(output, PCMK_XE_CIB)) {
+
+            // Show validation errors to stderr
+            pcmk__validate_xml(output, NULL, NULL, NULL);
+        }
+        return pcmk_rc2exitc(cib_rc);
+    }
+
+    return CRM_EX_OK;
+}
+
 static int
 print_xml_id(xmlNode *xml, void *user_data)
 {
@@ -275,12 +352,205 @@ print_xml_id(xmlNode *xml, void *user_data)
     return pcmk_rc_ok;
 }
 
+static void
+cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
+                    crm_exit_t *exit_code, GError **error)
+{
+    if ((options.acl_render_mode != pcmk__acl_render_none)
+        && (*exit_code == CRM_EX_OK)
+        && pcmk__xe_is(output, PCMK_XE_CIB)) {
+
+        xmlDoc *acl_evaled_doc = NULL;
+        xmlChar *rendered = NULL;
+        int rc = pcmk__acl_annotate_permissions(acl_user, output->doc,
+                                                &acl_evaled_doc);
+
+        if (rc != pcmk_rc_ok) {
+            *exit_code = CRM_EX_CONFIG;
+            g_set_error(error, PCMK__EXITC_ERROR, *exit_code,
+                        "Could not evaluate ACLs for %s: %s",
+                        acl_user, pcmk_rc_str(rc));
+            return;
+        }
+
+        rc = pcmk__acl_evaled_render(acl_evaled_doc, options.acl_render_mode,
+                                     &rendered);
+        if (rc != pcmk_rc_ok) {
+            *exit_code = CRM_EX_CONFIG;
+            g_set_error(error, PCMK__EXITC_ERROR, *exit_code,
+                        "Could not render ACLs for %s: %s",
+                        acl_user, pcmk_rc_str(rc));
+            return;
+        }
+
+        printf("%s\n", (char *) rendered);
+        xmlFree(rendered);
+
+    } else if (pcmk_is_set(call_options, cib_xpath_address)
+               && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
+
+        pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
+                               NULL);
+
+    } else {
+        GString *buf = g_string_sized_new(1024);
+
+        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+
+        printf("%s", buf->str);
+        g_string_free(buf, TRUE);
+    }
+}
+
+static crm_exit_t
+cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
+                        const gchar *acl_user, xmlNode *input, GError **error)
+{
+    int rc = pcmk_rc_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
+
+    cib_t *cib_conn = NULL;
+    xmlNode *output = NULL;
+
+    if (cmd_info->pre_fn != NULL) {
+        exit_code = cmd_info->pre_fn(&call_options, input, error);
+    }
+
+    if ((exit_code != CRM_EX_OK) || (cmd_info->cib_request == NULL)) {
+        goto done;
+    }
+
+    if (options.section_type == cibadmin_section_xpath) {
+        // Enable getting section by XPath
+        cib__set_call_options(call_options, crm_system_name, cib_xpath);
+
+    } else if ((options.section_type == cibadmin_section_scope)
+               && !scope_is_valid(options.cib_section)) {
+        // @COMPAT: Consider requiring --force to proceed
+        fprintf(stderr,
+                "Invalid value '%s' for '--scope'. Operation will apply to the "
+                "entire CIB.\n", options.cib_section);
+    }
+
+    rc = cib__create_signon(&cib_conn);
+    if (rc != pcmk_rc_ok) {
+        exit_code = pcmk_rc2exitc(rc);
+        g_set_error(error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to the CIB API: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+
+    cib_conn->call_timeout = options.timeout_sec;
+    if (cib_conn->call_timeout < 1) {
+        fprintf(stderr, "Timeout must be positive, defaulting to %d\n",
+                DEFAULT_TIMEOUT);
+        cib_conn->call_timeout = DEFAULT_TIMEOUT;
+    }
+
+    rc = cib_internal_op(cib_conn, cmd_info->cib_request, options.dest_node,
+                         options.cib_section, input, &output, call_options,
+                         options.cib_user);
+    rc = pcmk_legacy2rc(rc);
+
+    if (cmd_info->post_fn != NULL) {
+        exit_code = cmd_info->post_fn(cib_conn, call_options, output, rc,
+                                      error);
+    } else {
+        exit_code = cibadmin_post_default(cib_conn, call_options, output, rc,
+                                          error);
+    }
+
+    if (output != NULL) {
+        cibadmin_output_xml(output, call_options, acl_user, &exit_code, error);
+    }
+
+done:
+    pcmk__xml_free(output);
+
+    rc = cib__clean_up_connection(&cib_conn);
+    if (exit_code == CRM_EX_OK) {
+        exit_code = pcmk_rc2exitc(rc);
+    }
+
+    return exit_code;
+}
+
+static const cibadmin_cmd_info_t cibadmin_command_info[] = {
+    [cibadmin_cmd_bump] = {
+        PCMK__CIB_REQUEST_BUMP,
+        NULL, NULL,
+        cibadmin_cf_none,
+    },
+    [cibadmin_cmd_create] = {
+        PCMK__CIB_REQUEST_CREATE,
+        NULL, NULL,
+        cibadmin_cf_requires_input,
+    },
+    [cibadmin_cmd_delete] = {
+        PCMK__CIB_REQUEST_DELETE,
+        cibadmin_pre_delete_all, NULL,
+        cibadmin_cf_requires_input|cibadmin_cf_xpath_input,
+    },
+    [cibadmin_cmd_delete_all] = {
+        PCMK__CIB_REQUEST_DELETE,
+        NULL, NULL,
+        cibadmin_cf_requires_input|cibadmin_cf_unsafe|cibadmin_cf_xpath_input,
+    },
+    [cibadmin_cmd_empty] = {
+        NULL,
+        cibadmin_pre_empty, NULL,
+        cibadmin_cf_none,
+    },
+    [cibadmin_cmd_erase] = {
+        PCMK__CIB_REQUEST_ERASE,
+        NULL, NULL,
+        cibadmin_cf_unsafe,
+    },
+    [cibadmin_cmd_md5_sum] = {
+        NULL,
+        cibadmin_pre_md5_sum, NULL,
+        cibadmin_cf_requires_input,
+    },
+    [cibadmin_cmd_md5_sum_versioned] = {
+        NULL,
+        cibadmin_pre_md5_sum_versioned, NULL,
+        cibadmin_cf_requires_input,
+    },
+    [cibadmin_cmd_modify] = {
+        PCMK__CIB_REQUEST_MODIFY,
+        cibadmin_pre_modify, NULL,
+        cibadmin_cf_requires_input,
+    },
+    [cibadmin_cmd_patch] = {
+        PCMK__CIB_REQUEST_APPLY_PATCH,
+        NULL, NULL,
+        cibadmin_cf_requires_input,
+    },
+    [cibadmin_cmd_query] = {
+        PCMK__CIB_REQUEST_QUERY,
+        cibadmin_pre_query, NULL,
+        cibadmin_cf_none,
+    },
+    [cibadmin_cmd_replace] = {
+        PCMK__CIB_REQUEST_REPLACE,
+        cibadmin_pre_replace, NULL,
+        cibadmin_cf_requires_input,
+    },
+
+    /* @TODO Ideally, --upgrade wouldn't be considered unsafe if the CIB already
+     * uses the latest schema.
+     */
+    [cibadmin_cmd_upgrade] = {
+        PCMK__CIB_REQUEST_UPGRADE,
+        NULL, cibadmin_post_upgrade,
+        cibadmin_cf_unsafe,
+    },
+};
+
 static gboolean
 command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
-    options.delete_all = false;
-
     if (pcmk__str_any_of(option_name, "-u", "--upgrade", NULL)) {
         options.cmd = cibadmin_cmd_upgrade;
 
@@ -310,7 +580,6 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 
     } else if (pcmk__str_any_of(option_name, "-d", "--delete-all", NULL)) {
         options.cmd = cibadmin_cmd_delete_all;
-        options.delete_all = true;
 
     } else if (pcmk__str_any_of(option_name, "-a", "--empty", NULL)) {
         options.cmd = cibadmin_cmd_empty;
@@ -623,12 +892,60 @@ build_arg_context(pcmk__common_args_t *args)
     return context;
 }
 
+/*!
+ * \internal
+ * \brief Read input XML as specified on the command line
+ *
+ * Precedence is as follows:
+ * 1. Input file
+ * 2. Input string
+ * 3. stdin
+ *
+ * If multiple input sources are given, only the last occurrence of the one with
+ * the highest precedence is tried.
+ *
+ * If no input source is specified, this function does nothing.
+ *
+ * \param[out] input   Where to store parsed input
+ * \param[out] source  Where to store string describing input source
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+read_input(xmlNode **input, const char **source)
+{
+    if (options.input_file != NULL) {
+        *source = options.input_file;
+        *input = pcmk__xml_read(options.input_file);
+
+    } else if (options.input_string != NULL) {
+        *source = "input string";
+        *input = pcmk__xml_parse(options.input_string);
+
+    } else if (options.input_stdin) {
+        *source = "stdin";
+        *input = pcmk__xml_read(NULL);
+
+    } else {
+        *source = NULL;
+        *input = NULL;
+        return EINVAL;
+    }
+
+    if (*input == NULL) {
+        return pcmk_rc_bad_input;
+    }
+    return pcmk_rc_ok;
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
+
     const cibadmin_cmd_info_t *cmd_info = NULL;
-    xmlNode *output = NULL;
+    int call_options = cib_sync_call;
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
 
@@ -676,8 +993,7 @@ main(int argc, char **argv)
     set_crm_log_level(LOG_CRIT);
 
     if (args->verbosity > 0) {
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_verbose);
+        cib__set_call_options(call_options, crm_system_name, cib_verbose);
 
         for (int i = 0; i < args->verbosity; i++) {
             crm_bump_log_level(argc, argv);
@@ -695,20 +1011,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.cmd == cibadmin_cmd_empty) {
-        // Output an empty CIB
-        GString *buf = g_string_sized_new(1024);
-
-        output = createEmptyCib(1);
-        crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
-
-        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-        fprintf(stdout, "%s", buf->str);
-        g_string_free(buf, TRUE);
-        goto done;
-    }
-
-    if (cmd_is_dangerous() && !options.force) {
+    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_unsafe) && !options.force) {
         exit_code = CRM_EX_UNSAFE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "The supplied command is considered dangerous. To prevent "
@@ -717,206 +1020,83 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (options.section_type == cibadmin_section_xpath) {
-        // Enable getting section by XPath
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_xpath);
-
-    } else if (options.section_type == cibadmin_section_scope) {
-        if (!scope_is_valid(options.cib_section)) {
-            // @COMPAT: Consider requiring --force to proceed
-            fprintf(stderr,
-                    "Invalid value '%s' for '--scope'. Operation will apply "
-                    "to the entire CIB.\n", options.cib_section);
-        }
-    }
-
-    if (options.allow_create) {
-        // Allow target of --modify/-M to be created if it does not exist
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_can_create);
-    }
-
-    if (options.delete_all) {
-        // With cibadmin_section_xpath, remove all matching objects
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_multiple);
-    }
-
-    if (options.get_node_path) {
-        /* Enable getting node path of XPath query matches.
-         * Meaningful only if options.section_type == cibadmin_section_xpath.
-         */
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_xpath_address);
-    }
-
-    if (options.no_children) {
-        // When querying an object, don't include its children in the result
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_no_children);
-    }
-
-    if (read_input(&input, &error) != pcmk_rc_ok) {
-        goto done;
-    }
-
-    /* @TODO Since this was added by 99f414d, we have not entered this ACL
-     * render setup section if any input was provided. Is that correct?
+    /* Query is the only command that produces output suitable for ACL
+     * rendering. Ignore --show-access for other commands.
      */
-    if ((input == NULL) && (options.acl_render_mode != pcmk__acl_render_none)) {
-        char *username = NULL;
+    if (options.acl_render_mode != pcmk__acl_render_none) {
+        if (options.cmd == cibadmin_cmd_query) {
+            char *username = NULL;
 
-        if (options.cib_user == NULL) {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "The supplied command requires -U user specified.");
-            goto done;
+            if (options.cib_user == NULL) {
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "-U/--user is required with -S/--show-access");
+                goto done;
+            }
+
+            // @COMPAT Fail if pcmk_acl_required(username)
+            username = pcmk__uid2username(geteuid());
+            if (pcmk_acl_required(username)) {
+                fprintf(stderr,
+                        "Warning: cibadmin is being run as user %s, which is "
+                        "subject to ACLs. As a result, ACLs for user %s may be "
+                        "incorrect or incomplete in the output. In a future "
+                        "release, running as a privileged user (root or "
+                        CRM_DAEMON_USER ") will be required for "
+                        "-S/--show-access.\n",
+                        username, options.cib_user);
+            }
+
+            free(username);
+
+            /* Note: acl_cred takes ownership of options.cib_user here.
+             * options.cib_user is set to NULL so that the CIB is obtained as
+             * the user running the cibadmin command. The CIB must be obtained
+             * as a user with full permissions in order to show the CIB
+             * correctly annotated for the options.cib_user's permissions.
+             */
+            acl_cred = options.cib_user;
+            options.cib_user = NULL;
+
+        } else {
+            options.acl_render_mode = pcmk__acl_render_none;
         }
+    }
 
-        // @COMPAT Fail if pcmk_acl_required(username)
-        username = pcmk__uid2username(geteuid());
-        if (pcmk_acl_required(username)) {
-            fprintf(stderr,
-                    "Warning: cibadmin is being run as user %s, which is "
-                    "subject to ACLs. As a result, ACLs for user %s may be "
-                    "incorrect or incomplete in the output. In a future "
-                    "release, running as a privileged user (root or "
-                    CRM_DAEMON_USER ") will be required for --show-access.\n",
-                    username, options.cib_user);
-        }
+    if (pcmk_is_set(cmd_info->flags, cibadmin_cf_requires_input)) {
+        bool accepts_xpath = pcmk_is_set(cmd_info->flags,
+                                         cibadmin_cf_xpath_input);
 
-        free(username);
-
-        /* Note: acl_cred takes ownership of options.cib_user here.
-         * options.cib_user is set to NULL so that the CIB is obtained as the
-         * user running the cibadmin command. The CIB must be obtained as a user
-         * with full permissions in order to show the CIB correctly annotated
-         * for the options.cib_user's permissions.
+        /* If true, use options.cib_section (an XPath expression) instead of
+         * input XML
          */
-        acl_cred = options.cib_user;
-        options.cib_user = NULL;
-    }
+        bool as_xpath = accepts_xpath
+                        && (options.section_type == cibadmin_section_xpath);
 
-    if (options.cmd == cibadmin_cmd_md5_sum) {
-        output_digest(input, true, &error);
-        goto done;
-    }
-    if (options.cmd == cibadmin_cmd_md5_sum_versioned) {
-        output_digest(input, false, &error);
-        goto done;
-    }
+        if (!as_xpath) {
+            const char *source = NULL;
 
-    if (options.cmd == cibadmin_cmd_modify) {
-        /* @COMPAT When we drop default support for expansion in cibadmin, guard
-         * with `if (options.score_update)`
-         */
-        cib__set_call_options(options.cmd_options, crm_system_name,
-                              cib_score_update);
-    }
-
-    rc = cib__create_signon(&cib_conn);
-    if (rc != pcmk_rc_ok) {
-        exit_code = pcmk_rc2exitc(rc);
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not connect to the CIB API: %s", pcmk_rc_str(rc));
-        goto done;
-    }
-
-    cib_conn->call_timeout = options.timeout_sec;
-    if (cib_conn->call_timeout < 1) {
-        fprintf(stderr, "Timeout must be positive, defaulting to %d\n",
-                DEFAULT_TIMEOUT);
-        cib_conn->call_timeout = DEFAULT_TIMEOUT;
-    }
-
-    if ((options.cmd == cibadmin_cmd_replace)
-        && pcmk__xe_is(input, PCMK_XE_CIB)) {
-
-        xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
-
-        if (status == NULL) {
-            pcmk__xe_create(input, PCMK_XE_STATUS);
-        }
-    }
-
-    rc = cib_internal_op(cib_conn, cmd_info->cib_request, options.dest_node,
-                         options.cib_section, input, &output,
-                         options.cmd_options, options.cib_user);
-    rc = pcmk_legacy2rc(rc);
-
-    if ((rc == pcmk_rc_schema_unchanged)
-        && (options.cmd == cibadmin_cmd_upgrade)) {
-
-        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(rc));
-        exit_code = CRM_EX_OK;
-
-    } else if (rc != pcmk_rc_ok) {
-        fprintf(stderr, "Call failed: %s\n", pcmk_rc_str(rc));
-        exit_code = pcmk_rc2exitc(rc);
-
-        if (rc == pcmk_rc_schema_validation) {
-            if (options.cmd == cibadmin_cmd_upgrade) {
-                xmlNode *obj = NULL;
-
-                if (cib_conn->cmds->query(cib_conn, NULL, &obj,
-                                          options.cmd_options) == pcmk_ok) {
-                    pcmk__update_schema(&obj, NULL, true, false);
-                }
-                pcmk__xml_free(obj);
-
-            } else if (output != NULL) {
-                // Show validation errors to stderr
-                pcmk__validate_xml(output, NULL, NULL, NULL);
+            rc = read_input(&input, &source);
+            if (rc == EINVAL) {
+                exit_code = CRM_EX_USAGE;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "The supplied command requires %sinput via "
+                            "--xml-file, --xml-text, or --xml-pipe",
+                            (accepts_xpath? "either --xpath or " : ""));
+                goto done;
+            }
+            if (rc != pcmk_rc_ok) {
+                exit_code = pcmk_rc2exitc(rc);
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Couldn't parse input from %s",
+                            pcmk__s(source, "(BUG: null source)"));
+                goto done;
             }
         }
     }
 
-    if (output == NULL) {
-        goto done;
-    }
-
-    if (options.acl_render_mode != pcmk__acl_render_none) {
-        xmlDoc *acl_evaled_doc = NULL;
-        xmlChar *rendered = NULL;
-
-        rc = pcmk__acl_annotate_permissions(acl_cred, output->doc,
-                                            &acl_evaled_doc);
-        if (rc != pcmk_rc_ok) {
-            exit_code = CRM_EX_CONFIG;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not evaluate access per request (%s, error: %s)",
-                        acl_cred, pcmk_rc_str(rc));
-            goto done;
-        }
-
-        rc = pcmk__acl_evaled_render(acl_evaled_doc, options.acl_render_mode,
-                                     &rendered);
-        if (rc != pcmk_rc_ok) {
-            exit_code = CRM_EX_CONFIG;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Could not render evaluated access: %s",
-                        pcmk_rc_str(rc));
-            goto done;
-        }
-
-        printf("%s\n", (char *) rendered);
-        xmlFree(rendered);
-
-    } else if (pcmk_is_set(options.cmd_options, cib_xpath_address)
-               && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
-
-        pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
-                               NULL);
-
-    } else {
-        GString *buf = g_string_sized_new(1024);
-
-        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-
-        printf("%s", buf->str);
-        g_string_free(buf, TRUE);
-    }
+    exit_code = cibadmin_handle_command(cmd_info, call_options, acl_cred, input,
+                                        &error);
 
 done:
     g_strfreev(processed_args);
@@ -931,12 +1111,6 @@ done:
 
     g_free(acl_cred);
     pcmk__xml_free(input);
-    pcmk__xml_free(output);
-
-    rc = cib__clean_up_connection(&cib_conn);
-    if (exit_code == CRM_EX_OK) {
-        exit_code = pcmk_rc2exitc(rc);
-    }
 
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);
