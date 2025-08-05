@@ -77,7 +77,9 @@ cibadmin_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 
 if BUILD_CIBSECRETS
 cibsecret_SOURCES	= cibsecret.c
-cibsecret_LDADD = $(top_builddir)/lib/common/libcrmcommon.la
+cibsecret_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
+cibsecret_LDADD += $(top_builddir)/lib/cib/libcib.la
+cibsecret_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 endif
 
 crm_shadow_SOURCES	= crm_shadow.c

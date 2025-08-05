@@ -11,7 +11,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdlib.h>
+#include <stdlib.h>             // setenv, unsetenv
 #include <string.h>
 #include <sys/stat.h>           // umask, S_IRGRP, S_IROTH, ...
 #include <sys/wait.h>           // WEXITSTATUS
@@ -29,6 +29,8 @@
 #include <pacemaker-internal.h> // pcmk__query_node_name
 
 #define SUMMARY "cibsecret - manage sensitive information in Pacemaker CIB"
+
+#define SSH_OPTS "-o StrictHostKeyChecking=no"
 
 static gchar **remainder = NULL;
 static gboolean no_cib = FALSE;
@@ -139,19 +141,55 @@ done:
 static int
 pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    gchar *hosts = g_strjoinv(" ", nodes);
+
+    s = crm_strdup_printf("pssh -i -H \"%s\" -x \"" SSH_OPTS "\" -- \"%s\"",
+                          hosts, cmdline);
+    rc = run_cmdline(out, s, NULL);
+
+    free(s);
+    g_free(hosts);
+    return rc;
 }
 
 static int
 pdsh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+    char *s = NULL;
+    gchar *hosts = g_strjoinv(",", nodes);
+
+    s = crm_strdup_printf("pdsh -w \"%s\" -- \"%s\"", hosts, cmdline);
+    setenv("PDSH_SSH_ARGS_APPEND", SSH_OPTS, 1);
+    rc = run_cmdline(out, s, NULL);
+    unsetenv("PDSH_SSH_ARGS_APPEND");
+
+    free(s);
+    g_free(hosts);
+    return rc;
 }
 
 static int
 ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 {
-    return pcmk_rc_ok;
+    int rc = pcmk_rc_ok;
+
+    for (gchar **node = nodes; *node != NULL; node++) {
+        char *s = crm_strdup_printf("ssh " SSH_OPTS " \"%s\" -- \"%s\"",
+                                    *node, cmdline);
+
+        rc = run_cmdline(out, s, NULL);
+        free(s);
+
+        if (rc != pcmk_rc_ok) {
+            return rc;
+        }
+
+    }
+
+    return rc;
 }
 
 static int
