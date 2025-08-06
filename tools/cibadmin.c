@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdint.h>                         // uint32_t, etc.
-#include <stdio.h>                          // NULL, printf(), etc.
+#include <stdio.h>                          // NULL
 
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
@@ -389,7 +389,7 @@ cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
             return;
         }
 
-        printf("%s\n", (char *) rendered);
+        out->message(out, "cibadmin-rendered-acls", (const char *) rendered);
         xmlFree(rendered);
 
     } else if (pcmk_is_set(call_options, cib_xpath_address)
@@ -893,6 +893,39 @@ node_path_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+PCMK__OUTPUT_ARGS("cibadmin-rendered-acls", "const char *")
+static int
+rendered_acls_default(pcmk__output_t *out, va_list args)
+{
+    const char *rendered = va_arg(args, const char *);
+
+    if (rendered == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return out->info(out, "%s", rendered);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-rendered-acls", "const char *")
+static int
+rendered_acls_xml(pcmk__output_t *out, va_list args)
+{
+    /* We want to create a CData block in a PCMK_XE_OUTPUT element. At the time
+     * of writing, that's exactly what this call to xml_output_xml() does.
+     * Note, however, that the "rendered" string is not XML if the ACL render
+     * mode is color or text.
+     *
+     * @TODO Create a pcmk__output_xml_create_cdata() or similar, and share it
+     * between xml_output_xml() and this function?
+     */
+    const char *rendered = va_arg(args, const char *);
+
+    if (rendered == NULL) {
+        return pcmk_rc_no_output;
+    }
+    out->output_xml(out, PCMK_XE_OUTPUT, rendered);
+    return pcmk_rc_ok;
+}
+
 static const pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
@@ -906,6 +939,8 @@ static const pcmk__message_entry_t fmt_functions[] = {
     { "cibadmin-md5-sum", "xml", md5_sum_xml },
     { "cibadmin-node-path", "default", node_path_default },
     { "cibadmin-node-path", "xml", node_path_xml },
+    { "cibadmin-rendered-acls", "default", rendered_acls_default },
+    { "cibadmin-rendered-acls", "xml", rendered_acls_xml },
 
     { NULL, NULL, NULL }
 };
