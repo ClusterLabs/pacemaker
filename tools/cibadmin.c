@@ -204,7 +204,8 @@ cibadmin_pre_empty(pcmk__output_t *out, int *call_options, xmlNode *input,
     crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
 
     pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-    printf("%s", buf->str);
+
+    out->output_xml(out, PCMK_XE_OUTPUT, buf->str);
 
     g_string_free(buf, TRUE);
     pcmk__xml_free(output);
