@@ -182,6 +182,16 @@ scope_is_valid(const char *scope)
                             NULL);
 }
 
+static void
+cibadmin_output_basic_xml(pcmk__output_t *out, xmlNode *xml)
+{
+    GString *buf = g_string_sized_new(1024);
+
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buf, 0);
+    out->output_xml(out, PCMK_XE_OUTPUT, buf->str);
+    g_string_free(buf, TRUE);
+}
+
 static crm_exit_t
 cibadmin_pre_delete_all(pcmk__output_t *out, int *call_options, xmlNode *input,
                         GError **error)
@@ -198,16 +208,12 @@ cibadmin_pre_empty(pcmk__output_t *out, int *call_options, xmlNode *input,
     /* Output an empty CIB.
      * Handles entirety of empty command; there is no CIB request.
      */
-    GString *buf = g_string_sized_new(1024);
     xmlNode *output = createEmptyCib(1);
 
     crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
 
-    pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
+    cibadmin_output_basic_xml(out, output);
 
-    out->output_xml(out, PCMK_XE_OUTPUT, buf->str);
-
-    g_string_free(buf, TRUE);
     pcmk__xml_free(output);
     return CRM_EX_OK;
 }
@@ -363,8 +369,9 @@ print_xml_id(xmlNode *xml, void *user_data)
 }
 
 static void
-cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
-                    crm_exit_t *exit_code, GError **error)
+cibadmin_output_xml(pcmk__output_t *out, xmlNode *output, int call_options,
+                    const gchar *acl_user, crm_exit_t *exit_code,
+                    GError **error)
 {
     if ((options.acl_render_mode != pcmk__acl_render_none)
         && (*exit_code == CRM_EX_OK)
@@ -404,12 +411,7 @@ cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
                                NULL);
 
     } else {
-        GString *buf = g_string_sized_new(1024);
-
-        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-
-        printf("%s", buf->str);
-        g_string_free(buf, TRUE);
+        cibadmin_output_basic_xml(out, output);
     }
 }
 
@@ -473,7 +475,8 @@ cibadmin_handle_command(pcmk__output_t *out,
     }
 
     if (output != NULL) {
-        cibadmin_output_xml(output, call_options, acl_user, &exit_code, error);
+        cibadmin_output_xml(out, output, call_options, acl_user, &exit_code,
+                            error);
     }
 
 done:
