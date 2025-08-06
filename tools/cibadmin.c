@@ -436,9 +436,9 @@ cibadmin_handle_command(pcmk__output_t *out,
     } else if ((options.section_type == cibadmin_section_scope)
                && !scope_is_valid(options.cib_section)) {
         // @COMPAT: Consider requiring --force to proceed
-        fprintf(stderr,
-                "Invalid value '%s' for '--scope'. Operation will apply to the "
-                "entire CIB.\n", options.cib_section);
+        out->err(out,
+                 "Invalid value '%s' for '--scope'. Operation will apply to the "
+                 "entire CIB", options.cib_section);
     }
 
     rc = cib__create_signon(&cib_conn);
@@ -451,8 +451,8 @@ cibadmin_handle_command(pcmk__output_t *out,
 
     cib_conn->call_timeout = options.timeout_sec;
     if (cib_conn->call_timeout < 1) {
-        fprintf(stderr, "Timeout must be positive, defaulting to %d\n",
-                DEFAULT_TIMEOUT);
+        out->err(out, "Timeout must be positive, defaulting to %d",
+                 DEFAULT_TIMEOUT);
         cib_conn->call_timeout = DEFAULT_TIMEOUT;
     }
 
@@ -1063,14 +1063,14 @@ main(int argc, char **argv)
             // @COMPAT Fail if pcmk_acl_required(username)
             username = pcmk__uid2username(geteuid());
             if (pcmk_acl_required(username)) {
-                fprintf(stderr,
-                        "Warning: cibadmin is being run as user %s, which is "
-                        "subject to ACLs. As a result, ACLs for user %s may be "
-                        "incorrect or incomplete in the output. In a future "
-                        "release, running as a privileged user (root or "
-                        CRM_DAEMON_USER ") will be required for "
-                        "-S/--show-access.\n",
-                        username, options.cib_user);
+                out->err(out,
+                         "Warning: cibadmin is being run as user %s, which is "
+                         "subject to ACLs. As a result, ACLs for user %s may "
+                         "be incorrect or incomplete in the output. In a "
+                         "future release, running as a privileged user (root "
+                         "or " CRM_DAEMON_USER ") will be required for "
+                         "-S/--show-access.",
+                         username, options.cib_user);
             }
 
             free(username);
