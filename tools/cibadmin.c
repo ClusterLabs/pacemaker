@@ -101,14 +101,15 @@ enum cibadmin_command_flags {
  * \internal
  * \brief Setup function for a \c cibadmin command (before any CIB API call)
  */
-typedef crm_exit_t (*cibadmin_pre_fn_t)(int *, xmlNode *, GError **);
+typedef crm_exit_t (*cibadmin_pre_fn_t)(pcmk__output_t *, int *, xmlNode *,
+                                        GError **);
 
 /*!
  * \internal
  * \brief Return/output handler for a \c cibadmin command (after CIB API call)
  */
-typedef crm_exit_t (*cibadmin_post_fn_t)(cib_t *, int, xmlNode *, int,
-                                         GError **);
+typedef crm_exit_t (*cibadmin_post_fn_t)(pcmk__output_t *, cib_t *, int,
+                                         xmlNode *, int, GError **);
 
 /*!
  * \internal
@@ -182,7 +183,8 @@ scope_is_valid(const char *scope)
 }
 
 static crm_exit_t
-cibadmin_pre_delete_all(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_delete_all(pcmk__output_t *out, int *call_options, xmlNode *input,
+                        GError **error)
 {
     // Remove all matching objects. Meaningful only with cibadmin_section_xpath.
     cib__set_call_options(*call_options, crm_system_name, cib_multiple);
@@ -190,7 +192,8 @@ cibadmin_pre_delete_all(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_empty(pcmk__output_t *out, int *call_options, xmlNode *input,
+                   GError **error)
 {
     /* Output an empty CIB.
      * Handles entirety of empty command; there is no CIB request.
@@ -209,7 +212,8 @@ cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_md5_sum(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_md5_sum(pcmk__output_t *out, int *call_options, xmlNode *input,
+                     GError **error)
 {
     // Handles entirety of md5_sum command; there is no CIB request
     char *digest = pcmk__digest_on_disk_cib(input);
@@ -229,8 +233,8 @@ cibadmin_pre_md5_sum(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
-                               GError **error)
+cibadmin_pre_md5_sum_versioned(pcmk__output_t *out, int *call_options,
+                               xmlNode *input, GError **error)
 {
     // Handles entirety of md5_sum_versioned command; there is no CIB request
     char *digest = pcmk__digest_xml(input, true);
@@ -249,7 +253,8 @@ cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
 }
 
 static crm_exit_t
-cibadmin_pre_modify(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_modify(pcmk__output_t *out, int *call_options, xmlNode *input,
+                    GError **error)
 {
     /* @COMPAT When we drop default support for expansion in cibadmin, guard
      * with `if (options.score_update)`
@@ -264,7 +269,8 @@ cibadmin_pre_modify(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_query(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_query(pcmk__output_t *out, int *call_options, xmlNode *input,
+                   GError **error)
 {
     if (options.get_node_path) {
         /* Enable getting node path of XPath query matches. Meaningful only with
@@ -281,7 +287,8 @@ cibadmin_pre_query(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_replace(pcmk__output_t *out, int *call_options, xmlNode *input,
+                     GError **error)
 {
     if (pcmk__xe_is(input, PCMK_XE_CIB)) {
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
@@ -294,8 +301,8 @@ cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_post_upgrade(cib_t *cib_conn, int call_options, xmlNode *output,
-                      int cib_rc, GError **error)
+cibadmin_post_upgrade(pcmk__output_t *out, cib_t *cib_conn, int call_options,
+                      xmlNode *output, int cib_rc, GError **error)
 {
     if (cib_rc == pcmk_rc_ok) {
         return CRM_EX_OK;
@@ -322,8 +329,8 @@ cibadmin_post_upgrade(cib_t *cib_conn, int call_options, xmlNode *output,
 }
 
 static crm_exit_t
-cibadmin_post_default(cib_t *cib_conn, int call_options, xmlNode *output,
-                      int cib_rc, GError **error)
+cibadmin_post_default(pcmk__output_t *out, cib_t *cib_conn, int call_options,
+                      xmlNode *output, int cib_rc, GError **error)
 {
     if (cib_rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__RC_ERROR, cib_rc,
@@ -404,7 +411,8 @@ cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
 }
 
 static crm_exit_t
-cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
+cibadmin_handle_command(pcmk__output_t *out,
+                        const cibadmin_cmd_info_t *cmd_info, int call_options,
                         const gchar *acl_user, xmlNode *input, GError **error)
 {
     int rc = pcmk_rc_ok;
@@ -414,7 +422,7 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
     xmlNode *output = NULL;
 
     if (cmd_info->pre_fn != NULL) {
-        exit_code = cmd_info->pre_fn(&call_options, input, error);
+        exit_code = cmd_info->pre_fn(out, &call_options, input, error);
     }
 
     if ((exit_code != CRM_EX_OK) || (cmd_info->cib_request == NULL)) {
@@ -454,11 +462,11 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
     rc = pcmk_legacy2rc(rc);
 
     if (cmd_info->post_fn != NULL) {
-        exit_code = cmd_info->post_fn(cib_conn, call_options, output, rc,
+        exit_code = cmd_info->post_fn(out, cib_conn, call_options, output, rc,
                                       error);
     } else {
-        exit_code = cibadmin_post_default(cib_conn, call_options, output, rc,
-                                          error);
+        exit_code = cibadmin_post_default(out, cib_conn, call_options, output,
+                                          rc, error);
     }
 
     if (output != NULL) {
@@ -1113,8 +1121,8 @@ main(int argc, char **argv)
         }
     }
 
-    exit_code = cibadmin_handle_command(cmd_info, call_options, acl_cred, input,
-                                        &error);
+    exit_code = cibadmin_handle_command(out, cmd_info, call_options, acl_cred,
+                                        input, &error);
 
 done:
     g_strfreev(processed_args);
