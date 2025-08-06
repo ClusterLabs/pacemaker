@@ -53,8 +53,9 @@ version_pairs_last = $(wordlist \
 # problems.
 
 # Names of API schemas that form the choices for pacemaker-result content
-API_request_base	= cibsecret 		\
-			  command-output	\
+API_request_base	= cibadmin		\
+			  cibsecret		\
+			  command-output 	\
 			  crm_attribute 	\
 			  crm_diff 		\
 			  crm_error 		\
