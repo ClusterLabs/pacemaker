@@ -357,17 +357,6 @@ cibadmin_post_default(pcmk__output_t *out, cib_t *cib_conn, int call_options,
     return CRM_EX_OK;
 }
 
-static int
-print_xml_id(xmlNode *xml, void *user_data)
-{
-    const char *id = pcmk__xe_id(xml);
-
-    if (id != NULL) {
-        printf("%s\n", id);
-    }
-    return pcmk_rc_ok;
-}
-
 static void
 cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
                     const gchar *acl_user, crm_exit_t *exit_code,
@@ -407,8 +396,7 @@ cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
                && pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
 
         // @COMPAT Remove when -e/--node-path is removed
-        pcmk__xe_foreach_child(xml, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
-                               NULL);
+        out->message(out, "cibadmin-node-path", xml);
 
     } else {
         cibadmin_output_basic_xml(out, xml);
@@ -867,6 +855,44 @@ md5_sum_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+// @COMPAT Drop "cibadmin-node-path" and helper when dropping --node-path
+static int
+output_xml_id(xmlNode *xml, void *user_data)
+{
+    pcmk__output_t *out = user_data;
+    const char *id = pcmk__xe_id(xml);
+
+    pcmk__assert(id != NULL);
+
+    return out->info(out, "%s", id);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-node-path", "xmlNode *")
+static int
+node_path_default(pcmk__output_t *out, va_list args)
+{
+    xmlNode *query_result = va_arg(args, xmlNode *);
+
+    if (query_result == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return pcmk__xe_foreach_child(query_result, PCMK__XE_XPATH_QUERY_PATH,
+                                  output_xml_id, out);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-node-path", "xmlNode *")
+static int
+node_path_xml(pcmk__output_t *out, va_list args)
+{
+    xmlNode *query_result = va_arg(args, xmlNode *);
+
+    if (query_result == NULL) {
+        return pcmk_rc_no_output;
+    }
+    cibadmin_output_basic_xml(out, query_result);
+    return pcmk_rc_ok;
+}
+
 static const pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
     PCMK__SUPPORTED_FORMAT_TEXT,
@@ -878,6 +904,8 @@ static const pcmk__supported_format_t formats[] = {
 static const pcmk__message_entry_t fmt_functions[] = {
     { "cibadmin-md5-sum", "default", md5_sum_default },
     { "cibadmin-md5-sum", "xml", md5_sum_xml },
+    { "cibadmin-node-path", "default", node_path_default },
+    { "cibadmin-node-path", "xml", node_path_xml },
 
     { NULL, NULL, NULL }
 };
