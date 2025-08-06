@@ -946,7 +946,7 @@ static const pcmk__message_entry_t fmt_functions[] = {
 };
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args)
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
     const char *desc = NULL;
     GOptionContext *context = NULL;
@@ -995,7 +995,8 @@ build_arg_context(pcmk__common_args_t *args)
            "SEE ALSO:\n"
            " crm(8), pcs(8), crm_shadow(8), crm_diff(8)\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, "[<command>]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[<command>]");
     g_option_context_set_description(context, desc);
 
     pcmk__add_arg_group(context, "commands", "Commands:", "Show command help",
@@ -1071,7 +1072,7 @@ main(int argc, char **argv)
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "ANSUXhotx");
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
 
     pcmk__register_formats(output_group, formats);
 
