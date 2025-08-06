@@ -309,7 +309,7 @@ cibadmin_post_upgrade(pcmk__output_t *out, cib_t *cib_conn, int call_options,
     }
 
     if (cib_rc == pcmk_rc_schema_unchanged) {
-        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(cib_rc));
+        out->info(out, "Upgrade unnecessary: %s", pcmk_rc_str(cib_rc));
         return CRM_EX_OK;
     }
 
