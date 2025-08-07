@@ -277,18 +277,30 @@ compare_version(const char *version1, const char *version2)
  * \internal
  * \brief Convert the current process to a daemon process
  *
- * Fork a child process, exit the parent, create a PID file with the current
- * process ID, and close the standard input/output/error file descriptors.
- * Exit instead if a daemon is already running and using the PID file.
+ * Fork a child process, return in the parent, create a PID file with the
+ * child's process ID, and close the standard input/output/error file
+ * descriptors.
+ *
+ * Return an error if a daemon is already running and using the PID file.
  *
  * \param[in] name     Daemon executable name
  * \param[in] pidfile  File name to use as PID file
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The parent should exit after this function returns and after doing any
+ *       necessary cleanup.
+ * \note For convenience, this function returns instead of exiting, so that the
+ *       caller can clean up as appropriate. Exiting the parent here would be a
+ *       more intuitive way to daemonize a process. However, that would require
+ *       passing in a cleanup function (which may differ between parent and
+ *       child) and passing it the appropriate arguments, which is messy.
  */
-void
+int
 pcmk__daemonize(const char *name, const char *pidfile)
 {
-    int rc;
-    pid_t pid;
+    int rc = pcmk_rc_ok;
+    pid_t pid = 0;
 
     /* Check before we even try... */
     rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
@@ -297,7 +309,7 @@ pcmk__daemonize(const char *name, const char *pidfile)
                 name, (long long) pid, pidfile);
         printf("%s: already running [pid %lld in %s]\n",
                name, (long long) pid, pidfile);
-        crm_exit(pcmk_rc2exitc(rc));
+        return rc;
     }
 
     pid = fork();
@@ -305,10 +317,10 @@ pcmk__daemonize(const char *name, const char *pidfile)
         rc = errno;
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
-        crm_exit(pcmk_rc2exitc(rc));
-
-    } else if (pid > 0) {
-        crm_exit(CRM_EX_OK);
+        return rc;
+    }
+    if (pid > 0) {
+        return pcmk_rc_ok;
     }
 
     rc = pcmk__lock_pidfile(pidfile, name);
@@ -317,7 +329,7 @@ pcmk__daemonize(const char *name, const char *pidfile)
                 pidfile, name, pcmk_rc_str(rc), rc);
         printf("Could not lock '%s' for %s: %s (%d)\n",
                pidfile, name, pcmk_rc_str(rc), rc);
-        crm_exit(pcmk_rc2exitc(rc));
+        return rc;
     }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
@@ -330,6 +342,7 @@ pcmk__daemonize(const char *name, const char *pidfile)
 
     close(STDERR_FILENO);
     pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
+    return pcmk_rc_ok;
 }
 
 #ifdef HAVE_UUID_UUID_H
