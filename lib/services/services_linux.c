@@ -403,8 +403,12 @@ static struct mainloop_fd_callbacks stderr_callbacks = {
 static void
 set_ocf_env(const char *key, const char *value, gpointer user_data)
 {
+    // @FIXME @COMPAT This seems like it should be a fatal error
     if (setenv(key, value, 1) != 0) {
-        crm_perror(LOG_ERR, "setenv failed for key:%s and value:%s", key, value);
+        int rc = errno;
+
+        crm_err("setenv failed for key='%s' and value='%s': %s",
+                pcmk__s(key, ""), pcmk__s(value, ""), strerror(rc));
     }
 }
 
@@ -436,10 +440,22 @@ set_alert_env(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "setenv %s=%s",
-                  (char*)key, (value? (char*)value : ""));
+        // @FIXME @COMPAT This seems like it should be a fatal error
+        rc = errno;
+
+        if (value != NULL) {
+            crm_err("setenv %s='%s' failed: %s", (const char *) key,
+                    (const char *) value, strerror(rc));
+        } else {
+            crm_err("unsetenv %s failed: %s", (const char *) key, strerror(rc));
+        }
+
     } else {
-        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
+        if (value != NULL) {
+            crm_trace("setenv %s='%s'", (const char *) key, (const char *) value);
+        } else {
+            crm_trace("unsetenv %s", (const char *) key);
+        }
     }
 }
 
