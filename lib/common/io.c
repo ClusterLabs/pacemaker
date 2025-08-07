@@ -181,7 +181,6 @@ void
 pcmk__write_series_sequence(const char *directory, const char *series,
                             unsigned int sequence, int max)
 {
-    int rc = 0;
     FILE *file_strm = NULL;
     char *series_file = NULL;
 
@@ -198,21 +197,20 @@ pcmk__write_series_sequence(const char *directory, const char *series,
     series_file = crm_strdup_printf("%s/%s.last", directory, series);
     file_strm = fopen(series_file, "w");
     if (file_strm != NULL) {
-        rc = fprintf(file_strm, "%u", sequence);
+        int rc = fprintf(file_strm, "%u", sequence);
+
         if (rc < 0) {
-            crm_perror(LOG_ERR, "Cannot write to series file %s", series_file);
+            crm_err("Cannot write to series file %s", series_file);
+        } else {
+            crm_trace("Wrote %d to %s", sequence, series_file);
         }
+        fflush(file_strm);
+        fclose(file_strm);
 
     } else {
         crm_err("Cannot open series file %s for writing", series_file);
     }
 
-    if (file_strm != NULL) {
-        fflush(file_strm);
-        fclose(file_strm);
-    }
-
-    crm_trace("Wrote %d to %s", sequence, series_file);
     free(series_file);
 }
 
