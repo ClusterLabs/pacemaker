@@ -1027,17 +1027,27 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     if (pcmk__is_daemon) {
-        int user = getuid();
-        struct passwd *pwent = getpwuid(user);
+        uid_t user = getuid();
+        struct passwd *pwent = NULL;
+
+        errno = 0;
+        pwent = getpwuid(user);
 
         if (pwent == NULL) {
-            crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
+            const char *reason = "No matching password database entry found";
+
+            if (errno != 0) {
+                reason = strerror(errno);
+            }
+            crm_err("Cannot get name for uid %lld: %s", (long long) user,
+                    reason);
 
         } else if (!pcmk__strcase_any_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
             crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
 
         } else if (chdir(CRM_CORE_DIR) < 0) {
-            crm_perror(LOG_INFO, "Cannot change active directory to " CRM_CORE_DIR);
+            crm_info("Cannot change active directory to " CRM_CORE_DIR ": %s",
+                     strerror(errno));
 
         } else {
             crm_info("Changed active directory to " CRM_CORE_DIR);
