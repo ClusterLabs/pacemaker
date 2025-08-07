@@ -18,8 +18,6 @@
 
 #include "pe_status_private.h"
 
-extern bool pcmk__is_daemon;
-
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 
 /*!
