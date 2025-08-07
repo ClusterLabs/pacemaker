@@ -209,15 +209,16 @@ get_uptime(struct timeval *output)
     if (expires < tm_now) {
         int rc = 0;
 
-        info.ru_utime.tv_sec = 0;
-        info.ru_utime.tv_usec = 0;
-        rc = getrusage(RUSAGE_SELF, &info);
-
         output->tv_sec = 0;
         output->tv_usec = 0;
 
+        info.ru_utime.tv_sec = 0;
+        info.ru_utime.tv_usec = 0;
+
+        rc = getrusage(RUSAGE_SELF, &info);
         if (rc < 0) {
-            crm_perror(LOG_ERR, "Could not calculate the current uptime");
+            crm_err("Could not calculate the current uptime: %s",
+                    strerror(errno));
             expires = 0;
             return -1;
         }
