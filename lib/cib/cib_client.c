@@ -449,17 +449,28 @@ get_shadow_file(const char *suffix)
     const char *dir = getenv("CIB_shadow_dir");
 
     if (dir == NULL) {
-        uid_t uid = geteuid();
-        struct passwd *pwent = getpwuid(uid);
+        /* @TODO This basically duplicates pcmk__uid2username(), but we need the
+         * password database entry, not just the user name from it. We should
+         * reduce the duplication.
+         */
+        struct passwd *pwent = NULL;
         const char *user = NULL;
+
+        errno = 0;
+        pwent = getpwuid(geteuid());
 
         if (pwent) {
             user = pwent->pw_name;
+
         } else {
+            // Save errno before getenv()
+            int rc = errno;
+
             user = getenv("USER");
-            crm_perror(LOG_ERR,
-                       "Assuming %s because cannot get user details for user ID %d",
-                       (user? user : "unprivileged user"), uid);
+            crm_warn("Assuming user is %s because could not get password "
+                     "database entry for effective user ID %lld: %s",
+                     pcmk__s(user, "unprivileged user"), (long long) geteuid(),
+                     ((rc != 0)? strerror(rc) : "No matching entry found"));
         }
 
         if (pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
@@ -482,9 +493,9 @@ get_shadow_file(const char *suffix)
 
                 rc = mkdir(cib_home, 0700);
                 if (rc < 0 && errno != EEXIST) {
-                    crm_perror(LOG_ERR, "Couldn't create user-specific shadow directory: %s",
-                               cib_home);
-                    errno = 0;
+                    crm_err("Couldn't create user-specific shadow directory "
+                            "%s: %s",
+                            cib_home, strerror(errno));
 
                 } else {
                     dir = cib_home;
