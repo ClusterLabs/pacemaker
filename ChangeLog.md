@@ -1,5 +1,5 @@
-# Pacemaker-3.0.1 (30 Jul 2025)
-* 773 commits with 283 files changed, 11593 insertions(+), 7746 deletions(-)
+# Pacemaker-3.0.1 (07 Aug 2025)
+* 775 commits with 283 files changed, 11592 insertions(+), 7745 deletions(-)
 
 ## Features added since Pacemaker-3.0.0
 
