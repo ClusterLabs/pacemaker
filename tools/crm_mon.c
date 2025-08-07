@@ -1534,7 +1534,7 @@ main(int argc, char **argv)
         cib_delete(cib);
         cib = NULL;
 
-        rc = pcmk__daemonize(crm_system_name, options.pid_file);
+        rc = pcmk__daemonize(out, crm_system_name, options.pid_file);
         if (rc != pcmk_rc_ok) {
             return clean_up(pcmk_rc2exitc(rc));
         }

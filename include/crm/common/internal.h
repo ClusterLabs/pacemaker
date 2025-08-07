@@ -191,7 +191,7 @@ pcmk__flag_text(uint64_t flag_group, uint64_t flags)
 
 // miscellaneous utilities (from utils.c)
 
-int pcmk__daemonize(const char *name, const char *pidfile);
+int pcmk__daemonize(pcmk__output_t *out, const char *name, const char *pidfile);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);

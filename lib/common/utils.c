@@ -283,8 +283,9 @@ compare_version(const char *version1, const char *version2)
  *
  * Return an error if a daemon is already running and using the PID file.
  *
- * \param[in] name     Daemon executable name
- * \param[in] pidfile  File name to use as PID file
+ * \param[in,out] out      Output object (for error logging)
+ * \param[in]     name     Daemon executable name
+ * \param[in]     pidfile  File name to use as PID file
  *
  * \return Standard Pacemaker return code
  *
@@ -297,26 +298,25 @@ compare_version(const char *version1, const char *version2)
  *       child) and passing it the appropriate arguments, which is messy.
  */
 int
-pcmk__daemonize(const char *name, const char *pidfile)
+pcmk__daemonize(pcmk__output_t *out, const char *name, const char *pidfile)
 {
     int rc = pcmk_rc_ok;
     pid_t pid = 0;
 
+    pcmk__assert(out != NULL);
+
     /* Check before we even try... */
     rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
     if (rc == EEXIST) {
-        crm_err("%s: already running [pid %lld in %s]",
-                name, (long long) pid, pidfile);
-        printf("%s: already running [pid %lld in %s]\n",
-               name, (long long) pid, pidfile);
+        out->err(out, "%s: already running [pid %lld in %s]",
+                 name, (long long) pid, pidfile);
         return rc;
     }
 
     pid = fork();
     if (pid < 0) {
         rc = errno;
-        fprintf(stderr, "%s: could not start daemon\n", name);
-        crm_perror(LOG_ERR, "fork");
+        out->err(out, "%s: could not fork daemon: %s", name, strerror(errno));
         return rc;
     }
     if (pid > 0) {
@@ -325,10 +325,8 @@ pcmk__daemonize(const char *name, const char *pidfile)
 
     rc = pcmk__lock_pidfile(pidfile, name);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not lock '%s' for %s: %s " QB_XS " rc=%d",
-                pidfile, name, pcmk_rc_str(rc), rc);
-        printf("Could not lock '%s' for %s: %s (%d)\n",
-               pidfile, name, pcmk_rc_str(rc), rc);
+        out->err(out, "Could not lock '%s' for %s: %s",
+                 pidfile, name, pcmk_rc_str(rc));
         return rc;
     }
 
