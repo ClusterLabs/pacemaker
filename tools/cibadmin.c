@@ -1161,8 +1161,16 @@ main(int argc, char **argv)
                 goto done;
             }
 
-            // @COMPAT Fail if pcmk_acl_required(username)
             username = pcmk__uid2username(geteuid());
+            if (username == NULL) {
+                exit_code = CRM_EX_NOSUCH;
+                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                            "Failed to get username from password database for "
+                            "effective user ID %lld", (long long) geteuid());
+                goto done;
+            }
+
+            // @COMPAT Fail if pcmk_acl_required(username)
             if (pcmk_acl_required(username)) {
                 out->err(out,
                          "Warning: cibadmin is being run as user %s, which is "
