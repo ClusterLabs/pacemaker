@@ -46,7 +46,7 @@ decompress_file(const char *filename)
     FILE *input = fopen(filename, "r");
 
     if (input == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for reading", filename);
+        crm_err("Could not open %s for reading: %s", filename, strerror(errno));
         return NULL;
     }
 
@@ -496,7 +496,7 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
     rc = fprintf(stream, "%s", buffer->str);
     if (rc < 0) {
         rc = EIO;
-        crm_perror(LOG_ERR, "writing %s", filename);
+        crm_err("Error writing %s", filename);
         goto done;
     }
     bytes_out = (unsigned int) rc;
@@ -505,13 +505,13 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
 done:
     if (fflush(stream) != 0) {
         rc = errno;
-        crm_perror(LOG_ERR, "flushing %s", filename);
+        crm_err("Error flushing %s: %s", filename, strerror(errno));
     }
 
     // Don't report error if the file does not support synchronization
     if ((fsync(fileno(stream)) < 0) && (errno != EROFS) && (errno != EINVAL)) {
         rc = errno;
-        crm_perror(LOG_ERR, "synchronizing %s", filename);
+        crm_err("Error synchronizing %s: %s", filename, strerror(errno));
     }
 
     fclose(stream);
