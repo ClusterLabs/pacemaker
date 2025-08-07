@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -53,7 +53,8 @@ version_pairs_last = $(wordlist \
 # problems.
 
 # Names of API schemas that form the choices for pacemaker-result content
-API_request_base	= command-output	\
+API_request_base	= cibsecret 		\
+			  command-output	\
 			  crm_attribute 	\
 			  crm_diff 		\
 			  crm_error 		\
