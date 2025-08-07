@@ -392,21 +392,22 @@ pcmk__sync_directory(const char *name)
 
     directory = opendir(name);
     if (directory == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for syncing", name);
+        crm_err("Could not open %s for syncing: %s", name, strerror(errno));
         return;
     }
 
     fd = dirfd(directory);
     if (fd < 0) {
-        crm_perror(LOG_ERR, "Could not obtain file descriptor for %s", name);
+        crm_err("Could not obtain file descriptor for %s: %s", name,
+                strerror(errno));
         return;
     }
 
     if (fsync(fd) < 0) {
-        crm_perror(LOG_ERR, "Could not sync %s", name);
+        crm_err("Could not sync %s: %s", name, strerror(errno));
     }
     if (closedir(directory) < 0) {
-        crm_perror(LOG_ERR, "Could not close %s after fsync", name);
+        crm_err("Could not close %s after fsync: %s", name, strerror(errno));
     }
 }
 
