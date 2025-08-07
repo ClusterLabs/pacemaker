@@ -292,19 +292,20 @@ pcmk__daemonize(const char *name, const char *pidfile)
 
     /* Check before we even try... */
     rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
-    if ((rc != pcmk_rc_ok) && (rc != ENOENT)) {
+    if (rc == EEXIST) {
         crm_err("%s: already running [pid %lld in %s]",
                 name, (long long) pid, pidfile);
         printf("%s: already running [pid %lld in %s]\n",
                name, (long long) pid, pidfile);
-        crm_exit(CRM_EX_ERROR);
+        crm_exit(pcmk_rc2exitc(rc));
     }
 
     pid = fork();
     if (pid < 0) {
+        rc = errno;
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
-        crm_exit(CRM_EX_OSERR);
+        crm_exit(pcmk_rc2exitc(rc));
 
     } else if (pid > 0) {
         crm_exit(CRM_EX_OK);
@@ -316,7 +317,7 @@ pcmk__daemonize(const char *name, const char *pidfile)
                 pidfile, name, pcmk_rc_str(rc), rc);
         printf("Could not lock '%s' for %s: %s (%d)\n",
                pidfile, name, pcmk_rc_str(rc), rc);
-        crm_exit(CRM_EX_ERROR);
+        crm_exit(pcmk_rc2exitc(rc));
     }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
