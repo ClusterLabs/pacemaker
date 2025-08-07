@@ -216,6 +216,7 @@ pcmk__lock_pidfile(const char *filename, const char *name)
     pid_t mypid = getpid();
     int fd = 0;
     int rc = 0;
+    ssize_t bytes = 0;
     char buf[LOCKSTRLEN + 2];
 
     rc = pcmk__pidfile_matches(filename, 0, name, NULL);
@@ -239,12 +240,18 @@ pcmk__lock_pidfile(const char *filename, const char *name)
      */
     pcmk__assert(snprintf(buf, sizeof(buf), "%*lld\n", LOCKSTRLEN - 1,
                  (long long) mypid) >= (LOCKSTRLEN - 1));
-    rc = write(fd, buf, LOCKSTRLEN);
+    bytes = write(fd, buf, LOCKSTRLEN);
     close(fd);
 
-    if (rc != LOCKSTRLEN) {
-        crm_perror(LOG_ERR, "Incomplete write to %s", filename);
+    if (bytes < 0) {
+        crm_err("Failed to write to PID file %s: %s", filename,
+                strerror(errno));
         return errno;
+    }
+    if (bytes != LOCKSTRLEN) {
+        crm_err("Incomplete write to PID file %s: %zd of %zd", filename,
+                bytes, (ssize_t) LOCKSTRLEN);
+        return EIO;
     }
 
     rc = pcmk__pidfile_matches(filename, mypid, name, NULL);
