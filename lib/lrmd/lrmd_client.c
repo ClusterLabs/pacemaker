@@ -923,7 +923,8 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     }
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%d): %d", op, timeout, rc);
+        crm_err("Couldn't perform %s operation (timeout=%d): %d", op, timeout,
+                pcmk_strerror(rc));
         goto done;
 
     } else if (op_reply == NULL) {
@@ -1067,7 +1068,8 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
 
     if (rc < 0) {
-        crm_perror(LOG_DEBUG, "Couldn't complete registration with the executor API: %d", rc);
+        crm_debug("Couldn't complete registration with the executor API: %s",
+                  pcmk_strerror(rc));
         rc = ECOMM;
     } else if (reply == NULL) {
         crm_err("Did not receive registration reply");
