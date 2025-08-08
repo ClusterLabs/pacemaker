@@ -1244,10 +1244,6 @@ class CibadminRegressionTest(RegressionTest):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
             make_test_group("Validate CIB", "cibadmin -Q", update_cib=True),
-
-            # FIXME: The calculated digest is different in certain build environments
-            # for unknown reasons.  When this is figured out, remove the part that gets
-            # rid of the hash.
             make_test_group("Digest calculation", "cibadmin -5 -p 2>&1 < $(crm_shadow --file)"),
             make_test_group("Require --force for CIB erasure", "cibadmin -E",
                             expected_rc=ExitStatus.UNSAFE, update_cib=True),
