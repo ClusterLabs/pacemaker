@@ -38,6 +38,7 @@ if os.path.exists("@abs_top_srcdir@/python"):
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
+from pacemaker._cts.environment import set_cts_path
 from pacemaker._cts.errors import XmlValidationError
 from pacemaker._cts.validate import validate
 from pacemaker.buildoptions import BuildOptions
@@ -3262,35 +3263,6 @@ def setup_environment(valgrind):
         os.environ["PCMK_trace_functions"] = ""
 
 
-def path_prepend(p):
-    """Add another directory to the front of $PATH."""
-    old = os.environ["PATH"]
-    os.environ["PATH"] = f"{p}:{old}"
-
-
-def setup_path(opts_path):
-    """Set the PATH environment variable appropriately for the tests."""
-    srcdir = os.path.dirname(test_home)
-
-    # Add any search paths given on the command line
-    for p in opts_path:
-        path_prepend(p)
-
-    if os.path.exists(f"{srcdir}/tools/crm_simulate"):
-        print(f"Using local binaries from: {srcdir}")
-
-        path_prepend(f"{srcdir}/tools")
-
-        for daemon in ["based", "controld", "fenced", "schedulerd"]:
-            path_prepend(f"{srcdir}/daemons/{daemon}")
-
-        print(f"Using local schemas from: {srcdir}/xml")
-        os.environ["PCMK_schema_directory"] = f"{srcdir}/xml"
-    else:
-        path_prepend(BuildOptions.DAEMON_DIR)
-        os.environ["PCMK_schema_directory"] = BuildOptions.SCHEMA_DIR
-
-
 def _run_one(valgrind, r):
     """Run and return a TestGroup object."""
     # See comments in run_regression_tests.
@@ -3425,7 +3397,7 @@ def main():
     opts = build_options()
 
     setup_environment(opts.valgrind)
-    setup_path(opts.path)
+    set_cts_path(extra=opts.path)
 
     # Filter the list of all regression test classes to include only those that
     # were requested on the command line.  If empty, this defaults to default_tests.

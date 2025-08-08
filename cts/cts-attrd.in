@@ -29,28 +29,9 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.corosync import Corosync
+from pacemaker._cts.environment import set_cts_path
 from pacemaker._cts.process import killall, exit_if_proc_running
 from pacemaker._cts.test import Test, Tests
-
-TEST_DIR = sys.path[0]
-
-
-def update_path():
-    """Set the PATH environment variable appropriately for the tests."""
-    new_path = os.environ['PATH']
-    if os.path.exists(f"{TEST_DIR}/cts-attrd.in"):
-        # pylint: disable=protected-access
-        print(f"Running tests from the source tree: {BuildOptions._BUILD_DIR} ({TEST_DIR})")
-        # For pacemaker-attrd
-        new_path = f"{BuildOptions._BUILD_DIR}/daemons/attrd:{new_path}"
-
-    else:
-        print(f"Running tests from the install tree: {BuildOptions.DAEMON_DIR} (not {TEST_DIR})")
-        # For pacemaker-attrd
-        new_path = f"{BuildOptions.DAEMON_DIR}:{new_path}"
-
-    print(f'Using PATH="{new_path}"')
-    os.environ['PATH'] = new_path
 
 
 class AttributeTest(Test):
@@ -363,7 +344,7 @@ def build_options():
 
 def main():
     """Run attrd regression tests as specified by arguments."""
-    update_path()
+    set_cts_path()
 
     # Ensure all command output is in portable locale for comparison
     os.environ['LC_ALL'] = "C"

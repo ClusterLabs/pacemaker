@@ -18,10 +18,6 @@ import subprocess
 import shutil
 import tempfile
 
-# Where to find test binaries
-# Prefer the source tree if available
-TEST_DIR = sys.path[0]
-
 # These imports allow running from a source checkout after running `make`.
 # Note that while this doesn't necessarily mean it will successfully run tests,
 # but being able to see --help output can be useful.
@@ -35,36 +31,12 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.corosync import Corosync
+from pacemaker._cts.environment import set_cts_path
 from pacemaker._cts.process import killall, exit_if_proc_running, stdout_from_command
 from pacemaker._cts.test import Test, Tests
 
 # File permissions for executable scripts we create
 EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
-
-
-def update_path():
-    # pylint: disable=protected-access
-    """Set the PATH environment variable appropriately for the tests."""
-    new_path = os.environ['PATH']
-
-    if os.path.exists(f"{TEST_DIR}/cts-exec.in"):
-        print(f"Running tests from the source tree: {BuildOptions._BUILD_DIR} ({TEST_DIR})")
-        # For pacemaker-execd, cts-exec-helper, and pacemaker-remoted
-        new_path = f"{BuildOptions._BUILD_DIR}/daemons/execd:{new_path}"
-        new_path = f"{BuildOptions._BUILD_DIR}/tools:{new_path}"  # For crm_resource
-        # For pacemaker-fenced
-        new_path = f"{BuildOptions._BUILD_DIR}/daemons/fenced:{new_path}"
-        # For cts-support
-        new_path = f"{BuildOptions._BUILD_DIR}/cts/support:{new_path}"
-
-    else:
-        print(f"Running tests from the install tree: {BuildOptions.DAEMON_DIR} (not {TEST_DIR})")
-        # For cts-exec-helper, cts-support, pacemaker-execd, pacemaker-fenced,
-        # and pacemaker-remoted
-        new_path = f"{BuildOptions.DAEMON_DIR}:{new_path}"
-
-    print(f'Using PATH="{new_path}"')
-    os.environ['PATH'] = new_path
 
 
 class ExecTest(Test):
@@ -875,7 +847,7 @@ def build_options():
 
 def main():
     """Run pacemaker-execd regression tests as specified by arguments."""
-    update_path()
+    set_cts_path()
 
     # Ensure all command output is in portable locale for comparison
     os.environ['LC_ALL'] = "C"
