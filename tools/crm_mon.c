@@ -1533,7 +1533,12 @@ main(int argc, char **argv)
         crm_enable_stderr(FALSE);
         cib_delete(cib);
         cib = NULL;
-        pcmk__daemonize(crm_system_name, options.pid_file);
+
+        rc = pcmk__daemonize(out, crm_system_name, options.pid_file);
+        if (rc != pcmk_rc_ok) {
+            return clean_up(pcmk_rc2exitc(rc));
+        }
+
         cib = cib_new();
         exit_on_invalid_cib();
     }

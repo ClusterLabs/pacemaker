@@ -1234,7 +1234,8 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
         if (rc < 0) {
-            crm_perror(LOG_DEBUG, "Couldn't register for fencing notifications: %d", rc);
+            crm_debug("Couldn't register for fencing notifications: %s",
+                      pcmk_strerror(rc));
             rc = -ECOMM;
         } else {
             rc = pcmk_ok;
@@ -1607,7 +1608,8 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     pcmk__xml_free(op_msg);
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "Couldn't perform %s operation (timeout=%ds): %d", op, timeout, rc);
+        crm_err("Couldn't perform %s operation (timeout=%ds): %s", op, timeout,
+                pcmk_strerror(rc));
         rc = -ECOMM;
         goto done;
     }

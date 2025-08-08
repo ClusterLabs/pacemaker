@@ -810,12 +810,18 @@ pcmk_acl_required(const char *user)
 char *
 pcmk__uid2username(uid_t uid)
 {
-    struct passwd *pwent = getpwuid(uid);
+    struct passwd *pwent = NULL;
+
+    errno = 0;
+    pwent = getpwuid(uid);
 
     if (pwent == NULL) {
-        crm_perror(LOG_INFO, "Cannot get user details for user ID %d", uid);
+        crm_err("Cannot get name from password database for user ID %lld: %s",
+                (long long) uid,
+                ((errno != 0)? strerror(errno) : "No matching entry found"));
         return NULL;
     }
+
     return pcmk__str_copy(pwent->pw_name);
 }
 
