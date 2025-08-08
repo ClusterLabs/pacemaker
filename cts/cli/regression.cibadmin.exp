@@ -36,10 +36,59 @@
 </cib>
 =#=#=#= End test: Validate CIB - OK (0) =#=#=#=
 * Passed: cibadmin              - Validate CIB
+=#=#=#= Begin test: Validate CIB (XML) =#=#=#=
+<pacemaker-result api-version="X" request="cibadmin --output-as=xml -Q">
+  <output><![CDATA[<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+]]></output>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Validate CIB (XML) =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Validate CIB (XML) - OK (0) =#=#=#=
+* Passed: cibadmin              - Validate CIB (XML)
 =#=#=#= Begin test: Digest calculation =#=#=#=
 c330f9df7e1e54e99f9d5ae1a0d8d59a
 =#=#=#= End test: Digest calculation - OK (0) =#=#=#=
 * Passed: cibadmin              - Digest calculation
+=#=#=#= Begin test: Digest calculation (XML) =#=#=#=
+<pacemaker-result api-version="X" request="cibadmin --output-as=xml -5 -p">
+  <md5-sum digest="c330f9df7e1e54e99f9d5ae1a0d8d59a"/>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Digest calculation (XML) - OK (0) =#=#=#=
+* Passed: cibadmin              - Digest calculation (XML)
 =#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
 cibadmin: The supplied command is considered dangerous. To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
 =#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
@@ -62,9 +111,43 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
 </cib>
 =#=#=#= End test: Require --force for CIB erasure - Operation not safe (107) =#=#=#=
 * Passed: cibadmin              - Require --force for CIB erasure
+=#=#=#= Begin test: Require --force for CIB erasure (XML) =#=#=#=
+<pacemaker-result api-version="X" request="cibadmin --output-as=xml -E">
+  <status code="107" message="Operation not safe">
+    <errors>
+      <error>cibadmin: The supplied command is considered dangerous. To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.</error>
+    </errors>
+  </status>
+</pacemaker-result>
+=#=#=#= Current cib after: Require --force for CIB erasure (XML) =#=#=#=
+<cib epoch="4" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" uname="node1"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy"/>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Require --force for CIB erasure (XML) - Operation not safe (107) =#=#=#=
+* Passed: cibadmin              - Require --force for CIB erasure (XML)
 =#=#=#= Begin test: Allow CIB erasure with --force =#=#=#=
 =#=#=#= End test: Allow CIB erasure with --force - OK (0) =#=#=#=
 * Passed: cibadmin              - Allow CIB erasure with --force
+=#=#=#= Begin test: Allow CIB erasure with --force (XML) =#=#=#=
+<pacemaker-result api-version="X" request="cibadmin --output-as=xml -E --force">
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= End test: Allow CIB erasure with --force (XML) - OK (0) =#=#=#=
+* Passed: cibadmin              - Allow CIB erasure with --force (XML)
 =#=#=#= Begin test: Query CIB =#=#=#=
 <cib epoch="1" num_updates="0" admin_epoch="0">
   <configuration>
@@ -87,3 +170,29 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
 </cib>
 =#=#=#= End test: Query CIB - OK (0) =#=#=#=
 * Passed: cibadmin              - Query CIB
+=#=#=#= Begin test: Query CIB (XML) =#=#=#=
+<pacemaker-result api-version="X" request="cibadmin --output-as=xml -Q">
+  <output><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+]]></output>
+  <status code="0" message="OK"/>
+</pacemaker-result>
+=#=#=#= Current cib after: Query CIB (XML) =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Query CIB (XML) - OK (0) =#=#=#=
+* Passed: cibadmin              - Query CIB (XML)

@@ -263,6 +263,7 @@ def sanitize_output(s):
         (r'\(parse_date@.*\.c:[0-9]+\)', r'parse_date'),
         (r'\((pcmk__.*)@.*\.c:[0-9]+\)', r'\1'),
         (r'.*Relax-NG validity error : ', r''),
+        (r'request=".*cibadmin', r'request="cibadmin'),
         (r'request=".*(crm_?[a-zA-Z0-9]+) ', r'request="\1 '),
         (r'request=".*iso8601', r'request="iso8601'),
         (r' start="[0-9][-+: 0-9]*Z*"', r' start=""'),
@@ -1242,18 +1243,19 @@ class CibadminRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
-            Test("Validate CIB", "cibadmin -Q", update_cib=True),
+            make_test_group("Validate CIB", "cibadmin -Q", update_cib=True),
+
             # FIXME: The calculated digest is different in certain build environments
             # for unknown reasons.  When this is figured out, remove the part that gets
             # rid of the hash.
-            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1"),
-            Test("Require --force for CIB erasure", "cibadmin -E",
-                 expected_rc=ExitStatus.UNSAFE, update_cib=True),
-            Test("Allow CIB erasure with --force", "cibadmin -E --force"),
+            make_test_group("Digest calculation", "cibadmin -5 -p 2>&1 < $(crm_shadow --file)"),
+            make_test_group("Require --force for CIB erasure", "cibadmin -E",
+                            expected_rc=ExitStatus.UNSAFE, update_cib=True),
+            make_test_group("Allow CIB erasure with --force", "cibadmin -E --force"),
+
             # Verify the output after erasure
-            Test("Query CIB", "cibadmin -Q",
-                 setup=delete_shadow_resource_defaults,
-                 update_cib=True),
+            make_test_group("Query CIB", "cibadmin -Q",
+                            setup=delete_shadow_resource_defaults, update_cib=True),
         ]
 
         # Add some stuff to the empty CIB so we know that erasing it did something.
