@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,11 +51,9 @@ pcmk_xe_is_probe(const xmlNode *xml)
         return false;
     }
 
-    pcmk__scan_min_int(crm_element_value(xml, PCMK_META_INTERVAL),
-                       &interval_ms, 0);
+    pcmk__scan_min_int(pcmk__xe_get(xml, PCMK_META_INTERVAL), &interval_ms, 0);
 
-    return pcmk_is_probe(crm_element_value(xml, PCMK_XA_OPERATION),
-                         interval_ms);
+    return pcmk_is_probe(pcmk__xe_get(xml, PCMK_XA_OPERATION), interval_ms);
 }
 
 /*!
@@ -76,8 +74,8 @@ pcmk_xe_mask_probe_failure(const xmlNode *xml)
         return false;
     }
 
-    crm_element_value_int(xml, PCMK__XA_OP_STATUS, &exec_status);
-    crm_element_value_int(xml, PCMK__XA_RC_CODE, &exit_status);
+    pcmk__xe_get_int(xml, PCMK__XA_OP_STATUS, &exec_status);
+    pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &exit_status);
 
     return (exit_status == PCMK_OCF_NOT_INSTALLED)
            || (exit_status == PCMK_OCF_INVALID_PARAM)

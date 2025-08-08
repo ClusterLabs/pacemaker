@@ -133,7 +133,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         return 0;
     }
 
-    op = crm_element_value(request, PCMK__XA_CRM_TASK);
+    op = pcmk__xe_get(request, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         crm_xml_add(request, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         crm_xml_add(request, PCMK__XA_ST_OP, op);
@@ -147,7 +147,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     if (c->name == NULL) {
-        const char *value = crm_element_value(request, PCMK__XA_ST_CLIENTNAME);
+        const char *value = pcmk__xe_get(request, PCMK__XA_ST_CLIENTNAME);
 
         c->name = crm_strdup_printf("%s.%u", pcmk__s(value, "unknown"), c->pid);
     }
@@ -206,8 +206,8 @@ st_ipc_destroy(qb_ipcs_connection_t * c)
 static void
 stonith_peer_callback(xmlNode * msg, void *private_data)
 {
-    const char *remote_peer = crm_element_value(msg, PCMK__XA_SRC);
-    const char *op = crm_element_value(msg, PCMK__XA_ST_OP);
+    const char *remote_peer = pcmk__xe_get(msg, PCMK__XA_SRC);
+    const char *op = pcmk__xe_get(msg, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
         return;
@@ -319,7 +319,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(client != NULL, return);
     CRM_CHECK(update_msg != NULL, return);
 
-    type = crm_element_value(update_msg, PCMK__XA_SUBT);
+    type = pcmk__xe_get(update_msg, PCMK__XA_SUBT);
     CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
     if (client->ipcs == NULL) {

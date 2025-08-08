@@ -22,7 +22,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 {
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) userdata;
     pcmk__output_t *out = scheduler->priv->out;
-    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+    const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
 
     if (id == NULL) {
         return pcmk_rc_ok;
@@ -34,12 +34,12 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 
     out->info(out, "Constraint %s %s %s %s %s %s %s",
               xml_obj->name,
-              cons_string(crm_element_value(xml_obj, PCMK_XA_ID)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_RSC)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_WITH_RSC)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_SCORE)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_RSC_ROLE)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_WITH_RSC_ROLE)));
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_ID)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_RSC)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_SCORE)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_RSC_ROLE)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC_ROLE)));
 
     return pcmk_rc_ok;
 }
@@ -57,9 +57,9 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     const char *host = NULL;
     bool needs_quorum = TRUE;
-    const char *rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
-    const char *rprov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
-    const char *rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    const char *rtype = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
+    const char *rprov = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
+    const char *rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
     if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {

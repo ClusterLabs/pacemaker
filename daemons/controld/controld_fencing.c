@@ -422,7 +422,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
                 continue;
             }
 
-            task = crm_element_value(action->xml, PCMK_XA_OPERATION);
+            task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
             if (pcmk__str_eq(task, PCMK_ACTION_STONITH, pcmk__str_casei)) {
                 pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 last_action = action->xml;
@@ -828,7 +828,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
         goto bail;
     }
 
-    target = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
     if (target == NULL) {
         crm_err("Ignoring fence operation %d result: No target given (bug?)",
                 data->call_id);
@@ -837,8 +837,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
 
     stop_te_timer(action);
     if (stonith__exit_status(data) == CRM_EX_OK) {
-        const char *uuid = crm_element_value(action->xml,
-                                             PCMK__META_ON_NODE_UUID);
+        const char *uuid = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
         const char *op = crm_meta_value(action->params,
                                         PCMK__META_STONITH_ACTION);
 
@@ -955,8 +954,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 {
     int rc = 0;
     const char *id = pcmk__xe_id(action->xml);
-    const char *uuid = crm_element_value(action->xml, PCMK__META_ON_NODE_UUID);
-    const char *target = crm_element_value(action->xml, PCMK__META_ON_NODE);
+    const char *uuid = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
+    const char *target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
     const char *type = crm_meta_value(action->params,
                                       PCMK__META_STONITH_ACTION);
     char *transition_key = NULL;

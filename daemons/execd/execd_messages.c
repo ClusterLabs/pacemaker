@@ -28,7 +28,7 @@
 #include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
 #include <crm/common/strings.h>             // crm_strdup_printf
 #include <crm/common/util.h>                // pcmk_is_set
-#include <crm/common/xml_element.h>         // crm_xml_add, crm_element_value
+#include <crm/common/xml_element.h>         // crm_xml_add
 #include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*, pcmk__xe_is
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
@@ -60,7 +60,7 @@ handle_ipc_fwd_request(pcmk__request_t *request)
     rc = EPROTONOSUPPORT;
 #endif
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     /* Create a generic reply since forwarding doesn't create a more specific one */
     reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
@@ -74,7 +74,7 @@ handle_register_request(pcmk__request_t *request)
     int rc = pcmk_rc_ok;
     xmlNode *reply = NULL;
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
     rc = execd_process_signon(request->ipc_client, request->xml, call_id, &reply);
 
     if (rc != pcmk_rc_ok) {
@@ -104,7 +104,7 @@ handle_alert_exec_request(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     rc = execd_process_alert_exec(request->ipc_client, request->xml);
 
@@ -150,7 +150,7 @@ handle_check_request(pcmk__request_t *request)
         return NULL;
     }
 
-    timeout = crm_element_value(data, PCMK__XA_LRMD_WATCHDOG);
+    timeout = pcmk__xe_get(data, PCMK__XA_LRMD_WATCHDOG);
     /* FIXME: This just exits on certain conditions, which seems like a pretty
      * extreme reaction for a daemon to take.
      */
@@ -177,7 +177,7 @@ handle_get_recurring_request(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     rc = execd_process_get_recurring(request->xml, call_id, &reply);
 
@@ -197,7 +197,7 @@ handle_poke_request(pcmk__request_t *request)
     int call_id = 0;
     xmlNode *reply = NULL;
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     /* Create a generic reply since this doesn't create a more specific one */
     reply = execd_create_reply(pcmk_ok, call_id);
@@ -221,7 +221,7 @@ handle_rsc_cancel_request(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     rc = execd_process_rsc_cancel(request->ipc_client, request->xml);
 
@@ -256,7 +256,7 @@ handle_rsc_exec_request(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     rc = execd_process_rsc_exec(request->ipc_client, request->xml);
 
@@ -296,7 +296,7 @@ handle_rsc_info_request(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     /* This returns ENODEV if the resource isn't in the cache which will be
      * logged as an error.  However, this isn't fatal to the client - it may
@@ -330,7 +330,7 @@ handle_rsc_reg_request(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     execd_process_rsc_register(request->ipc_client, request->ipc_id, request->xml);
 
@@ -359,7 +359,7 @@ handle_rsc_unreg_request(pcmk__request_t *request)
         return NULL;
     }
 
-    crm_element_value_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
+    pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
     rc = execd_process_rsc_unregister(request->ipc_client, request->xml);
 
@@ -538,7 +538,7 @@ struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
 static bool
 invalid_msg(xmlNode *msg)
 {
-    const char *to = crm_element_value(msg, PCMK__XA_T);
+    const char *to = pcmk__xe_get(msg, PCMK__XA_T);
 
     /* IPC proxy messages do not get a t="" attribute set on them. */
     bool invalid = !pcmk__str_eq(to, CRM_SYSTEM_LRMD, pcmk__str_none) &&
@@ -563,7 +563,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
     }
 
     if (!c->name) {
-        c->name = crm_element_value_copy(msg, PCMK__XA_LRMD_CLIENTNAME);
+        c->name = pcmk__xe_get_copy(msg, PCMK__XA_LRMD_CLIENTNAME);
     }
 
     lrmd_call_id++;
@@ -592,7 +592,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = crm_element_value_copy(request.xml, PCMK__XA_LRMD_OP);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
         CRM_CHECK(request.op != NULL, return);
 
         crm_trace("Processing %s operation from %s", request.op, c->id);
@@ -608,7 +608,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
                          pcmk__client_name(c), pcmk_rc_str(rc), rc);
             }
 
-            crm_element_value_int(reply, PCMK__XA_LRMD_RC, &reply_rc);
+            pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &reply_rc);
             if (requires_notify(request.op, reply_rc)) {
                 execd_send_generic_notify(reply_rc, request.xml);
             }

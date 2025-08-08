@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -180,7 +180,7 @@ post_disconnect(pcmk_ipc_api_t *api)
 static bool
 reply_expected(pcmk_ipc_api_t *api, const xmlNode *request)
 {
-    const char *command = crm_element_value(request, PCMK__XA_CRM_TASK);
+    const char *command = pcmk__xe_get(request, PCMK__XA_CRM_TASK);
 
     if (command == NULL) {
         return false;
@@ -200,11 +200,10 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         pcmk_pacemakerd_reply_unknown
     };
     const char *value = NULL;
-    long long value_ll = 0;
 
     if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         long long int ack_status = 0;
-        const char *status = crm_element_value(reply, PCMK_XA_STATUS);
+        const char *status = pcmk__xe_get(reply, PCMK_XA_STATUS);
         int rc = pcmk__scan_ll(status, &ack_status, CRM_EX_OK);
 
         if (rc != pcmk_rc_ok) {
@@ -215,7 +214,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         return ack_status == CRM_EX_INDETERMINATE;
     }
 
-    value = crm_element_value(reply, PCMK__XA_T);
+    value = pcmk__xe_get(reply, PCMK__XA_T);
     if (pcmk__parse_server(value) != pcmk_ipc_pacemakerd) {
         /* @COMPAT pacemakerd <3.0.0 sets PCMK__VALUE_CRMD as the message type,
          * so we can't enforce this check until we no longer support
@@ -226,7 +225,7 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
                   pcmk_ipc_name(api, true), pcmk__s(value, ""));
     }
 
-    value = crm_element_value(reply, PCMK__XA_SUBT);
+    value = pcmk__xe_get(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
         crm_info("Unrecognizable message from %s: "
                  "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
@@ -235,34 +234,38 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         goto done;
     }
 
-    if (pcmk__str_empty(crm_element_value(reply, PCMK_XA_REFERENCE))) {
+    if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
         crm_info("Unrecognizable message from %s: no reference",
                  pcmk_ipc_name(api, true));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
-    value = crm_element_value(reply, PCMK__XA_CRM_TASK);
+    value = pcmk__xe_get(reply, PCMK__XA_CRM_TASK);
 
     // Parse useful info from reply
     wrapper = pcmk__xe_first_child(reply, PCMK__XE_CRM_XML, NULL, NULL);
     msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    crm_element_value_ll(msg_data, PCMK_XA_CRM_TIMESTAMP, &value_ll);
-
     if (pcmk__str_eq(value, CRM_OP_PING, pcmk__str_none)) {
         reply_data.reply_type = pcmk_pacemakerd_reply_ping;
         reply_data.data.ping.state =
             pcmk_pacemakerd_api_daemon_state_text2enum(
-                crm_element_value(msg_data, PCMK__XA_PACEMAKERD_STATE));
+                pcmk__xe_get(msg_data, PCMK__XA_PACEMAKERD_STATE));
         reply_data.data.ping.status =
-            pcmk__str_eq(crm_element_value(msg_data, PCMK_XA_RESULT), "ok",
+            pcmk__str_eq(pcmk__xe_get(msg_data, PCMK_XA_RESULT), "ok",
                          pcmk__str_casei)?pcmk_rc_ok:pcmk_rc_error;
-        reply_data.data.ping.last_good = (value_ll < 0)? 0 : (time_t) value_ll;
+
+        pcmk__xe_get_time(msg_data, PCMK__XA_CRM_TIMESTAMP,
+                          &reply_data.data.ping.last_good);
+        if (reply_data.data.ping.last_good < 0) {
+            reply_data.data.ping.last_good = 0;
+        }
+
         reply_data.data.ping.sys_from =
-            crm_element_value(msg_data, PCMK__XA_CRM_SUBSYSTEM);
+            pcmk__xe_get(msg_data, PCMK__XA_CRM_SUBSYSTEM);
     } else if (pcmk__str_eq(value, CRM_OP_QUIT, pcmk__str_none)) {
-        const char *op_status = crm_element_value(msg_data, PCMK__XA_OP_STATUS);
+        const char *op_status = pcmk__xe_get(msg_data, PCMK__XA_OP_STATUS);
 
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(op_status);

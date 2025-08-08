@@ -153,8 +153,8 @@ cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 void
 ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 {
-    const char *session = crm_element_value(xml, PCMK__XA_LRMD_IPC_SESSION);
-    const char *msg_type = crm_element_value(xml, PCMK__XA_LRMD_IPC_OP);
+    const char *session = pcmk__xe_get(xml, PCMK__XA_LRMD_IPC_SESSION);
+    const char *msg_type = pcmk__xe_get(xml, PCMK__XA_LRMD_IPC_OP);
 
     xmlNode *wrapper = pcmk__xe_first_child(xml, PCMK__XE_LRMD_IPC_MSG, NULL,
                                             NULL);
@@ -204,7 +204,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     } else if (pcmk__str_eq(msg_type, LRMD_IPC_OP_RESPONSE, pcmk__str_casei)) {
         int msg_id = 0;
 
-        crm_element_value_int(xml, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
+        pcmk__xe_get_int(xml, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
         crm_trace("Sending response to %d - %s", ipc_client->request_id, ipc_client->id);
         rc = pcmk__ipc_send_xml(ipc_client, msg_id, msg, crm_ipc_flags_none);
 

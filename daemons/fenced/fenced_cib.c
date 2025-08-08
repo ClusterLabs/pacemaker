@@ -77,7 +77,7 @@ remove_topology_level(xmlNode *match)
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
-    crm_element_value_int(match, PCMK_XA_INDEX, &index);
+    pcmk__xe_get_int(match, PCMK_XA_INDEX, &index);
 
     data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
     crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
@@ -158,7 +158,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
                                                 XPATH_WATCHDOG_TIMEOUT,
                                                 LOG_NEVER);
     if (stonith_watchdog_xml) {
-        value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
+        value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
     }
     if (value != NULL) {
         /* @COMPAT So far it has been documented that a negative value is
@@ -229,9 +229,9 @@ static void
 cib_devices_update(void)
 {
     crm_info("Updating devices to version %s.%s.%s",
-             crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_NUM_UPDATES));
+             pcmk__xe_get(local_cib, PCMK_XA_ADMIN_EPOCH),
+             pcmk__xe_get(local_cib, PCMK_XA_EPOCH),
+             pcmk__xe_get(local_cib, PCMK_XA_NUM_UPDATES));
 
     fenced_foreach_device(mark_dirty_if_cib_registered, NULL);
 
@@ -257,8 +257,8 @@ update_cib_stonith_devices(const xmlNode *patchset)
                                                       NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
         const char *primitive_xpath = NULL;
 
         if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
@@ -402,7 +402,7 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
     CRM_CHECK(patchset != NULL, return);
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
         crm_warn("Unknown patch format: %d", format);
         return;
@@ -413,8 +413,8 @@ update_fencing_topology(const char *event, xmlNode *msg)
     for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (op == NULL) {
             continue;
@@ -503,7 +503,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         int rc = pcmk_ok;
         xmlNode *wrapper = NULL;
 
-        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
         if (rc != pcmk_ok) {
             return;
         }

@@ -186,9 +186,9 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
                                                  pcmk__get_tmpdir(), digest);
 
             crm_trace("Saving %s.%s.%s to %s",
-                      crm_element_value(xml, PCMK_XA_ADMIN_EPOCH),
-                      crm_element_value(xml, PCMK_XA_EPOCH),
-                      crm_element_value(xml, PCMK_XA_NUM_UPDATES),
+                      pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
+                      pcmk__xe_get(xml, PCMK_XA_EPOCH),
+                      pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES),
                       trace_file);
             save_xml_to_file(xml, "digest input", trace_file);
             free(trace_file);
@@ -325,14 +325,12 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
      * removing meta-attributes
      */
     key = crm_meta_name(PCMK_META_INTERVAL);
-    if (crm_element_value_ms(param_set, key, &interval_ms) != pcmk_ok) {
-        interval_ms = 0;
-    }
+    pcmk__xe_get_guint(param_set, key, &interval_ms);
     free(key);
     key = NULL;
     if (interval_ms != 0) {
         key = crm_meta_name(PCMK_META_TIMEOUT);
-        timeout = crm_element_value_copy(param_set, key);
+        timeout = pcmk__xe_get_copy(param_set, key);
     }
 
     // Remove all CRM_meta_* attributes and certain other attributes

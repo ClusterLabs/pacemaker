@@ -1630,8 +1630,7 @@ pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
         return pcmk_rc_ok;
     }
 
-    if (pcmk__scan_ll(crm_element_value(xml, attr), &value,
-                      0LL) != pcmk_rc_ok) {
+    if (pcmk__scan_ll(pcmk__xe_get(xml, attr), &value, 0LL) != pcmk_rc_ok) {
         return pcmk_rc_unpack_error;
     }
 

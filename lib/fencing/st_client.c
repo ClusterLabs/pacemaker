@@ -578,7 +578,7 @@ stonith_api_query(stonith_t * stonith, int call_options, const char *target,
 
             CRM_LOG_ASSERT(match != NULL);
             if(match != NULL) {
-                const char *match_id = crm_element_value(match, PCMK_XA_ID);
+                const char *match_id = pcmk__xe_get(match, PCMK_XA_ID);
                 xmlChar *match_path = xmlGetNodePath(match);
 
                 crm_info("//*[@" PCMK_XA_AGENT "][%d] = %s", lpc, match_path);
@@ -641,7 +641,7 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
     if (output && list_info) {
         const char *list_str;
 
-        list_str = crm_element_value(output, PCMK__XA_ST_OUTPUT);
+        list_str = pcmk__xe_get(output, PCMK__XA_ST_OUTPUT);
 
         if (list_str) {
             *list_info = strdup(list_str);
@@ -735,22 +735,27 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
         for (op = pcmk__xe_first_child(reply, NULL, NULL, NULL); op != NULL;
              op = pcmk__xe_next(op, NULL)) {
-            stonith_history_t *kvp;
-            long long completed;
-            long long completed_nsec = 0L;
+            stonith_history_t *kvp =
+                pcmk__assert_alloc(1, sizeof(stonith_history_t));
+            long long completed_nsec = 0LL;
 
-            kvp = pcmk__assert_alloc(1, sizeof(stonith_history_t));
-            kvp->target = crm_element_value_copy(op, PCMK__XA_ST_TARGET);
-            kvp->action = crm_element_value_copy(op, PCMK__XA_ST_DEVICE_ACTION);
-            kvp->origin = crm_element_value_copy(op, PCMK__XA_ST_ORIGIN);
-            kvp->delegate = crm_element_value_copy(op, PCMK__XA_ST_DELEGATE);
-            kvp->client = crm_element_value_copy(op, PCMK__XA_ST_CLIENTNAME);
-            crm_element_value_ll(op, PCMK__XA_ST_DATE, &completed);
-            kvp->completed = (time_t) completed;
-            crm_element_value_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
-            kvp->completed_nsec = completed_nsec;
-            crm_element_value_int(op, PCMK__XA_ST_STATE, &kvp->state);
-            kvp->exit_reason = crm_element_value_copy(op, PCMK_XA_EXIT_REASON);
+            kvp->target = pcmk__xe_get_copy(op, PCMK__XA_ST_TARGET);
+            kvp->action = pcmk__xe_get_copy(op, PCMK__XA_ST_DEVICE_ACTION);
+            kvp->origin = pcmk__xe_get_copy(op, PCMK__XA_ST_ORIGIN);
+            kvp->delegate = pcmk__xe_get_copy(op, PCMK__XA_ST_DELEGATE);
+            kvp->client = pcmk__xe_get_copy(op, PCMK__XA_ST_CLIENTNAME);
+            pcmk__xe_get_time(op, PCMK__XA_ST_DATE, &kvp->completed);
+
+            pcmk__xe_get_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
+
+            // Coverity complains here if long is the same size as long long
+            // coverity[result_independent_of_operands:FALSE]
+            if ((completed_nsec >= LONG_MIN) && (completed_nsec <= LONG_MAX)) {
+                kvp->completed_nsec = (long) completed_nsec;
+            }
+
+            pcmk__xe_get_int(op, PCMK__XA_ST_STATE, &kvp->state);
+            kvp->exit_reason = pcmk__xe_get_copy(op, PCMK_XA_EXIT_REASON);
 
             if (last) {
                 last->next = kvp;
@@ -965,7 +970,7 @@ invoke_registered_callbacks(stonith_t *stonith, const xmlNode *msg, int call_id)
 
     } else {
         // We have the fencer reply
-        if ((crm_element_value_int(msg, PCMK__XA_ST_CALLID, &call_id) != 0)
+        if ((pcmk__xe_get_int(msg, PCMK__XA_ST_CALLID, &call_id) != pcmk_rc_ok)
             || (call_id <= 0)) {
             crm_log_xml_warn(msg, "Bad fencer reply");
         }
@@ -1083,7 +1088,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     /* do callbacks */
-    type = crm_element_value(blob.xml, PCMK__XA_T);
+    type = pcmk__xe_get(blob.xml, PCMK__XA_T);
     crm_trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, PCMK__VALUE_STONITH_NG, pcmk__str_none)) {
@@ -1097,8 +1102,8 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
         int call_id = 0;
         int timeout = 0;
 
-        crm_element_value_int(blob.xml, PCMK__XA_ST_TIMEOUT, &timeout);
-        crm_element_value_int(blob.xml, PCMK__XA_ST_CALLID, &call_id);
+        pcmk__xe_get_int(blob.xml, PCMK__XA_ST_TIMEOUT, &timeout);
+        pcmk__xe_get_int(blob.xml, PCMK__XA_ST_CALLID, &call_id);
 
         update_callback_timeout(call_id, timeout, st);
     } else {
@@ -1178,9 +1183,9 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             rc = -EPROTO;
 
         } else {
-            const char *msg_type = crm_element_value(reply, PCMK__XA_ST_OP);
+            const char *msg_type = pcmk__xe_get(reply, PCMK__XA_ST_OP);
 
-            native->token = crm_element_value_copy(reply, PCMK__XA_ST_CLIENTID);
+            native->token = pcmk__xe_get_copy(reply, PCMK__XA_ST_CLIENTID);
             if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
                 crm_debug("Couldn't register with the fencer: invalid reply type '%s'",
                           (msg_type? msg_type : "(missing)"));
@@ -1425,7 +1430,7 @@ xml_to_event(xmlNode *msg)
 
     // All notification types have the operation result and notification subtype
     stonith__xe_get_result(msg, &event_private->result);
-    event->operation = crm_element_value_copy(msg, PCMK__XA_ST_OP);
+    event->operation = pcmk__xe_get_copy(msg, PCMK__XA_ST_OP);
 
     // @COMPAT The API originally provided the result as a legacy return code
     event->result = pcmk_rc2legacy(stonith__result2rc(&event_private->result));
@@ -1440,16 +1445,14 @@ xml_to_event(xmlNode *msg)
             crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
-            event->origin = crm_element_value_copy(data, PCMK__XA_ST_ORIGIN);
-            event->action = crm_element_value_copy(data,
-                                                   PCMK__XA_ST_DEVICE_ACTION);
-            event->target = crm_element_value_copy(data, PCMK__XA_ST_TARGET);
-            event->executioner = crm_element_value_copy(data,
-                                                        PCMK__XA_ST_DELEGATE);
-            event->id = crm_element_value_copy(data, PCMK__XA_ST_REMOTE_OP);
-            event->client_origin =
-                crm_element_value_copy(data, PCMK__XA_ST_CLIENTNAME);
-            event->device = crm_element_value_copy(data, PCMK__XA_ST_DEVICE_ID);
+            event->origin = pcmk__xe_get_copy(data, PCMK__XA_ST_ORIGIN);
+            event->action = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ACTION);
+            event->target = pcmk__xe_get_copy(data, PCMK__XA_ST_TARGET);
+            event->executioner = pcmk__xe_get_copy(data, PCMK__XA_ST_DELEGATE);
+            event->id = pcmk__xe_get_copy(data, PCMK__XA_ST_REMOTE_OP);
+            event->client_origin = pcmk__xe_get_copy(data,
+                                                     PCMK__XA_ST_CLIENTNAME);
+            event->device = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ID);
         }
 
     } else if (pcmk__str_any_of(event->operation,
@@ -1462,7 +1465,7 @@ xml_to_event(xmlNode *msg)
             crm_err("No data for %s event", event->operation);
             crm_log_xml_notice(msg, "BadEvent");
         } else {
-            event->device = crm_element_value_copy(data, PCMK__XA_ST_DEVICE_ID);
+            event->device = pcmk__xe_get_copy(data, PCMK__XA_ST_DEVICE_ID);
         }
     }
 
@@ -1500,7 +1503,7 @@ stonith_send_notification(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(blob->xml, PCMK__XA_SUBT);
+    event = pcmk__xe_get(blob->xml, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");
@@ -1584,7 +1587,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
     if (data) {
-        const char *delay_s = crm_element_value(data, PCMK__XA_ST_DELAY);
+        const char *delay_s = pcmk__xe_get(data, PCMK__XA_ST_DELAY);
 
         if (delay_s) {
             crm_xml_add(op_msg, PCMK__XA_ST_DELAY, delay_s);
@@ -1617,7 +1620,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         return stonith->call_id;
     }
 
-    crm_element_value_int(op_reply, PCMK__XA_ST_CALLID, &reply_id);
+    pcmk__xe_get_int(op_reply, PCMK__XA_ST_CALLID, &reply_id);
 
     if (reply_id == stonith->call_id) {
         pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;

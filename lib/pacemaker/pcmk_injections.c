@@ -121,7 +121,7 @@ pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                             pcmk__xe_id(cib_node), NULL, NULL, NULL, name,
                             NULL, &output) == pcmk_rc_ok) {
 
-        if (crm_element_value_int(output, PCMK_XA_VALUE, &failcount) != 0) {
+        if (pcmk__xe_get_int(output, PCMK_XA_VALUE, &failcount) != pcmk_rc_ok) {
             failcount = 0;
         }
     }
@@ -211,7 +211,7 @@ create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
 
         int tmp = 0;
 
-        crm_element_value_int(xop, PCMK__XA_CALL_ID, &tmp);
+        pcmk__xe_get_int(xop, PCMK__XA_CALL_ID, &tmp);
         if (tmp > op->call_id) {
             op->call_id = tmp;
         }
@@ -386,7 +386,7 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
 static xmlNode *
 find_resource_xml(xmlNode *cib_node, const char *resource)
 {
-    const char *node = crm_element_value(cib_node, PCMK_XA_UNAME);
+    const char *node = pcmk__xe_get(cib_node, PCMK_XA_UNAME);
     char *xpath = crm_strdup_printf(XPATH_RSC_HISTORY, node, resource);
     xmlNode *match = pcmk__xpath_find_one(cib_node->doc, xpath, LOG_TRACE);
 
@@ -598,9 +598,9 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
         goto done;
     }
 
-    rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
-    rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
-    rprovider = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
+    rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+    rtype = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
+    rprovider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
 
     cib_node = pcmk__inject_node(cib, node, NULL);
     pcmk__assert(cib_node != NULL);

@@ -243,8 +243,8 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         pcmk__node_status_t *node = NULL;
         gboolean known = FALSE;
 
-        node_uuid = crm_element_value(node_xml, PCMK_XA_ID);
-        node_uname = crm_element_value(node_xml, PCMK_XA_UNAME);
+        node_uuid = pcmk__xe_get(node_xml, PCMK_XA_ID);
+        node_uname = pcmk__xe_get(node_xml, PCMK_XA_UNAME);
 
         if (node_uuid == NULL || node_uname == NULL) {
             continue;

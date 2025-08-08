@@ -10,7 +10,9 @@
 #ifndef PCMK__CRM_COMMON_XML_ELEMENT_COMPAT__H
 #define PCMK__CRM_COMMON_XML_ELEMENT_COMPAT__H
 
-#include <glib.h>           // gboolean
+#include <sys/time.h>       // struct timeval
+
+#include <glib.h>           // gboolean, guint
 #include <libxml/tree.h>    // xmlNode
 
 #ifdef __cplusplus
@@ -38,6 +40,29 @@ xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
 //! \deprecated Do not use
 const char *crm_copy_xml_element(const xmlNode *obj1, xmlNode *obj2,
                                  const char *element);
+
+//! \deprecated Do not use
+int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
+                              const char *name_usec, struct timeval *dest);
+
+//! \deprecated Do not use
+int crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest);
+
+//! \deprecated Do not use
+int crm_element_value_ms(const xmlNode *data, const char *name, guint *dest);
+
+//! \deprecated Do not use
+int crm_element_value_ll(const xmlNode *data, const char *name,
+                         long long *dest);
+
+//! \deprecated Do not use
+int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
+
+//! \deprecated Do not use
+const char *crm_element_value(const xmlNode *data, const char *name);
+
+//! \deprecated Do not use
+char *crm_element_value_copy(const xmlNode *data, const char *name);
 
 #ifdef __cplusplus
 }

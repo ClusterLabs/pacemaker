@@ -32,12 +32,11 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
 
     if (cib == NULL) {
         return FALSE;
-
-    } else {
-        crm_element_value_int(cib, PCMK_XA_EPOCH, epoch);
-        crm_element_value_int(cib, PCMK_XA_NUM_UPDATES, updates);
-        crm_element_value_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     }
+
+    pcmk__xe_get_int(cib, PCMK_XA_EPOCH, epoch);
+    pcmk__xe_get_int(cib, PCMK_XA_NUM_UPDATES, updates);
+    pcmk__xe_get_int(cib, PCMK_XA_ADMIN_EPOCH, admin_epoch);
     return TRUE;
 }
 
@@ -84,7 +83,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
         return ENOMSG;
     }
 
-    if ((crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc) != 0)
+    if ((pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok)
         || (rc != pcmk_ok)) {
 
         crm_warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
@@ -232,7 +231,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *user = crm_element_value(req, PCMK__XA_CIB_USER);
+    const char *user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     const bool enable_acl = cib_acl_enabled(*current_cib, user);
     bool with_digest = false;
 
@@ -371,7 +370,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
      * is checked elsewhere.
      */
     if (scratch && (cib == NULL || cib->variant != cib_file)) {
-        const char *new_version = crm_element_value(scratch, PCMK_XA_CRM_FEATURE_SET);
+        const char *new_version = pcmk__xe_get(scratch,
+                                               PCMK_XA_CRM_FEATURE_SET);
 
         rc = pcmk__check_feature_set(new_version);
         if (rc != pcmk_rc_ok) {
@@ -386,8 +386,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         int old = 0;
         int new = 0;
 
-        crm_element_value_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
-        crm_element_value_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
+        pcmk__xe_get_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
+        pcmk__xe_get_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
 
         if (old > new) {
             crm_err("%s went backwards: %d -> %d (Opts: %#x)",
@@ -397,8 +397,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             rc = -pcmk_err_old_data;
 
         } else if (old == new) {
-            crm_element_value_int(scratch, PCMK_XA_EPOCH, &new);
-            crm_element_value_int(patchset_cib, PCMK_XA_EPOCH, &old);
+            pcmk__xe_get_int(scratch, PCMK_XA_EPOCH, &new);
+            pcmk__xe_get_int(patchset_cib, PCMK_XA_EPOCH, &old);
             if (old > new) {
                 crm_err("%s went backwards: %d -> %d (Opts: %#x)",
                         PCMK_XA_EPOCH, old, new, call_options);
@@ -445,7 +445,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                 int format = 1;
                 xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
 
-                crm_element_value_int(local_diff, PCMK_XA_FORMAT, &format);
+                pcmk__xe_get_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
                                              manage_counters);
 
@@ -486,7 +486,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
      */
 
     if (*config_changed && !pcmk_is_set(call_options, cib_no_mtime)) {
-        const char *schema = crm_element_value(scratch, PCMK_XA_VALIDATE_WITH);
+        const char *schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
         if (schema == NULL) {
             rc = -pcmk_err_cib_corrupt;
@@ -499,9 +499,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
          * the ones in req (if the schema allows the attributes)
          */
         if (pcmk__cmp_schemas_by_name(schema, "pacemaker-1.2") >= 0) {
-            const char *origin = crm_element_value(req, PCMK__XA_SRC);
-            const char *client = crm_element_value(req,
-                                                   PCMK__XA_CIB_CLIENTNAME);
+            const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
+            const char *client = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTNAME);
 
             if (origin != NULL) {
                 crm_xml_add(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
@@ -602,8 +601,8 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
 static int
 validate_transaction_request(const xmlNode *request)
 {
-    const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-    const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     const cib__operation_t *operation = NULL;
     int rc = cib__get_operation(op, &operation);
 
@@ -652,7 +651,7 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
         pcmk__xml_copy(cib->transaction, request);
 
     } else {
-        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
+        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);
@@ -672,8 +671,8 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     if (msg != NULL) {
         xmlNode *wrapper = NULL;
 
-        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
-        crm_element_value_int(msg, PCMK__XA_CIB_CALLID, &call_id);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_CALLID, &call_id);
         wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_CALLDATA, NULL, NULL);
         output = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     }
@@ -723,7 +722,7 @@ cib_native_notify(gpointer data, gpointer user_data)
         return;
     }
 
-    event = crm_element_value(msg, PCMK__XA_SUBT);
+    event = pcmk__xe_get(msg, PCMK__XA_SUBT);
 
     if (entry == NULL) {
         crm_warn("Skipping callback - NULL callback client");
@@ -823,7 +822,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
 
     pcmk__assert((event != NULL) && (input != NULL) && (output != NULL));
 
-    crm_element_value_int(event, PCMK__XA_CIB_RC, &rc);
+    pcmk__xe_get_int(event, PCMK__XA_CIB_RC, &rc);
     wrapper = pcmk__xe_first_child(event, PCMK__XE_CIB_UPDATE_RESULT, NULL,
                                    NULL);
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);

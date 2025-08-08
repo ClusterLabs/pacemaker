@@ -247,12 +247,10 @@ stonith_xml_history_to_list(const xmlNode *history)
          xml_op != NULL; xml_op = pcmk__xe_next(xml_op, NULL)) {
 
         remote_fencing_op_t *op = NULL;
-        char *id = crm_element_value_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
+        char *id = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_REMOTE_OP);
         int state;
         int exit_status = CRM_EX_OK;
         int execution_status = PCMK_EXEC_DONE;
-        long long completed;
-        long long completed_nsec = 0L;
 
         if (!id) {
             crm_warn("Malformed fencing history received from peer");
@@ -264,34 +262,31 @@ stonith_xml_history_to_list(const xmlNode *history)
         op = pcmk__assert_alloc(1, sizeof(remote_fencing_op_t));
 
         op->id = id;
-        op->target = crm_element_value_copy(xml_op, PCMK__XA_ST_TARGET);
-        op->action = crm_element_value_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
-        op->originator = crm_element_value_copy(xml_op, PCMK__XA_ST_ORIGIN);
-        op->delegate = crm_element_value_copy(xml_op, PCMK__XA_ST_DELEGATE);
-        op->client_name = crm_element_value_copy(xml_op,
-                                                 PCMK__XA_ST_CLIENTNAME);
-        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE, &completed);
-        op->completed = (time_t) completed;
-        crm_element_value_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
-        op->completed_nsec = completed_nsec;
-        crm_element_value_int(xml_op, PCMK__XA_ST_STATE, &state);
+        op->target = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_TARGET);
+        op->action = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_DEVICE_ACTION);
+        op->originator = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_ORIGIN);
+        op->delegate = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_DELEGATE);
+        op->client_name = pcmk__xe_get_copy(xml_op, PCMK__XA_ST_CLIENTNAME);
+        pcmk__xe_get_time(xml_op, PCMK__XA_ST_DATE, &op->completed);
+        pcmk__xe_get_ll(xml_op, PCMK__XA_ST_DATE_NSEC, &op->completed_nsec);
+        pcmk__xe_get_int(xml_op, PCMK__XA_ST_STATE, &state);
         op->state = (enum op_state) state;
 
         /* @COMPAT We can't use stonith__xe_get_result() here because
          * fencers <2.1.3 didn't include results, leading it to assume an error
          * status. Instead, set an unknown status in that case.
          */
-        if ((crm_element_value_int(xml_op, PCMK__XA_RC_CODE, &exit_status) < 0)
-            || (crm_element_value_int(xml_op, PCMK__XA_OP_STATUS,
-                                      &execution_status) < 0)) {
+        if ((pcmk__xe_get_int(xml_op, PCMK__XA_RC_CODE,
+                              &exit_status) != pcmk_rc_ok)
+            || (pcmk__xe_get_int(xml_op, PCMK__XA_OP_STATUS,
+                                 &execution_status) != pcmk_rc_ok)) {
             exit_status = CRM_EX_INDETERMINATE;
             execution_status = PCMK_EXEC_UNKNOWN;
         }
         pcmk__set_result(&op->result, exit_status, execution_status,
-                         crm_element_value(xml_op, PCMK_XA_EXIT_REASON));
+                         pcmk__xe_get(xml_op, PCMK_XA_EXIT_REASON));
         pcmk__set_result_output(&op->result,
-                                crm_element_value_copy(xml_op,
-                                                       PCMK__XA_ST_OUTPUT),
+                                pcmk__xe_get_copy(xml_op, PCMK__XA_ST_OUTPUT),
                                 NULL);
 
 
@@ -485,7 +480,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     xmlNode *out_history = NULL;
 
     if (dev) {
-        target = crm_element_value(dev, PCMK__XA_ST_TARGET);
+        target = pcmk__xe_get(dev, PCMK__XA_ST_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid;
             pcmk__node_status_t *node = NULL;
@@ -501,7 +496,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     }
 
     if (options & st_opt_cleanup) {
-        const char *call_id = crm_element_value(msg, PCMK__XA_ST_CALLID);
+        const char *call_id = pcmk__xe_get(msg, PCMK__XA_ST_CALLID);
 
         crm_trace("Cleaning up operations on %s in %p", target,
                   stonith_remote_op_list);
@@ -514,7 +509,7 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
          */
         fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED, NULL,
                                  NULL);
-        if (crm_element_value(msg, PCMK__XA_ST_CALLID) != NULL) {
+        if (pcmk__xe_get(msg, PCMK__XA_ST_CALLID) != NULL) {
             /* this is coming from the stonith-API
             *
             * craft a broadcast with node's history

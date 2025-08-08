@@ -25,8 +25,8 @@ shutdown_lock_cleared(xmlNode *lrm_resource)
 {
     time_t shutdown_lock = 0;
 
-    return (crm_element_value_epoch(lrm_resource, PCMK_OPT_SHUTDOWN_LOCK,
-                                    &shutdown_lock) == pcmk_ok)
+    return (pcmk__xe_get_time(lrm_resource, PCMK_OPT_SHUTDOWN_LOCK,
+                              &shutdown_lock) == pcmk_rc_ok)
            && (shutdown_lock == 0);
 }
 
@@ -236,10 +236,10 @@ te_update_diff_element(xmlNode *change, void *userdata)
 {
     xmlNode *match = NULL;
     const char *name = NULL;
-    const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+    const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
     // Possible ops: create, modify, delete, move
-    const char *op = crm_element_value(change, PCMK_XA_OPERATION);
+    const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
 
     // Ignore uninteresting updates
     if (op == NULL) {
@@ -365,7 +365,7 @@ te_update_diff(const char *event, xmlNode * msg)
     int p_del[] = { 0, 0, 0 };
 
     CRM_CHECK(msg != NULL, return);
-    crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+    pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
 
     if (controld_globals.transition_graph == NULL) {
         crm_trace("No graph");
@@ -384,7 +384,7 @@ te_update_diff(const char *event, xmlNode * msg)
         return;
     }
 
-    op = crm_element_value(msg, PCMK__XA_CIB_OP);
+    op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
     wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_UPDATE_RESULT, NULL, NULL);
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
@@ -394,7 +394,7 @@ te_update_diff(const char *event, xmlNode * msg)
               p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
               fsa_state2string(controld_globals.fsa_state));
 
-    crm_element_value_int(diff, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
     if (format == 2) {
         crm_log_xml_trace(diff, "patch");
@@ -417,7 +417,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     CRM_CHECK(msg != NULL, return);
 
     // Transition requests must specify transition engine as subsystem
-    value = crm_element_value(msg, PCMK__XA_CRM_SYS_TO);
+    value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
         crm_info("Received invalid transition request: subsystem '%s' not '"
@@ -426,7 +426,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     // Only the lrm_invoke command is supported as a transition request
-    value = crm_element_value(msg, PCMK__XA_CRM_TASK);
+    value = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
     if (!pcmk__str_eq(value, CRM_OP_INVOKE_LRM, pcmk__str_none)) {
         crm_info("Received invalid transition request: command '%s' not '"
                  CRM_OP_INVOKE_LRM "'", pcmk__s(value, ""));
@@ -434,7 +434,7 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     // Transition requests must be marked as coming from the executor
-    value = crm_element_value(msg, PCMK__XA_CRM_SYS_FROM);
+    value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(value, CRM_SYSTEM_LRMD, pcmk__str_none)) {
         crm_info("Received invalid transition request: from '%s' not '"
                  CRM_SYSTEM_LRMD "'", pcmk__s(value, ""));
@@ -442,8 +442,8 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     }
 
     crm_debug("Processing transition request with ref='%s' origin='%s'",
-              pcmk__s(crm_element_value(msg, PCMK_XA_REFERENCE), ""),
-              pcmk__s(crm_element_value(msg, PCMK__XA_SRC), ""));
+              pcmk__s(pcmk__xe_get(msg, PCMK_XA_REFERENCE), ""),
+              pcmk__s(pcmk__xe_get(msg, PCMK__XA_SRC), ""));
 
     xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
     nmatches = pcmk__xpath_num_results(xpathObj);
@@ -490,9 +490,9 @@ action_timer_callback(gpointer data)
 
     stop_te_timer(action);
 
-    task = crm_element_value(action->xml, PCMK_XA_OPERATION);
-    on_node = crm_element_value(action->xml, PCMK__META_ON_NODE);
-    via_node = crm_element_value(action->xml, PCMK__XA_ROUTER_NODE);
+    task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
+    on_node = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
+    via_node = pcmk__xe_get(action->xml, PCMK__XA_ROUTER_NODE);
 
     if (controld_globals.transition_graph->complete) {
         crm_notice("Node %s did not send %s result (via %s) within %dms "

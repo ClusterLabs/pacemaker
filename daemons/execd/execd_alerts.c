@@ -109,9 +109,8 @@ execd_process_alert_exec(pcmk__client_t *client, xmlNode *request)
     xmlNode *alert_xml = pcmk__xpath_find_one(request->doc,
                                               "//" PCMK__XE_LRMD_ALERT,
                                               LOG_ERR);
-    const char *alert_id = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_ID);
-    const char *alert_path = crm_element_value(alert_xml,
-                                               PCMK__XA_LRMD_ALERT_PATH);
+    const char *alert_id = pcmk__xe_get(alert_xml, PCMK__XA_LRMD_ALERT_ID);
+    const char *alert_path = pcmk__xe_get(alert_xml, PCMK__XA_LRMD_ALERT_PATH);
     svc_action_t *action = NULL;
     int alert_timeout = 0;
     int rc = pcmk_rc_ok;
@@ -127,7 +126,7 @@ execd_process_alert_exec(pcmk__client_t *client, xmlNode *request)
         return pcmk_rc_ok;
     }
 
-    crm_element_value_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
+    pcmk__xe_get_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
 
     crm_info("Executing alert %s for %s", alert_id, client->id);
 
@@ -139,7 +138,7 @@ execd_process_alert_exec(pcmk__client_t *client, xmlNode *request)
 
     cb_data->client_id = pcmk__str_copy(client->id);
 
-    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
+    pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
 
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
                                    alert_sequence_no, cb_data);
