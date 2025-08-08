@@ -170,7 +170,7 @@ class RemoteExec:
         node        -- The remote machine to run on
         command     -- The command to run, as a string
         synchronous -- Should we wait for the command to complete?
-        verbose     -- If 0, do not lo:g anything.  If 1, log the command and its
+        verbose     -- If 0, do not log anything.  If 1, log the command and its
                        return code but not its output.  If 2, additionally log
                        command output.
 
@@ -235,8 +235,17 @@ class RemoteExec:
     def exists_on_all(self, filename, hosts):
         """Return True if specified file exists on all specified hosts."""
         for host in hosts:
-            rc = self(host, f"test -r {filename}")
+            (rc, _) = self(host, f"test -r {filename}")
             if rc != 0:
+                return False
+
+        return True
+
+    def exists_on_none(self, filename, hosts):
+        """Return True if specified file does not exist on any specified host."""
+        for host in hosts:
+            (rc, _) = self(host, f"test -r {filename}")
+            if rc == 0:
                 return False
 
         return True

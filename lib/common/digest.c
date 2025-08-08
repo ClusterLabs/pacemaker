@@ -272,6 +272,14 @@ crm_md5sum(const char *buffer)
         return NULL;
     }
 
+    /* g_compute_checksum_for_string returns NULL if the input string is empty.
+     * There are instances where we may want to hash an empty, but non-NULL,
+     * string so here we just hardcode the result.
+     */
+    if (pcmk__str_empty(buffer)) {
+        return pcmk__str_copy("d41d8cd98f00b204e9800998ecf8427e");
+    }
+
     raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
 
     if (raw_digest == NULL) {
