@@ -171,7 +171,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
-    crm_xml_add(cmd, PCMK__XA_TRANSITION_KEY, counter);
+    pcmk__xe_set(cmd, PCMK__XA_TRANSITION_KEY, counter);
 
     node = pcmk__get_node(0, router_node, NULL,
                           pcmk__node_search_cluster_member);
@@ -288,20 +288,20 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     state = pcmk__xe_create(NULL, PCMK__XE_NODE_STATE);
 
-    crm_xml_add(state, PCMK_XA_ID, target_uuid);
-    crm_xml_add(state, PCMK_XA_UNAME, target);
+    pcmk__xe_set(state, PCMK_XA_ID, target_uuid);
+    pcmk__xe_set(state, PCMK_XA_UNAME, target);
 
     rsc = pcmk__xe_create(state, PCMK__XE_LRM);
-    crm_xml_add(rsc, PCMK_XA_ID, target_uuid);
+    pcmk__xe_set(rsc, PCMK_XA_ID, target_uuid);
 
     rsc = pcmk__xe_create(rsc, PCMK__XE_LRM_RESOURCES);
     rsc = pcmk__xe_create(rsc, PCMK__XE_LRM_RESOURCE);
-    crm_xml_add(rsc, PCMK_XA_ID, rsc_id);
+    pcmk__xe_set(rsc, PCMK_XA_ID, rsc_id);
 
-    crm_xml_add(rsc, PCMK_XA_TYPE, pcmk__xe_get(action_rsc, PCMK_XA_TYPE));
-    crm_xml_add(rsc, PCMK_XA_CLASS, pcmk__xe_get(action_rsc, PCMK_XA_CLASS));
-    crm_xml_add(rsc, PCMK_XA_PROVIDER,
-                pcmk__xe_get(action_rsc, PCMK_XA_PROVIDER));
+    pcmk__xe_set(rsc, PCMK_XA_TYPE, pcmk__xe_get(action_rsc, PCMK_XA_TYPE));
+    pcmk__xe_set(rsc, PCMK_XA_CLASS, pcmk__xe_get(action_rsc, PCMK_XA_CLASS));
+    pcmk__xe_set(rsc, PCMK_XA_PROVIDER,
+                 pcmk__xe_get(action_rsc, PCMK_XA_PROVIDER));
 
     pcmk__create_history_xml(rsc, op, CRM_FEATURE_SET, target_rc, target,
                              __func__);
@@ -384,7 +384,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     counter = pcmk__transition_key(controld_globals.transition_graph->id,
                                    action->id, get_target_rc(action),
                                    controld_globals.te_uuid);
-    crm_xml_add(rsc_op, PCMK__XA_TRANSITION_KEY, counter);
+    pcmk__xe_set(rsc_op, PCMK__XA_TRANSITION_KEY, counter);
 
     if (controld_is_local_node(router_node)) {
         is_local = TRUE;

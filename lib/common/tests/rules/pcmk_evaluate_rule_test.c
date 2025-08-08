@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -88,7 +88,7 @@ good_idref(void **state)
     xmlNode *rule_xml = pcmk__xe_create(parent_xml, PCMK_XE_RULE);
     crm_time_t *next_change = crm_time_new_undefined();
 
-    crm_xml_add(rule_xml, PCMK_XA_ID_REF, "r");
+    pcmk__xe_set(rule_xml, PCMK_XA_ID_REF, "r");
     assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),
                      pcmk_rc_ok);
 
@@ -103,7 +103,7 @@ bad_idref(void **state)
     xmlNode *rule_xml = pcmk__xe_create(parent_xml, PCMK_XE_RULE);
     crm_time_t *next_change = crm_time_new_undefined();
 
-    crm_xml_add(rule_xml, PCMK_XA_ID_REF, "x");
+    pcmk__xe_set(rule_xml, PCMK_XA_ID_REF, "x");
     assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
 

@@ -76,8 +76,8 @@ handle_pecalc_request(pcmk__request_t *request)
     if (pcmk__update_configured_schema(&converted, true) != pcmk_rc_ok) {
         scheduler->priv->graph = pcmk__xe_create(NULL,
                                                  PCMK__XE_TRANSITION_GRAPH);
-        crm_xml_add_int(scheduler->priv->graph, "transition_id", 0);
-        crm_xml_add_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
+        pcmk__xe_set_int(scheduler->priv->graph, "transition_id", 0);
+        pcmk__xe_set_int(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, 0);
         process = false;
         free(digest);
 
@@ -146,7 +146,7 @@ handle_pecalc_request(pcmk__request_t *request)
                                          series[series_id].name, seq, true);
     }
 
-    crm_xml_add(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
+    pcmk__xe_set(reply, PCMK__XA_CRM_TGRAPH_IN, filename);
 
     pcmk__log_transition_summary(scheduler, filename);
 
@@ -158,8 +158,7 @@ handle_pecalc_request(pcmk__request_t *request)
 
     } else {
         unlink(filename);
-        crm_xml_add_ll(xml_data, PCMK_XA_EXECUTION_DATE,
-                       (long long) execution_date);
+        pcmk__xe_set_time(xml_data, PCMK_XA_EXECUTION_DATE, execution_date);
         pcmk__xml_write_file(xml_data, filename, true);
         pcmk__write_series_sequence(PCMK_SCHEDULER_INPUT_DIR, series[series_id].name,
                                     ++seq, series_wrap);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,10 @@
 #ifndef PCMK__PCMKI_PCMKI_TICKET__H
 #define PCMK__PCMKI_PCMKI_TICKET__H
 
-#include <crm/common/output_internal.h>
+#include <stdbool.h>                        // bool
+
+#include <crm/common/output_internal.h>     // pcmk__output_t
+#include <crm/common/scheduler_types.h>     // pcmk_scheduler_t
 
 #include <crm/cib/cib_types.h>
 

@@ -400,7 +400,7 @@ cib_client_fetch_schemas(cib_t *cib, xmlNode **output_data, const char *after_ve
     xmlNode *data = pcmk__xe_create(NULL, PCMK__XA_SCHEMA);
     int rc = pcmk_ok;
 
-    crm_xml_add(data, PCMK_XA_VERSION, after_ver);
+    pcmk__xe_set(data, PCMK_XA_VERSION, after_ver);
 
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_SCHEMAS, NULL, NULL, data,
                          output_data, call_options, NULL);

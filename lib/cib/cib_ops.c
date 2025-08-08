@@ -230,7 +230,7 @@ update_counter(xmlNode *xml_obj, const char *field, bool reset)
 
     crm_trace("Update %s from %s to %s",
               field, pcmk__s(old_value, "unset"), new_value);
-    crm_xml_add(xml_obj, field, new_value);
+    pcmk__xe_set(xml_obj, field, new_value);
 
     free(new_value);
     free(old_value);
@@ -562,10 +562,11 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation,
         xml_node = pcmk__xe_create(failed, PCMK__XE_FAILED_UPDATE);
         pcmk__xml_copy(xml_node, target);
 
-        crm_xml_add(xml_node, PCMK_XA_ID, pcmk__xe_id(target));
-        crm_xml_add(xml_node, PCMK_XA_OBJECT_TYPE, (const char *) target->name);
-        crm_xml_add(xml_node, PCMK_XA_OPERATION, operation);
-        crm_xml_add(xml_node, PCMK_XA_REASON, error_msg);
+        pcmk__xe_set(xml_node, PCMK_XA_ID, pcmk__xe_id(target));
+        pcmk__xe_set(xml_node, PCMK_XA_OBJECT_TYPE,
+                     (const char *) target->name);
+        pcmk__xe_set(xml_node, PCMK_XA_OPERATION, operation);
+        pcmk__xe_set(xml_node, PCMK_XA_REASON, error_msg);
 
         crm_warn("Action %s failed: %s (cde=%d)",
                  operation, error_msg, return_code);
@@ -803,7 +804,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                     *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
                 }
                 parent = pcmk__xe_create(*answer, PCMK__XE_XPATH_QUERY_PATH);
-                crm_xml_add(parent, PCMK_XA_ID, path);
+                pcmk__xe_set(parent, PCMK_XA_ID, path);
                 free(path);
 
             } else if (*answer) {

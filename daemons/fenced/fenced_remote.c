@@ -391,14 +391,14 @@ fencing_result2xml(xmlNode *parent, const remote_fencing_op_t *op)
 {
     xmlNode *notify_data = pcmk__xe_create(parent, PCMK__XE_ST_NOTIFY_FENCE);
 
-    crm_xml_add_int(notify_data, PCMK_XA_STATE, op->state);
-    crm_xml_add(notify_data, PCMK__XA_ST_TARGET, op->target);
-    crm_xml_add(notify_data, PCMK__XA_ST_DEVICE_ACTION, op->action);
-    crm_xml_add(notify_data, PCMK__XA_ST_DELEGATE, op->delegate);
-    crm_xml_add(notify_data, PCMK__XA_ST_REMOTE_OP, op->id);
-    crm_xml_add(notify_data, PCMK__XA_ST_ORIGIN, op->originator);
-    crm_xml_add(notify_data, PCMK__XA_ST_CLIENTID, op->client_id);
-    crm_xml_add(notify_data, PCMK__XA_ST_CLIENTNAME, op->client_name);
+    pcmk__xe_set_int(notify_data, PCMK_XA_STATE, op->state);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_TARGET, op->target);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_DEVICE_ACTION, op->action);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_DELEGATE, op->delegate);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_REMOTE_OP, op->id);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_ORIGIN, op->originator);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_CLIENTID, op->client_id);
+    pcmk__xe_set(notify_data, PCMK__XA_ST_CLIENTNAME, op->client_name);
 
     return notify_data;
 }
@@ -420,10 +420,10 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 
     count++;
     crm_trace("Broadcasting result to peers");
-    crm_xml_add(bcast, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
-    crm_xml_add(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
-    crm_xml_add(bcast, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
-    crm_xml_add_int(bcast, PCMK_XA_COUNT, count);
+    pcmk__xe_set(bcast, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
+    pcmk__xe_set(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
+    pcmk__xe_set(bcast, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
+    pcmk__xe_set_int(bcast, PCMK_XA_COUNT, count);
 
     if (op_merged) {
         pcmk__xe_set_bool_attr(bcast, PCMK__XA_ST_OP_MERGED, true);
@@ -459,12 +459,12 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     }
 
     /* Do notification with a clean data object */
-    crm_xml_add_int(data, PCMK_XA_STATE, op->state);
-    crm_xml_add(data, PCMK__XA_ST_TARGET, op->target);
-    crm_xml_add(data, PCMK__XA_ST_OP, op->action);
+    pcmk__xe_set_int(data, PCMK_XA_STATE, op->state);
+    pcmk__xe_set(data, PCMK__XA_ST_TARGET, op->target);
+    pcmk__xe_set(data, PCMK__XA_ST_OP, op->action);
 
     reply = fenced_construct_reply(op->request, data, &op->result);
-    crm_xml_add(reply, PCMK__XA_ST_DELEGATE, op->delegate);
+    pcmk__xe_set(reply, PCMK__XA_ST_DELEGATE, op->delegate);
 
     /* Send fencing OP reply to local client that initiated fencing */
     client = pcmk__find_client_by_id(op->client_id);
@@ -1354,20 +1354,20 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     query = stonith_create_op(op->client_callid, op->id, STONITH_OP_QUERY,
                               NULL, op->call_options);
 
-    crm_xml_add(query, PCMK__XA_ST_REMOTE_OP, op->id);
-    crm_xml_add(query, PCMK__XA_ST_TARGET, op->target);
-    crm_xml_add(query, PCMK__XA_ST_DEVICE_ACTION, op_requested_action(op));
-    crm_xml_add(query, PCMK__XA_ST_ORIGIN, op->originator);
-    crm_xml_add(query, PCMK__XA_ST_CLIENTID, op->client_id);
-    crm_xml_add(query, PCMK__XA_ST_CLIENTNAME, op->client_name);
-    crm_xml_add_int(query, PCMK__XA_ST_TIMEOUT, op->base_timeout);
+    pcmk__xe_set(query, PCMK__XA_ST_REMOTE_OP, op->id);
+    pcmk__xe_set(query, PCMK__XA_ST_TARGET, op->target);
+    pcmk__xe_set(query, PCMK__XA_ST_DEVICE_ACTION, op_requested_action(op));
+    pcmk__xe_set(query, PCMK__XA_ST_ORIGIN, op->originator);
+    pcmk__xe_set(query, PCMK__XA_ST_CLIENTID, op->client_id);
+    pcmk__xe_set(query, PCMK__XA_ST_CLIENTNAME, op->client_name);
+    pcmk__xe_set_int(query, PCMK__XA_ST_TIMEOUT, op->base_timeout);
 
     /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
     operation = pcmk__xe_get(request, PCMK__XA_ST_OP);
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         relay_op_id = pcmk__xe_get(request, PCMK__XA_ST_REMOTE_OP);
         if (relay_op_id) {
-            crm_xml_add(query, PCMK__XA_ST_REMOTE_OP_RELAY, relay_op_id);
+            pcmk__xe_set(query, PCMK__XA_ST_REMOTE_OP_RELAY, relay_op_id);
         }
     }
 
@@ -1752,10 +1752,10 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
 
     /* The client is connected to another node, relay this update to them */
     update = stonith_create_op(op->client_callid, op->id, STONITH_OP_TIMEOUT_UPDATE, NULL, 0);
-    crm_xml_add(update, PCMK__XA_ST_REMOTE_OP, op->id);
-    crm_xml_add(update, PCMK__XA_ST_CLIENTID, client_id);
-    crm_xml_add(update, PCMK__XA_ST_CALLID, call_id);
-    crm_xml_add_int(update, PCMK__XA_ST_TIMEOUT, op_timeout);
+    pcmk__xe_set(update, PCMK__XA_ST_REMOTE_OP, op->id);
+    pcmk__xe_set(update, PCMK__XA_ST_CLIENTID, client_id);
+    pcmk__xe_set(update, PCMK__XA_ST_CALLID, call_id);
+    pcmk__xe_set_int(update, PCMK__XA_ST_TIMEOUT, op_timeout);
 
     pcmk__cluster_send_message(pcmk__get_node(0, client_node, NULL,
                                               pcmk__node_search_cluster_member),
@@ -1954,15 +1954,15 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * op->client_delay;
         }
 
-        crm_xml_add(remote_op, PCMK__XA_ST_REMOTE_OP, op->id);
-        crm_xml_add(remote_op, PCMK__XA_ST_TARGET, op->target);
-        crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ACTION, op->action);
-        crm_xml_add(remote_op, PCMK__XA_ST_ORIGIN, op->originator);
-        crm_xml_add(remote_op, PCMK__XA_ST_CLIENTID, op->client_id);
-        crm_xml_add(remote_op, PCMK__XA_ST_CLIENTNAME, op->client_name);
-        crm_xml_add_int(remote_op, PCMK__XA_ST_TIMEOUT, timeout);
-        crm_xml_add_int(remote_op, PCMK__XA_ST_CALLOPT, op->call_options);
-        crm_xml_add_int(remote_op, PCMK__XA_ST_DELAY, op->client_delay);
+        pcmk__xe_set(remote_op, PCMK__XA_ST_REMOTE_OP, op->id);
+        pcmk__xe_set(remote_op, PCMK__XA_ST_TARGET, op->target);
+        pcmk__xe_set(remote_op, PCMK__XA_ST_DEVICE_ACTION, op->action);
+        pcmk__xe_set(remote_op, PCMK__XA_ST_ORIGIN, op->originator);
+        pcmk__xe_set(remote_op, PCMK__XA_ST_CLIENTID, op->client_id);
+        pcmk__xe_set(remote_op, PCMK__XA_ST_CLIENTNAME, op->client_name);
+        pcmk__xe_set_int(remote_op, PCMK__XA_ST_TIMEOUT, timeout);
+        pcmk__xe_set_int(remote_op, PCMK__XA_ST_CALLOPT, op->call_options);
+        pcmk__xe_set_int(remote_op, PCMK__XA_ST_DELAY, op->client_delay);
 
         if (device) {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR *
@@ -1971,7 +1971,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                        "using %s " QB_XS " for client %s (%ds)",
                        peer->host, op->action, op->target, device,
                        op->client_name, timeout_one);
-            crm_xml_add(remote_op, PCMK__XA_ST_DEVICE_ID, device);
+            pcmk__xe_set(remote_op, PCMK__XA_ST_DEVICE_ID, device);
 
         } else {
             timeout_one += TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
