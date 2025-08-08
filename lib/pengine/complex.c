@@ -686,6 +686,7 @@ int
 pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                     pcmk_resource_t *parent, pcmk_scheduler_t *scheduler)
 {
+    int rc = pcmk_rc_ok;
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     const char *value = NULL;
@@ -700,8 +701,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     CRM_CHECK(rsc != NULL, return EINVAL);
     CRM_CHECK((xml_obj != NULL) && (scheduler != NULL),
-              *rsc = NULL;
-              return EINVAL);
+              rc = EINVAL;
+              goto done);
 
     rule_input.now = scheduler->priv->now;
 
@@ -711,26 +712,29 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> configuration without " PCMK_XA_ID,
                          xml_obj->name);
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     if (unpack_template(xml_obj, &expanded_xml, scheduler) == FALSE) {
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     *rsc = calloc(1, sizeof(pcmk_resource_t));
     if (*rsc == NULL) {
         pcmk__sched_err(scheduler,
                         "Unable to allocate memory for resource '%s'", id);
-        return ENOMEM;
+        rc = ENOMEM;
+        goto done;
     }
 
     (*rsc)->priv = calloc(1, sizeof(pcmk__resource_private_t));
     if ((*rsc)->priv == NULL) {
         pcmk__sched_err(scheduler,
                         "Unable to allocate memory for resource '%s'", id);
-        free(*rsc);
-        return ENOMEM;
+        rc = ENOMEM;
+        goto done;
     }
     rsc_private = (*rsc)->priv;
 
@@ -759,9 +763,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     if (rsc_private->variant == pcmk__rsc_variant_unknown) {
         pcmk__config_err("Ignoring resource '%s' of unknown type '%s'",
                          id, rsc_private->xml->name);
-        common_free(*rsc);
-        *rsc = NULL;
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     rsc_private->meta = pcmk__strkey_table(free, free);
@@ -945,9 +948,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                         "default" : pcmk_role_text(rsc_private->next_role));
 
     if (!rsc_private->fns->unpack(*rsc)) {
-        pcmk__free_resource(*rsc);
-        *rsc = NULL;
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
@@ -968,14 +970,16 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                                &rule_input, rsc_private->utilization, NULL,
                                scheduler);
 
-    if (expanded_xml) {
-        if (add_template_rsc(xml_obj, scheduler) == FALSE) {
-            pcmk__free_resource(*rsc);
-            *rsc = NULL;
-            return pcmk_rc_unpack_error;
-        }
+    if ((expanded_xml != NULL) && !add_template_rsc(xml_obj, scheduler)) {
+        rc = pcmk_rc_unpack_error;
     }
-    return pcmk_rc_ok;
+
+done:
+    if (rc != pcmk_rc_ok) {
+        pcmk__free_resource(*rsc);
+        *rsc = NULL;
+    }
+    return rc;
 }
 
 gboolean
