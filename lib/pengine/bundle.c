@@ -757,6 +757,9 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             return pcmk_rc_unpack_error;
         }
 
+        // Make Coverity happy
+        pcmk__assert(replica->remote != NULL);
+
         g_hash_table_iter_init(&gIter, replica->remote->priv->allowed_nodes);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
             if (pcmk__is_pacemaker_remote_node(node)) {
