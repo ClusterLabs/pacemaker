@@ -355,7 +355,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             break;
     }
 
-    set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_RESOURCES,
+    set_config_flag(scheduler, PCMK_OPT_STOP_REMOVED_RESOURCES,
                     pcmk__sched_stop_removed_resources);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
         crm_trace("Orphan resources are stopped");
@@ -2514,7 +2514,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                            rsc->id, pcmk__node_name(node));
             } else {
                 crm_notice("Removed resource %s must be stopped manually on %s "
-                           "because " PCMK_OPT_STOP_ORPHAN_RESOURCES
+                           "because " PCMK_OPT_STOP_REMOVED_RESOURCES
                            " is set to false", rsc->id, pcmk__node_name(node));
             }
         }
