@@ -144,7 +144,7 @@ fencing_topology_init(void)
 
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
                                "[@" PCMK_XA_NAME "='"   \
-                                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
+                                    PCMK_OPT_FENCING_WATCHDOG_TIMEOUT "']"
 
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
