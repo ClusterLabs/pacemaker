@@ -340,8 +340,8 @@ stonith__result2rc(const pcmk__action_result_t *result)
                 case CRM_EX_INSUFFICIENT_PRIV:  return EACCES;
                 case CRM_EX_PROTOCOL:           return EPROTO;
 
-               /* CRM_EX_EXPIRED is used for orphaned fencing operations left
-                * over from a previous instance of the fencer. For API backward
+               /* CRM_EX_EXPIRED is used for fencing operations left over from a
+                * previous instance of the fencer. For API backward
                 * compatibility, this is mapped to the previously used code for
                 * this case, EHOSTUNREACH.
                 */
