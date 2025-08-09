@@ -26,7 +26,6 @@
     <define name="element-resource-history">
         <element name="resource_history">
             <attribute name="id"> <text /> </attribute>
-            <attribute name="orphan"> <data type="boolean" /> </attribute>
             <attribute name="removed"> <data type="boolean" /> </attribute>
             <optional>
                 <group>
@@ -42,6 +41,9 @@
             <zeroOrMore>
                 <ref name="element-operation-history" />
             </zeroOrMore>
+
+            <!-- @COMPAT Deprecated since 3.0.2 -->
+            <attribute name="orphan"> <data type="boolean" /> </attribute>
         </element>
     </define>
 
