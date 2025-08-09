@@ -242,7 +242,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
     if (pcmk__is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
-                 "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                 "fencing is required and " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
                  " is nonzero");
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_fencing);
     }

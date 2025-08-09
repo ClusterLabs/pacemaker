@@ -1376,7 +1376,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
 
         if (stonith_watchdog_timeout_ms <= 0) {
             crm_err("Ignoring watchdog fence device without "
-                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set");
+                    PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " set");
             rc = ENODEV;
             goto done;
         }

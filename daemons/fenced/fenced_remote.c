@@ -1525,14 +1525,14 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
     if (timeout > specified_timeout) {
         if (action_specific) {
             crm_warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
-                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " %ds), using %ds "
                      "instead",
                      op->action, specified_timeout, device? device : "watchdog",
                      timeout, timeout);
 
         } else {
             crm_warn("Fencing timeout %ds is too short (must be >= "
-                     PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " %ds), using %ds "
+                     PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " %ds), using %ds "
                      "instead",
                      specified_timeout, timeout, timeout);
         }
@@ -2006,7 +2006,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                  explicitly chosen for self-fencing. Local scheduler execution
                  in sbd might detect the node as unclean and lead to timely
                  self-fencing. Otherwise the selection of
-                 PCMK_OPT_STONITH_WATCHDOG_TIMEOUT at least is questionable.
+                 PCMK_OPT_FENCING_WATCHDOG_TIMEOUT at least is questionable.
              */
 
             /* coming here we're not waiting for watchdog timeout -

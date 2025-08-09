@@ -259,7 +259,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         N_("This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
             "The value `true` is meaningful if diskless SBD is used and "
-            "`stonith-watchdog-timeout` is nonzero. In that case, if fencing "
+            "`fencing-watchdog-timeout` is nonzero. In that case, if fencing "
             "is required, watchdog-based self-fencing will be performed via "
             "SBD without requiring a fencing resource explicitly configured."),
     },
@@ -274,7 +274,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
          * calculate, and use 0 as the single default for when the option either
          * is unset or fails to validate.
          */
-        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
+        PCMK_OPT_FENCING_WATCHDOG_TIMEOUT, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT,
+            PCMK_VALUE_TIMEOUT, NULL,
         "0", NULL,
         pcmk__opt_controld,
         N_("How long before nodes can be assumed to be safely down when "
