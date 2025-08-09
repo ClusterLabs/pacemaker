@@ -66,7 +66,6 @@ extern     "C" {
 #define PCMK_OPT_SHUTDOWN_LOCK_LIMIT            "shutdown-lock-limit"
 #define PCMK_OPT_START_FAILURE_IS_FATAL         "start-failure-is-fatal"
 #define PCMK_OPT_STARTUP_FENCING                "startup-fencing"
-#define PCMK_OPT_STONITH_TIMEOUT                "stonith-timeout"
 #define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT       "stonith-watchdog-timeout"
 #define PCMK_OPT_STOP_ALL_RESOURCES             "stop-all-resources"
 #define PCMK_OPT_STOP_REMOVED_ACTIONS           "stop-removed-actions"
@@ -88,6 +87,9 @@ extern     "C" {
 
 //! \deprecated Do not use
 #define PCMK_OPT_STONITH_MAX_ATTEMPTS           "stonith-max-attempts"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_TIMEOUT                "stonith-timeout"
 
 /*
  * Meta-attributes
