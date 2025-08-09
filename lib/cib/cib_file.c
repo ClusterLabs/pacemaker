@@ -546,7 +546,7 @@ cib_file_signoff(cib_t *cib)
 
         /* Otherwise, it's a simple write */
         } else {
-            bool compress = pcmk__ends_with_ext(private->filename, ".bz2");
+            bool compress = g_str_has_suffix(private->filename, ".bz2");
 
             if (pcmk__xml_write_file(private->cib_xml, private->filename,
                                      compress) != pcmk_rc_ok) {

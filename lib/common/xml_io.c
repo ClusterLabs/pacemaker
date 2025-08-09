@@ -117,7 +117,7 @@ pcmk__xml_read(const char *filename)
         output = xmlCtxtReadFd(ctxt, STDIN_FILENO, NULL, NULL,
                                XML_PARSE_NOBLANKS);
 
-    } else if (pcmk__ends_with_ext(filename, ".bz2")) {
+    } else if (g_str_has_suffix(filename, ".bz2")) {
         char *input = decompress_file(filename);
 
         if (input != NULL) {

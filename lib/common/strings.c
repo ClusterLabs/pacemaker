@@ -544,40 +544,6 @@ pcmk__trim(char *str)
 
 /*!
  * \internal
- * \brief Check whether a string ends with a certain "extension"
- *
- * \param[in] s      String to check
- * \param[in] match  Extension to match against end of \p s, that is,
- *                   its first character must not occur anywhere
- *                   in the rest of that very sequence (example: file
- *                   extension where the last dot is its delimiter,
- *                   e.g., ".html"); incorrect results may be
- *                   returned otherwise.
- *
- * \return \c true if \p s ends (verbatim, i.e., case sensitively)
- *         with "extension" designated as \p match (including empty
- *         string), \c false otherwise
- *
- * \note Main incentive to prefer this function over \c g_str_has_suffix()
- *       where possible is the efficiency (at the cost of added
- *       restriction on \p match as stated; the complexity class
- *       remains the same, though: BigO(M+N) vs. BigO(M+2N)).
- */
-bool
-pcmk__ends_with_ext(const char *s, const char *match)
-{
-    if (pcmk__str_empty(match)) {
-        return true;
-    } else if (s == NULL) {
-        return false;
-    } else {
-        s = strrchr(s, match[0]);
-        return (s == NULL)? false : !strcmp(s, match);
-    }
-}
-
-/*!
- * \internal
  * \brief Create a hash of a string suitable for use with GHashTable
  *
  * \param[in] v  String to hash

@@ -41,7 +41,6 @@ int pcmk__scan_double(const char *text, double *result,
                       const char *default_text, char **end_text);
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
-bool pcmk__ends_with_ext(const char *s, const char *match);
 char *pcmk__trim(char *str);
 void pcmk__add_separated_word(GString **list, size_t init_size,
                               const char *word, const char *separator);

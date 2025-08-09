@@ -176,10 +176,10 @@ schema_filter(const struct dirent *a)
     int rc = 0;
     pcmk__schema_version_t version = SCHEMA_ZERO;
 
-    if (strstr(a->d_name, "pacemaker-") != a->d_name) {
+    if (!g_str_has_prefix(a->d_name, "pacemaker-")) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
 
-    } else if (!pcmk__ends_with_ext(a->d_name, ".rng")) {
+    } else if (!g_str_has_suffix(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
     } else if (!version_from_filename(a->d_name, &version)) {
