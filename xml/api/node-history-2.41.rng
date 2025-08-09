@@ -27,6 +27,7 @@
         <element name="resource_history">
             <attribute name="id"> <text /> </attribute>
             <attribute name="orphan"> <data type="boolean" /> </attribute>
+            <attribute name="removed"> <data type="boolean" /> </attribute>
             <optional>
                 <group>
                     <attribute name="migration-threshold"> <data type="nonNegativeInteger" /> </attribute>

@@ -312,6 +312,9 @@ resource_history_string(pcmk_resource_t *rsc, const char *rsc_id, bool all,
     char *buf = NULL;
 
     if (rsc == NULL) {
+        /* @COMPAT "orphan" is deprecated since 3.0.2. Replace with "removed" at
+         * a compatibility break.
+         */
         buf = crm_strdup_printf("%s: orphan", rsc_id);
     } else if (all || failcount || last_failure > 0) {
         char *failcount_s = NULL;
@@ -2963,11 +2966,14 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
 
     if (rsc == NULL) {
         pcmk__xe_set_bool_attr(node, PCMK_XA_ORPHAN, true);
+        pcmk__xe_set_bool_attr(node, PCMK_XA_REMOVED, true);
+
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = pcmk__itoa(rsc->priv->ban_after_failures);
 
         pcmk__xe_set_props(node,
                            PCMK_XA_ORPHAN, PCMK_VALUE_FALSE,
+                           PCMK_XA_REMOVED, PCMK_VALUE_FALSE,
                            PCMK_META_MIGRATION_THRESHOLD, migration_s,
                            NULL);
         free(migration_s);
