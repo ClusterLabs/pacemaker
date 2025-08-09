@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 
+#include <glib.h>                       // g_str_has_prefix()
 #include <libxml/relaxng.h>
 #include <libxml/tree.h>                // xmlNode
 #include <libxml/xmlstring.h>           // xmlChar
@@ -923,15 +924,18 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
                 scan_state = escan_seennothing;
                 arg_cur = va_arg(aq, char *);
 
-                if (pcmk__starts_with(arg_cur, "WARNING: ")) {
+                if (arg_cur == NULL) {
+                    break;
+
+                } else if (g_str_has_prefix(arg_cur, "WARNING: ")) {
                     prefix_len = sizeof("WARNING: ") - 1;
                     msg_log_level = LOG_WARNING;
 
-                } else if (pcmk__starts_with(arg_cur, "INFO: ")) {
+                } else if (g_str_has_prefix(arg_cur, "INFO: ")) {
                     prefix_len = sizeof("INFO: ") - 1;
                     msg_log_level = LOG_INFO;
 
-                } else if (pcmk__starts_with(arg_cur, "DEBUG: ")) {
+                } else if (g_str_has_prefix(arg_cur, "DEBUG: ")) {
                     prefix_len = sizeof("DEBUG: ") - 1;
                     msg_log_level = LOG_DEBUG;
 

@@ -542,35 +542,6 @@ pcmk__trim(char *str)
     return str;
 }
 
-/*!
- * \brief Check whether a string starts with a certain sequence
- *
- * \param[in] str    String to check
- * \param[in] prefix Sequence to match against beginning of \p str
- *
- * \return \c true if \p str begins with match, \c false otherwise
- * \note This is equivalent to !strncmp(s, prefix, strlen(prefix))
- *       but is likely less efficient when prefix is a string literal
- *       if the compiler optimizes away the strlen() at compile time,
- *       and more efficient otherwise.
- */
-bool
-pcmk__starts_with(const char *str, const char *prefix)
-{
-    const char *s = str;
-    const char *p = prefix;
-
-    if (!s || !p) {
-        return false;
-    }
-    while (*s && *p) {
-        if (*s++ != *p++) {
-            return false;
-        }
-    }
-    return (*p == 0);
-}
-
 static inline bool
 ends_with(const char *s, const char *match, bool as_extension)
 {

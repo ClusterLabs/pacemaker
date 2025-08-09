@@ -26,6 +26,8 @@
 #include <signal.h>
 #include <sys/utsname.h>
 
+#include <glib.h>                           // g_str_has_prefix()
+
 #include <crm/services.h>
 #include <crm/lrmd.h>
 #include <crm/common/cmdline_internal.h>
@@ -343,7 +345,7 @@ apply_include(const gchar *includes, GError **error) {
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
             show = all_includes(output_format);
-        } else if (pcmk__starts_with(*s, "bans")) {
+        } else if (g_str_has_prefix(*s, "bans")) {
             show |= pcmk_section_bans;
             if (options.neg_location_prefix != NULL) {
                 free(options.neg_location_prefix);
@@ -382,13 +384,14 @@ apply_include_exclude(GSList *lst, GError **error) {
     while (node != NULL) {
         char *s = node->data;
 
-        if (pcmk__starts_with(s, "--include=")) {
+        if (s == NULL) {
+        } else if (g_str_has_prefix(s, "--include=")) {
             rc = apply_include(s+10, error);
-        } else if (pcmk__starts_with(s, "-I=")) {
+        } else if (g_str_has_prefix(s, "-I=")) {
             rc = apply_include(s+3, error);
-        } else if (pcmk__starts_with(s, "--exclude=")) {
+        } else if (g_str_has_prefix(s, "--exclude=")) {
             rc = apply_exclude(s+10, error);
-        } else if (pcmk__starts_with(s, "-U=")) {
+        } else if (g_str_has_prefix(s, "-U=")) {
             rc = apply_exclude(s+3, error);
         }
 

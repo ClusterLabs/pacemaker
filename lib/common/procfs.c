@@ -17,6 +17,8 @@
 #include <dirent.h>
 #include <ctype.h>
 
+#include <glib.h>		// g_str_has_prefix()
+
 #if HAVE_LINUX_PROCFS
 /*!
  * \internal
@@ -176,7 +178,7 @@ pcmk__procfs_num_cores(void)
         char buffer[2048];
 
         while (fgets(buffer, sizeof(buffer), stream)) {
-            if (pcmk__starts_with(buffer, "cpu") && isdigit(buffer[3])) {
+            if (g_str_has_prefix(buffer, "cpu") && isdigit(buffer[3])) {
                 ++cores;
             }
         }
