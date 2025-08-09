@@ -68,7 +68,6 @@ extern     "C" {
 #define PCMK_OPT_STONITH_TIMEOUT                "stonith-timeout"
 #define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT       "stonith-watchdog-timeout"
 #define PCMK_OPT_STOP_ALL_RESOURCES             "stop-all-resources"
-#define PCMK_OPT_STOP_ORPHAN_RESOURCES          "stop-orphan-resources"
 #define PCMK_OPT_STOP_REMOVED_ACTIONS           "stop-removed-actions"
 #define PCMK_OPT_STOP_REMOVED_RESOURCES         "stop-removed-resources"
 #define PCMK_OPT_SYMMETRIC_CLUSTER              "symmetric-cluster"
@@ -76,6 +75,9 @@ extern     "C" {
 
 //! \deprecated Do not use
 #define PCMK_OPT_STOP_ORPHAN_ACTIONS            "stop-orphan-actions"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STOP_ORPHAN_RESOURCES          "stop-orphan-resources"
 
 
 /*
