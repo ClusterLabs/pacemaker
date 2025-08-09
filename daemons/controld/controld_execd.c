@@ -1275,7 +1275,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
         in_progress = cancel_op_key(lrm_state, rsc, op_key, TRUE);
 
     } else {
-        // Normal case when the scheduler cancels an orphan op
+        // Normal case when the scheduler cancels a removed op
         in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
     }
 
