@@ -159,7 +159,11 @@ pcmk__find_x_0_schema(void)
 static inline bool
 version_from_filename(const char *filename, pcmk__schema_version_t *version)
 {
-    if (pcmk__ends_with(filename, ".rng")) {
+    if (filename == NULL) {
+        return false;
+    }
+
+    if (g_str_has_suffix(filename, ".rng")) {
         return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
     } else {
         return sscanf(filename, "pacemaker-%hhu.%hhu", &(version->v[0]), &(version->v[1])) == 2;
@@ -1444,7 +1448,7 @@ read_file_contents(const char *file, char **contents)
     int rc = pcmk_rc_ok;
     char *path = NULL;
 
-    if (pcmk__ends_with(file, ".rng")) {
+    if (g_str_has_suffix(file, ".rng")) {
         path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng, file);
     } else {
         path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt, file);
@@ -1473,7 +1477,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Ensure whatever file we were given has a suffix we know about.  If not,
      * just assume it's an RNG file.
      */
-    if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
+    if (!g_str_has_suffix(file, ".rng") && !g_str_has_suffix(file, ".xsl")) {
         path = crm_strdup_printf("%s.rng", file);
     } else {
         path = pcmk__str_copy(file);

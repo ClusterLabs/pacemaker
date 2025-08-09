@@ -58,8 +58,8 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         guint interval_ms = 0;
         const char *task = pcmk__xe_get(lrm_rsc_op, PCMK_XA_OPERATION);
         bool effective_op = false;
-        bool failure = pcmk__ends_with(pcmk__xe_id(lrm_rsc_op),
-                                       "_last_failure_0");
+        const char *id = pcmk__xe_id(lrm_rsc_op);
+        bool failure = (id != NULL) && g_str_has_suffix(id, "_last_failure_0");
 
 
         pcmk__xe_get_guint(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);

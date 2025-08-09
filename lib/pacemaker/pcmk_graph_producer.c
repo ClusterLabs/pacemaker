@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -656,7 +656,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
 
     } else if ((input->flags == pcmk__ar_ordered)
                && pcmk_is_set(input->action->flags, pcmk__action_migratable)
-               && pcmk__ends_with(input->action->uuid, "_stop_0")) {
+               && g_str_has_suffix(input->action->uuid, "_stop_0")) {
         crm_trace("Ignoring %s (%d) input %s (%d): "
                   "optional but stop in migration",
                   action->uuid, action->id,
@@ -730,7 +730,7 @@ should_add_input_to_graph(const pcmk_action_t *action,
                && input->action->rsc != action->rsc
                && pcmk_is_set(input->action->rsc->flags, pcmk__rsc_failed)
                && !pcmk_is_set(input->action->rsc->flags, pcmk__rsc_managed)
-               && pcmk__ends_with(input->action->uuid, "_stop_0")
+               && g_str_has_suffix(input->action->uuid, "_stop_0")
                && pcmk__is_clone(action->rsc)) {
         crm_warn("Ignoring requirement that %s complete before %s:"
                  " unmanaged failed resources cannot prevent clone shutdown",

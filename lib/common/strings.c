@@ -542,47 +542,6 @@ pcmk__trim(char *str)
     return str;
 }
 
-static inline bool
-ends_with(const char *s, const char *match, bool as_extension)
-{
-    if (pcmk__str_empty(match)) {
-        return true;
-    } else if (s == NULL) {
-        return false;
-    } else {
-        size_t slen, mlen;
-
-        /* Besides as_extension, we could also check
-           !strchr(&match[1], match[0]) but that would be inefficient.
-         */
-        if (as_extension) {
-            s = strrchr(s, match[0]);
-            return (s == NULL)? false : !strcmp(s, match);
-        }
-
-        mlen = strlen(match);
-        slen = strlen(s);
-        return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a string ends with a certain sequence
- *
- * \param[in] s      String to check
- * \param[in] match  Sequence to match against end of \p s
- *
- * \return \c true if \p s ends case-sensitively with match, \c false otherwise
- * \note pcmk__ends_with_ext() can be used if the first character of match
- *       does not recur in match.
- */
-bool
-pcmk__ends_with(const char *s, const char *match)
-{
-    return ends_with(s, match, false);
-}
-
 /*!
  * \internal
  * \brief Check whether a string ends with a certain "extension"
@@ -599,7 +558,7 @@ pcmk__ends_with(const char *s, const char *match)
  *         with "extension" designated as \p match (including empty
  *         string), \c false otherwise
  *
- * \note Main incentive to prefer this function over \c pcmk__ends_with()
+ * \note Main incentive to prefer this function over \c g_str_has_suffix()
  *       where possible is the efficiency (at the cost of added
  *       restriction on \p match as stated; the complexity class
  *       remains the same, though: BigO(M+N) vs. BigO(M+2N)).
@@ -607,7 +566,14 @@ pcmk__ends_with(const char *s, const char *match)
 bool
 pcmk__ends_with_ext(const char *s, const char *match)
 {
-    return ends_with(s, match, true);
+    if (pcmk__str_empty(match)) {
+        return true;
+    } else if (s == NULL) {
+        return false;
+    } else {
+        s = strrchr(s, match[0]);
+        return (s == NULL)? false : !strcmp(s, match);
+    }
 }
 
 /*!

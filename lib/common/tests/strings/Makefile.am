@@ -18,7 +18,6 @@ check_PROGRAMS = crm_get_msec_test 		\
 		 pcmk__add_word_test		\
 		 pcmk__btoa_test		\
 		 pcmk__compress_test		\
-		 pcmk__ends_with_test 		\
 		 pcmk__g_strcat_test		\
 		 pcmk__guint_from_hash_test	\
 		 pcmk__numeric_strcasecmp_test 	\
