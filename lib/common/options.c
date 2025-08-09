@@ -243,7 +243,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STONITH_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_FENCING_TIMEOUT, PCMK_OPT_STONITH_TIMEOUT, PCMK_VALUE_DURATION,
+            NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for on, off, and reboot fence actions to complete "
@@ -638,7 +639,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'reboot' actions instead "
-            "of stonith-timeout"),
+            "of fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'reboot' actions."),
@@ -669,7 +670,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'off' actions instead of "
-            "stonith-timeout"),
+            "fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'off' actions."),
@@ -700,7 +701,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'on' actions instead of "
-            "stonith-timeout"),
+            "fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'on' actions."),
@@ -731,7 +732,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'list' actions instead of "
-            "stonith-timeout"),
+            "fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'list' actions."),
@@ -762,7 +763,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'monitor' actions instead "
-            "of stonith-timeout"),
+            "of fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'monitor' actions."),
@@ -793,7 +794,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'status' actions instead "
-            "of stonith-timeout"),
+            "of fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'status' actions."),

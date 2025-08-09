@@ -51,7 +51,7 @@ struct device_search_s {
     /* requested fence action */
     char *action;
     /* timeout to use if a device is queried dynamically for possible targets */
-    // @TODO This name is misleading now, it's the value of stonith-timeout
+    // @TODO This name is misleading now, it's the value of fencing-timeout
     int per_device_timeout;
     /* number of registered fencing devices at time of request */
     int replies_needed;
@@ -2158,7 +2158,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 
             if (device_timeout > search->per_device_timeout) {
                 crm_notice("Since the pcmk_list_timeout (%ds) parameter of %s "
-                           "is larger than " PCMK_OPT_STONITH_TIMEOUT
+                           "is larger than " PCMK_OPT_FENCING_TIMEOUT
                            " (%ds), timeout may occur",
                            device_timeout, dev_id, search->per_device_timeout);
             }
@@ -2183,7 +2183,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 
         if (device_timeout > search->per_device_timeout) {
             crm_notice("Since the pcmk_status_timeout (%ds) parameter of %s is "
-                       "larger than " PCMK_OPT_STONITH_TIMEOUT " (%ds), "
+                       "larger than " PCMK_OPT_FENCING_TIMEOUT " (%ds), "
                        "timeout may occur",
                        device_timeout, dev_id, search->per_device_timeout);
         }

@@ -253,7 +253,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_if_xpath(pcmk__sched_enable_unfencing, XPATH_ENABLE_UNFENCING,
                  scheduler);
 
-    value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_TIMEOUT);
     pcmk_parse_interval_spec(value, &(scheduler->priv->fence_timeout_ms));
 
     crm_debug("Default fencing action timeout: %s",

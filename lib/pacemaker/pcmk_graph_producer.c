@@ -1019,8 +1019,8 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash, PCMK_OPT_CLUSTER_DELAY);
     pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_CLUSTER_DELAY, value);
 
-    value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
-    pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_STONITH_TIMEOUT, value);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_TIMEOUT);
+    pcmk__xe_set(scheduler->priv->graph, PCMK_OPT_FENCING_TIMEOUT, value);
 
     pcmk__xe_set(scheduler->priv->graph, PCMK__XA_FAILED_STOP_OFFSET,
                  PCMK_VALUE_INFINITY);
