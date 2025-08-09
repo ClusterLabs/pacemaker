@@ -221,7 +221,7 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
 pcmk_resource_t *
 pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
-    gboolean as_orphan = FALSE;
+    bool removed = false;
     char *inc_num = NULL;
     char *inc_max = NULL;
     pcmk_resource_t *child_rsc = NULL;
@@ -233,8 +233,10 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 
     if (clone_data->total_clones >= clone_data->clone_max) {
-        // If we've already used all available instances, this is an orphan
-        as_orphan = TRUE;
+        /* If we've already used all available instances, this instance is
+         * treated as removed
+         */
+        removed = true;
     }
 
     // Allocate instance numbers in numerical order (starting at 0)
@@ -256,7 +258,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pcmk__rsc_trace(child_rsc, "Setting clone attributes for: %s",
                     child_rsc->id);
     rsc->priv->children = g_list_append(rsc->priv->children, child_rsc);
-    if (as_orphan) {
+    if (removed) {
         pe__set_resource_flags_recursive(child_rsc, pcmk__rsc_removed);
     }
 
@@ -421,7 +423,7 @@ clone_unpack(pcmk_resource_t *rsc)
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up
-         * any orphans up to the parent correctly.
+         * any removed instances up to the parent correctly.
          */
         if (pe__create_clone_child(rsc, rsc->priv->scheduler) == NULL) {
             return FALSE;
@@ -665,7 +667,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         }
 
         if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
-            // Print individual instance when unique (except stopped orphans)
+            // Print individual instance when unique, unless stopped and removed
             if (partially_active
                 || !pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
                 print_full = TRUE;
@@ -681,7 +683,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             print_full = TRUE;
 
         } else if (partially_active == FALSE) {
-            // List stopped instances when requested (except orphans)
+            // List stopped instances when requested (except removed instances)
             if (!pcmk_is_set(child_rsc->flags, pcmk__rsc_removed)
                 && !pcmk_is_set(show_opts, pcmk_show_clone_detail)
                 && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
@@ -695,7 +697,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                    || !is_set_recursive(child_rsc, pcmk__rsc_managed, FALSE)
                    || is_set_recursive(child_rsc, pcmk__rsc_failed, TRUE)) {
 
-            // Print individual instance when active orphaned/unmanaged/failed
+            // Print individual instance when active removed/unmanaged/failed
             print_full = TRUE;
 
         } else if (child_rsc->priv->fns->active(child_rsc, true)) {

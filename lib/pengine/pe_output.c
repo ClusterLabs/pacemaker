@@ -3064,7 +3064,7 @@ resource_list(pcmk__output_t *out, va_list args)
         bool is_active = rsc->priv->fns->active(rsc, true);
         bool partially_active = rsc->priv->fns->active(rsc, false);
 
-        /* Skip inactive orphans (deleted but still in CIB) */
+        // Skip inactive removed resources (deleted but still in CIB)
         if (pcmk_is_set(rsc->flags, pcmk__rsc_removed) && !is_active) {
             continue;
 

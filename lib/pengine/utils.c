@@ -286,7 +286,7 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
                         pcmk_scheduler_t *scheduler)
 {
     if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
-        // Don't show allocation scores for orphans
+        // Don't show allocation scores for removed resources
         return;
     }
     if (nodes == NULL) {
