@@ -295,7 +295,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that use SBD, otherwise data corruption or loss could occur."),
     },
     {
-        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_FENCING_MAX_ATTEMPTS, PCMK_OPT_STONITH_MAX_ATTEMPTS,
+            PCMK_VALUE_SCORE, NULL,
         "10", pcmk__valid_positive_int,
         pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
