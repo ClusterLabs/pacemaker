@@ -30,10 +30,10 @@ struct st_fail_rec {
     int count;
 };
 
-#define DEFAULT_STONITH_MAX_ATTEMPTS 10
+#define DEFAULT_FENCING_MAX_ATTEMPTS 10
 
 static bool fence_reaction_panic = false;
-static unsigned long int stonith_max_attempts = DEFAULT_STONITH_MAX_ATTEMPTS;
+static unsigned long int stonith_max_attempts = DEFAULT_FENCING_MAX_ATTEMPTS;
 static GHashTable *stonith_failures = NULL;
 
 /*!
@@ -46,7 +46,7 @@ static void
 update_stonith_max_attempts(const char *value)
 {
     int score = 0;
-    int rc = pcmk_parse_score(value, &score, DEFAULT_STONITH_MAX_ATTEMPTS);
+    int rc = pcmk_parse_score(value, &score, DEFAULT_FENCING_MAX_ATTEMPTS);
 
     // The option validator ensures invalid values shouldn't be possible
     CRM_CHECK((rc == pcmk_rc_ok) && (score > 0), return);
@@ -93,7 +93,7 @@ controld_configure_fencing(GHashTable *options)
     value = g_hash_table_lookup(options, PCMK_OPT_FENCE_REACTION);
     set_fence_reaction(value);
 
-    value = g_hash_table_lookup(options, PCMK_OPT_STONITH_MAX_ATTEMPTS);
+    value = g_hash_table_lookup(options, PCMK_OPT_FENCING_MAX_ATTEMPTS);
     update_stonith_max_attempts(value);
 }
 
