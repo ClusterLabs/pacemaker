@@ -40,6 +40,7 @@ extern     "C" {
 #define PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM    "fence-remote-without-quorum"
 #define PCMK_OPT_FENCING_ACTION                 "fencing-action"
 #define PCMK_OPT_FENCING_ENABLED                "fencing-enabled"
+#define PCMK_OPT_FENCING_MAX_ATTEMPTS           "fencing-max-attempts"
 #define PCMK_OPT_HAVE_WATCHDOG                  "have-watchdog"
 #define PCMK_OPT_JOIN_FINALIZATION_TIMEOUT      "join-finalization-timeout"
 #define PCMK_OPT_JOIN_INTEGRATION_TIMEOUT       "join-integration-timeout"
