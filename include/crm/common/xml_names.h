@@ -352,7 +352,6 @@ extern "C" {
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_OPTIONS                     "options"
 #define PCMK_XA_ORIGIN                      "origin"
-#define PCMK_XA_ORPHANED                    "orphaned"
 #define PCMK_XA_PACEMAKERD_STATE            "pacemakerd-state"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PENDING                     "pending"
@@ -460,6 +459,9 @@ extern "C" {
 
 //! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
 #define PCMK_XA_ORPHAN                      "orphan"
+
+//! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
+#define PCMK_XA_ORPHANED                    "orphaned"
 
 #ifdef __cplusplus
 }

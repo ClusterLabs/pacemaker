@@ -777,6 +777,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         locked_to = rsc->priv->lock_node->priv->name;
     }
 
+    // @COMPAT PCMK_XA_ORPHANED is deprecated since 3.0.2
     rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE,
                                   PCMK_XA_ID, rsc_printable_id(rsc),
                                   PCMK_XA_RESOURCE_AGENT, ra_name,
