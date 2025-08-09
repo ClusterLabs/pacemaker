@@ -268,7 +268,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     scheduler->priv->fence_action =
-        pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_ACTION);
+        pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_ACTION);
     crm_trace("STONITH will %s nodes", scheduler->priv->fence_action);
 
     set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
