@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -904,8 +904,14 @@ crm_strdup_printf(char const *format, ...)
 int
 pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
 {
-    char *remainder = NULL;
     int rc = pcmk_rc_ok;
+    gchar **split = NULL;
+    guint length = 0;
+    const gchar *start_s = NULL;
+    const gchar *end_s = NULL;
+
+    // Do not free
+    char *remainder = NULL;
 
     pcmk__assert((start != NULL) && (end != NULL));
 
@@ -914,54 +920,58 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     // cppcheck-suppress ctunullpointer
     *end = PCMK__PARSE_INT_DEFAULT;
 
-    crm_trace("Attempting to decode: [%s]", srcstring);
-    if (pcmk__str_eq(srcstring, "", pcmk__str_null_matches)) {
-        return ENODATA;
-    } else if (pcmk__str_eq(srcstring, "-", pcmk__str_none)) {
-        return pcmk_rc_bad_input;
+    if (pcmk__str_empty(srcstring)) {
+        rc = ENODATA;
+        goto done;
     }
 
-    /* String starts with a dash, so this is either a range with
-     * no beginning or garbage.
-     * */
-    if (*srcstring == '-') {
-        int rc = scan_ll(srcstring+1, end, PCMK__PARSE_INT_DEFAULT, &remainder);
+    crm_trace("Attempting to decode: [%s]", srcstring);
 
-        if ((rc == pcmk_rc_ok) && (*remainder != '\0')) {
+    split = g_strsplit(srcstring, "-", 2);
+    length = g_strv_length(split);
+    start_s = split[0];
+    if (length == 2) {
+        end_s = split[1];
+    }
+
+    if (pcmk__str_empty(start_s) && pcmk__str_empty(end_s)) {
+        rc = pcmk_rc_bad_input;
+        goto done;
+    }
+
+    if (!pcmk__str_empty(start_s)) {
+        rc = scan_ll(start_s, start, PCMK__PARSE_INT_DEFAULT, &remainder);
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
+        if (!pcmk__str_empty(remainder)) {
+            rc = pcmk_rc_bad_input;
+            goto done;
+        }
+    }
+
+    if (length == 1) {
+        // String contains only a single number, which is both start and end
+        *end = *start;
+        goto done;
+    }
+
+    if (!pcmk__str_empty(end_s)) {
+        rc = scan_ll(end_s, end, PCMK__PARSE_INT_DEFAULT, &remainder);
+
+        if ((rc == pcmk_rc_ok) && !pcmk__str_empty(remainder)) {
             rc = pcmk_rc_bad_input;
         }
-        return rc;
     }
 
-    rc = scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT, &remainder);
+done:
     if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    if (*remainder && *remainder == '-') {
-        if (*(remainder+1)) {
-            char *more_remainder = NULL;
-            int rc = scan_ll(remainder+1, end, PCMK__PARSE_INT_DEFAULT,
-                             &more_remainder);
-
-            if (rc != pcmk_rc_ok) {
-                return rc;
-            } else if (*more_remainder != '\0') {
-                return pcmk_rc_bad_input;
-            }
-        }
-    } else if (*remainder && *remainder != '-') {
+        // Ensure that if either value was set, it gets reverted
         *start = PCMK__PARSE_INT_DEFAULT;
-        return pcmk_rc_bad_input;
-    } else {
-        /* The input string contained only one number.  Set start and end
-         * to the same value and return pcmk_rc_ok.  This gives the caller
-         * a way to tell this condition apart from a range with no end.
-         */
-        *end = *start;
+        *end = PCMK__PARSE_INT_DEFAULT;
     }
-
-    return pcmk_rc_ok;
+    g_strfreev(split);
+    return rc;
 }
 
 /*!
