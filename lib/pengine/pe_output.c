@@ -2964,6 +2964,7 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
                                                      PCMK_XA_ID, rsc_id,
                                                      NULL);
 
+    // @COMPAT PCMK_XA_ORPHAN is deprecated since 3.0.2
     if (rsc == NULL) {
         pcmk__xe_set_bool_attr(node, PCMK_XA_ORPHAN, true);
         pcmk__xe_set_bool_attr(node, PCMK_XA_REMOVED, true);
