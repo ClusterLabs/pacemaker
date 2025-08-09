@@ -780,7 +780,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     } else {
         /* If a resource has PCMK_META_REQUIRES set to PCMK_VALUE_NOTHING or
          * PCMK_VALUE_QUORUM, don't consider it active on unclean nodes (similar
-         * to how all resources behave when PCMK_OPT_STONITH_ENABLED is false).
+         * to how all resources behave when PCMK_OPT_FENCING_ENABLED is false).
          * We can start such resources elsewhere before fencing completes, and
          * if we considered the resource active on the failed node, we would
          * attempt recovery for being active on multiple nodes.

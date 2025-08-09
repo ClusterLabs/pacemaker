@@ -222,9 +222,10 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that are part of its partition as long as the cluster thinks they "
            "can be restarted.  If true, inquorate nodes will be able to fence "
            "remote nodes regardless."),
-     },
+    },
     {
-        PCMK_OPT_STONITH_ENABLED, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_FENCING_ENABLED, PCMK_OPT_STONITH_ENABLED, PCMK_VALUE_BOOLEAN,
+            NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether nodes may be fenced as part of recovery"),
@@ -908,7 +909,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "unfenced. "
             "The default is \"quorum\" for resources with a class of stonith; "
             "otherwise, \"unfencing\" if unfencing is active in the cluster; "
-            "otherwise, \"fencing\" if the stonith-enabled cluster option is "
+            "otherwise, \"fencing\" if the fencing-enabled cluster option is "
             "true; "
             "otherwise, \"quorum\"."),
     },
