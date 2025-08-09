@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,7 +53,7 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
 int pcmk__scan_ll(const char *text, long long *result, long long default_value);
 int pcmk__scan_min_int(const char *text, int *result, int minimum);
 int pcmk__scan_port(const char *text, int *port);
-int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
+int pcmk__parse_ll_range(const char *text, long long *start, long long *end);
 
 GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                GDestroyNotify value_destroy_func);

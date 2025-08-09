@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,8 +45,6 @@ only_separator(void **state)
     long long start, end;
 
     assert_int_equal(pcmk__parse_ll_range("-", &start, &end), pcmk_rc_bad_input);
-    assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
-    assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void
@@ -87,12 +85,7 @@ garbage(void **state)
     long long start, end;
 
     assert_int_equal(pcmk__parse_ll_range("2000x-", &start, &end), pcmk_rc_bad_input);
-    assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
-    assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
-
     assert_int_equal(pcmk__parse_ll_range("-x2000", &start, &end), pcmk_rc_bad_input);
-    assert_int_equal(start, PCMK__PARSE_INT_DEFAULT);
-    assert_int_equal(end, PCMK__PARSE_INT_DEFAULT);
 }
 
 static void

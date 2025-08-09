@@ -901,8 +901,41 @@ crm_strdup_printf(char const *format, ...)
     return string;
 }
 
+/*!
+ * \internal
+ * \brief Parse a range specification string
+ *
+ * A valid range specification string can be in any of the following forms,
+ * where \c "X", \c "Y", and \c "Z" are nonnegative integers that fit into a
+ * <tt>long long</tt> variable:
+ * * "X-Y"
+ * * "X-"
+ * * "-Y"
+ * * "Z"
+ *
+ * In the list above, \c "X" is the start value and \c "Y" is the end value of
+ * the range. Either the start value or the end value, but not both, can be
+ * empty. \c "Z", a single integer with no \c '-' character, is both the start
+ * value and the end value of its range.
+ *
+ * If the start value or end value is empty, then the parsed result stored in
+ * \p *start or \p *end (respectively) is \c PCMK__PARSE_INT_DEFAULT after a
+ * successful parse.
+ *
+ * If the specification string consists of only a single number, then the same
+ * value is stored in both \p *start and \p *end on a successful parse.
+ *
+ * \param[in]  text   String to parse
+ * \param[out] start  Where to store start value
+ * \param[out] end    Where to store end value
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The values stored in \p *start and \p *end are undefined if the return
+ *       value is not \c pcmk_rc_ok.
+ */
 int
-pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
+pcmk__parse_ll_range(const char *text, long long *start, long long *end)
 {
     int rc = pcmk_rc_ok;
     gchar **split = NULL;
@@ -920,14 +953,14 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     // cppcheck-suppress ctunullpointer
     *end = PCMK__PARSE_INT_DEFAULT;
 
-    if (pcmk__str_empty(srcstring)) {
+    if (pcmk__str_empty(text)) {
         rc = ENODATA;
         goto done;
     }
 
-    crm_trace("Attempting to decode: [%s]", srcstring);
+    crm_trace("Attempting to decode: [%s]", text);
 
-    split = g_strsplit(srcstring, "-", 2);
+    split = g_strsplit(text, "-", 2);
     length = g_strv_length(split);
     start_s = split[0];
     if (length == 2) {
@@ -965,11 +998,6 @@ pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
     }
 
 done:
-    if (rc != pcmk_rc_ok) {
-        // Ensure that if either value was set, it gets reverted
-        *start = PCMK__PARSE_INT_DEFAULT;
-        *end = PCMK__PARSE_INT_DEFAULT;
-    }
     g_strfreev(split);
     return rc;
 }
