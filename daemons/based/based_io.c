@@ -105,7 +105,7 @@ static int cib_archive_filter(const struct dirent * a)
     } else if(strstr(a->d_name, "cib-") != a->d_name) {
         crm_trace("%s - wrong prefix", a->d_name);
 
-    } else if (pcmk__ends_with_ext(a->d_name, ".sig")) {
+    } else if (g_str_has_suffix(a->d_name, ".sig")) {
         crm_trace("%s - wrong suffix", a->d_name);
 
     } else {

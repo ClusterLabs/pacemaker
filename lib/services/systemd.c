@@ -14,15 +14,18 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 
+#include <dbus/dbus.h>
 #include <inttypes.h>               // PRIu32
 #include <stdbool.h>
 #include <stdint.h>                 // uint32_t
 #include <stdio.h>                  // fopen(), NULL, etc.
 #include <sys/stat.h>
+
 #include <gio/gio.h>
+#include <glib.h>                   // g_str_has_suffix()
+
 #include <services_private.h>
 #include <systemd.h>
-#include <dbus/dbus.h>
 #include <pcmk-dbus.h>
 
 static void invoke_unit_by_path(svc_action_t *op, const char *unit);
@@ -1116,7 +1119,7 @@ systemd_create_override(const char *agent, int timeout)
 
     override = g_string_sized_new(2 * sizeof(SYSTEMD_UNIT_OVERRIDE_TEMPLATE));
     g_string_printf(override, SYSTEMD_UNIT_OVERRIDE_TEMPLATE, unit_name);
-    if (pcmk__ends_with_ext(unit_name, ".service")) {
+    if (g_str_has_suffix(unit_name, ".service")) {
         g_string_append(override, SYSTEMD_SERVICE_OVERRIDE);
     }
 

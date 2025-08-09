@@ -20,6 +20,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <glib.h>                   // g_str_has_suffix()
+
 #include "libpacemaker_private.h"
 
 static const char *profiling_dir = NULL;
@@ -343,7 +345,7 @@ profile_filter(const struct dirent *entry)
         crm_trace("Not profiling hidden file '%s'", filename);
         goto done;
     }
-    if (!pcmk__ends_with_ext(filename, ".xml")) {
+    if (!g_str_has_suffix(filename, ".xml")) {
         crm_trace("Not profiling file '%s' without '.xml' extension", filename);
         goto done;
     }

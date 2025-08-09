@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -520,127 +520,6 @@ crm_str_to_boolean(const char *s, int *ret)
 
 /*!
  * \internal
- * \brief Replace any trailing newlines in a string with \0's
- *
- * \param[in,out] str  String to trim
- *
- * \return \p str
- */
-char *
-pcmk__trim(char *str)
-{
-    int len;
-
-    if (str == NULL) {
-        return str;
-    }
-
-    for (len = strlen(str) - 1; len >= 0 && str[len] == '\n'; len--) {
-        str[len] = '\0';
-    }
-
-    return str;
-}
-
-/*!
- * \brief Check whether a string starts with a certain sequence
- *
- * \param[in] str    String to check
- * \param[in] prefix Sequence to match against beginning of \p str
- *
- * \return \c true if \p str begins with match, \c false otherwise
- * \note This is equivalent to !strncmp(s, prefix, strlen(prefix))
- *       but is likely less efficient when prefix is a string literal
- *       if the compiler optimizes away the strlen() at compile time,
- *       and more efficient otherwise.
- */
-bool
-pcmk__starts_with(const char *str, const char *prefix)
-{
-    const char *s = str;
-    const char *p = prefix;
-
-    if (!s || !p) {
-        return false;
-    }
-    while (*s && *p) {
-        if (*s++ != *p++) {
-            return false;
-        }
-    }
-    return (*p == 0);
-}
-
-static inline bool
-ends_with(const char *s, const char *match, bool as_extension)
-{
-    if (pcmk__str_empty(match)) {
-        return true;
-    } else if (s == NULL) {
-        return false;
-    } else {
-        size_t slen, mlen;
-
-        /* Besides as_extension, we could also check
-           !strchr(&match[1], match[0]) but that would be inefficient.
-         */
-        if (as_extension) {
-            s = strrchr(s, match[0]);
-            return (s == NULL)? false : !strcmp(s, match);
-        }
-
-        mlen = strlen(match);
-        slen = strlen(s);
-        return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
-    }
-}
-
-/*!
- * \internal
- * \brief Check whether a string ends with a certain sequence
- *
- * \param[in] s      String to check
- * \param[in] match  Sequence to match against end of \p s
- *
- * \return \c true if \p s ends case-sensitively with match, \c false otherwise
- * \note pcmk__ends_with_ext() can be used if the first character of match
- *       does not recur in match.
- */
-bool
-pcmk__ends_with(const char *s, const char *match)
-{
-    return ends_with(s, match, false);
-}
-
-/*!
- * \internal
- * \brief Check whether a string ends with a certain "extension"
- *
- * \param[in] s      String to check
- * \param[in] match  Extension to match against end of \p s, that is,
- *                   its first character must not occur anywhere
- *                   in the rest of that very sequence (example: file
- *                   extension where the last dot is its delimiter,
- *                   e.g., ".html"); incorrect results may be
- *                   returned otherwise.
- *
- * \return \c true if \p s ends (verbatim, i.e., case sensitively)
- *         with "extension" designated as \p match (including empty
- *         string), \c false otherwise
- *
- * \note Main incentive to prefer this function over \c pcmk__ends_with()
- *       where possible is the efficiency (at the cost of added
- *       restriction on \p match as stated; the complexity class
- *       remains the same, though: BigO(M+N) vs. BigO(M+2N)).
- */
-bool
-pcmk__ends_with_ext(const char *s, const char *match)
-{
-    return ends_with(s, match, true);
-}
-
-/*!
- * \internal
  * \brief Create a hash of a string suitable for use with GHashTable
  *
  * \param[in] v  String to hash
@@ -901,67 +780,107 @@ crm_strdup_printf(char const *format, ...)
     return string;
 }
 
+/*!
+ * \internal
+ * \brief Parse a range specification string
+ *
+ * A valid range specification string can be in any of the following forms,
+ * where \c "X", \c "Y", and \c "Z" are nonnegative integers that fit into a
+ * <tt>long long</tt> variable:
+ * * "X-Y"
+ * * "X-"
+ * * "-Y"
+ * * "Z"
+ *
+ * In the list above, \c "X" is the start value and \c "Y" is the end value of
+ * the range. Either the start value or the end value, but not both, can be
+ * empty. \c "Z", a single integer with no \c '-' character, is both the start
+ * value and the end value of its range.
+ *
+ * If the start value or end value is empty, then the parsed result stored in
+ * \p *start or \p *end (respectively) is \c PCMK__PARSE_INT_DEFAULT after a
+ * successful parse.
+ *
+ * If the specification string consists of only a single number, then the same
+ * value is stored in both \p *start and \p *end on a successful parse.
+ *
+ * \param[in]  text   String to parse
+ * \param[out] start  Where to store start value (can be \c NULL)
+ * \param[out] end    Where to store end value (can be \c NULL)
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The values stored in \p *start and \p *end are undefined if the return
+ *       value is not \c pcmk_rc_ok.
+ */
 int
-pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end)
+pcmk__parse_ll_range(const char *text, long long *start, long long *end)
 {
-    char *remainder = NULL;
     int rc = pcmk_rc_ok;
+    long long local_start = 0;
+    long long local_end = 0;
+    gchar **split = NULL;
+    guint length = 0;
+    const gchar *start_s = NULL;
+    const gchar *end_s = NULL;
 
-    pcmk__assert((start != NULL) && (end != NULL));
+    // Do not free
+    char *remainder = NULL;
 
+    if (start == NULL) {
+        start = &local_start;
+    }
+    if (end == NULL) {
+        end = &local_end;
+    }
     *start = PCMK__PARSE_INT_DEFAULT;
-    // cppcheck doesn't understand the above pcmk__assert line
-    // cppcheck-suppress ctunullpointer
     *end = PCMK__PARSE_INT_DEFAULT;
 
-    crm_trace("Attempting to decode: [%s]", srcstring);
-    if (pcmk__str_eq(srcstring, "", pcmk__str_null_matches)) {
-        return ENODATA;
-    } else if (pcmk__str_eq(srcstring, "-", pcmk__str_none)) {
-        return pcmk_rc_bad_input;
+    if (pcmk__str_empty(text)) {
+        rc = ENODATA;
+        goto done;
     }
 
-    /* String starts with a dash, so this is either a range with
-     * no beginning or garbage.
-     * */
-    if (*srcstring == '-') {
-        int rc = scan_ll(srcstring+1, end, PCMK__PARSE_INT_DEFAULT, &remainder);
+    split = g_strsplit(text, "-", 2);
+    length = g_strv_length(split);
+    start_s = split[0];
+    if (length == 2) {
+        end_s = split[1];
+    }
 
-        if ((rc == pcmk_rc_ok) && (*remainder != '\0')) {
+    if (pcmk__str_empty(start_s) && pcmk__str_empty(end_s)) {
+        rc = pcmk_rc_bad_input;
+        goto done;
+    }
+
+    if (!pcmk__str_empty(start_s)) {
+        rc = scan_ll(start_s, start, PCMK__PARSE_INT_DEFAULT, &remainder);
+        if (rc != pcmk_rc_ok) {
+            goto done;
+        }
+        if (!pcmk__str_empty(remainder)) {
+            rc = pcmk_rc_bad_input;
+            goto done;
+        }
+    }
+
+    if (length == 1) {
+        // String contains only a single number, which is both start and end
+        *end = *start;
+        goto done;
+    }
+
+    if (!pcmk__str_empty(end_s)) {
+        rc = scan_ll(end_s, end, PCMK__PARSE_INT_DEFAULT, &remainder);
+
+        if ((rc == pcmk_rc_ok) && !pcmk__str_empty(remainder)) {
             rc = pcmk_rc_bad_input;
         }
-        return rc;
     }
 
-    rc = scan_ll(srcstring, start, PCMK__PARSE_INT_DEFAULT, &remainder);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-
-    if (*remainder && *remainder == '-') {
-        if (*(remainder+1)) {
-            char *more_remainder = NULL;
-            int rc = scan_ll(remainder+1, end, PCMK__PARSE_INT_DEFAULT,
-                             &more_remainder);
-
-            if (rc != pcmk_rc_ok) {
-                return rc;
-            } else if (*more_remainder != '\0') {
-                return pcmk_rc_bad_input;
-            }
-        }
-    } else if (*remainder && *remainder != '-') {
-        *start = PCMK__PARSE_INT_DEFAULT;
-        return pcmk_rc_bad_input;
-    } else {
-        /* The input string contained only one number.  Set start and end
-         * to the same value and return pcmk_rc_ok.  This gives the caller
-         * a way to tell this condition apart from a range with no end.
-         */
-        *end = *start;
-    }
-
-    return pcmk_rc_ok;
+done:
+    g_strfreev(split);
+    return rc;
 }
 
 /*!

@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <glib.h>           // g_str_has_prefix()
 #include <libxml/tree.h>    // xmlNode
 #include <libxml/xpath.h>   // xmlXPathObject, etc.
 
@@ -370,8 +371,11 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     pcmk__assert(buf != NULL);
     g_string_truncate(buf, 0);
 
-    if (!pcmk__starts_with(cons_id, "cli-ban-")
-        && !pcmk__starts_with(cons_id, "cli-prefer-")) {
+    if (cons_id == NULL) {
+        return;
+    }
+    if (!g_str_has_prefix(cons_id, "cli-ban-")
+        && !g_str_has_prefix(cons_id, "cli-prefer-")) {
         return;
     }
 
@@ -423,7 +427,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     }
 
     g_string_append(buf, "//" PCMK_XE_DATE_EXPRESSION "[@" PCMK_XA_ID "='");
-    if (pcmk__starts_with(cons_id, "cli-ban-")) {
+    if (g_str_has_prefix(cons_id, "cli-ban-")) {
         pcmk__g_strcat(buf, cons_id, "-lifetime']", NULL);
 
     } else {    // starts with "cli-prefer-"

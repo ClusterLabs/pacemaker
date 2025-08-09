@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,6 +19,8 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <signal.h>
+
+#include <glib.h>		// g_str_has_prefix()
 
 static pid_t sbd_pid = 0;
 
@@ -69,7 +71,9 @@ panic_local(void)
         return;
     }
 
-    if (pcmk__starts_with(full_panic_action, "sync-")) {
+    if ((full_panic_action != NULL)
+        && g_str_has_prefix(full_panic_action, "sync-")) {
+
         panic_action += sizeof("sync-") - 1;
         sync();
     }

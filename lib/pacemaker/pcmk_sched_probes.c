@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -386,8 +386,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
                                              pcmk__str_none)) {
             continue;
         } else if ((first == NULL)
-                   && !pcmk__ends_with(order->task1,
-                                       "_" PCMK_ACTION_STOP "_0")) {
+                   && !g_str_has_suffix(order->task1,
+                                        "_" PCMK_ACTION_STOP "_0")) {
             continue;
         }
 
@@ -402,8 +402,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
                                                pcmk__str_none)) {
                 continue;
             } else if ((then == NULL)
-                       && pcmk__ends_with(order->task2,
-                                          "_" PCMK_ACTION_STOP "_0")) {
+                       && g_str_has_suffix(order->task2,
+                                           "_" PCMK_ACTION_STOP "_0")) {
                 continue;
             }
         }

@@ -40,7 +40,7 @@ rhcs_agent_filter(const struct dirent *entry)
     struct stat sb;
     int rc = 0;
 
-    if (!pcmk__starts_with(entry->d_name, "fence_")) {
+    if (!g_str_has_prefix(entry->d_name, "fence_")) {
         goto done;
     }
 

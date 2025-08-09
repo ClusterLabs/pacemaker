@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,10 +41,6 @@ int pcmk__scan_double(const char *text, double *result,
                       const char *default_text, char **end_text);
 int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
-bool pcmk__starts_with(const char *str, const char *prefix);
-bool pcmk__ends_with(const char *s, const char *match);
-bool pcmk__ends_with_ext(const char *s, const char *match);
-char *pcmk__trim(char *str);
 void pcmk__add_separated_word(GString **list, size_t init_size,
                               const char *word, const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,
@@ -53,7 +49,7 @@ int pcmk__compress(const char *data, unsigned int length, unsigned int max,
 int pcmk__scan_ll(const char *text, long long *result, long long default_value);
 int pcmk__scan_min_int(const char *text, int *result, int minimum);
 int pcmk__scan_port(const char *text, int *port);
-int pcmk__parse_ll_range(const char *srcstring, long long *start, long long *end);
+int pcmk__parse_ll_range(const char *text, long long *start, long long *end);
 
 GHashTable *pcmk__strkey_table(GDestroyNotify key_destroy_func,
                                GDestroyNotify value_destroy_func);
