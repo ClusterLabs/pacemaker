@@ -80,7 +80,6 @@ extern "C" {
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
 #define PCMK__XE_TRIGGER                "trigger"
 #define PCMK__XE_XPATH_QUERY            "xpath-query"
-#define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
 /* @COMPAT Deprecate somehow. It's undocumented and behaves the same as
  * PCMK__XE_CIB in places where it's recognized.
@@ -89,6 +88,9 @@ extern "C" {
 
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_FAILED                 "failed"
+
+// @COMPAT Deprecated since 3.0.2. Remove with cib_xpath_address.
+#define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
 
 /*
@@ -150,7 +152,6 @@ extern "C" {
 #define PCMK__XA_CRM_TIMESTAMP          "crm-timestamp"
 #define PCMK__XA_CRM_USER               "crm_user"
 #define PCMK__XA_DC_LEAVING             "dc-leaving"
-#define PCMK__XA_DIGEST                 "digest"
 #define PCMK__XA_ELECTION_AGE_SEC       "election-age-sec"
 #define PCMK__XA_ELECTION_AGE_NANO_SEC  "election-age-nano-sec"
 #define PCMK__XA_ELECTION_ID            "election-id"

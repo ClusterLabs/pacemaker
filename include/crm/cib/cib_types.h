@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -60,6 +60,8 @@ enum cib_call_options {
     cib_can_create      = (1 << 3),
     cib_discard_reply   = (1 << 4),
     cib_no_children     = (1 << 5),
+
+    //! \deprecated This value will be removed in a future release
     cib_xpath_address   = (1 << 6),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)

@@ -438,7 +438,7 @@ process_ping_reply(xmlNode *reply)
     xmlNode *pong = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     const char *seq_s = pcmk__xe_get(pong, PCMK__XA_CIB_PING_ID);
-    const char *digest = pcmk__xe_get(pong, PCMK__XA_DIGEST);
+    const char *digest = pcmk__xe_get(pong, PCMK_XA_DIGEST);
 
     if (seq_s == NULL) {
         crm_debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);

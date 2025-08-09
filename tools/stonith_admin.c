@@ -709,7 +709,6 @@ main(int argc, char **argv)
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
-    pcmk__unregister_formats();
     free(name);
     g_list_free_full(options.devices, free);
 
@@ -722,5 +721,6 @@ main(int argc, char **argv)
         stonith__api_free(st);
     }
 
+    pcmk__unregister_formats();
     return exit_code;
 }
