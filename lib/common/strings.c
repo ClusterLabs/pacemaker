@@ -926,8 +926,8 @@ crm_strdup_printf(char const *format, ...)
  * value is stored in both \p *start and \p *end on a successful parse.
  *
  * \param[in]  text   String to parse
- * \param[out] start  Where to store start value
- * \param[out] end    Where to store end value
+ * \param[out] start  Where to store start value (can be \c NULL)
+ * \param[out] end    Where to store end value (can be \c NULL)
  *
  * \return Standard Pacemaker return code
  *
@@ -938,6 +938,8 @@ int
 pcmk__parse_ll_range(const char *text, long long *start, long long *end)
 {
     int rc = pcmk_rc_ok;
+    long long local_start = 0;
+    long long local_end = 0;
     gchar **split = NULL;
     guint length = 0;
     const gchar *start_s = NULL;
@@ -946,19 +948,19 @@ pcmk__parse_ll_range(const char *text, long long *start, long long *end)
     // Do not free
     char *remainder = NULL;
 
-    pcmk__assert((start != NULL) && (end != NULL));
-
+    if (start == NULL) {
+        start = &local_start;
+    }
+    if (end == NULL) {
+        end = &local_end;
+    }
     *start = PCMK__PARSE_INT_DEFAULT;
-    // cppcheck doesn't understand the above pcmk__assert line
-    // cppcheck-suppress ctunullpointer
     *end = PCMK__PARSE_INT_DEFAULT;
 
     if (pcmk__str_empty(text)) {
         rc = ENODATA;
         goto done;
     }
-
-    crm_trace("Attempting to decode: [%s]", text);
 
     split = g_strsplit(text, "-", 2);
     length = g_strv_length(split);

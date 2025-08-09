@@ -25,8 +25,13 @@ null_input_variables(void **state)
 {
     long long start, end;
 
-    pcmk__assert_asserts(pcmk__parse_ll_range("1234", NULL, &end));
-    pcmk__assert_asserts(pcmk__parse_ll_range("1234", &start, NULL));
+    assert_int_equal(pcmk__parse_ll_range("1234", NULL, NULL), pcmk_rc_ok);
+
+    assert_int_equal(pcmk__parse_ll_range("1234", &start, NULL), pcmk_rc_ok);
+    assert_int_equal(start, 1234);
+
+    assert_int_equal(pcmk__parse_ll_range("1234", NULL, &end), pcmk_rc_ok);
+    assert_int_equal(end, 1234);
 }
 
 static void
