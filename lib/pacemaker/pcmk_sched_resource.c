@@ -355,7 +355,7 @@ pcmk__output_resource_actions(pcmk_resource_t *rsc)
     }
 
     if ((current == NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
-        /* Don't log stopped orphans */
+        // Don't log stopped removed resources
         return;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -446,7 +446,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
 
         remote = action->node->priv->remote;
         if (remote == NULL) {
-            // Orphaned
+            // Removed
             continue;
         }
 
