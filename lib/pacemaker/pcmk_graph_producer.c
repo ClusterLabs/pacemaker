@@ -278,7 +278,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * unique meta-attribute might have just been toggled from on to
          * off.
          */
-        crm_debug("Using orphan clone name %s instead of history ID %s",
+        crm_debug("Using \"removed\" clone name %s instead of history ID %s",
                   action->rsc->id, action->rsc->priv->history_id);
         crm_xml_add(rsc_xml, PCMK_XA_ID, action->rsc->priv->history_id);
         crm_xml_add(rsc_xml, PCMK__XA_LONG_ID, action->rsc->id);
@@ -300,7 +300,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
          * regression tests suggests that it is still needed for unique clones)
          *
          * If anyone toggles the unique flag to 'on', the
-         * 'instance free' name will correspond to an orphan
+         * 'instance free' name will correspond to a removed resource
          * and fall into the clause above instead
          */
         crm_xml_add(rsc_xml, PCMK_XA_ID, xml_id);

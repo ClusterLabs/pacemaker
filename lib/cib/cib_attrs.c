@@ -607,7 +607,7 @@ get_uuid_from_result(const xmlNode *result, char **uuid, int *is_remote)
  * - cluster or remote node in nodes section
  * - remote node in resources section
  * - guest node in resources section
- * - orphaned remote node or bundle guest node in status section
+ * - removed remote node or bundle guest node in status section
  */
 #define XPATH_UPPER_TRANS "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define XPATH_LOWER_TRANS "abcdefghijklmnopqrstuvwxyz"
