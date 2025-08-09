@@ -439,7 +439,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STOP_REMOVED_ACTIONS, PCMK_OPT_STOP_ORPHAN_ACTIONS,
+            PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to cancel recurring actions removed from the "
