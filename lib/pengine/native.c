@@ -509,6 +509,9 @@ pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
 
     // State on node
     if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+        /* @COMPAT "ORPHANED" is deprecated since 3.0.2. Replace with "REMOVED"
+         * at a compatibility break.
+         */
         g_string_append(outstr, " ORPHANED");
     }
     if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
@@ -741,7 +744,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
     const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, true));
-    const char *orphaned = pcmk__flag_text(rsc->flags, pcmk__rsc_removed);
+    const char *removed = pcmk__flag_text(rsc->flags, pcmk__rsc_removed);
     const char *blocked = pcmk__flag_text(rsc->flags, pcmk__rsc_blocked);
     const char *maintenance = pcmk__flag_text(rsc->flags,
                                               pcmk__rsc_maintenance);
@@ -780,7 +783,8 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
                                   PCMK_XA_ROLE, rsc_state,
                                   PCMK_XA_TARGET_ROLE, target_role,
                                   PCMK_XA_ACTIVE, active,
-                                  PCMK_XA_ORPHANED, orphaned,
+                                  PCMK_XA_ORPHANED, removed,
+                                  PCMK_XA_REMOVED, removed,
                                   PCMK_XA_BLOCKED, blocked,
                                   PCMK_XA_MAINTENANCE, maintenance,
                                   PCMK_XA_MANAGED, managed,

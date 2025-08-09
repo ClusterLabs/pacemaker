@@ -114,6 +114,7 @@
             </optional>
             <attribute name="active"> <data type="boolean" /> </attribute>
             <attribute name="orphaned"> <data type="boolean" /> </attribute>
+            <attribute name="removed"> <data type="boolean" /> </attribute>
             <optional>
                 <attribute name="blocked"> <data type="boolean" /> </attribute>
             </optional>
