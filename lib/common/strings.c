@@ -520,30 +520,6 @@ crm_str_to_boolean(const char *s, int *ret)
 
 /*!
  * \internal
- * \brief Replace any trailing newlines in a string with \0's
- *
- * \param[in,out] str  String to trim
- *
- * \return \p str
- */
-char *
-pcmk__trim(char *str)
-{
-    int len;
-
-    if (str == NULL) {
-        return str;
-    }
-
-    for (len = strlen(str) - 1; len >= 0 && str[len] == '\n'; len--) {
-        str[len] = '\0';
-    }
-
-    return str;
-}
-
-/*!
- * \internal
  * \brief Create a hash of a string suitable for use with GHashTable
  *
  * \param[in] v  String to hash

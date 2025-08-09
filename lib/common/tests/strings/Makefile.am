@@ -33,7 +33,6 @@ check_PROGRAMS = crm_get_msec_test 		\
 		 pcmk__str_update_test		\
 		 pcmk__strcmp_test 		\
 		 pcmk__strkey_table_test 	\
-		 pcmk__strikey_table_test 	\
-		 pcmk__trim_test
+		 pcmk__strikey_table_test
 
 TESTS = $(check_PROGRAMS)
