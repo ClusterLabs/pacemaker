@@ -855,7 +855,7 @@ crm_resource: --class, --agent, and --provider can only be used with --validate 
 * Passed: crm_resource          - crm_resource given resource config with invalid action
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
@@ -886,7 +886,7 @@ Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attribute
 * Passed: crm_resource          - Create a resource meta attribute
 =#=#=#= Begin test: Query a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 false
 =#=#=#= Current cib after: Query a resource meta attribute =#=#=#=
@@ -917,7 +917,7 @@ false
 * Passed: crm_resource          - Query a resource meta attribute
 =#=#=#= Begin test: Remove a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Remove a resource meta attribute =#=#=#=
@@ -946,7 +946,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 * Passed: crm_resource          - Remove a resource meta attribute
 =#=#=#= Begin test: Create another resource meta attribute (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -r dummy --meta -p target-role -v Stopped --output-as=xml">
   <resource-settings>
@@ -962,7 +962,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Create another resource meta attribute (XML)
 =#=#=#= Begin test: Show why a resource is not running (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -Y -r dummy --output-as=xml">
   <reason running="false">
@@ -974,7 +974,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Show why a resource is not running (XML)
 =#=#=#= Begin test: Remove another resource meta attribute (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -r dummy --meta -d target-role --output-as=xml">
   <status code="0" message="OK"/>
@@ -983,7 +983,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Remove another resource meta attribute (XML)
 =#=#=#= Begin test: Get a non-existent attribute from a resource element (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -r dummy --get-parameter nonexistent --element --output-as=xml">
   <status code="0" message="OK">
@@ -996,7 +996,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Get a non-existent attribute from a resource element (XML)
 =#=#=#= Begin test: Get a non-existent attribute from a resource element =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Attribute 'nonexistent' not found for 'dummy'
 =#=#=#= Current cib after: Get a non-existent attribute from a resource element =#=#=#=
@@ -1025,7 +1025,7 @@ Attribute 'nonexistent' not found for 'dummy'
 * Passed: crm_resource          - Get a non-existent attribute from a resource element
 =#=#=#= Begin test: Get a non-existent attribute from a resource element (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -r dummy --get-parameter nonexistent --element">
   <status code="0" message="OK">
@@ -1060,7 +1060,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Get a non-existent attribute from a resource element (XML)
 =#=#=#= Begin test: Get an existent attribute from a resource element =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 ocf
 =#=#=#= Current cib after: Get an existent attribute from a resource element =#=#=#=
@@ -1089,7 +1089,7 @@ ocf
 * Passed: crm_resource          - Get an existent attribute from a resource element
 =#=#=#= Begin test: Set a non-existent attribute for a resource element (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml">
   <status code="0" message="OK"/>
@@ -1120,7 +1120,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Set a non-existent attribute for a resource element (XML)
 =#=#=#= Begin test: Set an existent attribute for a resource element (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml">
   <status code="0" message="OK"/>
@@ -1151,7 +1151,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Set an existent attribute for a resource element (XML)
 =#=#=#= Begin test: Delete an existent attribute for a resource element (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -r dummy -d description --element --output-as=xml">
   <status code="0" message="OK"/>
@@ -1182,7 +1182,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Delete an existent attribute for a resource element (XML)
 =#=#=#= Begin test: Delete a non-existent attribute for a resource element (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource -r dummy -d description --element --output-as=xml">
   <status code="0" message="OK"/>
@@ -1213,7 +1213,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Delete a non-existent attribute for a resource element (XML)
 =#=#=#= Begin test: Set a non-existent attribute for a resource element =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Set attribute: name=description value=test_description
 =#=#=#= Current cib after: Set a non-existent attribute for a resource element =#=#=#=
@@ -1242,7 +1242,7 @@ Set attribute: name=description value=test_description
 * Passed: crm_resource          - Set a non-existent attribute for a resource element
 =#=#=#= Begin test: Set an existent attribute for a resource element =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Set attribute: name=description value=test_description
 =#=#=#= Current cib after: Set an existent attribute for a resource element =#=#=#=
@@ -1271,7 +1271,7 @@ Set attribute: name=description value=test_description
 * Passed: crm_resource          - Set an existent attribute for a resource element
 =#=#=#= Begin test: Delete an existent attribute for a resource element =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted attribute: description
 =#=#=#= Current cib after: Delete an existent attribute for a resource element =#=#=#=
@@ -1300,7 +1300,7 @@ Deleted attribute: description
 * Passed: crm_resource          - Delete an existent attribute for a resource element
 =#=#=#= Begin test: Delete a non-existent attribute for a resource element =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Deleted attribute: description
 =#=#=#= Current cib after: Delete a non-existent attribute for a resource element =#=#=#=
@@ -1329,7 +1329,7 @@ Deleted attribute: description
 * Passed: crm_resource          - Delete a non-existent attribute for a resource element
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attributes name=delay value=10s
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
@@ -1361,7 +1361,7 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 * Passed: crm_resource          - Create a resource attribute
 =#=#=#= Begin test: List the configured resources =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Full List of Resources:
   * dummy	(ocf:pacemaker:Dummy):	 Stopped
@@ -1394,7 +1394,7 @@ Full List of Resources:
 * Passed: crm_resource          - List the configured resources
 =#=#=#= Begin test: List the configured resources (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -L">
   <resources>
@@ -1431,7 +1431,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - List the configured resources (XML)
 =#=#=#= Begin test: Implicitly list the configured resources =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Full List of Resources:
   * dummy	(ocf:pacemaker:Dummy):	 Stopped
@@ -1439,14 +1439,14 @@ Full List of Resources:
 * Passed: crm_resource          - Implicitly list the configured resources
 =#=#=#= Begin test: List IDs of instantiated resources =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 dummy
 =#=#=#= End test: List IDs of instantiated resources - OK (0) =#=#=#=
 * Passed: crm_resource          - List IDs of instantiated resources
 =#=#=#= Begin test: Show XML configuration of resource =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 dummy	(ocf:pacemaker:Dummy):	 Stopped
 Resource XML:
@@ -1460,7 +1460,7 @@ Resource XML:
 * Passed: crm_resource          - Show XML configuration of resource
 =#=#=#= Begin test: Show XML configuration of resource (XML) =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -q -r dummy">
   <resource_config>
@@ -1479,7 +1479,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 * Passed: crm_resource          - Show XML configuration of resource (XML)
 =#=#=#= Begin test: Require a destination when migrating a resource that is stopped =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 crm_resource: Resource 'dummy' not moved: active in 0 locations.
 To prevent 'dummy' from running on a specific location, specify a node.
@@ -1512,7 +1512,7 @@ To prevent 'dummy' from running on a specific location, specify a node.
 * Passed: crm_resource          - Require a destination when migrating a resource that is stopped
 =#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 crm_resource: Node 'i.do.not.exist' not found
 Error performing operation: No such object
