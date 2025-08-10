@@ -1046,7 +1046,7 @@ target_list_type(fenced_device_t *dev)
 
         if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_LIST)) {
             check_type = PCMK_VALUE_STATIC_LIST;
-        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
+        } else if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_MAP)) {
             check_type = PCMK_VALUE_STATIC_LIST;
         } else if (pcmk_is_set(dev->flags, fenced_df_supports_list)) {
             check_type = PCMK_VALUE_DYNAMIC_LIST;
@@ -1081,7 +1081,7 @@ build_device_from_xml(const xmlNode *dev)
         device->targets = stonith__parse_targets(value);
     }
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_MAP);
+    value = g_hash_table_lookup(device->params, PCMK_FENCING_HOST_MAP);
     device->aliases = build_port_aliases(value, &(device->targets));
 
     value = target_list_type(device);
@@ -2145,7 +2145,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 
         if (pcmk__str_in_list(target, dev->targets, pcmk__str_casei)) {
             can = TRUE;
-        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
+        } else if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_MAP)
                    && g_hash_table_lookup(dev->aliases, target)) {
             can = TRUE;
         }

@@ -557,7 +557,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "supply any additional parameters."),
     },
     {
-        PCMK_STONITH_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("A mapping of node names to port numbers for devices that do not "
