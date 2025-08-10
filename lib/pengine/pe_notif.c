@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1003,19 +1003,18 @@ pe__free_action_notification_data(notify_data_t *n_data)
  * clone is ordered after it. This function creates new notification
  * pseudo-actions relative to the fencing to ensure everything works properly.
  *
- * \param[in]     stop        Stop action implied by fencing
- * \param[in,out] rsc         Clone resource that notification is for
- * \param[in,out] stonith_op  Fencing action that implies \p stop
+ * \param[in]     stop     Stop action implied by fencing
+ * \param[in,out] rsc      Clone resource that notification is for
+ * \param[in,out] fencing  Fencing action that implies \p stop
  */
 void
 pe__order_notifs_after_fencing(const pcmk_action_t *stop, pcmk_resource_t *rsc,
-                               pcmk_action_t *stonith_op)
+                               pcmk_action_t *fencing)
 {
     notify_data_t *n_data;
 
     crm_info("Ordering notifications for implied %s after fencing", stop->uuid);
-    n_data = pe__action_notif_pseudo_ops(rsc, PCMK_ACTION_STOP, NULL,
-                                         stonith_op);
+    n_data = pe__action_notif_pseudo_ops(rsc, PCMK_ACTION_STOP, NULL, fencing);
 
     if (n_data != NULL) {
         collect_resource_data(rsc, false, n_data);
