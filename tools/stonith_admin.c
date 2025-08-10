@@ -76,8 +76,8 @@ struct {
 };
 
 gboolean add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_fencing_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
@@ -86,19 +86,19 @@ gboolean set_tag(const gchar *option_name, const gchar *optarg, gpointer data, G
 /* *INDENT-OFF* */
 static GOptionEntry defn_entries[] = {
     { "register", 'R', 0, G_OPTION_ARG_STRING, &options.register_dev,
-      "Register the named stonith device. Requires: --agent.\n"
+      "Register the named fencing device. Requires: --agent.\n"
       INDENT "Optional: --option, --env-option.",
       "DEVICE" },
     { "deregister", 'D', 0, G_OPTION_ARG_STRING, &options.unregister_dev,
-      "De-register the named stonith device.",
+      "De-register the named fencing device.",
       "DEVICE" },
     { "register-level", 'r', 0, G_OPTION_ARG_STRING, &options.register_level,
-      "Register a stonith level for the named target,\n"
+      "Register a fencing level for the named target,\n"
       INDENT "specified as one of NAME, @PATTERN, or ATTR=VALUE.\n"
       INDENT "Requires: --index and one or more --device entries.",
       "TARGET" },
     { "deregister-level", 'd', 0, G_OPTION_ARG_STRING, &options.unregister_level,
-      "Unregister a stonith level for the named target,\n"
+      "Unregister a fencing level for the named target,\n"
       INDENT "specified as for --register-level. Requires: --index",
       "TARGET" },
 
@@ -175,7 +175,7 @@ static GOptionEntry addl_entries[] = {
       "The agent to use (for example, fence_xvm;\n"
       INDENT "with --register, --metadata, --validate).",
       "AGENT" },
-    { "option", 'o', 0, G_OPTION_ARG_CALLBACK, add_stonith_params,
+    { "option", 'o', 0, G_OPTION_ARG_CALLBACK, add_fencing_params,
       "Specify a device configuration parameter as NAME=VALUE\n"
       INDENT "(may be specified multiple times; with --register,\n"
       INDENT "--validate).",
@@ -192,7 +192,7 @@ static GOptionEntry addl_entries[] = {
       INDENT "tag; useful when multiple entities might invoke\n"
       INDENT "stonith_admin (used with most commands).",
       "TAG" },
-    { "device", 'v', 0, G_OPTION_ARG_CALLBACK, add_stonith_device,
+    { "device", 'v', 0, G_OPTION_ARG_CALLBACK, add_fencing_device,
       "Device ID (with --register-level, device to associate with\n"
       INDENT "a given host and level; may be specified multiple times)"
 #if PCMK__ENABLE_CIBSECRETS
@@ -201,7 +201,7 @@ static GOptionEntry addl_entries[] = {
       ".",
       "DEVICE" },
     { "index", 'i', 0, G_OPTION_ARG_INT, &options.fence_level,
-      "The stonith level (1-9) (with --register-level,\n"
+      "The fencing level (1-9) (with --register-level,\n"
       INDENT "--deregister-level).",
       "LEVEL" },
     { "timeout", 't', 0, G_OPTION_ARG_INT, &options.timeout,
@@ -264,7 +264,9 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 }
 
 gboolean
-add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+add_fencing_device(const gchar *option_name, const gchar *optarg, gpointer data,
+                   GError **error)
+{
     options.devices = g_list_append(options.devices, pcmk__str_copy(optarg));
     return TRUE;
 }
@@ -286,7 +288,9 @@ add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 }
 
 gboolean
-add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data,
+                   GError **error)
+{
     gchar *name = NULL;
     gchar *value = NULL;
     int rc = 0;

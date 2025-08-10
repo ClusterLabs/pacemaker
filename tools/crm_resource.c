@@ -1165,7 +1165,7 @@ validate_cmdline_config(void)
                      pcmk__str_none)) {
         if (!stonith__agent_exists(options.agent)) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        _("%s is not a known stonith agent"), options.agent);
+                        _("%s is not a known fencing agent"), options.agent);
             return;
         }
 
