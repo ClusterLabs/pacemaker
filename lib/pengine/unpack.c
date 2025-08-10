@@ -5098,9 +5098,10 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
         if (this_node->details->online
             || pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-            /* offline nodes run no resources...
-             * unless stonith is enabled in which case we need to
-             *   make sure rsc start events happen after the stonith
+
+            /* Offline nodes run no resources if fencing is disabled. If fencing
+             * is enabled, we need to ensure that resource start events happen
+             * after the fencing event.
              */
             xmlNode *lrm_rsc = NULL;
 
