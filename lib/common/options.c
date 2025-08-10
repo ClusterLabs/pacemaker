@@ -547,7 +547,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
      * long description
      */
     {
-        PCMK_STONITH_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_advanced,
         N_("Name of agent parameter that should be set to the fencing target"),

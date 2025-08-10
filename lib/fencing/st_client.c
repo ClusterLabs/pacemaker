@@ -1758,7 +1758,10 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
     char *host_arg = NULL;
 
     if (params != NULL) {
-        host_arg = pcmk__str_copy(g_hash_table_lookup(params, PCMK_STONITH_HOST_ARGUMENT));
+        const char *param = g_hash_table_lookup(params,
+                                                PCMK_FENCING_HOST_ARGUMENT);
+
+        host_arg = pcmk__str_copy(param);
 
         /* Remove special stonith params from the table before doing anything else */
         g_hash_table_foreach_remove(params, is_stonith_param, NULL);
