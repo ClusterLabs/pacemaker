@@ -160,7 +160,7 @@ make_args(const char *agent, const char *action, const char *target,
         pcmk__insert_dup(arg_list, "nodename", target);
 
         // Check whether target should be specified as some other argument
-        param = g_hash_table_lookup(device_args, PCMK_STONITH_HOST_ARGUMENT);
+        param = g_hash_table_lookup(device_args, PCMK_FENCING_HOST_ARGUMENT);
         if (param == NULL) {
             // Use caller's default (likely from agent metadata)
             param = default_host_arg;
