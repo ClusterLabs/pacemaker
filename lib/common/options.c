@@ -566,7 +566,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "port 1 for node1 and ports 2 and 3 for node2."),
     },
     {
-        PCMK_STONITH_HOST_LIST, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_HOST_LIST, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Nodes targeted by this device"),

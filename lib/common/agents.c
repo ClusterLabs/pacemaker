@@ -183,7 +183,7 @@ pcmk_stonith_param(const char *param)
                          PCMK_FENCING_DELAY_MAX,
                          PCMK_FENCING_HOST_ARGUMENT,
                          PCMK_FENCING_HOST_CHECK,
-                         PCMK_STONITH_HOST_LIST,
+                         PCMK_FENCING_HOST_LIST,
                          PCMK_STONITH_HOST_MAP,
                          NULL)) {
         return true;
