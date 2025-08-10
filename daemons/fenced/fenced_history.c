@@ -27,7 +27,7 @@
 
 #include <pacemaker-fenced.h>
 
-#define MAX_STONITH_HISTORY 500
+#define MAX_FENCING_HISTORY 500
 
 /*!
  * \internal
@@ -117,18 +117,18 @@ stonith_fence_history_cleanup(const char *target,
  *
  * stonith_remote_op_list isn't sorted for time-stamps
  * thus it would be kind of expensive to delete e.g.
- * the oldest entry if it would grow past MAX_STONITH_HISTORY
+ * the oldest entry if it would grow past MAX_FENCING_HISTORY
  * entries.
- * It is more efficient to purge MAX_STONITH_HISTORY/2
- * entries whenever the list grows beyond MAX_STONITH_HISTORY.
- * (sort for age + purge the MAX_STONITH_HISTORY/2 oldest)
+ * It is more efficient to purge MAX_FENCING_HISTORY/2
+ * entries whenever the list grows beyond MAX_FENCING_HISTORY.
+ * (sort for age + purge the MAX_FENCING_HISTORY/2 oldest)
  * That done on a per-node-base might raise the
  * probability of large syncs to occur.
  * Things like introducing a broadcast to purge
- * MAX_STONITH_HISTORY/2 entries or not sync above a certain
+ * MAX_FENCING_HISTORY/2 entries or not sync above a certain
  * threshold coming to mind ...
  * Simplest thing though is to purge the full history
- * throughout the cluster once MAX_STONITH_HISTORY is reached.
+ * throughout the cluster once MAX_FENCING_HISTORY is reached.
  * On the other hand this leads to purging the history in
  * situations where it would be handy to have it probably.
  */
@@ -198,8 +198,8 @@ remove_completed_remote_op(gpointer data, gpointer user_data)
 
 /*!
  * \internal
- * \brief Do a local history-trim to MAX_STONITH_HISTORY / 2 entries
- *        once over MAX_STONITH_HISTORY
+ * \brief Do a local history-trim to MAX_FENCING_HISTORY / 2 entries
+ *        once over MAX_FENCING_HISTORY
  */
 void
 stonith_fence_history_trim(void)
@@ -208,16 +208,16 @@ stonith_fence_history_trim(void)
         return;
     }
 
-    if (g_hash_table_size(stonith_remote_op_list) > MAX_STONITH_HISTORY) {
+    if (g_hash_table_size(stonith_remote_op_list) > MAX_FENCING_HISTORY) {
         GList *ops = g_hash_table_get_values(stonith_remote_op_list);
 
         crm_trace("More than %d entries in fencing history, purging oldest "
-                  "completed operations", MAX_STONITH_HISTORY);
+                  "completed operations", MAX_FENCING_HISTORY);
 
         ops = g_list_sort(ops, cmp_op_by_completion);
 
         // Always keep pending ops regardless of number of entries
-        g_list_foreach(g_list_nth(ops, MAX_STONITH_HISTORY / 2),
+        g_list_foreach(g_list_nth(ops, MAX_FENCING_HISTORY / 2),
                        remove_completed_remote_op, NULL);
 
         // No need for a notification after purging old data
