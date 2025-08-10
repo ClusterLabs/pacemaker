@@ -29,7 +29,7 @@
         <nvpair name="shutdown-escalation" value="20m" id="cib-bootstrap-options-shutdown-escalation"/>
         <nvpair name="start-failure-is-fatal" value="true" id="cib-bootstrap-options-start-failure-is-fatal"/>
         <nvpair name="startup-fencing" value="true" id="cib-bootstrap-options-startup-fencing"/>
-        <nvpair name="stonith-action" value="reboot" id="cib-bootstrap-options-stonith-action"/>
+        <nvpair name="fencing-action" value="reboot" id="cib-bootstrap-options-fencing-action"/>
         <nvpair name="stonith-timeout" value="60s" id="cib-bootstrap-options-stonith-timeout"/>
         <nvpair name="stop-removed-actions" value="true" id="cib-bootstrap-options-stop-removed-actions"/>
         <nvpair name="symmetric-cluster" value="true" id="cib-bootstrap-options-symmetric-cluster"/>

@@ -7,7 +7,7 @@
         <nvpair id="nvpair.id21877" name="stop-removed-resources" value="true"/>
         <nvpair id="nvpair.id21887" name="stop-removed-actions" value="true"/>
         <nvpair id="nvpair.id21915" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="nvpair.id21924" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21924" name="fencing-action" value="reboot"/>
         <nvpair id="nvpair.id21933" name="fencing-enabled" value="0"/>
         <nvpair id="nvpair.id21942" name="pe-error-series-max" value="100"/>
         <nvpair id="nvpair.id21951" name="pe-warn-series-max" value="100"/>
