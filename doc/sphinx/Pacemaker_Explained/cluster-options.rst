@@ -499,12 +499,12 @@ values, by running the ``man pacemaker-schedulerd`` and
        :ref:`is-managed <is_managed>` and :ref:`maintenance <rsc_maintenance>`
        resource meta-attributes, and :ref:`enabled <op_enabled>` operation
        meta-attribute.
-   * - .. _stonith_enabled:
+   * - .. _fencing_enabled:
 
        .. index::
-          pair: cluster option; stonith-enabled
+          pair: cluster option; fencing-enabled
 
-       stonith-enabled
+       fencing-enabled
      - :ref:`boolean <boolean>`
      - true
      - Whether the cluster is allowed to fence nodes (for example, failed nodes
@@ -522,32 +522,32 @@ values, by running the ``man pacemaker-schedulerd`` and
        This option applies only to fencing scheduled by the cluster, not to
        requests initiated externally (such as with the ``stonith_admin``
        command-line tool).
-   * - .. _stonith_action:
+   * - .. _fencing_action:
 
        .. index::
-          pair: cluster option; stonith-action
+          pair: cluster option; fencing-action
 
-       stonith-action
+       fencing-action
      - :ref:`enumeration <enumeration>`
      - reboot
      - Action the cluster should send to the fence agent when a node must be
        fenced. Allowed values are ``reboot`` and ``off``.
-   * - .. _stonith_timeout:
+   * - .. _fencing_timeout:
 
        .. index::
-          pair: cluster option; stonith-timeout
+          pair: cluster option; fencing-timeout
 
-       stonith-timeout
+       fencing-timeout
      - :ref:`duration <duration>`
      - 60s
      - How long to wait for ``on``, ``off``, and ``reboot`` fence actions to
        complete by default.
-   * - .. _stonith_max_attempts:
+   * - .. _fencing_max_attempts:
 
        .. index::
-          pair: cluster option; stonith-max-attempts
+          pair: cluster option; fencing-max-attempts
 
-       stonith-max-attempts
+       fencing-max-attempts
      - :ref:`score <score>`
      - 10
      - How many times fencing can fail for a target before the cluster will no
@@ -565,16 +565,16 @@ values, by running the ``man pacemaker-schedulerd`` and
        cluster according to whether SBD is detected to be in use.
        User-configured values are ignored. The value `true` is meaningful if
        diskless SBD is used and
-       :ref:`stonith-watchdog-timeout <stonith_watchdog_timeout>` is nonzero. In
+       :ref:`fencing-watchdog-timeout <fencing_watchdog_timeout>` is nonzero. In
        that case, if fencing is required, watchdog-based self-fencing will be
        performed via SBD without requiring a fencing resource explicitly
        configured.
-   * - .. _stonith_watchdog_timeout:
+   * - .. _fencing_watchdog_timeout:
 
        .. index::
-          pair: cluster option; stonith-watchdog-timeout
+          pair: cluster option; fencing-watchdog-timeout
 
-       stonith-watchdog-timeout
+       fencing-watchdog-timeout
      - :ref:`timeout <timeout>`
      - 0
      - If nonzero, and the cluster detects ``have-watchdog`` as ``true``, then
@@ -615,12 +615,12 @@ values, by running the ``man pacemaker-schedulerd`` and
        ``stonith_admin`` tool or an application such as DLM, or by the fencer
        itself such as recurring device monitors and ``status`` and ``list``
        commands, are not limited by this option.
-   * - .. _fence_reaction:
+   * - .. _fencing_reaction:
 
        .. index::
-          pair: cluster option; fence-reaction
+          pair: cluster option; fencing-reaction
 
-       fence-reaction
+       fencing-reaction
      - :ref:`enumeration <enumeration>`
      - stop
      - How should a cluster node react if notified of its own fencing? A
@@ -822,7 +822,7 @@ values, by running the ``man pacemaker-schedulerd`` and
        * :ref:`Rules <rules>` using ``date_spec`` are guaranteed to be checked
          only this often.
        * If :ref:`fencing <fencing>` fails enough to reach
-         :ref:`stonith-max-attempts <stonith_max_attempts>`, attempts will
+         :ref:`fencing-max-attempts <fencing_max_attempts>`, attempts will
          begin again after at most this time.
        * It serves as a fail-safe in case of certain scheduler bugs. If the
          scheduler incorrectly determines only some of the actions needed to

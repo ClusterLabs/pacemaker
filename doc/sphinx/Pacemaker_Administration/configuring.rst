@@ -51,7 +51,7 @@ To enable STONITH for example, one could run:
 
 .. code-block:: none
 
-   # crm_attribute --name stonith-enabled --update 1
+   # crm_attribute --name fencing-enabled --update 1
 
 Or, to check whether **node1** is allowed to run resources, there is:
 

@@ -212,7 +212,7 @@ the configuration.
     [root@pcmk-1 ~]# pcs cluster verify --full
     Error: invalid cib:
     (unpack_resources) 	error: Resource start-up disabled since no STONITH resources have been defined
-    (unpack_resources) 	error: Either configure some or disable STONITH with the stonith-enabled option
+    (unpack_resources) 	error: Either configure some or disable STONITH with the fencing-enabled option
     (unpack_resources) 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
     crm_verify: Errors found during check: config not valid
 
