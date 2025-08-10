@@ -464,7 +464,7 @@ get_action_limit(fenced_device_t *device)
     const char *value = NULL;
     int action_limit = 1;
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_ACTION_LIMIT);
+    value = g_hash_table_lookup(device->params, PCMK_FENCING_ACTION_LIMIT);
     if ((value == NULL)
         || (pcmk__scan_min_int(value, &action_limit, INT_MIN) != pcmk_rc_ok)
         || (action_limit == 0)) {
