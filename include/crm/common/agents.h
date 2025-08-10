@@ -39,7 +39,6 @@ extern "C" {
 #define PCMK_FENCING_DELAY_MAX          "pcmk_delay_max"
 #define PCMK_FENCING_HOST_ARGUMENT      "pcmk_host_argument"
 #define PCMK_FENCING_HOST_CHECK         "pcmk_host_check"
-#define PCMK_STONITH_HOST_CHECK         PCMK_FENCING_HOST_CHECK
 #define PCMK_STONITH_HOST_LIST          "pcmk_host_list"
 #define PCMK_STONITH_HOST_MAP           "pcmk_host_map"
 #define PCMK_STONITH_PROVIDES           "provides"
