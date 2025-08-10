@@ -80,19 +80,6 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "(for example, \"5min\")."),
     },
     {
-        PCMK_OPT_FENCE_REACTION, NULL, PCMK_VALUE_SELECT,
-            PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
-        PCMK_VALUE_STOP, NULL,
-        pcmk__opt_controld,
-        N_("How a cluster node should react if notified of its own fencing"),
-        N_("A cluster node may receive notification of a \"succeeded\" "
-            "fencing that targeted it if fencing is misconfigured, or if "
-            "fabric fencing is in use that doesn't cut cluster communication. "
-            "Use \"stop\" to attempt to immediately stop Pacemaker and stay "
-            "stopped, or \"panic\" to attempt to immediately reboot the local "
-            "node, falling back to stop on failure."),
-    },
-    {
         PCMK_OPT_ELECTION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
         "2min", pcmk__valid_interval_spec,
         pcmk__opt_controld|pcmk__opt_advanced,
@@ -241,6 +228,19 @@ static const pcmk__cluster_option_t cluster_options[] = {
         pcmk__opt_schedulerd,
         N_("Action to send to fence device when a node needs to be fenced"),
         NULL,
+    },
+    {
+        PCMK_OPT_FENCING_REACTION, PCMK_OPT_FENCE_REACTION, PCMK_VALUE_SELECT,
+            PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
+        PCMK_VALUE_STOP, NULL,
+        pcmk__opt_controld,
+        N_("How a cluster node should react if notified of its own fencing"),
+        N_("A cluster node may receive notification of a \"succeeded\" "
+            "fencing that targeted it if fencing is misconfigured, or if "
+            "fabric fencing is in use that doesn't cut cluster communication. "
+            "Use \"stop\" to attempt to immediately stop Pacemaker and stay "
+            "stopped, or \"panic\" to attempt to immediately reboot the local "
+            "node, falling back to stop on failure."),
     },
     {
         PCMK_OPT_FENCING_TIMEOUT, PCMK_OPT_STONITH_TIMEOUT, PCMK_VALUE_DURATION,
