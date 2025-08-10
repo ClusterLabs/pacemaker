@@ -368,7 +368,7 @@ behave and can be easily set using the ``--meta`` option of the
      - :ref:`enumeration <enumeration>`
      - ``quorum`` for resources with a ``class`` of ``stonith``, otherwise
        ``unfencing`` if unfencing is active in the cluster, otherwise
-       ``fencing`` if ``stonith-enabled`` is true, otherwise ``quorum``
+       ``fencing`` if ``fencing-enabled`` is true, otherwise ``quorum``
      - Conditions under which the resource can be started. Allowed values:
 
        * ``nothing:`` The cluster can always start this resource.
