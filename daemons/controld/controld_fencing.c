@@ -73,7 +73,7 @@ set_fence_reaction(const char *reaction_s)
     } else {
         if (!pcmk__str_eq(reaction_s, PCMK_VALUE_STOP, pcmk__str_casei)) {
             crm_warn("Invalid value '%s' for %s, using 'stop'",
-                     reaction_s, PCMK_OPT_FENCE_REACTION);
+                     reaction_s, PCMK_OPT_FENCING_REACTION);
         }
         fence_reaction_panic = false;
     }
@@ -90,7 +90,7 @@ controld_configure_fencing(GHashTable *options)
 {
     const char *value = NULL;
 
-    value = g_hash_table_lookup(options, PCMK_OPT_FENCE_REACTION);
+    value = g_hash_table_lookup(options, PCMK_OPT_FENCING_REACTION);
     set_fence_reaction(value);
 
     value = g_hash_table_lookup(options, PCMK_OPT_FENCING_MAX_ATTEMPTS);
