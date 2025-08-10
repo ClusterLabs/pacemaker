@@ -277,9 +277,17 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Whether remote nodes can be fenced without quorum</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stonith-enabled" advanced="1" generated="0">
+      <parameter name="fencing-enabled" advanced="1" generated="0">
         <longdesc lang="en">If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.</longdesc>
         <shortdesc lang="en">Whether nodes may be fenced as part of recovery</shortdesc>
+        <content type="boolean" default=""/>
+      </parameter>
+      <parameter name="stonith-enabled" advanced="1" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-enabled"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-enabled</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-enabled</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="stonith-action" advanced="0" generated="0">
@@ -623,7 +631,7 @@ Also known as properties, these are options that affect behavior across the enti
       * By default, an inquorate node can not fence Pacemaker Remote nodes that are part of its partition as long as the cluster thinks they can be restarted.  If true, inquorate nodes will be able to fence remote nodes regardless.
       * Possible values: boolean (default: )
 
-    * stonith-enabled: Whether nodes may be fenced as part of recovery
+    * fencing-enabled: Whether nodes may be fenced as part of recovery
       * If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.
       * Possible values: boolean (default: )
 
@@ -634,6 +642,9 @@ Also known as properties, these are options that affect behavior across the enti
   * DEPRECATED OPTIONS (will be removed in a future release):
 
     * concurrent-fencing: Allow performing fencing operations in parallel
+      * Possible values: boolean (default: )
+
+    * stonith-enabled: Deprecated alias for fencing-enabled
       * Possible values: boolean (default: )
 
     * stop-orphan-resources: Deprecated alias for stop-removed-resources
@@ -760,9 +771,17 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Whether remote nodes can be fenced without quorum</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stonith-enabled" advanced="1" generated="0">
+      <parameter name="fencing-enabled" advanced="1" generated="0">
         <longdesc lang="en">If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.</longdesc>
         <shortdesc lang="en">Whether nodes may be fenced as part of recovery</shortdesc>
+        <content type="boolean" default=""/>
+      </parameter>
+      <parameter name="stonith-enabled" advanced="1" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-enabled"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-enabled</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-enabled</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="stonith-action" advanced="0" generated="0">
@@ -1386,13 +1405,13 @@ Deleted crm_config option: id=(null) name=cluster-delay
 * Passed: crm_attribute         - Delete cluster option with -i
 =#=#=#= Begin test: Create node1 and bring it online =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Full List of Resources:
@@ -1654,7 +1673,7 @@ scope=status  name=fail-count-foo value=3
 * Passed: crm_failcount         - Query a fail count
 =#=#=#= Begin test: Show node attributes with crm_simulate =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
+unpack_resources 	error: Either configure some or disable STONITH with the fencing-enabled option
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 Current cluster status:
   * Node List:

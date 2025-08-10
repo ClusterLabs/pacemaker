@@ -523,12 +523,21 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stonith-enabled">
+    <parameter name="fencing-enabled">
       <longdesc lang="en">
         If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.
       </longdesc>
       <shortdesc lang="en">
         *** Advanced Use Only *** Whether nodes may be fenced as part of recovery
+      </shortdesc>
+      <content type="boolean" default=""/>
+    </parameter>
+    <parameter name="stonith-enabled">
+      <longdesc lang="en">
+        Deprecated alias for fencing-enabled
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-enabled *** *** Advanced Use Only ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
