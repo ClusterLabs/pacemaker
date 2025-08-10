@@ -180,7 +180,7 @@ pcmk_stonith_param(const char *param)
     if (pcmk__str_any_of(param,
                          PCMK_FENCING_ACTION_LIMIT,
                          PCMK_FENCING_DELAY_BASE,
-                         PCMK_STONITH_DELAY_MAX,
+                         PCMK_FENCING_DELAY_MAX,
                          PCMK_STONITH_HOST_ARGUMENT,
                          PCMK_STONITH_HOST_CHECK,
                          PCMK_STONITH_HOST_LIST,
