@@ -35,6 +35,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_FENCING_HOST_ARGUMENT instead
 #define PCMK_STONITH_HOST_ARGUMENT PCMK_FENCING_HOST_ARGUMENT
 
+//! \deprecated Use \c PCMK_FENCING_HOST_CHECK instead
+#define PCMK_STONITH_HOST_CHECK PCMK_FENCING_HOST_CHECK
+
 #ifdef __cplusplus
 }
 #endif
