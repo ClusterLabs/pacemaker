@@ -170,7 +170,7 @@ pcmk_stonith_param(const char *param)
     if (param == NULL) {
         return false;
     }
-    if (pcmk__str_any_of(param, PCMK_STONITH_PROVIDES,
+    if (pcmk__str_any_of(param, PCMK_FENCING_PROVIDES,
                          PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
         return true;
     }

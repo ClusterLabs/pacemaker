@@ -1156,7 +1156,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
             matches = g_list_prepend(matches, candidate);
 
         } else if (pcmk__str_eq(g_hash_table_lookup(candidate->priv->meta,
-                                                    PCMK_STONITH_PROVIDES),
+                                                    PCMK_FENCING_PROVIDES),
                                 PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
         }

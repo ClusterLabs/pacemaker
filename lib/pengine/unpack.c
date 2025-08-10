@@ -190,7 +190,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
 // nvpair with provides or requires set to unfencing
 #define XPATH_UNFENCING_NVPAIR PCMK_XE_NVPAIR           \
-    "[(@" PCMK_XA_NAME "='" PCMK_STONITH_PROVIDES "'"   \
+    "[(@" PCMK_XA_NAME "='" PCMK_FENCING_PROVIDES "'"   \
     "or @" PCMK_XA_NAME "='" PCMK_META_REQUIRES "') "   \
     "and @" PCMK_XA_VALUE "='" PCMK_VALUE_UNFENCING "']"
 
