@@ -1044,7 +1044,7 @@ target_list_type(fenced_device_t *dev)
 
     if (check_type == NULL) {
 
-        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST)) {
+        if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_LIST)) {
             check_type = PCMK_VALUE_STATIC_LIST;
         } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
             check_type = PCMK_VALUE_STATIC_LIST;
@@ -1076,7 +1076,7 @@ build_device_from_xml(const xmlNode *dev)
     device->namespace = pcmk__xe_get_copy(dev, PCMK__XA_NAMESPACE);
     device->params = xml2list(dev);
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_LIST);
+    value = g_hash_table_lookup(device->params, PCMK_FENCING_HOST_LIST);
     if (value) {
         device->targets = stonith__parse_targets(value);
     }
@@ -1417,7 +1417,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
         // Proceed as with any other fencing device
         g_list_free_full(device->targets, free);
         device->targets = stonith__parse_targets(local_node_name);
-        pcmk__insert_dup(device->params, PCMK_STONITH_HOST_LIST,
+        pcmk__insert_dup(device->params, PCMK_FENCING_HOST_LIST,
                          local_node_name);
     }
 
