@@ -6,7 +6,7 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.3-5.el8-4b1f869f0f"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1589453354"/>
       </cluster_property_set>
       <cluster_property_set id="redis_replication">
