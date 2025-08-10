@@ -15,6 +15,7 @@ header_HEADERS = acl.h 			\
 		 acl_compat.h		\
 		 actions.h		\
 		 agents.h 		\
+		 agents_compat.h 	\
 		 cib.h 			\
 		 ipc.h 			\
 		 ipc_client_compat.h 	\
