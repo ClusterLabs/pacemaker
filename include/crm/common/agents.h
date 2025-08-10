@@ -42,7 +42,6 @@ extern "C" {
 #define PCMK_FENCING_HOST_LIST          "pcmk_host_list"
 #define PCMK_FENCING_HOST_MAP           "pcmk_host_map"
 #define PCMK_FENCING_PROVIDES           "provides"
-#define PCMK_STONITH_PROVIDES           PCMK_FENCING_PROVIDES
 #define PCMK_STONITH_STONITH_TIMEOUT    "stonith-timeout"
 
 // OCF Resource Agent API standard version that this Pacemaker supports
