@@ -212,7 +212,7 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
         return 0;
     }
 
-    hash_value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
+    hash_value = g_hash_table_lookup(device->params, PCMK_FENCING_DELAY_BASE);
 
     if (hash_value) {
         char *value = pcmk__str_copy(hash_value);
@@ -747,7 +747,7 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
         delay_max = delay_base;
     }
     if (delay_max < delay_base) {
-        crm_warn(PCMK_STONITH_DELAY_BASE " (%ds) is larger than "
+        crm_warn(PCMK_FENCING_DELAY_BASE " (%ds) is larger than "
                  PCMK_STONITH_DELAY_MAX " (%ds) for %s using %s "
                  "(limiting to maximum delay)",
                  delay_base, delay_max, cmd->action, device->id);

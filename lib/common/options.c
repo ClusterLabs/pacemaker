@@ -602,7 +602,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "that the sum is kept below this maximum."),
     },
     {
-        PCMK_STONITH_DELAY_BASE, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_DELAY_BASE, NULL, PCMK_VALUE_STRING, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a base delay for fencing actions and specify base delay "
