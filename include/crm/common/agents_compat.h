@@ -47,6 +47,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_FENCING_PROVIDES instead
 #define PCMK_STONITH_PROVIDES PCMK_FENCING_PROVIDES
 
+//! \deprecated Do not use
+#define PCMK_STONITH_STONITH_TIMEOUT "stonith-timeout"
+
 #ifdef __cplusplus
 }
 #endif
