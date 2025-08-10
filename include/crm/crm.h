@@ -61,6 +61,9 @@ extern "C" {
  * Particular feature points currently tested by Pacemaker code:
  *
  * >=3.2.0:  DC supports PCMK_EXEC_INVALID and PCMK_EXEC_NOT_CONNECTED
+ * >=3.16.0: DC calculates secure digest using all resource parameters except
+ *           ones marked private
+ * >=3.18.0: DC supports PCMK__XA_IN_CCM and PCMK_XA_CRMD as timestamps
  * >=3.19.0: DC supports PCMK__CIB_REQUEST_COMMIT_TRANSACT
  */
 #define CRM_FEATURE_SET "3.20.4"
