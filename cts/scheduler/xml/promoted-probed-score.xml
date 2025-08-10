@@ -9,7 +9,7 @@
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="9"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="9"/>
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="9"/>
-        <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
+        <nvpair id="cib-bootstrap-options-fencing-action" name="fencing-action" value="reboot"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

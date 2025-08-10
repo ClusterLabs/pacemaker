@@ -6,7 +6,7 @@
       </cluster_property_set>
       <cluster_property_set id="set01">
         <nvpair id="nvpair.id21886" name="fencing-enabled" value="false"/>
-        <nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21894" name="fencing-action" value="reboot"/>
         <nvpair id="nvpair.id21903" name="cluster-delay" value="180s"/>
         <nvpair id="nvpair.id21920" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21929" name="symmetric-cluster" value="true"/>

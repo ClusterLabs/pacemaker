@@ -9,7 +9,7 @@
         <nvpair name="cluster-name" value="ha-idg" id="cib-bootstrap-options-cluster-name"/>
         <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
         <nvpair name="fencing-enabled" value="true" id="cib-bootstrap-options-fencing-enabled"/>
-        <nvpair name="stonith-action" value="off" id="cib-bootstrap-options-stonith-action"/>
+        <nvpair name="fencing-action" value="off" id="cib-bootstrap-options-fencing-action"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

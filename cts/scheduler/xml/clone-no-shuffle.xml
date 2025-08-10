@@ -6,7 +6,7 @@
         <nvpair name="no-quorum-policy" value="stop" id="nvpair.id21859"/>
         <nvpair name="symmetric-cluster" value="true" id="nvpair.id21868"/>
         <nvpair name="fencing-enabled" value="true" id="nvpair.id21877"/>
-        <nvpair name="stonith-action" value="reboot" id="nvpair.id21886"/>
+        <nvpair name="fencing-action" value="reboot" id="nvpair.id21886"/>
         <nvpair name="stop-removed-resources" value="true" id="nvpair.id21930"/>
         <nvpair name="stop-removed-actions" value="true" id="nvpair.id21939"/>
         <nvpair name="startup-fencing" value="true" id="nvpair.id21957"/>
