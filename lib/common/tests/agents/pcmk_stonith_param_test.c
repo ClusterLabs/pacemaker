@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,10 +19,10 @@ is_stonith_param(void **state)
     assert_false(pcmk_stonith_param(""));
     assert_false(pcmk_stonith_param("unrecognized"));
     assert_false(pcmk_stonith_param("pcmk_unrecognized"));
-    assert_false(pcmk_stonith_param("x" PCMK_STONITH_ACTION_LIMIT));
-    assert_false(pcmk_stonith_param(PCMK_STONITH_ACTION_LIMIT "x"));
+    assert_false(pcmk_stonith_param("x" PCMK_FENCING_ACTION_LIMIT));
+    assert_false(pcmk_stonith_param(PCMK_FENCING_ACTION_LIMIT "x"));
 
-    assert_true(pcmk_stonith_param(PCMK_STONITH_ACTION_LIMIT));
+    assert_true(pcmk_stonith_param(PCMK_FENCING_ACTION_LIMIT));
     assert_true(pcmk_stonith_param(PCMK_STONITH_DELAY_BASE));
     assert_true(pcmk_stonith_param(PCMK_STONITH_DELAY_MAX));
     assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_ARGUMENT));

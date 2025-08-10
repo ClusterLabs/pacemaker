@@ -617,7 +617,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "\"node1:1s;node2:5\") to set a different value for each target."),
     },
     {
-        PCMK_STONITH_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_FENCING_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "1", NULL,
         pcmk__opt_none,
         N_("The maximum number of actions can be performed in parallel on this "

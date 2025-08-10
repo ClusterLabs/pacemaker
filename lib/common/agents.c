@@ -178,7 +178,7 @@ pcmk_stonith_param(const char *param)
         return false;
     }
     if (pcmk__str_any_of(param,
-                         PCMK_STONITH_ACTION_LIMIT,
+                         PCMK_FENCING_ACTION_LIMIT,
                          PCMK_STONITH_DELAY_BASE,
                          PCMK_STONITH_DELAY_MAX,
                          PCMK_STONITH_HOST_ARGUMENT,
