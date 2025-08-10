@@ -26,6 +26,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_FENCING_ACTION_LIMIT instead
 #define PCMK_STONITH_ACTION_LIMIT PCMK_FENCING_ACTION_LIMIT
 
+//! \deprecated Use \c PCMK_FENCING_DELAY_BASE instead
+#define PCMK_STONITH_DELAY_BASE PCMK_FENCING_DELAY_BASE
+
 #ifdef __cplusplus
 }
 #endif
