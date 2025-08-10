@@ -1040,7 +1040,7 @@ target_list_type(fenced_device_t *dev)
 {
     const char *check_type = NULL;
 
-    check_type = g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK);
+    check_type = g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_CHECK);
 
     if (check_type == NULL) {
 
@@ -1281,9 +1281,9 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
         /* Fall back to pcmk_host_check=PCMK_VALUE_STATUS if the user didn't
          * explicitly specify PCMK_VALUE_DYNAMIC_LIST
          */
-        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
+        if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_CHECK) == NULL) {
             crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
-            pcmk__insert_dup(dev->params, PCMK_STONITH_HOST_CHECK,
+            pcmk__insert_dup(dev->params, PCMK_FENCING_HOST_CHECK,
                              PCMK_VALUE_STATUS);
         }
     }
@@ -2195,8 +2195,9 @@ can_fence_host_with_device(fenced_device_t *dev,
         /* we'll respond to this search request async in the cb */
         return;
     } else {
-        crm_err("Invalid value for " PCMK_STONITH_HOST_CHECK ": %s", check_type);
-        check_type = "Invalid " PCMK_STONITH_HOST_CHECK;
+        crm_err("Invalid value for " PCMK_FENCING_HOST_CHECK ": %s",
+                check_type);
+        check_type = "Invalid " PCMK_FENCING_HOST_CHECK;
     }
 
   search_report_results:
