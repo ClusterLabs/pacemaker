@@ -20,7 +20,7 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.8-183.f4ad018372.git.fc39-f4ad018372"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="testcluster"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="3s"/>
       </cluster_property_set>
     </crm_config>

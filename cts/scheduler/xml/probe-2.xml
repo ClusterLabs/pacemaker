@@ -7,7 +7,7 @@
         <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="stop-removed-resources" name="stop-removed-resources" value="false"/>
         <nvpair id="stop-removed-actions" name="stop-removed-actions" value="true"/>
-        <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
       </cluster_property_set>
       <cluster_property_set id="cib-bootstrap-options">

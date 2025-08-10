@@ -5,7 +5,7 @@
         <nvpair id="nvpair.id21849" name="dc-version" value="0.6.2-node: 7f22385d1b41c36c4cc54f292e55869caa94ab7e"/>
         <nvpair name="no-quorum-policy" value="stop" id="nvpair.id21859"/>
         <nvpair name="symmetric-cluster" value="true" id="nvpair.id21868"/>
-        <nvpair name="stonith-enabled" value="true" id="nvpair.id21877"/>
+        <nvpair name="fencing-enabled" value="true" id="nvpair.id21877"/>
         <nvpair name="stonith-action" value="reboot" id="nvpair.id21886"/>
         <nvpair name="stop-removed-resources" value="true" id="nvpair.id21930"/>
         <nvpair name="stop-removed-actions" value="true" id="nvpair.id21939"/>

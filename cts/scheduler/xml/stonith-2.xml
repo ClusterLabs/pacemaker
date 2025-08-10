@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21848" name="start-failure-is-fatal" value="false"/>
-        <nvpair id="nvpair.id21857" name="stonith-enabled" value="1"/>
+        <nvpair id="nvpair.id21857" name="fencing-enabled" value="1"/>
         <nvpair id="nvpair.id21865" name="pe-input-series-max" value="30000"/>
         <nvpair id="nvpair.id21874" name="shutdown-escalation" value="5min"/>
         <nvpair id="nvpair.id21883" name="startup-fencing" value="false"/>

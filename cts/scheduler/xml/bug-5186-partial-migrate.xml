@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair name="no-quorum-policy" value="freeze" id="cib-bootstrap-options-no-quorum-policy"/>
-        <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="fencing-enabled" value="true" id="cib-bootstrap-options-fencing-enabled"/>
         <nvpair name="startup-fencing" value="false" id="cib-bootstrap-options-startup-fencing"/>
         <nvpair name="crmd-transition-delay" value="2s" id="cib-bootstrap-options-crmd-transition-delay"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.11-0.35.0b231c1.git.el6-0b231c1"/>

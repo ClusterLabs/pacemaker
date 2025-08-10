@@ -7,7 +7,7 @@
         <nvpair id="nvpair.id21885" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21894" name="stop-removed-resources" value="false"/>
         <nvpair id="nvpair.id21903" name="stop-removed-actions" value="true"/>
-        <nvpair id="nvpair.id21930" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21930" name="fencing-enabled" value="false"/>
         <nvpair id="nvpair.id21939" name="stonith-action" value="reboot"/>
       </cluster_property_set>
     </crm_config>

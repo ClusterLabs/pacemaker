@@ -5,7 +5,7 @@
         <nvpair id="nvpair.id2000001" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id2000006" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id2000007" name="startup-fencing" value="true"/>
-        <nvpair id="nvpair.id2000008" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id2000008" name="fencing-enabled" value="true"/>
         <nvpair id="nvpair.id2000009" name="stonith-timeout" value="70s"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.1-2ed0b0ebaf57 stable-1.0 tip"/>
       </cluster_property_set>
