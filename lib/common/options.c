@@ -591,7 +591,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "supports the status operation; otherwise \"none\""),
     },
     {
-        PCMK_STONITH_DELAY_MAX, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_FENCING_DELAY_MAX, NULL, PCMK_VALUE_DURATION, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a delay of no more than the time specified before executing "
