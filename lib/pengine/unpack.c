@@ -262,14 +262,14 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_FENCING_ENABLED,
                     pcmk__sched_fencing_enabled);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-        crm_debug("STONITH of failed nodes is enabled");
+        crm_debug("Fencing of failed nodes is enabled");
     } else {
-        crm_debug("STONITH of failed nodes is disabled");
+        crm_debug("Fencing of failed nodes is disabled");
     }
 
     scheduler->priv->fence_action =
         pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_ACTION);
-    crm_trace("STONITH will %s nodes", scheduler->priv->fence_action);
+    crm_trace("Fencing will %s nodes", scheduler->priv->fence_action);
 
     set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
                     pcmk__sched_concurrent_fencing);
@@ -879,10 +879,12 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)
                && !pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
 
-        pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
-        pcmk__config_err("Either configure some or disable STONITH with the "
-                         PCMK_OPT_FENCING_ENABLED " option");
-        pcmk__config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
+        pcmk__config_err("Resource start-up disabled since no fencing "
+                         "resources have been defined. Either configure some "
+                         "or disable fencing with the "
+                         PCMK_OPT_FENCING_ENABLED " option. NOTE: Clusters "
+                         "with shared data need fencing to ensure data "
+                         "integrity.");
     }
 
     return TRUE;
