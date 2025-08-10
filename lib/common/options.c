@@ -575,7 +575,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
            "\"static-list\", either this or pcmk_host_map must be set."),
     },
     {
-        PCMK_STONITH_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
+        PCMK_FENCING_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_DYNAMIC_LIST ", " PCMK_VALUE_STATIC_LIST ", "
             PCMK_VALUE_STATUS ", " PCMK_VALUE_NONE,
         NULL, NULL,
