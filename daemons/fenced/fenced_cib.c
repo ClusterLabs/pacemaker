@@ -339,7 +339,7 @@ watchdog_device_update(void)
                     st_namespace_internal,
                     STONITH_WATCHDOG_AGENT,
                     NULL, /* fenced_device_register() will add our
-                             own name as PCMK_STONITH_HOST_LIST param
+                             own name as PCMK_FENCING_HOST_LIST param
                              so we can skip that here
                            */
                     NULL);
