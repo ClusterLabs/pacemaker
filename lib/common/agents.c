@@ -170,8 +170,7 @@ pcmk_stonith_param(const char *param)
     if (param == NULL) {
         return false;
     }
-    if (pcmk__str_any_of(param, PCMK_FENCING_PROVIDES,
-                         PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
+    if (pcmk__str_eq(param, PCMK_FENCING_PROVIDES, pcmk__str_none)) {
         return true;
     }
     if (!g_str_has_prefix(param, "pcmk_")) { // Short-circuit common case
