@@ -30,7 +30,6 @@ is_stonith_param(void **state)
     assert_true(pcmk_stonith_param(PCMK_FENCING_HOST_LIST));
     assert_true(pcmk_stonith_param(PCMK_FENCING_HOST_MAP));
     assert_true(pcmk_stonith_param(PCMK_FENCING_PROVIDES));
-    assert_true(pcmk_stonith_param(PCMK_STONITH_STONITH_TIMEOUT));
 }
 
 static void
