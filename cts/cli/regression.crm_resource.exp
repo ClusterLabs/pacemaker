@@ -1398,7 +1398,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -L">
   <resources>
-    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" removed="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
   </resources>
   <status code="0" message="OK"/>
 </pacemaker-result>
@@ -1464,7 +1464,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -q -r dummy">
   <resource_config>
-    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" removed="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     <xml><![CDATA[<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
   <meta_attributes id="dummy-meta_attributes"/>
   <instance_attributes id="dummy-instance_attributes">
