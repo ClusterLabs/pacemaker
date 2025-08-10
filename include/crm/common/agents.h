@@ -41,7 +41,6 @@ extern "C" {
 #define PCMK_FENCING_HOST_CHECK         "pcmk_host_check"
 #define PCMK_FENCING_HOST_LIST          "pcmk_host_list"
 #define PCMK_FENCING_HOST_MAP           "pcmk_host_map"
-#define PCMK_STONITH_HOST_MAP           PCMK_FENCING_HOST_MAP
 #define PCMK_STONITH_PROVIDES           "provides"
 #define PCMK_STONITH_STONITH_TIMEOUT    "stonith-timeout"
 

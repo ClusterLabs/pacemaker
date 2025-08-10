@@ -41,6 +41,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_FENCING_HOST_LIST instead
 #define PCMK_STONITH_HOST_LIST PCMK_FENCING_HOST_LIST
 
+//! \deprecated Use \c PCMK_FENCING_HOST_MAP instead
+#define PCMK_STONITH_HOST_MAP PCMK_FENCING_HOST_MAP
+
 #ifdef __cplusplus
 }
 #endif
