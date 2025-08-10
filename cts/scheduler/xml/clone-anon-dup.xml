@@ -18,7 +18,7 @@
         <nvpair id="crmd-integration-timeout" name="crmd-integration-timeout" value="3min"/>
         <nvpair id="crmd-finalization-timeout" name="crmd-finalization-timeout" value="30min"/>
         <!-- even more options - set to defaults -->
-        <nvpair id="stonith-timeout" name="stonith-timeout" value="60s"/>
+        <nvpair id="fencing-timeout" name="fencing-timeout" value="60s"/>
         <nvpair id="startup-fencing" name="startup-fencing" value="true"/>
         <nvpair id="maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cluster-delay" name="cluster-delay" value="60s"/>
