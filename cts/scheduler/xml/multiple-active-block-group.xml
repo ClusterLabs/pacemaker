@@ -7,7 +7,7 @@
         <nvpair name="node-action-limit" value="2" id="cib-bootstrap-options-node-action-limit"/>
         <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
         <nvpair name="fencing-enabled" value="false" id="cib-bootstrap-options-fencing-enabled"/>
-        <nvpair name="stonith-timeout" value="90" id="cib-bootstrap-options-stonith-timeout"/>
+        <nvpair name="fencing-timeout" value="90" id="cib-bootstrap-options-fencing-timeout"/>
         <nvpair name="last-lrm-refresh" value="1439556204" id="cib-bootstrap-options-last-lrm-refresh"/>
       </cluster_property_set>
     </crm_config>

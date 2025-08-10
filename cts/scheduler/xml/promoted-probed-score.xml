@@ -67,7 +67,11 @@
       </primitive>
       <primitive class="stonith" description="How to shut down hypatia via its UPS" id="StonithHypatia" type="fence_nut">
         <instance_attributes id="StonithHypatia-instance_attributes">
+          <!--
+           Don't drop or rename to "fencing-timeout", as this causes restart
+           -->
           <nvpair id="StonithHypatia-instance_attributes-stonith-timeout" name="stonith-timeout" value="120s"/>
+
           <nvpair id="StonithHypatia-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
           <nvpair id="StonithHypatia-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="hypatia-corosync.nevis.columbia.edu"/>
           <nvpair id="StonithHypatia-instance_attributes-ups" name="ups" value="sofia-ups"/>
@@ -82,7 +86,11 @@
       </primitive>
       <primitive class="stonith" description="How to shut down orestes via its UPS" id="StonithOrestes" type="fence_nut">
         <instance_attributes id="StonithOrestes-instance_attributes">
+          <!--
+           Don't drop or rename to "fencing-timeout", as this causes restart
+           -->
           <nvpair id="StonithOrestes-instance_attributes-stonith-timeout" name="stonith-timeout" value="120s"/>
+
           <nvpair id="StonithOrestes-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
           <nvpair id="StonithOrestes-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="orestes-corosync.nevis.columbia.edu"/>
           <nvpair id="StonithOrestes-instance_attributes-ups" name="ups" value="dc-test-stand-ups"/>
