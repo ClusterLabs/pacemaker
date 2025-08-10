@@ -24,7 +24,7 @@ is_stonith_param(void **state)
 
     assert_true(pcmk_stonith_param(PCMK_FENCING_ACTION_LIMIT));
     assert_true(pcmk_stonith_param(PCMK_FENCING_DELAY_BASE));
-    assert_true(pcmk_stonith_param(PCMK_STONITH_DELAY_MAX));
+    assert_true(pcmk_stonith_param(PCMK_FENCING_DELAY_MAX));
     assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_ARGUMENT));
     assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_CHECK));
     assert_true(pcmk_stonith_param(PCMK_STONITH_HOST_LIST));
