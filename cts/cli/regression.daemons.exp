@@ -634,7 +634,7 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stop-orphan-resources">
+    <parameter name="stop-removed-resources">
       <longdesc lang="en">
         Whether to stop resources that were removed from the configuration
       </longdesc>
@@ -643,7 +643,7 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stop-orphan-actions">
+    <parameter name="stop-removed-actions">
       <longdesc lang="en">
         Whether to cancel recurring actions removed from the configuration
       </longdesc>

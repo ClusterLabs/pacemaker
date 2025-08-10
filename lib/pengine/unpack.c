@@ -355,20 +355,20 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             break;
     }
 
-    set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_RESOURCES,
+    set_config_flag(scheduler, PCMK_OPT_STOP_REMOVED_RESOURCES,
                     pcmk__sched_stop_removed_resources);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
-        crm_trace("Orphan resources are stopped");
+        crm_trace("Removed resources are stopped");
     } else {
-        crm_trace("Orphan resources are ignored");
+        crm_trace("Removed resources are ignored");
     }
 
-    set_config_flag(scheduler, PCMK_OPT_STOP_ORPHAN_ACTIONS,
+    set_config_flag(scheduler, PCMK_OPT_STOP_REMOVED_ACTIONS,
                     pcmk__sched_cancel_removed_actions);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_cancel_removed_actions)) {
-        crm_trace("Orphan resource actions are stopped");
+        crm_trace("Removed resource actions are stopped");
     } else {
-        crm_trace("Orphan resource actions are ignored");
+        crm_trace("Removed resource actions are ignored");
     }
 
     set_config_flag(scheduler, PCMK_OPT_MAINTENANCE_MODE,
@@ -1995,7 +1995,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
 
     pcmk__xe_copy_attrs(xml_rsc, rsc_entry, pcmk__xaf_none);
     crm_xml_add(xml_rsc, PCMK_XA_ID, rsc_id);
-    crm_log_xml_debug(xml_rsc, "Orphan resource");
+    crm_log_xml_debug(xml_rsc, "Removed resource");
 
     if (pe__unpack_resource(xml_rsc, &rsc, NULL, scheduler) != pcmk_rc_ok) {
         return NULL;
@@ -2004,7 +2004,7 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
     if (xml_contains_remote_node(xml_rsc)) {
         pcmk_node_t *node;
 
-        crm_debug("Detected orphaned remote node %s", rsc_id);
+        crm_debug("Detected removed remote node %s", rsc_id);
         node = pcmk_find_node(scheduler, rsc_id);
         if (node == NULL) {
             node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, 0,
@@ -2013,7 +2013,8 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         link_rsc2remotenode(scheduler, rsc);
 
         if (node) {
-            crm_trace("Setting node %s as shutting down due to orphaned connection resource", rsc_id);
+            crm_trace("Setting node %s as shutting down due to removed "
+                      "connection resource", rsc_id);
             node->details->shutdown = TRUE;
         }
     }
@@ -2031,29 +2032,30 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
 
 /*!
  * \internal
- * \brief Create orphan instance for anonymous clone resource history
+ * \brief Create "removed" instance for anonymous clone resource history
  *
- * \param[in,out] parent     Clone resource that orphan will be added to
- * \param[in]     rsc_id     Orphan's resource ID
- * \param[in]     node       Where orphan is active (for logging only)
+ * \param[in,out] parent     Clone resource that instance will be added to
+ * \param[in]     rsc_id     Instance's resource ID
+ * \param[in]     node       Where instance is active (for logging only)
  * \param[in,out] scheduler  Scheduler data
  *
- * \return Newly added orphaned instance of \p parent
+ * \return Newly created "removed" instance of \p parent
  */
 static pcmk_resource_t *
-create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
-                        const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
+create_anonymous_removed_instance(pcmk_resource_t *parent, const char *rsc_id,
+                                  const pcmk_node_t *node,
+                                  pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *top = pe__create_clone_child(parent, scheduler);
-    pcmk_resource_t *orphan = NULL;
+    pcmk_resource_t *instance = NULL;
 
     // find_rsc() because we might be a cloned group
-    orphan = top->priv->fns->find_rsc(top, rsc_id, NULL,
-                                      pcmk_rsc_match_clone_only);
+    instance = top->priv->fns->find_rsc(top, rsc_id, NULL,
+                                        pcmk_rsc_match_clone_only);
 
-    pcmk__rsc_debug(parent, "Created orphan %s for %s: %s on %s",
+    pcmk__rsc_debug(parent, "Created \"removed\" instance %s for %s: %s on %s",
                     top->id, parent->id, rsc_id, pcmk__node_name(node));
-    return orphan;
+    return instance;
 }
 
 /*!
@@ -2063,8 +2065,8 @@ create_anonymous_orphan(pcmk_resource_t *parent, const char *rsc_id,
  * Return a child instance of the specified anonymous clone, in order of
  * preference: (1) the instance running on the specified node, if any;
  * (2) an inactive instance (i.e. within the total of \c PCMK_META_CLONE_MAX
- * instances); (3) a newly created orphan (that is, \c PCMK_META_CLONE_MAX
- * instances are already active).
+ * instances); (3) a newly created "removed" instance (that is,
+ * \c PCMK_META_CLONE_MAX instances are already active).
  *
  * \param[in,out] scheduler  Scheduler data
  * \param[in]     node       Node on which to check for instance
@@ -2122,7 +2124,8 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                  * instead of child because child may be a cloned group, and we
                  * need the particular member corresponding to rsc_id.
                  *
-                 * If the history entry is orphaned, rsc will be NULL.
+                 * If the history entry represents a removed instance, rsc will
+                 * be NULL.
                  */
                 rsc = parent->priv->fns->find_rsc(child, rsc_id, NULL,
                                                   pcmk_rsc_match_clone_only);
@@ -2131,12 +2134,13 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
                      * anonymous clone in a single node's history (which can
                      * happen if PCMK_META_GLOBALLY_UNIQUE is switched from true
                      * to false), we want to consider the instances beyond the
-                     * first as orphans, even if there are inactive instance
+                     * first as removed, even if there are inactive instance
                      * numbers available.
                      */
                     if (rsc->priv->active_nodes != NULL) {
                         crm_notice("Active (now-)anonymous clone %s has "
-                                   "multiple (orphan) instance histories on %s",
+                                   "multiple \"removed\" instance histories on "
+                                   "%s",
                                    parent->id, pcmk__node_name(node));
                         skip_inactive = TRUE;
                         rsc = NULL;
@@ -2183,7 +2187,7 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
      * don't want to consume a valid instance number for unclean nodes. Such
      * instances may appear to be active according to the history, but should be
      * considered inactive, so we can start an instance elsewhere. Treat such
-     * instances as orphans.
+     * instances as removed.
      *
      * An exception is instances running on guest nodes -- since guest node
      * "fencing" is actually just a resource stop, requires shouldn't apply.
@@ -2200,8 +2204,9 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     }
 
     if (rsc == NULL) {
-        rsc = create_anonymous_orphan(parent, rsc_id, node, scheduler);
-        pcmk__rsc_trace(parent, "Resource %s, orphan", rsc->id);
+        rsc = create_anonymous_removed_instance(parent, rsc_id, node,
+                                                scheduler);
+        pcmk__rsc_trace(parent, "Resource %s, removed", rsc->id);
     }
     return rsc;
 }
@@ -2219,7 +2224,7 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     if (rsc == NULL) {
         /* If we didn't find the resource by its name in the operation history,
          * check it again as a clone instance. Even when PCMK_META_CLONE_MAX=0,
-         * we create a single :0 orphan to match against here.
+         * we create a single :0 "removed" instance to match against here.
          */
         char *clone0_id = clone_zero(rsc_id);
         pcmk_resource_t *clone0 = pe_find_resource(scheduler->priv->resources,
@@ -2230,13 +2235,13 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
             parent = uber_parent(clone0);
             crm_trace("%s found as %s (%s)", rsc_id, clone0_id, parent->id);
         } else {
-            crm_trace("%s is not known as %s either (orphan)",
+            crm_trace("%s is not known as %s either (removed)",
                       rsc_id, clone0_id);
         }
         free(clone0_id);
 
     } else if (rsc->priv->variant > pcmk__rsc_variant_primitive) {
-        crm_trace("Resource history for %s is orphaned "
+        crm_trace("Resource history for %s is considered removed "
                   "because it is no longer primitive", rsc_id);
         return NULL;
 
@@ -2260,22 +2265,24 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     if (rsc && !pcmk__str_eq(rsc_id, rsc->id, pcmk__str_none)
         && !pcmk__str_eq(rsc_id, rsc->priv->history_id, pcmk__str_none)) {
 
+        const bool removed = pcmk_is_set(rsc->flags, pcmk__rsc_removed);
+
         pcmk__str_update(&(rsc->priv->history_id), rsc_id);
         pcmk__rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
                         rsc_id, pcmk__node_name(node), rsc->id,
-                        pcmk_is_set(rsc->flags, pcmk__rsc_removed)? " (ORPHAN)" : "");
+                        (removed? " (removed)" : ""));
     }
     return rsc;
 }
 
 static pcmk_resource_t *
-process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
+process_removed_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
                         pcmk_scheduler_t *scheduler)
 {
     pcmk_resource_t *rsc = NULL;
     const char *rsc_id = pcmk__xe_get(rsc_entry, PCMK_XA_ID);
 
-    crm_debug("Detected orphan resource %s on %s",
+    crm_debug("Detected removed resource %s on %s",
               rsc_id, pcmk__node_name(node));
     rsc = create_fake_resource(rsc_id, rsc_entry, scheduler);
     if (rsc == NULL) {
@@ -2287,9 +2294,9 @@ process_orphan_resource(const xmlNode *rsc_entry, const pcmk_node_t *node,
 
     } else {
         CRM_CHECK(rsc != NULL, return NULL);
-        pcmk__rsc_trace(rsc, "Added orphan %s", rsc->id);
+        pcmk__rsc_trace(rsc, "Added \"removed\" resource %s", rsc->id);
         resource_location(rsc, NULL, -PCMK_SCORE_INFINITY,
-                          "__orphan_do_not_run__", scheduler);
+                          "__removed_do_not_run__", scheduler);
     }
     return rsc;
 }
@@ -2514,7 +2521,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                            rsc->id, pcmk__node_name(node));
             } else {
                 crm_notice("Removed resource %s must be stopped manually on %s "
-                           "because " PCMK_OPT_STOP_ORPHAN_RESOURCES
+                           "because " PCMK_OPT_STOP_REMOVED_RESOURCES
                            " is set to false", rsc->id, pcmk__node_name(node));
             }
         }
@@ -2537,7 +2544,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     } else if ((rsc->priv->history_id != NULL)
                && (strchr(rsc->priv->history_id, ':') != NULL)) {
         /* @COMPAT This is for older (<1.1.8) status sections that included
-         * instance numbers, otherwise stopped instances are considered orphans.
+         * instance numbers, otherwise stopped instances are considered removed.
          *
          * @TODO We should be able to drop this, but some old regression tests
          * will need to be updated. Double-check that this is not still needed
@@ -2780,7 +2787,7 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
             // If there are no operations, there is nothing to do
             return NULL;
         } else {
-            rsc = process_orphan_resource(lrm_resource, node, scheduler);
+            rsc = process_removed_resource(lrm_resource, node, scheduler);
         }
     }
     pcmk__assert(rsc != NULL);

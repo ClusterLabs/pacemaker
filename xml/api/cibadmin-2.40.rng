@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+
+    <start>
+        <ref name="element-cibadmin" />
+    </start>
+
+    <!--
+     Some cibadmin commands produce no output. This is already allowed by the
+     api-result schema, however.
+     -->
+    <define name="element-cibadmin">
+        <choice>
+            <ref name="element-md5-sum" />
+            <ref name="element-output" />
+        </choice>
+    </define>
+
+    <!-- For both md5-sum and md5-sum-versioned -->
+    <define name="element-md5-sum">
+        <element name="md5-sum">
+            <attribute name="digest">
+                <text/>
+            </attribute>
+        </element>
+    </define>
+
+    <define name="element-output">
+        <element name="output">
+            <!--
+             CDATA block containing output from the CIB API. This is serialized
+             XML, except in the case of queries with show-access set to a value
+             other than "namespace".
+             -->
+            <text/>
+        </element>
+    </define>
+</grammar>

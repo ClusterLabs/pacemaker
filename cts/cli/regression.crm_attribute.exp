@@ -118,10 +118,10 @@ Also known as properties, these are options that affect behavior across the enti
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
 
-  * stop-orphan-resources: Whether to stop resources that were removed from the configuration
+  * stop-removed-resources: Whether to stop resources that were removed from the configuration
     * Possible values: boolean (default: )
 
-  * stop-orphan-actions: Whether to cancel recurring actions removed from the configuration
+  * stop-removed-actions: Whether to cancel recurring actions removed from the configuration
     * Possible values: boolean (default: )
 
   * pe-error-series-max: The number of scheduler inputs resulting in errors to save
@@ -366,12 +366,12 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Whether the cluster should stop all active resources</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stop-orphan-resources" advanced="0" generated="0">
+      <parameter name="stop-removed-resources" advanced="0" generated="0">
         <longdesc lang="en">Whether to stop resources that were removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to stop resources that were removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stop-orphan-actions" advanced="0" generated="0">
+      <parameter name="stop-removed-actions" advanced="0" generated="0">
         <longdesc lang="en">Whether to cancel recurring actions removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to cancel recurring actions removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
@@ -544,10 +544,10 @@ Also known as properties, these are options that affect behavior across the enti
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
 
-  * stop-orphan-resources: Whether to stop resources that were removed from the configuration
+  * stop-removed-resources: Whether to stop resources that were removed from the configuration
     * Possible values: boolean (default: )
 
-  * stop-orphan-actions: Whether to cancel recurring actions removed from the configuration
+  * stop-removed-actions: Whether to cancel recurring actions removed from the configuration
     * Possible values: boolean (default: )
 
   * pe-error-series-max: The number of scheduler inputs resulting in errors to save
@@ -827,12 +827,12 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Whether the cluster should stop all active resources</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stop-orphan-resources" advanced="0" generated="0">
+      <parameter name="stop-removed-resources" advanced="0" generated="0">
         <longdesc lang="en">Whether to stop resources that were removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to stop resources that were removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stop-orphan-actions" advanced="0" generated="0">
+      <parameter name="stop-removed-actions" advanced="0" generated="0">
         <longdesc lang="en">Whether to cancel recurring actions removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to cancel recurring actions removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
