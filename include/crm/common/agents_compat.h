@@ -32,6 +32,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_FENCING_DELAY_MAX instead
 #define PCMK_STONITH_DELAY_MAX PCMK_FENCING_DELAY_MAX
 
+//! \deprecated Use \c PCMK_FENCING_HOST_ARGUMENT instead
+#define PCMK_STONITH_HOST_ARGUMENT PCMK_FENCING_HOST_ARGUMENT
+
 #ifdef __cplusplus
 }
 #endif
