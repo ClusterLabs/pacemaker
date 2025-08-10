@@ -38,6 +38,9 @@ extern "C" {
 //! \deprecated Use \c PCMK_FENCING_HOST_CHECK instead
 #define PCMK_STONITH_HOST_CHECK PCMK_FENCING_HOST_CHECK
 
+//! \deprecated Use \c PCMK_FENCING_HOST_LIST instead
+#define PCMK_STONITH_HOST_LIST PCMK_FENCING_HOST_LIST
+
 #ifdef __cplusplus
 }
 #endif
