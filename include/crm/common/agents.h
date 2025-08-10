@@ -35,7 +35,8 @@ extern "C" {
  * (not including the pcmk_ACTION_{action,retries,timeout} parameters)
  */
 #define PCMK_FENCING_ACTION_LIMIT       "pcmk_action_limit"
-#define PCMK_STONITH_DELAY_BASE         "pcmk_delay_base"
+#define PCMK_FENCING_DELAY_BASE         "pcmk_delay_base"
+#define PCMK_STONITH_DELAY_BASE         PCMK_FENCING_DELAY_BASE
 #define PCMK_STONITH_DELAY_MAX          "pcmk_delay_max"
 #define PCMK_STONITH_HOST_ARGUMENT      "pcmk_host_argument"
 #define PCMK_STONITH_HOST_CHECK         "pcmk_host_check"
