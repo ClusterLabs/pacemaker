@@ -1022,7 +1022,7 @@ controld_valid_fencing_watchdog_timeout(const char *value)
         || (stonith_api && (stonith_api->state != stonith_disconnected) &&
             stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
                                                            our_nodename))) {
-        return pcmk__valid_stonith_watchdog_timeout(value);
+        return pcmk__valid_fencing_watchdog_timeout(value);
     }
     return true;
 }

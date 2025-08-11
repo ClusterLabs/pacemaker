@@ -153,7 +153,7 @@ handle_check_request(pcmk__request_t *request)
     /* FIXME: This just exits on certain conditions, which seems like a pretty
      * extreme reaction for a daemon to take.
      */
-    pcmk__valid_stonith_watchdog_timeout(timeout);
+    pcmk__valid_fencing_watchdog_timeout(timeout);
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
