@@ -15,8 +15,7 @@
 
 #include <pacemaker-controld.h>
 
-static void
-tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event);
+static void fencing_history_synced(stonith_t *st, stonith_event_t *st_event);
 
 #define DEFAULT_FENCING_MAX_ATTEMPTS 10
 
@@ -701,7 +700,7 @@ controld_timer_fencer_connect(gpointer user_data)
                                     handle_fence_notification);
         cmds->register_notification(fencer_api,
                                     PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
-                                    tengine_stonith_history_synced);
+                                    fencing_history_synced);
         controld_trigger_fencing_history_sync(true);
         crm_notice("Fencer successfully connected");
     }
@@ -1028,10 +1027,10 @@ controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
 }
 
 static void
-tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event)
+fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 {
     controld_cleanup_fencing_history_sync(st, false);
-    crm_debug("Fence-history synced - cancel all timers");
+    crm_debug("Fencing history synced - cancel all timers");
 }
 
 static gboolean
