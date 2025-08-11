@@ -81,12 +81,7 @@ void client_disconnect_cleanup(const char *client_id);
  */
 stonith_t *execd_get_fencer_connection(void);
 
-/*!
- * \brief This is a callback that tells the lrmd
- * the current stonith connection has gone away. This allows
- * us to timeout any pending stonith commands
- */
-void stonith_connection_failed(void);
+void execd_fencer_connection_failed(void);
 
 #ifdef PCMK__COMPILE_REMOTE
 void ipc_proxy_init(void);
