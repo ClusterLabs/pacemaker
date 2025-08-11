@@ -1188,14 +1188,14 @@ stonith_connection_failed(void)
  * Start a stonith resource by registering it with the fencer.
  * (Stonith agents don't have a start command.)
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in]     rsc          Stonith resource to start
- * \param[in]     cmd          Start command to execute
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in]     rsc         Stonith resource to start
+ * \param[in]     cmd         Start command to execute
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static int
-execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
+execd_stonith_start(stonith_t *fencer_api, const lrmd_rsc_t *rsc,
                     const lrmd_cmd_t *cmd)
 {
     char *key = NULL;
@@ -1219,9 +1219,9 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
      * resource, the executor registers the device as well. The fencer knows how
      * to handle duplicate registrations.
      */
-    rc = stonith_api->cmds->register_device(stonith_api, st_opt_sync_call,
-                                            cmd->rsc_id, rsc->provider,
-                                            rsc->type, device_params);
+    rc = fencer_api->cmds->register_device(fencer_api, st_opt_sync_call,
+                                           cmd->rsc_id, rsc->provider,
+                                           rsc->type, device_params);
 
     stonith__key_value_freeall(device_params, true, true);
     return rc;
@@ -1234,40 +1234,40 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
  * Stop a stonith resource by unregistering it with the fencer.
  * (Stonith agents don't have a stop command.)
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in]     rsc          Stonith resource to stop
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in]     rsc         Stonith resource to stop
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static inline int
-execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
+execd_stonith_stop(stonith_t *fencer_api, const lrmd_rsc_t *rsc)
 {
     /* @TODO Failure would indicate a problem communicating with fencer;
      * perhaps we should try reconnecting and retrying a few times?
      */
-    return stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call,
-                                            rsc->rsc_id);
+    return fencer_api->cmds->remove_device(fencer_api, st_opt_sync_call,
+                                           rsc->rsc_id);
 }
 
 /*!
  * \internal
  * \brief Initiate a stonith resource agent recurring "monitor" action
  *
- * \param[in,out] stonith_api  Connection to fencer
+ * \param[in,out] fencer_api  Connection to fencer
  * \param[in,out] rsc          Stonith resource to monitor
  * \param[in]     cmd          Monitor command being executed
  *
  * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
  */
 static inline int
-execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+execd_stonith_monitor(stonith_t *fencer_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
-    int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
-                                        pcmk__timeout_ms2s(cmd->timeout));
+    int rc = fencer_api->cmds->monitor(fencer_api, 0, cmd->rsc_id,
+                                       pcmk__timeout_ms2s(cmd->timeout));
 
-    rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
-                                              "lrmd_stonith_callback",
-                                              lrmd_stonith_callback);
+    rc = fencer_api->cmds->register_callback(fencer_api, rc, 0, 0, cmd,
+                                             "lrmd_stonith_callback",
+                                             lrmd_stonith_callback);
     if (rc == TRUE) {
         rsc->active = cmd;
         rc = pcmk_ok;
@@ -1285,7 +1285,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     bool do_monitor = false;
 
     // Don't free; belongs to pacemaker-execd.c
-    stonith_t *stonith_api = get_stonith_connection();
+    stonith_t *fencer_api = get_stonith_connection();
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
         && (cmd->interval_ms == 0)) {
@@ -1296,7 +1296,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
         return;
     }
 
-    if (stonith_api == NULL) {
+    if (fencer_api == NULL) {
         stonith_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
                                 PCMK_EXEC_NOT_CONNECTED,
                                 "No connection to fencer");
@@ -1304,13 +1304,13 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     }
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
-        rc = execd_stonith_start(stonith_api, rsc, cmd);
+        rc = execd_stonith_start(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             do_monitor = true;
         }
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        rc = execd_stonith_stop(stonith_api, rsc);
+        rc = execd_stonith_stop(fencer_api, rsc);
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
                             pcmk__str_casei)) {
@@ -1324,7 +1324,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     }
 
     if (do_monitor) {
-        rc = execd_stonith_monitor(stonith_api, rsc, cmd);
+        rc = execd_stonith_monitor(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             // Don't clean up yet. We will get the result of the monitor later.
             return;
