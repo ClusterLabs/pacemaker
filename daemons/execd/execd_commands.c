@@ -1285,7 +1285,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     bool do_monitor = false;
 
     // Don't free; belongs to pacemaker-execd.c
-    stonith_t *fencer_api = get_stonith_connection();
+    stonith_t *fencer_api = execd_get_fencer_connection();
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
         && (cmd->interval_ms == 0)) {
