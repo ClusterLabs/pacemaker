@@ -260,7 +260,7 @@ pcmk__get_sbd_sync_resource_startup(void)
 
 // 0 <= return value <= min(LONG_MAX, (2 * SBD timeout))
 long
-pcmk__auto_stonith_watchdog_timeout(void)
+pcmk__auto_fencing_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
     long long st_timeout = 2 * (long long) sbd_timeout;
@@ -282,7 +282,7 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
     }
 
     if (st_timeout < 0) {
-        st_timeout = pcmk__auto_stonith_watchdog_timeout();
+        st_timeout = pcmk__auto_fencing_watchdog_timeout();
 
         // At this point, 0 <= sbd_timeout <= st_timeout
         crm_debug("Using calculated value %lld for "

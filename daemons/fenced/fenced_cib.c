@@ -169,7 +169,7 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
     rc = pcmk__parse_ms(value, &stonith_watchdog_timeout_ms);
 
     if ((rc != pcmk_rc_ok) || (stonith_watchdog_timeout_ms < 0)) {
-        stonith_watchdog_timeout_ms = pcmk__auto_stonith_watchdog_timeout();
+        stonith_watchdog_timeout_ms = pcmk__auto_fencing_watchdog_timeout();
     }
 }
 
