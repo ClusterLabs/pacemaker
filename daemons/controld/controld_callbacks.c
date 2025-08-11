@@ -170,7 +170,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             if (pcmk__str_eq(PCMK_VALUE_MEMBER, node->state, pcmk__str_none)) {
                 appeared = TRUE;
                 if (!is_remote) {
-                    remove_stonith_cleanup(node->name);
+                    controld_remove_fencing_cleanup(node->name);
                 }
             } else {
                 controld_remove_failed_sync_node(node->name);

@@ -210,7 +210,7 @@ do_dc_takeover(long long action,
 
     crm_info("Taking over DC status for this partition");
     controld_set_fsa_input_flags(R_THE_DC);
-    execute_stonith_cleanup();
+    controld_execute_fencing_cleanup();
 
     election_reset(controld_globals.cluster);
     controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);

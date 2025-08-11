@@ -294,37 +294,38 @@ abort_for_stonith_failure(enum pcmk__graph_next abort_action,
 
 
 /*
- * stonith cleanup list
+ * Fencing cleanup list
  *
- * If the DC is shot, proper notifications might not go out.
- * The stonith cleanup list allows the cluster to (re-)send
- * notifications once a new DC is elected.
+ * If the DC is fenced, proper notifications might not go out. The fencing
+ * cleanup list allows the cluster to (re-)send notifications once a new DC is
+ * elected.
  */
 
-static GList *stonith_cleanup_list = NULL;
+static GList *fencing_cleanup_list = NULL;
 
 /*!
  * \internal
- * \brief Add a node to the stonith cleanup list
+ * \brief Add a node to the fencing cleanup list
  *
  * \param[in] target  Name of node to add
  */
-void
-add_stonith_cleanup(const char *target) {
-    stonith_cleanup_list = g_list_append(stonith_cleanup_list,
+static void
+add_fencing_cleanup(const char *target)
+{
+    fencing_cleanup_list = g_list_append(fencing_cleanup_list,
                                          pcmk__str_copy(target));
 }
 
 /*!
  * \internal
- * \brief Remove a node from the stonith cleanup list
+ * \brief Remove a node from the fencing cleanup list
  *
  * \param[in] Name of node to remove
  */
 void
-remove_stonith_cleanup(const char *target)
+controld_remove_fencing_cleanup(const char *target)
 {
-    GList *iter = stonith_cleanup_list;
+    GList *iter = fencing_cleanup_list;
 
     while (iter != NULL) {
         GList *tmp = iter;
@@ -333,7 +334,8 @@ remove_stonith_cleanup(const char *target)
         iter = iter->next;
         if (pcmk__str_eq(target, iter_name, pcmk__str_casei)) {
             crm_trace("Removing %s from the cleanup list", iter_name);
-            stonith_cleanup_list = g_list_delete_link(stonith_cleanup_list, tmp);
+            fencing_cleanup_list = g_list_delete_link(fencing_cleanup_list,
+                                                      tmp);
             free(iter_name);
         }
     }
@@ -341,49 +343,43 @@ remove_stonith_cleanup(const char *target)
 
 /*!
  * \internal
- * \brief Purge all entries from the stonith cleanup list
+ * \brief Purge all entries from the fencing cleanup list
  */
 void
-purge_stonith_cleanup(void)
+controld_purge_fencing_cleanup(void)
 {
-    if (stonith_cleanup_list) {
-        GList *iter = NULL;
+    for (GList *iter = fencing_cleanup_list; iter != NULL; iter = iter->next) {
+        char *target = iter->data;
 
-        for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
-            char *target = iter->data;
-
-            crm_info("Purging %s from stonith cleanup list", target);
-            free(target);
-        }
-        g_list_free(stonith_cleanup_list);
-        stonith_cleanup_list = NULL;
+        crm_info("Purging %s from fencing cleanup list", target);
+        free(target);
     }
+    g_list_free(fencing_cleanup_list);
+    fencing_cleanup_list = NULL;
 }
 
 /*!
  * \internal
- * \brief Send stonith updates for all entries in cleanup list, then purge it
+ * \brief Send fencing updates for all entries in cleanup list, then purge it
  */
 void
-execute_stonith_cleanup(void)
+controld_execute_fencing_cleanup(void)
 {
-    GList *iter;
-
-    for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
+    for (GList *iter = fencing_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
         pcmk__node_status_t *target_node =
             pcmk__get_node(0, target, NULL, pcmk__node_search_cluster_member);
         const char *uuid = pcmk__cluster_get_xml_id(target_node);
 
-        crm_notice("Marking %s, target of a previous stonith action, as clean", target);
+        crm_notice("Marking %s, target of a previous fencing action, as clean", target);
         update_node_state_after_fencing(target, uuid);
         free(target);
     }
-    g_list_free(stonith_cleanup_list);
-    stonith_cleanup_list = NULL;
+    g_list_free(fencing_cleanup_list);
+    fencing_cleanup_list = NULL;
 }
 
-/* end stonith cleanup list functions */
+/* end fencing cleanup list functions */
 
 
 /* stonith API client
@@ -630,7 +626,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
             if (controld_is_local_node(event->executioner)) {
                 update_node_state_after_fencing(event->target, uuid);
             }
-            add_stonith_cleanup(event->target);
+            add_fencing_cleanup(event->target);
         }
 
         /* If the target is a remote node, and we host its connection,

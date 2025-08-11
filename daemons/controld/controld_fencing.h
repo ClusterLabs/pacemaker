@@ -25,11 +25,10 @@ int controld_execute_fence_action(pcmk__graph_t *graph,
                                   pcmk__graph_action_t *action);
 void controld_validate_fencing_watchdog_timeout(const char *value);
 
-// stonith cleanup list
-void add_stonith_cleanup(const char *target);
-void remove_stonith_cleanup(const char *target);
-void purge_stonith_cleanup(void);
-void execute_stonith_cleanup(void);
+// Fencing cleanup list
+void controld_remove_fencing_cleanup(const char *target);
+void controld_purge_fencing_cleanup(void);
+void controld_execute_fencing_cleanup(void);
 
 // stonith history synchronization
 void te_trigger_stonith_history_sync(bool long_timeout);

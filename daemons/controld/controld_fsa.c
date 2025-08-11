@@ -637,7 +637,7 @@ do_state_transition(enum crmd_fsa_state cur_state,
 
         case S_NOT_DC:
             controld_reset_counter_election_timer();
-            purge_stonith_cleanup();
+            controld_purge_fencing_cleanup();
 
             if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we have a new DC");
