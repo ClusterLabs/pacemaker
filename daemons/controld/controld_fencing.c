@@ -33,7 +33,7 @@ struct st_fail_rec {
 #define DEFAULT_FENCING_MAX_ATTEMPTS 10
 
 static bool fence_reaction_panic = false;
-static unsigned long int stonith_max_attempts = DEFAULT_FENCING_MAX_ATTEMPTS;
+static unsigned long int fencing_max_attempts = DEFAULT_FENCING_MAX_ATTEMPTS;
 static GHashTable *stonith_failures = NULL;
 
 /*!
@@ -43,7 +43,7 @@ static GHashTable *stonith_failures = NULL;
  * \param[in] value  New max fencing attempts
  */
 static void
-update_stonith_max_attempts(const char *value)
+update_fencing_max_attempts(const char *value)
 {
     int score = 0;
     int rc = pcmk_parse_score(value, &score, DEFAULT_FENCING_MAX_ATTEMPTS);
@@ -51,11 +51,11 @@ update_stonith_max_attempts(const char *value)
     // The option validator ensures invalid values shouldn't be possible
     CRM_CHECK((rc == pcmk_rc_ok) && (score > 0), return);
 
-    if (stonith_max_attempts != score) {
+    if (fencing_max_attempts != score) {
         crm_debug("Maximum fencing attempts per transition is now %d (was %lu)",
-                  score, stonith_max_attempts);
+                  score, fencing_max_attempts);
     }
-    stonith_max_attempts = score;
+    fencing_max_attempts = score;
 }
 
 /*!
@@ -94,7 +94,7 @@ controld_configure_fencing(GHashTable *options)
     set_fence_reaction(value);
 
     value = g_hash_table_lookup(options, PCMK_OPT_FENCING_MAX_ATTEMPTS);
-    update_stonith_max_attempts(value);
+    update_fencing_max_attempts(value);
 }
 
 static gboolean
@@ -113,14 +113,14 @@ too_many_st_failures(const char *target)
         while (g_hash_table_iter_next(&iter, (gpointer *) &key,
                (gpointer *) &value)) {
 
-            if (value->count >= stonith_max_attempts) {
+            if (value->count >= fencing_max_attempts) {
                 target = (const char*)key;
                 goto too_many;
             }
         }
     } else {
         value = g_hash_table_lookup(stonith_failures, target);
-        if ((value != NULL) && (value->count >= stonith_max_attempts)) {
+        if ((value != NULL) && (value->count >= fencing_max_attempts)) {
             goto too_many;
         }
     }
