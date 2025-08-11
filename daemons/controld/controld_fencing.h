@@ -30,8 +30,8 @@ void controld_remove_fencing_cleanup(const char *target);
 void controld_purge_fencing_cleanup(void);
 void controld_execute_fencing_cleanup(void);
 
-// stonith history synchronization
-void te_trigger_stonith_history_sync(bool long_timeout);
+// Fencing history synchronization
+void controld_trigger_fencing_history_sync(bool long_timeout);
 void te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers);
 
 #endif
