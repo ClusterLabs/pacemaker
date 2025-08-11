@@ -1169,27 +1169,27 @@ execd_fencer_connection_failed(void)
 
 /*!
  * \internal
- * \brief Execute a stonith resource "start" action
+ * \brief Execute a fencing resource "start" action
  *
- * Start a stonith resource by registering it with the fencer.
- * (Stonith agents don't have a start command.)
+ * Start a fencing resource by registering it with the fencer. (Fencing agents
+ * don't have a start command.)
  *
  * \param[in,out] fencer_api  Connection to fencer
- * \param[in]     rsc         Stonith resource to start
+ * \param[in]     rsc         Fencing resource to start
  * \param[in]     cmd         Start command to execute
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static int
-execd_stonith_start(stonith_t *fencer_api, const lrmd_rsc_t *rsc,
-                    const lrmd_cmd_t *cmd)
+start_fencing_rsc(stonith_t *fencer_api, const lrmd_rsc_t *rsc,
+                  const lrmd_cmd_t *cmd)
 {
     char *key = NULL;
     char *value = NULL;
     stonith_key_value_t *device_params = NULL;
     int rc = pcmk_ok;
 
-    // Convert command parameters to stonith API key/values
+    // Convert command parameters to fencer API key/values
     if (cmd->params) {
         GHashTableIter iter;
 
@@ -1304,7 +1304,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     }
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
-        rc = execd_stonith_start(fencer_api, rsc, cmd);
+        rc = start_fencing_rsc(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             do_monitor = true;
         }
