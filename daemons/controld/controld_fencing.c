@@ -126,12 +126,12 @@ too_many:
 
 /*!
  * \internal
- * \brief Reset a stonith fail count
+ * \brief Reset the count of failed fencing operations for a node
  *
- * \param[in] target  Name of node to reset, or NULL for all
+ * \param[in] target  Name of node whose count to reset, or \c NULL to reset all
  */
 void
-st_fail_count_reset(const char *target)
+controld_reset_fencing_fail_count(const char *target)
 {
     if (fencing_fail_counts == NULL) {
         return;
@@ -536,7 +536,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
      */
     if (!AM_I_DC) {
         if (succeeded) {
-            st_fail_count_reset(event->target);
+            controld_reset_fencing_fail_count(event->target);
         } else {
             st_fail_count_increment(event->target);
         }
@@ -857,7 +857,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                                              pcmk__graph_action_sent_update);
             }
         }
-        st_fail_count_reset(target);
+        controld_reset_fencing_fail_count(target);
 
     } else {
         enum pcmk__graph_next abort_action = pcmk__graph_restart;
