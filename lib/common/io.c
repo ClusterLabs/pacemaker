@@ -201,8 +201,6 @@ pcmk__write_series_sequence(const char *directory, const char *series,
 
         if (rc < 0) {
             crm_err("Cannot write to series file %s", series_file);
-        } else {
-            crm_trace("Wrote %d to %s", sequence, series_file);
         }
         fflush(file_strm);
         fclose(file_strm);

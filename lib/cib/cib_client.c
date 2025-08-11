@@ -467,10 +467,11 @@ get_shadow_file(const char *suffix)
             int rc = errno;
 
             user = getenv("USER");
-            crm_warn("Assuming user is %s because could not get password "
-                     "database entry for effective user ID %lld: %s",
-                     pcmk__s(user, "unprivileged user"), (long long) geteuid(),
-                     ((rc != 0)? strerror(rc) : "No matching entry found"));
+            crm_warn("Could not get password database entry for effective user "
+                     "ID %lld: %s. Assuming user is %s.",
+                     (long long) geteuid(),
+                     ((rc != 0)? strerror(rc) : "No matching entry found"),
+                     pcmk__s(user, "unprivileged user"));
         }
 
         if (pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
