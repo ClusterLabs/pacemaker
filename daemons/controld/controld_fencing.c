@@ -758,8 +758,8 @@ static void
 fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
 {
     char *uuid = NULL;
-    int stonith_id = -1;
     int transition_id = -1;
+    int action_id = -1;
     pcmk__graph_action_t *action = NULL;
     const char *target = NULL;
 
@@ -783,10 +783,10 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
     }
 
     CRM_CHECK(decode_transition_key(data->userdata, &uuid, &transition_id,
-                                    &stonith_id, NULL),
+                                    &action_id, NULL),
               goto bail);
 
-    if (controld_globals.transition_graph->complete || (stonith_id < 0)
+    if (controld_globals.transition_graph->complete || (action_id < 0)
         || !pcmk__str_eq(uuid, controld_globals.te_uuid, pcmk__str_none)
         || (controld_globals.transition_graph->id != transition_id)) {
         crm_info("Ignoring fence operation %d result: "
@@ -794,17 +794,17 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
                  " complete=%s action=%d uuid=%s (vs %s) transition=%d (vs %d)",
                  data->call_id,
                  pcmk__btoa(controld_globals.transition_graph->complete),
-                 stonith_id, uuid, controld_globals.te_uuid, transition_id,
+                 action_id, uuid, controld_globals.te_uuid, transition_id,
                  controld_globals.transition_graph->id);
         goto bail;
     }
 
-    action = controld_get_action(stonith_id);
+    action = controld_get_action(action_id);
     if (action == NULL) {
         crm_err("Ignoring fence operation %d result: "
                 "Action %d not found in transition graph (bug?) "
                 QB_XS " uuid=%s transition=%d",
-                data->call_id, stonith_id, uuid, transition_id);
+                data->call_id, action_id, uuid, transition_id);
         goto bail;
     }
 
@@ -995,7 +995,7 @@ controld_validate_fencing_watchdog_timeout(const char *value)
     }
 }
 
-/* end stonith API client functions */
+/* end fencer API client functions */
 
 
 /*
