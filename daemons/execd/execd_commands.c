@@ -1215,18 +1215,18 @@ execd_stonith_start(stonith_t *fencer_api, const lrmd_rsc_t *rsc,
 
 /*!
  * \internal
- * \brief Execute a stonith resource "stop" action
+ * \brief Execute a fencing resource "stop" action
  *
- * Stop a stonith resource by unregistering it with the fencer.
- * (Stonith agents don't have a stop command.)
+ * Stop a fencing resource by unregistering it with the fencer. (Fencing agents
+ * don't have a stop command.)
  *
  * \param[in,out] fencer_api  Connection to fencer
- * \param[in]     rsc         Stonith resource to stop
+ * \param[in]     rsc         Fencing resource to stop
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static inline int
-execd_stonith_stop(stonith_t *fencer_api, const lrmd_rsc_t *rsc)
+stop_fencing_rsc(stonith_t *fencer_api, const lrmd_rsc_t *rsc)
 {
     /* @TODO Failure would indicate a problem communicating with fencer;
      * perhaps we should try reconnecting and retrying a few times?
@@ -1310,7 +1310,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
         }
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        rc = execd_stonith_stop(fencer_api, rsc);
+        rc = stop_fencing_rsc(fencer_api, rsc);
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
                             pcmk__str_casei)) {
