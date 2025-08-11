@@ -8,17 +8,17 @@
  */
 
 #ifndef CONTROLD_FENCING__H
-#  define CONTROLD_FENCING__H
+#define CONTROLD_FENCING__H
 
 #include <stdbool.h>                // bool
 #include <pacemaker-internal.h>     // pcmk__graph_t, pcmk__graph_action_t
 
 void controld_configure_fencing(GHashTable *options);
 
-// stonith fail counts
-void st_fail_count_reset(const char * target);
+// Fencing fail counts
+void controld_reset_fencing_fail_count(const char *target);
 
-// stonith API client
+// Fencer API client
 gboolean controld_timer_fencer_connect(gpointer user_data);
 void controld_disconnect_fencer(bool destroy);
 int controld_execute_fence_action(pcmk__graph_t *graph,
