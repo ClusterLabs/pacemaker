@@ -18,6 +18,11 @@
 static void
 tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event);
 
+#define DEFAULT_FENCING_MAX_ATTEMPTS 10
+
+static bool fence_reaction_panic = false;
+static unsigned long int fencing_max_attempts = DEFAULT_FENCING_MAX_ATTEMPTS;
+
 /*
  * stonith failure counting
  *
@@ -25,15 +30,6 @@ tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event);
  * number of fencing failures for each target node, and the most we'll restart a
  * transition for.
  */
-
-struct st_fail_rec {
-    int count;
-};
-
-#define DEFAULT_FENCING_MAX_ATTEMPTS 10
-
-static bool fence_reaction_panic = false;
-static unsigned long int fencing_max_attempts = DEFAULT_FENCING_MAX_ATTEMPTS;
 static GHashTable *stonith_failures = NULL;
 
 /*!
@@ -101,8 +97,7 @@ static gboolean
 too_many_st_failures(const char *target)
 {
     GHashTableIter iter;
-    const char *key = NULL;
-    struct st_fail_rec *value = NULL;
+    gpointer value = NULL;
 
     if (stonith_failures == NULL) {
         return FALSE;
@@ -110,25 +105,22 @@ too_many_st_failures(const char *target)
 
     if (target == NULL) {
         g_hash_table_iter_init(&iter, stonith_failures);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-               (gpointer *) &value)) {
-
-            if (value->count >= fencing_max_attempts) {
-                target = (const char*)key;
+        while (g_hash_table_iter_next(&iter, (gpointer *) &target, &value)) {
+            if (GPOINTER_TO_INT(value) >= fencing_max_attempts) {
                 goto too_many;
             }
         }
-    } else {
-        value = g_hash_table_lookup(stonith_failures, target);
-        if ((value != NULL) && (value->count >= fencing_max_attempts)) {
-            goto too_many;
-        }
+
+    } else if (g_hash_table_lookup_extended(stonith_failures, target, NULL,
+                                            &value)
+               && (GPOINTER_TO_INT(value) >= fencing_max_attempts)) {
+        goto too_many;
     }
     return FALSE;
 
 too_many:
     crm_warn("Too many failures (%d) to fence %s, giving up",
-             value->count, target);
+             GPOINTER_TO_INT(value), target);
     return TRUE;
 }
 
@@ -145,46 +137,34 @@ st_fail_count_reset(const char *target)
         return;
     }
 
-    if (target) {
-        struct st_fail_rec *rec = NULL;
+    if (target != NULL) {
+        g_hash_table_remove(stonith_failures, target);
 
-        rec = g_hash_table_lookup(stonith_failures, target);
-        if (rec) {
-            rec->count = 0;
-        }
     } else {
-        GHashTableIter iter;
-        const char *key = NULL;
-        struct st_fail_rec *rec = NULL;
-
-        g_hash_table_iter_init(&iter, stonith_failures);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-                                      (gpointer *) &rec)) {
-            rec->count = 0;
-        }
+        g_hash_table_remove_all(stonith_failures);
     }
 }
 
 static void
 st_fail_count_increment(const char *target)
 {
-    struct st_fail_rec *rec = NULL;
+    gpointer key = NULL;
+    gpointer value = NULL;
 
     if (stonith_failures == NULL) {
-        stonith_failures = pcmk__strikey_table(free, free);
+        stonith_failures = pcmk__strikey_table(free, NULL);
     }
 
-    rec = g_hash_table_lookup(stonith_failures, target);
-    if (rec) {
-        rec->count++;
-    } else {
-        rec = malloc(sizeof(struct st_fail_rec));
-        if(rec == NULL) {
-            return;
-        }
+    if (g_hash_table_lookup_extended(stonith_failures, target, &key, &value)) {
+        gpointer new_value = GINT_TO_POINTER(GPOINTER_TO_INT(value) + 1);
 
-        rec->count = 1;
-        g_hash_table_insert(stonith_failures, pcmk__str_copy(target), rec);
+        // Increment value in the table without freeing key
+        g_hash_table_steal(stonith_failures, key);
+        g_hash_table_insert(stonith_failures, key, new_value);
+
+    } else {
+        g_hash_table_insert(stonith_failures, pcmk__str_copy(target),
+                            GINT_TO_POINTER(1));
     }
 }
 
