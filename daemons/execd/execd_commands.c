@@ -1251,16 +1251,16 @@ fencing_rsc_monitor_cb(stonith_t *stonith, stonith_callback_data_t *data)
 
 /*!
  * \internal
- * \brief Initiate a stonith resource agent recurring "monitor" action
+ * \brief Initiate a fencing resource recurring "monitor" action
  *
  * \param[in,out] fencer_api  Connection to fencer
- * \param[in,out] rsc          Stonith resource to monitor
- * \param[in]     cmd          Monitor command being executed
+ * \param[in,out] rsc         Fencing resource to monitor
+ * \param[in]     cmd         Monitor command being executed
  *
  * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
  */
 static inline int
-execd_stonith_monitor(stonith_t *fencer_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+monitor_fencing_rsc(stonith_t *fencer_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
     int rc = fencer_api->cmds->monitor(fencer_api, 0, cmd->rsc_id,
                                        pcmk__timeout_ms2s(cmd->timeout));
@@ -1324,7 +1324,7 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     }
 
     if (do_monitor) {
-        rc = execd_stonith_monitor(fencer_api, rsc, cmd);
+        rc = monitor_fencing_rsc(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             // Don't clean up yet. We will get the result of the monitor later.
             return;
