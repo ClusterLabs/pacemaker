@@ -1023,9 +1023,9 @@ finalize:
  * \param[in]     exit_reason       Human-friendly detail, if action failed
  */
 static void
-stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
-                        enum pcmk_exec_status execution_status,
-                        const char *exit_reason)
+fencing_rsc_action_complete(lrmd_cmd_t *cmd, int exit_status,
+                            enum pcmk_exec_status execution_status,
+                            const char *exit_reason)
 {
     // This can be NULL if resource was removed before command completed
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
@@ -1119,10 +1119,10 @@ lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
         crm_err("Ignoring fence action result: "
                 "Invalid callback arguments (bug?)");
     } else {
-        stonith_action_complete((lrmd_cmd_t *) data->userdata,
-                                stonith__exit_status(data),
-                                stonith__execution_status(data),
-                                stonith__exit_reason(data));
+        fencing_rsc_action_complete((lrmd_cmd_t *) data->userdata,
+                                    stonith__exit_status(data),
+                                    stonith__execution_status(data),
+                                    stonith__exit_reason(data));
     }
 }
 
@@ -1164,9 +1164,9 @@ execd_fencer_connection_failed(void)
              * If cmd is rsc->active, this will set rsc->active to NULL, so we
              * don't have to worry about finalizing it a second time below.
              */
-            stonith_action_complete(cmd,
-                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
-                                    "Lost connection to fencer");
+            fencing_rsc_action_complete(cmd, CRM_EX_ERROR,
+                                        PCMK_EXEC_NOT_CONNECTED,
+                                        "Lost connection to fencer");
         }
 
         if (rsc->active != NULL) {
@@ -1174,9 +1174,9 @@ execd_fencer_connection_failed(void)
         }
         while (rsc->pending_ops != NULL) {
             // This will free the op and remove it from rsc->pending_ops
-            stonith_action_complete((lrmd_cmd_t *) rsc->pending_ops->data,
-                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
-                                    "Lost connection to fencer");
+            fencing_rsc_action_complete((lrmd_cmd_t *) rsc->pending_ops->data,
+                                        CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                                        "Lost connection to fencer");
         }
     }
 }
@@ -1290,16 +1290,16 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
         && (cmd->interval_ms == 0)) {
         // Probes don't require a fencer connection
-        stonith_action_complete(cmd, rsc->fence_probe_result.exit_status,
-                                rsc->fence_probe_result.execution_status,
-                                rsc->fence_probe_result.exit_reason);
+        fencing_rsc_action_complete(cmd, rsc->fence_probe_result.exit_status,
+                                    rsc->fence_probe_result.execution_status,
+                                    rsc->fence_probe_result.exit_reason);
         return;
     }
 
     if (fencer_api == NULL) {
-        stonith_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
-                                PCMK_EXEC_NOT_CONNECTED,
-                                "No connection to fencer");
+        fencing_rsc_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
+                                    PCMK_EXEC_NOT_CONNECTED,
+                                    "No connection to fencer");
         return;
     }
 
@@ -1317,9 +1317,9 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
         do_monitor = true;
 
     } else {
-        stonith_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
-                                PCMK_EXEC_ERROR,
-                                "Invalid fence device action (bug?)");
+        fencing_rsc_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
+                                    PCMK_EXEC_ERROR,
+                                    "Invalid fence device action (bug?)");
         return;
     }
 
@@ -1334,9 +1334,9 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     if (rc != -pcmk_err_generic) {
         rc_s = pcmk_strerror(rc);
     }
-    stonith_action_complete(cmd,
-                            ((rc == pcmk_rc_ok)? CRM_EX_OK : CRM_EX_ERROR),
-                            stonith__legacy2status(rc), rc_s);
+    fencing_rsc_action_complete(cmd,
+                                ((rc == pcmk_rc_ok)? CRM_EX_OK : CRM_EX_ERROR),
+                                stonith__legacy2status(rc), rc_s);
 }
 
 static void
