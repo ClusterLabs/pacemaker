@@ -594,7 +594,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * enabled for the local node. Otherwise, we may exit unnecessarily.
      *
      * A validator function in libcrmcommon can't act as such a wrapper, because
-     * it doesn't have a stonith API connection or the local node name.
+     * it doesn't have a fencer API connection or the local node name.
      */
     value = g_hash_table_lookup(config_hash, PCMK_OPT_FENCING_WATCHDOG_TIMEOUT);
     controld_validate_fencing_watchdog_timeout(value);
