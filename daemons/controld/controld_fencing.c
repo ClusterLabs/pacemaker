@@ -424,7 +424,7 @@ fail_incompletable_fencing(pcmk__graph_t *graph)
 }
 
 static void
-tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
+destroy_fencer_connection(stonith_t *st, stonith_event_t *e)
 {
     controld_cleanup_fencing_history_sync(st, false);
 
@@ -696,7 +696,7 @@ controld_timer_fencer_connect(gpointer user_data)
 
         cmds->register_notification(fencer_api,
                                     PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                    tengine_stonith_connection_destroy);
+                                    destroy_fencer_connection);
         cmds->register_notification(fencer_api, PCMK__VALUE_ST_NOTIFY_FENCE,
                                     handle_fence_notification);
         cmds->register_notification(fencer_api,
