@@ -146,7 +146,7 @@ controld_reset_fencing_fail_count(const char *target)
 }
 
 static void
-st_fail_count_increment(const char *target)
+increment_fencing_fail_count(const char *target)
 {
     gpointer key = NULL;
     gpointer value = NULL;
@@ -540,7 +540,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         if (succeeded) {
             controld_reset_fencing_fail_count(event->target);
         } else {
-            st_fail_count_increment(event->target);
+            increment_fencing_fail_count(event->target);
         }
     }
 
@@ -892,7 +892,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
          * check it. Non-DC nodes will increment it in
          * handle_fence_notification().
          */
-        st_fail_count_increment(target);
+        increment_fencing_fail_count(target);
         abort_for_stonith_failure(abort_action, target, NULL);
     }
 
