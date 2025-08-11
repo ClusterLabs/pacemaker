@@ -253,17 +253,19 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
 
 /*!
  * \internal
- * \brief Abort transition due to stonith failure
+ * \brief Abort transition due to fencing failure
  *
  * \param[in] abort_action  Whether to restart or stop transition
- * \param[in] target  Don't restart if this (NULL for any) has too many failures
- * \param[in] reason  Log this stonith action XML as abort reason (or NULL)
+ * \param[in] target        Don't restart if this node has too many failures
+ *                          (\c NULL to check if any node has too many failures)
+ * \param[in] reason        Log this fencing action XML as abort reason (can be
+ *                          \c NULL)
  */
 static void
-abort_for_stonith_failure(enum pcmk__graph_next abort_action,
+abort_for_fencing_failure(enum pcmk__graph_next abort_action,
                           const char *target, const xmlNode *reason)
 {
-    /* If stonith repeatedly fails, we eventually give up on starting a new
+    /* If fencing repeatedly fails, we eventually give up on starting a new
      * transition for that reason.
      */
     if ((abort_action != pcmk__graph_wait)
@@ -413,8 +415,8 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
     }
 
     if (last_action != NULL) {
-        crm_warn("Fencer failure resulted in unrunnable actions");
-        abort_for_stonith_failure(pcmk__graph_restart, NULL, last_action);
+        crm_warn("Fencing failure resulted in unrunnable actions");
+        abort_for_fencing_failure(pcmk__graph_restart, NULL, last_action);
         return TRUE;
     }
 
@@ -888,12 +890,12 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                        "(aborting transition)", data->call_id, target, reason);
         }
 
-        /* Increment the fail count now, so abort_for_stonith_failure() can
+        /* Increment the fail count now, so abort_for_fencing_failure() can
          * check it. Non-DC nodes will increment it in
          * handle_fence_notification().
          */
         increment_fencing_fail_count(target);
-        abort_for_stonith_failure(abort_action, target, NULL);
+        abort_for_fencing_failure(abort_action, target, NULL);
     }
 
     pcmk__update_graph(controld_globals.transition_graph, action);
