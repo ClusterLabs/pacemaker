@@ -205,7 +205,7 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     /* We (usually) rely on the membership layer to do
      * controld_node_update_cluster, and the peer status callback to do
      * controld_node_update_peer, because the node might have already rejoined
-     * before we get the stonith result here.
+     * before we get the fencing result here.
      */
     uint32_t flags = controld_node_update_join|controld_node_update_expected;
 
@@ -536,7 +536,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
     /* Update the count of fencing failures for this target, in case we become
      * DC later. The current DC has already updated its fail count in
-     * tengine_stonith_callback().
+     * fencing_cb().
      */
     if (!AM_I_DC) {
         if (succeeded) {
@@ -755,7 +755,7 @@ do_stonith_history_sync(gpointer user_data)
 }
 
 static void
-tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
+fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
 {
     char *uuid = NULL;
     int stonith_id = -1;
@@ -977,8 +977,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
                                         (timeout_sec
                                          + (delay_i > 0 ? delay_i : 0)),
                                         st_opt_timeout_updates, transition_key,
-                                        "tengine_stonith_callback",
-                                        tengine_stonith_callback);
+                                        "fencing_cb", fencing_cb);
     return pcmk_rc_ok;
 }
 
