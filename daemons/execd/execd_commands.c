@@ -1112,20 +1112,6 @@ fencing_rsc_action_complete(lrmd_cmd_t *cmd, int exit_status,
     cmd_finalize(cmd, rsc);
 }
 
-static void
-lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
-{
-    if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fence action result: "
-                "Invalid callback arguments (bug?)");
-    } else {
-        fencing_rsc_action_complete((lrmd_cmd_t *) data->userdata,
-                                    stonith__exit_status(data),
-                                    stonith__execution_status(data),
-                                    stonith__exit_reason(data));
-    }
-}
-
 void
 execd_fencer_connection_failed(void)
 {
@@ -1249,6 +1235,20 @@ execd_stonith_stop(stonith_t *fencer_api, const lrmd_rsc_t *rsc)
                                            rsc->rsc_id);
 }
 
+static void
+fencing_rsc_monitor_cb(stonith_t *stonith, stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->userdata == NULL)) {
+        crm_err("Ignoring fencing resource monitor result: "
+                "Invalid callback arguments (bug?)");
+    } else {
+        fencing_rsc_action_complete((lrmd_cmd_t *) data->userdata,
+                                    stonith__exit_status(data),
+                                    stonith__execution_status(data),
+                                    stonith__exit_reason(data));
+    }
+}
+
 /*!
  * \internal
  * \brief Initiate a stonith resource agent recurring "monitor" action
@@ -1266,8 +1266,8 @@ execd_stonith_monitor(stonith_t *fencer_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
                                        pcmk__timeout_ms2s(cmd->timeout));
 
     rc = fencer_api->cmds->register_callback(fencer_api, rc, 0, 0, cmd,
-                                             "lrmd_stonith_callback",
-                                             lrmd_stonith_callback);
+                                             "fencing_rsc_monitor_cb",
+                                             fencing_rsc_monitor_cb);
     if (rc == TRUE) {
         rsc->active = cmd;
         rc = pcmk_ok;
