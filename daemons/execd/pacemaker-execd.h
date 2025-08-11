@@ -75,10 +75,11 @@ void lrmd_client_destroy(pcmk__client_t *client);
 void client_disconnect_cleanup(const char *client_id);
 
 /*!
+ * \internal
  * \brief Don't worry about freeing this connection. It is
  *        taken care of after mainloop exits by the main() function.
  */
-stonith_t *get_stonith_connection(void);
+stonith_t *execd_get_fencer_connection(void);
 
 /*!
  * \brief This is a callback that tells the lrmd
