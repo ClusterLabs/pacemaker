@@ -238,7 +238,7 @@ crmd_exit(crm_exit_t exit_code)
     pcmk__cluster_destroy_node_caches();
 
     controld_free_fsa_timers();
-    te_cleanup_stonith_history_sync(NULL, TRUE);
+    controld_cleanup_fencing_history_sync(NULL, true);
     controld_free_sched_timer();
 
     free(controld_globals.our_uuid);

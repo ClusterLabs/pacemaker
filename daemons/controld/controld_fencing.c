@@ -441,7 +441,7 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
 static void
 tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
 {
-    te_cleanup_stonith_history_sync(st, FALSE);
+    controld_cleanup_fencing_history_sync(st, false);
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         crm_err("Lost fencer connection (will attempt to reconnect)");
@@ -758,7 +758,7 @@ do_stonith_history_sync(gpointer user_data)
     if (stonith_api && (stonith_api->state != stonith_disconnected)) {
         stonith_history_t *history = NULL;
 
-        te_cleanup_stonith_history_sync(stonith_api, FALSE);
+        controld_cleanup_fencing_history_sync(stonith_api, false);
         stonith_api->cmds->history(stonith_api,
                                    st_opt_sync_call | st_opt_broadcast,
                                    NULL, &history, 5);
@@ -1027,7 +1027,7 @@ static mainloop_timer_t *stonith_history_sync_timer_short = NULL;
 static mainloop_timer_t *stonith_history_sync_timer_long = NULL;
 
 void
-te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
+controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
 {
     if (free_timers) {
         mainloop_timer_del(stonith_history_sync_timer_short);
@@ -1047,7 +1047,7 @@ te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
 static void
 tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event)
 {
-    te_cleanup_stonith_history_sync(st, FALSE);
+    controld_cleanup_fencing_history_sync(st, false);
     crm_debug("Fence-history synced - cancel all timers");
 }
 
