@@ -1374,7 +1374,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
         || pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
                             STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
 
-        if (stonith_watchdog_timeout_ms <= 0) {
+        if (fencing_watchdog_timeout_ms <= 0) {
             crm_err("Ignoring watchdog fence device without "
                     PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " set");
             rc = ENODEV;
@@ -1927,7 +1927,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 
     if (pcmk__str_eq(id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
         // Watchdog agent actions are implemented internally
-        if (stonith_watchdog_timeout_ms <= 0) {
+        if (fencing_watchdog_timeout_ms <= 0) {
             pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                              "Watchdog fence device not configured");
             return;
