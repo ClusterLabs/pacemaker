@@ -57,7 +57,7 @@ static gboolean shutting_down = FALSE;
 static void exit_executor(void);
 
 static void
-stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
+fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
 {
     fencer_api->state = stonith_disconnected;
     stonith_connection_failed();
@@ -90,7 +90,7 @@ execd_get_fencer_connection(void)
 
             cmds->register_notification(fencer_api,
                                         PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                        stonith_connection_destroy_cb);
+                                        fencer_connection_destroy_cb);
         }
     }
     return fencer_api;
