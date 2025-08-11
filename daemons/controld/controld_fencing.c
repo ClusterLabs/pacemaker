@@ -24,13 +24,13 @@ static bool fence_reaction_panic = false;
 static unsigned long int fencing_max_attempts = DEFAULT_FENCING_MAX_ATTEMPTS;
 
 /*
- * stonith failure counting
+ * Fencing failure counting
  *
  * We don't want to get stuck in a permanent fencing loop. Keep track of the
  * number of fencing failures for each target node, and the most we'll restart a
  * transition for.
  */
-static GHashTable *stonith_failures = NULL;
+static GHashTable *fencing_fail_counts = NULL;
 
 /*!
  * \internal
@@ -99,19 +99,19 @@ too_many_st_failures(const char *target)
     GHashTableIter iter;
     gpointer value = NULL;
 
-    if (stonith_failures == NULL) {
+    if (fencing_fail_counts == NULL) {
         return FALSE;
     }
 
     if (target == NULL) {
-        g_hash_table_iter_init(&iter, stonith_failures);
+        g_hash_table_iter_init(&iter, fencing_fail_counts);
         while (g_hash_table_iter_next(&iter, (gpointer *) &target, &value)) {
             if (GPOINTER_TO_INT(value) >= fencing_max_attempts) {
                 goto too_many;
             }
         }
 
-    } else if (g_hash_table_lookup_extended(stonith_failures, target, NULL,
+    } else if (g_hash_table_lookup_extended(fencing_fail_counts, target, NULL,
                                             &value)
                && (GPOINTER_TO_INT(value) >= fencing_max_attempts)) {
         goto too_many;
@@ -133,15 +133,15 @@ too_many:
 void
 st_fail_count_reset(const char *target)
 {
-    if (stonith_failures == NULL) {
+    if (fencing_fail_counts == NULL) {
         return;
     }
 
     if (target != NULL) {
-        g_hash_table_remove(stonith_failures, target);
+        g_hash_table_remove(fencing_fail_counts, target);
 
     } else {
-        g_hash_table_remove_all(stonith_failures);
+        g_hash_table_remove_all(fencing_fail_counts);
     }
 }
 
@@ -151,24 +151,25 @@ st_fail_count_increment(const char *target)
     gpointer key = NULL;
     gpointer value = NULL;
 
-    if (stonith_failures == NULL) {
-        stonith_failures = pcmk__strikey_table(free, NULL);
+    if (fencing_fail_counts == NULL) {
+        fencing_fail_counts = pcmk__strikey_table(free, NULL);
     }
 
-    if (g_hash_table_lookup_extended(stonith_failures, target, &key, &value)) {
+    if (g_hash_table_lookup_extended(fencing_fail_counts, target, &key,
+                                     &value)) {
         gpointer new_value = GINT_TO_POINTER(GPOINTER_TO_INT(value) + 1);
 
         // Increment value in the table without freeing key
-        g_hash_table_steal(stonith_failures, key);
-        g_hash_table_insert(stonith_failures, key, new_value);
+        g_hash_table_steal(fencing_fail_counts, key);
+        g_hash_table_insert(fencing_fail_counts, key, new_value);
 
     } else {
-        g_hash_table_insert(stonith_failures, pcmk__str_copy(target),
+        g_hash_table_insert(fencing_fail_counts, pcmk__str_copy(target),
                             GINT_TO_POINTER(1));
     }
 }
 
-/* end stonith fail count functions */
+/* end fencing fail count functions */
 
 
 static void
