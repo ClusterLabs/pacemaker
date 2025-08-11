@@ -269,7 +269,7 @@ pcmk__auto_fencing_watchdog_timeout(void)
 }
 
 bool
-pcmk__valid_stonith_watchdog_timeout(const char *value)
+pcmk__valid_fencing_watchdog_timeout(const char *value)
 {
     /* @COMPAT At a compatibility break, accept either negative values or a
      * specific string like "auto" (but not both) to mean "auto-calculate the

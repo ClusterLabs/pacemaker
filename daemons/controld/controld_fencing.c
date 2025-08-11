@@ -1010,7 +1010,7 @@ controld_validate_fencing_watchdog_timeout(const char *value)
         && stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
                                                           our_nodename)) {
 
-        pcmk__valid_stonith_watchdog_timeout(value);
+        pcmk__valid_fencing_watchdog_timeout(value);
     }
 }
 
