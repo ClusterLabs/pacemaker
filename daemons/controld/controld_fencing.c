@@ -372,7 +372,7 @@ controld_execute_fencing_cleanup(void)
  * Functions that need to interact directly with the fencer via its API
  */
 
-static stonith_t *stonith_api = NULL;
+static stonith_t *fencer_api = NULL;
 static mainloop_timer_t *controld_fencer_connect_timer = NULL;
 static char *te_client_id = NULL;
 
@@ -437,14 +437,14 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
         crm_info("Disconnected from fencer");
     }
 
-    if (stonith_api) {
+    if (fencer_api != NULL) {
         /* the client API won't properly reconnect notifications
          * if they are still in the table - so remove them
          */
-        if (stonith_api->state != stonith_disconnected) {
-            stonith_api->cmds->disconnect(st);
+        if (fencer_api->state != stonith_disconnected) {
+            fencer_api->cmds->disconnect(st);
         }
-        stonith_api->cmds->remove_notification(stonith_api, NULL);
+        fencer_api->cmds->remove_notification(fencer_api, NULL);
     }
 
     if (AM_I_DC) {
@@ -641,29 +641,29 @@ controld_timer_fencer_connect(gpointer user_data)
 {
     int rc = pcmk_ok;
 
-    if (stonith_api == NULL) {
-        stonith_api = stonith__api_new();
-        if (stonith_api == NULL) {
+    if (fencer_api == NULL) {
+        fencer_api = stonith__api_new();
+        if (fencer_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return G_SOURCE_REMOVE;
         }
     }
 
-    if (stonith_api->state != stonith_disconnected) {
+    if (fencer_api->state != stonith_disconnected) {
         crm_trace("Already connected to fencer, no need to retry");
         return G_SOURCE_REMOVE;
     }
 
     if (user_data == NULL) {
         // Blocking (retry failures now until successful)
-        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 30);
+        rc = stonith__api_connect_retry(fencer_api, crm_system_name, 30);
         if (rc != pcmk_rc_ok) {
             crm_err("Could not connect to fencer in 30 attempts: %s "
                     QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
-        rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
+        rc = fencer_api->cmds->connect(fencer_api, crm_system_name, NULL);
 
         if (controld_fencer_connect_timer == NULL) {
             controld_fencer_connect_timer =
@@ -692,14 +692,14 @@ controld_timer_fencer_connect(gpointer user_data)
     }
 
     if (rc == pcmk_ok) {
-        stonith_api_operations_t *cmds = stonith_api->cmds;
+        stonith_api_operations_t *cmds = fencer_api->cmds;
 
-        cmds->register_notification(stonith_api,
+        cmds->register_notification(fencer_api,
                                     PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                     tengine_stonith_connection_destroy);
-        cmds->register_notification(stonith_api, PCMK__VALUE_ST_NOTIFY_FENCE,
+        cmds->register_notification(fencer_api, PCMK__VALUE_ST_NOTIFY_FENCE,
                                     handle_fence_notification);
-        cmds->register_notification(stonith_api,
+        cmds->register_notification(fencer_api,
                                     PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
                                     tengine_stonith_history_synced);
         controld_trigger_fencing_history_sync(true);
@@ -712,19 +712,19 @@ controld_timer_fencer_connect(gpointer user_data)
 void
 controld_disconnect_fencer(bool destroy)
 {
-    if (stonith_api) {
+    if (fencer_api != NULL) {
         // Prevent fencer connection from coming up again
         controld_clear_fsa_input_flags(R_ST_REQUIRED);
 
-        if (stonith_api->state != stonith_disconnected) {
-            stonith_api->cmds->disconnect(stonith_api);
+        if (fencer_api->state != stonith_disconnected) {
+            fencer_api->cmds->disconnect(fencer_api);
         }
-        stonith_api->cmds->remove_notification(stonith_api, NULL);
+        fencer_api->cmds->remove_notification(fencer_api, NULL);
     }
     if (destroy) {
-        if (stonith_api) {
-            stonith_api->cmds->free(stonith_api);
-            stonith_api = NULL;
+        if (fencer_api != NULL) {
+            fencer_api->cmds->free(fencer_api);
+            fencer_api = NULL;
         }
         if (controld_fencer_connect_timer) {
             mainloop_timer_del(controld_fencer_connect_timer);
@@ -740,13 +740,12 @@ controld_disconnect_fencer(bool destroy)
 static gboolean
 do_stonith_history_sync(gpointer user_data)
 {
-    if (stonith_api && (stonith_api->state != stonith_disconnected)) {
+    if ((fencer_api != NULL) && (fencer_api->state != stonith_disconnected)) {
         stonith_history_t *history = NULL;
 
-        controld_cleanup_fencing_history_sync(stonith_api, false);
-        stonith_api->cmds->history(stonith_api,
-                                   st_opt_sync_call | st_opt_broadcast,
-                                   NULL, &history, 5);
+        controld_cleanup_fencing_history_sync(fencer_api, false);
+        fencer_api->cmds->history(fencer_api, st_opt_sync_call|st_opt_broadcast,
+                                  NULL, &history, 5);
         stonith__history_free(history);
         return TRUE;
     } else {
@@ -917,8 +916,8 @@ fence_with_delay(const char *target, const char *type, int delay)
     if (crmd_join_phase_count(controld_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_self_fencing);
     }
-    return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
-                                               type, timeout_sec, 0, delay);
+    return fencer_api->cmds->fence_with_delay(fencer_api, options, target, type,
+                                              timeout_sec, 0, delay);
 }
 
 /*!
@@ -974,12 +973,12 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     transition_key = pcmk__transition_key(controld_globals.transition_graph->id,
                                           action->id, 0,
                                           controld_globals.te_uuid),
-    stonith_api->cmds->register_callback(stonith_api, rc,
-                                         (timeout_sec
-                                          + (delay_i > 0 ? delay_i : 0)),
-                                         st_opt_timeout_updates, transition_key,
-                                         "tengine_stonith_callback",
-                                         tengine_stonith_callback);
+    fencer_api->cmds->register_callback(fencer_api, rc,
+                                        (timeout_sec
+                                         + (delay_i > 0 ? delay_i : 0)),
+                                        st_opt_timeout_updates, transition_key,
+                                        "tengine_stonith_callback",
+                                        tengine_stonith_callback);
     return pcmk_rc_ok;
 }
 
@@ -989,8 +988,8 @@ controld_validate_fencing_watchdog_timeout(const char *value)
     const char *our_nodename = controld_globals.cluster->priv->node_name;
 
     // Validate only if the timeout will be used
-    if ((stonith_api != NULL) && (stonith_api->state != stonith_disconnected)
-        && stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
+    if ((fencer_api != NULL) && (fencer_api->state != stonith_disconnected)
+        && stonith__watchdog_fencing_enabled_for_node_api(fencer_api,
                                                           our_nodename)) {
 
         pcmk__valid_fencing_watchdog_timeout(value);
