@@ -1450,7 +1450,7 @@ execute_resource_action(gpointer user_data)
 }
 
 void
-free_rsc(gpointer data)
+execd_free_rsc(gpointer data)
 {
     GList *gIter = NULL;
     lrmd_rsc_t *rsc = data;
@@ -1586,7 +1586,7 @@ execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request
         pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
         crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
-        free_rsc(rsc);
+        execd_free_rsc(rsc);
         return;
     }
 
