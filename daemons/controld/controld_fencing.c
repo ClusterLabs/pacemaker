@@ -737,7 +737,7 @@ controld_disconnect_fencer(bool destroy)
 }
 
 static gboolean
-do_stonith_history_sync(gpointer user_data)
+sync_fencing_history(gpointer user_data)
 {
     if ((fencer_api != NULL) && (fencer_api->state != stonith_disconnected)) {
         stonith_history_t *history = NULL;
@@ -748,7 +748,8 @@ do_stonith_history_sync(gpointer user_data)
         stonith__history_free(history);
         return TRUE;
     } else {
-        crm_info("Skip triggering stonith history-sync as stonith is disconnected");
+        crm_info("Skipping triggering fencing history sync because fencer is "
+                 "disconnected");
         return FALSE;
     }
 }
@@ -1056,14 +1057,13 @@ controld_trigger_fencing_history_sync(bool long_timeout)
      */
 
     /* as we are finally checking the stonith-connection
-     * in do_stonith_history_sync we should be fine
+     * in sync_fencing_history() we should be fine
      * leaving stonith_history_sync_time and fencing_history_sync_trigger
      * around
      */
     if (fencing_history_sync_trigger == NULL) {
         fencing_history_sync_trigger =
-            mainloop_add_trigger(G_PRIORITY_LOW,
-                                 do_stonith_history_sync, NULL);
+            mainloop_add_trigger(G_PRIORITY_LOW, sync_fencing_history, NULL);
     }
 
     if (long_timeout) {
@@ -1088,4 +1088,4 @@ controld_trigger_fencing_history_sync(bool long_timeout)
 
 }
 
-/* end stonith history synchronization functions */
+/* end fencing history synchronization functions */
