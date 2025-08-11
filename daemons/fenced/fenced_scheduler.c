@@ -173,8 +173,8 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    if ((stonith_watchdog_timeout_ms <= 0) &&
-        pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
+    if ((fencing_watchdog_timeout_ms <= 0)
+        && pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
         crm_info("Ignoring fencing device %s "
                  "because watchdog fencing is disabled", rsc->id);
         return;

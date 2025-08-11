@@ -999,7 +999,7 @@ advance_topology_level(remote_fencing_op_t *op, bool empty_ok)
 
     crm_info("All %sfencing options targeting %s for client %s@%s failed "
              QB_XS " id=%.8s",
-             (stonith_watchdog_timeout_ms > 0)?"non-watchdog ":"",
+             ((fencing_watchdog_timeout_ms > 0) ? "non-watchdog " : ""),
              op->target, op->client_name, op->originator, op->id);
     return ENODEV;
 }
@@ -1392,7 +1392,7 @@ enum find_best_peer_options {
 static bool
 is_watchdog_fencing(const remote_fencing_op_t *op, const char *device)
 {
-    return (stonith_watchdog_timeout_ms > 0
+    return ((fencing_watchdog_timeout_ms > 0)
             // Only an explicit mismatch is considered not a watchdog fencing.
             && pcmk__str_eq(device, STONITH_WATCHDOG_ID, pcmk__str_null_matches)
             && pcmk__is_fencing_action(op->action)
@@ -1519,7 +1519,7 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
     }
 
     timeout = (int) QB_MIN(QB_MAX(specified_timeout,
-                                  pcmk__timeout_ms2s(stonith_watchdog_timeout_ms)),
+                                  pcmk__timeout_ms2s(fencing_watchdog_timeout_ms)),
                            INT_MAX);
 
     if (timeout > specified_timeout) {
@@ -1672,7 +1672,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
                    if didn't get a reply
                  */
                 if (!found && is_watchdog_fencing(op, device_list->data)) {
-                    total_timeout += pcmk__timeout_ms2s(stonith_watchdog_timeout_ms);
+                    total_timeout += pcmk__timeout_ms2s(fencing_watchdog_timeout_ms);
                 }
             }                   /* End Loop2: iterate through devices at a specific level */
         }                       /*End Loop1: iterate through fencing levels */
@@ -1838,7 +1838,7 @@ static gboolean
 check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
 {
     if (node_does_watchdog_fencing(op->target)) {
-        guint timeout_ms = QB_MIN(stonith_watchdog_timeout_ms, UINT_MAX);
+        guint timeout_ms = QB_MIN(fencing_watchdog_timeout_ms, UINT_MAX);
 
         crm_notice("Waiting %s for %s to self-fence (%s) for "
                    "client %s " QB_XS " id=%.8s",
@@ -1979,7 +1979,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
                        QB_XS " for client %s (%ds, %s)",
                        peer->host, op->action, op->target, op->client_name,
                        timeout_one,
-                       pcmk__readable_interval(stonith_watchdog_timeout_ms));
+                       pcmk__readable_interval(fencing_watchdog_timeout_ms));
         }
 
         op->state = st_exec;
