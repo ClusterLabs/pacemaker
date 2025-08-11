@@ -93,14 +93,14 @@ controld_configure_fencing(GHashTable *options)
     update_fencing_max_attempts(value);
 }
 
-static gboolean
-too_many_st_failures(const char *target)
+static bool
+too_many_fencing_failures(const char *target)
 {
     GHashTableIter iter;
     gpointer value = NULL;
 
     if (fencing_fail_counts == NULL) {
-        return FALSE;
+        return false;
     }
 
     if (target == NULL) {
@@ -116,12 +116,12 @@ too_many_st_failures(const char *target)
                && (GPOINTER_TO_INT(value) >= fencing_max_attempts)) {
         goto too_many;
     }
-    return FALSE;
+    return false;
 
 too_many:
     crm_warn("Too many failures (%d) to fence %s, giving up",
              GPOINTER_TO_INT(value), target);
-    return TRUE;
+    return true;
 }
 
 /*!
@@ -266,7 +266,9 @@ abort_for_stonith_failure(enum pcmk__graph_next abort_action,
     /* If stonith repeatedly fails, we eventually give up on starting a new
      * transition for that reason.
      */
-    if ((abort_action != pcmk__graph_wait) && too_many_st_failures(target)) {
+    if ((abort_action != pcmk__graph_wait)
+        && too_many_fencing_failures(target)) {
+
         abort_action = pcmk__graph_wait;
     }
     abort_transition(PCMK_SCORE_INFINITY, abort_action, "Stonith failed",
