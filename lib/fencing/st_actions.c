@@ -199,7 +199,7 @@ make_args(const char *agent, const char *action, const char *target,
 
 /*!
  * \internal
- * \brief Free all memory used by a stonith action
+ * \brief Free all memory used by a fencing action
  *
  * \param[in,out] action  Action to free
  */
@@ -222,7 +222,7 @@ stonith__destroy_action(stonith_action_t *action)
 
 /*!
  * \internal
- * \brief Get the result of an executed stonith action
+ * \brief Get the result of an executed fencing action
  *
  * \param[in] action  Executed action
  *
@@ -666,7 +666,7 @@ internal_stonith_action_execute(stonith_action_t * action)
 
 /*!
  * \internal
- * \brief Kick off execution of an async stonith action
+ * \brief Kick off execution of an async fencing action
  *
  * \param[in,out] action        Action to be executed
  * \param[in,out] userdata      Datapointer to be passed to callbacks
@@ -696,7 +696,7 @@ stonith__execute_async(stonith_action_t * action, void *userdata,
 
 /*!
  * \internal
- * \brief Execute a stonith action
+ * \brief Execute a fencing action
  *
  * \param[in,out] action  Action to execute
  *
