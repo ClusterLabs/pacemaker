@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -13,7 +13,6 @@
 
 #include <crm/cluster/internal.h>   // pcmk__node_status_t
 #include <crm/common/mainloop.h>
-#include <crm/stonith-ng.h>
 #include <crm/services.h>
 #include <pacemaker-internal.h>
 
