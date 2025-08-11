@@ -245,7 +245,7 @@ pcmk__get_sbd_sync_resource_startup(void)
 }
 
 long
-pcmk__auto_stonith_watchdog_timeout(void)
+pcmk__auto_fencing_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
@@ -274,7 +274,7 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
     }
 
     if (st_timeout < 0) {
-        st_timeout = pcmk__auto_stonith_watchdog_timeout();
+        st_timeout = pcmk__auto_fencing_watchdog_timeout();
         crm_debug("Using calculated value %lld for "
                   PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
