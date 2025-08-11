@@ -60,7 +60,7 @@ static void
 fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
 {
     fencer_api->state = stonith_disconnected;
-    stonith_connection_failed();
+    execd_fencer_connection_failed();
 }
 
 stonith_t *

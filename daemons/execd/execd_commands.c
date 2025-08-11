@@ -1127,7 +1127,7 @@ lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
 }
 
 void
-stonith_connection_failed(void)
+execd_fencer_connection_failed(void)
 {
     GHashTableIter iter;
     lrmd_rsc_t *rsc = NULL;
