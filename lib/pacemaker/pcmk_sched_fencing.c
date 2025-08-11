@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -50,16 +50,16 @@ rsc_is_known_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
  * \internal
  * \brief Order a resource's start and promote actions relative to fencing
  *
- * \param[in,out] rsc         Resource to be ordered
- * \param[in,out] stonith_op  Fence action
+ * \param[in,out] rsc      Resource to be ordered
+ * \param[in,out] fencing  Fencing action
  */
 static void
-order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
+order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *fencing)
 {
     pcmk_node_t *target;
 
-    CRM_CHECK(stonith_op && stonith_op->node, return);
-    target = stonith_op->node;
+    CRM_CHECK((fencing != NULL) && (fencing->node != NULL), return);
+    target = fencing->node;
 
     for (GList *iter = rsc->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
@@ -70,7 +70,7 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                 break;
 
             case pcmk__requires_fencing:
-                order_actions(stonith_op, action, pcmk__ar_ordered);
+                order_actions(fencing, action, pcmk__ar_ordered);
                 break;
 
             case pcmk__requires_quorum:
@@ -91,7 +91,7 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                      */
                     pcmk__rsc_debug(rsc, "Ordering %s after %s recovery",
                                     action->uuid, pcmk__node_name(target));
-                    order_actions(stonith_op, action,
+                    order_actions(fencing, action,
                                   pcmk__ar_ordered
                                   |pcmk__ar_unrunnable_first_blocks);
                 }
@@ -104,11 +104,11 @@ order_start_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
  * \internal
  * \brief Order a resource's stop and demote actions relative to fencing
  *
- * \param[in,out] rsc         Resource to be ordered
- * \param[in,out] stonith_op  Fence action
+ * \param[in,out] rsc      Resource to be ordered
+ * \param[in,out] fencing  Fencing action
  */
 static void
-order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
+order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *fencing)
 {
     GList *iter = NULL;
     GList *action_list = NULL;
@@ -118,8 +118,8 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
     pcmk_action_t *parent_stop = NULL;
     pcmk_node_t *target;
 
-    CRM_CHECK(stonith_op && stonith_op->node, return);
-    target = stonith_op->node;
+    CRM_CHECK((fencing != NULL) && (fencing->node != NULL), return);
+    target = fencing->node;
 
     /* Get a list of stop actions potentially implied by the fencing */
     action_list = pe__resource_actions(rsc, target, PCMK_ACTION_STOP, FALSE);
@@ -149,10 +149,10 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                                pcmk__action_pseudo|pcmk__action_runnable);
 
         if (order_implicit) {
-            /* Order the stonith before the parent stop (if any).
+            /* Order the fencing action before the parent stop (if any).
              *
-             * Also order the stonith before the resource stop, unless the
-             * resource is inside a bundle -- that would cause a graph loop.
+             * Also order the fencing action before the resource stop, unless
+             * the resource is inside a bundle -- that would cause a graph loop.
              * We can rely on the parent stop's ordering instead.
              *
              * User constraints must not order a resource in a guest node
@@ -162,9 +162,9 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
              * target is not a guest).
              */
             if (!pcmk__is_bundled(rsc)) {
-                order_actions(stonith_op, action, pcmk__ar_guest_allowed);
+                order_actions(fencing, action, pcmk__ar_guest_allowed);
             }
-            order_actions(stonith_op, parent_stop, pcmk__ar_guest_allowed);
+            order_actions(fencing, parent_stop, pcmk__ar_guest_allowed);
         }
 
         if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
@@ -178,7 +178,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
         }
 
         if (pcmk_is_set(rsc->flags, pcmk__rsc_notify)) {
-            pe__order_notifs_after_fencing(action, rsc, stonith_op);
+            pe__order_notifs_after_fencing(action, rsc, fencing);
         }
 
 #if 0
@@ -203,7 +203,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
          crm_info("Moving healthy resource %s off %s before fencing",
                   rsc->id, pcmk__node_name(node));
          pcmk__new_ordering(rsc, stop_key(rsc), NULL, NULL,
-                            strdup(PCMK_ACTION_STONITH), stonith_op,
+                            strdup(PCMK_ACTION_STONITH), fencing,
                             pcmk__ar_ordered, rsc->private->scheduler);
 #endif
     }
@@ -239,7 +239,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                 // Recovery will be ordered as usual after parent's implied stop
 
             } else if (order_implicit) {
-                order_actions(stonith_op, action,
+                order_actions(fencing, action,
                               pcmk__ar_guest_allowed|pcmk__ar_ordered);
             }
         }
@@ -252,11 +252,11 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
  * \internal
  * \brief Order resource actions properly relative to fencing
  *
- * \param[in,out] rsc         Resource whose actions should be ordered
- * \param[in,out] stonith_op  Fencing operation to be ordered against
+ * \param[in,out] rsc      Resource whose actions should be ordered
+ * \param[in,out] fencing  Fencing action to be ordered against
  */
 static void
-rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
+rsc_fencing_ordering(pcmk_resource_t *rsc, pcmk_action_t *fencing)
 {
     if (rsc->priv->children != NULL) {
 
@@ -265,7 +265,7 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
 
             pcmk_resource_t *child_rsc = iter->data;
 
-            rsc_stonith_ordering(child_rsc, stonith_op);
+            rsc_fencing_ordering(child_rsc, fencing);
         }
 
     } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
@@ -274,8 +274,8 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
                         "%s", rsc->id);
 
     } else {
-        order_start_vs_fencing(rsc, stonith_op);
-        order_stop_vs_fencing(rsc, stonith_op);
+        order_start_vs_fencing(rsc, fencing);
+        order_stop_vs_fencing(rsc, fencing);
     }
 }
 
@@ -287,15 +287,15 @@ rsc_stonith_ordering(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
  * imply stop and demote operations of affected resources by marking them as
  * pseudo-actions, etc.
  *
- * \param[in,out] stonith_op  Fencing operation
- * \param[in,out] scheduler   Scheduler data
+ * \param[in,out] fencing    Fencing action
+ * \param[in,out] scheduler  Scheduler data
  */
 void
-pcmk__order_vs_fence(pcmk_action_t *stonith_op, pcmk_scheduler_t *scheduler)
+pcmk__order_vs_fencing(pcmk_action_t *fencing, pcmk_scheduler_t *scheduler)
 {
-    CRM_CHECK(stonith_op && scheduler, return);
+    CRM_CHECK((fencing != NULL) && (scheduler != NULL), return);
     for (GList *r = scheduler->priv->resources; r != NULL; r = r->next) {
-        rsc_stonith_ordering((pcmk_resource_t *) r->data, stonith_op);
+        rsc_fencing_ordering((pcmk_resource_t *) r->data, fencing);
     }
 }
 
@@ -309,9 +309,9 @@ pcmk__order_vs_fence(pcmk_action_t *stonith_op, pcmk_scheduler_t *scheduler)
  * \param[in]     order     Ordering flags
  */
 void
-pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
-                       pcmk_action_t *action,
-                       enum pcmk__action_relation_flags order)
+pcmk__order_vs_unfencing(const pcmk_resource_t *rsc, pcmk_node_t *node,
+                         pcmk_action_t *action,
+                         enum pcmk__action_relation_flags order)
 {
     /* When unfencing is in use, we order unfence actions before any probe or
      * start of resources that require unfencing, and also of fence devices.
@@ -357,7 +357,7 @@ pcmk__fence_guest(pcmk_node_t *node)
 {
     pcmk_resource_t *launcher = NULL;
     pcmk_action_t *stop = NULL;
-    pcmk_action_t *stonith_op = NULL;
+    pcmk_action_t *fencing = NULL;
 
     /* The fence action is just a label; we don't do anything differently for
      * off vs. reboot. We specify it explicitly, rather than let it default to
@@ -386,34 +386,33 @@ pcmk__fence_guest(pcmk_node_t *node)
     /* Create a fence pseudo-event, so we have an event to order actions
      * against, and the controller can always detect it.
      */
-    stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean",
-                             FALSE, node->priv->scheduler);
-    pcmk__set_action_flags(stonith_op,
-                           pcmk__action_pseudo|pcmk__action_runnable);
+    fencing = pe_fence_op(node, fence_action, false, "guest is unclean", false,
+                          node->priv->scheduler);
+    pcmk__set_action_flags(fencing, pcmk__action_pseudo|pcmk__action_runnable);
 
     /* We want to imply stops/demotes after the guest is stopped, not wait until
      * it is restarted, so we always order pseudo-fencing after stop, not start
      * (even though start might be closer to what is done for a real reboot).
      */
     if ((stop != NULL) && pcmk_is_set(stop->flags, pcmk__action_pseudo)) {
-        pcmk_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE,
-                                                     NULL, FALSE,
-                                                     node->priv->scheduler);
+        pcmk_action_t *parent_fencing_op = pe_fence_op(stop->node, NULL, false,
+                                                       NULL, false,
+                                                       node->priv->scheduler);
 
         crm_info("Implying guest %s is down (action %d) after %s fencing",
-                 pcmk__node_name(node), stonith_op->id,
+                 pcmk__node_name(node), fencing->id,
                  pcmk__node_name(stop->node));
-        order_actions(parent_stonith_op, stonith_op,
+        order_actions(parent_fencing_op, fencing,
                       pcmk__ar_unrunnable_first_blocks
                       |pcmk__ar_first_implies_then);
 
     } else if (stop) {
-        order_actions(stop, stonith_op,
+        order_actions(stop, fencing,
                       pcmk__ar_unrunnable_first_blocks
                       |pcmk__ar_first_implies_then);
         crm_info("Implying guest %s is down (action %d) "
                  "after launcher %s is stopped (action %d)",
-                 pcmk__node_name(node), stonith_op->id,
+                 pcmk__node_name(node), fencing->id,
                  launcher->id, stop->id);
     } else {
         /* If we're fencing the guest node but there's no stop for the guest
@@ -427,21 +426,21 @@ pcmk__fence_guest(pcmk_node_t *node)
                                  NULL, PCMK_ACTION_STOP, NULL);
 
         if (stop) {
-            order_actions(stop, stonith_op, pcmk__ar_ordered);
+            order_actions(stop, fencing, pcmk__ar_ordered);
             crm_info("Implying guest %s is down (action %d) "
                      "after connection is stopped (action %d)",
-                     pcmk__node_name(node), stonith_op->id, stop->id);
+                     pcmk__node_name(node), fencing->id, stop->id);
         } else {
             /* Not sure why we're fencing, but everything must already be
              * cleanly stopped.
              */
             crm_info("Implying guest %s is down (action %d) ",
-                     pcmk__node_name(node), stonith_op->id);
+                     pcmk__node_name(node), fencing->id);
         }
     }
 
     // Order/imply other actions relative to pseudo-fence as with real fence
-    pcmk__order_vs_fence(stonith_op, node->priv->scheduler);
+    pcmk__order_vs_fencing(fencing, node->priv->scheduler);
 }
 
 /*!

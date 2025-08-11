@@ -143,8 +143,8 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
 {
     pcmk__output_t *out = scheduler->priv->out;
     GList *all = NULL;
-    crm_exit_t stonith_rc = 0;
-    enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
+    const crm_exit_t history_rc = 0;
+    const enum pcmk_pacemakerd_state state = pcmk_pacemakerd_state_invalid;
 
     section_opts |= pcmk_section_nodes | pcmk_section_resources;
     show_opts |= pcmk_show_inactive_rscs | pcmk_show_failed_detail;
@@ -154,9 +154,8 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
     out->message(out, "cluster-status",
-                 scheduler, state, stonith_rc, NULL,
-                 pcmk__fence_history_none, section_opts, show_opts, NULL,
-                 all, all);
+                 scheduler, state, history_rc, NULL, pcmk__fence_history_none,
+                 section_opts, show_opts, NULL, all, all);
     out->end_list(out);
 
     g_list_free(all);
