@@ -196,7 +196,7 @@ stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node)
 
         if (stonith_api->state != stonith_disconnected) {
             /* caveat!!!
-             * this might fail when when stonithd is just updating the device-list
+             * this might fail when the fencer is just updating the device-list
              * probably something we should fix as well for other api-calls */
             int rc = stonith_api->cmds->list(stonith_api, st_opt_sync_call, STONITH_WATCHDOG_ID, &list, 0);
             if ((rc != pcmk_ok) || (list == NULL)) {
@@ -1599,7 +1599,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
         if (call_options & st_opt_sync_call) {
-            pcmk__set_ipc_flags(ipc_flags, "stonith command",
+            pcmk__set_ipc_flags(ipc_flags, "fencing command",
                                 crm_ipc_client_response);
         }
         rc = crm_ipc_send(native->ipc, op_msg, ipc_flags,
@@ -1738,7 +1738,7 @@ free_stonith_api(stonith_t *stonith)
 }
 
 static gboolean
-is_stonith_param(gpointer key, gpointer value, gpointer user_data)
+is_fencing_param(gpointer key, gpointer value, gpointer user_data)
 {
     return pcmk_stonith_param(key);
 }
@@ -1763,8 +1763,10 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
 
         host_arg = pcmk__str_copy(param);
 
-        /* Remove special stonith params from the table before doing anything else */
-        g_hash_table_foreach_remove(params, is_stonith_param, NULL);
+        /* Remove special fencing params from the table before doing anything
+         * else
+         */
+        g_hash_table_foreach_remove(params, is_fencing_param, NULL);
     }
 
 #if PCMK__ENABLE_CIBSECRETS
@@ -2387,7 +2389,7 @@ stonith__later_succeeded(const stonith_history_t *event,
  * \internal
  * \brief Sort fencing history, pending first then by most recently completed
  *
- * \param[in,out] history    List of stonith actions
+ * \param[in,out] history    List of fencing actions
  *
  * \return New head of sorted \p history
  */
