@@ -367,7 +367,7 @@ controld_execute_fencing_cleanup(void)
 /* end fencing cleanup list functions */
 
 
-/* stonith API client
+/* Fencer API client
  *
  * Functions that need to interact directly with the fencer via its API
  */
@@ -376,15 +376,15 @@ static stonith_t *stonith_api = NULL;
 static mainloop_timer_t *controld_fencer_connect_timer = NULL;
 static char *te_client_id = NULL;
 
-static gboolean
-fail_incompletable_stonith(pcmk__graph_t *graph)
+static bool
+fail_incompletable_fencing(pcmk__graph_t *graph)
 {
     GList *lpc = NULL;
     const char *task = NULL;
     xmlNode *last_action = NULL;
 
     if (graph == NULL) {
-        return FALSE;
+        return false;
     }
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
@@ -417,10 +417,10 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
     if (last_action != NULL) {
         crm_warn("Fencing failure resulted in unrunnable actions");
         abort_for_fencing_failure(pcmk__graph_restart, NULL, last_action);
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 static void
@@ -448,7 +448,7 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
     }
 
     if (AM_I_DC) {
-        fail_incompletable_stonith(controld_globals.transition_graph);
+        fail_incompletable_fencing(controld_globals.transition_graph);
         trigger_graph();
     }
 }
