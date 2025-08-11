@@ -1454,8 +1454,8 @@ free_rsc(gpointer data)
 {
     GList *gIter = NULL;
     lrmd_rsc_t *rsc = data;
-    int is_stonith = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
-                                  pcmk__str_casei);
+    bool is_fencing_rsc = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                                       pcmk__str_casei);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
@@ -1476,11 +1476,11 @@ free_rsc(gpointer data)
         GList *next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
-        if (is_stonith) {
+        if (is_fencing_rsc) {
             cmd->result.execution_status = PCMK_EXEC_CANCELLED;
-            /* If a stonith command is in-flight, just mark it as cancelled;
-             * it is not safe to finalize/free the cmd until the stonith api
-             * says it has either completed or timed out.
+            /* If a fencing resource's recurring operation is in-flight, just
+             * mark it as cancelled. It is not safe to finalize/free the cmd
+             * until the fencer API says it has either completed or timed out.
              */
             if (rsc->active != cmd) {
                 cmd_finalize(cmd, NULL);
