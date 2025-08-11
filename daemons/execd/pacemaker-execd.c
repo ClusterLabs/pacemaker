@@ -64,7 +64,7 @@ stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
 }
 
 stonith_t *
-get_stonith_connection(void)
+execd_get_fencer_connection(void)
 {
     if ((fencer_api != NULL) && (fencer_api->state == stonith_disconnected)) {
         stonith__api_free(fencer_api);
