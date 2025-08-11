@@ -590,7 +590,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * environment. If invalid, the controller will exit with a fatal error.
      *
      * We do this via a wrapper in the controller, so that we call
-     * pcmk__valid_stonith_watchdog_timeout() only if watchdog fencing is
+     * pcmk__valid_fencing_watchdog_timeout() only if watchdog fencing is
      * enabled for the local node. Otherwise, we may exit unnecessarily.
      *
      * A validator function in libcrmcommon can't act as such a wrapper, because

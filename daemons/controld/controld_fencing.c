@@ -1012,7 +1012,7 @@ controld_valid_fencing_watchdog_timeout(const char *value)
         return true;
     }
 
-    return pcmk__valid_stonith_watchdog_timeout(value);
+    return pcmk__valid_fencing_watchdog_timeout(value);
 }
 
 /* end stonith API client functions */
