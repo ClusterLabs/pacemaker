@@ -64,7 +64,7 @@ int lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg);
 
 void notify_of_new_client(pcmk__client_t *new_client);
 
-void free_rsc(gpointer data);
+void execd_free_rsc(gpointer data);
 
 void handle_shutdown_ack(void);
 

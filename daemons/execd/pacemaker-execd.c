@@ -425,7 +425,7 @@ main(int argc, char **argv)
         }
     }
 
-    rsc_list = pcmk__strkey_table(NULL, free_rsc);
+    rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
