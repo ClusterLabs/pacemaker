@@ -717,7 +717,7 @@ controld_timer_fencer_connect(gpointer user_data)
         cmds->register_notification(stonith_api,
                                     PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
                                     tengine_stonith_history_synced);
-        te_trigger_stonith_history_sync(TRUE);
+        controld_trigger_fencing_history_sync(true);
         crm_notice("Fencer successfully connected");
     }
 
@@ -1059,7 +1059,7 @@ stonith_history_sync_set_trigger(gpointer user_data)
 }
 
 void
-te_trigger_stonith_history_sync(bool long_timeout)
+controld_trigger_fencing_history_sync(bool long_timeout)
 {
     /* trigger a sync in 5s to give more nodes the
      * chance to show up so that we don't create

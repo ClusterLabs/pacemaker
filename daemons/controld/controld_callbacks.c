@@ -255,7 +255,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                  * there is no other way to ensure some one node does it.
                  */
                 if (appeared) {
-                    te_trigger_stonith_history_sync(FALSE);
+                    controld_trigger_fencing_history_sync(false);
                 } else {
                     controld_delete_node_state(node->name,
                                                controld_section_attrs,
