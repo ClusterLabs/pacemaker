@@ -1006,20 +1006,20 @@ controld_validate_fencing_watchdog_timeout(const char *value)
  */
 
 static crm_trigger_t *fencing_history_sync_trigger = NULL;
-static mainloop_timer_t *stonith_history_sync_timer_short = NULL;
-static mainloop_timer_t *stonith_history_sync_timer_long = NULL;
+static mainloop_timer_t *fencing_history_sync_timer_short = NULL;
+static mainloop_timer_t *fencing_history_sync_timer_long = NULL;
 
 void
 controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
 {
     if (free_timers) {
-        mainloop_timer_del(stonith_history_sync_timer_short);
-        stonith_history_sync_timer_short = NULL;
-        mainloop_timer_del(stonith_history_sync_timer_long);
-        stonith_history_sync_timer_long = NULL;
+        mainloop_timer_del(fencing_history_sync_timer_short);
+        fencing_history_sync_timer_short = NULL;
+        mainloop_timer_del(fencing_history_sync_timer_long);
+        fencing_history_sync_timer_long = NULL;
     } else {
-        mainloop_timer_stop(stonith_history_sync_timer_short);
-        mainloop_timer_stop(stonith_history_sync_timer_long);
+        mainloop_timer_stop(fencing_history_sync_timer_short);
+        mainloop_timer_stop(fencing_history_sync_timer_long);
     }
 
     if (st) {
@@ -1035,7 +1035,7 @@ fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 }
 
 static gboolean
-stonith_history_sync_set_trigger(gpointer user_data)
+fencing_history_sync_set_trigger(gpointer user_data)
 {
     mainloop_set_trigger(fencing_history_sync_trigger);
     return FALSE;
@@ -1046,7 +1046,7 @@ controld_trigger_fencing_history_sync(bool long_timeout)
 {
     /* trigger a sync in 5s to give more nodes the
      * chance to show up so that we don't create
-     * unnecessary stonith-history-sync traffic
+     * unnecessary fencing-history-sync traffic
      *
      * the long timeout of 30s is there as a fallback
      * so that after a successful connection to fenced
@@ -1056,9 +1056,10 @@ controld_trigger_fencing_history_sync(bool long_timeout)
      * (e.g. fenced segfaults and is restarted by pacemakerd)
      */
 
-    /* as we are finally checking the stonith-connection
+    /* as we are finally checking the fencer connection
      * in sync_fencing_history() we should be fine
-     * leaving stonith_history_sync_time and fencing_history_sync_trigger
+     * leaving fencing_history_sync_timer_short,
+     * fencing_history_sync_timer_long, and fencing_history_sync_trigger
      * around
      */
     if (fencing_history_sync_trigger == NULL) {
@@ -1067,23 +1068,24 @@ controld_trigger_fencing_history_sync(bool long_timeout)
     }
 
     if (long_timeout) {
-        if(stonith_history_sync_timer_long == NULL) {
-            stonith_history_sync_timer_long =
+        if (fencing_history_sync_timer_long == NULL) {
+            fencing_history_sync_timer_long =
                 mainloop_timer_add("history_sync_long", 30000,
-                                   FALSE, stonith_history_sync_set_trigger,
+                                   FALSE, fencing_history_sync_set_trigger,
                                    NULL);
         }
         crm_info("Fence history will be synchronized cluster-wide within 30 seconds");
-        mainloop_timer_start(stonith_history_sync_timer_long);
+        mainloop_timer_start(fencing_history_sync_timer_long);
+
     } else {
-        if(stonith_history_sync_timer_short == NULL) {
-            stonith_history_sync_timer_short =
+        if (fencing_history_sync_timer_short == NULL) {
+            fencing_history_sync_timer_short =
                 mainloop_timer_add("history_sync_short", 5000,
-                                   FALSE, stonith_history_sync_set_trigger,
+                                   FALSE, fencing_history_sync_set_trigger,
                                    NULL);
         }
         crm_info("Fence history will be synchronized cluster-wide within 5 seconds");
-        mainloop_timer_start(stonith_history_sync_timer_short);
+        mainloop_timer_start(fencing_history_sync_timer_short);
     }
 
 }
