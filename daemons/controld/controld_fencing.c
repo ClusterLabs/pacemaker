@@ -1001,7 +1001,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 }
 
 bool
-controld_verify_stonith_watchdog_timeout(const char *value)
+controld_valid_fencing_watchdog_timeout(const char *value)
 {
     long long st_timeout = 0;
     const char *our_nodename = controld_globals.cluster->priv->node_name;
