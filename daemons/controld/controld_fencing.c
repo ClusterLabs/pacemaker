@@ -1016,13 +1016,13 @@ controld_validate_fencing_watchdog_timeout(const char *value)
 
 
 /*
- * stonith history synchronization
+ * Fencing history synchronization
  *
  * Each node's fencer keeps track of a cluster-wide fencing history. When a node
  * joins or leaves, we need to synchronize the history across all nodes.
  */
 
-static crm_trigger_t *stonith_history_sync_trigger = NULL;
+static crm_trigger_t *fencing_history_sync_trigger = NULL;
 static mainloop_timer_t *stonith_history_sync_timer_short = NULL;
 static mainloop_timer_t *stonith_history_sync_timer_long = NULL;
 
@@ -1054,7 +1054,7 @@ tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event)
 static gboolean
 stonith_history_sync_set_trigger(gpointer user_data)
 {
-    mainloop_set_trigger(stonith_history_sync_trigger);
+    mainloop_set_trigger(fencing_history_sync_trigger);
     return FALSE;
 }
 
@@ -1075,11 +1075,11 @@ controld_trigger_fencing_history_sync(bool long_timeout)
 
     /* as we are finally checking the stonith-connection
      * in do_stonith_history_sync we should be fine
-     * leaving stonith_history_sync_time & stonith_history_sync_trigger
+     * leaving stonith_history_sync_time and fencing_history_sync_trigger
      * around
      */
-    if (stonith_history_sync_trigger == NULL) {
-        stonith_history_sync_trigger =
+    if (fencing_history_sync_trigger == NULL) {
+        fencing_history_sync_trigger =
             mainloop_add_trigger(G_PRIORITY_LOW,
                                  do_stonith_history_sync, NULL);
     }
