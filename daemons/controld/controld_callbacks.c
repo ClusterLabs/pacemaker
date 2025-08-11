@@ -285,7 +285,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 const bool confirmed =
                     pcmk_is_set(down->flags, pcmk__graph_action_confirmed);
 
-                /* tengine_stonith_callback() confirms fence actions */
+                // fencing_cb() confirms fence actions
                 crm_trace("Updating CIB %s fencer reported fencing of %s complete",
                           (confirmed? "after" : "before"), node->name);
 
