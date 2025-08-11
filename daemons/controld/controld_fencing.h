@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@ gboolean controld_timer_fencer_connect(gpointer user_data);
 void controld_disconnect_fencer(bool destroy);
 int controld_execute_fence_action(pcmk__graph_t *graph,
                                   pcmk__graph_action_t *action);
-bool controld_verify_stonith_watchdog_timeout(const char *value);
+void controld_validate_fencing_watchdog_timeout(const char *value);
 
 // stonith cleanup list
 void add_stonith_cleanup(const char *target);

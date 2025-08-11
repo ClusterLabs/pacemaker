@@ -1000,19 +1000,18 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     return pcmk_rc_ok;
 }
 
-bool
-controld_verify_stonith_watchdog_timeout(const char *value)
+void
+controld_validate_fencing_watchdog_timeout(const char *value)
 {
     const char *our_nodename = controld_globals.cluster->priv->node_name;
 
-    if ((stonith_api == NULL) || (stonith_api->state == stonith_disconnected)
-        || !stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
-                                                           our_nodename)) {
-        // Anything is valid since it won't be used
-        return true;
-    }
+    // Validate only if the timeout will be used
+    if ((stonith_api != NULL) && (stonith_api->state != stonith_disconnected)
+        && stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
+                                                          our_nodename)) {
 
-    return pcmk__valid_stonith_watchdog_timeout(value);
+        pcmk__valid_stonith_watchdog_timeout(value);
+    }
 }
 
 /* end stonith API client functions */

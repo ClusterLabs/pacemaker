@@ -597,7 +597,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * it doesn't have a stonith API connection or the local node name.
      */
     value = g_hash_table_lookup(config_hash, PCMK_OPT_FENCING_WATCHDOG_TIMEOUT);
-    controld_verify_stonith_watchdog_timeout(value);
+    controld_validate_fencing_watchdog_timeout(value);
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
     if (pcmk__strcase_any_of(value, PCMK_VALUE_FENCE, PCMK_VALUE_FENCE_LEGACY,
