@@ -28,7 +28,7 @@ static qb_ipcs_service_t *cib_shm = NULL;
 
 static qb_ipcs_service_t *attrd_ipcs = NULL;
 static qb_ipcs_service_t *crmd_ipcs = NULL;
-static qb_ipcs_service_t *stonith_ipcs = NULL;
+static qb_ipcs_service_t *fencer_ipcs = NULL;
 static qb_ipcs_service_t *pacemakerd_ipcs = NULL;
 
 // An IPC provider is a cluster node controller connecting as a client
@@ -127,7 +127,7 @@ attrd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 }
 
 static int32_t
-stonith_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+fencer_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     return ipc_proxy_accept(c, uid, gid, "stonith-ng");
 }
@@ -397,8 +397,8 @@ static struct qb_ipcs_service_handlers attrd_proxy_callbacks = {
     .connection_destroyed = ipc_proxy_destroy
 };
 
-static struct qb_ipcs_service_handlers stonith_proxy_callbacks = {
-    .connection_accept = stonith_proxy_accept,
+static struct qb_ipcs_service_handlers fencer_proxy_callbacks = {
+    .connection_accept = fencer_proxy_accept,
     .connection_created = NULL,
     .msg_process = ipc_proxy_dispatch,
     .connection_closed = ipc_proxy_closed,
@@ -478,7 +478,7 @@ ipc_proxy_init(void)
     pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_shm, &cib_proxy_callbacks_ro,
                           &cib_proxy_callbacks_rw);
     pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
-    pcmk__serve_fenced_ipc(&stonith_ipcs, &stonith_proxy_callbacks);
+    pcmk__serve_fenced_ipc(&fencer_ipcs, &fencer_proxy_callbacks);
     pcmk__serve_pacemakerd_ipc(&pacemakerd_ipcs, &pacemakerd_proxy_callbacks);
     crmd_ipcs = pcmk__serve_controld_ipc(&crmd_proxy_callbacks);
     if (crmd_ipcs == NULL) {
@@ -501,7 +501,7 @@ ipc_proxy_cleanup(void)
     }
     pcmk__stop_based_ipc(cib_ro, cib_rw, cib_shm);
     qb_ipcs_destroy(attrd_ipcs);
-    qb_ipcs_destroy(stonith_ipcs);
+    qb_ipcs_destroy(fencer_ipcs);
     qb_ipcs_destroy(pacemakerd_ipcs);
     qb_ipcs_destroy(crmd_ipcs);
     cib_ro = NULL;
