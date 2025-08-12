@@ -297,15 +297,7 @@ pcmk__daemonize(const char *name)
     }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
-
-    close(STDIN_FILENO);
-    pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
-
-    close(STDOUT_FILENO);
-    pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
-
-    close(STDERR_FILENO);
-    pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
+    pcmk__null_std_streams();
 }
 
 #ifdef HAVE_UUID_UUID_H
