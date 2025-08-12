@@ -1481,25 +1481,6 @@ main(int argc, char **argv)
         options.fence_connect = TRUE;
     }
 
-    if (options.exec_mode == mon_exec_daemonized) {
-        if (options.external_agent == NULL) {
-            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                            "--daemonize requires at least one of --output-to "
-                            "(with value not set to '-') and --external-agent");
-                return clean_up(CRM_EX_USAGE);
-            }
-            if (output_format == mon_output_none) {
-                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                            "--daemonize requires --external-agent if used "
-                            "with --output-as=none");
-                return clean_up(CRM_EX_USAGE);
-            }
-        }
-        crm_enable_stderr(FALSE);
-        pcmk__daemonize(crm_system_name, options.pid_file);
-    }
-
     show = default_includes(output_format);
 
     /* Apply --include/--exclude flags we used internally.  There's no error reporting
@@ -1540,6 +1521,25 @@ main(int argc, char **argv)
                               PCMK__XA_CONTENT, content,
                               NULL);
         free(content);
+    }
+
+    if (options.exec_mode == mon_exec_daemonized) {
+        if (options.external_agent == NULL) {
+            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires at least one of --output-to "
+                            "(with value not set to '-') and --external-agent");
+                return clean_up(CRM_EX_USAGE);
+            }
+            if (output_format == mon_output_none) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires --external-agent if used "
+                            "with --output-as=none");
+                return clean_up(CRM_EX_USAGE);
+            }
+        }
+        crm_enable_stderr(FALSE);
+        pcmk__daemonize(crm_system_name, options.pid_file);
     }
 
     cib = cib_new();
