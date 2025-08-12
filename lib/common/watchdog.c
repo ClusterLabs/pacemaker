@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -171,7 +171,7 @@ pcmk__locate_sbd(void)
     }
 
     /* Read the pid file */
-    rc = pcmk__pidfile_matches(pidfile, 0, SBIN_DIR "/sbd", &sbd_pid);
+    rc = pcmk__pidfile_matches(pidfile, SBIN_DIR "/sbd", &sbd_pid);
     if (rc == pcmk_rc_ok) {
         crm_trace("SBD detected at pid %lld (via PID file %s)",
                   (long long) sbd_pid, pidfile);

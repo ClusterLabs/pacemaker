@@ -161,7 +161,6 @@ read_pidfile(const char *filename, pid_t *pid)
  * \brief Check whether a process from a PID file matches expected values
  *
  * \param[in]  filename       Path of PID file
- * \param[in]  expected_pid   If positive, compare to this PID
  * \param[in]  expected_name  If not NULL, the PID from the PID file is valid
  *                            only if it is active as a process with this name
  * \param[out] pid            If not NULL, store PID found in PID file here
@@ -169,8 +168,8 @@ read_pidfile(const char *filename, pid_t *pid)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
-                      const char *expected_name, pid_t *pid)
+pcmk__pidfile_matches(const char *filename, const char *expected_name,
+                      pid_t *pid)
 {
     pid_t pidfile_pid = 0;
     int rc = read_pidfile(filename, &pidfile_pid);
@@ -184,18 +183,10 @@ pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
         unlink(filename);
         rc = ENOENT;
 
-    } else if ((expected_pid > 0) && (pidfile_pid == expected_pid)) {
-        // PID in file matches what was expected
-        rc = pcmk_rc_ok;
-
     } else if (pcmk__pid_active(pidfile_pid, expected_name) == ESRCH) {
         // Contains a stale value
         unlink(filename);
         rc = ENOENT;
-
-    } else if ((expected_pid > 0) && (pidfile_pid != expected_pid)) {
-        // Locked by existing process
-        rc = EEXIST;
     }
 
     return rc;
