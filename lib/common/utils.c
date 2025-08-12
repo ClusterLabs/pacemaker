@@ -273,33 +273,6 @@ compare_version(const char *version1, const char *version2)
     return rc;
 }
 
-/*!
- * \internal
- * \brief Convert the current process to a daemon process
- *
- * Fork a child process, exit the parent, and close the standard
- * input/output/error file descriptors.
- *
- * \param[in] name  Daemon executable name
- */
-void
-pcmk__daemonize(const char *name)
-{
-    pid_t pid = fork();
-
-    if (pid < 0) {
-        fprintf(stderr, "%s: could not start daemon\n", name);
-        crm_perror(LOG_ERR, "fork");
-        crm_exit(CRM_EX_OSERR);
-
-    } else if (pid > 0) {
-        crm_exit(CRM_EX_OK);
-    }
-
-    umask(S_IWGRP | S_IWOTH | S_IROTH);
-    pcmk__null_std_streams();
-}
-
 #ifdef HAVE_UUID_UUID_H
 #  include <uuid/uuid.h>
 #endif

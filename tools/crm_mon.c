@@ -1524,6 +1524,8 @@ main(int argc, char **argv)
     }
 
     if (options.exec_mode == mon_exec_daemonized) {
+        pid_t pid = 0;
+
         if (options.external_agent == NULL) {
             if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
@@ -1538,8 +1540,20 @@ main(int argc, char **argv)
                 return clean_up(CRM_EX_USAGE);
             }
         }
+
         crm_enable_stderr(FALSE);
-        pcmk__daemonize(crm_system_name);
+
+        pid = fork();
+        if (pid < 0) {
+            fprintf(stderr, "%s: could not start daemon\n", crm_system_name);
+            crm_perror(LOG_ERR, "fork");
+            crm_exit(CRM_EX_OSERR);
+
+        } else if (pid > 0) {
+            crm_exit(CRM_EX_OK);
+        }
+        umask(S_IWGRP|S_IWOTH|S_IROTH);
+        pcmk__null_std_streams();
     }
 
     cib = cib_new();
