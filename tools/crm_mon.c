@@ -2116,6 +2116,7 @@ static crm_exit_t
 clean_up(crm_exit_t exit_code)
 {
     /* Quitting crm_mon is much more complicated than it ought to be. */
+    const bool has_error = (error != NULL);
 
     /* (1) Close connections, free things, etc. */
     if (io_channel != NULL) {
@@ -2141,7 +2142,7 @@ clean_up(crm_exit_t exit_code)
      * down will be lost because doing the shut down will also restore the
      * screen to whatever it looked like before crm_mon was started.
      */
-    if (((error != NULL) || (exit_code == CRM_EX_USAGE))
+    if ((has_error || (exit_code == CRM_EX_USAGE))
         && (output_format == mon_output_console)
         && (out != NULL)) {
 
@@ -2162,29 +2163,14 @@ clean_up(crm_exit_t exit_code)
 
     pcmk__free_arg_context(context);
 
-    /* (4) If this is any kind of error, print the error out and exit.  Make
-     * sure to handle situations both before and after formatted output is
-     * set up.  We want errors to appear formatted if at all possible.
+    /* (4) Output the error if one exists. Finish the output unless this is a
+     * successful daemonized child. Clean up the output object and exit.
      */
-    if (error != NULL) {
-        pcmk__output_and_clear_error(&error, out);
-
-        if (out != NULL) {
-            out->finish(out, exit_code, true, NULL);
-            pcmk__output_free(out);
-            pcmk__unregister_formats();
-        }
-        crm_exit(exit_code);
-    }
-
-    /* (5) Print formatted output to the screen if we made it far enough in
-     * crm_mon to be able to do so.
-     */
+    pcmk__output_and_clear_error(&error, out);
     if (out != NULL) {
-        if (options.exec_mode != mon_exec_daemonized) {
+        if (has_error || (options.exec_mode != mon_exec_daemonized)) {
             out->finish(out, exit_code, true, NULL);
         }
-
         pcmk__output_free(out);
     }
 
