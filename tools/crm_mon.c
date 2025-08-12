@@ -1547,10 +1547,10 @@ main(int argc, char **argv)
         if (pid < 0) {
             fprintf(stderr, "%s: could not start daemon\n", crm_system_name);
             crm_perror(LOG_ERR, "fork");
-            crm_exit(CRM_EX_OSERR);
-
-        } else if (pid > 0) {
-            crm_exit(CRM_EX_OK);
+            clean_up(CRM_EX_OSERR);
+        }
+        if (pid > 0) {
+            clean_up(CRM_EX_OK);
         }
         umask(S_IWGRP|S_IWOTH|S_IROTH);
         pcmk__null_std_streams();
