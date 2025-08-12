@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -24,9 +24,7 @@ sbin_SCRIPTS		= crm_report 	\
 			  crm_standby 	\
 			  crm_master 	\
 			  crm_failcount
-if BUILD_CIBSECRETS
-sbin_SCRIPTS		+= cibsecret
-endif
+
 noinst_SCRIPTS		= cluster-clean		\
 			  cluster-helper	\
 			  pcmk_simtimes
@@ -51,6 +49,10 @@ sbin_PROGRAMS		= attrd_updater \
 			  iso8601 	\
 			  stonith_admin
 
+if BUILD_CIBSECRETS
+sbin_PROGRAMS 		+= cibsecret
+endif
+
 ## SOURCES
 
 # A few tools are just thin wrappers around crm_attribute.
@@ -72,6 +74,13 @@ cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 cibadmin_LDADD += $(top_builddir)/lib/cib/libcib.la
 cibadmin_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+
+if BUILD_CIBSECRETS
+cibsecret_SOURCES	= cibsecret.c
+cibsecret_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
+cibsecret_LDADD += $(top_builddir)/lib/cib/libcib.la
+cibsecret_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+endif
 
 crm_shadow_SOURCES	= crm_shadow.c
 crm_shadow_LDADD = $(top_builddir)/lib/cib/libcib.la
