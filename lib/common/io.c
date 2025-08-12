@@ -551,21 +551,19 @@ pcmk__get_tmpdir(void)
 
 /*!
  * \internal
- * \brief Close open file descriptors
+ * \brief Close open file descriptors except standard streams
  *
- * Close all file descriptors (except optionally stdin, stdout, and stderr),
- * which is a best practice for a new child process forked for the purpose of
- * executing an external program.
- *
- * \param[in] bool  If true, close stdin, stdout, and stderr as well
+ * Close all file descriptors (except stdin, stdout, and stderr), which is a
+ * best practice for a new child process forked for the purpose of executing an
+ * external program.
  */
 void
-pcmk__close_fds_in_child(bool all)
+pcmk__close_fds_in_child(void)
 {
     DIR *dir;
     struct rlimit rlim;
     rlim_t max_fd;
-    int min_fd = (all? 0 : (STDERR_FILENO + 1));
+    const int min_fd = STDERR_FILENO + 1;
 
     /* Find the current process's (soft) limit for open files. getrlimit()
      * should always work, but have a fallback just in case.

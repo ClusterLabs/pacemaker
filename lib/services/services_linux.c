@@ -990,7 +990,7 @@ action_launch_child(svc_action_t *op)
      */
     setpgid(0, 0);
 
-    pcmk__close_fds_in_child(false);
+    pcmk__close_fds_in_child();
 
     /* It would be nice if errors in this function could be reported as
      * execution status (for example, PCMK_EXEC_NO_SECRETS for the secrets error

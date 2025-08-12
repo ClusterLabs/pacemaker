@@ -528,10 +528,13 @@ start_child(pcmk_child_t * child)
                      errno);
         }
 
-        pcmk__close_fds_in_child(true);
+        pcmk__close_fds_in_child();
 
+        close(STDIN_FILENO);
         pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
+        close(STDOUT_FILENO);
         pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
+        close(STDERR_FILENO);
         pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
 
         if (use_callgrind) {

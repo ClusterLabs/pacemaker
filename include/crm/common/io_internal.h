@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -39,7 +39,7 @@ int pcmk__write_sync(int fd, const char *contents);
 int pcmk__set_nonblocking(int fd);
 const char *pcmk__get_tmpdir(void);
 
-void pcmk__close_fds_in_child(bool);
+void pcmk__close_fds_in_child(void);
 
 /*!
  * \internal
