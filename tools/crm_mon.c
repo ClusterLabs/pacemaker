@@ -212,7 +212,6 @@ struct {
     gboolean print_pending;
     gboolean show_bans;
     gboolean watch_fencing;
-    gchar *pid_file;
     gchar *external_agent;
     gchar *external_recipient;
     char *neg_location_prefix;
@@ -426,6 +425,13 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
+pid_file_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+            GError **err)
+{
+    return TRUE;
+}
+
+static gboolean
 fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg == NULL) {
         interactive_fence_level = 2;
@@ -617,10 +623,6 @@ static GOptionEntry addl_entries[] = {
       INDENT "Requires at least one of --output-to and --external-agent.",
       NULL },
 
-    { "pid-file", 'p', 0, G_OPTION_ARG_FILENAME, &options.pid_file,
-      "(Advanced) Daemon pid file location",
-      "FILE" },
-
     { "external-agent", 'E', 0, G_OPTION_ARG_FILENAME, &options.external_agent,
       "A program to run when resource operations take place",
       "FILE" },
@@ -732,6 +734,10 @@ static GOptionEntry deprecated_entries[] = {
       "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
       INDENT "Use --output-as=xml instead.",
       NULL },
+
+    { "pid-file", 'p', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
+      G_OPTION_ARG_CALLBACK, pid_file_cb,
+      "(deprecated)", "FILE" },
 
     { NULL }
 };
@@ -1408,7 +1414,6 @@ main(int argc, char **argv)
     context = build_arg_context(args, &output_group);
     pcmk__register_formats(output_group, formats);
 
-    options.pid_file = g_strdup("/tmp/ClusterMon.pid");
     pcmk__cli_init_logging("crm_mon", 0);
 
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
@@ -2125,7 +2130,6 @@ clean_up(crm_exit_t exit_code)
 
     cib__clean_up_connection(&cib);
     stonith__api_free(st);
-    g_free(options.pid_file);
     g_free(options.external_agent);
     g_free(options.external_recipient);
     free(options.neg_location_prefix);
