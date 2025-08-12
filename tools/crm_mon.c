@@ -1545,8 +1545,8 @@ main(int argc, char **argv)
 
         pid = fork();
         if (pid < 0) {
-            fprintf(stderr, "%s: could not start daemon\n", crm_system_name);
-            crm_perror(LOG_ERR, "fork");
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_OSERR,
+                        "Could not fork daemon: %s", strerror(errno));
             clean_up(CRM_EX_OSERR);
         }
         if (pid > 0) {
