@@ -1522,22 +1522,20 @@ main(int argc, char **argv)
             break;
     }
 
-    if ((options.exec_mode == mon_exec_daemonized)
-        && !options.external_agent
-        && pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
-
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                    "--daemonize requires at least one of --output-to "
-                    "(with value not set to '-') and --external-agent");
-        return clean_up(CRM_EX_USAGE);
-    }
-
     if (options.exec_mode == mon_exec_daemonized) {
-        if (!options.external_agent && (output_format == mon_output_none)) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "--daemonize requires --external-agent if used with "
-                        "--output-as=none");
-            return clean_up(CRM_EX_USAGE);
+        if (!options.external_agent) {
+            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires at least one of --output-to "
+                            "(with value not set to '-') and --external-agent");
+                return clean_up(CRM_EX_USAGE);
+            }
+            if (output_format == mon_output_none) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires --external-agent if used "
+                            "with --output-as=none");
+                return clean_up(CRM_EX_USAGE);
+            }
         }
         crm_enable_stderr(FALSE);
         cib_delete(cib);
