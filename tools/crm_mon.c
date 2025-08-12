@@ -212,12 +212,12 @@ struct {
     gboolean print_pending;
     gboolean show_bans;
     gboolean watch_fencing;
-    char *pid_file;
-    char *external_agent;
-    char *external_recipient;
+    gchar *pid_file;
+    gchar *external_agent;
+    gchar *external_recipient;
     char *neg_location_prefix;
-    char *only_node;
-    char *only_rsc;
+    gchar *only_node;
+    gchar *only_rsc;
     GSList *user_includes_excludes;
     GSList *includes_excludes;
 } options = {
@@ -1408,7 +1408,7 @@ main(int argc, char **argv)
     context = build_arg_context(args, &output_group);
     pcmk__register_formats(output_group, formats);
 
-    options.pid_file = strdup("/tmp/ClusterMon.pid");
+    options.pid_file = g_strdup("/tmp/ClusterMon.pid");
     pcmk__cli_init_logging("crm_mon", 0);
 
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
@@ -1523,7 +1523,7 @@ main(int argc, char **argv)
     }
 
     if (options.exec_mode == mon_exec_daemonized) {
-        if (!options.external_agent) {
+        if (options.external_agent == NULL) {
             if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
                 g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
                             "--daemonize requires at least one of --output-to "
@@ -1687,7 +1687,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
     }
-    if (options.external_recipient) {
+    if (options.external_recipient != NULL) {
         setenv("CRM_notify_recipient", options.external_recipient, 1);
     }
     setenv("CRM_notify_node", node, 1);
@@ -1797,7 +1797,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
-    if (notify && options.external_agent) {
+    if (notify && (options.external_agent != NULL)) {
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
 
@@ -1949,7 +1949,7 @@ crm_diff_update(const char *event, xmlNode * msg)
         cib->cmds->query(cib, NULL, &current_cib, cib_sync_call);
     }
 
-    if (options.external_agent) {
+    if (options.external_agent != NULL) {
         int format = 0;
 
         pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
@@ -2033,7 +2033,7 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
         mon_cib_connection_destroy(NULL);
-    } else if (options.external_agent) {
+    } else if (options.external_agent != NULL) {
         char *desc = stonith__event_description(e);
 
         send_custom_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
@@ -2124,10 +2124,12 @@ clean_up(crm_exit_t exit_code)
 
     cib__clean_up_connection(&cib);
     stonith__api_free(st);
+    g_free(options.pid_file);
+    g_free(options.external_agent);
+    g_free(options.external_recipient);
     free(options.neg_location_prefix);
-    free(options.only_node);
-    free(options.only_rsc);
-    free(options.pid_file);
+    g_free(options.only_node);
+    g_free(options.only_rsc);
     g_slist_free_full(options.includes_excludes, free);
 
     g_strfreev(processed_args);
