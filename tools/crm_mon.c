@@ -639,6 +639,10 @@ static GOptionEntry addl_entries[] = {
       NULL,
       NULL },
 
+    { "pid-file", 'p', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
+      G_OPTION_ARG_CALLBACK, pid_file_cb,
+      "(deprecated)", "FILE" },
+
     { NULL }
 };
 
@@ -722,10 +726,6 @@ static GOptionEntry display_entries[] = {
       "Display pending state if '" PCMK_META_RECORD_PENDING "' is enabled",
       NULL },
 
-    { NULL }
-};
-
-static GOptionEntry deprecated_entries[] = {
     /* @COMPAT resource-agents <4.15.0 uses --as-xml, so removing this option
      * must wait until we no longer support building on any platforms that ship
      * the older agents.
@@ -735,10 +735,6 @@ static GOptionEntry deprecated_entries[] = {
     { "as-xml", 'X', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
       G_OPTION_ARG_CALLBACK, as_xml_cb,
       "(deprecated)" },
-
-    { "pid-file", 'p', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
-      G_OPTION_ARG_CALLBACK, pid_file_cb,
-      "(deprecated)", "FILE" },
 
     { NULL }
 };
@@ -1271,8 +1267,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                         "Show display options", display_entries);
     pcmk__add_arg_group(context, "additional", "Additional Options:",
                         "Show additional options", addl_entries);
-    pcmk__add_arg_group(context, "deprecated", "Deprecated Options:",
-                        "Show deprecated options", deprecated_entries);
 
     return context;
 }
