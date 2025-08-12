@@ -277,30 +277,16 @@ compare_version(const char *version1, const char *version2)
  * \internal
  * \brief Convert the current process to a daemon process
  *
- * Fork a child process, exit the parent, create a PID file with the current
- * process ID, and close the standard input/output/error file descriptors.
- * Exit instead if a daemon is already running and using the PID file.
+ * Fork a child process, exit the parent, and close the standard
+ * input/output/error file descriptors.
  *
- * \param[in] name     Daemon executable name
- * \param[in] pidfile  File name to use as PID file
+ * \param[in] name  Daemon executable name
  */
 void
-pcmk__daemonize(const char *name, const char *pidfile)
+pcmk__daemonize(const char *name)
 {
-    int rc;
-    pid_t pid;
+    pid_t pid = fork();
 
-    /* Check before we even try... */
-    rc = pcmk__pidfile_matches(pidfile, 1, name, &pid);
-    if ((rc != pcmk_rc_ok) && (rc != ENOENT)) {
-        crm_err("%s: already running [pid %lld in %s]",
-                name, (long long) pid, pidfile);
-        printf("%s: already running [pid %lld in %s]\n",
-               name, (long long) pid, pidfile);
-        crm_exit(CRM_EX_ERROR);
-    }
-
-    pid = fork();
     if (pid < 0) {
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
@@ -308,15 +294,6 @@ pcmk__daemonize(const char *name, const char *pidfile)
 
     } else if (pid > 0) {
         crm_exit(CRM_EX_OK);
-    }
-
-    rc = pcmk__lock_pidfile(pidfile, name);
-    if (rc != pcmk_rc_ok) {
-        crm_err("Could not lock '%s' for %s: %s " QB_XS " rc=%d",
-                pidfile, name, pcmk_rc_str(rc), rc);
-        printf("Could not lock '%s' for %s: %s (%d)\n",
-               pidfile, name, pcmk_rc_str(rc), rc);
-        crm_exit(CRM_EX_ERROR);
     }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);

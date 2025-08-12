@@ -1539,7 +1539,7 @@ main(int argc, char **argv)
             }
         }
         crm_enable_stderr(FALSE);
-        pcmk__daemonize(crm_system_name, options.pid_file);
+        pcmk__daemonize(crm_system_name);
     }
 
     cib = cib_new();
