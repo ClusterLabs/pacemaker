@@ -1481,47 +1481,6 @@ main(int argc, char **argv)
         options.fence_connect = TRUE;
     }
 
-    /* create the cib-object early to be able to do further
-     * decisions based on the cib-source
-     */
-    cib = cib_new();
-    if (cib == NULL) {
-        /* For the foreseeable future, out-of-memory is the only possible
-         * reason for NULL return value
-         */
-        rc = ENOMEM;
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    "Failed to create CIB API connection object: %s",
-                    pcmk_rc_str(rc));
-        clean_up(pcmk_rc2exitc(rc));
-    }
-
-    switch (cib->variant) {
-        case cib_native:
-            // Everything (fencer, CIB, pcmkd status) should be available
-            break;
-
-        case cib_file:
-            // Live fence history is not meaningful
-            fence_history_cb("--fence-history", "0", NULL, NULL);
-
-            /* Notifications are unsupported; nothing to monitor
-             * @COMPAT: Let setup_cib_connection() handle this by exiting?
-             */
-            options.exec_mode = mon_exec_one_shot;
-            break;
-
-        case cib_remote:
-            // We won't receive any fencing updates
-            fence_history_cb("--fence-history", "0", NULL, NULL);
-            break;
-
-        default:
-            // Should not be possible; would indicate a bug in CIB library
-            CRM_CHECK(false, clean_up(CRM_EX_ERROR));
-            break;
-    }
-
     if (options.exec_mode == mon_exec_daemonized) {
         if (options.external_agent == NULL) {
             if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
@@ -1538,19 +1497,7 @@ main(int argc, char **argv)
             }
         }
         crm_enable_stderr(FALSE);
-        cib_delete(cib);
-        cib = NULL;
         pcmk__daemonize(crm_system_name, options.pid_file);
-        cib = cib_new();
-
-        // @TODO Remove this duplication
-        if (cib == NULL) {
-            rc = ENOMEM;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Failed to create CIB API connection object: %s",
-                        pcmk_rc_str(rc));
-            clean_up(pcmk_rc2exitc(rc));
-        }
     }
 
     show = default_includes(output_format);
@@ -1595,11 +1542,50 @@ main(int argc, char **argv)
         free(content);
     }
 
-    crm_info("Starting %s", crm_system_name);
+    cib = cib_new();
+    if (cib == NULL) {
+        /* For the foreseeable future, out-of-memory is the only possible
+         * reason for NULL return value
+         */
+        rc = ENOMEM;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Failed to create CIB API connection object: %s",
+                    pcmk_rc_str(rc));
+        clean_up(pcmk_rc2exitc(rc));
+    }
 
     cib__set_output(cib, out);
 
+    switch (cib->variant) {
+        case cib_native:
+            // Everything (fencer, CIB, pcmkd status) should be available
+            break;
+
+        case cib_file:
+            // Live fence history is not meaningful
+            fence_history_cb("--fence-history", "0", NULL, NULL);
+
+            /* Notifications are unsupported; nothing to monitor
+             * @COMPAT: Let setup_cib_connection() handle this by exiting?
+             */
+            options.exec_mode = mon_exec_one_shot;
+            break;
+
+        case cib_remote:
+            // We won't receive any fencing updates
+            fence_history_cb("--fence-history", "0", NULL, NULL);
+            break;
+
+        default:
+            // Should not be possible; would indicate a bug in CIB library
+            CRM_CHECK(false, clean_up(CRM_EX_ERROR));
+            break;
+    }
+
+    crm_info("Starting %s", crm_system_name);
+
     if (options.exec_mode == mon_exec_one_shot) {
+        // Needs cib but not scheduler
         one_shot();
     }
 
