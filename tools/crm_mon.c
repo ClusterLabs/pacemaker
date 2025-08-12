@@ -1309,12 +1309,16 @@ reconcile_output_format(pcmk__common_args_t *args)
          * * We've requested daemonized or one-shot mode (console output is
          *   incompatible with modes other than mon_exec_update)
          * * We requested the version, which is effectively one-shot
+         * * The CIB_file environment variable is set. We haven't created the
+         *   cib object yet, so we can't simply check cib->variant, even though
+         *   that abstraction feels cleaner than checking CIB_file.
          * * We specified a non-stdout output destination (console mode is
          *   compatible only with stdout)
          */
         if ((options.exec_mode == mon_exec_daemonized)
             || (options.exec_mode == mon_exec_one_shot)
             || args->version
+            || (getenv("CIB_file") != NULL)
             || !pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
 
             pcmk__str_update(&args->output_ty, "text");
@@ -1410,8 +1414,6 @@ main(int argc, char **argv)
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
     avoid_zombies();
 
-    processed_args = pcmk__cmdline_preproc(argv, "eimpxEILU");
-
     fence_history_cb("--fence-history", "1", NULL, NULL);
 
     /* Set an HTML title regardless of what format we will eventually use.
@@ -1419,6 +1421,8 @@ main(int argc, char **argv)
      * line.
      */
     pcmk__html_set_title("Cluster Status");
+
+    processed_args = pcmk__cmdline_preproc(argv, "eimpxEILU");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         return clean_up(CRM_EX_USAGE);
@@ -1428,74 +1432,13 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
-    if (!args->version) {
-        if (args->quiet) {
-            include_exclude_cb("--exclude", "times", NULL, NULL);
-        }
-
-        if (options.watch_fencing) {
-            fence_history_cb("--fence-history", "0", NULL, NULL);
-            options.fence_connect = TRUE;
-        }
-
-        /* create the cib-object early to be able to do further
-         * decisions based on the cib-source
-         */
-        cib = cib_new();
-        if (cib == NULL) {
-            /* For the foreseeable future, out-of-memory is the only possible
-             * reason for NULL return value
-             */
-            rc = ENOMEM;
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        "Failed to create CIB API connection object: %s",
-                        pcmk_rc_str(rc));
-            clean_up(pcmk_rc2exitc(rc));
-        }
-
-        switch (cib->variant) {
-            case cib_native:
-                // Everything (fencer, CIB, pcmkd status) should be available
-                break;
-
-            case cib_file:
-                // Live fence history is not meaningful
-                fence_history_cb("--fence-history", "0", NULL, NULL);
-
-                /* Notifications are unsupported; nothing to monitor
-                 * @COMPAT: Let setup_cib_connection() handle this by exiting?
-                 */
-                options.exec_mode = mon_exec_one_shot;
-                break;
-
-            case cib_remote:
-                // We won't receive any fencing updates
-                fence_history_cb("--fence-history", "0", NULL, NULL);
-                break;
-
-            default:
-                // Should not be possible; would indicate a bug in CIB library
-                CRM_CHECK(false, clean_up(CRM_EX_ERROR));
-                break;
-        }
-
-        if ((options.exec_mode == mon_exec_daemonized)
-            && !options.external_agent
-            && pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
-
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "--daemonize requires at least one of --output-to "
-                        "(with value not set to '-') and --external-agent");
-            return clean_up(CRM_EX_USAGE);
-        }
-    }
-
     reconcile_output_format(args);
     set_default_exec_mode(args);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR,
+                    "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
@@ -1514,6 +1457,79 @@ main(int argc, char **argv)
 
     if (output_format == mon_output_plain) {
         pcmk__output_text_set_fancy(out, true);
+    }
+
+    pcmk__register_lib_messages(out);
+    crm_mon_register_messages(out);
+    pe__register_messages(out);
+    stonith__register_messages(out);
+
+    // Messages internal to this file, nothing curses-specific
+    pcmk__register_messages(out, fmt_functions);
+
+    if (args->version) {
+        out->version(out);
+        return clean_up(CRM_EX_OK);
+    }
+
+    if (args->quiet) {
+        include_exclude_cb("--exclude", "times", NULL, NULL);
+    }
+
+    if (options.watch_fencing) {
+        fence_history_cb("--fence-history", "0", NULL, NULL);
+        options.fence_connect = TRUE;
+    }
+
+    /* create the cib-object early to be able to do further
+     * decisions based on the cib-source
+     */
+    cib = cib_new();
+    if (cib == NULL) {
+        /* For the foreseeable future, out-of-memory is the only possible
+         * reason for NULL return value
+         */
+        rc = ENOMEM;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Failed to create CIB API connection object: %s",
+                    pcmk_rc_str(rc));
+        clean_up(pcmk_rc2exitc(rc));
+    }
+
+    switch (cib->variant) {
+        case cib_native:
+            // Everything (fencer, CIB, pcmkd status) should be available
+            break;
+
+        case cib_file:
+            // Live fence history is not meaningful
+            fence_history_cb("--fence-history", "0", NULL, NULL);
+
+            /* Notifications are unsupported; nothing to monitor
+             * @COMPAT: Let setup_cib_connection() handle this by exiting?
+             */
+            options.exec_mode = mon_exec_one_shot;
+            break;
+
+        case cib_remote:
+            // We won't receive any fencing updates
+            fence_history_cb("--fence-history", "0", NULL, NULL);
+            break;
+
+        default:
+            // Should not be possible; would indicate a bug in CIB library
+            CRM_CHECK(false, clean_up(CRM_EX_ERROR));
+            break;
+    }
+
+    if ((options.exec_mode == mon_exec_daemonized)
+        && !options.external_agent
+        && pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
+
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                    "--daemonize requires at least one of --output-to "
+                    "(with value not set to '-') and --external-agent");
+        return clean_up(CRM_EX_USAGE);
     }
 
     if (options.exec_mode == mon_exec_daemonized) {
@@ -1565,19 +1581,6 @@ main(int argc, char **argv)
         interactive_fence_level = 1;
     } else {
         interactive_fence_level = 0;
-    }
-
-    pcmk__register_lib_messages(out);
-    crm_mon_register_messages(out);
-    pe__register_messages(out);
-    stonith__register_messages(out);
-
-    // Messages internal to this file, nothing curses-specific
-    pcmk__register_messages(out, fmt_functions);
-
-    if (args->version) {
-        out->version(out);
-        return clean_up(CRM_EX_OK);
     }
 
     if (output_format == mon_output_xml) {
