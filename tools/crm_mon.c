@@ -729,11 +729,12 @@ static GOptionEntry deprecated_entries[] = {
     /* @COMPAT resource-agents <4.15.0 uses --as-xml, so removing this option
      * must wait until we no longer support building on any platforms that ship
      * the older agents.
+     *
+     * Note: This enables one-shot mode.
      */
-    { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
-      "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
-      INDENT "Use --output-as=xml instead.",
-      NULL },
+    { "as-xml", 'X', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
+      G_OPTION_ARG_CALLBACK, as_xml_cb,
+      "(deprecated)" },
 
     { "pid-file", 'p', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
       G_OPTION_ARG_CALLBACK, pid_file_cb,
