@@ -384,6 +384,14 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
          * invoked again once the client sends more.
          */
         return EAGAIN;
+    } else if (rc == GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR) {
+        int type = gnutls_certificate_type_get(client->remote->tls_session);
+        unsigned int status = gnutls_session_get_verify_cert_status(client->remote->tls_session);
+        gnutls_datum_t out;
+
+        gnutls_certificate_verification_status_print(status, type, &out, 0);
+        crm_err("Certificate verification failed: %s", out.data);
+        gnutls_free(out.data);
     } else if (rc != GNUTLS_E_SUCCESS) {
         crm_err("TLS handshake with remote client failed: %s "
                 QB_XS " rc=%d", gnutls_strerror(rc), rc);
@@ -468,6 +476,17 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
         case GNUTLS_E_AGAIN:
             rc = EAGAIN;
             break;
+
+        case GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR: {
+            int type = gnutls_certificate_type_get(remote->tls_session);
+            unsigned int status = gnutls_session_get_verify_cert_status(remote->tls_session);
+            gnutls_datum_t out;
+
+            gnutls_certificate_verification_status_print(status, type, &out, 0);
+            crm_err("Certificate verification failed: %s", out.data);
+            gnutls_free(out.data);
+            break;
+        }
 
         default:
             if (gnutls_rc != NULL) {
