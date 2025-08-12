@@ -39,9 +39,12 @@ static const char *stylesheet_default =
 
     "." PCMK__VALUE_WARNING " { color: red; font-weight: bold }";
 
+/* @TODO stylesheet_link, title, and extra_headers should be set
+ * per-output-object and should be freed before exit
+ */
 static gboolean cgi_output = FALSE;
-static char *stylesheet_link = NULL;
-static char *title = NULL;
+static gchar *stylesheet_link = NULL;
+static gchar *title = NULL;
 static GSList *extra_headers = NULL;
 
 GOptionEntry pcmk__html_output_entries[] = {
