@@ -2167,15 +2167,13 @@ clean_up(crm_exit_t exit_code)
      * set up.  We want errors to appear formatted if at all possible.
      */
     if (error != NULL) {
+        pcmk__output_and_clear_error(&error, out);
+
         if (out != NULL) {
-            out->err(out, "%s: %s", g_get_prgname(), error->message);
             out->finish(out, exit_code, true, NULL);
             pcmk__output_free(out);
-        } else {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
+            pcmk__unregister_formats();
         }
-
-        g_clear_error(&error);
         crm_exit(exit_code);
     }
 
