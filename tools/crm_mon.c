@@ -1394,18 +1394,6 @@ one_shot(void)
     }
 }
 
-static void
-exit_on_invalid_cib(void)
-{
-    if (cib != NULL) {
-        return;
-    }
-
-    // Shouldn't really be possible
-    g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
-    clean_up(CRM_EX_ERROR);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -1454,8 +1442,16 @@ main(int argc, char **argv)
          * decisions based on the cib-source
          */
         cib = cib_new();
-
-        exit_on_invalid_cib();
+        if (cib == NULL) {
+            /* For the foreseeable future, out-of-memory is the only possible
+             * reason for NULL return value
+             */
+            rc = ENOMEM;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Failed to create CIB API connection object: %s",
+                        pcmk_rc_str(rc));
+            clean_up(pcmk_rc2exitc(rc));
+        }
 
         switch (cib->variant) {
             case cib_native:
@@ -1478,8 +1474,8 @@ main(int argc, char **argv)
                 break;
 
             default:
-                /* something is odd */
-                exit_on_invalid_cib();
+                // Should not be possible; would indicate a bug in CIB library
+                CRM_CHECK(false, clean_up(CRM_EX_ERROR));
                 break;
         }
 
@@ -1532,7 +1528,15 @@ main(int argc, char **argv)
         cib = NULL;
         pcmk__daemonize(crm_system_name, options.pid_file);
         cib = cib_new();
-        exit_on_invalid_cib();
+
+        // @TODO Remove this duplication
+        if (cib == NULL) {
+            rc = ENOMEM;
+            g_set_error(&error, PCMK__RC_ERROR, rc,
+                        "Failed to create CIB API connection object: %s",
+                        pcmk_rc_str(rc));
+            clean_up(pcmk_rc2exitc(rc));
+        }
     }
 
     show = default_includes(output_format);
