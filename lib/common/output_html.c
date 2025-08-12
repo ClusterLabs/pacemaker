@@ -500,6 +500,13 @@ pcmk__html_create(xmlNode *parent, const char *name, const char *id,
 }
 
 void
+pcmk__html_set_title(const char *name)
+{
+    g_free(title);
+    title = g_strdup(name);
+}
+
+void
 pcmk__html_add_header(const char *name, ...) {
     htmlNodePtr header_node;
     va_list ap;

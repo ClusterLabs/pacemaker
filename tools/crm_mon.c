@@ -1430,10 +1430,7 @@ main(int argc, char **argv)
      * Doing this here means the user can give their own title on the command
      * line.
      */
-    if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
-                          g_get_prgname())) {
-        return clean_up(CRM_EX_USAGE);
-    }
+    pcmk__html_set_title("Cluster Status");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         return clean_up(CRM_EX_USAGE);
