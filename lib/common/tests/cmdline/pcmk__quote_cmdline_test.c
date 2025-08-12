@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,39 +14,69 @@
 
 #include <glib.h>
 
+/* g_shell_quote currently always uses single quotes. However, the documentation
+ * says "The quoting style used is undefined (single or double quotes may be
+ * used)."
+ */
 static void
-empty_input(void **state) {
+assert_quote_cmdline(const char **argv, const gchar *expected_single,
+                     const gchar *expected_double)
+{
+    gchar *processed = pcmk__quote_cmdline((gchar **) argv);
+
+    assert_true(pcmk__str_any_of(processed, expected_single, expected_double,
+                                 NULL));
+    g_free(processed);
+}
+
+static void
+empty_input(void **state)
+{
     assert_null(pcmk__quote_cmdline(NULL));
 }
 
 static void
-no_spaces(void **state) {
-    const char *argv[] = { "crm_resource", "-r", "rsc1", "--meta", "-p", "comment", "-v", "hello", "--output-as=xml", NULL };
-    const gchar *expected = "crm_resource -r rsc1 --meta -p comment -v hello --output-as=xml";
+no_spaces(void **state)
+{
+    const char *argv[] = {
+        "crm_resource", "-r", "rsc1", "--meta", "-p", "comment",
+        "-v", "hello", "--output-as=xml", NULL,
+    };
 
-    gchar *processed = pcmk__quote_cmdline((gchar **) argv);
-    assert_string_equal(processed, expected);
-    g_free(processed);
+    assert_quote_cmdline(argv,
+                         "crm_resource -r rsc1 --meta -p comment "
+                         "-v hello --output-as=xml",
+                         "crm_resource -r rsc1 --meta -p comment "
+                         "-v hello --output-as=xml");
 }
 
 static void
-spaces_no_quote(void **state) {
-    const char *argv[] = { "crm_resource", "-r", "rsc1", "--meta", "-p", "comment", "-v", "hello world", "--output-as=xml", NULL };
-    const gchar *expected = "crm_resource -r rsc1 --meta -p comment -v 'hello world' --output-as=xml";
+spaces_no_quote(void **state)
+{
+    const char *argv[] = {
+        "crm_resource", "-r", "rsc1", "--meta", "-p", "comment",
+        "-v", "hello world", "--output-as=xml", NULL,
+    };
 
-    gchar *processed = pcmk__quote_cmdline((gchar **) argv);
-    assert_string_equal(processed, expected);
-    g_free(processed);
+    assert_quote_cmdline(argv,
+                         "crm_resource -r rsc1 --meta -p comment "
+                         "-v 'hello world' --output-as=xml",
+                         "crm_resource -r rsc1 --meta -p comment "
+                         "-v \"hello world\" --output-as=xml");
 }
 
 static void
 spaces_with_quote(void **state) {
-    const char *argv[] = { "crm_resource", "-r", "rsc1", "--meta", "-p", "comment", "-v", "here's johnny", "--output-as=xml", NULL };
-    const gchar *expected = "crm_resource -r rsc1 --meta -p comment -v 'here\\\'s johnny' --output-as=xml";
+    const char *argv[] = {
+        "crm_resource", "-r", "rsc1", "--meta", "-p", "comment",
+        "-v", "here's johnny", "--output-as=xml", NULL,
+    };
 
-    gchar *processed = pcmk__quote_cmdline((gchar **) argv);
-    assert_string_equal(processed, expected);
-    g_free(processed);
+    assert_quote_cmdline(argv,
+                         "crm_resource -r rsc1 --meta -p comment "
+                         "-v 'here'\\''s johnny' --output-as=xml",
+                         "crm_resource -r rsc1 --meta -p comment "
+                         "-v \"here's johnny\" --output-as=xml");
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
