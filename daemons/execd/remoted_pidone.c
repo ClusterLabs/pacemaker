@@ -123,7 +123,8 @@ load_env_var_line(const char *line)
     // Ensure the line contains zero or one token besides an optional comment
     if (!g_shell_parse_argv(line, &argc, NULL, &error)) {
         // Empty line (or only space/comment) means nothing to do and no error
-        if (error->code != G_SHELL_ERROR_EMPTY_STRING) {
+        if (!g_error_matches(error, G_SHELL_ERROR,
+                             G_SHELL_ERROR_EMPTY_STRING)) {
             reason = error->message;
         }
         goto done;
@@ -153,7 +154,9 @@ load_env_var_line(const char *line)
      */
     if (!g_shell_parse_argv(value, &argc, &argv, &error)) {
         // Parse error should mean value is empty
-        CRM_CHECK(error->code == G_SHELL_ERROR_EMPTY_STRING, goto done);
+        CRM_CHECK(g_error_matches(error, G_SHELL_ERROR,
+                                  G_SHELL_ERROR_EMPTY_STRING),
+                  goto done);
         value_to_set = "";
 
     } else {
