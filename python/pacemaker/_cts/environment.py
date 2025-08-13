@@ -1,11 +1,12 @@
 """Test environment classes for Pacemaker's Cluster Test Suite (CTS)."""
 
-__all__ = ["EnvFactory"]
+__all__ = ["EnvFactory", "set_cts_path"]
 __copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
 from contextlib import suppress
+from glob import glob
 import os
 import random
 import socket
@@ -636,3 +637,36 @@ class EnvFactory:
             EnvFactory.instance = Environment(args)
 
         return EnvFactory.instance
+
+
+def set_cts_path(extra=None):
+    """Set the PATH environment variable appropriately for the tests."""
+    new_path = os.environ['PATH']
+
+    # Add any search paths given on the command line
+    if extra is not None:
+        for p in extra:
+            new_path = f"{p}:{new_path}"
+
+    cwd = os.getcwd()
+
+    if os.path.exists(f"{cwd}/cts/cts-attrd.in"):
+        # pylint: disable=protected-access
+        print(f"Running tests from the source tree: {BuildOptions._BUILD_DIR}")
+
+        for d in glob(f"{BuildOptions._BUILD_DIR}/daemons/*/"):
+            new_path = f"{d}:{new_path}"
+
+        new_path = f"{BuildOptions._BUILD_DIR}/tools:{new_path}"
+        new_path = f"{BuildOptions._BUILD_DIR}/cts/support:{new_path}"
+
+        print(f"Using local schemas from: {cwd}/xml")
+        os.environ["PCMK_schema_directory"] = f"{cwd}/xml"
+
+    else:
+        print(f"Running tests from the install tree: {BuildOptions.DAEMON_DIR} (not {cwd})")
+        new_path = f"{BuildOptions.DAEMON_DIR}:{new_path}"
+        os.environ["PCMK_schema_directory"] = BuildOptions.SCHEMA_DIR
+
+    print(f'Using PATH="{new_path}"')
+    os.environ['PATH'] = new_path
