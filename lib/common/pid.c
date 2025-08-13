@@ -10,8 +10,6 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
 
 #include <crm/crm.h>
 
@@ -94,100 +92,4 @@ pcmk__pid_active(pid_t pid, const char *daemon)
     }
 
     return ESRCH;
-}
-
-#define	LOCKSTRLEN	11
-
-/*!
- * \internal
- * \brief Read a process ID from a file
- *
- * \param[in]  filename  Process ID file to read
- * \param[out] pid       Where to put PID that was read
- *
- * \return Standard Pacemaker return code
- */
-static int
-read_pidfile(const char *filename, pid_t *pid)
-{
-    int fd;
-    struct stat sbuf;
-    int rc = pcmk_rc_ok;
-    long long pid_read = 0;
-    char buf[LOCKSTRLEN + 1];
-
-    CRM_CHECK((filename != NULL) && (pid != NULL), return EINVAL);
-
-    fd = open(filename, O_RDONLY);
-    if (fd < 0) {
-        return errno;
-    }
-
-    if ((fstat(fd, &sbuf) >= 0) && (sbuf.st_size < LOCKSTRLEN)) {
-        sleep(2);           /* if someone was about to create one,
-                             * give'm a sec to do so
-                             */
-    }
-
-    if (read(fd, buf, sizeof(buf)) < 1) {
-        rc = errno;
-        goto bail;
-    }
-
-    errno = 0;
-    rc = sscanf(buf, "%lld", &pid_read);
-
-    if (rc > 0) {
-        if (pid_read <= 0) {
-            rc = ESRCH;
-        } else {
-            rc = pcmk_rc_ok;
-            *pid = (pid_t) pid_read;
-            crm_trace("Read pid %lld from %s", pid_read, filename);
-        }
-    } else if (rc == 0) {
-        rc = ENODATA;
-    } else {
-        rc = errno;
-    }
-
-  bail:
-    close(fd);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Check whether a process from a PID file matches expected values
- *
- * \param[in]  filename       Path of PID file
- * \param[in]  expected_name  If not NULL, the PID from the PID file is valid
- *                            only if it is active as a process with this name
- * \param[out] pid            If not NULL, store PID found in PID file here
- *
- * \return Standard Pacemaker return code
- */
-int
-pcmk__pidfile_matches(const char *filename, const char *expected_name,
-                      pid_t *pid)
-{
-    pid_t pidfile_pid = 0;
-    int rc = read_pidfile(filename, &pidfile_pid);
-
-    if (pid) {
-        *pid = pidfile_pid;
-    }
-
-    if (rc != pcmk_rc_ok) {
-        // Error reading PID file or invalid contents
-        unlink(filename);
-        rc = ENOENT;
-
-    } else if (pcmk__pid_active(pidfile_pid, expected_name) == ESRCH) {
-        // Contains a stale value
-        unlink(filename);
-        rc = ENOENT;
-    }
-
-    return rc;
 }

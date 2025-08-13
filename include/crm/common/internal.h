@@ -101,9 +101,6 @@ bool pcmk__throttle_load_avg(float *load);
  */
 int pcmk__pid_active(pid_t pid, const char *daemon);
 
-int pcmk__pidfile_matches(const char *filename, const char *expected_name,
-                          pid_t *pid);
-
 
 // bitwise arithmetic utilities
 
