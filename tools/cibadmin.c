@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdint.h>                         // uint32_t, etc.
-#include <stdio.h>                          // NULL, printf(), etc.
+#include <stdio.h>                          // NULL
 
 #include <crm/crm.h>
 #include <crm/common/cmdline_internal.h>
@@ -101,14 +101,15 @@ enum cibadmin_command_flags {
  * \internal
  * \brief Setup function for a \c cibadmin command (before any CIB API call)
  */
-typedef crm_exit_t (*cibadmin_pre_fn_t)(int *, xmlNode *, GError **);
+typedef crm_exit_t (*cibadmin_pre_fn_t)(pcmk__output_t *, int *, xmlNode *,
+                                        GError **);
 
 /*!
  * \internal
  * \brief Return/output handler for a \c cibadmin command (after CIB API call)
  */
-typedef crm_exit_t (*cibadmin_post_fn_t)(cib_t *, int, xmlNode *, int,
-                                         GError **);
+typedef crm_exit_t (*cibadmin_post_fn_t)(pcmk__output_t *, cib_t *, int,
+                                         xmlNode *, int, GError **);
 
 /*!
  * \internal
@@ -181,8 +182,19 @@ scope_is_valid(const char *scope)
                             NULL);
 }
 
+static void
+cibadmin_output_basic_xml(pcmk__output_t *out, const xmlNode *xml)
+{
+    GString *buf = g_string_sized_new(1024);
+
+    pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buf, 0);
+    out->output_xml(out, PCMK_XE_OUTPUT, buf->str);
+    g_string_free(buf, TRUE);
+}
+
 static crm_exit_t
-cibadmin_pre_delete_all(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_delete_all(pcmk__output_t *out, int *call_options, xmlNode *input,
+                        GError **error)
 {
     // Remove all matching objects. Meaningful only with cibadmin_section_xpath.
     cib__set_call_options(*call_options, crm_system_name, cib_multiple);
@@ -190,28 +202,28 @@ cibadmin_pre_delete_all(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_empty(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_empty(pcmk__output_t *out, int *call_options, xmlNode *input,
+                   GError **error)
 {
     /* Output an empty CIB.
      * Handles entirety of empty command; there is no CIB request.
      */
-    GString *buf = g_string_sized_new(1024);
     xmlNode *output = createEmptyCib(1);
 
     crm_xml_add(output, PCMK_XA_VALIDATE_WITH, options.validate_with);
 
-    pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-    printf("%s", buf->str);
+    cibadmin_output_basic_xml(out, output);
 
-    g_string_free(buf, TRUE);
     pcmk__xml_free(output);
     return CRM_EX_OK;
 }
 
 static crm_exit_t
-cibadmin_pre_md5_sum(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_md5_sum(pcmk__output_t *out, int *call_options, xmlNode *input,
+                     GError **error)
 {
     // Handles entirety of md5_sum command; there is no CIB request
+    int rc = pcmk_rc_ok;
     char *digest = pcmk__digest_on_disk_cib(input);
 
     if (digest == NULL) {
@@ -223,16 +235,17 @@ cibadmin_pre_md5_sum(int *call_options, xmlNode *input, GError **error)
         return CRM_EX_SOFTWARE;
     }
 
-    printf("%s\n", digest);
+    rc = out->message(out, "cibadmin-md5-sum", digest);
     free(digest);
-    return CRM_EX_OK;
+    return pcmk_rc2exitc(rc);
 }
 
 static crm_exit_t
-cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
-                               GError **error)
+cibadmin_pre_md5_sum_versioned(pcmk__output_t *out, int *call_options,
+                               xmlNode *input, GError **error)
 {
     // Handles entirety of md5_sum_versioned command; there is no CIB request
+    int rc = pcmk_rc_ok;
     char *digest = pcmk__digest_xml(input, true);
 
     if (digest == NULL) {
@@ -243,13 +256,14 @@ cibadmin_pre_md5_sum_versioned(int *call_options, xmlNode *input,
         return pcmk_rc2exitc(rc);
     }
 
-    printf("%s\n", digest);
+    rc = out->message(out, "cibadmin-md5-sum", digest);
     free(digest);
-    return CRM_EX_OK;
+    return pcmk_rc2exitc(rc);
 }
 
 static crm_exit_t
-cibadmin_pre_modify(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_modify(pcmk__output_t *out, int *call_options, xmlNode *input,
+                    GError **error)
 {
     /* @COMPAT When we drop default support for expansion in cibadmin, guard
      * with `if (options.score_update)`
@@ -264,7 +278,8 @@ cibadmin_pre_modify(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_query(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_query(pcmk__output_t *out, int *call_options, xmlNode *input,
+                   GError **error)
 {
     if (options.get_node_path) {
         /* Enable getting node path of XPath query matches. Meaningful only with
@@ -281,7 +296,8 @@ cibadmin_pre_query(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
+cibadmin_pre_replace(pcmk__output_t *out, int *call_options, xmlNode *input,
+                     GError **error)
 {
     if (pcmk__xe_is(input, PCMK_XE_CIB)) {
         xmlNode *status = pcmk_find_cib_element(input, PCMK_XE_STATUS);
@@ -294,15 +310,15 @@ cibadmin_pre_replace(int *call_options, xmlNode *input, GError **error)
 }
 
 static crm_exit_t
-cibadmin_post_upgrade(cib_t *cib_conn, int call_options, xmlNode *output,
-                      int cib_rc, GError **error)
+cibadmin_post_upgrade(pcmk__output_t *out, cib_t *cib_conn, int call_options,
+                      xmlNode *output, int cib_rc, GError **error)
 {
     if (cib_rc == pcmk_rc_ok) {
         return CRM_EX_OK;
     }
 
     if (cib_rc == pcmk_rc_schema_unchanged) {
-        printf("Upgrade unnecessary: %s\n", pcmk_rc_str(cib_rc));
+        out->info(out, "Upgrade unnecessary: %s", pcmk_rc_str(cib_rc));
         return CRM_EX_OK;
     }
 
@@ -322,8 +338,8 @@ cibadmin_post_upgrade(cib_t *cib_conn, int call_options, xmlNode *output,
 }
 
 static crm_exit_t
-cibadmin_post_default(cib_t *cib_conn, int call_options, xmlNode *output,
-                      int cib_rc, GError **error)
+cibadmin_post_default(pcmk__output_t *out, cib_t *cib_conn, int call_options,
+                      xmlNode *output, int cib_rc, GError **error)
 {
     if (cib_rc != pcmk_rc_ok) {
         g_set_error(error, PCMK__RC_ERROR, cib_rc,
@@ -341,28 +357,18 @@ cibadmin_post_default(cib_t *cib_conn, int call_options, xmlNode *output,
     return CRM_EX_OK;
 }
 
-static int
-print_xml_id(xmlNode *xml, void *user_data)
-{
-    const char *id = pcmk__xe_id(xml);
-
-    if (id != NULL) {
-        printf("%s\n", id);
-    }
-    return pcmk_rc_ok;
-}
-
 static void
-cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
-                    crm_exit_t *exit_code, GError **error)
+cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
+                    const gchar *acl_user, crm_exit_t *exit_code,
+                    GError **error)
 {
     if ((options.acl_render_mode != pcmk__acl_render_none)
         && (*exit_code == CRM_EX_OK)
-        && pcmk__xe_is(output, PCMK_XE_CIB)) {
+        && pcmk__xe_is(xml, PCMK_XE_CIB)) {
 
         xmlDoc *acl_evaled_doc = NULL;
         xmlChar *rendered = NULL;
-        int rc = pcmk__acl_annotate_permissions(acl_user, output->doc,
+        int rc = pcmk__acl_annotate_permissions(acl_user, xml->doc,
                                                 &acl_evaled_doc);
 
         if (rc != pcmk_rc_ok) {
@@ -383,27 +389,23 @@ cibadmin_output_xml(xmlNode *output, int call_options, const gchar *acl_user,
             return;
         }
 
-        printf("%s\n", (char *) rendered);
+        out->message(out, "cibadmin-rendered-acls", (const char *) rendered);
         xmlFree(rendered);
 
     } else if (pcmk_is_set(call_options, cib_xpath_address)
-               && pcmk__xe_is(output, PCMK__XE_XPATH_QUERY)) {
+               && pcmk__xe_is(xml, PCMK__XE_XPATH_QUERY)) {
 
-        pcmk__xe_foreach_child(output, PCMK__XE_XPATH_QUERY_PATH, print_xml_id,
-                               NULL);
+        // @COMPAT Remove when -e/--node-path is removed
+        out->message(out, "cibadmin-node-path", xml);
 
     } else {
-        GString *buf = g_string_sized_new(1024);
-
-        pcmk__xml_string(output, pcmk__xml_fmt_pretty, buf, 0);
-
-        printf("%s", buf->str);
-        g_string_free(buf, TRUE);
+        cibadmin_output_basic_xml(out, xml);
     }
 }
 
 static crm_exit_t
-cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
+cibadmin_handle_command(pcmk__output_t *out,
+                        const cibadmin_cmd_info_t *cmd_info, int call_options,
                         const gchar *acl_user, xmlNode *input, GError **error)
 {
     int rc = pcmk_rc_ok;
@@ -413,7 +415,7 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
     xmlNode *output = NULL;
 
     if (cmd_info->pre_fn != NULL) {
-        exit_code = cmd_info->pre_fn(&call_options, input, error);
+        exit_code = cmd_info->pre_fn(out, &call_options, input, error);
     }
 
     if ((exit_code != CRM_EX_OK) || (cmd_info->cib_request == NULL)) {
@@ -427,9 +429,9 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
     } else if ((options.section_type == cibadmin_section_scope)
                && !scope_is_valid(options.cib_section)) {
         // @COMPAT: Consider requiring --force to proceed
-        fprintf(stderr,
-                "Invalid value '%s' for '--scope'. Operation will apply to the "
-                "entire CIB.\n", options.cib_section);
+        out->err(out,
+                 "Invalid value '%s' for '--scope'. Operation will apply to the "
+                 "entire CIB", options.cib_section);
     }
 
     rc = cib__create_signon(&cib_conn);
@@ -442,8 +444,8 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
 
     cib_conn->call_timeout = options.timeout_sec;
     if (cib_conn->call_timeout < 1) {
-        fprintf(stderr, "Timeout must be positive, defaulting to %d\n",
-                DEFAULT_TIMEOUT);
+        out->err(out, "Timeout must be positive, defaulting to %d",
+                 DEFAULT_TIMEOUT);
         cib_conn->call_timeout = DEFAULT_TIMEOUT;
     }
 
@@ -453,15 +455,16 @@ cibadmin_handle_command(const cibadmin_cmd_info_t *cmd_info, int call_options,
     rc = pcmk_legacy2rc(rc);
 
     if (cmd_info->post_fn != NULL) {
-        exit_code = cmd_info->post_fn(cib_conn, call_options, output, rc,
+        exit_code = cmd_info->post_fn(out, cib_conn, call_options, output, rc,
                                       error);
     } else {
-        exit_code = cibadmin_post_default(cib_conn, call_options, output, rc,
-                                          error);
+        exit_code = cibadmin_post_default(out, cib_conn, call_options, output,
+                                          rc, error);
     }
 
     if (output != NULL) {
-        cibadmin_output_xml(output, call_options, acl_user, &exit_code, error);
+        cibadmin_output_xml(out, output, call_options, acl_user, &exit_code,
+                            error);
     }
 
 done:
@@ -758,16 +761,6 @@ static GOptionEntry addl_entries[] = {
       "appear takes effect",
       "value" },
 
-    { "node-path", 'e', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.get_node_path,
-      "When performing XPath queries, return paths of any matches found\n"
-      INDENT "(for example, "
-      "\"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION
-      "/" PCMK_XE_RESOURCES "/" PCMK_XE_CLONE
-      "[@" PCMK_XA_ID "='dummy-clone']"
-      "/" PCMK_XE_PRIMITIVE "[@" PCMK_XA_ID "='dummy']\")",
-      NULL },
-
     { "show-access", 'S', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       show_access_cb,
       "Whether to use syntax highlighting for ACLs (with -Q/--query and "
@@ -823,6 +816,10 @@ static GOptionEntry addl_entries[] = {
     { "node", 'N', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING,
       &options.dest_node, "(deprecated)", "value" },
 
+    // @COMPAT Deprecated since 3.0.2
+    { "node-path", 'e', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
+      &options.get_node_path, "(deprecated)", NULL },
+
     // @COMPAT Deprecated since 3.0.1
     { "sync-call", 's', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,
       &options.sync_call, "(deprecated)", NULL },
@@ -830,8 +827,126 @@ static GOptionEntry addl_entries[] = {
     { NULL }
 };
 
+PCMK__OUTPUT_ARGS("cibadmin-md5-sum", "const char *")
+static int
+md5_sum_default(pcmk__output_t *out, va_list args)
+{
+    const char *digest = va_arg(args, const char *);
+
+    if (digest == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return out->info(out, "%s", digest);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-md5-sum", "const char *")
+static int
+md5_sum_xml(pcmk__output_t *out, va_list args)
+{
+    const char *digest = va_arg(args, const char *);
+
+    if (digest == NULL) {
+        return pcmk_rc_no_output;
+    }
+
+    pcmk__output_create_xml_node(out, PCMK_XE_MD5_SUM,
+                                 PCMK_XA_DIGEST, digest,
+                                 NULL);
+    return pcmk_rc_ok;
+}
+
+// @COMPAT Drop "cibadmin-node-path" and helper when dropping --node-path
+static int
+output_xml_id(xmlNode *xml, void *user_data)
+{
+    pcmk__output_t *out = user_data;
+    const char *id = pcmk__xe_id(xml);
+
+    pcmk__assert(id != NULL);
+
+    return out->info(out, "%s", id);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-node-path", "xmlNode *")
+static int
+node_path_default(pcmk__output_t *out, va_list args)
+{
+    xmlNode *query_result = va_arg(args, xmlNode *);
+
+    if (query_result == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return pcmk__xe_foreach_child(query_result, PCMK__XE_XPATH_QUERY_PATH,
+                                  output_xml_id, out);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-node-path", "xmlNode *")
+static int
+node_path_xml(pcmk__output_t *out, va_list args)
+{
+    xmlNode *query_result = va_arg(args, xmlNode *);
+
+    if (query_result == NULL) {
+        return pcmk_rc_no_output;
+    }
+    cibadmin_output_basic_xml(out, query_result);
+    return pcmk_rc_ok;
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-rendered-acls", "const char *")
+static int
+rendered_acls_default(pcmk__output_t *out, va_list args)
+{
+    const char *rendered = va_arg(args, const char *);
+
+    if (rendered == NULL) {
+        return pcmk_rc_no_output;
+    }
+    return out->info(out, "%s", rendered);
+}
+
+PCMK__OUTPUT_ARGS("cibadmin-rendered-acls", "const char *")
+static int
+rendered_acls_xml(pcmk__output_t *out, va_list args)
+{
+    /* We want to create a CData block in a PCMK_XE_OUTPUT element. At the time
+     * of writing, that's exactly what this call to xml_output_xml() does.
+     * Note, however, that the "rendered" string is not XML if the ACL render
+     * mode is color or text.
+     *
+     * @TODO Create a pcmk__output_xml_create_cdata() or similar, and share it
+     * between xml_output_xml() and this function?
+     */
+    const char *rendered = va_arg(args, const char *);
+
+    if (rendered == NULL) {
+        return pcmk_rc_no_output;
+    }
+    out->output_xml(out, PCMK_XE_OUTPUT, rendered);
+    return pcmk_rc_ok;
+}
+
+static const pcmk__supported_format_t formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+
+    { NULL, NULL, NULL }
+};
+
+static const pcmk__message_entry_t fmt_functions[] = {
+    { "cibadmin-md5-sum", "default", md5_sum_default },
+    { "cibadmin-md5-sum", "xml", md5_sum_xml },
+    { "cibadmin-node-path", "default", node_path_default },
+    { "cibadmin-node-path", "xml", node_path_xml },
+    { "cibadmin-rendered-acls", "default", rendered_acls_default },
+    { "cibadmin-rendered-acls", "xml", rendered_acls_xml },
+
+    { NULL, NULL, NULL }
+};
+
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args)
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
     const char *desc = NULL;
     GOptionContext *context = NULL;
@@ -880,7 +995,8 @@ build_arg_context(pcmk__common_args_t *args)
            "SEE ALSO:\n"
            " crm(8), pcs(8), crm_shadow(8), crm_diff(8)\n";
 
-    context = pcmk__build_arg_context(args, NULL, NULL, "[<command>]");
+    context = pcmk__build_arg_context(args, "text (default), xml", group,
+                                      "[<command>]");
     g_option_context_set_description(context, desc);
 
     pcmk__add_arg_group(context, "commands", "Commands:", "Show command help",
@@ -949,37 +1065,20 @@ main(int argc, char **argv)
     xmlNode *input = NULL;
     gchar *acl_cred = NULL;
 
+    pcmk__output_t *out = NULL;
+
     GError *error = NULL;
 
+    GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "ANSUXhotx");
-    GOptionContext *context = build_arg_context(args);
+    GOptionContext *context = build_arg_context(args, &output_group);
+
+    pcmk__register_formats(output_group, formats);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
-    }
-
-    if (g_strv_length(processed_args) > 1) {
-        gchar *extra = g_strjoinv(" ", processed_args + 1);
-        gchar *help = g_option_context_get_help(context, TRUE, NULL);
-
-        exit_code = CRM_EX_USAGE;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "non-option ARGV-elements: %s\n\n%s", extra, help);
-        g_free(extra);
-        g_free(help);
-        goto done;
-    }
-
-    if (args->version) {
-        g_strfreev(processed_args);
-        pcmk__free_arg_context(context);
-
-        /* FIXME: When cibadmin is converted to use formatted output, this can
-         * be replaced by out->version.
-         */
-        pcmk__cli_help();
     }
 
     /* At LOG_ERR, stderr for CIB calls is rather verbose. Several lines like
@@ -999,6 +1098,34 @@ main(int argc, char **argv)
             crm_bump_log_level(argc, argv);
         }
     }
+
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    if (rc != pcmk_rc_ok) {
+        exit_code = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Error creating output format %s: %s", args->output_ty,
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    if (g_strv_length(processed_args) > 1) {
+        gchar *extra = g_strjoinv(" ", processed_args + 1);
+        gchar *help = g_option_context_get_help(context, TRUE, NULL);
+
+        exit_code = CRM_EX_USAGE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "non-option ARGV-elements: %s\n\n%s", extra, help);
+        g_free(extra);
+        g_free(help);
+        goto done;
+    }
+
+    if (args->version) {
+        out->version(out);
+        goto done;
+    }
+
+    pcmk__register_messages(out, fmt_functions);
 
     // Ensure command is in valid range
     if ((options.cmd >= 0) && (options.cmd <= cibadmin_cmd_max)) {
@@ -1037,14 +1164,14 @@ main(int argc, char **argv)
             // @COMPAT Fail if pcmk_acl_required(username)
             username = pcmk__uid2username(geteuid());
             if (pcmk_acl_required(username)) {
-                fprintf(stderr,
-                        "Warning: cibadmin is being run as user %s, which is "
-                        "subject to ACLs. As a result, ACLs for user %s may be "
-                        "incorrect or incomplete in the output. In a future "
-                        "release, running as a privileged user (root or "
-                        CRM_DAEMON_USER ") will be required for "
-                        "-S/--show-access.\n",
-                        username, options.cib_user);
+                out->err(out,
+                         "Warning: cibadmin is being run as user %s, which is "
+                         "subject to ACLs. As a result, ACLs for user %s may "
+                         "be incorrect or incomplete in the output. In a "
+                         "future release, running as a privileged user (root "
+                         "or " CRM_DAEMON_USER ") will be required for "
+                         "-S/--show-access.",
+                         username, options.cib_user);
             }
 
             free(username);
@@ -1095,8 +1222,8 @@ main(int argc, char **argv)
         }
     }
 
-    exit_code = cibadmin_handle_command(cmd_info, call_options, acl_cred, input,
-                                        &error);
+    exit_code = cibadmin_handle_command(out, cmd_info, call_options, acl_cred,
+                                        input, &error);
 
 done:
     g_strfreev(processed_args);
@@ -1112,6 +1239,12 @@ done:
     g_free(acl_cred);
     pcmk__xml_free(input);
 
-    pcmk__output_and_clear_error(&error, NULL);
+    pcmk__output_and_clear_error(&error, out);
+
+    if (out != NULL) {
+        out->finish(out, exit_code, true, NULL);
+        pcmk__output_free(out);
+    }
+    pcmk__unregister_formats();
     crm_exit(exit_code);
 }
