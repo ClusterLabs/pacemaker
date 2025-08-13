@@ -1592,7 +1592,7 @@ main(int argc, char **argv)
 
         default:
             // Should not be possible; would indicate a bug in CIB library
-            CRM_CHECK(false, clean_up(CRM_EX_ERROR));
+            CRM_CHECK(false, clean_up(CRM_EX_SOFTWARE));
             break;
     }
 
