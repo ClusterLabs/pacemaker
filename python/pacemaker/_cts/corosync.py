@@ -11,6 +11,7 @@ import tempfile
 import time
 
 from pacemaker.buildoptions import BuildOptions
+from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.process import killall, stdout_from_command
 
 
@@ -112,6 +113,9 @@ class Corosync:
         self.logdir = logdir
         self.cluster_name = cluster_name
 
+        # The Corosync class doesn't use self._env._nodes, but the
+        # "--nodes" argument is required to be present and nonempty
+        self._env = EnvFactory().getInstance(args=["--nodes", "localhost"])
         self._existing_cfg_file = None
 
     def _ready(self, logfile, timeout=10):
@@ -149,10 +153,15 @@ class Corosync:
                                                         self.cluster_name, localname())
         logfile = corosync_log_file(BuildOptions.COROSYNC_CONFIG_FILE)
 
+        if self._env["have_systemd"]:
+            cmd = ["systemctl", "start", "corosync.service"]
+        else:
+            cmd = ["corosync"]
+
         if self.verbose:
             print("Starting corosync")
 
-        with subprocess.Popen("corosync", stdout=subprocess.PIPE, stderr=subprocess.PIPE) as test:
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as test:
             test.wait()
 
         # Wait for corosync to be ready before returning
