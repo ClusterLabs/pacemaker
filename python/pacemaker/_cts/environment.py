@@ -70,7 +70,6 @@ class Environment:
         self._logger = LogFactory()
         self._rsh = RemoteFactory().getInstance()
 
-        self._seed_random()
         self._parse_args(args)
 
         if not self["ListTests"]:
@@ -551,6 +550,8 @@ class Environment:
 
         if args.qarsh:
             self._rsh.enable_qarsh()
+
+        self._seed_random(args.seed)
 
         for kv in args.set:
             (name, value) = kv.split("=")
