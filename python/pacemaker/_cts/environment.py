@@ -64,7 +64,6 @@ class Environment:
         self["CIBfilename"] = None
         self["CIBResource"] = False
         self["log_kind"] = None
-        self["node-limit"] = 0
         self["scenario"] = "random"
 
         self.random_gen = random.Random()
@@ -121,10 +120,6 @@ class Environment:
         if key == "Stack":
             self._set_stack(value)
 
-        elif key == "node-limit":
-            self.data[key] = value
-            self._filter_nodes()
-
         elif key == "nodes":
             self._nodes = []
             for node in value:
@@ -140,8 +135,6 @@ class Environment:
                 except socket.herror:
                     self._logger.log(f"{node} not found in DNS... aborting")
                     raise
-
-            self._filter_nodes()
 
         else:
             self.data[key] = value
@@ -270,21 +263,6 @@ class Environment:
                 self["IPBase"] = " fe80::1234:56:7890:1000"
                 self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
 
-    def _filter_nodes(self):
-        """
-        Filter the list of cluster nodes.
-
-        If --limit-nodes is given, keep that many nodes from the front of the
-        list of cluster nodes and drop the rest.
-        """
-        if self["node-limit"] > 0:
-            if len(self["nodes"]) > self["node-limit"]:
-                self._logger.log(f"Limiting the number of nodes configured={len(self['nodes'])} "
-                                 f"(max={self['node-limit']})")
-
-                while len(self["nodes"]) > self["node-limit"]:
-                    self["nodes"].pop(len(self["nodes"]) - 1)
-
     def _validate(self):
         """Check that we were given all required command line parameters."""
         if not self["nodes"]:
@@ -325,10 +303,6 @@ class Environment:
         grp1.add_argument("-g", "--dsh-group", "--group",
                           metavar="GROUP", dest="group",
                           help="Use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
-        grp1.add_argument("-l", "--limit-nodes",
-                          type=int, default=0,
-                          metavar="MAX",
-                          help="Only use the first MAX cluster nodes supplied with --nodes")
         grp1.add_argument("--benchmark",
                           action="store_true",
                           help="Add timing information")
@@ -473,7 +447,6 @@ class Environment:
         self["loop-tests"] = not args.no_loop_tests
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
-        self["node-limit"] = args.limit_nodes
         self["stonith-params"] = args.stonith_args
         self["stonith-type"] = args.stonith_type
         self["unsafe-tests"] = not args.no_unsafe_tests
