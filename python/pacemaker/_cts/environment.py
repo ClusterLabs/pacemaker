@@ -96,12 +96,7 @@ class Environment:
 
     def dump(self):
         """Print the current environment."""
-        keys = []
-        for key in list(self.data.keys()):
-            keys.append(key)
-
-        keys.sort()
-        for key in keys:
+        for key in sorted(self.data.keys()):
             self._logger.debug(f"{f'Environment[{key}]':35}: {str(self[key])}")
 
     def __contains__(self, key):
