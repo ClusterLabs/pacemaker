@@ -498,44 +498,41 @@ class Environment:
             self["tests"].extend(shlex.split(args.choose))
             self["iterations"] = len(self["tests"])
 
-        if args.fencing:
-            if args.fencing in ["0", "no"]:
-                self["DoFencing"] = False
-            else:
-                self["DoFencing"] = True
+        if args.fencing in ["0", "no"]:
+            self["DoFencing"] = False
 
-                if args.fencing in ["rhcs", "virt", "xvm"]:
-                    self["stonith-type"] = "fence_xvm"
+        elif args.fencing in ["rhcs", "virt", "xvm"]:
+            self["stonith-type"] = "fence_xvm"
 
-                elif args.fencing == "scsi":
-                    self["stonith-type"] = "fence_scsi"
+        elif args.fencing == "scsi":
+            self["stonith-type"] = "fence_scsi"
 
-                elif args.fencing in ["lha", "ssh"]:
-                    self["stonith-params"] = "hostlist=all,livedangerously=yes"
-                    self["stonith-type"] = "external/ssh"
+        elif args.fencing in ["lha", "ssh"]:
+            self["stonith-params"] = "hostlist=all,livedangerously=yes"
+            self["stonith-type"] = "external/ssh"
 
-                elif args.fencing == "openstack":
-                    self["stonith-type"] = "fence_openstack"
+        elif args.fencing == "openstack":
+            self["stonith-type"] = "fence_openstack"
 
-                    print("Obtaining OpenStack credentials from the current environment")
-                    region = os.environ['OS_REGION_NAME']
-                    tenant = os.environ['OS_TENANT_NAME']
-                    auth = os.environ['OS_AUTH_URL']
-                    user = os.environ['OS_USERNAME']
-                    password = os.environ['OS_PASSWORD']
+            print("Obtaining OpenStack credentials from the current environment")
+            region = os.environ['OS_REGION_NAME']
+            tenant = os.environ['OS_TENANT_NAME']
+            auth = os.environ['OS_AUTH_URL']
+            user = os.environ['OS_USERNAME']
+            password = os.environ['OS_PASSWORD']
 
-                    self["stonith-params"] = f"region={region},tenant={tenant},auth={auth},user={user},password={password}"
+            self["stonith-params"] = f"region={region},tenant={tenant},auth={auth},user={user},password={password}"
 
-                elif args.fencing == "rhevm":
-                    self["stonith-type"] = "fence_rhevm"
+        elif args.fencing == "rhevm":
+            self["stonith-type"] = "fence_rhevm"
 
-                    print("Obtaining RHEV-M credentials from the current environment")
-                    user = os.environ['RHEVM_USERNAME']
-                    password = os.environ['RHEVM_PASSWORD']
-                    server = os.environ['RHEVM_SERVER']
-                    port = os.environ['RHEVM_PORT']
+            print("Obtaining RHEV-M credentials from the current environment")
+            user = os.environ['RHEVM_USERNAME']
+            password = os.environ['RHEVM_PASSWORD']
+            server = os.environ['RHEVM_SERVER']
+            port = os.environ['RHEVM_PORT']
 
-                    self["stonith-params"] = f"login={user},passwd={password},ipaddr={server},ipport={port},ssl=1,shell_timeout=10"
+            self["stonith-params"] = f"login={user},passwd={password},ipaddr={server},ipport={port},ssl=1,shell_timeout=10"
 
         if args.ip:
             self["CIBResource"] = True
