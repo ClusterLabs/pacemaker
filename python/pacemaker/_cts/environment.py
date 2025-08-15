@@ -142,13 +142,6 @@ class Environment:
         """Choose a random node from the cluster."""
         return self.random_gen.choice(self["nodes"])
 
-    def get(self, key, default=None):
-        """Return the value for key if key is in the environment, else default."""
-        if key == "nodes":
-            return self._nodes
-
-        return self.data.get(key, default)
-
     def _set_stack(self, name):
         """Normalize the given cluster stack name."""
         if name in ["corosync", "cs", "mcp"]:
