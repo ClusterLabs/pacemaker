@@ -356,18 +356,18 @@ add_set_attr_update(const attribute_t *attr, const char *attr_id,
     xmlNode *child = update;
     int rc = ENOMEM;
 
-    crm_xml_add(child, PCMK_XA_ID, node_id);
+    pcmk__xe_set(child, PCMK_XA_ID, node_id);
 
     child = pcmk__xe_create(child, PCMK__XE_TRANSIENT_ATTRIBUTES);
-    crm_xml_add(child, PCMK_XA_ID, node_id);
+    pcmk__xe_set(child, PCMK_XA_ID, node_id);
 
     child = pcmk__xe_create(child, attr->set_type);
-    crm_xml_add(child, PCMK_XA_ID, set_id);
+    pcmk__xe_set(child, PCMK_XA_ID, set_id);
 
     child = pcmk__xe_create(child, PCMK_XE_NVPAIR);
-    crm_xml_add(child, PCMK_XA_ID, attr_id);
-    crm_xml_add(child, PCMK_XA_NAME, attr->id);
-    crm_xml_add(child, PCMK_XA_VALUE, value);
+    pcmk__xe_set(child, PCMK_XA_ID, attr_id);
+    pcmk__xe_set(child, PCMK_XA_NAME, attr->id);
+    pcmk__xe_set(child, PCMK_XA_VALUE, value);
 
     rc = the_cib->cmds->modify(the_cib, PCMK_XE_STATUS, update,
                                cib_can_create|cib_transaction);

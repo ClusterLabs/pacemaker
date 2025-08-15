@@ -12,7 +12,10 @@
 
 #include <stdint.h>
 #include <sys/uio.h>
+
 #include <qb/qbipcc.h>
+
+#include <crm/common/results.h>     // crm_exit_t
 #include <crm/common/xml.h>
 
 #ifdef __cplusplus

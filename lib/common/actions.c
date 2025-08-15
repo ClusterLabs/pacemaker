@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -555,10 +555,10 @@ crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
 
     xml_op = pcmk__xe_create(parent, PCMK_XE_OP);
     pcmk__xe_set_id(xml_op, "%s-%s-%s", prefix, task, interval_spec);
-    crm_xml_add(xml_op, PCMK_META_INTERVAL, interval_spec);
-    crm_xml_add(xml_op, PCMK_XA_NAME, task);
+    pcmk__xe_set(xml_op, PCMK_META_INTERVAL, interval_spec);
+    pcmk__xe_set(xml_op, PCMK_XA_NAME, task);
     if (timeout) {
-        crm_xml_add(xml_op, PCMK_META_TIMEOUT, timeout);
+        pcmk__xe_set(xml_op, PCMK_META_TIMEOUT, timeout);
     }
     return xml_op;
 }

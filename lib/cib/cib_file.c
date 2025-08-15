@@ -328,8 +328,8 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     if (rc != pcmk_ok) {
         return rc;
     }
-    crm_xml_add(request, PCMK__XA_ACL_TARGET, user_name);
-    crm_xml_add(request, PCMK__XA_CIB_CLIENTID, private->id);
+    pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user_name);
+    pcmk__xe_set(request, PCMK__XA_CIB_CLIENTID, private->id);
 
     if (pcmk_is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
@@ -892,7 +892,7 @@ cib_file_prepare_xml(xmlNode *root)
     xmlNode *cib_status_root = NULL;
 
     /* Always write out with num_updates=0 and current last-written timestamp */
-    crm_xml_add(root, PCMK_XA_NUM_UPDATES, "0");
+    pcmk__xe_set(root, PCMK_XA_NUM_UPDATES, "0");
     pcmk__xe_add_last_written(root);
 
     /* Delete status section before writing to file, because

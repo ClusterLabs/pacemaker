@@ -106,7 +106,7 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
         xmlNode *tmp = pcmk__xpath_result(xpathObj, 0);
 
         if (tmp != NULL) {
-            crm_xml_add(tmp, "required", "0");
+            pcmk__xe_set(tmp, "required", "0");
         }
     }
     xmlXPathFreeObject(xpathObj);
@@ -190,12 +190,12 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
         tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
-        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
-        crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
+        pcmk__xe_set(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
+        pcmk__xe_set(tmp, PCMK_META_TIMEOUT, timeout_str);
 
         tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
-        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
-        crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
+        pcmk__xe_set(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
+        pcmk__xe_set(tmp, PCMK_META_TIMEOUT, timeout_str);
     }
     xmlXPathFreeObject(xpathObj);
 

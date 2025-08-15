@@ -1107,7 +1107,7 @@ add_op_digest_to_xml(const lrmd_event_data_t *op, xmlNode *update)
     g_hash_table_foreach(op->params, hash2field, args_xml);
     pcmk__filter_op_for_digest(args_xml);
     digest = pcmk__digest_op_params(args_xml);
-    crm_xml_add(update, PCMK__XA_OP_DIGEST, digest);
+    pcmk__xe_set(update, PCMK__XA_OP_DIGEST, digest);
     pcmk__xml_free(args_xml);
     free(digest);
 }
@@ -1236,20 +1236,20 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
                                   (const char *) op->user_data);
     }
 
-    crm_xml_add(xml_op, PCMK_XA_ID, op_id);
-    crm_xml_add(xml_op, PCMK__XA_OPERATION_KEY, key);
-    crm_xml_add(xml_op, PCMK_XA_OPERATION, task);
-    crm_xml_add(xml_op, PCMK_XA_CRM_DEBUG_ORIGIN, origin);
-    crm_xml_add(xml_op, PCMK_XA_CRM_FEATURE_SET, caller_version);
-    crm_xml_add(xml_op, PCMK__XA_TRANSITION_KEY, op->user_data);
-    crm_xml_add(xml_op, PCMK__XA_TRANSITION_MAGIC, magic);
-    crm_xml_add(xml_op, PCMK_XA_EXIT_REASON, pcmk__s(exit_reason, ""));
-    crm_xml_add(xml_op, PCMK__META_ON_NODE, node); // For context during triage
+    pcmk__xe_set(xml_op, PCMK_XA_ID, op_id);
+    pcmk__xe_set(xml_op, PCMK__XA_OPERATION_KEY, key);
+    pcmk__xe_set(xml_op, PCMK_XA_OPERATION, task);
+    pcmk__xe_set(xml_op, PCMK_XA_CRM_DEBUG_ORIGIN, origin);
+    pcmk__xe_set(xml_op, PCMK_XA_CRM_FEATURE_SET, caller_version);
+    pcmk__xe_set(xml_op, PCMK__XA_TRANSITION_KEY, op->user_data);
+    pcmk__xe_set(xml_op, PCMK__XA_TRANSITION_MAGIC, magic);
+    pcmk__xe_set(xml_op, PCMK_XA_EXIT_REASON, pcmk__s(exit_reason, ""));
+    pcmk__xe_set(xml_op, PCMK__META_ON_NODE, node); // For context during triage
 
-    crm_xml_add_int(xml_op, PCMK__XA_CALL_ID, op->call_id);
-    crm_xml_add_int(xml_op, PCMK__XA_RC_CODE, op->rc);
-    crm_xml_add_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
-    crm_xml_add_ms(xml_op, PCMK_META_INTERVAL, op->interval_ms);
+    pcmk__xe_set_int(xml_op, PCMK__XA_CALL_ID, op->call_id);
+    pcmk__xe_set_int(xml_op, PCMK__XA_RC_CODE, op->rc);
+    pcmk__xe_set_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
+    pcmk__xe_set_guint(xml_op, PCMK_META_INTERVAL, op->interval_ms);
 
     if ((op->t_run > 0) || (op->t_rcchange > 0) || (op->exec_time > 0)
         || (op->queue_time > 0)) {
@@ -1262,15 +1262,13 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
 
         if ((op->interval_ms > 0) && (op->t_rcchange > 0)) {
             // Recurring ops may have changed rc after initial run
-            crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                           (long long) op->t_rcchange);
+            pcmk__xe_set_time(xml_op, PCMK_XA_LAST_RC_CHANGE, op->t_rcchange);
         } else {
-            crm_xml_add_ll(xml_op, PCMK_XA_LAST_RC_CHANGE,
-                           (long long) op->t_run);
+            pcmk__xe_set_time(xml_op, PCMK_XA_LAST_RC_CHANGE, op->t_run);
         }
 
-        crm_xml_add_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
-        crm_xml_add_int(xml_op, PCMK_XA_QUEUE_TIME, op->queue_time);
+        pcmk__xe_set_int(xml_op, PCMK_XA_EXEC_TIME, op->exec_time);
+        pcmk__xe_set_int(xml_op, PCMK_XA_QUEUE_TIME, op->queue_time);
     }
 
     if (pcmk__str_any_of(op->op_type, PCMK_ACTION_MIGRATE_TO,
@@ -1280,10 +1278,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
          */
         const char *name = PCMK__META_MIGRATE_SOURCE;
 
-        crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+        pcmk__xe_set(xml_op, name, crm_meta_value(op->params, name));
 
         name = PCMK__META_MIGRATE_TARGET;
-        crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+        pcmk__xe_set(xml_op, name, crm_meta_value(op->params, name));
     }
 
     add_op_digest_to_xml(op, xml_op);
