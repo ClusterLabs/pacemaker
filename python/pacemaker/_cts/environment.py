@@ -69,7 +69,6 @@ class Environment:
 
         self._logger = LogFactory()
         self._rsh = RemoteFactory().getInstance()
-        self._target = "localhost"
 
         self._seed_random()
         self._parse_args(args)
@@ -161,23 +160,23 @@ class Environment:
         LogFactory().log(f"Unknown stack: {self['stack']}")
         raise ValueError(f"Unknown stack: {self['stack']}")
 
-    def _detect_systemd(self):
+    def _detect_systemd(self, node):
         """Detect whether systemd is in use on the target node."""
         if "have_systemd" not in self.data:
-            (rc, _) = self._rsh(self._target, "systemctl list-units", verbose=0)
+            (rc, _) = self._rsh(node, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
-    def _detect_syslog(self):
+    def _detect_syslog(self, node):
         """Detect the syslog variant in use on the target node (if any)."""
         if "syslogd" in self.data:
             return
 
         if self["have_systemd"]:
             # Systemd
-            (_, lines) = self._rsh(self._target, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+            (_, lines) = self._rsh(node, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
         else:
             # SYS-V
-            (_, lines) = self._rsh(self._target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
+            (_, lines) = self._rsh(node, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
 
         with suppress(IndexError):
             self["syslogd"] = lines[0].strip()
@@ -220,19 +219,19 @@ class Environment:
         (rc, _) = self._rsh(node, f"chkconfig --list | grep -e {service}.*on")
         return rc == 0
 
-    def _detect_at_boot(self):
+    def _detect_at_boot(self, node):
         """Detect if the cluster starts at boot."""
         if "at-boot" not in self.data:
-            self["at-boot"] = self.service_is_enabled(self._target, "corosync") \
-                or self.service_is_enabled(self._target, "pacemaker")
+            self["at-boot"] = self.service_is_enabled(node, "corosync") \
+                or self.service_is_enabled(node, "pacemaker")
 
-    def _detect_ip_offset(self):
+    def _detect_ip_offset(self, node):
         """Detect the offset for IPaddr resources."""
         if self["CIBResource"] and "IPBase" not in self.data:
-            (_, lines) = self._rsh(self._target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
+            (_, lines) = self._rsh(node, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
-            (_, lines) = self._rsh(self._target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
+            (_, lines) = self._rsh(node, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
 
             try:
                 self["IPBase"] = lines[0].strip()
@@ -262,8 +261,6 @@ class Environment:
 
     def _discover(self):
         """Probe cluster nodes to figure out how to log and manage services."""
-        self._target = random.Random().choice(self["nodes"])
-
         exerciser = socket.gethostname()
 
         # Use the IP where possible to avoid name lookup failures
@@ -274,10 +271,11 @@ class Environment:
 
         self["cts-exerciser"] = exerciser
 
-        self._detect_systemd()
-        self._detect_syslog()
-        self._detect_at_boot()
-        self._detect_ip_offset()
+        node = self["nodes"][0]
+        self._detect_systemd(node)
+        self._detect_syslog(node)
+        self._detect_at_boot(node)
+        self._detect_ip_offset(node)
 
     def _parse_args(self, argv):
         """
