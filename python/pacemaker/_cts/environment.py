@@ -104,10 +104,6 @@ class Environment:
         for key in keys:
             self._logger.debug(f"{f'Environment[{key}]':35}: {str(self[key])}")
 
-    def keys(self):
-        """Return a list of all environment keys stored in this instance."""
-        return list(self.data.keys())
-
     def __contains__(self, key):
         """Return True if the given key exists in the environment."""
         if key == "nodes":
