@@ -62,7 +62,6 @@ class Environment:
         self["IPagent"] = "IPaddr2"
         self["DoFencing"] = True
         self["ClobberCIB"] = False
-        self["CIBfilename"] = None
         self["CIBResource"] = False
         self["log_kind"] = None
         self["scenario"] = "random"
@@ -433,8 +432,9 @@ class Environment:
         # Set values on this object based on what happened with command line
         # processing.  This has to be done in several blocks.
 
-        # These values can always be set.  They get a default from the add_argument
-        # calls, only do one thing, and they do not have any side effects.
+        # These values can always be set. Most get a default from the add_argument
+        # calls, they only do one thing, and they do not have any side effects.
+        self["CIBfilename"] = args.cib_filename if args.cib_filename else None
         self["ClobberCIB"] = args.clobber_cib
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema
@@ -487,11 +487,6 @@ class Environment:
         # alphabetically.
         if args.boot:
             self["scenario"] = "boot"
-
-        if args.cib_filename:
-            self["CIBfilename"] = args.cib_filename
-        else:
-            self["CIBfilename"] = None
 
         if args.choose:
             self["scenario"] = "sequence"
