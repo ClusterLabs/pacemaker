@@ -12,7 +12,6 @@ import random
 import shlex
 import socket
 import sys
-import time
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
@@ -75,20 +74,6 @@ class Environment:
         if not self["ListTests"]:
             self._validate()
             self._discover()
-
-    def _seed_random(self, seed=None):
-        """
-        Initialize the random number generator.
-
-        Arguments:
-        seed -- Use this to see the random number generator, or use the
-                current time if None.
-        """
-        if not seed:
-            seed = int(time.time())
-
-        self["RandSeed"] = seed
-        self.random_gen.seed(str(seed))
 
     def dump(self):
         """Print the current environment."""
@@ -551,7 +536,7 @@ class Environment:
         if args.qarsh:
             self._rsh.enable_qarsh()
 
-        self._seed_random(args.seed)
+        self.random_gen.seed(args.seed)
 
         for kv in args.set:
             (name, value) = kv.split("=")

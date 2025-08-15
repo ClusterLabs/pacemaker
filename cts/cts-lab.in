@@ -119,7 +119,6 @@ if __name__ == '__main__':
     LogFactory().log(f"Scenario:               {scenario.__doc__}")
     LogFactory().log(f"CTS Exerciser:          {environment['cts-exerciser']}")
     LogFactory().log(f"CTS Logfile:            {environment['OutputFile']}")
-    LogFactory().log(f"Random Seed:            {environment['RandSeed']}")
     if "syslogd" in environment:
         LogFactory().log(f"Syslog variant:         {environment['syslogd'].strip()}")
     LogFactory().log(f"System log files:       {environment['LogFileName']}")
