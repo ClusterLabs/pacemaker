@@ -4154,7 +4154,8 @@ static bool
 check_operation_expiry(struct action_history *history)
 {
     bool expired = false;
-    bool is_last_failure = pcmk__ends_with(history->id, "_last_failure_0");
+    bool is_last_failure = (history->id != NULL)
+                           && g_str_has_suffix(history->id, "_last_failure_0");
     time_t last_run = 0;
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;

@@ -13,6 +13,8 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+#include <glib.h>               // g_str_has_prefix()
+
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/services.h>
@@ -92,7 +94,7 @@ lsb_meta_helper_get_value(const char *line, gchar **value, const char *prefix)
     /* @TODO Perhaps update later to use pcmk__xml_needs_escape(). Involves many
      * extra variables in the caller.
      */
-    if ((*value == NULL) && pcmk__starts_with(line, prefix)) {
+    if ((*value == NULL) && g_str_has_prefix(line, prefix)) {
         *value = pcmk__xml_escape(line + strlen(prefix), pcmk__xml_escape_text);
         return TRUE;
     }
@@ -134,7 +136,7 @@ services__get_lsb_metadata(const char *type, char **output)
     while (fgets(buffer, sizeof(buffer), fp)) {
 
         // Ignore lines up to and including the block delimiter
-        if (pcmk__starts_with(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
+        if (g_str_has_prefix(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
             in_header = TRUE;
             continue;
         }
@@ -171,7 +173,7 @@ services__get_lsb_metadata(const char *type, char **output)
 
         /* Long description may cross multiple lines */
         if ((long_desc == NULL)  // Haven't already found long description
-            && pcmk__starts_with(buffer, DESCRIPTION)) {
+            && g_str_has_prefix(buffer, DESCRIPTION)) {
             bool processed_line = TRUE;
             GString *desc = g_string_sized_new(2048);
 
@@ -181,8 +183,8 @@ services__get_lsb_metadata(const char *type, char **output)
             // Read any continuation lines of the description
             buffer[0] = '\0';
             while (fgets(buffer, sizeof(buffer), fp)) {
-                if (pcmk__starts_with(buffer, "#  ")
-                    || pcmk__starts_with(buffer, "#\t")) {
+                if (g_str_has_prefix(buffer, "#  ")
+                    || g_str_has_prefix(buffer, "#\t")) {
                     /* '#' followed by a tab or more than one space indicates a
                      * continuation of the long description.
                      */
@@ -207,7 +209,7 @@ services__get_lsb_metadata(const char *type, char **output)
         }
 
         // Stop if we leave the header block
-        if (pcmk__starts_with(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
+        if (g_str_has_prefix(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
             break;
         }
         if (buffer[0] != '#') {

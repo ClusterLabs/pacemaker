@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+
+#include <glib.h>		// g_str_has_prefix()
 
 #include <crm/crm.h>
 #include <crm/common/util.h>
@@ -172,7 +174,7 @@ pcmk_stonith_param(const char *param)
                          PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
         return true;
     }
-    if (!pcmk__starts_with(param, "pcmk_")) { // Short-circuit common case
+    if (!g_str_has_prefix(param, "pcmk_")) { // Short-circuit common case
         return false;
     }
     if (pcmk__str_any_of(param,

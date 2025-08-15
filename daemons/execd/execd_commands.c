@@ -941,7 +941,8 @@ action_complete(svc_action_t * action)
                 crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout "
                            "(first pending notification=%s timeout=%ds)",
                            cmd->rsc_id, cmd->action, cmd->result.exit_status,
-                           pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
+                           g_strchomp(ctime(&cmd->epoch_rcchange)),
+                           cmd->timeout_orig);
                 pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                                  PCMK_EXEC_TIMEOUT,
                                  "Investigate reason for timeout, and adjust "

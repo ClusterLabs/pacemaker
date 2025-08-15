@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2024 the Pacemaker project contributors
+# Copyright 2020-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -18,7 +18,6 @@ check_PROGRAMS = crm_get_msec_test 		\
 		 pcmk__add_word_test		\
 		 pcmk__btoa_test		\
 		 pcmk__compress_test		\
-		 pcmk__ends_with_test 		\
 		 pcmk__g_strcat_test		\
 		 pcmk__guint_from_hash_test	\
 		 pcmk__numeric_strcasecmp_test 	\
@@ -28,14 +27,12 @@ check_PROGRAMS = crm_get_msec_test 		\
 		 pcmk__scan_ll_test		\
 		 pcmk__scan_min_int_test	\
 		 pcmk__scan_port_test		\
-		 pcmk__starts_with_test 	\
 		 pcmk__str_any_of_test		\
 		 pcmk__str_in_list_test		\
 		 pcmk__str_table_dup_test	\
 		 pcmk__str_update_test		\
 		 pcmk__strcmp_test 		\
 		 pcmk__strkey_table_test 	\
-		 pcmk__strikey_table_test 	\
-		 pcmk__trim_test
+		 pcmk__strikey_table_test
 
 TESTS = $(check_PROGRAMS)

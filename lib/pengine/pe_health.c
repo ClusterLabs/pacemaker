@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <glib.h>                   // g_str_has_prefix()
 
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
@@ -79,7 +81,11 @@ struct health_sum {
 static void
 add_node_health_value(gpointer key, gpointer value, gpointer user_data)
 {
-    if (pcmk__starts_with((const char *) key, "#health")) {
+    if (key == NULL) {
+        return;
+    }
+
+    if (g_str_has_prefix((const gchar *) key, "#health")) {
         struct health_sum *health_sum = user_data;
         int score = 0;
         int rc = pcmk_parse_score((const char *) value, &score, 0);
@@ -146,7 +152,7 @@ pe__node_health(pcmk_node_t *node)
     g_hash_table_iter_init(&iter, node->priv->attrs);
     while (g_hash_table_iter_next(&iter, (gpointer *) &name,
                                   (gpointer *) &value)) {
-        if (pcmk__starts_with(name, "#health")) {
+        if ((name != NULL) && g_str_has_prefix(name, "#health")) {
             int parse_rc = pcmk_rc_ok;
 
             /* It's possible that pcmk__score_red equals pcmk__score_yellow,

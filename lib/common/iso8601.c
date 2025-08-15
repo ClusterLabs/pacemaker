@@ -21,6 +21,9 @@
 #include <limits.h>         // INT_MIN, INT_MAX
 #include <string.h>
 #include <stdbool.h>
+
+#include <glib.h>                           // g_strchomp()
+
 #include <crm/common/iso8601.h>
 #include <crm/common/iso8601_internal.h>
 #include "crmcommon_private.h"
@@ -2251,7 +2254,7 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
     time_t epoch_time = (source == NULL)? time(NULL) : *source;
 
     if (flags == 0) {
-        return pcmk__str_copy(pcmk__trim(ctime(&epoch_time)));
+        return pcmk__str_copy(g_strchomp(ctime(&epoch_time)));
     } else {
         crm_time_t dt;
 

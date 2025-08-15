@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <glib.h>                   // g_str_has_suffix()
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
@@ -1406,9 +1408,11 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
     const char *orig_first_task = orig_action_name(first);
 
     // Stops and demotes must be interleaved with instance on current node
-    bool current = pcmk__ends_with(first->uuid, "_" PCMK_ACTION_STOPPED "_0")
-                   || pcmk__ends_with(first->uuid,
-                                      "_" PCMK_ACTION_DEMOTED "_0");
+    bool current = (first->uuid != NULL)
+                   && (g_str_has_suffix(first->uuid,
+                                        "_" PCMK_ACTION_STOPPED "_0")
+                       || g_str_has_suffix(first->uuid,
+                                           "_" PCMK_ACTION_DEMOTED "_0"));
 
     // Update the specified actions for each "then" instance individually
     instances = get_instance_list(then->rsc);
@@ -1493,8 +1497,8 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
         return false;
     }
 
-    if (pcmk__ends_with(then->uuid, "_stop_0")
-        || pcmk__ends_with(then->uuid, "_demote_0")) {
+    if (g_str_has_suffix(then->uuid, "_stop_0")
+        || g_str_has_suffix(then->uuid, "_demote_0")) {
         rsc = first->rsc;
     } else {
         rsc = then->rsc;

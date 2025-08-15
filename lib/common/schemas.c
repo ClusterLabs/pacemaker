@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 
+#include <glib.h>                       // g_str_has_prefix()
 #include <libxml/relaxng.h>
 #include <libxml/tree.h>                // xmlNode
 #include <libxml/xmlstring.h>           // xmlChar
@@ -158,7 +159,11 @@ pcmk__find_x_0_schema(void)
 static inline bool
 version_from_filename(const char *filename, pcmk__schema_version_t *version)
 {
-    if (pcmk__ends_with(filename, ".rng")) {
+    if (filename == NULL) {
+        return false;
+    }
+
+    if (g_str_has_suffix(filename, ".rng")) {
         return sscanf(filename, "pacemaker-%hhu.%hhu.rng", &(version->v[0]), &(version->v[1])) == 2;
     } else {
         return sscanf(filename, "pacemaker-%hhu.%hhu", &(version->v[0]), &(version->v[1])) == 2;
@@ -171,10 +176,10 @@ schema_filter(const struct dirent *a)
     int rc = 0;
     pcmk__schema_version_t version = SCHEMA_ZERO;
 
-    if (strstr(a->d_name, "pacemaker-") != a->d_name) {
+    if (!g_str_has_prefix(a->d_name, "pacemaker-")) {
         /* crm_trace("%s - wrong prefix", a->d_name); */
 
-    } else if (!pcmk__ends_with_ext(a->d_name, ".rng")) {
+    } else if (!g_str_has_suffix(a->d_name, ".rng")) {
         /* crm_trace("%s - wrong suffix", a->d_name); */
 
     } else if (!version_from_filename(a->d_name, &version)) {
@@ -923,15 +928,18 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
                 scan_state = escan_seennothing;
                 arg_cur = va_arg(aq, char *);
 
-                if (pcmk__starts_with(arg_cur, "WARNING: ")) {
+                if (arg_cur == NULL) {
+                    break;
+
+                } else if (g_str_has_prefix(arg_cur, "WARNING: ")) {
                     prefix_len = sizeof("WARNING: ") - 1;
                     msg_log_level = LOG_WARNING;
 
-                } else if (pcmk__starts_with(arg_cur, "INFO: ")) {
+                } else if (g_str_has_prefix(arg_cur, "INFO: ")) {
                     prefix_len = sizeof("INFO: ") - 1;
                     msg_log_level = LOG_INFO;
 
-                } else if (pcmk__starts_with(arg_cur, "DEBUG: ")) {
+                } else if (g_str_has_prefix(arg_cur, "DEBUG: ")) {
                     prefix_len = sizeof("DEBUG: ") - 1;
                     msg_log_level = LOG_DEBUG;
 
@@ -1440,7 +1448,7 @@ read_file_contents(const char *file, char **contents)
     int rc = pcmk_rc_ok;
     char *path = NULL;
 
-    if (pcmk__ends_with(file, ".rng")) {
+    if (g_str_has_suffix(file, ".rng")) {
         path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_rng, file);
     } else {
         path = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt, file);
@@ -1469,7 +1477,7 @@ add_schema_file_to_xml(xmlNode *parent, const char *file, GList **already_includ
     /* Ensure whatever file we were given has a suffix we know about.  If not,
      * just assume it's an RNG file.
      */
-    if (!pcmk__ends_with(file, ".rng") && !pcmk__ends_with(file, ".xsl")) {
+    if (!g_str_has_suffix(file, ".rng") && !g_str_has_suffix(file, ".xsl")) {
         path = crm_strdup_printf("%s.rng", file);
     } else {
         path = pcmk__str_copy(file);

@@ -21,6 +21,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <glib.h>                           // GOption, etc.
+
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/output_internal.h>
@@ -175,7 +177,7 @@ shadow_default(pcmk__output_t *out, va_list args)
                              buf, 0);
 
             str = g_string_free(buf, FALSE);
-            str = pcmk__trim(str);
+            str = g_strchomp(str);
             if (!pcmk__str_empty(str)) {
                 out->info(out, "%s", str);
             }
@@ -251,7 +253,7 @@ shadow_text(pcmk__output_t *out, va_list args)
                              buf, 0);
 
             str = g_string_free(buf, FALSE);
-            str = pcmk__trim(str);
+            str = g_strchomp(str);
             rc = out->info(out, "%s", str);
             g_free(str);
         }

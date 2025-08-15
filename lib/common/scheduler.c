@@ -328,8 +328,7 @@ pcmk__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
             || (scheduler->priv->recheck_by > recheck))) {
         scheduler->priv->recheck_by = recheck;
         crm_debug("Updated next scheduler recheck to %s for %s",
-                  pcmk__trim(ctime(&recheck)),
-                  pcmk__s(reason, "some reason"));
+                  g_strchomp(ctime(&recheck)), pcmk__s(reason, "some reason"));
     }
 }
 

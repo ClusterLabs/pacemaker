@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 
+#include <glib.h>                           // g_strchomp()
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/xml_internal.h>
@@ -2225,7 +2226,7 @@ node_and_op(pcmk__output_t *out, va_list args) {
 
         last_change_str = crm_strdup_printf(", %s='%s', exec=%sms",
                                             PCMK_XA_LAST_RC_CHANGE,
-                                            pcmk__trim(ctime(&last_change)),
+                                            g_strchomp(ctime(&last_change)),
                                             exec_time);
     }
 
@@ -2293,7 +2294,7 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
 
     if (pcmk__xe_get_time(xml_op, PCMK_XA_LAST_RC_CHANGE,
                           &last_change) == pcmk_rc_ok) {
-        const char *last_rc_change = pcmk__trim(ctime(&last_change));
+        const char *last_rc_change = g_strchomp(ctime(&last_change));
         const char *exec_time = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
 
         pcmk__xe_set_props(node,
