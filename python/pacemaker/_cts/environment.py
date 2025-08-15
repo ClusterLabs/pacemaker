@@ -9,6 +9,7 @@ from contextlib import suppress
 from glob import glob
 import os
 import random
+import shlex
 import socket
 import sys
 import time
@@ -60,11 +61,8 @@ class Environment:
         self["tests"] = []
         self["IPagent"] = "IPaddr2"
         self["DoFencing"] = True
-        self["ClobberCIB"] = False
-        self["CIBfilename"] = None
         self["CIBResource"] = False
         self["log_kind"] = None
-        self["node-limit"] = 0
         self["scenario"] = "random"
 
         self.random_gen = random.Random()
@@ -96,17 +94,8 @@ class Environment:
 
     def dump(self):
         """Print the current environment."""
-        keys = []
-        for key in list(self.data.keys()):
-            keys.append(key)
-
-        keys.sort()
-        for key in keys:
+        for key in sorted(self.data.keys()):
             self._logger.debug(f"{f'Environment[{key}]':35}: {str(self[key])}")
-
-    def keys(self):
-        """Return a list of all environment keys stored in this instance."""
-        return list(self.data.keys())
 
     def __contains__(self, key):
         """Return True if the given key exists in the environment."""
@@ -117,9 +106,6 @@ class Environment:
 
     def __getitem__(self, key):
         """Return the given environment key, or None if it does not exist."""
-        if str(key) == "0":
-            raise ValueError("Bad call to 'foo in X', should reference 'foo in X.keys()' instead")
-
         if key == "nodes":
             return self._nodes
 
@@ -132,10 +118,6 @@ class Environment:
         """Set the given environment key to the given value, overriding any previous value."""
         if key == "Stack":
             self._set_stack(value)
-
-        elif key == "node-limit":
-            self.data[key] = value
-            self._filter_nodes()
 
         elif key == "nodes":
             self._nodes = []
@@ -153,21 +135,12 @@ class Environment:
                     self._logger.log(f"{node} not found in DNS... aborting")
                     raise
 
-            self._filter_nodes()
-
         else:
             self.data[key] = value
 
     def random_node(self):
         """Choose a random node from the cluster."""
         return self.random_gen.choice(self["nodes"])
-
-    def get(self, key, default=None):
-        """Return the value for key if key is in the environment, else default."""
-        if key == "nodes":
-            return self._nodes
-
-        return self.data.get(key, default)
 
     def _set_stack(self, name):
         """Normalize the given cluster stack name."""
@@ -282,21 +255,6 @@ class Environment:
                 self["IPBase"] = " fe80::1234:56:7890:1000"
                 self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
 
-    def _filter_nodes(self):
-        """
-        Filter the list of cluster nodes.
-
-        If --limit-nodes is given, keep that many nodes from the front of the
-        list of cluster nodes and drop the rest.
-        """
-        if self["node-limit"] > 0:
-            if len(self["nodes"]) > self["node-limit"]:
-                self._logger.log(f"Limiting the number of nodes configured={len(self['nodes'])} "
-                                 f"(max={self['node-limit']})")
-
-                while len(self["nodes"]) > self["node-limit"]:
-                    self["nodes"].pop(len(self["nodes"]) - 1)
-
     def _validate(self):
         """Check that we were given all required command line parameters."""
         if not self["nodes"]:
@@ -337,10 +295,6 @@ class Environment:
         grp1.add_argument("-g", "--dsh-group", "--group",
                           metavar="GROUP", dest="group",
                           help="Use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
-        grp1.add_argument("-l", "--limit-nodes",
-                          type=int, default=0,
-                          metavar="MAX",
-                          help="Only use the first MAX cluster nodes supplied with --nodes")
         grp1.add_argument("--benchmark",
                           action="store_true",
                           help="Add timing information")
@@ -348,6 +302,7 @@ class Environment:
                           action="store_true", dest="list_tests",
                           help="List the valid tests")
         grp1.add_argument("--nodes",
+                          default="",
                           metavar="NODES",
                           help="List of cluster nodes separated by whitespace")
         grp1.add_argument("--stack",
@@ -419,6 +374,7 @@ class Environment:
                           default="/var/lib/pacemaker/notify.log",
                           help="Recipient to pass to alert script")
         grp4.add_argument("--oprofile",
+                          default="",
                           metavar="NODES",
                           help="List of cluster nodes to run oprofile on")
         grp4.add_argument("--outputfile",
@@ -468,8 +424,9 @@ class Environment:
         # Set values on this object based on what happened with command line
         # processing.  This has to be done in several blocks.
 
-        # These values can always be set.  They get a default from the add_argument
-        # calls, only do one thing, and they do not have any side effects.
+        # These values can always be set. Most get a default from the add_argument
+        # calls, they only do one thing, and they do not have any side effects.
+        self["CIBfilename"] = args.cib_filename if args.cib_filename else None
         self["ClobberCIB"] = args.clobber_cib
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema
@@ -483,24 +440,19 @@ class Environment:
         self["iterations"] = args.iterations
         self["loop-minutes"] = args.loop_minutes
         self["loop-tests"] = not args.no_loop_tests
+        self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
-        self["node-limit"] = args.limit_nodes
+        self["oprofile"] = shlex.split(args.oprofile)
         self["stonith-params"] = args.stonith_args
         self["stonith-type"] = args.stonith_type
         self["unsafe-tests"] = not args.no_unsafe_tests
         self["valgrind-procs"] = args.valgrind_procs
         self["warn-inactive"] = args.warn_inactive
 
-        # Nodes and groups are mutually exclusive, so their defaults cannot be
-        # set in their add_argument calls.  Additionally, groups does more than
-        # just set a value.  Here, set nodes first and then if a group is
-        # specified, override the previous nodes value.
-        if args.nodes:
-            self["nodes"] = args.nodes.split(" ")
-        else:
-            self["nodes"] = []
-
+        # Nodes and groups are mutually exclusive. Additionally, --group does
+        # more than just set a value. Here, set nodes first and then if a group
+        # is specified, override the previous nodes value.
         if args.group:
             self["OutputFile"] = f"{os.environ['HOME']}/cluster-{args.dsh_group}.log"
             LogFactory().add_file(self["OutputFile"], "CTS")
@@ -528,54 +480,46 @@ class Environment:
         if args.boot:
             self["scenario"] = "boot"
 
-        if args.cib_filename:
-            self["CIBfilename"] = args.cib_filename
-        else:
-            self["CIBfilename"] = None
-
         if args.choose:
             self["scenario"] = "sequence"
-            self["tests"].extend(args.choose.split())
+            self["tests"].extend(shlex.split(args.choose))
             self["iterations"] = len(self["tests"])
 
-        if args.fencing:
-            if args.fencing in ["0", "no"]:
-                self["DoFencing"] = False
-            else:
-                self["DoFencing"] = True
+        if args.fencing in ["0", "no"]:
+            self["DoFencing"] = False
 
-                if args.fencing in ["rhcs", "virt", "xvm"]:
-                    self["stonith-type"] = "fence_xvm"
+        elif args.fencing in ["rhcs", "virt", "xvm"]:
+            self["stonith-type"] = "fence_xvm"
 
-                elif args.fencing == "scsi":
-                    self["stonith-type"] = "fence_scsi"
+        elif args.fencing == "scsi":
+            self["stonith-type"] = "fence_scsi"
 
-                elif args.fencing in ["lha", "ssh"]:
-                    self["stonith-params"] = "hostlist=all,livedangerously=yes"
-                    self["stonith-type"] = "external/ssh"
+        elif args.fencing in ["lha", "ssh"]:
+            self["stonith-params"] = "hostlist=all,livedangerously=yes"
+            self["stonith-type"] = "external/ssh"
 
-                elif args.fencing == "openstack":
-                    self["stonith-type"] = "fence_openstack"
+        elif args.fencing == "openstack":
+            self["stonith-type"] = "fence_openstack"
 
-                    print("Obtaining OpenStack credentials from the current environment")
-                    region = os.environ['OS_REGION_NAME']
-                    tenant = os.environ['OS_TENANT_NAME']
-                    auth = os.environ['OS_AUTH_URL']
-                    user = os.environ['OS_USERNAME']
-                    password = os.environ['OS_PASSWORD']
+            print("Obtaining OpenStack credentials from the current environment")
+            region = os.environ['OS_REGION_NAME']
+            tenant = os.environ['OS_TENANT_NAME']
+            auth = os.environ['OS_AUTH_URL']
+            user = os.environ['OS_USERNAME']
+            password = os.environ['OS_PASSWORD']
 
-                    self["stonith-params"] = f"region={region},tenant={tenant},auth={auth},user={user},password={password}"
+            self["stonith-params"] = f"region={region},tenant={tenant},auth={auth},user={user},password={password}"
 
-                elif args.fencing == "rhevm":
-                    self["stonith-type"] = "fence_rhevm"
+        elif args.fencing == "rhevm":
+            self["stonith-type"] = "fence_rhevm"
 
-                    print("Obtaining RHEV-M credentials from the current environment")
-                    user = os.environ['RHEVM_USERNAME']
-                    password = os.environ['RHEVM_PASSWORD']
-                    server = os.environ['RHEVM_SERVER']
-                    port = os.environ['RHEVM_PORT']
+            print("Obtaining RHEV-M credentials from the current environment")
+            user = os.environ['RHEVM_USERNAME']
+            password = os.environ['RHEVM_PASSWORD']
+            server = os.environ['RHEVM_SERVER']
+            port = os.environ['RHEVM_PORT']
 
-                    self["stonith-params"] = f"login={user},passwd={password},ipaddr={server},ipport={port},ssl=1,shell_timeout=10"
+            self["stonith-params"] = f"login={user},passwd={password},ipaddr={server},ipport={port},ssl=1,shell_timeout=10"
 
         if args.ip:
             self["CIBResource"] = True
@@ -598,11 +542,6 @@ class Environment:
 
         if args.once:
             self["scenario"] = "all-once"
-
-        if args.oprofile:
-            self["oprofile"] = args.oprofile.split(" ")
-        else:
-            self["oprofile"] = []
 
         if args.outputfile:
             self["OutputFile"] = args.outputfile

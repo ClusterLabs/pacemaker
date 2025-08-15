@@ -141,19 +141,19 @@ class LogAudit(ClusterAudit):
             if rc != 0:
                 self._cm.log(f"ERROR: Cannot execute remote command [{cmd}] on {node}")
 
-        for k in list(watch.keys()):
-            w = watch[k]
+        for k, w in watch.items():
             if watch_pref is None:
                 self._cm.log(f"Checking for test message in {k} logs")
+
             w.look_for_all(silent=True)
-            if w.unmatched:
-                for regex in w.unmatched:
-                    self._cm.log(f"Test message [{regex}] not found in {w.kind} logs")
-            else:
+            if not w.unmatched:
                 if watch_pref is None:
                     self._cm.log(f"Found test message in {k} logs")
                     self._cm.env["log_kind"] = k
-                return 1
+                return True
+
+            for regex in w.unmatched:
+                self._cm.log(f"Test message [{regex}] not found in {w.kind} logs")
 
         return False
 

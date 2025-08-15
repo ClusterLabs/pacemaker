@@ -38,10 +38,7 @@ class RemoteStonithd(RemoteDriver):
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""
-        if not RemoteDriver.is_applicable(self):
-            return False
-
-        return self._env.get("DoFencing", True)
+        return self._env["DoFencing"] and RemoteDriver.is_applicable(self)
 
     @property
     def errors_to_ignore(self):
