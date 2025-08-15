@@ -9,6 +9,7 @@ from contextlib import suppress
 from glob import glob
 import os
 import random
+import shlex
 import socket
 import sys
 import time
@@ -310,6 +311,7 @@ class Environment:
                           action="store_true", dest="list_tests",
                           help="List the valid tests")
         grp1.add_argument("--nodes",
+                          default="",
                           metavar="NODES",
                           help="List of cluster nodes separated by whitespace")
         grp1.add_argument("--stack",
@@ -381,6 +383,7 @@ class Environment:
                           default="/var/lib/pacemaker/notify.log",
                           help="Recipient to pass to alert script")
         grp4.add_argument("--oprofile",
+                          default="",
                           metavar="NODES",
                           help="List of cluster nodes to run oprofile on")
         grp4.add_argument("--outputfile",
@@ -445,23 +448,19 @@ class Environment:
         self["iterations"] = args.iterations
         self["loop-minutes"] = args.loop_minutes
         self["loop-tests"] = not args.no_loop_tests
+        self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
+        self["oprofile"] = shlex.split(args.oprofile)
         self["stonith-params"] = args.stonith_args
         self["stonith-type"] = args.stonith_type
         self["unsafe-tests"] = not args.no_unsafe_tests
         self["valgrind-procs"] = args.valgrind_procs
         self["warn-inactive"] = args.warn_inactive
 
-        # Nodes and groups are mutually exclusive, so their defaults cannot be
-        # set in their add_argument calls.  Additionally, groups does more than
-        # just set a value.  Here, set nodes first and then if a group is
-        # specified, override the previous nodes value.
-        if args.nodes:
-            self["nodes"] = args.nodes.split(" ")
-        else:
-            self["nodes"] = []
-
+        # Nodes and groups are mutually exclusive. Additionally, --group does
+        # more than just set a value. Here, set nodes first and then if a group
+        # is specified, override the previous nodes value.
         if args.group:
             self["OutputFile"] = f"{os.environ['HOME']}/cluster-{args.dsh_group}.log"
             LogFactory().add_file(self["OutputFile"], "CTS")
@@ -496,7 +495,7 @@ class Environment:
 
         if args.choose:
             self["scenario"] = "sequence"
-            self["tests"].extend(args.choose.split())
+            self["tests"].extend(shlex.split(args.choose))
             self["iterations"] = len(self["tests"])
 
         if args.fencing:
@@ -559,11 +558,6 @@ class Environment:
 
         if args.once:
             self["scenario"] = "all-once"
-
-        if args.oprofile:
-            self["oprofile"] = args.oprofile.split(" ")
-        else:
-            self["oprofile"] = []
 
         if args.outputfile:
             self["OutputFile"] = args.outputfile
