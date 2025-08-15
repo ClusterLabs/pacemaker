@@ -113,9 +113,6 @@ class Environment:
 
     def __getitem__(self, key):
         """Return the given environment key, or None if it does not exist."""
-        if str(key) == "0":
-            raise ValueError("Bad call to 'foo in X', should reference 'foo in X.keys()' instead")
-
         if key == "nodes":
             return self._nodes
 
