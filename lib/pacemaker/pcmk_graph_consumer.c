@@ -562,9 +562,13 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         return NULL;
     }
 
+    /* @TODO Should we use pcmk__assert_alloc() here? A crash seems preferable
+     * to returning a graph with missing actions. Besides, there will likely be
+     * more allocation failures after this.
+     */
     action = calloc(1, sizeof(pcmk__graph_action_t));
     if (action == NULL) {
-        crm_perror(LOG_CRIT, "Cannot unpack transition graph action");
+        crm_crit("Cannot unpack transition graph action: %s", strerror(errno));
         crm_log_xml_trace(xml_action, "lost");
         return NULL;
     }

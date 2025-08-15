@@ -308,8 +308,8 @@ crm_signal_handler(int sig, sighandler_t dispatch)
     struct sigaction old;
 
     if (sigemptyset(&mask) < 0) {
-        crm_err("Could not set handler for signal %d: %s",
-                sig, pcmk_rc_str(errno));
+        crm_err("Could not %sset handler for signal %d: %s",
+                ((dispatch == NULL)? "un" : ""), sig, strerror(errno));
         return SIG_ERR;
     }
 
@@ -319,8 +319,8 @@ crm_signal_handler(int sig, sighandler_t dispatch)
     sa.sa_mask = mask;
 
     if (sigaction(sig, &sa, &old) < 0) {
-        crm_err("Could not set handler for signal %d: %s",
-                sig, pcmk_rc_str(errno));
+        crm_err("Could not %sset handler for signal %d: %s",
+                ((dispatch == NULL)? "un" : ""), sig, strerror(errno));
         return SIG_ERR;
     }
     return old.sa_handler;
@@ -401,7 +401,7 @@ mainloop_destroy_signal(int sig)
         return FALSE;
 
     } else if (crm_signal_handler(sig, NULL) == SIG_ERR) {
-        crm_perror(LOG_ERR, "Could not uninstall signal handler for signal %d", sig);
+        // Error already logged
         return FALSE;
 
     } else if (crm_signals[sig] == NULL) {
@@ -1076,7 +1076,7 @@ child_kill_helper(mainloop_child_t *child)
 
     if (rc < 0) {
         if (errno != ESRCH) {
-            crm_perror(LOG_ERR, "kill(%d, KILL) failed", child->pid);
+            crm_err("kill(%d, KILL) failed: %s", child->pid, strerror(errno));
         }
         return -errno;
     }

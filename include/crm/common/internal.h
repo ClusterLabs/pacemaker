@@ -101,10 +101,6 @@ bool pcmk__throttle_load_avg(float *load);
  */
 int pcmk__pid_active(pid_t pid, const char *daemon);
 
-int pcmk__pidfile_matches(const char *filename, pid_t expected_pid,
-                          const char *expected_name, pid_t *pid);
-int pcmk__lock_pidfile(const char *filename, const char *name);
-
 
 // bitwise arithmetic utilities
 
@@ -191,7 +187,6 @@ pcmk__flag_text(uint64_t flag_group, uint64_t flags)
 
 // miscellaneous utilities (from utils.c)
 
-void pcmk__daemonize(const char *name, const char *pidfile);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);

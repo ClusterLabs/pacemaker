@@ -243,7 +243,7 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
 
         } else {
             errno = EINVAL;
-            crm_perror(LOG_ERR, "Agent %s not found", agent);
+            crm_err("Agent %s not found", agent);
             return -EINVAL;
         }
 
@@ -304,6 +304,6 @@ stonith__lha_validate(stonith_t *st, int call_options, const char *target,
                       char **output, char **error_output)
 {
     errno = EOPNOTSUPP;
-    crm_perror(LOG_ERR, "Cannot validate Linux-HA fence agents");
+    crm_err("Cannot validate Linux-HA fence agents");
     return -EOPNOTSUPP;
 }

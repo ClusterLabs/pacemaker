@@ -160,6 +160,8 @@ pcmk__panic(const char *reason)
     }
 }
 
+#define PIDFILE PCMK__RUN_DIR "/sbd.pid"
+
 /*!
  * \internal
  * \brief Return the process ID of sbd (or 0 if it is not running)
@@ -167,33 +169,44 @@ pcmk__panic(const char *reason)
 pid_t
 pcmk__locate_sbd(void)
 {
-    const char *pidfile = PCMK__RUN_DIR "/sbd.pid";
-    int rc;
+    gchar *contents = NULL;
+    long long pid_read = 0;
 
-    if(sbd_pid > 1) {
+    if (sbd_pid > 1) {
         return sbd_pid;
     }
 
-    /* Read the pid file */
-    rc = pcmk__pidfile_matches(pidfile, 0, SBIN_DIR "/sbd", &sbd_pid);
-    if (rc == pcmk_rc_ok) {
-        crm_trace("SBD detected at pid %lld (via PID file %s)",
-                  (long long) sbd_pid, pidfile);
-    } else {
-        /* Fall back to /proc for systems that support it */
-        sbd_pid = pcmk__procfs_pid_of("sbd");
+    if (g_file_get_contents(PIDFILE, &contents, NULL, NULL)
+        && (pcmk__scan_ll(contents, &pid_read, 0) == pcmk_rc_ok)
+        && (pcmk__pid_active((pid_t) pid_read,
+                             SBIN_DIR "/sbd") != ESRCH)) {
 
+        /* If the pcmk__pid_active() return code is neither pcmk__rc_ok nor
+         * ESRCH, then we couldn't determine whether the PID belongs to
+         * SBIN_DIR "/sbd". In that case, we assume that it does.
+         *
+         * @TODO Make sure that's what we want to do.
+         */
+        crm_trace("SBD detected at pid %lld (via PID file " PIDFILE ")",
+                  pid_read);
+        sbd_pid = (pid_t) pid_read;
+
+    } else {
+        unlink(PIDFILE);
+
+        // Fall back to /proc for systems that support it
+        sbd_pid = pcmk__procfs_pid_of("sbd");
         if (sbd_pid != 0) {
             crm_trace("SBD detected at pid %lld (via procfs)",
                       (long long) sbd_pid);
         }
     }
 
-    if(sbd_pid < 0) {
+    if (sbd_pid <= 0) {
         sbd_pid = 0;
         crm_trace("SBD not detected");
     }
-
+    g_free(contents);
     return sbd_pid;
 }
 

@@ -219,7 +219,7 @@ pcmk__verify_digest(const xmlNode *input, const char *expected)
     if (input != NULL) {
         calculated = pcmk__digest_on_disk_cib(input);
         if (calculated == NULL) {
-            crm_perror(LOG_ERR, "Could not calculate digest for comparison");
+            crm_err("Could not calculate digest for comparison");
             return false;
         }
     }
