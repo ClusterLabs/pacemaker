@@ -61,7 +61,6 @@ class Environment:
         self["tests"] = []
         self["IPagent"] = "IPaddr2"
         self["DoFencing"] = True
-        self["ClobberCIB"] = False
         self["CIBResource"] = False
         self["log_kind"] = None
         self["scenario"] = "random"
