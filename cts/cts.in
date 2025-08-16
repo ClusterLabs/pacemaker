@@ -12,7 +12,6 @@ cts_root=`dirname $0`
 
 summary=0
 verbose=0
-tests=""
 
 clean=0
 run=0
@@ -29,11 +28,9 @@ Usage: %s [options] {[CMDS]}
 -v                      increase verbosity
 -e PATTERN              grep pattern to apply when 'summary' requested
 -f,-sf FILE             show summary for the provided log
--t TEST, [0-9]*         add a test to the working set
 [--]run                 request CTS run (passing remaining arguments through)
 [--]boot, start         request CTS run (with --boot option)
 [--]clean               request cleaning up after CTS run
---                      delimits tests that follow
 EOF
 )
 
@@ -63,15 +60,6 @@ while true; do
             shift
             shift
             ;;
-        -t)
-            tests="$tests $2"
-            shift
-            shift
-            ;;
-        [0-9]*)
-            tests="$tests $1"
-            shift
-            ;;
         --run|run)
             run=1
             shift
@@ -86,11 +74,6 @@ while true; do
         --clean|clean)
             clean=1
             shift
-            ;;
-        --)
-            shift
-            tests="$tests $*"
-            break
             ;;
         "")
             break
@@ -175,13 +158,7 @@ if [ ! -z $custom_log ]; then
     cluster_log=$custom_log
 fi
 
-if [ "x$tests" != x ] && [ "x$tests" != "x " ]; then
-    for t in $tests; do
-        echo "crm_report --cts-log $cluster_log -d -T $t"
-        crm_report --cts-log $cluster_log -d -T $t
-    done
-
-elif [ $summary = 1 ]; then
+if [ $summary = 1 ]; then
     echo $cluster_log
     case $verbose in
         0)
