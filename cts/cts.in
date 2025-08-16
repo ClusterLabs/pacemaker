@@ -26,7 +26,6 @@ Usage: %s [options] {[CMDS]}
 
 [--]help, -h            show help screen and exit
 -c,-g CLUSTER_NAME      set the cluster name
--s                      show summary for the current log
 -v                      increase verbosity
 -e PATTERN              grep pattern to apply when 'summary' requested
 -f,-sf FILE             show summary for the provided log
@@ -47,10 +46,6 @@ while true; do
         -c|-g)
             cluster_name=$2
             shift
-            shift
-            ;;
-        -s)
-            summary=1
             shift
             ;;
         -v)
