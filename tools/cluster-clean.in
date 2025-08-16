@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2011-2023 the Pacemaker project contributors
+# Copyright 2011-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -20,7 +20,6 @@ while true; do
 	    shift; shift;;
 	-g) group=$2; shift; shift;;
 	--kill) kill=1; shift;;
-	--kill-only) kill=2; shift;;
 	"") break;;
 	*) echo "unknown option: $1"; exit 1;;
     esac
@@ -51,10 +50,6 @@ if [ $kill != 0 ]; then
 
     cluster-helper $target -- "killall -q -9 corosync pacemakerd pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-remoted pacemaker-schedulerd dlm_controld gfs_controld" &> /dev/null
     cluster-helper $target -- 'kill -9 `pidof valgrind`' &> /dev/null
-
-    if [ $kill == 2 ]; then
-	exit 0
-    fi
 fi
 
 #logrotate -f $cluster_rotate
