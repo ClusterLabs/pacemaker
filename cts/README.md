@@ -156,10 +156,8 @@ Putting all the above together, a command line might look like:
 
 For more options, run with the --help option.
 
-There are also a couple of wrappers for cts-lab that some users may find more
-convenient: cts, which is typically installed in the same place as the rest of
-the testing code; and cluster\_test, which is in the source directory and
-typically not installed.
+There is also a wrapper for cts-lab that some users may find more convenient:
+cluster\_test, which is in the source directory and typically not installed.
 
 
 ### Optional: Memory testing

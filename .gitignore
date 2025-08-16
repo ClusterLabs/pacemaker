@@ -1,5 +1,5 @@
 #
-# Copyright 2011-2024 the Pacemaker project contributors
+# Copyright 2011-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -113,7 +113,6 @@ configure
 /agents/stonith/fence_watchdog
 /cts/benchmark/clubench
 /cts/cluster_test
-/cts/cts
 /cts/cts-attrd
 /cts/cts-cli
 /cts/cts-exec
@@ -272,6 +271,7 @@ pacemaker_*.info
 /config.sub
 /coverage.sh
 /crmd
+/cts/cts
 /cts/CTS.py
 /cts/CTSlab.py
 /cts/CTSvars.py
