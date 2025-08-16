@@ -353,56 +353,54 @@ if [ $compress -eq 1 ]; then
     require_tar
 fi
 
-if [ "x$start_time" != "x" ]; then
-    masterlog=""
-
-    if [ -z "$sanitize_patterns" ]; then
-	log "WARNING: The tarball produced by this program may contain"
-	log "         sensitive information such as passwords."
-	log ""
-	log "We will attempt to remove such information if you use the"
-	log "-p option. For example: -p \"pass.*\" -p \"user.*\""
-	log ""
-	log "However, doing this may reduce the ability for the recipients"
-	log "to diagnose issues and generally provide assistance."
-	log ""
-	log "IT IS YOUR RESPONSIBILITY TO PROTECT SENSITIVE DATA FROM EXPOSURE"
-	log ""
-    fi
-
-    # If user didn't specify a cluster stack, make a best guess if possible.
-    if [ -z "$cluster" ] || [ "$cluster" = "any" ]; then
-        cluster=$(get_cluster_type)
-    fi
-
-    # If user didn't specify node(s), make a best guess if possible.
-    if [ -z "$nodes" ]; then
-	nodes=`getnodes $cluster`
-        if [ -n "$nodes" ]; then
-            log "Calculated node list: $nodes"
-        else
-            fatal "Cannot determine nodes; specify --nodes or --single-node"
-        fi
-    fi
-
-    if
-	echo $nodes | grep -qs $host
-    then
-	debug "We are a cluster node"
-    else
-	debug "We are a log master"
-	masterlog=`findmsg 1 "pacemaker-controld\\|CTS"`
-    fi
-
-
-    if [ -z $end_time ]; then
-	end_time=`perl -e 'print time()'`
-    fi
-    label="pcmk-`date +"%a-%d-%b-%Y"`"
-    log "Collecting data from $nodes (`time2str $start_time` to `time2str $end_time`)"
-    collect_data $label $start_time $end_time $masterlog
-else
+if [ "x$start_time" = "x" ]; then
     fatal "Not sure what to do, no time range to extract"
 fi
+
+masterlog=""
+
+if [ -z "$sanitize_patterns" ]; then
+    log "WARNING: The tarball produced by this program may contain"
+    log "         sensitive information such as passwords."
+    log ""
+    log "We will attempt to remove such information if you use the"
+    log "-p option. For example: -p \"pass.*\" -p \"user.*\""
+    log ""
+    log "However, doing this may reduce the ability for the recipients"
+    log "to diagnose issues and generally provide assistance."
+    log ""
+    log "IT IS YOUR RESPONSIBILITY TO PROTECT SENSITIVE DATA FROM EXPOSURE"
+    log ""
+fi
+
+# If user didn't specify a cluster stack, make a best guess if possible.
+if [ -z "$cluster" ] || [ "$cluster" = "any" ]; then
+    cluster=$(get_cluster_type)
+fi
+
+# If user didn't specify node(s), make a best guess if possible.
+if [ -z "$nodes" ]; then
+    nodes=`getnodes $cluster`
+    if [ -n "$nodes" ]; then
+        log "Calculated node list: $nodes"
+    else
+        fatal "Cannot determine nodes; specify --nodes or --single-node"
+    fi
+fi
+
+if echo $nodes | grep -qs $host; then
+    debug "We are a cluster node"
+else
+    debug "We are a log master"
+    masterlog=`findmsg 1 "pacemaker-controld\\|CTS"`
+fi
+
+if [ -z $end_time ]; then
+    end_time=`perl -e 'print time()'`
+fi
+
+label="pcmk-`date +"%a-%d-%b-%Y"`"
+log "Collecting data from $nodes (`time2str $start_time` to `time2str $end_time`)"
+collect_data $label $start_time $end_time $masterlog
 
 # vim: set filetype=sh:
