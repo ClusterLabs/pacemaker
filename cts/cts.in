@@ -10,7 +10,6 @@
 
 cts_root=`dirname $0`
 
-logfile=0
 summary=0
 verbose=0
 watch=0
@@ -31,10 +30,9 @@ Usage: %s [options] {[CMDS]}
 -x                      turn on debugging
 -c,-g CLUSTER_NAME      set the cluster name
 -S                      show summary from the last CTS run
--s                      show summary for the current log (see -l)
+-s                      show summary for the current log
 -v                      increase verbosity
 -e PATTERN              grep pattern to apply when 'summary' or 'watch' requested
--l                      print the filename of the log that would be operated on
 -w                      continous (filtered) monitoring of the log file
 -f,-sf FILE             show summary for the provided log
 -t TEST, [0-9]*         add a test to the working set
@@ -76,10 +74,6 @@ while true; do
         -e)
             patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"
             shift
-            shift
-            ;;
-        -l)
-            logfile=1
             shift
             ;;
         -w)
@@ -209,9 +203,6 @@ if [ "x$tests" != x ] && [ "x$tests" != "x " ]; then
         echo "crm_report --cts-log $cluster_log -d -T $t"
         crm_report --cts-log $cluster_log -d -T $t
     done
-
-elif [ $logfile = 1 ]; then
-    echo $cluster_log
 
 elif [ $summary = 1 ]; then
     files=$cluster_log
