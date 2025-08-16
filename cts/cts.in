@@ -33,7 +33,6 @@ Usage: %s [options] {[CMDS]}
 -S                      show summary from the last CTS run
 -s                      show summary for the current log (see -l)
 -v                      increase verbosity
--p                      (currently unused)
 -e PATTERN              grep pattern to apply when 'summary' or 'watch' requested
 -l                      print the filename of the log that would be operated on
 -w                      continous (filtered) monitoring of the log file
@@ -72,9 +71,6 @@ while true; do
             ;;
         -v)
             verbose=`expr $verbose + 1`
-            shift
-            ;;
-        -p)
             shift
             ;;
         -e)
