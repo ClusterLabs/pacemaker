@@ -161,10 +161,6 @@ convenient: cts, which is typically installed in the same place as the rest of
 the testing code; and cluster\_test, which is in the source directory and
 typically not installed.
 
-To extract the result of a particular test, run:
-
-    crm_report -T $test
-
 
 ### Optional: Memory testing
 
