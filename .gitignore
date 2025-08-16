@@ -142,9 +142,7 @@ configure
 /maint/bumplibs
 /python/pacemaker/buildoptions.py
 /python/setup.py
-/tools/cluster-clean
 /tools/cluster-helper
-/tools/cluster-init
 /tools/crm_error
 /tools/crm_failcount
 /tools/crm_master
@@ -343,10 +341,11 @@ pacemaker_*.info
 /pengine
 /py-compile
 /scratch
+/test-driver
 /tools/cibsecret
+/tools/cluster-clean
 /tools/cluster-init
 /tools/crm_mon.upstart
-/test-driver
 /xml/assets
 /xml/crm.dtd
 /xml/version-diff.sh
