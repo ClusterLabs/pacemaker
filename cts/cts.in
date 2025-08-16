@@ -184,7 +184,7 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-if [ "x$cluster_name" = x ] || [ "x$cluster_name" = xpick ]; then
+if [ "x$cluster_name" = x ] ; then
     clusters=`ls -1 ~/.dsh/group/[a-z]+[0-9] | sed s/.*group.// | tr '\n' ' ' `
 
     echo "custom) interactively define a cluster"
