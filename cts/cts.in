@@ -12,7 +12,6 @@ cts_root=`dirname $0`
 
 summary=0
 verbose=0
-watch=0
 tests=""
 
 clean=0
@@ -29,8 +28,7 @@ Usage: %s [options] {[CMDS]}
 -c,-g CLUSTER_NAME      set the cluster name
 -s                      show summary for the current log
 -v                      increase verbosity
--e PATTERN              grep pattern to apply when 'summary' or 'watch' requested
--w                      continous (filtered) monitoring of the log file
+-e PATTERN              grep pattern to apply when 'summary' requested
 -f,-sf FILE             show summary for the provided log
 -t TEST, [0-9]*         add a test to the working set
 [--]run                 request CTS run (passing remaining arguments through)
@@ -62,10 +60,6 @@ while true; do
         -e)
             patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"
             shift
-            shift
-            ;;
-        -w)
-            watch=1
             shift
             ;;
         -f|-sf)
@@ -206,19 +200,6 @@ elif [ $summary = 1 ]; then
             ;;
     esac
     echo ""
-
-elif [ $watch = 1 ]; then
-    case $verbose in
-        0)
-            tail -F $cluster_log | grep $patterns | grep -v "CTS: debug:"
-            ;;
-        1)
-            tail -F $cluster_log | grep $patterns | grep -v "CTS:.* cmd:"
-            ;;
-        *)
-            tail -F $cluster_log | grep $patterns
-            ;;
-    esac
 fi
 
 # vim: set filetype=sh:
