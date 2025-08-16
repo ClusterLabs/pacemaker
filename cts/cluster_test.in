@@ -1,6 +1,6 @@
 #!@BASH_PATH@
 #
-# Copyright 2008-2020 the Pacemaker project contributors
+# Copyright 2008-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -32,14 +32,6 @@ if [ -z "$CTS_node_list" ]; then
     read -p "Please list your cluster nodes (eg. node1 node2 node3): " CTS_node_list
 else
     echo "Beginning test of cluster: $CTS_node_list"
-fi
-
-if [ -z "$CTS_stack" ]; then
-    anyAsked=1
-    read -p "Which cluster stack are you using? ([corosync]): " CTS_stack
-    [ -n "$CTS_stack" ] || CTS_stack=corosync
-else
-    echo "Using the $CTS_stack cluster stack"
 fi
 
 [ "${CTS_node_list}" = "${CTS_node_list/$HOSTNAME/}" ] \
@@ -144,7 +136,6 @@ fi
 if [ "$doSave" = "y" ]; then
     cat > ~/.cts <<-EOF
 	# CTS Test data
-	CTS_stack="$CTS_stack"
 	CTS_node_list="$CTS_node_list"
 	CTS_logfile="$CTS_logfile"
 	CTS_logport="$CTS_logport"
@@ -172,6 +163,6 @@ printf "\nAll set to go for %d iterations!\n" "$CTS_numtests"
     || echo "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually)."
 
 echo Now paste the following command into this shell:
-echo "@PYTHON@ `dirname "$0"`/cts-lab -L \"$CTS_logfile\" --syslog-facility \"$CTS_logfacility\" --no-unsafe-tests --stack \"$CTS_stack\" $CTS_adv --at-boot \"$CTS_boot\" $cts_extra \"$CTS_numtests\" --nodes \"$CTS_node_list\""
+echo "@PYTHON@ `dirname "$0"`/cts-lab -L \"$CTS_logfile\" --syslog-facility \"$CTS_logfacility\" --no-unsafe-tests $CTS_adv --at-boot \"$CTS_boot\" $cts_extra \"$CTS_numtests\" --nodes \"$CTS_node_list\""
 
 # vim: set filetype=sh:

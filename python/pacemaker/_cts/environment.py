@@ -12,7 +12,6 @@ import random
 import shlex
 import socket
 import sys
-import time
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
@@ -59,38 +58,25 @@ class Environment:
         self["StartTime"] = 300
         self["StableTime"] = 30
         self["tests"] = []
-        self["IPagent"] = "IPaddr2"
         self["DoFencing"] = True
         self["CIBResource"] = False
         self["log_kind"] = None
         self["scenario"] = "random"
 
+        # Hard-coded since there is only one supported cluster manager/stack
+        self["Name"] = "crm-corosync"
+        self["Stack"] = "corosync 2+"
+
         self.random_gen = random.Random()
 
         self._logger = LogFactory()
         self._rsh = RemoteFactory().getInstance()
-        self._target = "localhost"
 
-        self._seed_random()
         self._parse_args(args)
 
         if not self["ListTests"]:
             self._validate()
             self._discover()
-
-    def _seed_random(self, seed=None):
-        """
-        Initialize the random number generator.
-
-        Arguments:
-        seed -- Use this to see the random number generator, or use the
-                current time if None.
-        """
-        if not seed:
-            seed = int(time.time())
-
-        self["RandSeed"] = seed
-        self.random_gen.seed(str(seed))
 
     def dump(self):
         """Print the current environment."""
@@ -109,17 +95,11 @@ class Environment:
         if key == "nodes":
             return self._nodes
 
-        if key == "Name":
-            return self._get_stack_short()
-
         return self.data.get(key)
 
     def __setitem__(self, key, value):
         """Set the given environment key to the given value, overriding any previous value."""
-        if key == "Stack":
-            self._set_stack(value)
-
-        elif key == "nodes":
+        if key == "nodes":
             self._nodes = []
             for node in value:
                 # I don't think I need the IP address, etc. but this validates
@@ -142,42 +122,23 @@ class Environment:
         """Choose a random node from the cluster."""
         return self.random_gen.choice(self["nodes"])
 
-    def _set_stack(self, name):
-        """Normalize the given cluster stack name."""
-        if name in ["corosync", "cs", "mcp"]:
-            self.data["Stack"] = "corosync 2+"
-
-        else:
-            raise ValueError(f"Unknown stack: {name}")
-
-    def _get_stack_short(self):
-        """Return the short name for the currently set cluster stack."""
-        if "Stack" not in self.data:
-            return "unknown"
-
-        if self.data["Stack"] == "corosync 2+":
-            return "crm-corosync"
-
-        LogFactory().log(f"Unknown stack: {self['stack']}")
-        raise ValueError(f"Unknown stack: {self['stack']}")
-
-    def _detect_systemd(self):
+    def _detect_systemd(self, node):
         """Detect whether systemd is in use on the target node."""
         if "have_systemd" not in self.data:
-            (rc, _) = self._rsh(self._target, "systemctl list-units", verbose=0)
+            (rc, _) = self._rsh(node, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
-    def _detect_syslog(self):
+    def _detect_syslog(self, node):
         """Detect the syslog variant in use on the target node (if any)."""
         if "syslogd" in self.data:
             return
 
         if self["have_systemd"]:
             # Systemd
-            (_, lines) = self._rsh(self._target, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+            (_, lines) = self._rsh(node, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
         else:
             # SYS-V
-            (_, lines) = self._rsh(self._target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
+            (_, lines) = self._rsh(node, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
 
         with suppress(IndexError):
             self["syslogd"] = lines[0].strip()
@@ -220,19 +181,19 @@ class Environment:
         (rc, _) = self._rsh(node, f"chkconfig --list | grep -e {service}.*on")
         return rc == 0
 
-    def _detect_at_boot(self):
+    def _detect_at_boot(self, node):
         """Detect if the cluster starts at boot."""
         if "at-boot" not in self.data:
-            self["at-boot"] = self.service_is_enabled(self._target, "corosync") \
-                or self.service_is_enabled(self._target, "pacemaker")
+            self["at-boot"] = self.service_is_enabled(node, "corosync") \
+                or self.service_is_enabled(node, "pacemaker")
 
-    def _detect_ip_offset(self):
+    def _detect_ip_offset(self, node):
         """Detect the offset for IPaddr resources."""
         if self["CIBResource"] and "IPBase" not in self.data:
-            (_, lines) = self._rsh(self._target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
+            (_, lines) = self._rsh(node, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
-            (_, lines) = self._rsh(self._target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
+            (_, lines) = self._rsh(node, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
 
             try:
                 self["IPBase"] = lines[0].strip()
@@ -262,8 +223,6 @@ class Environment:
 
     def _discover(self):
         """Probe cluster nodes to figure out how to log and manage services."""
-        self._target = random.Random().choice(self["nodes"])
-
         exerciser = socket.gethostname()
 
         # Use the IP where possible to avoid name lookup failures
@@ -274,10 +233,11 @@ class Environment:
 
         self["cts-exerciser"] = exerciser
 
-        self._detect_systemd()
-        self._detect_syslog()
-        self._detect_at_boot()
-        self._detect_ip_offset()
+        node = self["nodes"][0]
+        self._detect_systemd(node)
+        self._detect_syslog(node)
+        self._detect_at_boot(node)
+        self._detect_ip_offset(node)
 
     def _parse_args(self, argv):
         """
@@ -305,10 +265,6 @@ class Environment:
                           default="",
                           metavar="NODES",
                           help="List of cluster nodes separated by whitespace")
-        grp1.add_argument("--stack",
-                          default="corosync",
-                          metavar="STACK",
-                          help="Which cluster stack is installed")
 
         grp2 = parser.add_argument_group("Options that CTS will usually auto-detect correctly")
         grp2.add_argument("-L", "--logfile",
@@ -430,7 +386,6 @@ class Environment:
         self["ClobberCIB"] = args.clobber_cib
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema
-        self["Stack"] = args.stack
         self["SyslogFacility"] = args.facility
         self["TruncateLog"] = args.truncate
         self["at-boot"] = args.at_boot in ["1", "yes"]
@@ -553,6 +508,8 @@ class Environment:
 
         if args.qarsh:
             self._rsh.enable_qarsh()
+
+        self.random_gen.seed(args.seed)
 
         for kv in args.set:
             (name, value) = kv.split("=")

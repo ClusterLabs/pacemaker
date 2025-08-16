@@ -59,30 +59,22 @@ class CIB:
 
     def new_ip(self, name=None):
         """Generate an IP resource for the next available IP address, optionally specifying the resource's name."""
-        if self._cm.env["IPagent"] == "IPaddr2":
-            ip = next_ip(self._cm.env["IPBase"])
-            if not name:
-                if ":" in ip:
-                    (_, _, suffix) = ip.rpartition(":")
-                    name = f"r{suffix}"
-                else:
-                    name = f"r{ip}"
-
-            r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
-            r["ip"] = ip
-
+        ip = next_ip(self._cm.env["IPBase"])
+        if not name:
             if ":" in ip:
-                r["cidr_netmask"] = "64"
-                r["nic"] = "eth0"
+                (_, _, suffix) = ip.rpartition(":")
+                name = f"r{suffix}"
             else:
-                r["cidr_netmask"] = "32"
+                name = f"r{ip}"
 
+        r = Resource(self._factory, name, "IPaddr2", "ocf")
+        r["ip"] = ip
+
+        if ":" in ip:
+            r["cidr_netmask"] = "64"
+            r["nic"] = "eth0"
         else:
-            if not name:
-                name = f"r{self._cm.env['IPagent']}{self._counter}"
-                self._counter += 1
-
-            r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
+            r["cidr_netmask"] = "32"
 
         r.add_op("monitor", "5s")
         return r
@@ -131,6 +123,7 @@ class CIB:
 
     def contents(self, target):
         """Generate a complete CIB file."""
+        # pylint: disable=too-many-locals
         # fencing resource
         if self._cib:
             return self._cib
@@ -196,7 +189,10 @@ class CIB:
                 remote_node = f"remote-{node}"
 
                 # Randomly assign node to a fencing method
-                ftype = self._cm.env.random_gen.choice(["levels-and", "levels-or ", "broadcast "])
+                # @TODO What does "broadcast" do, if anything?
+                types = ["levels-and", "levels-or", "broadcast"]
+                width = max(len(t) for t in types)
+                ftype = self._cm.env.random_gen.choice(types)
 
                 # For levels-and, randomly choose targeting by node name or attribute
                 by = ""
@@ -210,7 +206,7 @@ class CIB:
                         attr_nodes[node] = node_id
                         by = " (by attribute)"
 
-                self._cm.log(f" - Using {ftype} fencing for node: {node}{by}")
+                self._cm.log(f" - Using {ftype:{width}} fencing for node: {node}{by}")
 
                 if ftype == "levels-and":
                     # If targeting by name, add a topology level for this node
@@ -226,7 +222,7 @@ class CIB:
                     # Add the node (and its remote equivalent) to the list of levels-and nodes.
                     stt_nodes.extend([node, remote_node])
 
-                elif ftype == "levels-or ":
+                elif ftype == "levels-or":
                     for n in [node, remote_node]:
                         stl.level(1, n, "FencingFail")
                         stl.level(2, n, "Fencing")
