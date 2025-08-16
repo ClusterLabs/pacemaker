@@ -10,14 +10,12 @@
 
 cts_root=`dirname $0`
 
-summary=0
 verbose=0
 
 clean=0
 run=0
 boot=0
 
-custom_log=""
 patterns="-e CTS:"
 
 helpmsg=$(cat <<EOF
@@ -27,7 +25,6 @@ Usage: %s [options] {[CMDS]}
 -c,-g CLUSTER_NAME      set the cluster name
 -v                      increase verbosity
 -e PATTERN              grep pattern to apply when 'summary' requested
--f,-sf FILE             show summary for the provided log
 [--]run                 request CTS run (passing remaining arguments through)
 [--]boot, start         request CTS run (with --boot option)
 [--]clean               request cleaning up after CTS run
@@ -51,12 +48,6 @@ while true; do
             ;;
         -e)
             patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"
-            shift
-            shift
-            ;;
-        -f|-sf)
-            summary=1
-            custom_log=$2
             shift
             shift
             ;;
@@ -152,26 +143,6 @@ elif [ $run = 1 ]; then
 
 elif [ $clean = 1 ]; then
     exit 0
-fi
-
-if [ ! -z $custom_log ]; then
-    cluster_log=$custom_log
-fi
-
-if [ $summary = 1 ]; then
-    echo $cluster_log
-    case $verbose in
-        0)
-            cat -n $cluster_log | grep $patterns | grep -v "CTS: debug:"
-            ;;
-        1)
-            cat -n $cluster_log | grep $patterns | grep -v "CTS:.* cmd:"
-            ;;
-        *)
-            cat -n $cluster_log | grep $patterns
-            ;;
-    esac
-    echo ""
 fi
 
 # vim: set filetype=sh:
