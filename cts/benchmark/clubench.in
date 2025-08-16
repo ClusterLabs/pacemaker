@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2010-2021 the Pacemaker project contributors
+# Copyright 2010-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -41,7 +41,6 @@ test -f $CTSCTRL ||  {
 . $CTSCTRL
 
 : ${CTS_logfacility:=local7}
-: ${CTS_stack:=corosync}
 : ${CTS_logfile:="@CRM_LOG_DIR@/ha-log-bench"}
 : ${CTS_adv:="--schema pacemaker-1.2 --clobber-cib -r"}
 : ${RUNS:=3}
@@ -57,12 +56,7 @@ test -f $CTSCTRL ||  {
 	exit 1
 }
 
-case "$CTS_stack" in
-corosync) CRM_REPORT_OPTS="--corosync";;
-*) msg "$CTS_stack: cluster stack not recognized"; exit 1;;
-esac
-
-CTSOPTS="--stack $CTS_stack --at-boot $CTS_boot $CTS_adv"
+CTSOPTS="--at-boot $CTS_boot $CTS_adv"
 CTSOPTS="$CTSOPTS --facility $CTS_logfacility --logfile $CTS_logfile"
 
 if [ "x$CTS_stonith" != "x" ]; then
