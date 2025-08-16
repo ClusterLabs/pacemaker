@@ -10,8 +10,6 @@
 
 cts_root=`dirname $0`
 
-verbose=0
-
 clean=0
 run=0
 boot=0
@@ -21,7 +19,6 @@ Usage: %s [options] {[CMDS]}
 
 [--]help, -h            show help screen and exit
 -c,-g CLUSTER_NAME      set the cluster name
--v                      increase verbosity
 [--]run                 request CTS run (passing remaining arguments through)
 [--]boot, start         request CTS run (with --boot option)
 [--]clean               request cleaning up after CTS run
@@ -37,10 +34,6 @@ while true; do
         -c|-g)
             cluster_name=$2
             shift
-            shift
-            ;;
-        -v)
-            verbose=`expr $verbose + 1`
             shift
             ;;
         --run|run)
