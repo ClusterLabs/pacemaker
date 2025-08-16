@@ -17,7 +17,6 @@ watch=0
 saved=0
 tests=""
 
-install=0
 clean=0
 run=0
 boot=0
@@ -43,7 +42,6 @@ Usage: %s [options] {[CMDS]}
 [--]run                 request CTS run (passing remaining arguments through)
 [--]boot, start         request CTS run (with --boot option)
 [--]clean               request cleaning up after CTS run
-[--]install, --inst     request installing packages to get ready to run CTS
 --                      delimits tests that follow
 EOF
 )
@@ -122,11 +120,6 @@ while true; do
             clean=1
             shift
             ;;
-        --inst|--install|install)
-            install=1
-            clean=1
-            shift
-            ;;
         --)
             shift
             tests="$tests $*"
@@ -187,17 +180,12 @@ case $cluster_name in
 esac
 
 if [ $run = 1 ]; then
-    install=1
     clean=1
 fi
 
 if [ $clean = 1 ]; then
     rm -f $cluster_log
     cluster-clean -g $cluster_name --kill
-fi
-
-if [ $install = 1 ]; then
-    cluster-helper -g $cluster_name -- yum install -y pacemaker pacemaker-debuginfo pacemaker-cts libqb libqb-debuginfo
 fi
 
 if [ $boot = 1 ]; then
