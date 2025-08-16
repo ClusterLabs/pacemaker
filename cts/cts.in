@@ -16,15 +16,12 @@ clean=0
 run=0
 boot=0
 
-patterns="-e CTS:"
-
 helpmsg=$(cat <<EOF
 Usage: %s [options] {[CMDS]}
 
 [--]help, -h            show help screen and exit
 -c,-g CLUSTER_NAME      set the cluster name
 -v                      increase verbosity
--e PATTERN              grep pattern to apply when 'summary' requested
 [--]run                 request CTS run (passing remaining arguments through)
 [--]boot, start         request CTS run (with --boot option)
 [--]clean               request cleaning up after CTS run
@@ -44,11 +41,6 @@ while true; do
             ;;
         -v)
             verbose=`expr $verbose + 1`
-            shift
-            ;;
-        -e)
-            patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"
-            shift
             shift
             ;;
         --run|run)
