@@ -200,11 +200,7 @@ class Environment:
                 self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
                 return
 
-            # pylint thinks self["IPBase"] is a list, not a string, which causes it
-            # to error out because a list doesn't have split().
-            # pylint: disable=no-member
             last_part = self["IPBase"].split('.')[3]
-
             if int(last_part) >= 240:
                 self._logger.log(f"Could not determine an offset for IPaddr resources. Upper bound is too high: {self['IPBase']} {last_part}")
                 self["IPBase"] = " fe80::1234:56:7890:1000"
