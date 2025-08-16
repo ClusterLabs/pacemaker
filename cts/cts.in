@@ -41,7 +41,6 @@ Usage: %s [options] {[CMDS]}
 
 [--]help, -h            show help screen and exit
 -x                      turn on debugging
--a                      show relevant screen sessions and exit
 -c,-g CLUSTER_NAME      set the cluster name
 -S                      show summary from the last CTS run
 -s                      show summary for the current log (see -l)
@@ -74,10 +73,6 @@ while true; do
         -x)
             set -x
             shift
-            ;;
-        -a)
-            screen -ls | grep cts
-            exit 0
             ;;
         -c|-g)
             cluster_name=$2
@@ -330,9 +325,6 @@ elif [ $clean = 1 ]; then
     exit 0
 fi
 
-screen -ls | grep cts-$cluster_name &>/dev/null
-active=$?
-
 if [ ! -z $custom_log ]; then
     cluster_log=$custom_log
 fi
@@ -379,14 +371,6 @@ elif [ $watch = 1 ]; then
             tail -F $cluster_log | grep $patterns
             ;;
     esac
-
-elif [ $active = 0 ]; then
-    screen -x cts-$cluster_name
-
-else
-    touch $cluster_log
-    export cluster_name cluster_hosts cluster_log
-    screen -S cts-$cluster_name bash
 fi
 
 # vim: set filetype=sh:
