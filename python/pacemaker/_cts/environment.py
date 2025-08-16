@@ -49,7 +49,6 @@ class Environment:
                 If None, sys.argv will be used.
         """
         self.data = {}
-        self._nodes = []
 
         # Set some defaults before processing command line arguments.  These are
         # either not set by any command line parameter, or they need a default
@@ -85,32 +84,27 @@ class Environment:
 
     def __contains__(self, key):
         """Return True if the given key exists in the environment."""
-        if key == "nodes":
-            return True
-
         return key in self.data
 
     def __getitem__(self, key):
         """Return the given environment key, or None if it does not exist."""
-        if key == "nodes":
-            return self._nodes
-
         return self.data.get(key)
 
     def __setitem__(self, key, value):
         """Set the given environment key to the given value, overriding any previous value."""
         if key == "nodes":
-            self._nodes = []
+            self.data["nodes"] = []
             for node in value:
+                node = node.strip()
+
                 # I don't think I need the IP address, etc. but this validates
                 # the node name against /etc/hosts and/or DNS, so it's a
                 # GoodThing(tm).
                 try:
-                    n = node.strip()
                     # @TODO This only handles IPv4, use getaddrinfo() instead
                     # (here and in _discover())
-                    socket.gethostbyname_ex(n)
-                    self._nodes.append(n)
+                    socket.gethostbyname_ex(node)
+                    self.data["nodes"].append(node)
                 except socket.herror:
                     self._logger.log(f"{node} not found in DNS... aborting")
                     raise

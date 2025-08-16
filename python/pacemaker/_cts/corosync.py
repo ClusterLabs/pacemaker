@@ -113,7 +113,7 @@ class Corosync:
         self.logdir = logdir
         self.cluster_name = cluster_name
 
-        # The Corosync class doesn't use self._env._nodes, but the
+        # The Corosync class doesn't use self._env["nodes"], but the
         # "--nodes" argument is required to be present and nonempty
         self._env = EnvFactory().getInstance(args=["--nodes", "localhost"])
         self._existing_cfg_file = None
