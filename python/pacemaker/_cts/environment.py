@@ -64,6 +64,10 @@ class Environment:
         self["log_kind"] = None
         self["scenario"] = "random"
 
+        # Hard-coded since there is only one supported cluster manager/stack
+        self["Name"] = "crm-corosync"
+        self["Stack"] = "corosync 2+"
+
         self.random_gen = random.Random()
 
         self._logger = LogFactory()
@@ -92,17 +96,11 @@ class Environment:
         if key == "nodes":
             return self._nodes
 
-        if key == "Name":
-            return self._get_stack_short()
-
         return self.data.get(key)
 
     def __setitem__(self, key, value):
         """Set the given environment key to the given value, overriding any previous value."""
-        if key == "Stack":
-            self._set_stack(value)
-
-        elif key == "nodes":
+        if key == "nodes":
             self._nodes = []
             for node in value:
                 # I don't think I need the IP address, etc. but this validates
@@ -124,25 +122,6 @@ class Environment:
     def random_node(self):
         """Choose a random node from the cluster."""
         return self.random_gen.choice(self["nodes"])
-
-    def _set_stack(self, name):
-        """Normalize the given cluster stack name."""
-        if name in ["corosync", "cs", "mcp"]:
-            self.data["Stack"] = "corosync 2+"
-
-        else:
-            raise ValueError(f"Unknown stack: {name}")
-
-    def _get_stack_short(self):
-        """Return the short name for the currently set cluster stack."""
-        if "Stack" not in self.data:
-            return "unknown"
-
-        if self.data["Stack"] == "corosync 2+":
-            return "crm-corosync"
-
-        LogFactory().log(f"Unknown stack: {self['stack']}")
-        raise ValueError(f"Unknown stack: {self['stack']}")
 
     def _detect_systemd(self, node):
         """Detect whether systemd is in use on the target node."""
@@ -287,10 +266,6 @@ class Environment:
                           default="",
                           metavar="NODES",
                           help="List of cluster nodes separated by whitespace")
-        grp1.add_argument("--stack",
-                          default="corosync",
-                          metavar="STACK",
-                          help="Which cluster stack is installed")
 
         grp2 = parser.add_argument_group("Options that CTS will usually auto-detect correctly")
         grp2.add_argument("-L", "--logfile",
@@ -412,7 +387,6 @@ class Environment:
         self["ClobberCIB"] = args.clobber_cib
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema
-        self["Stack"] = args.stack
         self["SyslogFacility"] = args.facility
         self["TruncateLog"] = args.truncate
         self["at-boot"] = args.at_boot in ["1", "yes"]
