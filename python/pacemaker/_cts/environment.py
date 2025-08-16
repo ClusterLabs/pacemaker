@@ -58,7 +58,6 @@ class Environment:
         self["StartTime"] = 300
         self["StableTime"] = 30
         self["tests"] = []
-        self["IPagent"] = "IPaddr2"
         self["DoFencing"] = True
         self["CIBResource"] = False
         self["log_kind"] = None

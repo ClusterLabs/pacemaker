@@ -59,30 +59,22 @@ class CIB:
 
     def new_ip(self, name=None):
         """Generate an IP resource for the next available IP address, optionally specifying the resource's name."""
-        if self._cm.env["IPagent"] == "IPaddr2":
-            ip = next_ip(self._cm.env["IPBase"])
-            if not name:
-                if ":" in ip:
-                    (_, _, suffix) = ip.rpartition(":")
-                    name = f"r{suffix}"
-                else:
-                    name = f"r{ip}"
-
-            r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
-            r["ip"] = ip
-
+        ip = next_ip(self._cm.env["IPBase"])
+        if not name:
             if ":" in ip:
-                r["cidr_netmask"] = "64"
-                r["nic"] = "eth0"
+                (_, _, suffix) = ip.rpartition(":")
+                name = f"r{suffix}"
             else:
-                r["cidr_netmask"] = "32"
+                name = f"r{ip}"
 
+        r = Resource(self._factory, name, "IPaddr2", "ocf")
+        r["ip"] = ip
+
+        if ":" in ip:
+            r["cidr_netmask"] = "64"
+            r["nic"] = "eth0"
         else:
-            if not name:
-                name = f"r{self._cm.env['IPagent']}{self._counter}"
-                self._counter += 1
-
-            r = Resource(self._factory, name, self._cm.env["IPagent"], "ocf")
+            r["cidr_netmask"] = "32"
 
         r.add_op("monitor", "5s")
         return r
