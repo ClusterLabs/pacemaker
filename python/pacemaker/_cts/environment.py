@@ -252,9 +252,6 @@ class Environment:
         parser = argparse.ArgumentParser(epilog=f"{sys.argv[0]} -g virt1 -r --stonith ssh --schema pacemaker-2.0 500")
 
         grp1 = parser.add_argument_group("Common options")
-        grp1.add_argument("-g", "--dsh-group", "--group",
-                          metavar="GROUP", dest="group",
-                          help="Use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
         grp1.add_argument("--benchmark",
                           action="store_true",
                           help="Add timing information")
@@ -404,27 +401,6 @@ class Environment:
         self["unsafe-tests"] = not args.no_unsafe_tests
         self["valgrind-procs"] = args.valgrind_procs
         self["warn-inactive"] = args.warn_inactive
-
-        # Nodes and groups are mutually exclusive. Additionally, --group does
-        # more than just set a value. Here, set nodes first and then if a group
-        # is specified, override the previous nodes value.
-        if args.group:
-            self["OutputFile"] = f"{os.environ['HOME']}/cluster-{args.dsh_group}.log"
-            LogFactory().add_file(self["OutputFile"], "CTS")
-
-            dsh_file = f"{os.environ['HOME']}/.dsh/group/{args.dsh_group}"
-
-            if os.path.isfile(dsh_file):
-                self["nodes"] = []
-
-                with open(dsh_file, "r", encoding="utf-8") as f:
-                    for line in f:
-                        stripped = line.strip()
-
-                        if not stripped.startswith('#'):
-                            self["nodes"].append(stripped)
-            else:
-                print(f"Unknown DSH group: {args.dsh_group}")
 
         # Everything else either can't have a default set in an add_argument
         # call (likely because we don't want to always have a value set for it)
