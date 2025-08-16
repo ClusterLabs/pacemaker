@@ -22,7 +22,6 @@ tests=""
 
 install=0
 clean=0
-kill=0
 run=0
 boot=0
 cmd=""
@@ -51,7 +50,6 @@ Usage: %s [options] {[CMDS]}
 -w                      continous (filtered) monitoring of the log file
 -f,-sf FILE             show summary for the provided log
 -t TEST, [0-9]*         add a test to the working set
-[--]kill                request termination of cluster software
 [--]run                 request CTS run (passing remaining arguments through)
 [--]boot, start         request CTS run (with --boot option)
 [--]clean               request cleaning up after CTS run
@@ -122,11 +120,6 @@ while true; do
         [0-9]*)
             tests="$tests $1"
             shift
-            ;;
-        --kill|kill)
-            kill=1
-            shift
-            break
             ;;
         --run|run)
             run=1
@@ -300,9 +293,6 @@ fi
 if [ $clean = 1 ]; then
     rm -f $cluster_log
     cluster-clean -g $cluster_name --kill
-elif [ $kill = 1 ]; then
-    cluster-clean -g $cluster_name --kill-only
-    exit 0
 fi
 
 if [ $install = 1 ]; then
