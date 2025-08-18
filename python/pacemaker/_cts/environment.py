@@ -349,10 +349,6 @@ class Environment:
         grp4.add_argument("--trunc",
                           action="store_true", dest="truncate",
                           help="Truncate log file before starting")
-        grp4.add_argument("--valgrind-procs",
-                          metavar="PROCS",
-                          default="pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd",
-                          help="Run valgrind against the given space-separated list of processes")
         grp4.add_argument("--warn-inactive",
                           action="store_true",
                           help="Warn if a resource is assigned to an inactive node")
@@ -389,7 +385,6 @@ class Environment:
         self["stonith-params"] = args.stonith_args
         self["stonith-type"] = args.stonith_type
         self["unsafe-tests"] = not args.no_unsafe_tests
-        self["valgrind-procs"] = args.valgrind_procs
         self["warn-inactive"] = args.warn_inactive
 
         # Everything else either can't have a default set in an add_argument
