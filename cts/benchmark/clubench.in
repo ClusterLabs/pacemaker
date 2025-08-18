@@ -40,7 +40,6 @@ test -f $CTSCTRL ||  {
 }
 . $CTSCTRL
 
-: ${CTS_logfacility:=local7}
 : ${CTS_logfile:="@CRM_LOG_DIR@/ha-log-bench"}
 : ${CTS_adv:="--schema pacemaker-1.2 --clobber-cib -r"}
 : ${RUNS:=3}
@@ -55,7 +54,7 @@ test -f $CTSCTRL ||  {
 	exit 1
 }
 
-CTSOPTS="$CTS_adv --facility $CTS_logfacility --logfile $CTS_logfile"
+CTSOPTS="$CTS_adv --logfile $CTS_logfile"
 
 if [ "x$CTS_stonith" != "x" ]; then
 	CTSOPTS="$CTSOPTS --stonith-type $CTS_stonith"

@@ -61,6 +61,7 @@ class Environment:
         self["CIBResource"] = False
         self["log_kind"] = None
         self["scenario"] = "random"
+        self["syslog_facility"] = "daemon"
 
         # Hard-coded since there is only one supported cluster manager/stack
         self["Name"] = "crm-corosync"
@@ -256,10 +257,6 @@ class Environment:
         grp2.add_argument("-L", "--logfile",
                           metavar="PATH",
                           help="Where to look for logs from cluster nodes (or 'journal' for systemd journal)")
-        grp2.add_argument("--facility", "--syslog-facility",
-                          default="daemon",
-                          metavar="NAME",
-                          help="Which syslog facility to log to")
         grp2.add_argument("--ip", "--test-ip-base",
                           metavar="IP",
                           help="Offset for generated IP address resources")
@@ -351,7 +348,6 @@ class Environment:
         self["ClobberCIB"] = args.clobber_cib
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema
-        self["SyslogFacility"] = args.facility
         self["TruncateLog"] = args.truncate
         self["benchmark"] = args.benchmark
         self["continue"] = args.always_continue

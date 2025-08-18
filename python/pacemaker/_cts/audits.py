@@ -135,7 +135,7 @@ class LogAudit(ClusterAudit):
             watch[watch_pref] = self._create_watcher(patterns, watch_pref)
 
         for node in self._cm.env["nodes"]:
-            cmd = f"logger -p {self._cm.env['SyslogFacility']}.info {prefix} {node} {suffix}"
+            cmd = f"logger -p {self._cm.env['syslog_facility']}.info {prefix} {node} {suffix}"
 
             (rc, _) = self._cm.rsh(node, cmd, synchronous=False, verbose=0)
             if rc != 0:
