@@ -323,9 +323,6 @@ class Environment:
         grp4.add_argument("--outputfile",
                           metavar="PATH",
                           help="Location to write logs to")
-        grp4.add_argument("--qarsh",
-                          action="store_true",
-                          help="Use QARSH to access nodes instead of SSH")
         grp4.add_argument("--schema",
                           metavar="SCHEMA",
                           default=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}",
@@ -466,9 +463,6 @@ class Environment:
         if args.populate_resources:
             self["CIBResource"] = True
             self["ClobberCIB"] = True
-
-        if args.qarsh:
-            self._rsh.enable_qarsh()
 
         self.random_gen.seed(args.seed)
 
