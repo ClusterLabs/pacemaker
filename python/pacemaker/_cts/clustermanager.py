@@ -227,6 +227,37 @@ class ClusterManager(UserDict):
 
         return peer_list
 
+    def _install_config(self, node):
+        """Remove and re-install the CIB on the first node in the cluster."""
+        if not self.ns.wait_for_node(node):
+            self.log(f"Node {node} is not up.")
+            return
+
+        if node in self._cib_sync or not self.env["ClobberCIB"]:
+            return
+
+        self._cib_sync[node] = True
+        self.rsh(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
+
+        # Only install the CIB on the first node, all the other ones will pick it up from there
+        if self._cib_installed:
+            return
+
+        self._cib_installed = True
+        if self.env["CIBfilename"]:
+            self.log(f"Installing CIB ({self.env['CIBfilename']}) on node {node}")
+
+            rc = self.rsh.copy(self.env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node))
+
+            if rc != 0:
+                raise ValueError(f"Can not scp file to {node} {rc}")
+
+        else:
+            self.log(f"Installing Generated CIB on node {node}")
+            self._cib.install(node)
+
+        self.rsh(node, f"chown {BuildOptions.DAEMON_USER} {BuildOptions.CIB_DIR}/cib.xml")
+
     def start_cm(self, node, verbose=False):
         """Start up the cluster manager on a given node."""
         log_fn = self._logger.log if verbose else self.debug
@@ -252,7 +283,7 @@ class ClusterManager(UserDict):
                            self.env["nodes"], self.env["log_kind"],
                            "StartaCM", self.env["StartTime"] + 10)
 
-        self.install_config(node)
+        self._install_config(node)
 
         self.expected_status[node] = "any"
 
@@ -292,7 +323,7 @@ class ClusterManager(UserDict):
         log_fn = self._logger.log if verbose else self.debug
         log_fn(f"Starting {self.name} on node {node}")
 
-        self.install_config(node)
+        self._install_config(node)
         self.rsh(node, self.templates["StartCmd"], synchronous=False)
         self.expected_status[node] = "up"
 
@@ -472,37 +503,6 @@ class ClusterManager(UserDict):
             self.rsh(node, "opcontrol --reset")
             self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
 
-    def install_config(self, node):
-        """Remove and re-install the CIB on the first node in the cluster."""
-        if not self.ns.wait_for_node(node):
-            self.log(f"Node {node} is not up.")
-            return
-
-        if node in self._cib_sync or not self.env["ClobberCIB"]:
-            return
-
-        self._cib_sync[node] = True
-        self.rsh(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
-
-        # Only install the CIB on the first node, all the other ones will pick it up from there
-        if self._cib_installed:
-            return
-
-        self._cib_installed = True
-        if self.env["CIBfilename"]:
-            self.log(f"Installing CIB ({self.env['CIBfilename']}) on node {node}")
-
-            rc = self.rsh.copy(self.env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node))
-
-            if rc != 0:
-                raise ValueError(f"Can not scp file to {node} {rc}")
-
-        else:
-            self.log(f"Installing Generated CIB on node {node}")
-            self._cib.install(node)
-
-        self.rsh(node, f"chown {BuildOptions.DAEMON_USER} {BuildOptions.CIB_DIR}/cib.xml")
-
     def prepare(self):
         """
         Finish initialization.
@@ -588,7 +588,7 @@ class ClusterManager(UserDict):
         self.log(f"Warn: Node {node} not stable")
         return False
 
-    def partition_stable(self, nodes, timeout=None):
+    def _partition_stable(self, nodes, timeout=None):
         """Return whether or not all nodes in the given partition are stable."""
         watchpats = [
             "Current ping state: S_IDLE",
@@ -631,7 +631,7 @@ class ClusterManager(UserDict):
         partitions = self.find_partitions()
 
         for partition in partitions:
-            if not self.partition_stable(partition, timeout):
+            if not self._partition_stable(partition, timeout):
                 return False
 
         if not double_check:
@@ -642,7 +642,7 @@ class ClusterManager(UserDict):
         # are started if they were going to be
         time.sleep(5)
         for partition in partitions:
-            if not self.partition_stable(partition, timeout):
+            if not self._partition_stable(partition, timeout):
                 return False
 
         return True
