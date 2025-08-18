@@ -371,11 +371,7 @@ class PatternSelector:
         else:
             self._base = patternVariants[name]()
 
-    def get_patterns(self, kind):
-        """Call get_patterns on the previously instantiated pattern object."""
-        return self._base.get_patterns(kind)
-
-    def get_template(self, key):
+    def __getitem__(self, key):
         """
         Return a single pattern from the previously instantiated pattern object.
 
@@ -383,13 +379,13 @@ class PatternSelector:
         """
         return self._base[key]
 
+    def get_patterns(self, kind):
+        """Call get_patterns on the previously instantiated pattern object."""
+        return self._base.get_patterns(kind)
+
     def get_component(self, kind):
         """Call get_component on the previously instantiated pattern object."""
         return self._base.get_component(kind)
-
-    def __getitem__(self, key):
-        """Return the pattern for the given key, or None if it does not exist."""
-        return self.get_template(key)
 
 
 # PYTHONPATH=python python python/pacemaker/_cts/patterns.py -k crm-corosync -t StartCmd
