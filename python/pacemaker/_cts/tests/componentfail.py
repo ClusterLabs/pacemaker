@@ -63,8 +63,6 @@ class ComponentFail(CTSTest):
 
         # select a component to kill
         chosen = self._env.random_gen.choice(self._complist)
-        while chosen.dc_only and not node_is_dc:
-            chosen = self._env.random_gen.choice(self._complist)
 
         self.debug(f"...component {chosen.name} (dc={node_is_dc})")
         self.incr(chosen.name)
