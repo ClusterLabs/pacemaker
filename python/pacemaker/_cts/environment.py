@@ -177,9 +177,8 @@ class Environment:
 
     def _detect_at_boot(self, node):
         """Detect if the cluster starts at boot."""
-        if "at-boot" not in self.data:
-            self["at-boot"] = self.service_is_enabled(node, "corosync") \
-                or self.service_is_enabled(node, "pacemaker")
+        self["at-boot"] = any(self.service_is_enabled(node, service)
+                              for service in ("pacemaker", "corosync"))
 
     def _detect_ip_offset(self, node):
         """Detect the offset for IPaddr resources."""
@@ -257,9 +256,6 @@ class Environment:
         grp2.add_argument("-L", "--logfile",
                           metavar="PATH",
                           help="Where to look for logs from cluster nodes (or 'journal' for systemd journal)")
-        grp2.add_argument("--at-boot", "--cluster-starts-at-boot",
-                          choices=["1", "0", "yes", "no"],
-                          help="Does the cluster software start at boot time?")
         grp2.add_argument("--facility", "--syslog-facility",
                           default="daemon",
                           metavar="NAME",
@@ -357,7 +353,6 @@ class Environment:
         self["Schema"] = args.schema
         self["SyslogFacility"] = args.facility
         self["TruncateLog"] = args.truncate
-        self["at-boot"] = args.at_boot in ["1", "yes"]
         self["benchmark"] = args.benchmark
         self["continue"] = args.always_continue
         self["experimental-tests"] = args.experimental_tests

@@ -47,7 +47,6 @@ test -f $CTSCTRL ||  {
 : ${CTSTESTS:="--benchmark"}
 : ${CTSDIR:="@datadir@/@PACKAGE@/tests/cts"}
 : ${CTS_node_list:=""}
-: ${CTS_boot:=""}
 : ${CTS_stonith:=""}
 : ${CTS_stonith_args:=""}
 
@@ -56,8 +55,7 @@ test -f $CTSCTRL ||  {
 	exit 1
 }
 
-CTSOPTS="--at-boot $CTS_boot $CTS_adv"
-CTSOPTS="$CTSOPTS --facility $CTS_logfacility --logfile $CTS_logfile"
+CTSOPTS="$CTS_adv --facility $CTS_logfacility --logfile $CTS_logfile"
 
 if [ "x$CTS_stonith" != "x" ]; then
 	CTSOPTS="$CTSOPTS --stonith-type $CTS_stonith"
