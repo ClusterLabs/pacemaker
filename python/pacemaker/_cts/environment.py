@@ -330,11 +330,6 @@ class Environment:
         grp4.add_argument("--seed",
                           metavar="SEED",
                           help="Use the given string as the random number seed")
-        grp4.add_argument("--set",
-                          action="append",
-                          metavar="ARG",
-                          default=[],
-                          help="Set key=value pairs (can be specified multiple times)")
         grp4.add_argument("--stonith-args",
                           metavar="ARGS",
                           default="hostlist=all,livedangerously=yes",
@@ -465,11 +460,6 @@ class Environment:
             self["ClobberCIB"] = True
 
         self.random_gen.seed(args.seed)
-
-        for kv in args.set:
-            (name, value) = kv.split("=")
-            self[name] = value
-            print(f"Setting {name} = {value}")
 
 
 class EnvFactory:
