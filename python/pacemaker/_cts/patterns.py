@@ -4,8 +4,6 @@ __all__ = ["PatternSelector"]
 __copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
-import argparse
-
 from pacemaker.buildoptions import BuildOptions
 
 
@@ -386,14 +384,3 @@ class PatternSelector:
     def get_component(self, kind):
         """Call get_component on the previously instantiated pattern object."""
         return self._base.get_component(kind)
-
-
-# PYTHONPATH=python python python/pacemaker/_cts/patterns.py -k crm-corosync -t StartCmd
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-k", "--kind", metavar="KIND")
-    parser.add_argument("-t", "--template", metavar="TEMPLATE")
-
-    args = parser.parse_args()
-
-    print(PatternSelector(args.kind)[args.template])
