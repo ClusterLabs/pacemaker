@@ -48,28 +48,14 @@ class ClusterManager(UserDict):
     Among other things, this class tracks the state every node is expected to be in.
     """
 
-    def _final_conditions(self):
-        """Check all keys to make sure they have a non-None value."""
-        for (key, val) in self._data.items():
-            if val is None:
-                raise ValueError(f"Improper derivation: self[{key}] must be overridden by subclass.")
-
     def __init__(self):
-        """
-        Create a new ClusterManager instance.
-
-        This class can be treated kind of like a dictionary due to the process
-        of certain dict functions like __getitem__ and __setitem__.  This is
-        because it contains a lot of name/value pairs.  However, it is not
-        actually a dictionary so do not rely on standard dictionary behavior.
-        """
+        """Create a new ClusterManager instance."""
         # Eventually, ClusterManager should not be a UserDict subclass.  Until
         # that point...
         # pylint: disable=super-init-not-called
         self.__instance_errors_to_ignore = []
 
         self._cib_installed = False
-        self._data = {}
         self._logger = LogFactory()
 
         self.env = EnvFactory().getInstance()
@@ -82,36 +68,9 @@ class ClusterManager(UserDict):
         self.rsh = RemoteFactory().getInstance()
         self.templates = PatternSelector(self.name)
 
-        self._final_conditions()
-
         self._cib_factory = ConfigFactory(self)
         self._cib = self._cib_factory.create_config(self.env["Schema"])
         self._cib_sync = {}
-
-    def __getitem__(self, key):
-        """
-        Return the given key, checking for it in two places.
-
-        If the key was previously added to the dictionary via
-        __setitem__, return that.  Otherwise, return the template
-        pattern for the key.
-
-        This method should not be used and may be removed in the future.
-        """
-        print(f"FIXME: Getting {key} from {self!r}")
-        if key in self._data:
-            return self._data[key]
-
-        return self.templates.get_patterns(key)
-
-    def __setitem__(self, key, value):
-        """
-        Set the given key to the given value, overriding any previous value.
-
-        This method should not be used and may be removed in the future.
-        """
-        print(f"FIXME: Setting {key}={value} on {self!r}")
-        self._data[key] = value
 
     def clear_instance_errors_to_ignore(self):
         """Reset instance-specific errors to ignore on each iteration."""

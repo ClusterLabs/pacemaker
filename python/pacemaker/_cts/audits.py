@@ -858,7 +858,7 @@ class CIBAudit(ClusterAudit):
         if not target:
             target = node
 
-        (rc, lines) = self._cm.rsh(node, self._cm["CibQuery"], verbose=1)
+        (rc, lines) = self._cm.rsh(node, self._cm.templates["CibQuery"], verbose=1)
         if rc != 0:
             self._cm.log("Could not retrieve configuration")
             return None
@@ -968,13 +968,13 @@ class PartitionAudit(ClusterAudit):
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
-            (_, out) = self._cm.rsh(node, self._cm["StatusCmd"] % node, verbose=1)
+            (_, out) = self._cm.rsh(node, self._cm.templates["StatusCmd"] % node, verbose=1)
             self._node_state[node] = out[0].strip()
 
-            (_, out) = self._cm.rsh(node, self._cm["EpochCmd"], verbose=1)
+            (_, out) = self._cm.rsh(node, self._cm.templates["EpochCmd"], verbose=1)
             self._node_epoch[node] = out[0].strip()
 
-            (_, out) = self._cm.rsh(node, self._cm["QuorumCmd"], verbose=1)
+            (_, out) = self._cm.rsh(node, self._cm.templates["QuorumCmd"], verbose=1)
             self._node_quorum[node] = out[0].strip()
 
             self.debug(f"Node {node}: {self._node_state[node]} - {self._node_epoch[node]} - {self._node_quorum[node]}.")
