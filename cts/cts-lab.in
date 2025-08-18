@@ -114,7 +114,7 @@ if __name__ == '__main__':
     LogFactory().log(f"CTS Exerciser:          {environment['cts-exerciser']}")
     LogFactory().log(f"CTS Logfile:            {environment['OutputFile']}")
     if "syslogd" in environment:
-        LogFactory().log(f"Syslog variant:         {environment['syslogd'].strip()}")
+        LogFactory().log(f"Syslog variant:         {environment['syslogd']}")
     LogFactory().log(f"System log files:       {environment['LogFileName']}")
 
     if "IPBase" in environment:
