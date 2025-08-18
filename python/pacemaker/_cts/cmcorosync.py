@@ -29,6 +29,7 @@ class Corosync2(ClusterManager):
             common_ignore = self.templates.get_component("common-ignore")
 
             daemons = [
+                "corosync",
                 "pacemaker-based",
                 "pacemaker-controld",
                 "pacemaker-attrd",
@@ -40,12 +41,6 @@ class Corosync2(ClusterManager):
                 proc = Process(self, c, pats=self.templates.get_component(c),
                                badnews_ignore=badnews)
                 self._components[c] = proc
-
-            # add (or replace) extra components
-            badnews = self.templates.get_component("corosync-ignore") + common_ignore
-            proc = Process(self, "corosync", pats=self.templates.get_component("corosync"),
-                           badnews_ignore=badnews)
-            self._components["corosync"] = proc
 
         if self.env["DoFencing"]:
             return list(self._components.values())
