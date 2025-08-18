@@ -302,9 +302,6 @@ class Environment:
         grp4.add_argument("--loop-minutes",
                           type=int, default=60,
                           help="")
-        grp4.add_argument("--no-loop-tests",
-                          action="store_true",
-                          help="Don't run looping/time-based tests")
         grp4.add_argument("--no-unsafe-tests",
                           action="store_true",
                           help="Don't run tests that are unsafe for use with ocfs2/drbd")
@@ -369,7 +366,6 @@ class Environment:
         self["experimental-tests"] = args.experimental_tests
         self["iterations"] = args.iterations
         self["loop-minutes"] = args.loop_minutes
-        self["loop-tests"] = not args.no_loop_tests
         self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient

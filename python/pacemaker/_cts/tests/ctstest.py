@@ -56,7 +56,6 @@ class CTSTest:
         self.benchmark = True  # which tests to benchmark
         self.failed = False
         self.is_experimental = False
-        self.is_loop = False
         self.is_unsafe = False
         self.passed = True
 
@@ -220,9 +219,6 @@ class CTSTest:
 
         This method must be implemented by all subclasses.
         """
-        if self.is_loop and not self._env["loop-tests"]:
-            return False
-
         if self.is_unsafe and not self._env["unsafe-tests"]:
             return False
 
