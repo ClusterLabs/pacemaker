@@ -59,14 +59,7 @@ class Corosync2(ClusterManager):
                            badnews_ignore=badnews)
             self._fullcomplist["corosync"] = proc
 
-        # Processes running under valgrind can't be shot with "killall -9 processname",
-        # so don't include them in the returned list
-        vgrind = self.env["valgrind-procs"].split()
         for (key, val) in self._fullcomplist.items():
-            if key in vgrind:
-                self.log(f"Filtering {key} from the component list as it is being profiled by valgrind")
-                continue
-
             if key == "pacemaker-fenced" and not self.env["DoFencing"]:
                 continue
 
