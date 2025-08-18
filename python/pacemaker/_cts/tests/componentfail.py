@@ -59,10 +59,9 @@ class ComponentFail(CTSTest):
         if not self._cm.cluster_stable(self._env["StableTime"]):
             return self.failure("Setup failed - unstable")
 
-        node_is_dc = self._cm.is_node_dc(node, None)
-
         # select a component to kill
         chosen = self._env.random_gen.choice(self._complist)
+        node_is_dc = self._cm.is_node_dc(node, None)
 
         self.debug(f"...component {chosen.name} (dc={node_is_dc})")
         self.incr(chosen.name)
@@ -74,8 +73,6 @@ class ComponentFail(CTSTest):
             ])
 
         self._patterns.extend(chosen.pats)
-        if node_is_dc:
-            self._patterns.extend(chosen.dc_pats)
 
         # @TODO this should be a flag in the Component
         if chosen.name in ["corosync", "pacemaker-based", "pacemaker-fenced"]:

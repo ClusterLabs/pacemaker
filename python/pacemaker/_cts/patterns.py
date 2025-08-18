@@ -134,6 +134,10 @@ class BasePatterns:
 class Corosync2Patterns(BasePatterns):
     """Patterns for Corosync version 2 cluster manager class."""
 
+    # @FIXME Some of the templates here look like they start with
+    # incorrect daemon names. Also, many of them aren't Corosync-
+    # specific and should probably go in BasePatterns.
+
     def __init__(self):
         BasePatterns.__init__(self)
         self._name = "crm-corosync"

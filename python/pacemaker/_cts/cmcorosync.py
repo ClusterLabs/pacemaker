@@ -41,13 +41,6 @@ class Corosync2(ClusterManager):
                                badnews_ignore=badnews)
                 self._components[c] = proc
 
-            # the scheduler uses dc_pats instead of pats
-            badnews = self.templates.get_component("pacemaker-schedulerd-ignore") + common_ignore
-            proc = Process(self, "pacemaker-schedulerd",
-                           dc_pats=self.templates.get_component("pacemaker-schedulerd"),
-                           badnews_ignore=badnews)
-            self._components["pacemaker-schedulerd"] = proc
-
             # add (or replace) extra components
             badnews = self.templates.get_component("corosync-ignore") + common_ignore
             proc = Process(self, "corosync", pats=self.templates.get_component("corosync"),

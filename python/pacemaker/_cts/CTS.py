@@ -192,7 +192,7 @@ class Process:
     """A class for managing a Pacemaker daemon."""
 
     # pylint: disable=invalid-name
-    def __init__(self, cm, name, pats=None, dc_pats=None, badnews_ignore=None):
+    def __init__(self, cm, name, pats=None, badnews_ignore=None):
         """
         Create a new Process instance.
 
@@ -200,21 +200,15 @@ class Process:
         cm              -- A ClusterManager instance
         name            -- The command being run
         pats            -- Regexes we expect to find in log files
-        dc_pats         -- Additional DC-specific regexes we expect to find
-                           in log files
         badnews_ignore  -- Regexes for lines in the log that can be ignored
         """
         self._cm = cm
         self.badnews_ignore = badnews_ignore
-        self.dc_pats = dc_pats
         self.name = name
         self.pats = pats
 
         if self.badnews_ignore is None:
             self.badnews_ignore = []
-
-        if self.dc_pats is None:
-            self.dc_pats = []
 
         if self.pats is None:
             self.pats = []
