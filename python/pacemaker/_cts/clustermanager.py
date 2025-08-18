@@ -90,17 +90,14 @@ class ClusterManager(UserDict):
 
     def __getitem__(self, key):
         """
-        Return the given key, checking for it in several places.
+        Return the given key, checking for it in two places.
 
-        If key is "Name", return the name of the cluster manager.  If the key
-        was previously added to the dictionary via __setitem__, return that.
-        Otherwise, return the template pattern for the key.
+        If the key was previously added to the dictionary via
+        __setitem__, return that.  Otherwise, return the template
+        pattern for the key.
 
         This method should not be used and may be removed in the future.
         """
-        if key == "Name":
-            return self.name
-
         print(f"FIXME: Getting {key} from {self!r}")
         if key in self._data:
             return self._data[key]
@@ -273,10 +270,8 @@ class ClusterManager(UserDict):
 
     def start_cm(self, node, verbose=False):
         """Start up the cluster manager on a given node."""
-        if verbose:
-            self._logger.log(f"Starting {self.templates['Name']} on node {node}")
-        else:
-            self.debug(f"Starting {self.templates['Name']} on node {node}")
+        log_fn = self._logger.log if verbose else self.debug
+        log_fn(f"Starting {self.name} on node {node}")
 
         if node not in self.expected_status:
             self.expected_status[node] = "down"
@@ -335,10 +330,8 @@ class ClusterManager(UserDict):
 
     def start_cm_async(self, node, verbose=False):
         """Start up the cluster manager on a given node without blocking."""
-        if verbose:
-            self._logger.log(f"Starting {self['Name']} on node {node}")
-        else:
-            self.debug(f"Starting {self['Name']} on node {node}")
+        log_fn = self._logger.log if verbose else self.debug
+        log_fn(f"Starting {self.name} on node {node}")
 
         self.install_config(node)
         self.rsh(node, self.templates["StartCmd"], synchronous=False)
@@ -346,10 +339,8 @@ class ClusterManager(UserDict):
 
     def stop_cm(self, node, verbose=False, force=False):
         """Stop the cluster manager on a given node."""
-        if verbose:
-            self._logger.log(f"Stopping {self['Name']} on node {node}")
-        else:
-            self.debug(f"Stopping {self['Name']} on node {node}")
+        log_fn = self._logger.log if verbose else self.debug
+        log_fn(f"Stopping {self.name} on node {node}")
 
         if self.expected_status[node] != "up" and not force:
             return True
@@ -361,12 +352,12 @@ class ClusterManager(UserDict):
             self.cluster_stable(self.env["DeadTime"])
             return True
 
-        self._logger.log(f"ERROR: Could not stop {self['Name']} on node {node}")
+        self._logger.log(f"ERROR: Could not stop {self.name} on node {node}")
         return False
 
     def stop_cm_async(self, node):
         """Stop the cluster manager on a given node without blocking."""
-        self.debug(f"Stopping {self['Name']} on node {node}")
+        self.debug(f"Stopping {self.name} on node {node}")
 
         self.rsh(node, self.templates["StopCmd"], synchronous=False)
         self.expected_status[node] = "down"

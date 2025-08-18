@@ -39,7 +39,7 @@ class CTSTest:
 
         self.audits = []
         self.name = None
-        self.templates = PatternSelector(cm["Name"])
+        self.templates = PatternSelector(cm.name)
 
         self.stats = {
             "auditfail": 0,
