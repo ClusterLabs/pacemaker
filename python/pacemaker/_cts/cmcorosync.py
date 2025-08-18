@@ -22,15 +22,13 @@ class Corosync2(ClusterManager):
         """Create a new Corosync2 instance."""
         ClusterManager.__init__(self)
 
-        self._fullcomplist = {}
+        self._components = {}
         self.templates = PatternSelector(self.name)
 
     @property
     def components(self):
         """Return a list of patterns that should be ignored for the cluster's components."""
-        complist = []
-
-        if not self._fullcomplist:
+        if not self._components:
             common_ignore = self.templates.get_component("common-ignore")
 
             daemons = [
@@ -44,25 +42,22 @@ class Corosync2(ClusterManager):
                 badnews = self.templates.get_component(f"{c}-ignore") + common_ignore
                 proc = Process(self, c, pats=self.templates.get_component(c),
                                badnews_ignore=badnews)
-                self._fullcomplist[c] = proc
+                self._components[c] = proc
 
             # the scheduler uses dc_pats instead of pats
             badnews = self.templates.get_component("pacemaker-schedulerd-ignore") + common_ignore
             proc = Process(self, "pacemaker-schedulerd",
                            dc_pats=self.templates.get_component("pacemaker-schedulerd"),
                            badnews_ignore=badnews)
-            self._fullcomplist["pacemaker-schedulerd"] = proc
+            self._components["pacemaker-schedulerd"] = proc
 
             # add (or replace) extra components
             badnews = self.templates.get_component("corosync-ignore") + common_ignore
             proc = Process(self, "corosync", pats=self.templates.get_component("corosync"),
                            badnews_ignore=badnews)
-            self._fullcomplist["corosync"] = proc
+            self._components["corosync"] = proc
 
-        for (key, val) in self._fullcomplist.items():
-            if key == "pacemaker-fenced" and not self.env["DoFencing"]:
-                continue
+        if self.env["DoFencing"]:
+            return list(self._components.values())
 
-            complist.append(val)
-
-        return complist
+        return [v for k, v in self._components.items() if k != "pacemaker-fenced"]
