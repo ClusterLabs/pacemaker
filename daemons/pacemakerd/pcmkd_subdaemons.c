@@ -528,11 +528,8 @@ start_child(pcmk_child_t * child)
                      errno);
         }
 
-        pcmk__close_fds_in_child(true);
-
-        pcmk__open_devnull(O_RDONLY);   // stdin (fd 0)
-        pcmk__open_devnull(O_WRONLY);   // stdout (fd 1)
-        pcmk__open_devnull(O_WRONLY);   // stderr (fd 2)
+        pcmk__close_fds_in_child();
+        pcmk__null_std_streams();
 
         if (use_callgrind) {
             char *out_file = pcmk__str_copy("--callgrind-out-file="

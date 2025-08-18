@@ -18,8 +18,6 @@
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
-extern bool pcmk__is_daemon;
-
 /*!
  * \internal
  * \brief Free an operation digest cache entry

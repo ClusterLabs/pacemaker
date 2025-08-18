@@ -1027,17 +1027,18 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     if (pcmk__is_daemon) {
-        int user = getuid();
-        struct passwd *pwent = getpwuid(user);
+        char *user = pcmk__uid2username(getuid());
 
-        if (pwent == NULL) {
-            crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
+        if (user == NULL) {
+            // Error already logged
 
-        } else if (!pcmk__strcase_any_of(pwent->pw_name, "root", CRM_DAEMON_USER, NULL)) {
-            crm_trace("Don't change active directory for regular user: %s", pwent->pw_name);
+        } else if (!pcmk__str_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
+            crm_trace("Don't change active directory for regular user %s",
+                      user);
 
         } else if (chdir(CRM_CORE_DIR) < 0) {
-            crm_perror(LOG_INFO, "Cannot change active directory to " CRM_CORE_DIR);
+            crm_info("Cannot change active directory to " CRM_CORE_DIR ": %s",
+                     strerror(errno));
 
         } else {
             crm_info("Changed active directory to " CRM_CORE_DIR);
@@ -1055,6 +1056,8 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
         mainloop_add_signal(SIGUSR2, crm_disable_blackbox);
         mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
+
+        free(user);
 
     } else if (!quiet) {
         crm_log_args(argc, argv);

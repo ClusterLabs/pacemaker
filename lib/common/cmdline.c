@@ -315,30 +315,3 @@ pcmk__cmdline_preproc(char *const *argv, const char *special) {
 
     return (char **) g_ptr_array_free(arr, FALSE);
 }
-
-G_GNUC_PRINTF(3, 4)
-gboolean
-pcmk__force_args(GOptionContext *context, GError **error, const char *format, ...) {
-    int len = 0;
-    char *buf = NULL;
-    gchar **extra_args = NULL;
-    va_list ap;
-    gboolean retval = TRUE;
-
-    va_start(ap, format);
-    len = vasprintf(&buf, format, ap);
-    pcmk__assert(len > 0);
-    va_end(ap);
-
-    if (!g_shell_parse_argv(buf, NULL, &extra_args, error)) {
-        g_strfreev(extra_args);
-        free(buf);
-        return FALSE;
-    }
-
-    retval = g_option_context_parse_strv(context, &extra_args, error);
-
-    g_strfreev(extra_args);
-    free(buf);
-    return retval;
-}

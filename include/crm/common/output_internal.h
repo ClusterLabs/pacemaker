@@ -866,6 +866,8 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 xmlNode *pcmk__html_create(xmlNode *parent, const char *name, const char *id,
                            const char *class_name);
 
+void pcmk__html_set_title(const char *name);
+
 /*!
  * \internal
  * \brief Add an HTML tag to the <head> section.

@@ -181,7 +181,6 @@ void
 pcmk__write_series_sequence(const char *directory, const char *series,
                             unsigned int sequence, int max)
 {
-    int rc = 0;
     FILE *file_strm = NULL;
     char *series_file = NULL;
 
@@ -198,21 +197,18 @@ pcmk__write_series_sequence(const char *directory, const char *series,
     series_file = crm_strdup_printf("%s/%s.last", directory, series);
     file_strm = fopen(series_file, "w");
     if (file_strm != NULL) {
-        rc = fprintf(file_strm, "%u", sequence);
+        int rc = fprintf(file_strm, "%u", sequence);
+
         if (rc < 0) {
-            crm_perror(LOG_ERR, "Cannot write to series file %s", series_file);
+            crm_err("Cannot write to series file %s", series_file);
         }
+        fflush(file_strm);
+        fclose(file_strm);
 
     } else {
         crm_err("Cannot open series file %s for writing", series_file);
     }
 
-    if (file_strm != NULL) {
-        fflush(file_strm);
-        fclose(file_strm);
-    }
-
-    crm_trace("Wrote %d to %s", sequence, series_file);
     free(series_file);
 }
 
@@ -394,21 +390,22 @@ pcmk__sync_directory(const char *name)
 
     directory = opendir(name);
     if (directory == NULL) {
-        crm_perror(LOG_ERR, "Could not open %s for syncing", name);
+        crm_err("Could not open %s for syncing: %s", name, strerror(errno));
         return;
     }
 
     fd = dirfd(directory);
     if (fd < 0) {
-        crm_perror(LOG_ERR, "Could not obtain file descriptor for %s", name);
+        crm_err("Could not obtain file descriptor for %s: %s", name,
+                strerror(errno));
         return;
     }
 
     if (fsync(fd) < 0) {
-        crm_perror(LOG_ERR, "Could not sync %s", name);
+        crm_err("Could not sync %s: %s", name, strerror(errno));
     }
     if (closedir(directory) < 0) {
-        crm_perror(LOG_ERR, "Could not close %s after fsync", name);
+        crm_err("Could not close %s after fsync: %s", name, strerror(errno));
     }
 }
 
@@ -554,21 +551,19 @@ pcmk__get_tmpdir(void)
 
 /*!
  * \internal
- * \brief Close open file descriptors
+ * \brief Close open file descriptors except standard streams
  *
- * Close all file descriptors (except optionally stdin, stdout, and stderr),
- * which is a best practice for a new child process forked for the purpose of
- * executing an external program.
- *
- * \param[in] bool  If true, close stdin, stdout, and stderr as well
+ * Close all file descriptors (except stdin, stdout, and stderr), which is a
+ * best practice for a new child process forked for the purpose of executing an
+ * external program.
  */
 void
-pcmk__close_fds_in_child(bool all)
+pcmk__close_fds_in_child(void)
 {
     DIR *dir;
     struct rlimit rlim;
     rlim_t max_fd;
-    int min_fd = (all? 0 : (STDERR_FILENO + 1));
+    const int min_fd = STDERR_FILENO + 1;
 
     /* Find the current process's (soft) limit for open files. getrlimit()
      * should always work, but have a fallback just in case.

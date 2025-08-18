@@ -173,7 +173,7 @@ pcmk__procfs_num_cores(void)
     /* Parse /proc/stat instead of /proc/cpuinfo because it's smaller */
     stream = fopen("/proc/stat", "r");
     if (stream == NULL) {
-        crm_perror(LOG_INFO, "Could not open /proc/stat");
+        crm_info("Could not open /proc/stat: %s", strerror(errno));
     } else {
         char buffer[2048];
 

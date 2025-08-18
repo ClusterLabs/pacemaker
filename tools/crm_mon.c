@@ -213,12 +213,11 @@ struct {
     gboolean print_pending;
     gboolean show_bans;
     gboolean watch_fencing;
-    char *pid_file;
-    char *external_agent;
-    char *external_recipient;
+    gchar *external_agent;
+    gchar *external_recipient;
     char *neg_location_prefix;
-    char *only_node;
-    char *only_rsc;
+    gchar *only_node;
+    gchar *only_rsc;
     GSList *user_includes_excludes;
     GSList *includes_excludes;
 } options = {
@@ -428,6 +427,13 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
+pid_file_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+            GError **err)
+{
+    return TRUE;
+}
+
+static gboolean
 fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg == NULL) {
         interactive_fence_level = 2;
@@ -619,10 +625,6 @@ static GOptionEntry addl_entries[] = {
       INDENT "Requires at least one of --output-to and --external-agent.",
       NULL },
 
-    { "pid-file", 'p', 0, G_OPTION_ARG_FILENAME, &options.pid_file,
-      "(Advanced) Daemon pid file location",
-      "FILE" },
-
     { "external-agent", 'E', 0, G_OPTION_ARG_FILENAME, &options.external_agent,
       "A program to run when resource operations take place",
       "FILE" },
@@ -638,6 +640,10 @@ static GOptionEntry addl_entries[] = {
     { "xml-file", 'x', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, use_cib_file_cb,
       NULL,
       NULL },
+
+    { "pid-file", 'p', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
+      G_OPTION_ARG_CALLBACK, pid_file_cb,
+      "(deprecated)", "FILE" },
 
     { NULL }
 };
@@ -722,18 +728,15 @@ static GOptionEntry display_entries[] = {
       "Display pending state if '" PCMK_META_RECORD_PENDING "' is enabled",
       NULL },
 
-    { NULL }
-};
-
-static GOptionEntry deprecated_entries[] = {
     /* @COMPAT resource-agents <4.15.0 uses --as-xml, so removing this option
      * must wait until we no longer support building on any platforms that ship
      * the older agents.
+     *
+     * Note: This enables one-shot mode.
      */
-    { "as-xml", 'X', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, as_xml_cb,
-      "Write cluster status as XML to stdout. This will enable one-shot mode.\n"
-      INDENT "Use --output-as=xml instead.",
-      NULL },
+    { "as-xml", 'X', G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG,
+      G_OPTION_ARG_CALLBACK, as_xml_cb,
+      "(deprecated)" },
 
     { NULL }
 };
@@ -1266,8 +1269,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
                         "Show display options", display_entries);
     pcmk__add_arg_group(context, "additional", "Additional Options:",
                         "Show additional options", addl_entries);
-    pcmk__add_arg_group(context, "deprecated", "Deprecated Options:",
-                        "Show deprecated options", deprecated_entries);
 
     return context;
 }
@@ -1311,12 +1312,16 @@ reconcile_output_format(pcmk__common_args_t *args)
          * * We've requested daemonized or one-shot mode (console output is
          *   incompatible with modes other than mon_exec_update)
          * * We requested the version, which is effectively one-shot
+         * * The CIB_file environment variable is set. We haven't created the
+         *   cib object yet, so we can't simply check cib->variant, even though
+         *   that abstraction feels cleaner than checking CIB_file.
          * * We specified a non-stdout output destination (console mode is
          *   compatible only with stdout)
          */
         if ((options.exec_mode == mon_exec_daemonized)
             || (options.exec_mode == mon_exec_one_shot)
             || args->version
+            || (getenv("CIB_file") != NULL)
             || !pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
 
             pcmk__str_update(&args->output_ty, "text");
@@ -1396,18 +1401,6 @@ one_shot(void)
     }
 }
 
-static void
-exit_on_invalid_cib(void)
-{
-    if (cib != NULL) {
-        return;
-    }
-
-    // Shouldn't really be possible
-    g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Invalid CIB source");
-    clean_up(CRM_EX_ERROR);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -1418,13 +1411,10 @@ main(int argc, char **argv)
     context = build_arg_context(args, &output_group);
     pcmk__register_formats(output_group, formats);
 
-    options.pid_file = strdup("/tmp/ClusterMon.pid");
     pcmk__cli_init_logging("crm_mon", 0);
 
     // Avoid needing to wait for subprocesses forked for -E/--external-agent
     avoid_zombies();
-
-    processed_args = pcmk__cmdline_preproc(argv, "eimpxEILU");
 
     fence_history_cb("--fence-history", "1", NULL, NULL);
 
@@ -1432,10 +1422,9 @@ main(int argc, char **argv)
      * Doing this here means the user can give their own title on the command
      * line.
      */
-    if (!pcmk__force_args(context, &error, "%s --html-title \"Cluster Status\"",
-                          g_get_prgname())) {
-        return clean_up(CRM_EX_USAGE);
-    }
+    pcmk__html_set_title("Cluster Status");
+
+    processed_args = pcmk__cmdline_preproc(argv, "eimpxEILU");
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         return clean_up(CRM_EX_USAGE);
@@ -1445,66 +1434,13 @@ main(int argc, char **argv)
         crm_bump_log_level(argc, argv);
     }
 
-    if (!args->version) {
-        if (args->quiet) {
-            include_exclude_cb("--exclude", "times", NULL, NULL);
-        }
-
-        if (options.watch_fencing) {
-            fence_history_cb("--fence-history", "0", NULL, NULL);
-            options.fence_connect = TRUE;
-        }
-
-        /* create the cib-object early to be able to do further
-         * decisions based on the cib-source
-         */
-        cib = cib_new();
-
-        exit_on_invalid_cib();
-
-        switch (cib->variant) {
-            case cib_native:
-                // Everything (fencer, CIB, pcmkd status) should be available
-                break;
-
-            case cib_file:
-                // Live fence history is not meaningful
-                fence_history_cb("--fence-history", "0", NULL, NULL);
-
-                /* Notifications are unsupported; nothing to monitor
-                 * @COMPAT: Let setup_cib_connection() handle this by exiting?
-                 */
-                options.exec_mode = mon_exec_one_shot;
-                break;
-
-            case cib_remote:
-                // We won't receive any fencing updates
-                fence_history_cb("--fence-history", "0", NULL, NULL);
-                break;
-
-            default:
-                /* something is odd */
-                exit_on_invalid_cib();
-                break;
-        }
-
-        if ((options.exec_mode == mon_exec_daemonized)
-            && !options.external_agent
-            && pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
-
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "--daemonize requires at least one of --output-to "
-                        "(with value not set to '-') and --external-agent");
-            return clean_up(CRM_EX_USAGE);
-        }
-    }
-
     reconcile_output_format(args);
     set_default_exec_mode(args);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR, "Error creating output format %s: %s",
+        g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR,
+                    "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         return clean_up(CRM_EX_ERROR);
     }
@@ -1525,19 +1461,26 @@ main(int argc, char **argv)
         pcmk__output_text_set_fancy(out, true);
     }
 
-    if (options.exec_mode == mon_exec_daemonized) {
-        if (!options.external_agent && (output_format == mon_output_none)) {
-            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        "--daemonize requires --external-agent if used with "
-                        "--output-as=none");
-            return clean_up(CRM_EX_USAGE);
-        }
-        crm_enable_stderr(FALSE);
-        cib_delete(cib);
-        cib = NULL;
-        pcmk__daemonize(crm_system_name, options.pid_file);
-        cib = cib_new();
-        exit_on_invalid_cib();
+    pcmk__register_lib_messages(out);
+    crm_mon_register_messages(out);
+    pe__register_messages(out);
+    stonith__register_messages(out);
+
+    // Messages internal to this file, nothing curses-specific
+    pcmk__register_messages(out, fmt_functions);
+
+    if (args->version) {
+        out->version(out);
+        return clean_up(CRM_EX_OK);
+    }
+
+    if (args->quiet) {
+        include_exclude_cb("--exclude", "times", NULL, NULL);
+    }
+
+    if (options.watch_fencing) {
+        fence_history_cb("--fence-history", "0", NULL, NULL);
+        options.fence_connect = TRUE;
     }
 
     show = default_includes(output_format);
@@ -1568,19 +1511,6 @@ main(int argc, char **argv)
         interactive_fence_level = 0;
     }
 
-    pcmk__register_lib_messages(out);
-    crm_mon_register_messages(out);
-    pe__register_messages(out);
-    stonith__register_messages(out);
-
-    // Messages internal to this file, nothing curses-specific
-    pcmk__register_messages(out, fmt_functions);
-
-    if (args->version) {
-        out->version(out);
-        return clean_up(CRM_EX_OK);
-    }
-
     if (output_format == mon_output_xml) {
         show_opts |= pcmk_show_inactive_rscs | pcmk_show_timing;
     }
@@ -1595,11 +1525,83 @@ main(int argc, char **argv)
         free(content);
     }
 
-    crm_info("Starting %s", crm_system_name);
+    if (options.exec_mode == mon_exec_daemonized) {
+        pid_t pid = 0;
+
+        if (options.external_agent == NULL) {
+            if (pcmk__str_eq(args->output_dest, "-", pcmk__str_null_matches)) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires at least one of --output-to "
+                            "(with value not set to '-') and --external-agent");
+                return clean_up(CRM_EX_USAGE);
+            }
+            if (output_format == mon_output_none) {
+                g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
+                            "--daemonize requires --external-agent if used "
+                            "with --output-as=none");
+                return clean_up(CRM_EX_USAGE);
+            }
+        }
+
+        crm_enable_stderr(FALSE);
+
+        pid = fork();
+        if (pid < 0) {
+            g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_OSERR,
+                        "Could not fork daemon: %s", strerror(errno));
+            clean_up(CRM_EX_OSERR);
+        }
+        if (pid > 0) {
+            clean_up(CRM_EX_OK);
+        }
+        umask(S_IWGRP|S_IWOTH|S_IROTH);
+        pcmk__null_std_streams();
+    }
+
+    cib = cib_new();
+    if (cib == NULL) {
+        /* For the foreseeable future, out-of-memory is the only possible
+         * reason for NULL return value
+         */
+        rc = ENOMEM;
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    "Failed to create CIB API connection object: %s",
+                    pcmk_rc_str(rc));
+        clean_up(pcmk_rc2exitc(rc));
+    }
 
     cib__set_output(cib, out);
 
+    switch (cib->variant) {
+        case cib_native:
+            // Everything (fencer, CIB, pcmkd status) should be available
+            break;
+
+        case cib_file:
+            // Live fence history is not meaningful
+            fence_history_cb("--fence-history", "0", NULL, NULL);
+
+            /* Notifications are unsupported; nothing to monitor
+             * @COMPAT: Let setup_cib_connection() handle this by exiting?
+             */
+            options.exec_mode = mon_exec_one_shot;
+            break;
+
+        case cib_remote:
+            // We won't receive any fencing updates
+            fence_history_cb("--fence-history", "0", NULL, NULL);
+            break;
+
+        default:
+            // Should not be possible; would indicate a bug in CIB library
+            CRM_CHECK(false, clean_up(CRM_EX_SOFTWARE));
+            break;
+    }
+
+    crm_info("Starting %s", crm_system_name);
+
     if (options.exec_mode == mon_exec_one_shot) {
+        // Needs cib but not scheduler
         one_shot();
     }
 
@@ -1687,7 +1689,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
     }
-    if (options.external_recipient) {
+    if (options.external_recipient != NULL) {
         setenv("CRM_notify_recipient", options.external_recipient, 1);
     }
     setenv("CRM_notify_node", node, 1);
@@ -1797,7 +1799,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
-    if (notify && options.external_agent) {
+    if (notify && (options.external_agent != NULL)) {
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
 
@@ -1949,7 +1951,7 @@ crm_diff_update(const char *event, xmlNode * msg)
         cib->cmds->query(cib, NULL, &current_cib, cib_sync_call);
     }
 
-    if (options.external_agent) {
+    if (options.external_agent != NULL) {
         int format = 0;
 
         pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
@@ -2033,7 +2035,7 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
         mon_cib_connection_destroy(NULL);
-    } else if (options.external_agent) {
+    } else if (options.external_agent != NULL) {
         char *desc = stonith__event_description(e);
 
         send_custom_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
@@ -2116,6 +2118,7 @@ static crm_exit_t
 clean_up(crm_exit_t exit_code)
 {
     /* Quitting crm_mon is much more complicated than it ought to be. */
+    const bool has_error = (error != NULL);
 
     /* (1) Close connections, free things, etc. */
     if (io_channel != NULL) {
@@ -2124,10 +2127,11 @@ clean_up(crm_exit_t exit_code)
 
     cib__clean_up_connection(&cib);
     stonith__api_free(st);
+    g_free(options.external_agent);
+    g_free(options.external_recipient);
     free(options.neg_location_prefix);
-    free(options.only_node);
-    free(options.only_rsc);
-    free(options.pid_file);
+    g_free(options.only_node);
+    g_free(options.only_rsc);
     g_slist_free_full(options.includes_excludes, free);
 
     g_strfreev(processed_args);
@@ -2139,7 +2143,7 @@ clean_up(crm_exit_t exit_code)
      * down will be lost because doing the shut down will also restore the
      * screen to whatever it looked like before crm_mon was started.
      */
-    if (((error != NULL) || (exit_code == CRM_EX_USAGE))
+    if ((has_error || (exit_code == CRM_EX_USAGE))
         && (output_format == mon_output_console)
         && (out != NULL)) {
 
@@ -2160,31 +2164,14 @@ clean_up(crm_exit_t exit_code)
 
     pcmk__free_arg_context(context);
 
-    /* (4) If this is any kind of error, print the error out and exit.  Make
-     * sure to handle situations both before and after formatted output is
-     * set up.  We want errors to appear formatted if at all possible.
+    /* (4) Output the error if one exists. Finish the output unless this is a
+     * successful daemonized child. Clean up the output object and exit.
      */
-    if (error != NULL) {
-        if (out != NULL) {
-            out->err(out, "%s: %s", g_get_prgname(), error->message);
-            out->finish(out, exit_code, true, NULL);
-            pcmk__output_free(out);
-        } else {
-            fprintf(stderr, "%s: %s\n", g_get_prgname(), error->message);
-        }
-
-        g_clear_error(&error);
-        crm_exit(exit_code);
-    }
-
-    /* (5) Print formatted output to the screen if we made it far enough in
-     * crm_mon to be able to do so.
-     */
+    pcmk__output_and_clear_error(&error, out);
     if (out != NULL) {
-        if (options.exec_mode != mon_exec_daemonized) {
+        if (has_error || (options.exec_mode != mon_exec_daemonized)) {
             out->finish(out, exit_code, true, NULL);
         }
-
         pcmk__output_free(out);
     }
 

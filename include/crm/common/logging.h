@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -278,42 +278,6 @@ pcmk__clip_log_level(int level)
                 qb_log_from_external_source(function, file, fmt, _level,    \
                                             line, 0 , ##args);              \
                 break;                                                      \
-        }                                                                   \
-    } while (0)
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-/*!
- * \brief Send a system error message to both the log and stderr
- *
- * \param[in] level  Priority at which to log the message
- * \param[in] fmt    printf-style format string for message
- * \param[in] args   Any arguments needed by format string
- *
- * \deprecated One of the other logging functions should be used with
- *             pcmk_strerror() instead.
- * \note This is a macro, and \p level may be evaluated more than once.
- * \note Because crm_perror() adds the system error message and error number
- *       onto the end of fmt, that information will become extended information
- *       if QB_XS is used inside fmt and will not show up in syslog.
- */
-#define crm_perror(level, fmt, args...) do {                                \
-        uint8_t _level = pcmk__clip_log_level(level);                       \
-                                                                            \
-        switch (_level) {                                                   \
-            case LOG_NEVER:                                                 \
-                break;                                                      \
-            default: {                                                      \
-                const char *err = strerror(errno);                          \
-                if (_level <= crm_log_level) {                              \
-                    fprintf(stderr, fmt ": %s (%d)\n" , ##args, err,        \
-                            errno);                                         \
-                }                                                           \
-                /* Pass original level arg since do_crm_log() also declares \
-                 * _level                                                   \
-                 */                                                         \
-                do_crm_log((level), fmt ": %s (%d)" , ##args, err, errno);  \
-            }                                                               \
-            break;                                                          \
         }                                                                   \
     } while (0)
 
