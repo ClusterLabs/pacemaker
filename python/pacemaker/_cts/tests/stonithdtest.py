@@ -130,12 +130,4 @@ class StonithdTest(CTSTest):
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""
-        if not CTSTest.is_applicable(self):
-            return False
-
-        # pylint gets confused because of EnvFactory here.
-        # pylint: disable=unsupported-membership-test
-        if "DoFencing" in self._env:
-            return self._env["DoFencing"]
-
-        return True
+        return self._env["DoFencing"] and CTSTest.is_applicable(self)
