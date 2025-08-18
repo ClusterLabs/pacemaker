@@ -7,12 +7,6 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 from pacemaker._cts.CTS import Process
 from pacemaker._cts.clustermanager import ClusterManager
 
-# Throughout this file, pylint has trouble understanding that EnvFactory
-# is a singleton instance that can be treated as a subscriptable object.
-# Various warnings are disabled because of this.  See also a comment about
-# self._rsh in environment.py.
-# pylint: disable=unsubscriptable-object
-
 
 class Corosync2(ClusterManager):
     """A subclass of ClusterManager specialized to handle corosync2 and later based clusters."""
@@ -42,7 +36,4 @@ class Corosync2(ClusterManager):
                                badnews_ignore=badnews)
                 self._components[c] = proc
 
-        if self.env["DoFencing"]:
-            return list(self._components.values())
-
-        return [v for k, v in self._components.items() if k != "pacemaker-fenced"]
+        return list(self._components.values())
