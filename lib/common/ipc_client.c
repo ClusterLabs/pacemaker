@@ -1117,7 +1117,7 @@ crm_ipc_read(crm_ipc_t *client)
             goto done;
 
         } else if (bytes != header->size + sizeof(pcmk__ipc_header_t)) {
-            crm_trace("Message size does not match header");
+            crm_err("Message size does not match header");
             rc = -EBADMSG;
             pcmk__ipc_free_client_buffer(client);
             goto done;
@@ -1232,8 +1232,8 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
             continue;
 
         } else if (*bytes != hdr->size + sizeof(pcmk__ipc_header_t)) {
-            crm_trace("Message size does not match header");
-            rc = -EBADMSG;
+            crm_err("Message size does not match header");
+            *bytes = -EBADMSG;
             break;
         }
 
@@ -1265,7 +1265,12 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
         }
     } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
 
-    if (client->buffer->len > 0) {
+    if (*bytes < 0) {
+        rc = (int) -*bytes; // System errno
+        crm_trace("%s reply to %s IPC %d: %s " QB_XS " rc=%d",
+                  (client->buffer == NULL) ? "No" : "Incomplete",
+                  client->server_name, request_id, pcmk_rc_str(rc), rc);
+    } else if ((client->buffer != NULL) && (client->buffer->len > 0)) {
         crm_trace("Received %u-byte reply %d to %s IPC %d: %.100s",
                   client->buffer->len, reply_id, client->server_name,
                   request_id, crm_ipc_buffer(client));
@@ -1273,10 +1278,6 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
         if (reply != NULL) {
             *reply = pcmk__xml_parse(crm_ipc_buffer(client));
         }
-    } else if (*bytes < 0) {
-        rc = (int) -*bytes; // System errno
-        crm_trace("No reply to %s IPC %d: %s " QB_XS " rc=%d",
-                  client->server_name, request_id, pcmk_rc_str(rc), rc);
     }
     /* If bytes == 0, we'll return that to crm_ipc_send which will interpret
      * that as pcmk_rc_ok, log that the IPC request failed (since we did not
