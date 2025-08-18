@@ -20,8 +20,6 @@ class Corosync2(ClusterManager):
     def components(self):
         """Return a list of patterns that should be ignored for the cluster's components."""
         if not self._components:
-            common_ignore = self.templates.get_component("common-ignore")
-
             daemons = [
                 "corosync",
                 "pacemaker-based",
@@ -31,7 +29,7 @@ class Corosync2(ClusterManager):
                 "pacemaker-fenced"
             ]
             for c in daemons:
-                badnews = self.templates.get_component(f"{c}-ignore") + common_ignore
+                badnews = self.templates.get_component(f"{c}-ignore")
                 proc = Process(self, c, pats=self.templates.get_component(c),
                                badnews_ignore=badnews)
                 self._components[c] = proc

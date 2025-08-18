@@ -226,7 +226,7 @@ class Corosync2Patterns(BasePatterns):
             r"stalled the FSA with pending inputs",
         ]
 
-        self._components["common-ignore"] = [
+        components_common_ignore = [
             r"Pending action:",
             r"resource( was|s were) active at shutdown",
             r"pending LRM operations at shutdown",
@@ -237,7 +237,7 @@ class Corosync2Patterns(BasePatterns):
             r"(Blackbox dump requested|Problem detected)",
         ]
 
-        self._components["corosync-ignore"] = [
+        self._components["corosync-ignore"] = components_common_ignore + [
             r"Could not connect to Corosync CFG: CS_ERR_LIBRARY",
             r"error:.*Connection to the CPG API failed: Library error",
             r"\[[0-9]+\] exited with status [0-9]+ \(",
@@ -283,7 +283,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-controld.*Could not recover from internal error",
         ]
 
-        self._components["pacemaker-based-ignore"] = [
+        self._components["pacemaker-based-ignore"] = components_common_ignore + [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
             r"pacemaker-controld.*:Could not connect to attrd: Connection refused",
@@ -300,7 +300,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemakerd.* Respawning subdaemon pacemaker-controld after unexpected exit",
         ]
 
-        self._components["pacemaker-execd-ignore"] = [
+        self._components["pacemaker-execd-ignore"] = components_common_ignore + [
             r"pacemaker-(attrd|controld).*Connection to lrmd.* (failed|closed)",
             r"pacemaker-(attrd|controld).*Could not execute alert",
         ]
@@ -309,9 +309,9 @@ class Corosync2Patterns(BasePatterns):
             r"State transition .* -> S_IDLE",
         ]
 
-        self._components["pacemaker-controld-ignore"] = []
+        self._components["pacemaker-controld-ignore"] = components_common_ignore
         self._components["pacemaker-attrd"] = []
-        self._components["pacemaker-attrd-ignore"] = [
+        self._components["pacemaker-attrd-ignore"] = components_common_ignore + [
             r"pacemaker-controld.*Connection to attrd (IPC failed|closed)",
         ]
 
@@ -325,7 +325,7 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-controld.*Could not recover from internal error",
         ]
 
-        self._components["pacemaker-schedulerd-ignore"] = [
+        self._components["pacemaker-schedulerd-ignore"] = components_common_ignore + [
             r"Connection to pengine.* (failed|closed)",
         ]
 
@@ -335,14 +335,12 @@ class Corosync2Patterns(BasePatterns):
             r"pacemaker-controld.*Fencer successfully connected",
         ]
 
-        self._components["pacemaker-fenced-ignore"] = [
+        self._components["pacemaker-fenced-ignore"] = components_common_ignore + [
             r"(error|warning):.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"error:.*Lost fencer connection",
             r"error:.*Fencer connection failed \(will retry\)",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error \(Lost connection to fencer\)",
         ]
-
-        self._components["pacemaker-fenced-ignore"].extend(self._components["common-ignore"])
 
 
 patternVariants = {
