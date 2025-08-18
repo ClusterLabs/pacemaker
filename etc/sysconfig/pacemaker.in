@@ -424,5 +424,11 @@
 # is specified because pacemaker-execd can lower privileges when executing
 # commands, which would otherwise leave a bunch of unremovable files in /tmp.
 #
+# These options will also be passed to the callgrind tool if it's enabled.
+# However, callgrind does not support all the same options as valgrind (in
+# particular, it does not support "--leak-check=").  If you need that option
+# or any other valgrind-specific options, add those here and make sure to set
+# PCMK_callgrind_enabled="no".
+#
 # Default: VALGRIND_OPTS=""
-VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=@PCMK__PERSISTENT_DATA_DIR@/valgrind-%p --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
+VALGRIND_OPTS="--trace-children=no --vgdb=no --num-callers=25 --log-file=@PCMK__PERSISTENT_DATA_DIR@/valgrind-%p --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
