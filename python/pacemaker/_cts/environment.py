@@ -300,10 +300,6 @@ class Environment:
                           metavar="R",
                           default="/var/lib/pacemaker/notify.log",
                           help="Recipient to pass to alert script")
-        grp4.add_argument("--oprofile",
-                          default="",
-                          metavar="NODES",
-                          help="List of cluster nodes to run oprofile on")
         grp4.add_argument("--outputfile",
                           metavar="PATH",
                           help="Location to write logs to")
@@ -352,7 +348,6 @@ class Environment:
         self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
-        self["oprofile"] = shlex.split(args.oprofile)
         self["stonith-params"] = args.stonith_args
         self["stonith-type"] = args.stonith_type
         self["unsafe-tests"] = not args.no_unsafe_tests

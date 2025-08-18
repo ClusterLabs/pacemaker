@@ -462,47 +462,6 @@ class ClusterManager(UserDict):
             self.rsh(node, self.templates["FixCommCmd"] % target, synchronous=False)
             self.debug(f"Communication restored between {target} and {node}")
 
-    def oprofile_start(self, node=None):
-        """Start profiling on the given node, or all nodes in the cluster."""
-        if not node:
-            for n in self.env["oprofile"]:
-                self.oprofile_start(n)
-
-        elif node in self.env["oprofile"]:
-            self.debug(f"Enabling oprofile on {node}")
-            self.rsh(node, "opcontrol --init")
-            self.rsh(node, "opcontrol --setup --no-vmlinux --separate=lib --callgraph=20 --image=all")
-            self.rsh(node, "opcontrol --start")
-            self.rsh(node, "opcontrol --reset")
-
-    def oprofile_save(self, test, node=None):
-        """Save profiling data and restart profiling on the given node, or all nodes in the cluster."""
-        if not node:
-            for n in self.env["oprofile"]:
-                self.oprofile_save(test, n)
-
-        elif node in self.env["oprofile"]:
-            self.rsh(node, "opcontrol --dump")
-            self.rsh(node, f"opcontrol --save=cts.{test}")
-            # Read back with: opreport -l session:cts.0 image:<directory>/c*
-            self.oprofile_stop(node)
-            self.oprofile_start(node)
-
-    def oprofile_stop(self, node=None):
-        """
-        Start profiling on the given node, or all nodes in the cluster.
-
-        This does not save profiling data, so call oprofile_save first if needed.
-        """
-        if not node:
-            for n in self.env["oprofile"]:
-                self.oprofile_stop(n)
-
-        elif node in self.env["oprofile"]:
-            self.debug(f"Stopping oprofile on {node}")
-            self.rsh(node, "opcontrol --reset")
-            self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
-
     def prepare(self):
         """
         Finish initialization.

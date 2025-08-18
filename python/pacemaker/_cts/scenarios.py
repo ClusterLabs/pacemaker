@@ -181,17 +181,6 @@ class Scenario:
         self.stats[name] += 1
 
     def run(self, iterations):
-        """Run all tests in the scenario the given number of times."""
-        self._cm.oprofile_start()
-
-        try:
-            self._run_loop(iterations)
-            self._cm.oprofile_stop()
-        except:  # noqa: E722
-            self._cm.oprofile_stop()
-            raise
-
-    def _run_loop(self, iterations):
         """Run all the tests the given number of times."""
         raise NotImplementedError
 
@@ -228,7 +217,6 @@ class Scenario:
             ret = False
 
         stoptime = time.time()
-        self._cm.oprofile_save(testcount)
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
@@ -344,7 +332,7 @@ class Scenario:
 class AllOnce(Scenario):
     """Every Test Once."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         testcount = 1
 
         for test in self.tests:
@@ -355,7 +343,7 @@ class AllOnce(Scenario):
 class RandomTests(Scenario):
     """Random Test Execution."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         testcount = 1
 
         while testcount <= iterations:
@@ -367,7 +355,7 @@ class RandomTests(Scenario):
 class Sequence(Scenario):
     """Named Tests in Sequence."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         testcount = 1
 
         while testcount <= iterations:
@@ -379,7 +367,7 @@ class Sequence(Scenario):
 class Boot(Scenario):
     """Start the Cluster."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         return
 
 

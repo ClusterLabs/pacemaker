@@ -61,7 +61,6 @@ Also:
 * python3-dateutil and python3-systemd (if running CTS lab on cluster nodes
   running systemd)
 * nmap (if not specifying an IP address base)
-* oprofile (if running CTS lab profiling tests)
 * dlm (to log DLM debugging info after CTS lab tests)
 * xmllint (to validate tool output in cts-cli)
 
