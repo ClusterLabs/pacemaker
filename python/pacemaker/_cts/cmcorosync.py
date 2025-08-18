@@ -6,7 +6,6 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 from pacemaker._cts.CTS import Process
 from pacemaker._cts.clustermanager import ClusterManager
-from pacemaker._cts.patterns import PatternSelector
 
 # Throughout this file, pylint has trouble understanding that EnvFactory
 # is a singleton instance that can be treated as a subscriptable object.
@@ -21,9 +20,7 @@ class Corosync2(ClusterManager):
     def __init__(self):
         """Create a new Corosync2 instance."""
         ClusterManager.__init__(self)
-
         self._components = {}
-        self.templates = PatternSelector(self.name)
 
     @property
     def components(self):

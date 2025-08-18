@@ -80,7 +80,7 @@ class ClusterManager(UserDict):
         self.our_node = os.uname()[1].lower()
         self.partitions_expected = 1
         self.rsh = RemoteFactory().getInstance()
-        self.templates = PatternSelector(self.env["Name"])
+        self.templates = PatternSelector(self.name)
 
         self._final_conditions()
 
