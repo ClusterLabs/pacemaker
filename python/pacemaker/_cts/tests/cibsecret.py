@@ -48,7 +48,7 @@ class CibsecretTest(CTSTest):
     def _insert_dummy(self, node):
         """Create a dummy resource on the given node."""
         pats = [
-            f"{node}.*" + (self.templates["Pat:RscOpOK"] % ("start", self._rid))
+            f"{node}.*" + (self._cm.templates["Pat:RscOpOK"] % ("start", self._rid))
         ]
 
         watch = self.create_watch(pats, 60)

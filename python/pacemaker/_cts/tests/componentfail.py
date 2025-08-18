@@ -69,8 +69,8 @@ class ComponentFail(CTSTest):
 
         if chosen.name != "corosync":
             self._patterns.extend([
-                self.templates["Pat:ChildKilled"] % (node, chosen.name),
-                self.templates["Pat:ChildRespawn"] % (node, chosen.name),
+                self._cm.templates["Pat:ChildKilled"] % (node, chosen.name),
+                self._cm.templates["Pat:ChildRespawn"] % (node, chosen.name),
             ])
 
         self._patterns.extend(chosen.pats)
@@ -82,7 +82,7 @@ class ComponentFail(CTSTest):
             # Ignore actions for fence devices if fencer will respawn
             # (their registration will be lost, and probes will fail)
             self._okerrpatterns = [
-                self.templates["Pat:Fencing_active"],
+                self._cm.templates["Pat:Fencing_active"],
             ]
             (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
 
@@ -92,8 +92,8 @@ class ComponentFail(CTSTest):
 
                     if r.rclass == "stonith":
                         self._okerrpatterns.extend([
-                            self.templates["Pat:Fencing_recover"] % r.id,
-                            self.templates["Pat:Fencing_probe"] % r.id,
+                            self._cm.templates["Pat:Fencing_recover"] % r.id,
+                            self._cm.templates["Pat:Fencing_probe"] % r.id,
                         ])
 
         # supply a copy so self.patterns doesn't end up empty
@@ -102,7 +102,7 @@ class ComponentFail(CTSTest):
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonith_pats = [
-            self.templates["Pat:Fencing_ok"] % node
+            self._cm.templates["Pat:Fencing_ok"] % node
         ]
         stonith = self.create_watch(stonith_pats, 0)
         stonith.set_watch()
@@ -130,7 +130,7 @@ class ComponentFail(CTSTest):
 
         if shot:
             self.debug(f"Found: {shot!r}")
-            self._okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
+            self._okerrpatterns.append(self._cm.templates["Pat:Fencing_start"] % node)
 
             if not self._env["at-boot"]:
                 self._cm.expected_status[node] = "down"

@@ -65,17 +65,17 @@ class ResourceRecover(CTSTest):
 
         # Log patterns to watch for (failure, plus restart if managed)
         pats = [
-            self.templates["Pat:CloneOpFail"] % (self._action, rsc.id, rsc.clone_id)
+            self._cm.templates["Pat:CloneOpFail"] % (self._action, rsc.id, rsc.clone_id)
         ]
 
         if rsc.managed:
-            pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._rid))
+            pats.append(self._cm.templates["Pat:RscOpOK"] % ("stop", self._rid))
 
             if rsc.unique:
-                pats.append(self.templates["Pat:RscOpOK"] % ("start", self._rid))
+                pats.append(self._cm.templates["Pat:RscOpOK"] % ("start", self._rid))
             else:
                 # Anonymous clones may get restarted with a different clone number
-                pats.append(self.templates["Pat:RscOpOK"] % ("start", ".*"))
+                pats.append(self._cm.templates["Pat:RscOpOK"] % ("start", ".*"))
 
         # Fail resource. (Ideally, we'd fail it twice, to ensure the fail count
         # is incrementing properly, but it might restart on a different node.
@@ -166,6 +166,6 @@ class ResourceRecover(CTSTest):
             f"Updating failcount for {self._rid}",
             fr"schedulerd.*: Recover\s+({self._rid}|{self._rid_alt})\s+\(.*\)",
             r"Unknown operation: fail",
-            self.templates["Pat:RscOpOK"] % (self._action, self._rid),
+            self._cm.templates["Pat:RscOpOK"] % (self._action, self._rid),
             f"(ERROR|error).*: Action {self._rid}_{self._action}_{self._interval} .* initiated outside of a transition",
         ]

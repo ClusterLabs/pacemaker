@@ -48,17 +48,17 @@ class SimulStartLite(CTSTest):
         self.set_timer()
         while len(node_list) > 0:
             # Repeat until all nodes come up
-            uppat = self.templates["Pat:NonDC_started"]
+            uppat = self._cm.templates["Pat:NonDC_started"]
             if self._cm.upcount() == 0:
-                uppat = self.templates["Pat:Local_started"]
+                uppat = self._cm.templates["Pat:Local_started"]
 
             watchpats = [
-                self.templates["Pat:DC_IDLE"]
+                self._cm.templates["Pat:DC_IDLE"]
             ]
             for node in node_list:
                 watchpats.extend([uppat % node,
-                                  self.templates["Pat:InfraUp"] % node,
-                                  self.templates["Pat:PacemakerUp"] % node])
+                                  self._cm.templates["Pat:InfraUp"] % node,
+                                  self._cm.templates["Pat:PacemakerUp"] % node])
 
             #   Start all the nodes - at about the same time...
             watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
@@ -86,14 +86,14 @@ class SimulStartLite(CTSTest):
                         self.debug(f"Already matched: {uppat % node}")
 
                     try:
-                        watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
+                        watch.unmatched.remove(self._cm.templates["Pat:InfraUp"] % node)
                     except ValueError:
-                        self.debug(f"Already matched: {self.templates['Pat:InfraUp'] % node}")
+                        self.debug(f"Already matched: {self._cm.templates['Pat:InfraUp'] % node}")
 
                     try:
-                        watch.unmatched.remove(self.templates["Pat:PacemakerUp"] % node)
+                        watch.unmatched.remove(self._cm.templates["Pat:PacemakerUp"] % node)
                     except ValueError:
-                        self.debug(f"Already matched: {self.templates['Pat:PacemakerUp'] % node}")
+                        self.debug(f"Already matched: {self._cm.templates['Pat:PacemakerUp'] % node}")
 
             if watch.unmatched:
                 for regex in watch.unmatched:

@@ -47,8 +47,8 @@ class StonithdTest(CTSTest):
             return self.failure("Setup failed")
 
         watchpats = [
-            self.templates["Pat:Fencing_ok"] % node,
-            self.templates["Pat:NodeFenced"] % node,
+            self._cm.templates["Pat:Fencing_ok"] % node,
+            self._cm.templates["Pat:NodeFenced"] % node,
         ]
 
         if not self._env["at-boot"]:
@@ -122,9 +122,9 @@ class StonithdTest(CTSTest):
     def errors_to_ignore(self):
         """Return a list of errors which should be ignored."""
         return [
-            self.templates["Pat:Fencing_start"] % ".*",
-            self.templates["Pat:Fencing_ok"] % ".*",
-            self.templates["Pat:Fencing_active"],
+            self._cm.templates["Pat:Fencing_start"] % ".*",
+            self._cm.templates["Pat:Fencing_ok"] % ".*",
+            self._cm.templates["Pat:Fencing_active"],
             r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired"
         ]
 

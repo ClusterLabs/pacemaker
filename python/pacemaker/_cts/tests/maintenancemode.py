@@ -44,7 +44,7 @@ class MaintenanceMode(CTSTest):
     def _toggle_maintenance_mode(self, node, enabled):
         """Toggle maintenance mode on the given node."""
         pats = [
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:DC_IDLE"]
         ]
 
         if enabled:
@@ -55,18 +55,18 @@ class MaintenanceMode(CTSTest):
         # fail the resource right after turning Maintenance mode on
         # verify it is not recovered until maintenance mode is turned off
         if enabled:
-            pats.append(self.templates["Pat:RscOpFail"] % (self._action, self._rid))
+            pats.append(self._cm.templates["Pat:RscOpFail"] % (self._action, self._rid))
         else:
             pats.extend([
-                self.templates["Pat:RscOpOK"] % ("stop", self._rid),
-                self.templates["Pat:RscOpOK"] % ("start", self._rid)
+                self._cm.templates["Pat:RscOpOK"] % ("stop", self._rid),
+                self._cm.templates["Pat:RscOpOK"] % ("start", self._rid)
             ])
 
         watch = self.create_watch(pats, 60)
         watch.set_watch()
 
         self.debug(f"Turning maintenance mode {action}")
-        self._rsh(node, self.templates[f"MaintenanceMode{action}"])
+        self._rsh(node, self._cm.templates[f"MaintenanceMode{action}"])
 
         if enabled:
             self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
@@ -83,7 +83,7 @@ class MaintenanceMode(CTSTest):
     def _insert_maintenance_dummy(self, node):
         """Create a dummy resource on the given node."""
         pats = [
-            f"{node}.*" + (self.templates["Pat:RscOpOK"] % ("start", self._rid))
+            f"{node}.*" + (self._cm.templates["Pat:RscOpOK"] % ("start", self._rid))
         ]
 
         watch = self.create_watch(pats, 60)
@@ -103,7 +103,7 @@ class MaintenanceMode(CTSTest):
     def _remove_maintenance_dummy(self, node):
         """Remove the previously created dummy resource on the given node."""
         pats = [
-            self.templates["Pat:RscOpOK"] % ("stop", self._rid)
+            self._cm.templates["Pat:RscOpOK"] % ("stop", self._rid)
         ]
 
         watch = self.create_watch(pats, 60)
@@ -223,6 +223,6 @@ class MaintenanceMode(CTSTest):
             f"Updating failcount for {self._rid}",
             fr"schedulerd.*: Recover\s+{self._rid}\s+\(.*\)",
             r"Unknown operation: fail",
-            self.templates["Pat:RscOpOK"] % (self._action, self._rid),
+            self._cm.templates["Pat:RscOpOK"] % (self._action, self._rid),
             f"(ERROR|error).*: Action {self._rid}_{self._action}_0 .* initiated outside of a transition",
         ]

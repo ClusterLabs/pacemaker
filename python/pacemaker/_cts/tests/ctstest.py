@@ -8,7 +8,6 @@ import re
 
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
-from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.timer import Timer
 from pacemaker._cts.watcher import LogWatcher
@@ -39,7 +38,6 @@ class CTSTest:
 
         self.audits = []
         self.name = None
-        self.templates = PatternSelector(cm.name)
 
         self.stats = {
             "auditfail": 0,

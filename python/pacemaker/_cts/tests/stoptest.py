@@ -43,14 +43,14 @@ class StopTest(CTSTest):
 
         # Technically we should always be able to notice ourselves stopping
         patterns = [
-            self.templates["Pat:We_stopped"] % node,
+            self._cm.templates["Pat:We_stopped"] % node,
         ]
 
         # Any active node needs to notice this one left
         # (note that this won't work if we have multiple partitions)
         for other in self._env["nodes"]:
             if self._cm.expected_status[other] == "up" and other != node:
-                patterns.append(self.templates["Pat:They_stopped"] % (other, node))
+                patterns.append(self._cm.templates["Pat:They_stopped"] % (other, node))
 
         watch = self.create_watch(patterns, self._env["DeadTime"])
         watch.set_watch()
