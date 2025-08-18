@@ -321,9 +321,6 @@ class Environment:
         grp4.add_argument("--trunc",
                           action="store_true", dest="truncate",
                           help="Truncate log file before starting")
-        grp4.add_argument("--warn-inactive",
-                          action="store_true",
-                          help="Warn if a resource is assigned to an inactive node")
 
         parser.add_argument("iterations",
                             nargs='?',
@@ -351,7 +348,6 @@ class Environment:
         self["stonith-params"] = args.stonith_args
         self["stonith-type"] = args.stonith_type
         self["unsafe-tests"] = not args.no_unsafe_tests
-        self["warn-inactive"] = args.warn_inactive
 
         # Everything else either can't have a default set in an add_argument
         # call (likely because we don't want to always have a value set for it)
