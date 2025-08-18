@@ -39,7 +39,7 @@ class SplitBrainTest(CTSTest):
         """
         CTSTest.__init__(self, cm)
 
-        self.is_experimental = True
+        self.is_unsafe = True
         self.name = "SplitBrain"
 
         self._start = StartTest(cm)

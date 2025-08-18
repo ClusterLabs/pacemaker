@@ -289,9 +289,6 @@ class Environment:
         grp4.add_argument("--cib-filename",
                           metavar="PATH",
                           help="Install the given CIB file to the cluster")
-        grp4.add_argument("--experimental-tests",
-                          action="store_true",
-                          help="Include experimental tests")
         grp4.add_argument("--no-unsafe-tests",
                           action="store_true",
                           help="Don't run tests that are unsafe for use with ocfs2/drbd")
@@ -351,7 +348,6 @@ class Environment:
         self["TruncateLog"] = args.truncate
         self["benchmark"] = args.benchmark
         self["continue"] = args.always_continue
-        self["experimental-tests"] = args.experimental_tests
         self["iterations"] = args.iterations
         self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent

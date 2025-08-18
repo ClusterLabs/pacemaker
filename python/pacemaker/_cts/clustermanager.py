@@ -514,8 +514,17 @@ class ClusterManager(UserDict):
         for node in self.env["nodes"]:
             self.expected_status[node] = ""
 
-            if self.env["experimental-tests"]:
-                self.unisolate_node(node)
+            # This used to be conditional on whether SplitBrainTest was
+            # allowed to run. SplitBrainTest is supposed to unisolate
+            # the nodes, so this shouldn't be necessary here. However,
+            # SplitBrainTest was flagged as "experimental" from 2009 to
+            # 2025 and wasn't allowed to run by default. So uncomment
+            # this if problems emerge.
+            #
+            # @COMPAT Delete this comment if no problems emerge after a
+            # while.
+            #
+            # self.unisolate_node(node)
 
             self.stat_cm(node)
 
