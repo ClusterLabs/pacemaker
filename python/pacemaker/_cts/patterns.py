@@ -122,8 +122,6 @@ class BasePatterns:
         return None
 
     def __getitem__(self, key):
-        if key == "Name":
-            return self._name
         if key in self._commands:
             return self._commands[key]
         if key in self._search:
