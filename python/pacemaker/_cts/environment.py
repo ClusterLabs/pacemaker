@@ -57,7 +57,6 @@ class Environment:
         self["StartTime"] = 300
         self["StableTime"] = 30
         self["tests"] = []
-        self["CIBResource"] = False
         self["log_kind"] = None
         self["scenario"] = "random"
         self["syslog_facility"] = "daemon"
@@ -182,7 +181,7 @@ class Environment:
 
     def _detect_ip_offset(self, node):
         """Detect the offset for IPaddr resources."""
-        if self["CIBResource"] and "IPBase" not in self.data:
+        if self["create_resources"] and "IPBase" not in self.data:
             (_, lines) = self._rsh(node, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
@@ -334,6 +333,7 @@ class Environment:
         # calls, they only do one thing, and they do not have any side effects.
         self["CIBfilename"] = args.cib_filename if args.cib_filename else None
         self["ClobberCIB"] = args.clobber_cib
+        self["create_resources"] = args.ip or args.populate_resources
         self["fencing_agent"] = args.fencing_agent
         self["fencing_enabled"] = args.fencing_enabled
         self["fencing_params"] = shlex.split(args.fencing_params)
@@ -363,7 +363,6 @@ class Environment:
             self["iterations"] = len(self["tests"])
 
         if args.ip:
-            self["CIBResource"] = True
             self["ClobberCIB"] = True
             self["IPBase"] = args.ip
 
@@ -389,7 +388,6 @@ class Environment:
             LogFactory().add_file(self["OutputFile"])
 
         if args.populate_resources:
-            self["CIBResource"] = True
             self["ClobberCIB"] = True
 
         self.random_gen.seed(args.seed)

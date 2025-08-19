@@ -286,7 +286,7 @@ class CIB:
             alerts.commit()
 
         # Add resources?
-        if self._cm.env["CIBResource"]:
+        if self._cm.env["create_resources"]:
             self.add_resources()
 
         # generate cib
