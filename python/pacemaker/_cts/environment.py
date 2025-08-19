@@ -54,12 +54,12 @@ class Environment:
         # either not set by any command line parameter, or they need a default
         # that can't be set in add_argument.
         self["dead_time"] = 300
-        self["StableTime"] = 30
-        self["tests"] = []
         self["log_kind"] = None
         self["scenario"] = "random"
+        self["stable_time"] = 30
         self["start_time"] = 300
         self["syslog_facility"] = "daemon"
+        self["tests"] = []
 
         # Hard-coded since there is only one supported cluster manager/stack
         self["Name"] = "crm-corosync"

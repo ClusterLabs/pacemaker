@@ -56,7 +56,7 @@ class ComponentFail(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        if not self._cm.cluster_stable(self._env["StableTime"]):
+        if not self._cm.cluster_stable(self._env["stable_time"]):
             return self.failure("Setup failed - unstable")
 
         # select a component to kill
@@ -106,7 +106,7 @@ class ComponentFail(CTSTest):
 
         # set the watch for stable
         watch = self.create_watch(
-            tmp_pats, self._env["dead_time"] + self._env["StableTime"] + self._env["start_time"])
+            tmp_pats, self._env["dead_time"] + self._env["stable_time"] + self._env["start_time"])
 
         watch.set_watch()
 
