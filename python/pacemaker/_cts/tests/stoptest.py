@@ -52,7 +52,7 @@ class StopTest(CTSTest):
             if self._cm.expected_status[other] == "up" and other != node:
                 patterns.append(self._cm.templates["Pat:They_stopped"] % (other, node))
 
-        watch = self.create_watch(patterns, self._env["DeadTime"])
+        watch = self.create_watch(patterns, self._env["dead_time"])
         watch.set_watch()
 
         if node == self._cm.our_node:
@@ -83,7 +83,7 @@ class StopTest(CTSTest):
                 unmatched_str += f"{regex}||"
                 failreason = "Missing shutdown pattern"
 
-        self._cm.cluster_stable(self._env["DeadTime"])
+        self._cm.cluster_stable(self._env["dead_time"])
 
         if not watch.unmatched or self._cm.upcount() == 0:
             return self.success()

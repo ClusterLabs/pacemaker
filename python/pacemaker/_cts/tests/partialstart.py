@@ -47,7 +47,7 @@ class PartialStart(CTSTest):
         watchpats = [
             "pacemaker-controld.*Connecting to .* cluster layer"
         ]
-        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
+        watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
         watch.set_watch()
 
         self._cm.start_cm_async(node)

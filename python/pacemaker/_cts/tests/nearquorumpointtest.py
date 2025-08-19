@@ -70,7 +70,7 @@ class NearQuorumPointTest(CTSTest):
         if startset:
             watchpats.append(self._cm.templates["Pat:DC_IDLE"])
 
-        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
+        watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
 
         watch.set_watch()
 

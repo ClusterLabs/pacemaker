@@ -214,7 +214,7 @@ class ClusterManager(UserDict):
                     shot = stonith.look(60)
 
             # Now make sure the node is alive too
-            self.ns.wait_for_node(peer, self.env["DeadTime"])
+            self.ns.wait_for_node(peer, self.env["dead_time"])
 
             # Poll until it comes up
             if self.env["at-boot"]:
@@ -287,7 +287,7 @@ class ClusterManager(UserDict):
 
         self.expected_status[node] = "any"
 
-        if self.stat_cm(node) and self.cluster_stable(self.env["DeadTime"]):
+        if self.stat_cm(node) and self.cluster_stable(self.env["dead_time"]):
             self._logger.log(f"{node} was already started")
             return True
 
@@ -307,11 +307,11 @@ class ClusterManager(UserDict):
             for regex in watch.unmatched:
                 self._logger.log(f"Warn: Startup pattern not found: {regex}")
 
-        if watch_result and self.cluster_stable(self.env["DeadTime"]):
+        if watch_result and self.cluster_stable(self.env["dead_time"]):
             self.fencing_cleanup(node, stonith)
             return True
 
-        if self.stat_cm(node) and self.cluster_stable(self.env["DeadTime"]):
+        if self.stat_cm(node) and self.cluster_stable(self.env["dead_time"]):
             self.fencing_cleanup(node, stonith)
             return True
 
@@ -339,7 +339,7 @@ class ClusterManager(UserDict):
         if rc == 0:
             # Make sure we can continue even if corosync leaks
             self.expected_status[node] = "down"
-            self.cluster_stable(self.env["DeadTime"])
+            self.cluster_stable(self.env["dead_time"])
             return True
 
         self._logger.log(f"ERROR: Could not stop {self.name} on node {node}")
@@ -380,7 +380,7 @@ class ClusterManager(UserDict):
         #   Start all the nodes - at about the same time...
         watch = LogWatcher(self.env["LogFileName"], watchpats, self.env["nodes"],
                            self.env["log_kind"], "fast-start",
-                           self.env["DeadTime"] + 10)
+                           self.env["dead_time"] + 10)
         watch.set_watch()
 
         if not self.start_cm(nodelist[0], verbose=verbose):
@@ -566,7 +566,7 @@ class ClusterManager(UserDict):
         self.debug("Waiting for cluster stability...")
 
         if timeout is None:
-            timeout = self.env["DeadTime"]
+            timeout = self.env["dead_time"]
 
         if len(nodes) < 3:
             self.debug("Cluster is inactive")

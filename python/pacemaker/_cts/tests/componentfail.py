@@ -106,7 +106,7 @@ class ComponentFail(CTSTest):
 
         # set the watch for stable
         watch = self.create_watch(
-            tmp_pats, self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
+            tmp_pats, self._env["dead_time"] + self._env["StableTime"] + self._env["StartTime"])
 
         watch.set_watch()
 

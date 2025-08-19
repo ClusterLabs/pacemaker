@@ -53,7 +53,7 @@ class Environment:
         # Set some defaults before processing command line arguments.  These are
         # either not set by any command line parameter, or they need a default
         # that can't be set in add_argument.
-        self["DeadTime"] = 300
+        self["dead_time"] = 300
         self["StartTime"] = 300
         self["StableTime"] = 30
         self["tests"] = []

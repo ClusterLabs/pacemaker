@@ -61,7 +61,8 @@ class StonithdTest(CTSTest):
                 f"{node}.* S_PENDING -> S_NOT_DC",
             ])
 
-        watch = self.create_watch(watchpats, 30 + self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
+        watch = self.create_watch(watchpats,
+                                  30 + self._env["dead_time"] + self._env["StableTime"] + self._env["StartTime"])
         watch.set_watch()
 
         origin = self._env.random_gen.choice(self._env["nodes"])
