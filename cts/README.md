@@ -238,7 +238,7 @@ pcmk\_host\_list=all, the lab will expand that to all cluster nodes and their
 the "remote-" names to the hostnames. Example:
 
     --fencing-agent fence_xvm --fencing-params \
-    pcmk_host_list=all,pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2
+    'pcmk_host_list=all pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2'
 
 
 ### Optional: Remote node testing with valgrind

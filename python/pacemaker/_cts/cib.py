@@ -147,7 +147,7 @@ class CIB:
         if self._cm.env["DoFencing"]:
 
             # Define the "real" fencing device
-            st = Resource(self._factory, "Fencing", self._cm.env["stonith-type"], "stonith")
+            st = Resource(self._factory, "Fencing", self._cm.env["fencing_agent"], "stonith")
 
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
@@ -161,12 +161,11 @@ class CIB:
             all_node_names = [prefix + n for n in self._cm.env["nodes"] for prefix in ('', 'remote-')]
 
             # Add all parameters specified by user
-            entries = self._cm.env["stonith-params"].split(',')
-            for entry in entries:
+            for param in self._cm.env["fencing_params"]:
                 try:
-                    (name, value) = entry.split('=', 1)
+                    (name, value) = param.split('=', 1)
                 except ValueError:
-                    print(f"Warning: skipping invalid fencing parameter: {entry}")
+                    print(f"Warning: skipping invalid fencing parameter: {param}")
                     continue
 
                 # Allow user to specify "all" as the node list, and expand it here

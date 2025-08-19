@@ -275,13 +275,9 @@ class Environment:
                           metavar="AGENT",
                           default="external/ssh",
                           help="Agent to use for a fencing resource")
-
-        # @FIXME These params are meaningful only with --fencing-agent="external/ssh"
         grp3.add_argument("--fencing-params",
                           metavar="PARAMS",
-                          default="hostlist=all,livedangerously=yes",
-                          help="Parameters for the fencing resource (comma-delimited)")
-
+                          help="Parameters for the fencing resource (as NAME=VALUE), separated by whitespace")
         grp3.add_argument("--once",
                           action="store_true",
                           help="Run all valid tests once")
@@ -339,6 +335,8 @@ class Environment:
         self["CIBfilename"] = args.cib_filename if args.cib_filename else None
         self["ClobberCIB"] = args.clobber_cib
         self["DoFencing"] = args.fencing_enabled
+        self["fencing_agent"] = args.fencing_agent
+        self["fencing_params"] = shlex.split(args.fencing_params)
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema
         self["TruncateLog"] = args.truncate
@@ -348,8 +346,6 @@ class Environment:
         self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
-        self["stonith-params"] = args.fencing_params
-        self["stonith-type"] = args.fencing_agent
         self["unsafe-tests"] = not args.no_unsafe_tests
 
         # Everything else either can't have a default set in an add_argument
