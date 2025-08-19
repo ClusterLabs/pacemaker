@@ -62,7 +62,7 @@ class StonithdTest(CTSTest):
             ])
 
         watch = self.create_watch(watchpats,
-                                  30 + self._env["dead_time"] + self._env["StableTime"] + self._env["start_time"])
+                                  30 + self._env["dead_time"] + self._env["stable_time"] + self._env["start_time"])
         watch.set_watch()
 
         origin = self._env.random_gen.choice(self._env["nodes"])
