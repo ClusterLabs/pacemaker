@@ -332,12 +332,12 @@ class Environment:
         # These values can always be set. Most get a default from the add_argument
         # calls, they only do one thing, and they do not have any side effects.
         self["CIBfilename"] = args.cib_filename if args.cib_filename else None
-        self["ClobberCIB"] = args.clobber_cib
         self["create_resources"] = args.ip or args.populate_resources
         self["fencing_agent"] = args.fencing_agent
         self["fencing_enabled"] = args.fencing_enabled
         self["fencing_params"] = shlex.split(args.fencing_params)
         self["ListTests"] = args.list_tests
+        self["overwrite_cib"] = any([args.clobber_cib, args.ip, args.populate_resources])
         self["Schema"] = args.schema
         self["TruncateLog"] = args.truncate
         self["benchmark"] = args.benchmark
@@ -363,7 +363,6 @@ class Environment:
             self["iterations"] = len(self["tests"])
 
         if args.ip:
-            self["ClobberCIB"] = True
             self["IPBase"] = args.ip
 
         if args.logfile == "journal":
@@ -386,9 +385,6 @@ class Environment:
         if args.outputfile:
             self["OutputFile"] = args.outputfile
             LogFactory().add_file(self["OutputFile"])
-
-        if args.populate_resources:
-            self["ClobberCIB"] = True
 
         self.random_gen.seed(args.seed)
 
