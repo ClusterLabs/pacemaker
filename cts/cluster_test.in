@@ -130,11 +130,11 @@ fi
 
 cts_extra=""
 if [ -n "$CTS_stonith" ]; then
-    cts_extra="$cts_extra --stonith-type $CTS_stonith"
+    cts_extra="$cts_extra --fencing-agent $CTS_stonith"
     [ -z "$CTS_stonith_args" ] \
-        || cts_extra="$cts_extra --stonith-params \"$CTS_stonith_args\""
+        || cts_extra="$cts_extra --fencing-params \"$CTS_stonith_args\""
 else
-    cts_extra="$cts_extra --stonith 0"
+    cts_extra="$cts_extra --disable-fencing"
     echo " - Testing a cluster without STONITH is like a blunt pencil... pointless"
 fi
 

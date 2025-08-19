@@ -57,7 +57,6 @@ class Environment:
         self["StartTime"] = 300
         self["StableTime"] = 30
         self["tests"] = []
-        self["DoFencing"] = True
         self["CIBResource"] = False
         self["log_kind"] = None
         self["scenario"] = "random"
@@ -239,7 +238,7 @@ class Environment:
         if not argv:
             argv = sys.argv[1:]
 
-        parser = argparse.ArgumentParser(epilog=f"{sys.argv[0]} -g virt1 -r --stonith ssh --schema pacemaker-2.0 500")
+        parser = argparse.ArgumentParser()
 
         grp1 = parser.add_argument_group("Common options")
         grp1.add_argument("--benchmark",
@@ -268,10 +267,21 @@ class Environment:
         grp3.add_argument("--choose",
                           metavar="NAME",
                           help="Run only the named tests, separated by whitespace")
-        grp3.add_argument("--fencing", "--stonith",
-                          choices=["1", "0", "yes", "no", "lha", "openstack", "rhcs", "rhevm", "scsi", "ssh", "virt", "xvm"],
-                          default="1",
-                          help="What fencing agent to use")
+        grp3.add_argument("--disable-fencing",
+                          action="store_false",
+                          dest="fencing_enabled",
+                          help="Whether to disable fencing")
+        grp3.add_argument("--fencing-agent",
+                          metavar="AGENT",
+                          default="external/ssh",
+                          help="Agent to use for a fencing resource")
+
+        # @FIXME These params are meaningful only with --fencing-agent="external/ssh"
+        grp3.add_argument("--fencing-params",
+                          metavar="PARAMS",
+                          default="hostlist=all,livedangerously=yes",
+                          help="Parameters for the fencing resource (comma-delimited)")
+
         grp3.add_argument("--once",
                           action="store_true",
                           help="Run all valid tests once")
@@ -310,14 +320,6 @@ class Environment:
         grp4.add_argument("--seed",
                           metavar="SEED",
                           help="Use the given string as the random number seed")
-        grp4.add_argument("--stonith-args",
-                          metavar="ARGS",
-                          default="hostlist=all,livedangerously=yes",
-                          help="")
-        grp4.add_argument("--stonith-type",
-                          metavar="TYPE",
-                          default="external/ssh",
-                          help="")
         grp4.add_argument("--trunc",
                           action="store_true", dest="truncate",
                           help="Truncate log file before starting")
@@ -336,6 +338,7 @@ class Environment:
         # calls, they only do one thing, and they do not have any side effects.
         self["CIBfilename"] = args.cib_filename if args.cib_filename else None
         self["ClobberCIB"] = args.clobber_cib
+        self["DoFencing"] = args.fencing_enabled
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema
         self["TruncateLog"] = args.truncate
@@ -345,8 +348,8 @@ class Environment:
         self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
-        self["stonith-params"] = args.stonith_args
-        self["stonith-type"] = args.stonith_type
+        self["stonith-params"] = args.fencing_params
+        self["stonith-type"] = args.fencing_agent
         self["unsafe-tests"] = not args.no_unsafe_tests
 
         # Everything else either can't have a default set in an add_argument
@@ -362,42 +365,6 @@ class Environment:
             self["scenario"] = "sequence"
             self["tests"].extend(shlex.split(args.choose))
             self["iterations"] = len(self["tests"])
-
-        if args.fencing in ["0", "no"]:
-            self["DoFencing"] = False
-
-        elif args.fencing in ["rhcs", "virt", "xvm"]:
-            self["stonith-type"] = "fence_xvm"
-
-        elif args.fencing == "scsi":
-            self["stonith-type"] = "fence_scsi"
-
-        elif args.fencing in ["lha", "ssh"]:
-            self["stonith-params"] = "hostlist=all,livedangerously=yes"
-            self["stonith-type"] = "external/ssh"
-
-        elif args.fencing == "openstack":
-            self["stonith-type"] = "fence_openstack"
-
-            print("Obtaining OpenStack credentials from the current environment")
-            region = os.environ['OS_REGION_NAME']
-            tenant = os.environ['OS_TENANT_NAME']
-            auth = os.environ['OS_AUTH_URL']
-            user = os.environ['OS_USERNAME']
-            password = os.environ['OS_PASSWORD']
-
-            self["stonith-params"] = f"region={region},tenant={tenant},auth={auth},user={user},password={password}"
-
-        elif args.fencing == "rhevm":
-            self["stonith-type"] = "fence_rhevm"
-
-            print("Obtaining RHEV-M credentials from the current environment")
-            user = os.environ['RHEVM_USERNAME']
-            password = os.environ['RHEVM_PASSWORD']
-            server = os.environ['RHEVM_SERVER']
-            port = os.environ['RHEVM_PORT']
-
-            self["stonith-params"] = f"login={user},passwd={password},ipaddr={server},ipport={port},ssl=1,shell_timeout=10"
 
         if args.ip:
             self["CIBResource"] = True

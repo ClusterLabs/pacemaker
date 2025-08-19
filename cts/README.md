@@ -146,13 +146,13 @@ cluster node, by specifying the first, for example:
 
 Configure some sort of fencing, for example to use fence\_xvm:
 
-    --stonith xvm
+    --fencing-agent fence_xvm
 
 Putting all the above together, a command line might look like:
 
     /usr/share/pacemaker/tests/cts-lab --nodes "pcmk-1 pcmk-2 pcmk-3" \
         --outputfile ~/cts.log --clobber-cib --populate-resources \
-        --test-ip-base 192.168.9.100 --stonith xvm 50
+        --test-ip-base 192.168.9.100 --fencing-agent fence_xvm 50
 
 For more options, run with the --help option.
 
@@ -237,7 +237,7 @@ pcmk\_host\_list=all, the lab will expand that to all cluster nodes and their
 "remote-" names.  You may additionally need a pcmk\_host\_map argument to map
 the "remote-" names to the hostnames. Example:
 
-    --stonith xvm --stonith-args \
+    --fencing-agent fence_xvm --fencing-params \
     pcmk_host_list=all,pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2
 
 

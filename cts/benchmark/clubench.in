@@ -57,11 +57,11 @@ test -f $CTSCTRL ||  {
 CTSOPTS="$CTS_adv --logfile $CTS_logfile"
 
 if [ "x$CTS_stonith" != "x" ]; then
-	CTSOPTS="$CTSOPTS --stonith-type $CTS_stonith"
+	CTSOPTS="$CTSOPTS --fencing-agent $CTS_stonith"
 	[ "x$CTS_stonith_args" != "x" ] &&
-		CTSOPTS="$CTSOPTS --stonith-params \"$CTS_stonith_args\""
+		CTSOPTS="$CTSOPTS --fencing-params \"$CTS_stonith_args\""
 else
-	CTSOPTS="$CTSOPTS --stonith 0"
+	CTSOPTS="$CTSOPTS --disable-fencing"
 fi
 
 CTSOPTS="$CTSOPTS $CTSTESTS"
