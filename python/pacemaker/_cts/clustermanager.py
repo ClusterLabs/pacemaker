@@ -219,7 +219,7 @@ class ClusterManager(UserDict):
             # Poll until it comes up
             if self.env["at-boot"]:
                 if not self.stat_cm(peer):
-                    time.sleep(self.env["StartTime"])
+                    time.sleep(self.env["start_time"])
 
                 if not self.stat_cm(peer):
                     self._logger.log(f"ERROR: Peer {peer} failed to restart after being fenced")
@@ -281,7 +281,7 @@ class ClusterManager(UserDict):
 
         watch = LogWatcher(self.env["LogFileName"], patterns,
                            self.env["nodes"], self.env["log_kind"],
-                           "StartaCM", self.env["StartTime"] + 10)
+                           "StartaCM", self.env["start_time"] + 10)
 
         self._install_config(node)
 
