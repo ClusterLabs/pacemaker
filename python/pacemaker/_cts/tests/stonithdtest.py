@@ -130,4 +130,4 @@ class StonithdTest(CTSTest):
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""
-        return self._env["DoFencing"] and CTSTest.is_applicable(self)
+        return self._env["fencing_enabled"] and CTSTest.is_applicable(self)

@@ -40,7 +40,7 @@ class RemoteStonithd(RemoteDriver):
         """Return True if this test is applicable in the current test configuration."""
         # pylint doesn't understand that self._env is subscriptable.
         # pylint: disable=unsubscriptable-object
-        return self._env["DoFencing"] and RemoteDriver.is_applicable(self)
+        return self._env["fencing_enabled"] and RemoteDriver.is_applicable(self)
 
     @property
     def errors_to_ignore(self):

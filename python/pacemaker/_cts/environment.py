@@ -334,8 +334,8 @@ class Environment:
         # calls, they only do one thing, and they do not have any side effects.
         self["CIBfilename"] = args.cib_filename if args.cib_filename else None
         self["ClobberCIB"] = args.clobber_cib
-        self["DoFencing"] = args.fencing_enabled
         self["fencing_agent"] = args.fencing_agent
+        self["fencing_enabled"] = args.fencing_enabled
         self["fencing_params"] = shlex.split(args.fencing_params)
         self["ListTests"] = args.list_tests
         self["Schema"] = args.schema

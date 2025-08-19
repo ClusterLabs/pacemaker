@@ -144,7 +144,7 @@ class CIB:
 
         # Fencing resource
         # Define first so that the shell doesn't reject every update
-        if self._cm.env["DoFencing"]:
+        if self._cm.env["fencing_enabled"]:
 
             # Define the "real" fencing device
             st = Resource(self._factory, "Fencing", self._cm.env["fencing_agent"], "stonith")
@@ -260,7 +260,7 @@ class CIB:
             stl.commit()
 
         o = Option(self._factory)
-        o["stonith-enabled"] = self._cm.env["DoFencing"]
+        o["stonith-enabled"] = self._cm.env["fencing_enabled"]
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
         o["shutdown-escalation"] = "5min"
