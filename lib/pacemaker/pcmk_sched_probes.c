@@ -206,7 +206,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
         goto no_probe;
 
     } else if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
-        reason = "resource is orphaned";
+        reason = "resource is removed";
         goto no_probe;
 
     } else if (g_hash_table_lookup(rsc->priv->probed_nodes,

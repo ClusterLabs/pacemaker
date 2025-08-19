@@ -422,7 +422,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "cluster multiplied by the number of nodes)."),
     },
 
-    // Orphans and stopping
+    // Stopping resources and removed resources
     {
         PCMK_OPT_STOP_ALL_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
@@ -431,7 +431,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STOP_REMOVED_RESOURCES, PCMK_OPT_STOP_ORPHAN_RESOURCES,
+            PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to stop resources that were removed from the "
@@ -439,7 +440,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_STOP_REMOVED_ACTIONS, PCMK_OPT_STOP_ORPHAN_ACTIONS,
+            PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
         N_("Whether to cancel recurring actions removed from the "

@@ -440,24 +440,24 @@ values, by running the ``man pacemaker-schedulerd`` and
      - false
      - Whether all resources should be disallowed from running (can be useful
        during maintenance or troubleshooting)
-   * - .. _stop_orphan_resources:
+   * - .. _stop_removed_resources:
 
        .. index::
-          pair: cluster option; stop-orphan-resources
+          pair: cluster option; stop-removed-resources
 
-       stop-orphan-resources
+       stop-removed-resources
      - :ref:`boolean <boolean>`
      - true
      - Whether resources that have been deleted from the configuration should
        be stopped. This value takes precedence over
        :ref:`is-managed <is_managed>` (that is, even unmanaged resources will
-       be stopped when orphaned if this value is ``true``).
-   * - .. _stop_orphan_actions:
+       be stopped when removed if this value is ``true``).
+   * - .. _stop_removed_actions:
 
        .. index::
-          pair: cluster option; stop-orphan-actions
+          pair: cluster option; stop-removed-actions
 
-       stop-orphan-actions
+       stop-removed-actions
      - :ref:`boolean <boolean>`
      - true
      - Whether recurring :ref:`operations <operation>` that have been deleted

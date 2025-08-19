@@ -82,13 +82,13 @@ enum pcmk__scheduler_flags {
 
     /*
      * Whether resources removed from the configuration should be stopped (via
-     * stop-orphan-resources property)
+     * PCMK_OPT_STOP_REMOVED_RESOURCES property)
      */
     pcmk__sched_stop_removed_resources  = (1ULL << 8),
 
     /*
      * Whether recurring actions removed from the configuration should be
-     * cancelled (via stop-orphan-actions property)
+     * cancelled (via PCMK_OPT_STOP_REMOVED_ACTIONS property)
      */
     pcmk__sched_cancel_removed_actions  = (1ULL << 9),
 

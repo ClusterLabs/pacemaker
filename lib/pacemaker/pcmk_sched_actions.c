@@ -1643,7 +1643,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
 
-    // If this is a recurring action, check whether it has been orphaned
+    // If this is a recurring action, check whether it has been removed
     if (interval_ms > 0) {
         if (pcmk__find_action_config(rsc, task, interval_ms, false) != NULL) {
             pcmk__rsc_trace(rsc,
@@ -1653,10 +1653,10 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
         } else if (pcmk_is_set(rsc->priv->scheduler->flags,
                                pcmk__sched_cancel_removed_actions)) {
             pcmk__schedule_cancel(rsc, pcmk__xe_get(xml_op, PCMK__XA_CALL_ID),
-                                  task, interval_ms, node, "orphan");
+                                  task, interval_ms, node, "removed");
             return true;
         } else {
-            pcmk__rsc_debug(rsc, "%s-interval %s for %s on %s is orphaned",
+            pcmk__rsc_debug(rsc, "%s-interval %s for %s on %s is removed",
                             pcmk__readable_interval(interval_ms), task, rsc->id,
                             pcmk__node_name(node));
             return true;
@@ -1782,12 +1782,12 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
              */
             pcmk__rsc_trace(rsc,
                             "Skipping configuration check "
-                            "for orphaned clone instance %s",
+                            "for removed clone instance %s",
                             rsc->id);
         } else {
             pcmk__rsc_trace(rsc,
                             "Skipping configuration check and scheduling "
-                            "clean-up for orphaned resource %s", rsc->id);
+                            "clean-up for removed resource %s", rsc->id);
             pcmk__schedule_cleanup(rsc, node, false);
         }
         return;
@@ -1931,7 +1931,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
 
     /* Rather than iterate through the status section, iterate through the nodes
      * and search for the appropriate status subsection for each. This skips
-     * orphaned nodes and lets us eliminate some cases before searching the XML.
+     * removed nodes and lets us eliminate some cases before searching the XML.
      */
     for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
         pcmk_node_t *node = (pcmk_node_t *) iter->data;

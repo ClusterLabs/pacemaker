@@ -313,7 +313,7 @@ defaults and calls a series of functions for the scheduling. Some key steps:
   ordered before promote actions.
 * ``pcmk__handle_rsc_config_changes()`` processes resource history entries in
   the CIB status section. This is used to decide whether certain
-  actions need to be done, such as deleting orphan resources, forcing a restart
+  actions need to be done, such as deleting removed resources, forcing a restart
   when a resource definition changes, etc.
 * ``assign_resources()`` :term:`assigns <assign>` resources to nodes.
 * ``schedule_resource_actions()`` schedules resource-specific actions (which

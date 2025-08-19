@@ -336,20 +336,20 @@ assign_resources(pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
- * \brief Schedule fail count clearing on online nodes if resource is orphaned
+ * \brief Schedule fail count clearing on online nodes if resource is removed
  *
  * \param[in,out] data       Resource to check
  * \param[in]     user_data  Ignored
  */
 static void
-clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
+clear_failcounts_if_removed(gpointer data, gpointer user_data)
 {
     pcmk_resource_t *rsc = data;
 
     if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
         return;
     }
-    crm_trace("Clear fail counts for orphaned resource %s", rsc->id);
+    crm_trace("Clear fail counts for removed resource %s", rsc->id);
 
     /* There's no need to recurse into rsc->private->children because those
      * should just be unassigned clone instances.
@@ -368,7 +368,7 @@ clear_failcounts_if_orphaned(gpointer data, gpointer user_data)
             continue;
         }
 
-        clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
+        clear_op = pe__clear_failcount(rsc, node, "it is removed",
                                        rsc->priv->scheduler);
 
         /* We can't use order_action_then_stop() here because its
@@ -398,7 +398,7 @@ schedule_resource_actions(pcmk_scheduler_t *scheduler)
     }
 
     if (pcmk_is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
-        g_list_foreach(scheduler->priv->resources, clear_failcounts_if_orphaned,
+        g_list_foreach(scheduler->priv->resources, clear_failcounts_if_removed,
                        NULL);
     }
 
@@ -667,7 +667,7 @@ log_resource_details(pcmk_scheduler_t *scheduler)
 
         pcmk_resource_t *rsc = (pcmk_resource_t *) item->data;
 
-        // Log all resources except inactive orphans
+        // Log all resources except inactive removed resources
         if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
             || (rsc->priv->orig_role != pcmk_role_stopped)) {
             out->message(out, (const char *) rsc->priv->xml->name, 0UL,

@@ -35,7 +35,7 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
     pcmk_node_t *allowed_node = NULL;
 
     if (pcmk_is_set(instance->flags, pcmk__rsc_removed)) {
-        pcmk__rsc_trace(instance, "%s cannot run on %s: orphaned",
+        pcmk__rsc_trace(instance, "%s cannot run on %s: removed",
                         instance->id, pcmk__node_name(node));
         return false;
     }
@@ -1331,7 +1331,7 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
         || pcmk__is_down_action(action_name)) {
         crm_trace("No %s action found for %s%s",
                   action_name,
-                  pcmk_is_set(instance->flags, pcmk__rsc_removed)? "orphan " : "",
+                  pcmk_is_set(instance->flags, pcmk__rsc_removed)? "removed " : "",
                   instance->id);
     } else {
         crm_err("No %s action found for %s to interleave (bug?)",

@@ -352,8 +352,6 @@ extern "C" {
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_OPTIONS                     "options"
 #define PCMK_XA_ORIGIN                      "origin"
-#define PCMK_XA_ORPHAN                      "orphan"
-#define PCMK_XA_ORPHANED                    "orphaned"
 #define PCMK_XA_PACEMAKERD_STATE            "pacemakerd-state"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PENDING                     "pending"
@@ -378,6 +376,7 @@ extern "C" {
 #define PCMK_XA_REMOTE_CLEAR_PORT           "remote-clear-port"
 #define PCMK_XA_REMOTE_NODE                 "remote_node"
 #define PCMK_XA_REMOTE_TLS_PORT             "remote-tls-port"
+#define PCMK_XA_REMOVED                     "removed"
 #define PCMK_XA_REPLICAS                    "replicas"
 #define PCMK_XA_REPLICAS_PER_HOST           "replicas-per-host"
 #define PCMK_XA_REQUEST                     "request"
@@ -458,6 +457,11 @@ extern "C" {
 #define PCMK_XA_YEARDAYS                    "yeardays"
 #define PCMK_XA_YEARS                       "years"
 
+//! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
+#define PCMK_XA_ORPHAN                      "orphan"
+
+//! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
+#define PCMK_XA_ORPHANED                    "orphaned"
 
 #ifdef __cplusplus
 }
