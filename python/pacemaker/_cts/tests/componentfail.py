@@ -106,7 +106,7 @@ class ComponentFail(CTSTest):
 
         # set the watch for stable
         watch = self.create_watch(
-            tmp_pats, self._env["dead_time"] + self._env["StableTime"] + self._env["StartTime"])
+            tmp_pats, self._env["dead_time"] + self._env["StableTime"] + self._env["start_time"])
 
         watch.set_watch()
 
@@ -120,7 +120,7 @@ class ComponentFail(CTSTest):
         self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
-        self._cm.cluster_stable(self._env["StartTime"])
+        self._cm.cluster_stable(self._env["start_time"])
 
         self.debug(f"Checking if {node} was shot")
         shot = stonith.look(60)
@@ -142,7 +142,7 @@ class ComponentFail(CTSTest):
             self._logger.log(f"Patterns not found: {watch.unmatched!r}")
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
-        is_stable = self._cm.cluster_stable(self._env["StartTime"])
+        is_stable = self._cm.cluster_stable(self._env["start_time"])
 
         if not matched:
             return self.failure(f"Didn't find all expected {chosen.name} patterns")

@@ -62,7 +62,7 @@ class StonithdTest(CTSTest):
             ])
 
         watch = self.create_watch(watchpats,
-                                  30 + self._env["dead_time"] + self._env["StableTime"] + self._env["StartTime"])
+                                  30 + self._env["dead_time"] + self._env["StableTime"] + self._env["start_time"])
         watch.set_watch()
 
         origin = self._env.random_gen.choice(self._env["nodes"])
@@ -108,7 +108,7 @@ class StonithdTest(CTSTest):
         self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
-        is_stable = self._cm.cluster_stable(self._env["StartTime"])
+        is_stable = self._cm.cluster_stable(self._env["start_time"])
 
         if not matched:
             return self.failure("Didn't find all expected patterns")
