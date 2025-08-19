@@ -233,7 +233,7 @@ class ClusterManager(UserDict):
             self.log(f"Node {node} is not up.")
             return
 
-        if node in self._cib_sync or not self.env["ClobberCIB"]:
+        if node in self._cib_sync or not self.env["overwrite_cib"]:
             return
 
         self._cib_sync[node] = True
