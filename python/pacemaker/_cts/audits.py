@@ -531,9 +531,11 @@ class PrimitiveAudit(ClusterAudit):
         if not self._setup():
             return passed
 
+        primitives = [r for r in self._resources if r.type == "primitive"]
         quorum = self._cm.has_quorum(None)
-        for resource in self._resources:
-            if resource.type == "primitive" and not self._audit_resource(resource, quorum):
+
+        for primitive in primitives:
+            if not self._audit_resource(primitive, quorum):
                 passed = False
 
         return passed
@@ -573,17 +575,14 @@ class GroupAudit(PrimitiveAudit):
         if not self._setup():
             return passed
 
-        for group in self._resources:
-            if group.type != "group":
-                continue
+        groups = [r for r in self._resources if r.type == "group"]
 
+        for group in groups:
             first_match = True
             group_location = None
+            children = [r for r in self._resources if r.parent == group.id]
 
-            for child in self._resources:
-                if child.parent != group.id:
-                    continue
-
+            for child in children:
                 nodes = self._cm.resource_location(child.id)
 
                 if first_match and len(nodes) > 0:
@@ -634,17 +633,18 @@ class CloneAudit(PrimitiveAudit):
         if not self._setup():
             return passed
 
-        for clone in self._resources:
-            if clone.type != "clone":
-                continue
+        clones = [r for r in self._resources if r.type == "clone"]
 
-            for child in self._resources:
-                if child.parent == clone.id and child.type == "primitive":
-                    self.debug(f"Checking child {child.id} of {clone.id}...")
-                    # Check max and node_max
-                    # Obtain with:
-                    #    crm_resource -g clone_max --meta -r child.id
-                    #    crm_resource -g clone_node_max --meta -r child.id
+        for clone in clones:
+            children = [r for r in self._resources
+                        if r.parent == clone.id and r.type == "primitive"]
+
+            for child in children:
+                self.debug(f"Checking child {child.id} of {clone.id}...")
+                # Check max and node_max
+                # Obtain with:
+                #    crm_resource -g clone_max --meta -r child.id
+                #    crm_resource -g clone_node_max --meta -r child.id
 
         return passed
 
