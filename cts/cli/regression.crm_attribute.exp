@@ -68,7 +68,7 @@ Also known as properties, these are options that affect behavior across the enti
   * enable-startup-probes: Whether the cluster should check for active resources during start-up
     * Possible values: boolean (default: )
 
-  * stonith-action: Action to send to fence device when a node needs to be fenced
+  * fencing-action: Action to send to fence device when a node needs to be fenced
     * Possible values: "reboot" (default), "off"
 
   * stonith-timeout: How long to wait for on, off, and reboot fence actions to complete by default
@@ -290,9 +290,20 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Deprecated alias for fencing-enabled</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stonith-action" advanced="0" generated="0">
+      <parameter name="fencing-action" advanced="0" generated="0">
         <longdesc lang="en">Action to send to fence device when a node needs to be fenced</longdesc>
         <shortdesc lang="en">Action to send to fence device when a node needs to be fenced</shortdesc>
+        <content type="select" default="">
+          <option value="reboot"/>
+          <option value="off"/>
+        </content>
+      </parameter>
+      <parameter name="stonith-action" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-action"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-action</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-action</shortdesc>
         <content type="select" default="">
           <option value="reboot"/>
           <option value="off"/>
@@ -518,7 +529,7 @@ Also known as properties, these are options that affect behavior across the enti
   * enable-startup-probes: Whether the cluster should check for active resources during start-up
     * Possible values: boolean (default: )
 
-  * stonith-action: Action to send to fence device when a node needs to be fenced
+  * fencing-action: Action to send to fence device when a node needs to be fenced
     * Possible values: "reboot" (default), "off"
 
   * stonith-timeout: How long to wait for on, off, and reboot fence actions to complete by default
@@ -646,6 +657,9 @@ Also known as properties, these are options that affect behavior across the enti
 
     * stonith-enabled: Deprecated alias for fencing-enabled
       * Possible values: boolean (default: )
+
+    * stonith-action: Deprecated alias for fencing-action
+      * Possible values: "reboot" (default), "off"
 
     * stop-orphan-resources: Deprecated alias for stop-removed-resources
       * Possible values: boolean (default: )
@@ -784,9 +798,20 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Deprecated alias for fencing-enabled</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stonith-action" advanced="0" generated="0">
+      <parameter name="fencing-action" advanced="0" generated="0">
         <longdesc lang="en">Action to send to fence device when a node needs to be fenced</longdesc>
         <shortdesc lang="en">Action to send to fence device when a node needs to be fenced</shortdesc>
+        <content type="select" default="">
+          <option value="reboot"/>
+          <option value="off"/>
+        </content>
+      </parameter>
+      <parameter name="stonith-action" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-action"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-action</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-action</shortdesc>
         <content type="select" default="">
           <option value="reboot"/>
           <option value="off"/>

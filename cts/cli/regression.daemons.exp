@@ -541,12 +541,24 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stonith-action">
+    <parameter name="fencing-action">
       <longdesc lang="en">
         Action to send to fence device when a node needs to be fenced  Allowed values: reboot, off
       </longdesc>
       <shortdesc lang="en">
         Action to send to fence device when a node needs to be fenced
+      </shortdesc>
+      <content type="select" default="">
+        <option value="reboot"/>
+        <option value="off"/>
+      </content>
+    </parameter>
+    <parameter name="stonith-action">
+      <longdesc lang="en">
+        Deprecated alias for fencing-action  Allowed values: reboot, off
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-action ***
       </shortdesc>
       <content type="select" default="">
         <option value="reboot"/>
