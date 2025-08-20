@@ -289,7 +289,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -316,7 +316,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'off' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'off' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -343,7 +343,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'on' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'on' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -370,7 +370,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'list' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'list' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -397,7 +397,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -424,7 +424,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'status' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'status' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -574,12 +574,21 @@
         <option value="off"/>
       </content>
     </parameter>
-    <parameter name="stonith-timeout">
+    <parameter name="fencing-timeout">
       <longdesc lang="en">
         How long to wait for on, off, and reboot fence actions to complete by default
       </longdesc>
       <shortdesc lang="en">
         How long to wait for on, off, and reboot fence actions to complete by default
+      </shortdesc>
+      <content type="time" default=""/>
+    </parameter>
+    <parameter name="stonith-timeout">
+      <longdesc lang="en">
+        Deprecated alias for fencing-timeout
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-timeout ***
       </shortdesc>
       <content type="time" default=""/>
     </parameter>

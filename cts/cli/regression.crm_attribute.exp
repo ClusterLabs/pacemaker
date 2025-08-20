@@ -71,7 +71,7 @@ Also known as properties, these are options that affect behavior across the enti
   * fencing-action: Action to send to fence device when a node needs to be fenced
     * Possible values: "reboot" (default), "off"
 
-  * stonith-timeout: How long to wait for on, off, and reboot fence actions to complete by default
+  * fencing-timeout: How long to wait for on, off, and reboot fence actions to complete by default
     * Possible values: duration (default: )
 
   * have-watchdog: Whether watchdog integration is enabled
@@ -309,9 +309,17 @@ Also known as properties, these are options that affect behavior across the enti
           <option value="off"/>
         </content>
       </parameter>
-      <parameter name="stonith-timeout" advanced="0" generated="0">
+      <parameter name="fencing-timeout" advanced="0" generated="0">
         <longdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</longdesc>
         <shortdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</shortdesc>
+        <content type="duration" default=""/>
+      </parameter>
+      <parameter name="stonith-timeout" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-timeout"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-timeout</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-timeout</shortdesc>
         <content type="duration" default=""/>
       </parameter>
       <parameter name="have-watchdog" advanced="0" generated="1">
@@ -540,7 +548,7 @@ Also known as properties, these are options that affect behavior across the enti
   * fencing-action: Action to send to fence device when a node needs to be fenced
     * Possible values: "reboot" (default), "off"
 
-  * stonith-timeout: How long to wait for on, off, and reboot fence actions to complete by default
+  * fencing-timeout: How long to wait for on, off, and reboot fence actions to complete by default
     * Possible values: duration (default: )
 
   * have-watchdog: Whether watchdog integration is enabled
@@ -668,6 +676,9 @@ Also known as properties, these are options that affect behavior across the enti
 
     * stonith-action: Deprecated alias for fencing-action
       * Possible values: "reboot" (default), "off"
+
+    * stonith-timeout: Deprecated alias for fencing-timeout
+      * Possible values: duration (default: )
 
     * stonith-max-attempts: Deprecated alias for fencing-max-attempts
       * Possible values: score (default: )
@@ -828,9 +839,17 @@ Also known as properties, these are options that affect behavior across the enti
           <option value="off"/>
         </content>
       </parameter>
-      <parameter name="stonith-timeout" advanced="0" generated="0">
+      <parameter name="fencing-timeout" advanced="0" generated="0">
         <longdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</longdesc>
         <shortdesc lang="en">How long to wait for on, off, and reboot fence actions to complete by default</shortdesc>
+        <content type="duration" default=""/>
+      </parameter>
+      <parameter name="stonith-timeout" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-timeout"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-timeout</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-timeout</shortdesc>
         <content type="duration" default=""/>
       </parameter>
       <parameter name="have-watchdog" advanced="0" generated="1">
