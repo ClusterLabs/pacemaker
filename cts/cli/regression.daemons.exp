@@ -155,7 +155,7 @@
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
-    <parameter name="stonith-max-attempts">
+    <parameter name="fencing-max-attempts">
       <longdesc lang="en">
         How many times fencing can fail before it will no longer be immediately re-attempted on a target
       </longdesc>
