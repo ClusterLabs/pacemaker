@@ -532,7 +532,7 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stonith-action">
+    <parameter name="fencing-action">
       <longdesc lang="en">
         Action to send to fence device when a node needs to be fenced  Allowed values: reboot, off
       </longdesc>
