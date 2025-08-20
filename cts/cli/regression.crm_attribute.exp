@@ -82,7 +82,7 @@ Also known as properties, these are options that affect behavior across the enti
     * If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.
     * Possible values: timeout (default: )
 
-  * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
+  * fencing-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
     * Possible values: score (default: )
 
   * priority-fencing-delay: Apply fencing delay targeting the lost nodes with the highest total resource priority
@@ -324,9 +324,17 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">How long before nodes can be assumed to be safely down when watchdog-based self-fencing via SBD is in use</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
-      <parameter name="stonith-max-attempts" advanced="0" generated="0">
+      <parameter name="fencing-max-attempts" advanced="0" generated="0">
         <longdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</longdesc>
         <shortdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</shortdesc>
+        <content type="score" default=""/>
+      </parameter>
+      <parameter name="stonith-max-attempts" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-max-attempts"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-max-attempts</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-max-attempts</shortdesc>
         <content type="score" default=""/>
       </parameter>
       <parameter name="concurrent-fencing" advanced="0" generated="0">
@@ -543,7 +551,7 @@ Also known as properties, these are options that affect behavior across the enti
     * If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.
     * Possible values: timeout (default: )
 
-  * stonith-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
+  * fencing-max-attempts: How many times fencing can fail before it will no longer be immediately re-attempted on a target
     * Possible values: score (default: )
 
   * priority-fencing-delay: Apply fencing delay targeting the lost nodes with the highest total resource priority
@@ -660,6 +668,9 @@ Also known as properties, these are options that affect behavior across the enti
 
     * stonith-action: Deprecated alias for fencing-action
       * Possible values: "reboot" (default), "off"
+
+    * stonith-max-attempts: Deprecated alias for fencing-max-attempts
+      * Possible values: score (default: )
 
     * stop-orphan-resources: Deprecated alias for stop-removed-resources
       * Possible values: boolean (default: )
@@ -832,9 +843,17 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">How long before nodes can be assumed to be safely down when watchdog-based self-fencing via SBD is in use</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
-      <parameter name="stonith-max-attempts" advanced="0" generated="0">
+      <parameter name="fencing-max-attempts" advanced="0" generated="0">
         <longdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</longdesc>
         <shortdesc lang="en">How many times fencing can fail before it will no longer be immediately re-attempted on a target</shortdesc>
+        <content type="score" default=""/>
+      </parameter>
+      <parameter name="stonith-max-attempts" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-max-attempts"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-max-attempts</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-max-attempts</shortdesc>
         <content type="score" default=""/>
       </parameter>
       <parameter name="concurrent-fencing" advanced="0" generated="0">
