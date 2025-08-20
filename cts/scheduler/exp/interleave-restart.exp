@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
+<transition_graph cluster-delay="60s" fencing-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="71" operation="notify" operation_key="evmsclone:1_post_notify_stop_0" internal_operation_key="evmsclone:0_post_notify_stop_0" on_node="node2" on_node_uuid="2529f279-adaf-4ff5-9198-4646e845c5a5">

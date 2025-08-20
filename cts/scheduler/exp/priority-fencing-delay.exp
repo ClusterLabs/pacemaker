@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
+<transition_graph cluster-delay="60s" fencing-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="100">
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="vm-fs_monitor_20000" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01" router_node="kiff-02">
