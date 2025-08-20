@@ -64,6 +64,23 @@ const char *crm_element_value(const xmlNode *data, const char *name);
 //! \deprecated Do not use
 char *crm_element_value_copy(const xmlNode *data, const char *name);
 
+//! \deprecated Do not use
+const char *crm_xml_add_timeval(xmlNode *xml, const char *name_sec,
+                                const char *name_usec,
+                                const struct timeval *value);
+
+//! \deprecated Do not use
+const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);
+
+//! \deprecated Do not use
+const char *crm_xml_add_ll(xmlNode *node, const char *name, long long value);
+
+//! \deprecated Do not use
+const char *crm_xml_add_int(xmlNode *node, const char *name, int value);
+
+//! \deprecated Do not use
+const char *crm_xml_add(xmlNode *node, const char *name, const char *value);
+
 #ifdef __cplusplus
 }
 #endif

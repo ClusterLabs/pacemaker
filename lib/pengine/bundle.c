@@ -314,10 +314,10 @@ create_resource(const char *name, const char *provider, const char *kind)
 {
     xmlNode *rsc = pcmk__xe_create(NULL, PCMK_XE_PRIMITIVE);
 
-    crm_xml_add(rsc, PCMK_XA_ID, name);
-    crm_xml_add(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(rsc, PCMK_XA_PROVIDER, provider);
-    crm_xml_add(rsc, PCMK_XA_TYPE, kind);
+    pcmk__xe_set(rsc, PCMK_XA_ID, name);
+    pcmk__xe_set(rsc, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    pcmk__xe_set(rsc, PCMK_XA_PROVIDER, provider);
+    pcmk__xe_set(rsc, PCMK_XA_TYPE, kind);
 
     return rsc;
 }
@@ -757,6 +757,9 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
             return pcmk_rc_unpack_error;
         }
 
+        // Make Coverity happy
+        pcmk__assert(replica->remote != NULL);
+
         g_hash_table_iter_init(&gIter, replica->remote->priv->allowed_nodes);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
             if (pcmk__is_pacemaker_remote_node(node)) {
@@ -941,7 +944,7 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
     crm_trace("Setting address for bundle connection %s to bundle host %s",
               rsc->id, pcmk__node_name(node));
     if(xml != NULL && field != NULL) {
-        crm_xml_add(xml, field, node->priv->name);
+        pcmk__xe_set(xml, field, node->priv->name);
     }
 
     return node->priv->name;
@@ -1143,7 +1146,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
             free(value);
         }
 
-        //crm_xml_add(xml_obj, PCMK_XA_ID, bundle_data->prefix);
+        //pcmk__xe_set(xml_obj, PCMK_XA_ID, bundle_data->prefix);
         pcmk__xml_copy(xml_resource, xml_obj);
 
     } else if(xml_obj) {

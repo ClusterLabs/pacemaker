@@ -136,10 +136,10 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     remote = pcmk__xe_create(parent, PCMK_XE_PRIMITIVE);
 
     // Add identity
-    crm_xml_add(remote, PCMK_XA_ID, uname);
-    crm_xml_add(remote, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(remote, PCMK_XA_PROVIDER, "pacemaker");
-    crm_xml_add(remote, PCMK_XA_TYPE, "remote");
+    pcmk__xe_set(remote, PCMK_XA_ID, uname);
+    pcmk__xe_set(remote, PCMK_XA_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    pcmk__xe_set(remote, PCMK_XA_PROVIDER, "pacemaker");
+    pcmk__xe_set(remote, PCMK_XA_TYPE, "remote");
 
     // Add meta-attributes
     xml_sub = pcmk__xe_create(remote, PCMK_XE_META_ATTRIBUTES);

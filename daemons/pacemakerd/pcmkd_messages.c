@@ -55,11 +55,10 @@ handle_ping_request(pcmk__request_t *request)
 
     ping = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
     value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
-    crm_xml_add(ping, PCMK__XA_CRM_SUBSYSTEM, value);
-    crm_xml_add(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);
-    crm_xml_add_ll(ping, PCMK__XA_CRM_TIMESTAMP,
-                   (long long) subdaemon_check_progress);
-    crm_xml_add(ping, PCMK_XA_RESULT, "ok");
+    pcmk__xe_set(ping, PCMK__XA_CRM_SUBSYSTEM, value);
+    pcmk__xe_set(ping, PCMK__XA_PACEMAKERD_STATE, pacemakerd_state);
+    pcmk__xe_set_time(ping, PCMK__XA_CRM_TIMESTAMP, subdaemon_check_progress);
+    pcmk__xe_set(ping, PCMK_XA_RESULT, "ok");
     reply = pcmk__new_reply(msg, ping);
 
     pcmk__xml_free(ping);
@@ -116,11 +115,12 @@ handle_shutdown_request(pcmk__request_t *request)
         crm_notice("Shutting down in response to IPC request %s from %s",
                    pcmk__xe_get(msg, PCMK_XA_REFERENCE),
                    pcmk__xe_get(msg, PCMK_XA_ORIGIN));
-        crm_xml_add_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_OK);
+        pcmk__xe_set_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_OK);
     } else {
         crm_warn("Ignoring shutdown request from unprivileged client %s",
                  pcmk__client_name(request->ipc_client));
-        crm_xml_add_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_INSUFFICIENT_PRIV);
+        pcmk__xe_set_int(shutdown, PCMK__XA_OP_STATUS,
+                         CRM_EX_INSUFFICIENT_PRIV);
     }
 
     reply = pcmk__new_reply(msg, shutdown);

@@ -220,9 +220,9 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             if (pcmk__str_eq(node_type, PCMK_VALUE_REMOTE, pcmk__str_casei)) {
                 xml_top = pcmk__xe_create(xml_obj, PCMK_XE_NODES);
                 xml_obj = pcmk__xe_create(xml_top, PCMK_XE_NODE);
-                crm_xml_add(xml_obj, PCMK_XA_TYPE, PCMK_VALUE_REMOTE);
-                crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
-                crm_xml_add(xml_obj, PCMK_XA_UNAME, node_uuid);
+                pcmk__xe_set(xml_obj, PCMK_XA_TYPE, PCMK_VALUE_REMOTE);
+                pcmk__xe_set(xml_obj, PCMK_XA_ID, node_uuid);
+                pcmk__xe_set(xml_obj, PCMK_XA_UNAME, node_uuid);
             } else {
                 tag = PCMK_XE_NODE;
             }
@@ -234,7 +234,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
             }
 
             xml_top = pcmk__xe_create(xml_obj, PCMK__XE_NODE_STATE);
-            crm_xml_add(xml_top, PCMK_XA_ID, node_uuid);
+            pcmk__xe_set(xml_top, PCMK_XA_ID, node_uuid);
             xml_obj = xml_top;
 
         } else {
@@ -280,7 +280,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         crm_trace("Creating %s/%s", section, tag);
         if (tag != NULL) {
             xml_obj = pcmk__xe_create(xml_obj, tag);
-            crm_xml_add(xml_obj, PCMK_XA_ID, node_uuid);
+            pcmk__xe_set(xml_obj, PCMK_XA_ID, node_uuid);
             if (xml_top == NULL) {
                 xml_top = xml_obj;
             }
@@ -302,7 +302,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
         } else {
             xml_obj = pcmk__xe_create(xml_obj, PCMK_XE_INSTANCE_ATTRIBUTES);
         }
-        crm_xml_add(xml_obj, PCMK_XA_ID, set_name);
+        pcmk__xe_set(xml_obj, PCMK_XA_ID, set_name);
 
         if (xml_top == NULL) {
             xml_top = xml_obj;

@@ -39,7 +39,7 @@ no_source_attrs(void **state)
     assert_ptr_equal(target->properties, NULL);
 
     // Ensure copying from empty source doesn't delete target attributes
-    crm_xml_add(target, "attr", "value");
+    pcmk__xe_set(target, "attr", "value");
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);
     assert_string_equal(pcmk__xe_get(target, "attr"), "value");
@@ -54,7 +54,7 @@ copy_one(void **state)
     xmlNode *src = pcmk__xe_create(NULL, "test");
     xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    crm_xml_add(src, "attr", "value");
+    pcmk__xe_set(src, "attr", "value");
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);
@@ -96,8 +96,8 @@ overwrite(void **state)
     xmlNode *src = pcmk__xe_create(NULL, "test");
     xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    crm_xml_add(src, "attr", "src_value");
-    crm_xml_add(target, "attr", "target_value");
+    pcmk__xe_set(src, "attr", "src_value");
+    pcmk__xe_set(target, "attr", "target_value");
 
     // Overwrite enabled by default
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
@@ -114,8 +114,8 @@ no_overwrite(void **state)
     xmlNode *src = pcmk__xe_create(NULL, "test");
     xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    crm_xml_add(src, "attr", "src_value");
-    crm_xml_add(target, "attr", "target_value");
+    pcmk__xe_set(src, "attr", "src_value");
+    pcmk__xe_set(target, "attr", "target_value");
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_no_overwrite),
                      pcmk_rc_ok);
@@ -140,10 +140,10 @@ score_update(void **state)
     xmlNode *src = pcmk__xe_create(NULL, "test");
     xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    crm_xml_add(src, "plus_plus_attr", "plus_plus_attr++");
-    crm_xml_add(src, "plus_two_attr", "plus_two_attr+=2");
-    crm_xml_add(target, "plus_plus_attr", "1");
-    crm_xml_add(target, "plus_two_attr", "1");
+    pcmk__xe_set(src, "plus_plus_attr", "plus_plus_attr++");
+    pcmk__xe_set(src, "plus_two_attr", "plus_two_attr+=2");
+    pcmk__xe_set(target, "plus_plus_attr", "1");
+    pcmk__xe_set(target, "plus_two_attr", "1");
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_score_update),
                      pcmk_rc_ok);
@@ -160,10 +160,10 @@ no_score_update(void **state)
     xmlNode *src = pcmk__xe_create(NULL, "test");
     xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    crm_xml_add(src, "plus_plus_attr", "plus_plus_attr++");
-    crm_xml_add(src, "plus_two_attr", "plus_two_attr+=2");
-    crm_xml_add(target, "plus_plus_attr", "1");
-    crm_xml_add(target, "plus_two_attr", "1");
+    pcmk__xe_set(src, "plus_plus_attr", "plus_plus_attr++");
+    pcmk__xe_set(src, "plus_two_attr", "plus_two_attr+=2");
+    pcmk__xe_set(target, "plus_plus_attr", "1");
+    pcmk__xe_set(target, "plus_two_attr", "1");
 
     // Score update disabled by default
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),

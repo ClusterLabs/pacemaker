@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,7 @@ assert_flags(const char *value, int expected_rc, unsigned int expected_flags)
     xmlNode *xml = pcmk__xe_create(NULL, "element");
 
     assert_non_null(xml);
-    crm_xml_add(xml, "attribute", value);
+    pcmk__xe_set(xml, "attribute", value);
 
     // Without output argument
     assert_int_equal(pcmk__xe_get_flags(xml, "attribute", NULL, DEFAULT_VALUE),

@@ -400,7 +400,7 @@ unpack_rsc_ticket_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
             /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as a
              * PCMK_XA_ROLE attribute
              */
-            crm_xml_add(rsc_set, PCMK_XA_ROLE, state);
+            pcmk__xe_set(rsc_set, PCMK_XA_ROLE, state);
             pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_RSC_ROLE);
         }
 

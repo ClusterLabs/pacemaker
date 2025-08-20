@@ -2276,7 +2276,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     // PCMK__XA_ST_REQUIRED is currently used only for unfencing
     if (is_action_required(action, device)) {
         crm_trace("Action '%s' is required using %s", action, device->id);
-        crm_xml_add_int(xml, PCMK__XA_ST_REQUIRED, 1);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_REQUIRED, 1);
     }
 
     // pcmk_<action>_timeout if configured
@@ -2284,20 +2284,20 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
     if (action_specific_timeout) {
         crm_trace("Action '%s' has timeout %ds using %s",
                   action, action_specific_timeout, device->id);
-        crm_xml_add_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
-                        action_specific_timeout);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_ACTION_TIMEOUT,
+                         action_specific_timeout);
     }
 
     delay_max = get_action_delay_max(device, action);
     if (delay_max > 0) {
         crm_trace("Action '%s' has maximum random delay %ds using %s",
                   action, delay_max, device->id);
-        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_MAX, delay_max);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_DELAY_MAX, delay_max);
     }
 
     delay_base = get_action_delay_base(device, action, target);
     if (delay_base > 0) {
-        crm_xml_add_int(xml, PCMK__XA_ST_DELAY_BASE, delay_base);
+        pcmk__xe_set_int(xml, PCMK__XA_ST_DELAY_BASE, delay_base);
     }
 
     if ((delay_max > 0) && (delay_base == 0)) {
@@ -2351,7 +2351,7 @@ add_action_reply(xmlNode *xml, const char *action,
 {
     xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
-    crm_xml_add(child, PCMK_XA_ID, action);
+    pcmk__xe_set(child, PCMK_XA_ID, action);
     add_action_specific_attributes(child, action, device, target);
     add_disallowed(child, action, device, target, allow_self);
 }
@@ -2405,7 +2405,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     // Pack the results into XML
     wrapper = pcmk__xe_create(query->reply, PCMK__XE_ST_CALLDATA);
     list = pcmk__xe_create(wrapper, __func__);
-    crm_xml_add(list, PCMK__XA_ST_TARGET, query->target);
+    pcmk__xe_set(list, PCMK__XA_ST_TARGET, query->target);
 
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         fenced_device_t *device = g_hash_table_lookup(device_table, lpc->data);
@@ -2421,15 +2421,15 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         available_devices++;
 
         dev = pcmk__xe_create(list, PCMK__XE_ST_DEVICE_ID);
-        crm_xml_add(dev, PCMK_XA_ID, device->id);
-        crm_xml_add(dev, PCMK__XA_NAMESPACE, device->namespace);
-        crm_xml_add(dev, PCMK_XA_AGENT, device->agent);
+        pcmk__xe_set(dev, PCMK_XA_ID, device->id);
+        pcmk__xe_set(dev, PCMK__XA_NAMESPACE, device->namespace);
+        pcmk__xe_set(dev, PCMK_XA_AGENT, device->agent);
 
         // Has had successful monitor, list, or status on this node
-        crm_xml_add_int(dev, PCMK__XA_ST_MONITOR_VERIFIED,
-                        pcmk_is_set(device->flags, fenced_df_verified));
+        pcmk__xe_set_int(dev, PCMK__XA_ST_MONITOR_VERIFIED,
+                         pcmk_is_set(device->flags, fenced_df_verified));
 
-        crm_xml_add_int(dev, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, device->flags);
+        pcmk__xe_set_int(dev, PCMK__XA_ST_DEVICE_SUPPORT_FLAGS, device->flags);
 
         /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
@@ -2473,7 +2473,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         }
     }
 
-    crm_xml_add_int(list, PCMK__XA_ST_AVAILABLE_DEVICES, available_devices);
+    pcmk__xe_set_int(list, PCMK__XA_ST_AVAILABLE_DEVICES, available_devices);
     if (query->target) {
         crm_debug("Found %d matching device%s for target '%s'",
                   available_devices, pcmk__plural_s(available_devices),
@@ -2626,8 +2626,8 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
          */
         crm_trace("Broadcast '%s' result for %s (target was also originator)",
                   cmd->action, cmd->target);
-        crm_xml_add(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
-        crm_xml_add(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
+        pcmk__xe_set(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
+        pcmk__xe_set(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
         pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, reply);
     } else {
         // Reply only to the originator
@@ -2914,8 +2914,8 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
 
     reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
-    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    pcmk__xe_set(reply, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     stonith__xe_set_result(reply, result);
 
     if (request == NULL) {
@@ -2946,7 +2946,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
         for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
             name = names[lpc];
             value = pcmk__xe_get(request, name);
-            crm_xml_add(reply, name, value);
+            pcmk__xe_set(reply, name, value);
         }
         if (data != NULL) {
             xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_ST_CALLDATA);
@@ -2970,18 +2970,18 @@ construct_async_reply(const async_command_t *cmd,
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_ST_REPLY);
 
-    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-    crm_xml_add(reply, PCMK__XA_ST_OP, cmd->op);
-    crm_xml_add(reply, PCMK__XA_ST_DEVICE_ID, cmd->device);
-    crm_xml_add(reply, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
-    crm_xml_add(reply, PCMK__XA_ST_CLIENTID, cmd->client);
-    crm_xml_add(reply, PCMK__XA_ST_CLIENTNAME, cmd->client_name);
-    crm_xml_add(reply, PCMK__XA_ST_TARGET, cmd->target);
-    crm_xml_add(reply, PCMK__XA_ST_DEVICE_ACTION, cmd->op);
-    crm_xml_add(reply, PCMK__XA_ST_ORIGIN, cmd->origin);
-    crm_xml_add_int(reply, PCMK__XA_ST_CALLID, cmd->id);
-    crm_xml_add_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
+    pcmk__xe_set(reply, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    pcmk__xe_set(reply, PCMK__XA_ST_OP, cmd->op);
+    pcmk__xe_set(reply, PCMK__XA_ST_DEVICE_ID, cmd->device);
+    pcmk__xe_set(reply, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
+    pcmk__xe_set(reply, PCMK__XA_ST_CLIENTID, cmd->client);
+    pcmk__xe_set(reply, PCMK__XA_ST_CLIENTNAME, cmd->client_name);
+    pcmk__xe_set(reply, PCMK__XA_ST_TARGET, cmd->target);
+    pcmk__xe_set(reply, PCMK__XA_ST_DEVICE_ACTION, cmd->op);
+    pcmk__xe_set(reply, PCMK__XA_ST_ORIGIN, cmd->origin);
+    pcmk__xe_set_int(reply, PCMK__XA_ST_CALLID, cmd->id);
+    pcmk__xe_set_int(reply, PCMK__XA_ST_CALLOPT, cmd->options);
 
     stonith__xe_set_result(reply, result);
     return reply;
@@ -3124,8 +3124,8 @@ handle_register_request(pcmk__request_t *request)
     xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
     pcmk__assert(request->ipc_client != NULL);
-    crm_xml_add(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
-    crm_xml_add(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
+    pcmk__xe_set(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     pcmk__set_request_flags(request, pcmk__request_reuse_options);
     return reply;
@@ -3335,10 +3335,10 @@ handle_fence_request(pcmk__request_t *request)
              */
             op = create_remote_stonith_op(client_id, request->xml, FALSE);
 
-            crm_xml_add(request->xml, PCMK__XA_ST_OP, STONITH_OP_RELAY);
-            crm_xml_add(request->xml, PCMK__XA_ST_CLIENTID,
-                        request->ipc_client->id);
-            crm_xml_add(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
+            pcmk__xe_set(request->xml, PCMK__XA_ST_OP, STONITH_OP_RELAY);
+            pcmk__xe_set(request->xml, PCMK__XA_ST_CLIENTID,
+                         request->ipc_client->id);
+            pcmk__xe_set(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
 
             // @TODO On failure, fail request immediately, or maybe panic
             pcmk__cluster_send_message(node, pcmk_ipc_fenced, request->xml);

@@ -33,7 +33,7 @@ assert_set_score(const char *initial, const char *new,
     const char *name = "X";
     xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
 
-    crm_xml_add(test_xml, name, initial);
+    pcmk__xe_set(test_xml, name, initial);
     assert_int_equal(pcmk__xe_set_score(test_xml, name, new), reference_rc);
     assert_string_equal(pcmk__xe_get(test_xml, name), reference_val);
 
@@ -66,7 +66,7 @@ name_is_NULL(void **state)
 {
     xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
 
-    crm_xml_add(test_xml, "X", "5");
+    pcmk__xe_set(test_xml, "X", "5");
 
     // Dumps core via CRM_CHECK()
     assert_int_equal(pcmk__xe_set_score(test_xml, NULL, "X++"), EINVAL);

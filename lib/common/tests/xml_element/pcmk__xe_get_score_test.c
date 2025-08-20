@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,7 @@ assert_score(const char *score_s, int expected_rc, int expected_score)
     int rc = pcmk_rc_ok;
     xmlNode *xml = pcmk__xe_create(NULL, __func__);
 
-    crm_xml_add(xml, "test_attr", score_s);
+    pcmk__xe_set(xml, "test_attr", score_s);
     rc = pcmk__xe_get_score(xml, "test_attr", &score, default_score);
     assert_int_equal(rc, expected_rc);
     assert_int_equal(score, expected_score);
@@ -73,11 +73,11 @@ null_score(void **state)
     assert_int_equal(pcmk__xe_get_score(xml, "test_attr", NULL, default_score),
                      pcmk_rc_ok);
 
-    crm_xml_add(xml, "test_attr", "0");
+    pcmk__xe_set(xml, "test_attr", "0");
     assert_int_equal(pcmk__xe_get_score(xml, "test_attr", NULL, default_score),
                      pcmk_rc_ok);
 
-    crm_xml_add(xml, "test_attr", "foo");
+    pcmk__xe_set(xml, "test_attr", "foo");
     assert_int_equal(pcmk__xe_get_score(xml, "test_attr", NULL, default_score),
                      pcmk_rc_bad_input);
 

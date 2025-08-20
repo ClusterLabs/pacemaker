@@ -308,14 +308,15 @@ election_vote(pcmk_cluster_t *cluster)
                              NULL, message_type, CRM_OP_VOTE, NULL);
 
     cluster->priv->election->count++;
-    crm_xml_add(vote, PCMK__XA_ELECTION_OWNER,
-                pcmk__cluster_get_xml_id(our_node));
-    crm_xml_add_int(vote, PCMK__XA_ELECTION_ID, cluster->priv->election->count);
+    pcmk__xe_set(vote, PCMK__XA_ELECTION_OWNER,
+                 pcmk__cluster_get_xml_id(our_node));
+    pcmk__xe_set_int(vote, PCMK__XA_ELECTION_ID,
+                     cluster->priv->election->count);
 
     // Warning: PCMK__XA_ELECTION_AGE_NANO_SEC value is actually microseconds
     get_uptime(&age);
-    crm_xml_add_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
-                        PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
+    pcmk__xe_set_timeval(vote, PCMK__XA_ELECTION_AGE_SEC,
+                         PCMK__XA_ELECTION_AGE_NANO_SEC, &age);
 
     pcmk__cluster_send_message(NULL, cluster->priv->server, vote);
     pcmk__xml_free(vote);
@@ -501,8 +502,8 @@ send_no_vote(pcmk_cluster_t *cluster, pcmk__node_status_t *peer,
     message_type = pcmk__server_message_type(cluster->priv->server);
     novote = pcmk__new_request(cluster->priv->server, message_type,
                                vote->from, message_type, CRM_OP_NOVOTE, NULL);
-    crm_xml_add(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
-    crm_xml_add_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
+    pcmk__xe_set(novote, PCMK__XA_ELECTION_OWNER, vote->election_owner);
+    pcmk__xe_set_int(novote, PCMK__XA_ELECTION_ID, vote->election_id);
 
     pcmk__cluster_send_message(peer, cluster->priv->server, novote);
     pcmk__xml_free(novote);

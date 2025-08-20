@@ -21,7 +21,6 @@
 #include <libxml/xmlstring.h>           // xmlChar
 
 #include <crm/crm.h>
-#include <crm/common/nvpair.h>          // crm_xml_add(), etc.
 #include <crm/common/results.h>         // pcmk_rc_ok, etc.
 #include <crm/common/xml.h>
 #include "crmcommon_private.h"
@@ -221,14 +220,14 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
                 }
             }
 
-            crm_xml_add_int(target, name, pcmk__add_scores(old_value_i, add));
+            pcmk__xe_set_int(target, name, pcmk__add_scores(old_value_i, add));
             return pcmk_rc_ok;
         }
     }
 
     // Default case: set the attribute unexpanded (with value treated literally)
     if (old_value != value) {
-        crm_xml_add(target, name, value);
+        pcmk__xe_set(target, name, value);
     }
     return pcmk_rc_ok;
 }
@@ -265,7 +264,7 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
         if (pcmk_is_set(flags, pcmk__xaf_score_update)) {
             pcmk__xe_set_score(target, name, value);
         } else {
-            crm_xml_add(target, name, value);
+            pcmk__xe_set(target, name, value);
         }
     }
 
@@ -510,7 +509,7 @@ pcmk__xe_set_id(xmlNode *node, const char *format, ...)
     if (!xmlValidateNameValue((const xmlChar *) id)) {
         pcmk__xml_sanitize_id(id);
     }
-    crm_xml_add(node, PCMK_XA_ID, id);
+    pcmk__xe_set(node, PCMK_XA_ID, id);
     free(id);
 }
 
@@ -526,12 +525,11 @@ const char *
 pcmk__xe_add_last_written(xmlNode *xe)
 {
     char *now_s = pcmk__epoch2str(NULL, 0);
-    const char *result = NULL;
 
-    result = crm_xml_add(xe, PCMK_XA_CIB_LAST_WRITTEN,
-                         pcmk__s(now_s, "Could not determine current time"));
+    pcmk__xe_set(xe, PCMK_XA_CIB_LAST_WRITTEN,
+                 pcmk__s(now_s, "Could not determine current time"));
     free(now_s);
-    return result;
+    return pcmk__xe_get(xe, PCMK_XA_CIB_LAST_WRITTEN);
 }
 
 /*!
@@ -960,9 +958,7 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs)
         }
 
         value = va_arg(pairs, const char *);
-        if (value != NULL) {
-            crm_xml_add(node, name, value);
-        }
+        pcmk__xe_set(node, name, value);
     }
 }
 
@@ -1002,155 +998,6 @@ pcmk__xe_foreach_child(xmlNode *xml, const char *child_element_name,
 // XML attribute handling
 
 /*!
- * \brief Create an XML attribute with specified name and value
- *
- * \param[in,out] node   XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value on success, \c NULL otherwise
- * \note This does nothing if node, name, or value are \c NULL or empty.
- */
-const char *
-crm_xml_add(xmlNode *node, const char *name, const char *value)
-{
-    // @TODO Replace with internal function that returns the new attribute
-    bool dirty = FALSE;
-    xmlAttr *attr = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-    CRM_CHECK(name != NULL, return NULL);
-
-    if (value == NULL) {
-        return NULL;
-    }
-
-    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
-        const char *old = pcmk__xe_get(node, name);
-
-        if (old == NULL || value == NULL || strcmp(old, value) != 0) {
-            dirty = TRUE;
-        }
-    }
-
-    if (dirty && (pcmk__check_acl(node, name, pcmk__xf_acl_create) == FALSE)) {
-        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
-        return NULL;
-    }
-
-    attr = xmlSetProp(node, (const xmlChar *) name, (const xmlChar *) value);
-
-    /* If the attribute already exists, this does nothing. Attribute values
-     * don't get private data.
-     */
-    pcmk__xml_new_private_data((xmlNode *) attr);
-
-    if (dirty) {
-        pcmk__mark_xml_attr_dirty(attr);
-    }
-
-    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
-    return (char *)attr->children->content;
-}
-
-
-/*!
- * \brief Create an XML attribute with specified name and integer value
- *
- * This is like \c crm_xml_add() but taking an integer value.
- *
- * \param[in,out] node   XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if node or name are \c NULL or empty.
- */
-const char *
-crm_xml_add_int(xmlNode *node, const char *name, int value)
-{
-    char *number = pcmk__itoa(value);
-    const char *added = crm_xml_add(node, name, number);
-
-    free(number);
-    return added;
-}
-
-/*!
- * \brief Create an XML attribute with specified name and unsigned value
- *
- * This is like \c crm_xml_add() but taking a guint value.
- *
- * \param[in,out] node   XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     ms     Attribute value to set
- *
- * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if node or name are \c NULL or empty.
- */
-const char *
-crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
-{
-    char *number = crm_strdup_printf("%u", ms);
-    const char *added = crm_xml_add(node, name, number);
-
-    free(number);
-    return added;
-}
-
-/*!
- * \brief Create an XML attribute with specified name and long long int value
- *
- * This is like \c crm_xml_add() but taking a long long int value. It is a
- * useful equivalent for defined types like time_t, etc.
- *
- * \param[in,out] xml    XML node to modify
- * \param[in]     name   Attribute name to set
- * \param[in]     value  Attribute value to set
- *
- * \return New value as string on success, \c NULL otherwise
- * \note This does nothing if \p xml or \p name is \c NULL or empty.
- */
-const char *
-crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
-{
-    char *str = crm_strdup_printf("%lld", value);
-    const char *result = crm_xml_add(xml, name, str);
-
-    free(str);
-    return result;
-}
-
-/*!
- * \brief Create XML attributes for seconds and microseconds
- *
- * This is like \c crm_xml_add() but taking a struct timeval.
- *
- * \param[in,out] xml        XML node to modify
- * \param[in]     name_sec   Name of XML attribute for seconds
- * \param[in]     name_usec  Name of XML attribute for microseconds (or NULL)
- * \param[in]     value      Time value to set
- *
- * \return New seconds value as string on success, \c NULL otherwise
- * \note This does nothing if xml, name_sec, or value is \c NULL.
- */
-const char *
-crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
-                    const struct timeval *value)
-{
-    const char *added = NULL;
-
-    if (xml && name_sec && value) {
-        added = crm_xml_add_ll(xml, name_sec, (long long) value->tv_sec);
-        if (added && name_usec) {
-            // Any error is ignored (we successfully added seconds)
-            crm_xml_add_ll(xml, name_usec, (long long) value->tv_usec);
-        }
-    }
-    return added;
-}
-
-/*!
  * \internal
  * \brief Retrieve the value of an XML attribute
  *
@@ -1172,6 +1019,71 @@ pcmk__xe_get(const xmlNode *xml, const char *attr_name)
     }
 
     return (const char *) attr->children->content;
+}
+
+/*!
+ * \internal
+ * \brief Set an XML attribute value
+ *
+ * This also performs change tracking if enabled and checks ACLs if enabled.
+ * Upon ACL denial, the attribute is not updated.
+ *
+ * \param[in,out] xml        XML element whose attribute to set
+ * \param[in]     attr_name  Attribute name
+ * \param[in]     value      Attribute value to set
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This does nothing and returns \c pcmk_rc_ok if \p value is \c NULL.
+ */
+int
+pcmk__xe_set(xmlNode *xml, const char *attr_name, const char *value)
+{
+    bool dirty = false;
+    xmlAttr *attr = NULL;
+
+    CRM_CHECK((xml != NULL) && (attr_name != NULL), return EINVAL);
+
+    if (value == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    /* @TODO Can we return early if dirty is false? Or does anything rely on
+     * "cleanly" resetting the value? If so, try to preserve existing behavior
+     * for public API functions that depend on this.
+     */
+    if (pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)) {
+        const char *old_value = pcmk__xe_get(xml, attr_name);
+
+        if (!pcmk__str_eq(old_value, value, pcmk__str_none)) {
+            dirty = true;
+        }
+    }
+
+    if (dirty && !pcmk__check_acl(xml, attr_name, pcmk__xf_acl_create)) {
+        crm_trace("Cannot add %s=%s to %s",
+                  attr_name, value, (const char *) xml->name);
+        return EACCES;
+    }
+
+    attr = xmlSetProp(xml, (const xmlChar *) attr_name,
+                      (const xmlChar *) value);
+
+    // These should never be NULL -- out of memory?
+    CRM_CHECK((attr != NULL) && (attr->children != NULL)
+              && (attr->children->content != NULL),
+              xmlRemoveProp(attr); return ENXIO);
+
+    /* If the attribute already exists, this does nothing. Attribute values
+     * don't get private data.
+     */
+    pcmk__xml_new_private_data((xmlNode *) attr);
+
+    if (dirty) {
+        pcmk__mark_xml_attr_dirty(attr);
+    }
+
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -1259,6 +1171,28 @@ pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
 
 /*!
  * \internal
+ * \brief Set an XML attribute using a \c guint value
+ *
+ * This is like \c pcmk__xe_set() but takes a \c guint.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
+ */
+void
+pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value)
+{
+    char *value_s = NULL;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL), return);
+
+    value_s = crm_strdup_printf("%u", value);
+    pcmk__xe_set(xml, attr, value_s);
+    free(value_s);
+}
+
+/*!
+ * \internal
  * \brief Retrieve an \c int value from an XML attribute
  *
  * This is like \c pcmk__xe_get() but returns the value as an \c int.
@@ -1288,6 +1222,28 @@ pcmk__xe_get_int(const xmlNode *xml, const char *attr, int *dest)
 
     *dest = (int) value_ll;
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Set an XML attribute using an \c int value.
+ *
+ * This is like \c pcmk__xe_set() but takes an \c int.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
+ */
+void
+pcmk__xe_set_int(xmlNode *xml, const char *attr, int value)
+{
+    char *value_s = NULL;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL), return);
+
+    value_s = pcmk__itoa(value);
+    pcmk__xe_set(xml, attr, value_s);
+    free(value_s);
 }
 
 /*!
@@ -1327,6 +1283,33 @@ pcmk__xe_get_ll(const xmlNode *xml, const char *attr, long long *dest)
 
 /*!
  * \internal
+ * \brief Set an XML attribute using a <tt>long long</tt> value
+ *
+ * This is like \c pcmk__xe_set() but takes a <tt>long long</tt>.
+ *
+ * \param[in,out] xml    XML node to modify
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__xe_set_ll(xmlNode *xml, const char *attr, long long value)
+{
+    char *value_s = NULL;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL), return EINVAL);
+
+    value_s = crm_strdup_printf("%lld", value);
+
+    rc = pcmk__xe_set(xml, attr, value_s);
+    free(value_s);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Retrieve a \c time_t value from an XML attribute
  *
  * This is like \c pcmk__xe_get() but returns the value as a \c time_t.
@@ -1357,6 +1340,25 @@ pcmk__xe_get_time(const xmlNode *xml, const char *attr, time_t *dest)
      */
     *dest = (time_t) value_ll;
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Set an XML attribute using a \c time_t value
+ *
+ * This is like \c pcmk__xe_set() but takes a \c time_t.
+ *
+ * \param[in,out] xml    XML element whose attribute to set
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set (in seconds)
+ */
+void
+pcmk__xe_set_time(xmlNode *xml, const char *attr, time_t value)
+{
+    // Could be inline, but keep it underneath pcmk__xe_get_time()
+    CRM_CHECK((xml != NULL) && (attr != NULL), return);
+
+    pcmk__xe_set_ll(xml, attr, (long long) value);
 }
 
 /*!
@@ -1406,6 +1408,46 @@ pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
 
 /*!
  * \internal
+ * \brief Set XML attribute values for seconds and microseconds
+ *
+ * This is like \c pcmk__xe_set() but takes a <tt>struct timeval *</tt>.
+ *
+ * \param[in,out] xml        XML element whose attributes to set
+ * \param[in]     sec_attr   Name of XML attribute for seconds
+ * \param[in]     usec_attr  Name of XML attribute for microseconds
+ * \param[in]     value      Attribute values to set
+ *
+ * \note This does nothing if \p value is \c NULL.
+ */
+void
+pcmk__xe_set_timeval(xmlNode *xml, const char *sec_attr, const char *usec_attr,
+                     const struct timeval *value)
+{
+    CRM_CHECK((xml != NULL) && (sec_attr != NULL) && (usec_attr != NULL),
+              return);
+
+    if (value == NULL) {
+        return;
+    }
+    if (pcmk__xe_set_ll(xml, sec_attr,
+                        (long long) value->tv_sec) != pcmk_rc_ok) {
+        return;
+    }
+
+    /* Seconds were added successfully. Ignore any errors adding microseconds.
+     *
+     * It would be nice to make this atomic: revert the seconds attribute if
+     * adding the microseconds attribute fails. That's somewhat complicated due
+     * to change tracking: the chain of parents is already marked dirty, etc. In
+     * practice, microseconds should succeed if seconds succeeded, unless it's
+     * due to memory allocation failure. Nothing checks the return values of
+     * these setter functions at time of writing, anyway.
+     */
+    pcmk__xe_set_ll(xml, usec_attr, (long long) value->tv_usec);
+}
+
+/*!
+ * \internal
  * \brief Get a date/time object from an XML attribute value
  *
  * \param[in]  xml   XML with attribute to parse (from CIB)
@@ -1446,7 +1488,7 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
 void
 pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
 {
-    crm_xml_add(node, name, pcmk__btoa(value));
+    pcmk__xe_set(node, name, pcmk__btoa(value));
 }
 
 /*!
@@ -1524,6 +1566,47 @@ xmlNode *
 expand_idref(xmlNode *input, xmlNode *top)
 {
     return pcmk__xe_resolve_idref(input, top);
+}
+
+const char *
+crm_xml_add(xmlNode *node, const char *name, const char *value)
+{
+    bool dirty = FALSE;
+    xmlAttr *attr = NULL;
+
+    CRM_CHECK(node != NULL, return NULL);
+    CRM_CHECK(name != NULL, return NULL);
+
+    if (value == NULL) {
+        return NULL;
+    }
+
+    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)) {
+        const char *old = pcmk__xe_get(node, name);
+
+        if (old == NULL || value == NULL || strcmp(old, value) != 0) {
+            dirty = TRUE;
+        }
+    }
+
+    if (dirty && (pcmk__check_acl(node, name, pcmk__xf_acl_create) == FALSE)) {
+        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
+        return NULL;
+    }
+
+    attr = xmlSetProp(node, (const xmlChar *) name, (const xmlChar *) value);
+
+    /* If the attribute already exists, this does nothing. Attribute values
+     * don't get private data.
+     */
+    pcmk__xml_new_private_data((xmlNode *) attr);
+
+    if (dirty) {
+        pcmk__mark_xml_attr_dirty(attr);
+    }
+
+    CRM_CHECK(attr && attr->children && attr->children->content, return NULL);
+    return (char *)attr->children->content;
 }
 
 void
@@ -1727,6 +1810,52 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 {
     CRM_CHECK((data != NULL) && (name != NULL), return NULL);
     return pcmk__str_copy(pcmk__xe_get(data, name));
+}
+
+const char *
+crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
+{
+    char *str = crm_strdup_printf("%lld", value);
+    const char *result = crm_xml_add(xml, name, str);
+
+    free(str);
+    return result;
+}
+
+const char *
+crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
+                    const struct timeval *value)
+{
+    const char *added = NULL;
+
+    if (xml && name_sec && value) {
+        added = crm_xml_add_ll(xml, name_sec, (long long) value->tv_sec);
+        if (added && name_usec) {
+            // Any error is ignored (we successfully added seconds)
+            crm_xml_add_ll(xml, name_usec, (long long) value->tv_usec);
+        }
+    }
+    return added;
+}
+
+const char *
+crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
+{
+    char *number = crm_strdup_printf("%u", ms);
+    const char *added = crm_xml_add(node, name, number);
+
+    free(number);
+    return added;
+}
+
+const char *
+crm_xml_add_int(xmlNode *node, const char *name, int value)
+{
+    char *number = pcmk__itoa(value);
+    const char *added = crm_xml_add(node, name, number);
+
+    free(number);
+    return added;
 }
 
 // LCOV_EXCL_STOP
