@@ -37,10 +37,6 @@ Also known as properties, these are options that affect behavior across the enti
     * Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure-timeout settings and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs. A value of 0 disables polling. A positive value sets an interval in seconds, unless other units are specified (for example, "5min").
     * Possible values: duration (default: )
 
-  * fence-reaction: How a cluster node should react if notified of its own fencing
-    * A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.
-    * Possible values: "stop" (default), "panic"
-
   * no-quorum-policy: What to do when the cluster does not have quorum
     * Possible values: "stop" (default), "freeze", "ignore", "demote", "fence", "suicide"
 
@@ -70,6 +66,10 @@ Also known as properties, these are options that affect behavior across the enti
 
   * fencing-action: Action to send to fence device when a node needs to be fenced
     * Possible values: "reboot" (default), "off"
+
+  * fencing-reaction: How a cluster node should react if notified of its own fencing
+    * A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.
+    * Possible values: "stop" (default), "panic"
 
   * fencing-timeout: How long to wait for on, off, and reboot fence actions to complete by default
     * Possible values: duration (default: )
@@ -192,14 +192,6 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Polling interval to recheck cluster state and evaluate rules with date specifications</shortdesc>
         <content type="duration" default=""/>
       </parameter>
-      <parameter name="fence-reaction" advanced="0" generated="0">
-        <longdesc lang="en">A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.</longdesc>
-        <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
-        <content type="select" default="">
-          <option value="stop"/>
-          <option value="panic"/>
-        </content>
-      </parameter>
       <parameter name="election-timeout" advanced="1" generated="0">
         <longdesc lang="en">Declare an election failed if it is not decided within this much time. If you need to adjust this value, it probably indicates the presence of a bug.</longdesc>
         <shortdesc lang="en">Declare an election failed if it is not decided within this much time. If you need to adjust this value, it probably indicates the presence of a bug.</shortdesc>
@@ -307,6 +299,25 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="select" default="">
           <option value="reboot"/>
           <option value="off"/>
+        </content>
+      </parameter>
+      <parameter name="fencing-reaction" advanced="0" generated="0">
+        <longdesc lang="en">A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.</longdesc>
+        <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
+        <content type="select" default="">
+          <option value="stop"/>
+          <option value="panic"/>
+        </content>
+      </parameter>
+      <parameter name="fence-reaction" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-reaction"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-reaction</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-reaction</shortdesc>
+        <content type="select" default="">
+          <option value="stop"/>
+          <option value="panic"/>
         </content>
       </parameter>
       <parameter name="fencing-timeout" advanced="0" generated="0">
@@ -522,10 +533,6 @@ Also known as properties, these are options that affect behavior across the enti
     * Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure-timeout settings and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs. A value of 0 disables polling. A positive value sets an interval in seconds, unless other units are specified (for example, "5min").
     * Possible values: duration (default: )
 
-  * fence-reaction: How a cluster node should react if notified of its own fencing
-    * A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.
-    * Possible values: "stop" (default), "panic"
-
   * no-quorum-policy: What to do when the cluster does not have quorum
     * Possible values: "stop" (default), "freeze", "ignore", "demote", "fence", "suicide"
 
@@ -555,6 +562,10 @@ Also known as properties, these are options that affect behavior across the enti
 
   * fencing-action: Action to send to fence device when a node needs to be fenced
     * Possible values: "reboot" (default), "off"
+
+  * fencing-reaction: How a cluster node should react if notified of its own fencing
+    * A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.
+    * Possible values: "stop" (default), "panic"
 
   * fencing-timeout: How long to wait for on, off, and reboot fence actions to complete by default
     * Possible values: duration (default: )
@@ -685,6 +696,9 @@ Also known as properties, these are options that affect behavior across the enti
     * stonith-action: Deprecated alias for fencing-action
       * Possible values: "reboot" (default), "off"
 
+    * fence-reaction: Deprecated alias for fencing-reaction
+      * Possible values: "stop" (default), "panic"
+
     * stonith-timeout: Deprecated alias for fencing-timeout
       * Possible values: duration (default: )
 
@@ -732,14 +746,6 @@ Also known as properties, these are options that affect behavior across the enti
         <longdesc lang="en">Pacemaker is primarily event-driven, and looks ahead to know when to recheck cluster state for failure-timeout settings and most time-based rules. However, it will also recheck the cluster after this amount of inactivity, to evaluate rules with date specifications and serve as a fail-safe for certain types of scheduler bugs. A value of 0 disables polling. A positive value sets an interval in seconds, unless other units are specified (for example, "5min").</longdesc>
         <shortdesc lang="en">Polling interval to recheck cluster state and evaluate rules with date specifications</shortdesc>
         <content type="duration" default=""/>
-      </parameter>
-      <parameter name="fence-reaction" advanced="0" generated="0">
-        <longdesc lang="en">A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.</longdesc>
-        <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
-        <content type="select" default="">
-          <option value="stop"/>
-          <option value="panic"/>
-        </content>
       </parameter>
       <parameter name="election-timeout" advanced="1" generated="0">
         <longdesc lang="en">Declare an election failed if it is not decided within this much time. If you need to adjust this value, it probably indicates the presence of a bug.</longdesc>
@@ -848,6 +854,25 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="select" default="">
           <option value="reboot"/>
           <option value="off"/>
+        </content>
+      </parameter>
+      <parameter name="fencing-reaction" advanced="0" generated="0">
+        <longdesc lang="en">A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.</longdesc>
+        <shortdesc lang="en">How a cluster node should react if notified of its own fencing</shortdesc>
+        <content type="select" default="">
+          <option value="stop"/>
+          <option value="panic"/>
+        </content>
+      </parameter>
+      <parameter name="fence-reaction" advanced="0" generated="0">
+        <deprecated>
+          <replaced-with name="fencing-reaction"/>
+        </deprecated>
+        <longdesc lang="en">Deprecated alias for fencing-reaction</longdesc>
+        <shortdesc lang="en">Deprecated alias for fencing-reaction</shortdesc>
+        <content type="select" default="">
+          <option value="stop"/>
+          <option value="panic"/>
         </content>
       </parameter>
       <parameter name="fencing-timeout" advanced="0" generated="0">
