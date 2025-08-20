@@ -11,27 +11,19 @@ from pacemaker._cts.clustermanager import ClusterManager
 class Corosync2(ClusterManager):
     """A subclass of ClusterManager specialized to handle corosync2 and later based clusters."""
 
-    def __init__(self):
-        """Create a new Corosync2 instance."""
-        ClusterManager.__init__(self)
-        self._components = {}
-
     @property
     def components(self):
         """Return a list of patterns that should be ignored for the cluster's components."""
-        if not self._components:
-            daemons = [
-                "corosync",
-                "pacemaker-based",
-                "pacemaker-controld",
-                "pacemaker-attrd",
-                "pacemaker-execd",
-                "pacemaker-fenced"
-            ]
-            for c in daemons:
-                badnews = self.templates.get_component(f"{c}-ignore")
-                proc = Process(self, c, pats=self.templates.get_component(c),
-                               badnews_ignore=badnews)
-                self._components[c] = proc
-
-        return list(self._components.values())
+        comps = [
+            "corosync",
+            "pacemaker-attrd",
+            "pacemaker-based",
+            "pacemaker-controld",
+            "pacemaker-execd",
+            "pacemaker-fenced"
+        ]
+        return [
+            Process(self, c, pats=self.templates.get_component(c),
+                    badnews_ignore=self.templates.get_component(f"{c}-ignore"))
+            for c in comps
+        ]
