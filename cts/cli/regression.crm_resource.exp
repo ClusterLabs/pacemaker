@@ -482,7 +482,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_reboot_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_reboot_retries" advanced="1" generated="0">
@@ -497,7 +497,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_off_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_off_retries" advanced="1" generated="0">
@@ -512,7 +512,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_on_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_on_retries" advanced="1" generated="0">
@@ -527,7 +527,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_list_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_list_retries" advanced="1" generated="0">
@@ -542,7 +542,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_monitor_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_monitor_retries" advanced="1" generated="0">
@@ -557,7 +557,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_status_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_status_retries" advanced="1" generated="0">
@@ -610,7 +610,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'reboot' action.
       * Possible values: string (default: )
 
-    * pcmk_reboot_timeout: Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout
+    * pcmk_reboot_timeout: Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.
       * Possible values: timeout (default: )
 
@@ -622,7 +622,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'off' action.
       * Possible values: string (default: )
 
-    * pcmk_off_timeout: Specify an alternate timeout to use for 'off' actions instead of stonith-timeout
+    * pcmk_off_timeout: Specify an alternate timeout to use for 'off' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.
       * Possible values: timeout (default: )
 
@@ -634,7 +634,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'on' action.
       * Possible values: string (default: )
 
-    * pcmk_on_timeout: Specify an alternate timeout to use for 'on' actions instead of stonith-timeout
+    * pcmk_on_timeout: Specify an alternate timeout to use for 'on' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.
       * Possible values: timeout (default: )
 
@@ -646,7 +646,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'list' action.
       * Possible values: string (default: )
 
-    * pcmk_list_timeout: Specify an alternate timeout to use for 'list' actions instead of stonith-timeout
+    * pcmk_list_timeout: Specify an alternate timeout to use for 'list' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.
       * Possible values: timeout (default: )
 
@@ -658,7 +658,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'monitor' action.
       * Possible values: string (default: )
 
-    * pcmk_monitor_timeout: Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout
+    * pcmk_monitor_timeout: Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.
       * Possible values: timeout (default: )
 
@@ -670,7 +670,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'status' action.
       * Possible values: string (default: )
 
-    * pcmk_status_timeout: Specify an alternate timeout to use for 'status' actions instead of stonith-timeout
+    * pcmk_status_timeout: Specify an alternate timeout to use for 'status' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.
       * Possible values: timeout (default: )
 
@@ -733,7 +733,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_reboot_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_reboot_retries" advanced="1" generated="0">
@@ -748,7 +748,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_off_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_off_retries" advanced="1" generated="0">
@@ -763,7 +763,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_on_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_on_retries" advanced="1" generated="0">
@@ -778,7 +778,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_list_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_list_retries" advanced="1" generated="0">
@@ -793,7 +793,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_monitor_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_monitor_retries" advanced="1" generated="0">
@@ -808,7 +808,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_status_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_status_retries" advanced="1" generated="0">
