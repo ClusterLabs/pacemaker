@@ -295,7 +295,8 @@ class Environment:
                           metavar="PATH",
                           help="Install the given CIB file to the cluster")
         grp4.add_argument("--no-unsafe-tests",
-                          action="store_true",
+                          action="store_false",
+                          dest="unsafe_tests",
                           help="Don't run tests that are unsafe for use with ocfs2/drbd")
         grp4.add_argument("--notification-agent",
                           metavar="PATH",
@@ -332,7 +333,7 @@ class Environment:
         # These values can always be set. Most get a default from the add_argument
         # calls, they only do one thing, and they do not have any side effects.
         self["CIBfilename"] = args.cib_filename if args.cib_filename else None
-        self["create_resources"] = args.ip or args.populate_resources
+        self["create_resources"] = bool(args.ip or args.populate_resources)
         self["fencing_agent"] = args.fencing_agent
         self["fencing_enabled"] = args.fencing_enabled
         self["fencing_params"] = shlex.split(args.fencing_params)
@@ -346,7 +347,7 @@ class Environment:
         self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
-        self["unsafe-tests"] = not args.no_unsafe_tests
+        self["unsafe-tests"] = args.unsafe_tests
 
         # Everything else either can't have a default set in an add_argument
         # call (likely because we don't want to always have a value set for it)
