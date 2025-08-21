@@ -9,6 +9,7 @@ import time
 import subprocess
 import tempfile
 
+from pacemaker._cts.CTS import Process
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
@@ -204,11 +205,11 @@ class RemoteDriver(CTSTest):
 
     def _freeze_pcmk_remote(self, node):
         """Simulate a Pacemaker Remote daemon failure."""
-        self._rsh(node, "killall -STOP pacemaker-remoted")
+        Process(self._cm, "pacemaker-remoted").signal("STOP", node)
 
     def _resume_pcmk_remote(self, node):
         """Simulate the Pacemaker Remote daemon recovering."""
-        self._rsh(node, "killall -CONT pacemaker-remoted")
+        Process(self._cm, "pacemaker-remoted").signal("CONT", node)
 
     def _start_metal(self, node):
         """

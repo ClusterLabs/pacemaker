@@ -111,7 +111,7 @@ class ComponentFail(CTSTest):
         watch.set_watch()
 
         # kill the component
-        chosen.kill(node)
+        chosen.signal("KILL", node)
 
         self.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()

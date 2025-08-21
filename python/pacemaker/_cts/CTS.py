@@ -213,9 +213,31 @@ class Process:
         if self.pats is None:
             self.pats = []
 
-    def kill(self, node):
-        """Kill the instance of this process running on the given node."""
-        (rc, _) = self._cm.rsh(node, f"killall -9 {self.name}")
+    def signal(self, sig, node):
+        """Send a signal to the instance of this process running on the given node."""
+        # Using psutil would be nice but we need a shell command line.
 
+        # Word boundaries. It's not clear how portable \<, \>, \b, and \W are.
+        non_word_char = "[^_[:alnum:]]"
+        word_begin = f"(^|{non_word_char})"
+        word_end = f"($|{non_word_char})"
+
+        # Match this process, possibly running under valgrind
+        search_re = f"({word_begin}valgrind )?.*{word_begin}{self.name}{word_end}"
+
+        if sig in ["SIGKILL", "KILL", 9, "SIGTERM", "TERM", 15]:
+            (rc, _) = self._cm.rsh(node, f"pgrep --full '{search_re}'")
+            if rc == 1:
+                # No matching process, so nothing to kill/terminate
+                return
+            if rc != 0:
+                # 2 or 3: Syntax error or fatal error (like out of memory)
+                self._cm.log(f"ERROR: pgrep for {self.name} failed on node {node}")
+                return
+
+        # 0: One or more processes were successfully signaled.
+        # 1: No processes matched or none of them could be signalled.
+        # This is why we check for no matching process above.
+        (rc, _) = self._cm.rsh(node, f"pkill --signal {sig} --full '{search_re}'")
         if rc != 0:
-            self._cm.log(f"ERROR: Kill {self.name} failed on node {node}")
+            self._cm.log(f"ERROR: Sending signal {sig} to {self.name} failed on node {node}")
