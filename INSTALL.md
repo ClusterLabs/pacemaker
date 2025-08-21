@@ -56,8 +56,10 @@ Also:
 | unit tests                                      | 1.1.0 or later | libcmocka-devel         | libcmocka-devel         | libcmocka-dev           |
 
 ## Optional Testing Dependencies
-* procps and psmisc (if running cts-exec, cts-fencing, or CTS lab)
-* valgrind (if running valgrind tests in cts-cli, cts-scheduler, or CTS lab)
+* procps and psmisc (if running CTS lab)
+* valgrind (if running valgrind tests in cts-cli or cts-scheduler, or if
+  running Pacemaker daemons under valgrind)
+* python3-psutil (if running any CTS tests)
 * python3-dateutil and python3-systemd (if running CTS lab on cluster nodes
   running systemd)
 * nmap (if not specifying an IP address base)
