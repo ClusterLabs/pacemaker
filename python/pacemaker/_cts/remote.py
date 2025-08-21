@@ -280,11 +280,3 @@ class RemoteFactory:
                                                 RemoteFactory.cp_command,
                                                 False)
         return RemoteFactory.instance
-
-    def enable_qarsh(self):
-        """Enable the QA remote shell."""
-        # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
-        print("Using QARSH for connections to cluster nodes")
-
-        RemoteFactory.command = "qarsh -t 300 -l root"
-        RemoteFactory.cp_command = "qacp -q"

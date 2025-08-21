@@ -9,6 +9,7 @@ import time
 import subprocess
 import tempfile
 
+from pacemaker._cts.CTS import Process
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
@@ -204,11 +205,11 @@ class RemoteDriver(CTSTest):
 
     def _freeze_pcmk_remote(self, node):
         """Simulate a Pacemaker Remote daemon failure."""
-        self._rsh(node, "killall -STOP pacemaker-remoted")
+        Process(self._cm, "pacemaker-remoted").signal("STOP", node)
 
     def _resume_pcmk_remote(self, node):
         """Simulate the Pacemaker Remote daemon recovering."""
-        self._rsh(node, "killall -CONT pacemaker-remoted")
+        Process(self._cm, "pacemaker-remoted").signal("CONT", node)
 
     def _start_metal(self, node):
         """
@@ -246,8 +247,8 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         pats.extend([
-            self.templates["Pat:RscOpOK"] % ("start", self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscOpOK"] % ("start", self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ])
 
         self._add_connection_rsc(node)
@@ -264,9 +265,9 @@ class RemoteDriver(CTSTest):
             return
 
         pats = [
-            self.templates["Pat:RscOpOK"] % ("migrate_to", self._remote_node),
-            self.templates["Pat:RscOpOK"] % ("migrate_from", self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscOpOK"] % ("migrate_to", self._remote_node),
+            self._cm.templates["Pat:RscOpOK"] % ("migrate_from", self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ]
 
         watch = self.create_watch(pats, 120)
@@ -293,9 +294,9 @@ class RemoteDriver(CTSTest):
             return
 
         watchpats = [
-            self.templates["Pat:RscRemoteOpOK"] % ("stop", self._remote_rsc, self._remote_node),
-            self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscRemoteOpOK"] % ("stop", self._remote_rsc, self._remote_node),
+            self._cm.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ]
 
         watch = self.create_watch(watchpats, 120)
@@ -322,8 +323,8 @@ class RemoteDriver(CTSTest):
             return
 
         watchpats = [
-            self.templates["Pat:Fencing_ok"] % self._remote_node,
-            self.templates["Pat:NodeFenced"] % self._remote_node
+            self._cm.templates["Pat:Fencing_ok"] % self._remote_node,
+            self._cm.templates["Pat:NodeFenced"] % self._remote_node
         ]
 
         watch = self.create_watch(watchpats, 120)
@@ -350,10 +351,10 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 240)
         watch.set_watch()
 
-        pats.append(self.templates["Pat:RscOpOK"] % ("start", self._remote_node))
+        pats.append(self._cm.templates["Pat:RscOpOK"] % ("start", self._remote_node))
 
         if self._remote_rsc_added:
-            pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node))
+            pats.append(self._cm.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node))
 
         # start the remote node again watch it integrate back into cluster.
         self._start_pcmk_remote(node)
@@ -380,8 +381,8 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         pats.extend([
-            self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ])
 
         # Add a resource that must live on remote-node
@@ -438,10 +439,10 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         if self._remote_rsc_added:
-            pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._remote_rsc))
+            pats.append(self._cm.templates["Pat:RscOpOK"] % ("stop", self._remote_rsc))
 
         if self._remote_node_added:
-            pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._remote_node))
+            pats.append(self._cm.templates["Pat:RscOpOK"] % ("stop", self._remote_node))
 
         with Timer(self._logger, self.name, "remoteMetalCleanup"):
             self._resume_pcmk_remote(node)

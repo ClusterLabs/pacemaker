@@ -14,16 +14,11 @@ class Logger:
 
     TimeFormat = "%b %d %H:%M:%S\t"
 
-    def __init__(self, filename=None, tag=None):
+    def __init__(self, filename=None):
         # Whether this logger should print debug messages
         self._debug_target = True
 
         self._logfile = filename
-
-        if tag:
-            self._source = f"{tag}: "
-        else:
-            self._source = ""
 
     def __call__(self, lines):
         """Log specified messages."""
@@ -47,8 +42,8 @@ class Logger:
 class StdErrLog(Logger):
     """Class to log to standard error."""
 
-    def __init__(self, filename, tag):
-        Logger.__init__(self, filename, tag)
+    def __init__(self, filename):
+        Logger.__init__(self, filename)
         self._debug_target = False
 
     def __call__(self, lines):
@@ -67,8 +62,8 @@ class StdErrLog(Logger):
 class FileLog(Logger):
     """Class to log to a file."""
 
-    def __init__(self, filename, tag):
-        Logger.__init__(self, filename, tag)
+    def __init__(self, filename):
+        Logger.__init__(self, filename)
         self._hostname = os.uname()[1]
 
     def __call__(self, lines):
@@ -81,7 +76,7 @@ class FileLog(Logger):
                 lines = [lines]
 
             for line in lines:
-                print(f"{timestamp}{self._hostname} {self._source}{line}", file=logf)
+                print(f"{timestamp}{self._hostname} {line}", file=logf)
 
 
 class LogFactory:
@@ -90,16 +85,16 @@ class LogFactory:
     log_methods = []
     have_stderr = False
 
-    def add_file(self, filename, tag=None):
+    def add_file(self, filename):
         """When logging messages, log them to specified file."""
         if filename:
-            LogFactory.log_methods.append(FileLog(filename, tag))
+            LogFactory.log_methods.append(FileLog(filename))
 
     def add_stderr(self):
         """When logging messages, log them to standard error."""
         if not LogFactory.have_stderr:
             LogFactory.have_stderr = True
-            LogFactory.log_methods.append(StdErrLog(None, None))
+            LogFactory.log_methods.append(StdErrLog(None))
 
     def log(self, args):
         """Log a message (to all configured log destinations)."""

@@ -1,7 +1,7 @@
 """A module providing functions for manipulating corosync."""
 
 __all__ = ["Corosync", "localname"]
-__copyright__ = "Copyright 2009-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2009-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import os
@@ -113,7 +113,7 @@ class Corosync:
         self.logdir = logdir
         self.cluster_name = cluster_name
 
-        # The Corosync class doesn't use self._env._nodes, but the
+        # The Corosync class doesn't use self._env["nodes"], but the
         # "--nodes" argument is required to be present and nonempty
         self._env = EnvFactory().getInstance(args=["--nodes", "localhost"])
         self._existing_cfg_file = None
@@ -153,6 +153,8 @@ class Corosync:
                                                         self.cluster_name, localname())
         logfile = corosync_log_file(BuildOptions.COROSYNC_CONFIG_FILE)
 
+        # pylint doesn't understand that self._env is subscriptable.
+        # pylint: disable=unsubscriptable-object
         if self._env["have_systemd"]:
             cmd = ["systemctl", "start", "corosync.service"]
         else:

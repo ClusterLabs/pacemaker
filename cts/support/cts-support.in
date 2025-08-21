@@ -225,9 +225,9 @@ if __name__ == "__main__":
         sys.exit(ExitStatus.ERROR)
 
     # If the install directory doesn't exist, assume we're in a build directory.
-    data_dir = "%s/pacemaker/tests/cts" % BuildOptions.DATA_DIR
+    data_dir = f"{BuildOptions.DATA_DIR}/pacemaker/tests/cts"
     if not os.path.exists(data_dir):
-        data_dir = "%s/pacemaker/tests/cts" % BuildOptions._BUILD_DIR
+        data_dir = f"{BuildOptions._BUILD_DIR}/cts/support"
 
     if opts.subparser_name == "install":
         cmd_install(data_dir)

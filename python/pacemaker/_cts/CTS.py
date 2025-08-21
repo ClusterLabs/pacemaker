@@ -192,39 +192,52 @@ class Process:
     """A class for managing a Pacemaker daemon."""
 
     # pylint: disable=invalid-name
-    def __init__(self, cm, name, dc_only=False, pats=None, dc_pats=None,
-                 badnews_ignore=None):
+    def __init__(self, cm, name, pats=None, badnews_ignore=None):
         """
         Create a new Process instance.
 
         Arguments:
         cm              -- A ClusterManager instance
         name            -- The command being run
-        dc_only         -- Should this daemon be killed only on the DC?
         pats            -- Regexes we expect to find in log files
-        dc_pats         -- Additional DC-specific regexes we expect to find
-                           in log files
         badnews_ignore  -- Regexes for lines in the log that can be ignored
         """
         self._cm = cm
         self.badnews_ignore = badnews_ignore
-        self.dc_only = dc_only
-        self.dc_pats = dc_pats
         self.name = name
         self.pats = pats
 
         if self.badnews_ignore is None:
             self.badnews_ignore = []
 
-        if self.dc_pats is None:
-            self.dc_pats = []
-
         if self.pats is None:
             self.pats = []
 
-    def kill(self, node):
-        """Kill the instance of this process running on the given node."""
-        (rc, _) = self._cm.rsh(node, f"killall -9 {self.name}")
+    def signal(self, sig, node):
+        """Send a signal to the instance of this process running on the given node."""
+        # Using psutil would be nice but we need a shell command line.
 
+        # Word boundaries. It's not clear how portable \<, \>, \b, and \W are.
+        non_word_char = "[^_[:alnum:]]"
+        word_begin = f"(^|{non_word_char})"
+        word_end = f"($|{non_word_char})"
+
+        # Match this process, possibly running under valgrind
+        search_re = f"({word_begin}valgrind )?.*{word_begin}{self.name}{word_end}"
+
+        if sig in ["SIGKILL", "KILL", 9, "SIGTERM", "TERM", 15]:
+            (rc, _) = self._cm.rsh(node, f"pgrep --full '{search_re}'")
+            if rc == 1:
+                # No matching process, so nothing to kill/terminate
+                return
+            if rc != 0:
+                # 2 or 3: Syntax error or fatal error (like out of memory)
+                self._cm.log(f"ERROR: pgrep for {self.name} failed on node {node}")
+                return
+
+        # 0: One or more processes were successfully signaled.
+        # 1: No processes matched or none of them could be signalled.
+        # This is why we check for no matching process above.
+        (rc, _) = self._cm.rsh(node, f"pkill --signal {sig} --full '{search_re}'")
         if rc != 0:
-            self._cm.log(f"ERROR: Kill {self.name} failed on node {node}")
+            self._cm.log(f"ERROR: Sending signal {sig} to {self.name} failed on node {node}")

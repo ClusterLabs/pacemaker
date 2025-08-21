@@ -146,24 +146,18 @@ cluster node, by specifying the first, for example:
 
 Configure some sort of fencing, for example to use fence\_xvm:
 
-    --stonith xvm
+    --fencing-agent fence_xvm
 
 Putting all the above together, a command line might look like:
 
     /usr/share/pacemaker/tests/cts-lab --nodes "pcmk-1 pcmk-2 pcmk-3" \
         --outputfile ~/cts.log --clobber-cib --populate-resources \
-        --test-ip-base 192.168.9.100 --stonith xvm 50
+        --test-ip-base 192.168.9.100 --fencing-agent fence_xvm 50
 
 For more options, run with the --help option.
 
-There are also a couple of wrappers for cts-lab that some users may find more
-convenient: cts, which is typically installed in the same place as the rest of
-the testing code; and cluster\_test, which is in the source directory and
-typically not installed.
-
-To extract the result of a particular test, run:
-
-    crm_report -T $test
+There is also a wrapper for cts-lab that some users may find more convenient:
+cluster\_test, which is in the source directory and typically not installed.
 
 
 ### Optional: Memory testing
@@ -182,11 +176,6 @@ setting the following environment variables on all cluster nodes:
         --log-file=/var/lib/pacemaker/valgrind-%p
         --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions
         --gen-suppressions=all"
-
-If running the CTS lab with valgrind enabled on the cluster nodes, add these
-options to cts-lab:
-
-    --valgrind-procs "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-schedulerd pacemaker-fenced"
 
 These options should only be set while specifically testing memory management,
 because they may slow down the cluster significantly, and they will disable
@@ -248,8 +237,8 @@ pcmk\_host\_list=all, the lab will expand that to all cluster nodes and their
 "remote-" names.  You may additionally need a pcmk\_host\_map argument to map
 the "remote-" names to the hostnames. Example:
 
-    --stonith xvm --stonith-args \
-    pcmk_host_list=all,pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2
+    --fencing-agent fence_xvm --fencing-params \
+    'pcmk_host_list=all pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2'
 
 
 ### Optional: Remote node testing with valgrind

@@ -8,7 +8,6 @@ import re
 
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.logging import LogFactory
-from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.timer import Timer
 from pacemaker._cts.watcher import LogWatcher
@@ -39,7 +38,6 @@ class CTSTest:
 
         self.audits = []
         self.name = None
-        self.templates = PatternSelector(cm["Name"])
 
         self.stats = {
             "auditfail": 0,
@@ -57,8 +55,6 @@ class CTSTest:
 
         self.benchmark = True  # which tests to benchmark
         self.failed = False
-        self.is_experimental = False
-        self.is_loop = False
         self.is_unsafe = False
         self.passed = True
 
@@ -222,13 +218,7 @@ class CTSTest:
 
         This method must be implemented by all subclasses.
         """
-        if self.is_loop and not self._env["loop-tests"]:
-            return False
-
         if self.is_unsafe and not self._env["unsafe-tests"]:
-            return False
-
-        if self.is_experimental and not self._env["experimental-tests"]:
             return False
 
         if self._env["benchmark"] and not self.benchmark:

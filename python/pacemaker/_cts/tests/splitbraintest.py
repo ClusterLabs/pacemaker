@@ -39,7 +39,7 @@ class SplitBrainTest(CTSTest):
         """
         CTSTest.__init__(self, cm)
 
-        self.is_experimental = True
+        self.is_unsafe = True
         self.name = "SplitBrain"
 
         self._start = StartTest(cm)
@@ -183,7 +183,7 @@ class SplitBrainTest(CTSTest):
                 raise ValueError("Reformed cluster not stable")
 
         # Turn fencing back on
-        if self._env["DoFencing"]:
+        if self._env["fencing_enabled"]:
             self._rsh(node, "crm_attribute -V -D -n stonith-enabled")
 
         self._cm.cluster_stable()

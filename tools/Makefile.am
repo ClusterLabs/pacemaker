@@ -25,9 +25,7 @@ sbin_SCRIPTS		= crm_report 	\
 			  crm_master 	\
 			  crm_failcount
 
-noinst_SCRIPTS		= cluster-clean		\
-			  cluster-helper	\
-			  pcmk_simtimes
+noinst_SCRIPTS		= pcmk_simtimes
 
 EXTRA_DIST		= $(wildcard *.inc) 	\
 			  fix-manpages

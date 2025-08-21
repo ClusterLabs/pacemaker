@@ -1,7 +1,7 @@
 """Fail the connection resource and fence the remote node."""
 
 __all__ = ["RemoteStonithd"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.remotedriver import RemoteDriver
@@ -38,7 +38,9 @@ class RemoteStonithd(RemoteDriver):
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""
-        return self._env["DoFencing"] and RemoteDriver.is_applicable(self)
+        # pylint doesn't understand that self._env is subscriptable.
+        # pylint: disable=unsubscriptable-object
+        return self._env["fencing_enabled"] and RemoteDriver.is_applicable(self)
 
     @property
     def errors_to_ignore(self):

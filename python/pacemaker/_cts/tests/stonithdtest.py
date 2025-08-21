@@ -47,8 +47,8 @@ class StonithdTest(CTSTest):
             return self.failure("Setup failed")
 
         watchpats = [
-            self.templates["Pat:Fencing_ok"] % node,
-            self.templates["Pat:NodeFenced"] % node,
+            self._cm.templates["Pat:Fencing_ok"] % node,
+            self._cm.templates["Pat:NodeFenced"] % node,
         ]
 
         if not self._env["at-boot"]:
@@ -61,7 +61,8 @@ class StonithdTest(CTSTest):
                 f"{node}.* S_PENDING -> S_NOT_DC",
             ])
 
-        watch = self.create_watch(watchpats, 30 + self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
+        watch = self.create_watch(watchpats,
+                                  30 + self._env["dead_time"] + self._env["stable_time"] + self._env["start_time"])
         watch.set_watch()
 
         origin = self._env.random_gen.choice(self._env["nodes"])
@@ -107,7 +108,7 @@ class StonithdTest(CTSTest):
         self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
-        is_stable = self._cm.cluster_stable(self._env["StartTime"])
+        is_stable = self._cm.cluster_stable(self._env["start_time"])
 
         if not matched:
             return self.failure("Didn't find all expected patterns")
@@ -122,20 +123,12 @@ class StonithdTest(CTSTest):
     def errors_to_ignore(self):
         """Return a list of errors which should be ignored."""
         return [
-            self.templates["Pat:Fencing_start"] % ".*",
-            self.templates["Pat:Fencing_ok"] % ".*",
-            self.templates["Pat:Fencing_active"],
+            self._cm.templates["Pat:Fencing_start"] % ".*",
+            self._cm.templates["Pat:Fencing_ok"] % ".*",
+            self._cm.templates["Pat:Fencing_active"],
             r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired"
         ]
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""
-        if not CTSTest.is_applicable(self):
-            return False
-
-        # pylint gets confused because of EnvFactory here.
-        # pylint: disable=unsupported-membership-test
-        if "DoFencing" in self._env:
-            return self._env["DoFencing"]
-
-        return True
+        return self._env["fencing_enabled"] and CTSTest.is_applicable(self)
