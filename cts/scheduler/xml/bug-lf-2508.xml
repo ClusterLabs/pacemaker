@@ -5,9 +5,9 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.9-0a40fd0cb9f2fcedef9d1967115c912314c57438"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-startup-fencing" name="startup-fencing" value="false"/>
-        <nvpair id="cib-bootstrap-options-stonith-timeout" name="stonith-timeout" value="240s"/>
+        <nvpair id="cib-bootstrap-options-fencing-timeout" name="fencing-timeout" value="240s"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="48s"/>
         <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
       </cluster_property_set>
@@ -55,7 +55,12 @@
           <primitive class="stonith" id="prmStonith1-1" type="external/stonith-helper">
             <instance_attributes id="prmStonith1-1-instance_attributes">
               <nvpair id="prmStonith1-1-priority" name="priority" value="1"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith1-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith1-1-hostlist" name="hostlist" value="srv01"/>
               <nvpair id="prmStonith1-1-dead_check_target" name="dead_check_target" value="192.168.40.10"/>
               <nvpair id="prmStonith1-1-run_standby_wait" name="run_standby_wait" value="no"/>
@@ -73,7 +78,12 @@
           <primitive class="stonith" id="prmStonith1-3" type="external/ssh">
             <instance_attributes id="prmStonith1-3-instance_attributes">
               <nvpair id="prmStonith1-3-priority" name="priority" value="3"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith1-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith1-3-ip_address" name="hostlist" value="srv01"/>
             </instance_attributes>
             <meta_attributes id="prmStonith1-3-meta_attributes">
@@ -96,7 +106,12 @@
           <primitive class="stonith" id="prmStonith2-1" type="external/stonith-helper">
             <instance_attributes id="prmStonith2-1-instance_attributes">
               <nvpair id="prmStonith2-1-priority" name="priority" value="1"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith2-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith2-1-hostlist" name="hostlist" value="srv02"/>
               <nvpair id="prmStonith2-1-dead_check_target" name="dead_check_target" value="192.168.40.20"/>
               <nvpair id="prmStonith2-1-run_standby_wait" name="run_standby_wait" value="no"/>
@@ -114,7 +129,12 @@
           <primitive class="stonith" id="prmStonith2-3" type="external/ssh">
             <instance_attributes id="prmStonith2-3-instance_attributes">
               <nvpair id="prmStonith2-3-priority" name="priority" value="3"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith2-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith2-3-ip_address" name="hostlist" value="srv02"/>
             </instance_attributes>
             <meta_attributes id="prmStonith2-3-meta_attributes">
@@ -137,7 +157,12 @@
           <primitive class="stonith" id="prmStonith3-1" type="external/stonith-helper">
             <instance_attributes id="prmStonith3-1-instance_attributes">
               <nvpair id="prmStonith3-1-priority" name="priority" value="1"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith3-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith3-1-hostlist" name="hostlist" value="srv03"/>
               <nvpair id="prmStonith3-1-dead_check_target" name="dead_check_target" value="192.168.40.30"/>
               <nvpair id="prmStonith3-1-run_standby_wait" name="run_standby_wait" value="no"/>
@@ -155,7 +180,12 @@
           <primitive class="stonith" id="prmStonith3-3" type="external/ssh">
             <instance_attributes id="prmStonith3-3-instance_attributes">
               <nvpair id="prmStonith3-3-priority" name="priority" value="3"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith3-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith3-3-ip_address" name="hostlist" value="srv03"/>
             </instance_attributes>
             <meta_attributes id="prmStonith3-3-meta_attributes">
@@ -178,7 +208,12 @@
           <primitive class="stonith" id="prmStonith4-1" type="external/stonith-helper">
             <instance_attributes id="prmStonith4-1-instance_attributes">
               <nvpair id="prmStonith4-1-priority" name="priority" value="1"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith4-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith4-1-hostlist" name="hostlist" value="srv04"/>
               <nvpair id="prmStonith4-1-dead_check_target" name="dead_check_target" value="192.168.40.40"/>
               <nvpair id="prmStonith4-1-run_standby_wait" name="run_standby_wait" value="no"/>
@@ -196,7 +231,12 @@
           <primitive class="stonith" id="prmStonith4-3" type="external/ssh">
             <instance_attributes id="prmStonith4-3-instance_attributes">
               <nvpair id="prmStonith4-3-priority" name="priority" value="3"/>
+
+              <!--
+               Don't drop or rename to "fencing-timeout", as this causes restart
+               -->
               <nvpair id="prmStonith4-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+
               <nvpair id="prmStonith4-3-ip_address" name="hostlist" value="srv04"/>
             </instance_attributes>
             <meta_attributes id="prmStonith4-3-meta_attributes">

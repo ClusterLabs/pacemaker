@@ -173,8 +173,8 @@ register_if_fencing_device(gpointer data, gpointer user_data)
         return;
     }
 
-    if ((stonith_watchdog_timeout_ms <= 0) &&
-        pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
+    if ((fencing_watchdog_timeout_ms <= 0)
+        && pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
         crm_info("Ignoring fencing device %s "
                  "because watchdog fencing is disabled", rsc->id);
         return;
@@ -212,7 +212,7 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     get_meta_attributes(rsc->priv->meta, rsc, NULL, scheduler);
     rsc_provides = g_hash_table_lookup(rsc->priv->meta,
-                                       PCMK_STONITH_PROVIDES);
+                                       PCMK_FENCING_PROVIDES);
 
     g_hash_table_iter_init(&hash_iter, pe_rsc_params(rsc, node, scheduler));
     while (g_hash_table_iter_next(&hash_iter, (gpointer *) &name,

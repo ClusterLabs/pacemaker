@@ -86,7 +86,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * op_defaults, or evaluate rules.
      *
      * Also, PCMK_META_ON_FAIL defaults to PCMK_VALUE_BLOCK (in
-     * unpack_operation()) for stop actions when stonith is disabled.
+     * unpack_operation()) for stop actions when fencing is disabled.
      *
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.

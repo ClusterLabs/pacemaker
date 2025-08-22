@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2024 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,15 +34,14 @@ extern "C" {
 /* Special stonith-class agent parameters interpreted directly by Pacemaker
  * (not including the pcmk_ACTION_{action,retries,timeout} parameters)
  */
-#define PCMK_STONITH_ACTION_LIMIT       "pcmk_action_limit"
-#define PCMK_STONITH_DELAY_BASE         "pcmk_delay_base"
-#define PCMK_STONITH_DELAY_MAX          "pcmk_delay_max"
-#define PCMK_STONITH_HOST_ARGUMENT      "pcmk_host_argument"
-#define PCMK_STONITH_HOST_CHECK         "pcmk_host_check"
-#define PCMK_STONITH_HOST_LIST          "pcmk_host_list"
-#define PCMK_STONITH_HOST_MAP           "pcmk_host_map"
-#define PCMK_STONITH_PROVIDES           "provides"
-#define PCMK_STONITH_STONITH_TIMEOUT    "stonith-timeout"
+#define PCMK_FENCING_ACTION_LIMIT       "pcmk_action_limit"
+#define PCMK_FENCING_DELAY_BASE         "pcmk_delay_base"
+#define PCMK_FENCING_DELAY_MAX          "pcmk_delay_max"
+#define PCMK_FENCING_HOST_ARGUMENT      "pcmk_host_argument"
+#define PCMK_FENCING_HOST_CHECK         "pcmk_host_check"
+#define PCMK_FENCING_HOST_LIST          "pcmk_host_list"
+#define PCMK_FENCING_HOST_MAP           "pcmk_host_map"
+#define PCMK_FENCING_PROVIDES           "provides"
 
 // OCF Resource Agent API standard version that this Pacemaker supports
 #define PCMK_OCF_MAJOR_VERSION "1"

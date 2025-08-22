@@ -6,7 +6,7 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-71dbd12"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
-        <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="fencing-enabled" value="true" id="cib-bootstrap-options-fencing-enabled"/>
         <nvpair name="startup-fencing" value="false" id="cib-bootstrap-options-startup-fencing"/>
       </cluster_property_set>
     </crm_config>
