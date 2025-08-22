@@ -655,8 +655,8 @@ pe__common_output_html(pcmk__output_t *out, const pcmk_resource_t *rsc,
 
     pcmk__assert((kind != NULL) && pcmk__is_primitive(rsc));
 
-    if (crm_is_true(g_hash_table_lookup(rsc->priv->meta,
-                                        PCMK__META_INTERNAL_RSC))
+    if (pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
+                                          PCMK__META_INTERNAL_RSC))
         && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
 
         crm_trace("skipping print of internal resource %s", rsc->id);
@@ -704,8 +704,8 @@ pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
 
     pcmk__assert(pcmk__is_primitive(rsc));
 
-    if (crm_is_true(g_hash_table_lookup(rsc->priv->meta,
-                                        PCMK__META_INTERNAL_RSC))
+    if (pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
+                                          PCMK__META_INTERNAL_RSC))
         && !pcmk_is_set(show_opts, pcmk_show_implicit_rscs)) {
 
         crm_trace("skipping print of internal resource %s", rsc->id);

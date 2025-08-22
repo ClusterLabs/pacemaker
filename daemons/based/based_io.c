@@ -221,7 +221,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     }
 
     if (cib_writes_enabled && (use_valgrind != NULL)
-        && (crm_is_true(use_valgrind)
+        && (pcmk__is_true(use_valgrind)
             || (strstr(use_valgrind, PCMK__SERVER_BASED) != NULL))) {
 
         cib_writes_enabled = FALSE;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -405,8 +405,11 @@ pcmk__apply_node_health(pcmk_scheduler_t *scheduler)
                 /* Negative health scores do not apply to resources with
                  * PCMK_META_ALLOW_UNHEALTHY_NODES=true.
                  */
-                constrain = !crm_is_true(g_hash_table_lookup(rsc->priv->meta,
-                                                             PCMK_META_ALLOW_UNHEALTHY_NODES));
+                const char *allow =
+                    g_hash_table_lookup(rsc->priv->meta,
+                                        PCMK_META_ALLOW_UNHEALTHY_NODES);
+
+                constrain = !pcmk__is_true(allow);
             }
             if (constrain) {
                 pcmk__new_location(strategy_str, rsc, health, NULL, node);

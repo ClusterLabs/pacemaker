@@ -149,34 +149,28 @@ fencing_topology_init(void)
 static void
 update_stonith_watchdog_timeout_ms(xmlNode *cib)
 {
-    long long timeout_ms = 0;
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
+    int rc = pcmk_rc_ok;
 
     // @TODO An XPath search can't handle multiple instances or rules
     stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
                                                 XPATH_WATCHDOG_TIMEOUT,
                                                 LOG_NEVER);
-    if (stonith_watchdog_xml) {
-        value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
-    }
-    if (value != NULL) {
-        /* @COMPAT So far it has been documented that a negative value is
-         * valid. Parse it as an integer first to avoid the warning from
-         * crm_get_msec().
-         */
-        int rc = pcmk__scan_ll(value, &timeout_ms, PCMK__PARSE_INT_DEFAULT);
-
-        if (rc != pcmk_rc_ok || timeout_ms >= 0) {
-            timeout_ms = crm_get_msec(value);
-        }
+    if (stonith_watchdog_xml == NULL) {
+        return;
     }
 
-    if (timeout_ms < 0) {
-        timeout_ms = pcmk__auto_stonith_watchdog_timeout();
+    value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
+    if (value == NULL) {
+        return;
     }
 
-    stonith_watchdog_timeout_ms = timeout_ms;
+    rc = pcmk__parse_ms(value, &stonith_watchdog_timeout_ms);
+
+    if ((rc != pcmk_rc_ok) || (stonith_watchdog_timeout_ms < 0)) {
+        stonith_watchdog_timeout_ms = pcmk__auto_stonith_watchdog_timeout();
+    }
 }
 
 /*!

@@ -361,8 +361,8 @@ clone_unpack(pcmk_resource_t *rsc)
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
                                             QB_MAX(1, num_nodes));
 
-    if (crm_is_true(g_hash_table_lookup(rsc->priv->meta,
-                                        PCMK_META_ORDERED))) {
+    if (pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
+                                          PCMK_META_ORDERED))) {
         clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
                                                "Clone", rsc->id,
                                                clone_data->flags,

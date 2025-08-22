@@ -140,7 +140,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     value = crm_meta_value(action->params, PCMK__META_OP_NO_WAIT);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         no_wait = TRUE;
     }
 
@@ -391,7 +391,7 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     }
 
     value = crm_meta_value(action->params, PCMK__META_OP_NO_WAIT);
-    if (crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         no_wait = TRUE;
     }
 

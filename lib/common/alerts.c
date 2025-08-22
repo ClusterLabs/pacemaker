@@ -159,7 +159,7 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
-    if ((value != NULL) && !crm_is_true(value)) {
+    if ((value != NULL) && !pcmk__is_true(value)) {
         // No need to continue unpacking
         rc = pcmk_rc_disabled;
         goto done;
@@ -167,11 +167,14 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
 
     value = g_hash_table_lookup(config_hash, PCMK_META_TIMEOUT);
     if (value != NULL) {
-        long long timeout_ms = crm_get_msec(value);
+        long long timeout_ms = 0;
 
-        entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
-        if (entry->timeout <= 0) {
-            if (entry->timeout == 0) {
+        if ((pcmk__parse_ms(value, &timeout_ms) != pcmk_rc_ok)
+            || (timeout_ms <= 0)) {
+
+            entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
+
+            if (timeout_ms == 0) {
                 crm_trace("Alert %s uses default timeout (%s)",
                           entry->id, READABLE_DEFAULT);
             } else {
@@ -179,8 +182,9 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
                                   "because '%s' is not a valid timeout",
                                   entry->id, value, READABLE_DEFAULT);
             }
-            entry->timeout = PCMK__ALERT_DEFAULT_TIMEOUT_MS;
+
         } else {
+            entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
             crm_trace("Alert %s uses timeout of %s",
                       entry->id, pcmk__readable_interval(entry->timeout));
         }

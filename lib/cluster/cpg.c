@@ -977,7 +977,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     msg->size = 1 + strlen(data);
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
 
-    if (msg->size < CRM_BZ2_THRESHOLD) {
+    if (msg->size < PCMK__BZ2_THRESHOLD) {
         msg = pcmk__realloc(msg, msg->header.size);
         memcpy(msg->data, data, msg->size);
 
