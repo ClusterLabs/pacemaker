@@ -387,10 +387,10 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 gboolean
 crm_fsa_trigger(gpointer user_data)
 {
-    crm_trace("Invoked (queue len: %d)",
-              g_list_length(controld_globals.fsa_message_queue));
+    crm_trace("Invoking FSA (queue len: %u)",
+              controld_fsa_message_queue_length());
     s_crmd_fsa(C_FSA_INTERNAL);
-    crm_trace("Exited  (queue len: %d)",
-              g_list_length(controld_globals.fsa_message_queue));
-    return TRUE;
+    crm_trace("Exited FSA (queue len: %u)",
+              controld_fsa_message_queue_length());
+    return G_SOURCE_CONTINUE;
 }

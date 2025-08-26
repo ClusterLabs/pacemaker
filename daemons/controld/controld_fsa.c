@@ -158,21 +158,29 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_dump_actions(controld_globals.fsa_actions, "Initial");
 
     controld_clear_global_flags(controld_fsa_is_stalled);
-    if ((controld_globals.fsa_message_queue == NULL)
+    if ((controld_fsa_message_queue_length() == 0)
         && (controld_globals.fsa_actions != A_NOTHING)) {
-        /* fake the first message so we can get into the loop */
+
+        /* Fake the first message so we can get into the loop.
+         * We can't call register_fsa_input() because it won't add a message
+         * with I_NULL and A_NOTHING.
+         */
         fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __func__;
         fsa_data->data_type = fsa_dt_none;
-        controld_globals.fsa_message_queue
-            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
+
+        if (controld_globals.fsa_message_queue == NULL) {
+            controld_globals.fsa_message_queue = g_queue_new();
+        }
+        g_queue_push_tail(controld_globals.fsa_message_queue, fsa_data);
     }
-    while ((controld_globals.fsa_message_queue != NULL)
+
+    while ((controld_fsa_message_queue_length() > 0)
            && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
-        crm_trace("Checking messages (%d remaining)",
-                  g_list_length(controld_globals.fsa_message_queue));
+        crm_trace("Checking messages (%u remaining)",
+                  controld_fsa_message_queue_length());
 
         fsa_data = get_message();
         if(fsa_data == NULL) {
@@ -233,13 +241,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         delete_fsa_input(fsa_data);
     }
 
-    if ((controld_globals.fsa_message_queue != NULL)
+    if ((controld_fsa_message_queue_length() > 0)
         || (controld_globals.fsa_actions != A_NOTHING)
         || pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
 
-        crm_debug("Exiting the FSA: queue=%d, fsa_actions=%" PRIx64
+        crm_debug("Exiting the FSA: queue=%u, fsa_actions=%" PRIx64
                   ", stalled=%s",
-                  g_list_length(controld_globals.fsa_message_queue),
+                  controld_fsa_message_queue_length(),
                   controld_globals.fsa_actions,
                   pcmk__flag_text(controld_globals.flags,
                                   controld_fsa_is_stalled));
@@ -261,8 +269,8 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         {
             unsigned int offset = 0;
 
-            g_list_foreach(controld_globals.fsa_message_queue, log_fsa_data,
-                           &offset);
+            g_queue_foreach(controld_globals.fsa_message_queue, log_fsa_data,
+                            &offset);
         },
         {}
     );

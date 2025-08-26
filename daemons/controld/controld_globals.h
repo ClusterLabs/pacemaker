@@ -13,7 +13,7 @@
 #include <crm_internal.h>       // pcmk__output_t, etc.
 
 #include <stdint.h>             // uint32_t, uint64_t
-#include <glib.h>               // GList, GMainLoop
+#include <glib.h>               // GMainLoop, GQueue, guint, etc.
 #include <crm/cib.h>            // cib_t
 #include <pacemaker-internal.h> // pcmk__graph_t
 #include <controld_fsa.h>       // enum crmd_fsa_state
@@ -35,7 +35,7 @@ typedef struct {
     uint64_t fsa_input_register;
 
     // FSA message queue
-    GList *fsa_message_queue;
+    GQueue *fsa_message_queue;
 
 
     /* CIB */
@@ -107,6 +107,21 @@ typedef struct {
 } controld_globals_t;
 
 extern controld_globals_t controld_globals;
+
+/*!
+ * \internal
+ * \brief Get number of messages in the controller FSA message queue
+ *
+ * \return Length of the queue, or 0 if the queue is \c NULL
+ */
+static inline guint
+controld_fsa_message_queue_length(void)
+{
+    if (controld_globals.fsa_message_queue == NULL) {
+        return 0;
+    }
+    return controld_globals.fsa_message_queue->length;
+}
 
 /*!
  * \internal

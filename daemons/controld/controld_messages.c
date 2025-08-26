@@ -74,9 +74,10 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     if (input == I_WAIT_FOR_EVENT) {
         controld_set_global_flags(controld_fsa_is_stalled);
-        crm_debug("Stalling the FSA pending further input: source=%s cause=%s data=%p queue=%d",
+        crm_debug("Stalling the FSA pending further input: "
+                  "source=%s cause=%s data=%p queue=%u",
                   raised_from, fsa_cause2string(cause), data,
-                  g_list_length(controld_globals.fsa_message_queue));
+                  controld_fsa_message_queue_length());
 
         if (data == NULL) {
             controld_set_fsa_action_flags(with_actions);
@@ -144,17 +145,18 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         }
     }
 
-    /* make sure to free it properly later */
-    if (prepend) {
-        controld_globals.fsa_message_queue
-            = g_list_prepend(controld_globals.fsa_message_queue, fsa_data);
-    } else {
-        controld_globals.fsa_message_queue
-            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
+    if (controld_globals.fsa_message_queue == NULL) {
+        controld_globals.fsa_message_queue = g_queue_new();
     }
 
-    crm_trace("FSA message queue length is %d",
-              g_list_length(controld_globals.fsa_message_queue));
+    if (prepend) {
+        g_queue_push_head(controld_globals.fsa_message_queue, fsa_data);
+    } else {
+        g_queue_push_tail(controld_globals.fsa_message_queue, fsa_data);
+    }
+
+    crm_trace("FSA message queue length is %u",
+              controld_fsa_message_queue_length());
 
     if (input != I_WAIT_FOR_EVENT) {
         controld_trigger_fsa();
@@ -220,11 +222,8 @@ delete_fsa_input(fsa_data_t * fsa_data)
 fsa_data_t *
 get_message(void)
 {
-    fsa_data_t *message
-        = (fsa_data_t *) controld_globals.fsa_message_queue->data;
+    fsa_data_t *message = g_queue_pop_head(controld_globals.fsa_message_queue);
 
-    controld_globals.fsa_message_queue
-        = g_list_remove(controld_globals.fsa_message_queue, message);
     crm_trace("Processing input %d", message->id);
     return message;
 }
