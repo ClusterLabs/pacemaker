@@ -218,16 +218,6 @@ delete_fsa_input(fsa_data_t * fsa_data)
     free(fsa_data);
 }
 
-/* returns the next message */
-fsa_data_t *
-get_message(void)
-{
-    fsa_data_t *message = g_queue_pop_head(controld_globals.fsa_message_queue);
-
-    crm_trace("Processing input %d", message->id);
-    return message;
-}
-
 void *
 fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char *caller)
 {

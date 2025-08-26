@@ -182,8 +182,10 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         crm_trace("Checking messages (%u remaining)",
                   controld_fsa_message_queue_length());
 
-        fsa_data = get_message();
-        if(fsa_data == NULL) {
+        fsa_data =
+            (fsa_data_t *) g_queue_pop_head(controld_globals.fsa_message_queue);
+
+        if (fsa_data == NULL) {
             continue;
         }
 
