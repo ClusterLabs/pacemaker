@@ -33,7 +33,6 @@ static void do_state_transition(enum crmd_fsa_state cur_state,
                                 fsa_data_t *msg_data);
 
 void s_crmd_fsa_actions(fsa_data_t * fsa_data);
-void log_fsa_input(fsa_data_t * stored_msg);
 
 static void
 do_fsa_action(fsa_data_t * fsa_data, long long an_action,
@@ -127,6 +126,26 @@ controld_trigger_fsa_as(const char *fn, int line)
     if (fsa_trigger != NULL) {
         crm_trace("%s:%d - Triggered FSA invocation", fn, line);
         mainloop_set_trigger(fsa_trigger);
+    }
+}
+
+static void
+log_fsa_input(fsa_data_t *stored_msg)
+{
+    pcmk__assert(stored_msg != NULL);
+    crm_trace("Processing queued input %d", stored_msg->id);
+    if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
+        crm_trace("FSA processing LRM callback from %s", stored_msg->origin);
+
+    } else if (stored_msg->data == NULL) {
+        crm_trace("FSA processing input from %s", stored_msg->origin);
+
+    } else {
+        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg,
+                                                      __func__);
+
+        crm_trace("FSA processing XML message from %s", stored_msg->origin);
+        crm_log_xml_trace(ha_input->xml, "FSA message data");
     }
 }
 
@@ -485,26 +504,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,
                                    __func__);
         }
-    }
-}
-
-void
-log_fsa_input(fsa_data_t * stored_msg)
-{
-    pcmk__assert(stored_msg != NULL);
-    crm_trace("Processing queued input %d", stored_msg->id);
-    if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
-        crm_trace("FSA processing LRM callback from %s", stored_msg->origin);
-
-    } else if (stored_msg->data == NULL) {
-        crm_trace("FSA processing input from %s", stored_msg->origin);
-
-    } else {
-        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg,
-                                                      __func__);
-
-        crm_trace("FSA processing XML message from %s", stored_msg->origin);
-        crm_log_xml_trace(ha_input->xml, "FSA message data");
     }
 }
 
