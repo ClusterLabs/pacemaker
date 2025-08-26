@@ -180,9 +180,20 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     if ((controld_fsa_message_queue_length() == 0)
         && (controld_globals.fsa_actions != A_NOTHING)) {
 
-        /* Fake the first message so we can get into the loop.
-         * We can't call register_fsa_input() because it won't add a message
-         * with I_NULL and A_NOTHING.
+        /* Fake the first message so that we can enter the loop.
+         *
+         * There are already actions to perform. Everything in the loop is a
+         * no-op for this fake message, except the following:
+         * * controld_clear_fsa_action_flags(startup_actions)
+         * * s_crmd_fsa_actions(fsa_data)
+         *
+         * We would still need this fake message even if we changed the loop
+         * condition. s_crmd_fsa_actions() needs an fsa_data_t object so that we
+         * can process the already-pending actions. So a larger refactor would
+         * be required in order to get rid of this.
+         *
+         * We can't call register_fsa_input() because it currently won't add a
+         * message with I_NULL and A_NOTHING (like this one).
          */
         fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
