@@ -136,7 +136,7 @@ log_fsa_data(gpointer data, gpointer user_data)
     fsa_data_t *fsa_data = data;
     unsigned int *offset = user_data;
 
-    crm_debug("queue[%u.%d]: input %s submitted by %s (%p.%d) (cause=%s)",
+    crm_trace("queue[%u.%d]: input %s submitted by %s (%p.%d) (cause=%s)",
               (*offset)++, fsa_data->id, fsa_input2string(fsa_data->fsa_input),
               fsa_data->origin, fsa_data->data, fsa_data->data_type,
               fsa_cause2string(fsa_data->fsa_cause));
@@ -150,7 +150,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     uint64_t register_copy = controld_globals.fsa_input_register;
     uint64_t new_actions = A_NOTHING;
     enum crmd_fsa_state last_state;
-    unsigned int offset = 0;
 
     crm_trace("FSA invoked with Cause: %s\tState: %s",
               fsa_cause2string(cause),
@@ -258,7 +257,15 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     }
 
     fsa_dump_actions(controld_globals.fsa_actions, "Remaining");
-    g_list_foreach(controld_globals.fsa_message_queue, log_fsa_data, &offset);
+    pcmk__if_tracing(
+        {
+            unsigned int offset = 0;
+
+            g_list_foreach(controld_globals.fsa_message_queue, log_fsa_data,
+                           &offset);
+        },
+        {}
+    );
 
     return globals->fsa_state;
 }
