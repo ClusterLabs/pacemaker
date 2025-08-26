@@ -161,23 +161,6 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 }
 
-void
-fsa_dump_queue(int log_level)
-{
-    int offset = 0;
-
-    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
-         iter = iter->next) {
-        fsa_data_t *data = (fsa_data_t *) iter->data;
-
-        do_crm_log_unlikely(log_level,
-                            "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
-                            offset++, data->id, fsa_input2string(data->fsa_input),
-                            data->origin, data->data, data->data_type,
-                            fsa_cause2string(data->fsa_cause));
-    }
-}
-
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t * orig)
 {

@@ -40,7 +40,6 @@ void register_fsa_input_adv(enum crmd_fsa_cause cause,
                             uint64_t with_actions, gboolean prepend,
                             const char *raised_from);
 
-extern void fsa_dump_queue(int log_level);
 extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 
 #  define crmd_fsa_stall(suppress) do {                                 \
