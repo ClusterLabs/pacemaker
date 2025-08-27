@@ -553,10 +553,20 @@ no_more_retries:
      * consume resources indefinitely.
      */
     if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
-        if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
-            /* Don't evict for a new or shrinking backlog */
+        /* Don't evict:
+         * - Clients with a new backlog.
+         * - Clients with a shrinking backlog (the client is processing
+         *   messages faster than the server is sending them).
+         * - Clients that are pacemaker daemons and have had any messages sent
+         *   to them in this flush call (the server is sending messages faster
+         *   than the client is processing them, but the client is not dead).
+         */
+        if ((c->queue_backlog <= 1)
+            || (queue_len < c->queue_backlog)
+            || ((sent > 0) && (pcmk__parse_server(c->name) != pcmk_ipc_unknown))) {
             crm_warn("Client with process ID %u has a backlog of %u messages "
                      QB_XS " %p", c->pid, queue_len, c->ipcs);
+
         } else {
             crm_err("Evicting client with process ID %u due to backlog of %u messages "
                      QB_XS " %p", c->pid, queue_len, c->ipcs);
