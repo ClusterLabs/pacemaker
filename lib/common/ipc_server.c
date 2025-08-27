@@ -491,13 +491,12 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         pcmk__ipc_header_t *header = NULL;
         struct iovec *event = NULL;
 
-        if (c->event_queue) {
-            // We don't pop unless send is successful
-            event = g_queue_peek_head(c->event_queue);
-        }
-        if (event == NULL) { // Queue is empty
+        if ((c->event_queue == NULL) || g_queue_is_empty(c->event_queue)) {
             break;
         }
+
+        // We don't pop unless send is successful
+        event = g_queue_peek_head(c->event_queue);
 
         /* Retry sending the event up to five times.  If we get -EAGAIN, sleep
          * a very short amount of time (too long here is bad) and try again.
