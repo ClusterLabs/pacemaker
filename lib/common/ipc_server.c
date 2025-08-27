@@ -541,33 +541,32 @@ no_more_retries:
                   sent, queue_len, c->ipcs, c->pid, pcmk_rc_str(rc), qb_rc);
     }
 
-    if (queue_len) {
-
-        /* Allow clients to briefly fall behind on processing incoming messages,
-         * but drop completely unresponsive clients so the connection doesn't
-         * consume resources indefinitely.
-         */
-        if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
-            if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
-                /* Don't evict for a new or shrinking backlog */
-                crm_warn("Client with process ID %u has a backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
-            } else {
-                crm_err("Evicting client with process ID %u due to backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
-                c->queue_backlog = 0;
-                qb_ipcs_disconnect(c->ipcs);
-                return rc;
-            }
-        }
-
-        c->queue_backlog = queue_len;
-        delay_next_flush(c, queue_len);
-
-    } else {
+    if (queue_len == 0) {
         /* Event queue is empty, there is no backlog */
         c->queue_backlog = 0;
+        return rc;
     }
+
+    /* Allow clients to briefly fall behind on processing incoming messages,
+     * but drop completely unresponsive clients so the connection doesn't
+     * consume resources indefinitely.
+     */
+    if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
+        if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
+            /* Don't evict for a new or shrinking backlog */
+            crm_warn("Client with process ID %u has a backlog of %u messages "
+                     QB_XS " %p", c->pid, queue_len, c->ipcs);
+        } else {
+            crm_err("Evicting client with process ID %u due to backlog of %u messages "
+                     QB_XS " %p", c->pid, queue_len, c->ipcs);
+            c->queue_backlog = 0;
+            qb_ipcs_disconnect(c->ipcs);
+            return rc;
+        }
+    }
+
+    c->queue_backlog = queue_len;
+    delay_next_flush(c, queue_len);
 
     return rc;
 }
