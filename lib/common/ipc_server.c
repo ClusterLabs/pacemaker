@@ -490,7 +490,6 @@ crm_ipcs_flush_events(pcmk__client_t *c)
     }
 
     while (sent < 100) {
-        pcmk__ipc_header_t *header = NULL;
         struct iovec *event = NULL;
 
         if ((c->event_queue == NULL) || g_queue_is_empty(c->event_queue)) {
@@ -525,13 +524,22 @@ crm_ipcs_flush_events(pcmk__client_t *c)
             }
         }
 
-        event = g_queue_pop_head(c->event_queue);
-
+        /* No need to assign the return value here because event is still the
+         * same since we peeked it earlier.
+         */
+        g_queue_pop_head(c->event_queue);
         sent++;
-        header = event[0].iov_base;
-        crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
-                  header->qb.id, c->ipcs, c->pid, qb_rc,
-                  (char *) (event[1].iov_base));
+
+        pcmk__if_tracing(
+            {
+                pcmk__ipc_header_t *header = event[0].iov_base;
+                crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
+                          header->qb.id, c->ipcs, c->pid, qb_rc,
+                          (char *) (event[1].iov_base));
+            },
+            {}
+       );
+
         pcmk_free_ipc_event(event);
     }
 
