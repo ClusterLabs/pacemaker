@@ -209,20 +209,10 @@ crmd_exit(crm_exit_t exit_code)
 
 /* Clean up as much memory as possible for valgrind */
 
-    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
-         iter = iter->next) {
-        fsa_data_t *fsa_data = (fsa_data_t *) iter->data;
-
-        crm_info("Dropping %s: [ state=%s cause=%s origin=%s ]",
-                 fsa_input2string(fsa_data->fsa_input),
-                 fsa_state2string(controld_globals.fsa_state),
-                 fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
-        delete_fsa_input(fsa_data);
-    }
-
     controld_clear_fsa_input_flags(R_MEMBERSHIP);
 
-    g_list_free(controld_globals.fsa_message_queue);
+    g_queue_free_full(controld_globals.fsa_message_queue,
+                      (GDestroyNotify) delete_fsa_input);
     controld_globals.fsa_message_queue = NULL;
 
     controld_free_node_pending_timers();

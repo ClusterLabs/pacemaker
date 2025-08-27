@@ -33,7 +33,6 @@ static void do_state_transition(enum crmd_fsa_state cur_state,
                                 fsa_data_t *msg_data);
 
 void s_crmd_fsa_actions(fsa_data_t * fsa_data);
-void log_fsa_input(fsa_data_t * stored_msg);
 
 static void
 do_fsa_action(fsa_data_t * fsa_data, long long an_action,
@@ -130,6 +129,38 @@ controld_trigger_fsa_as(const char *fn, int line)
     }
 }
 
+static void
+log_fsa_input(fsa_data_t *stored_msg)
+{
+    pcmk__assert(stored_msg != NULL);
+    crm_trace("Processing queued input %d", stored_msg->id);
+    if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
+        crm_trace("FSA processing LRM callback from %s", stored_msg->origin);
+
+    } else if (stored_msg->data == NULL) {
+        crm_trace("FSA processing input from %s", stored_msg->origin);
+
+    } else {
+        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg,
+                                                      __func__);
+
+        crm_trace("FSA processing XML message from %s", stored_msg->origin);
+        crm_log_xml_trace(ha_input->xml, "FSA message data");
+    }
+}
+
+static void
+log_fsa_data(gpointer data, gpointer user_data)
+{
+    fsa_data_t *fsa_data = data;
+    unsigned int *offset = user_data;
+
+    crm_trace("queue[%u.%d]: input %s submitted by %s (%p.%d) (cause=%s)",
+              (*offset)++, fsa_data->id, fsa_input2string(fsa_data->fsa_input),
+              fsa_data->origin, fsa_data->data, fsa_data->data_type,
+              fsa_cause2string(fsa_data->fsa_cause));
+}
+
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
@@ -146,24 +177,45 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     fsa_dump_actions(controld_globals.fsa_actions, "Initial");
 
     controld_clear_global_flags(controld_fsa_is_stalled);
-    if ((controld_globals.fsa_message_queue == NULL)
+    if ((controld_fsa_message_queue_length() == 0)
         && (controld_globals.fsa_actions != A_NOTHING)) {
-        /* fake the first message so we can get into the loop */
+
+        /* Fake the first message so that we can enter the loop.
+         *
+         * There are already actions to perform. Everything in the loop is a
+         * no-op for this fake message, except the following:
+         * * controld_clear_fsa_action_flags(startup_actions)
+         * * s_crmd_fsa_actions(fsa_data)
+         *
+         * We would still need this fake message even if we changed the loop
+         * condition. s_crmd_fsa_actions() needs an fsa_data_t object so that we
+         * can process the already-pending actions. So a larger refactor would
+         * be required in order to get rid of this.
+         *
+         * We can't call register_fsa_input() because it currently won't add a
+         * message with I_NULL and A_NOTHING (like this one).
+         */
         fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __func__;
         fsa_data->data_type = fsa_dt_none;
-        controld_globals.fsa_message_queue
-            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
-    }
-    while ((controld_globals.fsa_message_queue != NULL)
-           && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
-        crm_trace("Checking messages (%d remaining)",
-                  g_list_length(controld_globals.fsa_message_queue));
 
-        fsa_data = get_message();
-        if(fsa_data == NULL) {
+        if (controld_globals.fsa_message_queue == NULL) {
+            controld_globals.fsa_message_queue = g_queue_new();
+        }
+        g_queue_push_tail(controld_globals.fsa_message_queue, fsa_data);
+    }
+
+    while ((controld_fsa_message_queue_length() > 0)
+           && !pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
+        crm_trace("Checking messages (%u remaining)",
+                  controld_fsa_message_queue_length());
+
+        fsa_data =
+            (fsa_data_t *) g_queue_pop_head(controld_globals.fsa_message_queue);
+
+        if (fsa_data == NULL) {
             continue;
         }
 
@@ -221,13 +273,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         delete_fsa_input(fsa_data);
     }
 
-    if ((controld_globals.fsa_message_queue != NULL)
+    if ((controld_fsa_message_queue_length() > 0)
         || (controld_globals.fsa_actions != A_NOTHING)
         || pcmk_is_set(controld_globals.flags, controld_fsa_is_stalled)) {
 
-        crm_debug("Exiting the FSA: queue=%d, fsa_actions=%" PRIx64
+        crm_debug("Exiting the FSA: queue=%u, fsa_actions=%" PRIx64
                   ", stalled=%s",
-                  g_list_length(controld_globals.fsa_message_queue),
+                  controld_fsa_message_queue_length(),
                   controld_globals.fsa_actions,
                   pcmk__flag_text(controld_globals.flags,
                                   controld_fsa_is_stalled));
@@ -245,7 +297,15 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
     }
 
     fsa_dump_actions(controld_globals.fsa_actions, "Remaining");
-    fsa_dump_queue(LOG_DEBUG);
+    pcmk__if_tracing(
+        {
+            unsigned int offset = 0;
+
+            g_queue_foreach(controld_globals.fsa_message_queue, log_fsa_data,
+                            &offset);
+        },
+        {}
+    );
 
     return globals->fsa_state;
 }
@@ -455,26 +515,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,
                                    __func__);
         }
-    }
-}
-
-void
-log_fsa_input(fsa_data_t * stored_msg)
-{
-    pcmk__assert(stored_msg != NULL);
-    crm_trace("Processing queued input %d", stored_msg->id);
-    if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
-        crm_trace("FSA processing LRM callback from %s", stored_msg->origin);
-
-    } else if (stored_msg->data == NULL) {
-        crm_trace("FSA processing input from %s", stored_msg->origin);
-
-    } else {
-        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg,
-                                                      __func__);
-
-        crm_trace("FSA processing XML message from %s", stored_msg->origin);
-        crm_log_xml_trace(ha_input->xml, "FSA message data");
     }
 }
 

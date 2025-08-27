@@ -60,7 +60,6 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        void *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
-    unsigned old_len = g_list_length(controld_globals.fsa_message_queue);
     fsa_data_t *fsa_data = NULL;
 
     if (raised_from == NULL) {
@@ -75,19 +74,18 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     if (input == I_WAIT_FOR_EVENT) {
         controld_set_global_flags(controld_fsa_is_stalled);
-        crm_debug("Stalling the FSA pending further input: source=%s cause=%s data=%p queue=%d",
-                  raised_from, fsa_cause2string(cause), data, old_len);
-
-        if (old_len > 0) {
-            fsa_dump_queue(LOG_TRACE);
-            prepend = FALSE;
-        }
+        crm_debug("Stalling the FSA pending further input: "
+                  "source=%s cause=%s data=%p queue=%u",
+                  raised_from, fsa_cause2string(cause), data,
+                  controld_fsa_message_queue_length());
 
         if (data == NULL) {
             controld_set_fsa_action_flags(with_actions);
             fsa_dump_actions(with_actions, "Restored");
             return;
         }
+
+        prepend = FALSE;
 
         /* Store everything in the new event and reset
          * controld_globals.fsa_actions
@@ -147,43 +145,21 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         }
     }
 
-    /* make sure to free it properly later */
+    if (controld_globals.fsa_message_queue == NULL) {
+        controld_globals.fsa_message_queue = g_queue_new();
+    }
+
     if (prepend) {
-        controld_globals.fsa_message_queue
-            = g_list_prepend(controld_globals.fsa_message_queue, fsa_data);
+        g_queue_push_head(controld_globals.fsa_message_queue, fsa_data);
     } else {
-        controld_globals.fsa_message_queue
-            = g_list_append(controld_globals.fsa_message_queue, fsa_data);
+        g_queue_push_tail(controld_globals.fsa_message_queue, fsa_data);
     }
 
-    crm_trace("FSA message queue length is %d",
-              g_list_length(controld_globals.fsa_message_queue));
-
-    /* fsa_dump_queue(LOG_TRACE); */
-
-    if (old_len == g_list_length(controld_globals.fsa_message_queue)) {
-        crm_err("Couldn't add message to the queue");
-    }
+    crm_trace("FSA message queue length is %u",
+              controld_fsa_message_queue_length());
 
     if (input != I_WAIT_FOR_EVENT) {
         controld_trigger_fsa();
-    }
-}
-
-void
-fsa_dump_queue(int log_level)
-{
-    int offset = 0;
-
-    for (GList *iter = controld_globals.fsa_message_queue; iter != NULL;
-         iter = iter->next) {
-        fsa_data_t *data = (fsa_data_t *) iter->data;
-
-        do_crm_log_unlikely(log_level,
-                            "queue[%d.%d]: input %s raised by %s(%p.%d)\t(cause=%s)",
-                            offset++, data->id, fsa_input2string(data->fsa_input),
-                            data->origin, data->data, data->data_type,
-                            fsa_cause2string(data->fsa_cause));
     }
 }
 
@@ -240,19 +216,6 @@ delete_fsa_input(fsa_data_t * fsa_data)
     }
 
     free(fsa_data);
-}
-
-/* returns the next message */
-fsa_data_t *
-get_message(void)
-{
-    fsa_data_t *message
-        = (fsa_data_t *) controld_globals.fsa_message_queue->data;
-
-    controld_globals.fsa_message_queue
-        = g_list_remove(controld_globals.fsa_message_queue, message);
-    crm_trace("Processing input %d", message->id);
-    return message;
 }
 
 void *
