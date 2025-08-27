@@ -513,16 +513,16 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         for (unsigned int retries = 5; retries > 0; retries--) {
             qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
 
-            if (qb_rc < 0) {
-                if (retries == 1 || qb_rc != -EAGAIN) {
-                    rc = (int) -qb_rc;
-                    goto no_more_retries;
-                } else {
-                    pcmk__sleep_ms(5);
-                }
-            } else {
+            if (qb_rc >= 0) {
                 break;
             }
+
+            if (retries == 1 || qb_rc != -EAGAIN) {
+                rc = (int) -qb_rc;
+                goto no_more_retries;
+            }
+
+            pcmk__sleep_ms(5);
         }
 
         event = g_queue_pop_head(c->event_queue);
