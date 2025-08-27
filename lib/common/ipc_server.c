@@ -477,16 +477,18 @@ crm_ipcs_flush_events(pcmk__client_t *c)
 
     if (c == NULL) {
         return rc;
+    }
 
-    } else if (c->event_timer) {
+    if (c->event_timer != 0) {
         /* There is already a timer, wait until it goes off */
         crm_trace("Timer active for %p - %d", c->ipcs, c->event_timer);
         return rc;
     }
 
-    if (c->event_queue) {
+    if (c->event_queue != NULL) {
         queue_len = g_queue_get_length(c->event_queue);
     }
+
     while (sent < 100) {
         pcmk__ipc_header_t *header = NULL;
         struct iovec *event = NULL;
