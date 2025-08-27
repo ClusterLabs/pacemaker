@@ -21,10 +21,10 @@
     </parameter>
     <parameter name="cluster-ipc-limit">
       <longdesc lang="en">
-        Raise this if log has "Evicting client" messages for cluster daemon PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).
+        Raise this if log has "Evicting client" messages for cluster PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).
       </longdesc>
       <shortdesc lang="en">
-        Maximum IPC message backlog before disconnecting a cluster daemon
+        Maximum IPC message backlog before disconnecting a client
       </shortdesc>
       <content type="integer" default=""/>
     </parameter>
