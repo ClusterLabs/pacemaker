@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2010-2021 the Pacemaker project contributors
+# Copyright 2010-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -40,15 +40,12 @@ test -f $CTSCTRL ||  {
 }
 . $CTSCTRL
 
-: ${CTS_logfacility:=local7}
-: ${CTS_stack:=corosync}
 : ${CTS_logfile:="@CRM_LOG_DIR@/ha-log-bench"}
 : ${CTS_adv:="--schema pacemaker-1.2 --clobber-cib -r"}
 : ${RUNS:=3}
 : ${CTSTESTS:="--benchmark"}
 : ${CTSDIR:="@datadir@/@PACKAGE@/tests/cts"}
 : ${CTS_node_list:=""}
-: ${CTS_boot:=""}
 : ${CTS_stonith:=""}
 : ${CTS_stonith_args:=""}
 
@@ -57,20 +54,14 @@ test -f $CTSCTRL ||  {
 	exit 1
 }
 
-case "$CTS_stack" in
-corosync) CRM_REPORT_OPTS="--corosync";;
-*) msg "$CTS_stack: cluster stack not recognized"; exit 1;;
-esac
-
-CTSOPTS="--stack $CTS_stack --at-boot $CTS_boot $CTS_adv"
-CTSOPTS="$CTSOPTS --facility $CTS_logfacility --logfile $CTS_logfile"
+CTSOPTS="$CTS_adv --logfile $CTS_logfile"
 
 if [ "x$CTS_stonith" != "x" ]; then
-	CTSOPTS="$CTSOPTS --stonith-type $CTS_stonith"
+	CTSOPTS="$CTSOPTS --fencing-agent $CTS_stonith"
 	[ "x$CTS_stonith_args" != "x" ] &&
-		CTSOPTS="$CTSOPTS --stonith-params \"$CTS_stonith_args\""
+		CTSOPTS="$CTSOPTS --fencing-params \"$CTS_stonith_args\""
 else
-	CTSOPTS="$CTSOPTS --stonith 0"
+	CTSOPTS="$CTSOPTS --disable-fencing"
 fi
 
 CTSOPTS="$CTSOPTS $CTSTESTS"

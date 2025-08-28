@@ -12,7 +12,6 @@ import random
 import shlex
 import socket
 import sys
-import time
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.logging import LogFactory
@@ -50,47 +49,32 @@ class Environment:
                 If None, sys.argv will be used.
         """
         self.data = {}
-        self._nodes = []
 
         # Set some defaults before processing command line arguments.  These are
         # either not set by any command line parameter, or they need a default
         # that can't be set in add_argument.
-        self["DeadTime"] = 300
-        self["StartTime"] = 300
-        self["StableTime"] = 30
-        self["tests"] = []
-        self["IPagent"] = "IPaddr2"
-        self["DoFencing"] = True
-        self["CIBResource"] = False
+        self["dead_time"] = 300
         self["log_kind"] = None
         self["scenario"] = "random"
+        self["stable_time"] = 30
+        self["start_time"] = 300
+        self["syslog_facility"] = "daemon"
+        self["tests"] = []
+
+        # Hard-coded since there is only one supported cluster manager/stack
+        self["Name"] = "crm-corosync"
+        self["Stack"] = "corosync 2+"
 
         self.random_gen = random.Random()
 
         self._logger = LogFactory()
         self._rsh = RemoteFactory().getInstance()
-        self._target = "localhost"
 
-        self._seed_random()
         self._parse_args(args)
 
         if not self["ListTests"]:
             self._validate()
             self._discover()
-
-    def _seed_random(self, seed=None):
-        """
-        Initialize the random number generator.
-
-        Arguments:
-        seed -- Use this to see the random number generator, or use the
-                current time if None.
-        """
-        if not seed:
-            seed = int(time.time())
-
-        self["RandSeed"] = seed
-        self.random_gen.seed(str(seed))
 
     def dump(self):
         """Print the current environment."""
@@ -99,38 +83,27 @@ class Environment:
 
     def __contains__(self, key):
         """Return True if the given key exists in the environment."""
-        if key == "nodes":
-            return True
-
         return key in self.data
 
     def __getitem__(self, key):
         """Return the given environment key, or None if it does not exist."""
-        if key == "nodes":
-            return self._nodes
-
-        if key == "Name":
-            return self._get_stack_short()
-
         return self.data.get(key)
 
     def __setitem__(self, key, value):
         """Set the given environment key to the given value, overriding any previous value."""
-        if key == "Stack":
-            self._set_stack(value)
-
-        elif key == "nodes":
-            self._nodes = []
+        if key == "nodes":
+            self.data["nodes"] = []
             for node in value:
+                node = node.strip()
+
                 # I don't think I need the IP address, etc. but this validates
                 # the node name against /etc/hosts and/or DNS, so it's a
                 # GoodThing(tm).
                 try:
-                    n = node.strip()
                     # @TODO This only handles IPv4, use getaddrinfo() instead
                     # (here and in _discover())
-                    socket.gethostbyname_ex(n)
-                    self._nodes.append(n)
+                    socket.gethostbyname_ex(node)
+                    self.data["nodes"].append(node)
                 except socket.herror:
                     self._logger.log(f"{node} not found in DNS... aborting")
                     raise
@@ -142,42 +115,23 @@ class Environment:
         """Choose a random node from the cluster."""
         return self.random_gen.choice(self["nodes"])
 
-    def _set_stack(self, name):
-        """Normalize the given cluster stack name."""
-        if name in ["corosync", "cs", "mcp"]:
-            self.data["Stack"] = "corosync 2+"
-
-        else:
-            raise ValueError(f"Unknown stack: {name}")
-
-    def _get_stack_short(self):
-        """Return the short name for the currently set cluster stack."""
-        if "Stack" not in self.data:
-            return "unknown"
-
-        if self.data["Stack"] == "corosync 2+":
-            return "crm-corosync"
-
-        LogFactory().log(f"Unknown stack: {self['stack']}")
-        raise ValueError(f"Unknown stack: {self['stack']}")
-
-    def _detect_systemd(self):
+    def _detect_systemd(self, node):
         """Detect whether systemd is in use on the target node."""
         if "have_systemd" not in self.data:
-            (rc, _) = self._rsh(self._target, "systemctl list-units", verbose=0)
+            (rc, _) = self._rsh(node, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
-    def _detect_syslog(self):
+    def _detect_syslog(self, node):
         """Detect the syslog variant in use on the target node (if any)."""
         if "syslogd" in self.data:
             return
 
         if self["have_systemd"]:
             # Systemd
-            (_, lines) = self._rsh(self._target, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+            (_, lines) = self._rsh(node, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
         else:
             # SYS-V
-            (_, lines) = self._rsh(self._target, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
+            (_, lines) = self._rsh(node, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
 
         with suppress(IndexError):
             self["syslogd"] = lines[0].strip()
@@ -220,19 +174,18 @@ class Environment:
         (rc, _) = self._rsh(node, f"chkconfig --list | grep -e {service}.*on")
         return rc == 0
 
-    def _detect_at_boot(self):
+    def _detect_at_boot(self, node):
         """Detect if the cluster starts at boot."""
-        if "at-boot" not in self.data:
-            self["at-boot"] = self.service_is_enabled(self._target, "corosync") \
-                or self.service_is_enabled(self._target, "pacemaker")
+        self["at-boot"] = any(self.service_is_enabled(node, service)
+                              for service in ("pacemaker", "corosync"))
 
-    def _detect_ip_offset(self):
+    def _detect_ip_offset(self, node):
         """Detect the offset for IPaddr resources."""
-        if self["CIBResource"] and "IPBase" not in self.data:
-            (_, lines) = self._rsh(self._target, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
+        if self["create_resources"] and "IPBase" not in self.data:
+            (_, lines) = self._rsh(node, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
-            (_, lines) = self._rsh(self._target, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
+            (_, lines) = self._rsh(node, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
 
             try:
                 self["IPBase"] = lines[0].strip()
@@ -245,11 +198,7 @@ class Environment:
                 self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
                 return
 
-            # pylint thinks self["IPBase"] is a list, not a string, which causes it
-            # to error out because a list doesn't have split().
-            # pylint: disable=no-member
             last_part = self["IPBase"].split('.')[3]
-
             if int(last_part) >= 240:
                 self._logger.log(f"Could not determine an offset for IPaddr resources. Upper bound is too high: {self['IPBase']} {last_part}")
                 self["IPBase"] = " fe80::1234:56:7890:1000"
@@ -262,8 +211,6 @@ class Environment:
 
     def _discover(self):
         """Probe cluster nodes to figure out how to log and manage services."""
-        self._target = random.Random().choice(self["nodes"])
-
         exerciser = socket.gethostname()
 
         # Use the IP where possible to avoid name lookup failures
@@ -274,10 +221,11 @@ class Environment:
 
         self["cts-exerciser"] = exerciser
 
-        self._detect_systemd()
-        self._detect_syslog()
-        self._detect_at_boot()
-        self._detect_ip_offset()
+        node = self["nodes"][0]
+        self._detect_systemd(node)
+        self._detect_syslog(node)
+        self._detect_at_boot(node)
+        self._detect_ip_offset(node)
 
     def _parse_args(self, argv):
         """
@@ -289,12 +237,9 @@ class Environment:
         if not argv:
             argv = sys.argv[1:]
 
-        parser = argparse.ArgumentParser(epilog=f"{sys.argv[0]} -g virt1 -r --stonith ssh --schema pacemaker-2.0 500")
+        parser = argparse.ArgumentParser()
 
         grp1 = parser.add_argument_group("Common options")
-        grp1.add_argument("-g", "--dsh-group", "--group",
-                          metavar="GROUP", dest="group",
-                          help="Use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
         grp1.add_argument("--benchmark",
                           action="store_true",
                           help="Add timing information")
@@ -305,22 +250,11 @@ class Environment:
                           default="",
                           metavar="NODES",
                           help="List of cluster nodes separated by whitespace")
-        grp1.add_argument("--stack",
-                          default="corosync",
-                          metavar="STACK",
-                          help="Which cluster stack is installed")
 
         grp2 = parser.add_argument_group("Options that CTS will usually auto-detect correctly")
         grp2.add_argument("-L", "--logfile",
                           metavar="PATH",
                           help="Where to look for logs from cluster nodes (or 'journal' for systemd journal)")
-        grp2.add_argument("--at-boot", "--cluster-starts-at-boot",
-                          choices=["1", "0", "yes", "no"],
-                          help="Does the cluster software start at boot time?")
-        grp2.add_argument("--facility", "--syslog-facility",
-                          default="daemon",
-                          metavar="NAME",
-                          help="Which syslog facility to log to")
         grp2.add_argument("--ip", "--test-ip-base",
                           metavar="IP",
                           help="Offset for generated IP address resources")
@@ -332,10 +266,17 @@ class Environment:
         grp3.add_argument("--choose",
                           metavar="NAME",
                           help="Run only the named tests, separated by whitespace")
-        grp3.add_argument("--fencing", "--stonith",
-                          choices=["1", "0", "yes", "no", "lha", "openstack", "rhcs", "rhevm", "scsi", "ssh", "virt", "xvm"],
-                          default="1",
-                          help="What fencing agent to use")
+        grp3.add_argument("--disable-fencing",
+                          action="store_false",
+                          dest="fencing_enabled",
+                          help="Whether to disable fencing")
+        grp3.add_argument("--fencing-agent",
+                          metavar="AGENT",
+                          default="external/ssh",
+                          help="Agent to use for a fencing resource")
+        grp3.add_argument("--fencing-params",
+                          metavar="PARAMS",
+                          help="Parameters for the fencing resource (as NAME=VALUE), separated by whitespace")
         grp3.add_argument("--once",
                           action="store_true",
                           help="Run all valid tests once")
@@ -353,17 +294,9 @@ class Environment:
         grp4.add_argument("--cib-filename",
                           metavar="PATH",
                           help="Install the given CIB file to the cluster")
-        grp4.add_argument("--experimental-tests",
-                          action="store_true",
-                          help="Include experimental tests")
-        grp4.add_argument("--loop-minutes",
-                          type=int, default=60,
-                          help="")
-        grp4.add_argument("--no-loop-tests",
-                          action="store_true",
-                          help="Don't run looping/time-based tests")
         grp4.add_argument("--no-unsafe-tests",
-                          action="store_true",
+                          action="store_false",
+                          dest="unsafe_tests",
                           help="Don't run tests that are unsafe for use with ocfs2/drbd")
         grp4.add_argument("--notification-agent",
                           metavar="PATH",
@@ -373,16 +306,9 @@ class Environment:
                           metavar="R",
                           default="/var/lib/pacemaker/notify.log",
                           help="Recipient to pass to alert script")
-        grp4.add_argument("--oprofile",
-                          default="",
-                          metavar="NODES",
-                          help="List of cluster nodes to run oprofile on")
         grp4.add_argument("--outputfile",
                           metavar="PATH",
                           help="Location to write logs to")
-        grp4.add_argument("--qarsh",
-                          action="store_true",
-                          help="Use QARSH to access nodes instead of SSH")
         grp4.add_argument("--schema",
                           metavar="SCHEMA",
                           default=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}",
@@ -390,29 +316,9 @@ class Environment:
         grp4.add_argument("--seed",
                           metavar="SEED",
                           help="Use the given string as the random number seed")
-        grp4.add_argument("--set",
-                          action="append",
-                          metavar="ARG",
-                          default=[],
-                          help="Set key=value pairs (can be specified multiple times)")
-        grp4.add_argument("--stonith-args",
-                          metavar="ARGS",
-                          default="hostlist=all,livedangerously=yes",
-                          help="")
-        grp4.add_argument("--stonith-type",
-                          metavar="TYPE",
-                          default="external/ssh",
-                          help="")
         grp4.add_argument("--trunc",
                           action="store_true", dest="truncate",
                           help="Truncate log file before starting")
-        grp4.add_argument("--valgrind-procs",
-                          metavar="PROCS",
-                          default="pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd",
-                          help="Run valgrind against the given space-separated list of processes")
-        grp4.add_argument("--warn-inactive",
-                          action="store_true",
-                          help="Warn if a resource is assigned to an inactive node")
 
         parser.add_argument("iterations",
                             nargs='?',
@@ -427,49 +333,21 @@ class Environment:
         # These values can always be set. Most get a default from the add_argument
         # calls, they only do one thing, and they do not have any side effects.
         self["CIBfilename"] = args.cib_filename if args.cib_filename else None
-        self["ClobberCIB"] = args.clobber_cib
+        self["create_resources"] = bool(args.ip or args.populate_resources)
+        self["fencing_agent"] = args.fencing_agent
+        self["fencing_enabled"] = args.fencing_enabled
+        self["fencing_params"] = shlex.split(args.fencing_params)
         self["ListTests"] = args.list_tests
+        self["overwrite_cib"] = any([args.clobber_cib, args.ip, args.populate_resources])
         self["Schema"] = args.schema
-        self["Stack"] = args.stack
-        self["SyslogFacility"] = args.facility
         self["TruncateLog"] = args.truncate
-        self["at-boot"] = args.at_boot in ["1", "yes"]
         self["benchmark"] = args.benchmark
         self["continue"] = args.always_continue
-        self["experimental-tests"] = args.experimental_tests
         self["iterations"] = args.iterations
-        self["loop-minutes"] = args.loop_minutes
-        self["loop-tests"] = not args.no_loop_tests
         self["nodes"] = shlex.split(args.nodes)
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
-        self["oprofile"] = shlex.split(args.oprofile)
-        self["stonith-params"] = args.stonith_args
-        self["stonith-type"] = args.stonith_type
-        self["unsafe-tests"] = not args.no_unsafe_tests
-        self["valgrind-procs"] = args.valgrind_procs
-        self["warn-inactive"] = args.warn_inactive
-
-        # Nodes and groups are mutually exclusive. Additionally, --group does
-        # more than just set a value. Here, set nodes first and then if a group
-        # is specified, override the previous nodes value.
-        if args.group:
-            self["OutputFile"] = f"{os.environ['HOME']}/cluster-{args.dsh_group}.log"
-            LogFactory().add_file(self["OutputFile"], "CTS")
-
-            dsh_file = f"{os.environ['HOME']}/.dsh/group/{args.dsh_group}"
-
-            if os.path.isfile(dsh_file):
-                self["nodes"] = []
-
-                with open(dsh_file, "r", encoding="utf-8") as f:
-                    for line in f:
-                        stripped = line.strip()
-
-                        if not stripped.startswith('#'):
-                            self["nodes"].append(stripped)
-            else:
-                print(f"Unknown DSH group: {args.dsh_group}")
+        self["unsafe-tests"] = args.unsafe_tests
 
         # Everything else either can't have a default set in an add_argument
         # call (likely because we don't want to always have a value set for it)
@@ -485,45 +363,7 @@ class Environment:
             self["tests"].extend(shlex.split(args.choose))
             self["iterations"] = len(self["tests"])
 
-        if args.fencing in ["0", "no"]:
-            self["DoFencing"] = False
-
-        elif args.fencing in ["rhcs", "virt", "xvm"]:
-            self["stonith-type"] = "fence_xvm"
-
-        elif args.fencing == "scsi":
-            self["stonith-type"] = "fence_scsi"
-
-        elif args.fencing in ["lha", "ssh"]:
-            self["stonith-params"] = "hostlist=all,livedangerously=yes"
-            self["stonith-type"] = "external/ssh"
-
-        elif args.fencing == "openstack":
-            self["stonith-type"] = "fence_openstack"
-
-            print("Obtaining OpenStack credentials from the current environment")
-            region = os.environ['OS_REGION_NAME']
-            tenant = os.environ['OS_TENANT_NAME']
-            auth = os.environ['OS_AUTH_URL']
-            user = os.environ['OS_USERNAME']
-            password = os.environ['OS_PASSWORD']
-
-            self["stonith-params"] = f"region={region},tenant={tenant},auth={auth},user={user},password={password}"
-
-        elif args.fencing == "rhevm":
-            self["stonith-type"] = "fence_rhevm"
-
-            print("Obtaining RHEV-M credentials from the current environment")
-            user = os.environ['RHEVM_USERNAME']
-            password = os.environ['RHEVM_PASSWORD']
-            server = os.environ['RHEVM_SERVER']
-            port = os.environ['RHEVM_PORT']
-
-            self["stonith-params"] = f"login={user},passwd={password},ipaddr={server},ipport={port},ssl=1,shell_timeout=10"
-
         if args.ip:
-            self["CIBResource"] = True
-            self["ClobberCIB"] = True
             self["IPBase"] = args.ip
 
         if args.logfile == "journal":
@@ -547,17 +387,7 @@ class Environment:
             self["OutputFile"] = args.outputfile
             LogFactory().add_file(self["OutputFile"])
 
-        if args.populate_resources:
-            self["CIBResource"] = True
-            self["ClobberCIB"] = True
-
-        if args.qarsh:
-            self._rsh.enable_qarsh()
-
-        for kv in args.set:
-            (name, value) = kv.split("=")
-            self[name] = value
-            print(f"Setting {name} = {value}")
+        self.random_gen.seed(args.seed)
 
 
 class EnvFactory:

@@ -135,7 +135,7 @@ class LogAudit(ClusterAudit):
             watch[watch_pref] = self._create_watcher(patterns, watch_pref)
 
         for node in self._cm.env["nodes"]:
-            cmd = f"logger -p {self._cm.env['SyslogFacility']}.info {prefix} {node} {suffix}"
+            cmd = f"logger -p {self._cm.env['syslog_facility']}.info {prefix} {node} {suffix}"
 
             (rc, _) = self._cm.rsh(node, cmd, synchronous=False, verbose=0)
             if rc != 0:
@@ -483,14 +483,6 @@ class PrimitiveAudit(ClusterAudit):
             self._cm.log(f"WARN: Resource {resource.id} not served anywhere")
             rc = False
 
-        elif self._cm.env["warn-inactive"]:
-            if quorum or not resource.needs_quorum:
-                self._cm.log(f"WARN: Resource {resource.id} not served anywhere "
-                             f"(Inactive nodes: {self._inactive_nodes!r})")
-            else:
-                self.debug(f"Resource {resource.id} not served anywhere "
-                           f"(Inactive nodes: {self._inactive_nodes!r})")
-
         elif quorum or not resource.needs_quorum:
             self.debug(f"Resource {resource.id} not served anywhere "
                        f"(Inactive nodes: {self._inactive_nodes!r})")
@@ -539,9 +531,11 @@ class PrimitiveAudit(ClusterAudit):
         if not self._setup():
             return passed
 
+        primitives = [r for r in self._resources if r.type == "primitive"]
         quorum = self._cm.has_quorum(None)
-        for resource in self._resources:
-            if resource.type == "primitive" and not self._audit_resource(resource, quorum):
+
+        for primitive in primitives:
+            if not self._audit_resource(primitive, quorum):
                 passed = False
 
         return passed
@@ -552,7 +546,7 @@ class PrimitiveAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        # if self._cm["Name"] == "crm-corosync":
+        # if self._cm.name == "crm-corosync":
         #     return True
         return False
 
@@ -581,17 +575,14 @@ class GroupAudit(PrimitiveAudit):
         if not self._setup():
             return passed
 
-        for group in self._resources:
-            if group.type != "group":
-                continue
+        groups = [r for r in self._resources if r.type == "group"]
 
+        for group in groups:
             first_match = True
             group_location = None
+            children = [r for r in self._resources if r.parent == group.id]
 
-            for child in self._resources:
-                if child.parent != group.id:
-                    continue
-
+            for child in children:
                 nodes = self._cm.resource_location(child.id)
 
                 if first_match and len(nodes) > 0:
@@ -642,17 +633,18 @@ class CloneAudit(PrimitiveAudit):
         if not self._setup():
             return passed
 
-        for clone in self._resources:
-            if clone.type != "clone":
-                continue
+        clones = [r for r in self._resources if r.type == "clone"]
 
-            for child in self._resources:
-                if child.parent == clone.id and child.type == "primitive":
-                    self.debug(f"Checking child {child.id} of {clone.id}...")
-                    # Check max and node_max
-                    # Obtain with:
-                    #    crm_resource -g clone_max --meta -r child.id
-                    #    crm_resource -g clone_node_max --meta -r child.id
+        for clone in clones:
+            children = [r for r in self._resources
+                        if r.parent == clone.id and r.type == "primitive"]
+
+            for child in children:
+                self.debug(f"Checking child {child.id} of {clone.id}...")
+                # Check max and node_max
+                # Obtain with:
+                #    crm_resource -g clone_max --meta -r child.id
+                #    crm_resource -g clone_node_max --meta -r child.id
 
         return passed
 
@@ -774,7 +766,7 @@ class ControllerStateAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        # if self._cm["Name"] == "crm-corosync":
+        # if self._cm.name == "crm-corosync":
         #     return True
         return False
 
@@ -858,7 +850,7 @@ class CIBAudit(ClusterAudit):
         if not target:
             target = node
 
-        (rc, lines) = self._cm.rsh(node, self._cm["CibQuery"], verbose=1)
+        (rc, lines) = self._cm.rsh(node, self._cm.templates["CibQuery"], verbose=1)
         if rc != 0:
             self._cm.log("Could not retrieve configuration")
             return None
@@ -879,7 +871,7 @@ class CIBAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        # if self._cm["Name"] == "crm-corosync":
+        # if self._cm.name == "crm-corosync":
         #     return True
         return False
 
@@ -968,13 +960,13 @@ class PartitionAudit(ClusterAudit):
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
-            (_, out) = self._cm.rsh(node, self._cm["StatusCmd"] % node, verbose=1)
+            (_, out) = self._cm.rsh(node, self._cm.templates["StatusCmd"] % node, verbose=1)
             self._node_state[node] = out[0].strip()
 
-            (_, out) = self._cm.rsh(node, self._cm["EpochCmd"], verbose=1)
+            (_, out) = self._cm.rsh(node, self._cm.templates["EpochCmd"], verbose=1)
             self._node_epoch[node] = out[0].strip()
 
-            (_, out) = self._cm.rsh(node, self._cm["QuorumCmd"], verbose=1)
+            (_, out) = self._cm.rsh(node, self._cm.templates["QuorumCmd"], verbose=1)
             self._node_quorum[node] = out[0].strip()
 
             self.debug(f"Node {node}: {self._node_state[node]} - {self._node_epoch[node]} - {self._node_quorum[node]}.")
@@ -1032,7 +1024,7 @@ class PartitionAudit(ClusterAudit):
         # so this audit (and those derived from it) would never run.
         # Uncommenting the next lines fixes the name test, but that then
         # exposes pre-existing bugs that need to be fixed.
-        # if self._cm["Name"] == "crm-corosync":
+        # if self._cm.name == "crm-corosync":
         #     return True
         return False
 

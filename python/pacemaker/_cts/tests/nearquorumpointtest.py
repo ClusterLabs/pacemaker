@@ -54,23 +54,23 @@ class NearQuorumPointTest(CTSTest):
         watchpats = []
         for node in stopset:
             if self._cm.expected_status[node] == "up":
-                watchpats.append(self.templates["Pat:We_stopped"] % node)
+                watchpats.append(self._cm.templates["Pat:We_stopped"] % node)
 
         for node in startset:
             if self._cm.expected_status[node] == "down":
-                watchpats.append(self.templates["Pat:Local_started"] % node)
+                watchpats.append(self._cm.templates["Pat:Local_started"] % node)
             else:
                 for stopping in stopset:
                     if self._cm.expected_status[stopping] == "up":
-                        watchpats.append(self.templates["Pat:They_stopped"] % (node, stopping))
+                        watchpats.append(self._cm.templates["Pat:They_stopped"] % (node, stopping))
 
         if not watchpats:
             return self.skipped()
 
         if startset:
-            watchpats.append(self.templates["Pat:DC_IDLE"])
+            watchpats.append(self._cm.templates["Pat:DC_IDLE"])
 
-        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
+        watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
 
         watch.set_watch()
 
@@ -108,7 +108,7 @@ class NearQuorumPointTest(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in stopset:
-                self._rsh(node, self.templates["StopCmd"])
+                self._rsh(node, self._cm.templates["StopCmd"])
 
             return self.success()
 

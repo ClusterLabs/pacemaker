@@ -47,13 +47,13 @@ class SimulStopLite(CTSTest):
         for node in self._env["nodes"]:
             if self._cm.expected_status[node] == "up":
                 self.incr("WasStarted")
-                watchpats.append(self.templates["Pat:We_stopped"] % node)
+                watchpats.append(self._cm.templates["Pat:We_stopped"] % node)
 
         if len(watchpats) == 0:
             return self.success()
 
         # Stop all the nodes - at about the same time...
-        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
+        watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
 
         watch.set_watch()
         self.set_timer()
@@ -64,7 +64,7 @@ class SimulStopLite(CTSTest):
         if watch.look_for_all():
             # Make sure they're completely down with no residule
             for node in self._env["nodes"]:
-                self._rsh(node, self.templates["StopCmd"])
+                self._rsh(node, self._cm.templates["StopCmd"])
 
             return self.success()
 

@@ -147,11 +147,11 @@ class Reattach(CTSTest):
             return self.failure("Resource management not disabled")
 
         pats = [
-            self.templates["Pat:RscOpOK"] % ("start", ".*"),
-            self.templates["Pat:RscOpOK"] % ("stop", ".*"),
-            self.templates["Pat:RscOpOK"] % ("promote", ".*"),
-            self.templates["Pat:RscOpOK"] % ("demote", ".*"),
-            self.templates["Pat:RscOpOK"] % ("migrate", ".*")
+            self._cm.templates["Pat:RscOpOK"] % ("start", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("stop", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("promote", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("demote", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("migrate", ".*")
         ]
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
@@ -192,7 +192,7 @@ class Reattach(CTSTest):
 
                 if r.rclass == "stonith":
                     self.debug(f"Ignoring start actions for {r.id}")
-                    ignore.append(self.templates["Pat:RscOpOK"] % ("start", r.id))
+                    ignore.append(self._cm.templates["Pat:RscOpOK"] % ("start", r.id))
 
         if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
