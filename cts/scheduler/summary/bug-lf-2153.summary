@@ -25,8 +25,8 @@ Transition Summary:
 Executing Cluster Transition:
   * Pseudo action:   ms_drbd_iscsivg01_pre_notify_stop_0
   * Pseudo action:   cl_tgtd_stop_0
-  * Resource action: res_drbd_iscsivg01:0 notify on bob
   * Resource action: res_drbd_iscsivg01:1 notify on alice
+  * Resource action: res_drbd_iscsivg01:0 notify on bob
   * Pseudo action:   ms_drbd_iscsivg01_confirmed-pre_notify_stop_0
   * Pseudo action:   ms_drbd_iscsivg01_stop_0
   * Resource action: res_tgtd:0      stop on bob

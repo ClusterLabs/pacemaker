@@ -32,8 +32,8 @@ Transition Summary:
   * Move       lsb-dummy          (              pcmk-4 -> pcmk-1 )
   * Migrate    migrator           (              pcmk-1 -> pcmk-3 )
   * Stop       ping-1:0           (                        pcmk-4 )  due to node availability
-  * Stop       stateful-1:0       (               Promoted pcmk-4 )  due to node availability
   * Promote    stateful-1:1       ( Unpromoted -> Promoted pcmk-1 )
+  * Stop       stateful-1:0       (               Promoted pcmk-4 )  due to node availability
 
 Executing Cluster Transition:
   * Pseudo action:   Fencing_stop_0

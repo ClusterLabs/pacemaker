@@ -13,18 +13,18 @@ Current cluster status:
       * Unpromoted: [ rhel7-1 rhel7-2 rhel7-3 rhel7-5 ]
 
 Transition Summary:
-  * Demote     rsc1:0     ( Promoted -> Unpromoted rhel7-4 )
   * Promote    rsc1:1     ( Unpromoted -> Promoted rhel7-3 )
+  * Demote     rsc1:0     ( Promoted -> Unpromoted rhel7-4 )
 
 Executing Cluster Transition:
-  * Resource action: rsc1            cancel=10000 on rhel7-4
   * Resource action: rsc1            cancel=11000 on rhel7-3
+  * Resource action: rsc1            cancel=10000 on rhel7-4
   * Pseudo action:   rsc1-clone_demote_0
   * Resource action: rsc1            demote on rhel7-4
   * Pseudo action:   rsc1-clone_demoted_0
   * Pseudo action:   rsc1-clone_promote_0
-  * Resource action: rsc1            monitor=11000 on rhel7-4
   * Resource action: rsc1            promote on rhel7-3
+  * Resource action: rsc1            monitor=11000 on rhel7-4
   * Pseudo action:   rsc1-clone_promoted_0
   * Resource action: rsc1            monitor=10000 on rhel7-3
 Using the original execution date of: 2020-06-16 19:23:21Z
