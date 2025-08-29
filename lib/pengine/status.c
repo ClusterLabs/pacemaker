@@ -55,7 +55,7 @@ check_for_deprecated_rules(pcmk_scheduler_t *scheduler)
  *  - A list of resources (each with any dependencies on other resources)
  *  - A list of constraints between resources and nodes
  *  - A list of constraints between start/stop actions
- *  - A list of nodes that need to be stonith'd
+ *  - A list of nodes that need to be fenced
  *  - A list of nodes that need to be shutdown
  *  - A list of the possible stop/start actions (without dependencies)
  *

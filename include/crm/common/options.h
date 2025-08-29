@@ -36,8 +36,13 @@ extern     "C" {
 #define PCMK_OPT_ELECTION_TIMEOUT               "election-timeout"
 #define PCMK_OPT_ENABLE_ACL                     "enable-acl"
 #define PCMK_OPT_ENABLE_STARTUP_PROBES          "enable-startup-probes"
-#define PCMK_OPT_FENCE_REACTION                 "fence-reaction"
 #define PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM    "fence-remote-without-quorum"
+#define PCMK_OPT_FENCING_ACTION                 "fencing-action"
+#define PCMK_OPT_FENCING_ENABLED                "fencing-enabled"
+#define PCMK_OPT_FENCING_MAX_ATTEMPTS           "fencing-max-attempts"
+#define PCMK_OPT_FENCING_REACTION               "fencing-reaction"
+#define PCMK_OPT_FENCING_TIMEOUT                "fencing-timeout"
+#define PCMK_OPT_FENCING_WATCHDOG_TIMEOUT       "fencing-watchdog-timeout"
 #define PCMK_OPT_HAVE_WATCHDOG                  "have-watchdog"
 #define PCMK_OPT_JOIN_FINALIZATION_TIMEOUT      "join-finalization-timeout"
 #define PCMK_OPT_JOIN_INTEGRATION_TIMEOUT       "join-integration-timeout"
@@ -62,11 +67,6 @@ extern     "C" {
 #define PCMK_OPT_SHUTDOWN_LOCK_LIMIT            "shutdown-lock-limit"
 #define PCMK_OPT_START_FAILURE_IS_FATAL         "start-failure-is-fatal"
 #define PCMK_OPT_STARTUP_FENCING                "startup-fencing"
-#define PCMK_OPT_STONITH_ACTION                 "stonith-action"
-#define PCMK_OPT_STONITH_ENABLED                "stonith-enabled"
-#define PCMK_OPT_STONITH_MAX_ATTEMPTS           "stonith-max-attempts"
-#define PCMK_OPT_STONITH_TIMEOUT                "stonith-timeout"
-#define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT       "stonith-watchdog-timeout"
 #define PCMK_OPT_STOP_ALL_RESOURCES             "stop-all-resources"
 #define PCMK_OPT_STOP_REMOVED_ACTIONS           "stop-removed-actions"
 #define PCMK_OPT_STOP_REMOVED_RESOURCES         "stop-removed-resources"
@@ -79,6 +79,23 @@ extern     "C" {
 //! \deprecated Do not use
 #define PCMK_OPT_STOP_ORPHAN_RESOURCES          "stop-orphan-resources"
 
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_ENABLED                "stonith-enabled"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_ACTION                 "stonith-action"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_MAX_ATTEMPTS           "stonith-max-attempts"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_TIMEOUT                "stonith-timeout"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT       "stonith-watchdog-timeout"
+
+//! \deprecated Do not use
+#define PCMK_OPT_FENCE_REACTION                 "fence-reaction"
 
 /*
  * Meta-attributes

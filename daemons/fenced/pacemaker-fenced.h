@@ -396,7 +396,7 @@ fenced_support_flag(const char *action)
 }
 
 extern GHashTable *topology;
-extern long long stonith_watchdog_timeout_ms;
+extern long long fencing_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;

@@ -152,7 +152,7 @@ layer callback, which calls
       request with the target, desired action, timeout, etc. then broadcasts
       the operation to the cluster group (i.e. all fencer instances) and
       starts a timer. The query is broadcast because (1) location constraints
-      might prevent the local node from accessing the stonith device directly,
+      might prevent the local node from accessing the fencing device directly,
       and (2) even if the local node does have direct access, another node
       might be preferred to carry out the fencing.
 

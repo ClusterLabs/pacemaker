@@ -5,7 +5,7 @@
         <nvpair id="nvpair.id21849" name="dc-version" value="2.1.3-node: a3184d5240c6e7032aef9cce6e5b7752ded544b3"/>
         <nvpair id="nvpair.id21859" name="no-quorum-policy" value="ignore"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21868" value="1210070991"/>
-        <nvpair id="nvpair.id21878" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21878" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

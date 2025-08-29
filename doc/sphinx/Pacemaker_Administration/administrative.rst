@@ -76,7 +76,7 @@ may become unmanaged in several ways:
 * Certain types of failure cause affected resources to become unmanaged. These
   include:
 
-  * Failed stop operations when the ``stonith-enabled`` cluster property is set
+  * Failed stop operations when the ``fencing-enabled`` cluster property is set
     to ``false``
   * Failure of an operation that has ``on-fail`` set to ``block``
   * A resource detected as incorrectly active on more than one node when its
@@ -107,7 +107,7 @@ Disabled Configuration
 
 Some configuration elements disable particular behaviors:
 
-* The ``stonith-enabled`` cluster option, when set to ``false``, disables node
+* The ``fencing-enabled`` cluster option, when set to ``false``, disables node
   fencing. This is highly discouraged, as it can lead to data unavailability,
   loss, or corruption.
 

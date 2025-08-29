@@ -27,11 +27,11 @@ In order to guarantee the safety of your data [#]_, fencing is enabled by defaul
 .. NOTE::
 
     It is possible to tell the cluster not to use fencing, by setting the
-    ``stonith-enabled`` cluster property to false:
+    ``fencing-enabled`` cluster property to false:
 
     .. code-block:: console
 
-        [root@pcmk-1 ~]# pcs property set stonith-enabled=false
+        [root@pcmk-1 ~]# pcs property set fencing-enabled=false
         [root@pcmk-1 ~]# pcs cluster verify --full
 
     However, this is completely inappropriate for a production cluster. It tells
@@ -93,14 +93,15 @@ Configure the Cluster for Fencing
 #. Find the parameters associated with the device:
    ``pcs stonith describe <AGENT_NAME>``
 
-#. Create a local copy of the CIB: ``pcs cluster cib stonith_cfg``
+#. Create a local copy of the CIB: ``pcs cluster cib fencing_cfg``
 
-#. Create the fencing resource: ``pcs -f stonith_cfg stonith create <STONITH_ID> <STONITH_DEVICE_TYPE> [STONITH_DEVICE_OPTIONS]``
+#. Create the fencing resource:
+   ``pcs -f fencing_cfg stonith create <FENCING_DEVICE_ID> <FENCING_DEVICE_TYPE> [FENCING_DEVICE_OPTIONS]``
 
    Any flags that do not take arguments, such as ``--ssl``, should be passed as ``ssl=1``.
 
 #. Ensure fencing is enabled in the cluster:
-   ``pcs -f stonith_cfg property set stonith-enabled=true``
+   ``pcs -f fencing_cfg property set fencing-enabled=true``
 
 #. If the device does not know how to fence nodes based on their cluster node
    name, you may also need to set the special ``pcmk_host_map`` parameter. See
@@ -114,7 +115,7 @@ Configure the Cluster for Fencing
    parameter, you may also need to set the special ``pcmk_host_argument``
    parameter. See ``man pacemaker-fenced`` for details.
 
-#. Commit the new configuration: ``pcs cluster cib-push stonith_cfg``
+#. Commit the new configuration: ``pcs cluster cib-push fencing_cfg``
 
 #. Once the fence device resource is running, test it (you might want to stop
    the cluster on that machine first):
@@ -190,32 +191,32 @@ Step 4: Obtain the agent's possible parameters:
       monitor: interval=60s
 
 
-Step 5: ``pcs cluster cib stonith_cfg``
+Step 5: ``pcs cluster cib fencing_cfg``
 
 Step 6: Here are example parameters for creating our fence device resource:
 
 .. code-block:: console
 
-    [root@pcmk-1 ~]# pcs -f stonith_cfg stonith create ipmi-fencing fence_ipmilan \
+    [root@pcmk-1 ~]# pcs -f fencing_cfg stonith create ipmi-fencing fence_ipmilan \
           pcmk_host_list="pcmk-1 pcmk-2" ipaddr=10.0.0.1 login=testuser \
           passwd=acd123 op monitor interval=60s
-    [root@pcmk-1 ~]# pcs -f stonith_cfg stonith
+    [root@pcmk-1 ~]# pcs -f fencing_cfg stonith
       * ipmi-fencing	(stonith:fence_ipmilan):	Stopped
 
 Steps 7-10: Enable fencing in the cluster:
 
 .. code-block:: console
 
-    [root@pcmk-1 ~]# pcs -f stonith_cfg property set stonith-enabled=true
-    [root@pcmk-1 ~]# pcs -f stonith_cfg property
+    [root@pcmk-1 ~]# pcs -f fencing_cfg property set fencing-enabled=true
+    [root@pcmk-1 ~]# pcs -f fencing_cfg property
     Cluster Properties:
      cluster-infrastructure: corosync
      cluster-name: mycluster
      dc-version: 2.0.5-4.el8-ba59be7122
+     fencing-enabled: true
      have-watchdog: false
-     stonith-enabled: true
 
-Step 11: ``pcs cluster cib-push stonith_cfg --config``
+Step 11: ``pcs cluster cib-push fencing_cfg --config``
 
 Step 12: Test:
 

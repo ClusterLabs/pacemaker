@@ -170,21 +170,20 @@ pcmk_stonith_param(const char *param)
     if (param == NULL) {
         return false;
     }
-    if (pcmk__str_any_of(param, PCMK_STONITH_PROVIDES,
-                         PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
+    if (pcmk__str_eq(param, PCMK_FENCING_PROVIDES, pcmk__str_none)) {
         return true;
     }
     if (!g_str_has_prefix(param, "pcmk_")) { // Short-circuit common case
         return false;
     }
     if (pcmk__str_any_of(param,
-                         PCMK_STONITH_ACTION_LIMIT,
-                         PCMK_STONITH_DELAY_BASE,
-                         PCMK_STONITH_DELAY_MAX,
-                         PCMK_STONITH_HOST_ARGUMENT,
-                         PCMK_STONITH_HOST_CHECK,
-                         PCMK_STONITH_HOST_LIST,
-                         PCMK_STONITH_HOST_MAP,
+                         PCMK_FENCING_ACTION_LIMIT,
+                         PCMK_FENCING_DELAY_BASE,
+                         PCMK_FENCING_DELAY_MAX,
+                         PCMK_FENCING_HOST_ARGUMENT,
+                         PCMK_FENCING_HOST_CHECK,
+                         PCMK_FENCING_HOST_LIST,
+                         PCMK_FENCING_HOST_MAP,
                          NULL)) {
         return true;
     }

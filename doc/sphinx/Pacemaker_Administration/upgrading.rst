@@ -507,8 +507,8 @@ _______
   * All operations must have an ``interval``, ``start``/``stop`` must have it
     set to zero
 
-* The ``stonith-enabled`` option now defaults to true.
-* The cluster will refuse to start resources if ``stonith-enabled`` is true (or
+* The ``fencing-enabled`` option now defaults to true.
+* The cluster will refuse to start resources if ``fencing-enabled`` is true (or
   unset) and no STONITH resources have been defined
 * The attributes of colocation and ordering constraints were renamed for
   clarity.
