@@ -20,7 +20,7 @@ libcib_la_SOURCES	+= cib_ops.c
 libcib_la_SOURCES	+= cib_remote.c
 libcib_la_SOURCES	+= cib_utils.c
 
-libcib_la_LDFLAGS	= -version-info 54:0:0
+libcib_la_LDFLAGS	= -version-info 54:1:0
 libcib_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libcib_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
