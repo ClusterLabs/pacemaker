@@ -1003,28 +1003,16 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 bool
 controld_verify_stonith_watchdog_timeout(const char *value)
 {
-    long long st_timeout = 0;
     const char *our_nodename = controld_globals.cluster->priv->node_name;
 
-    if (value != NULL) {
-        /* @COMPAT So far it has been documented that a negative value is
-         * valid. Parse it as an integer first to avoid the warning from
-         * crm_get_msec().
-         */
-        int rc = pcmk__scan_ll(value, &st_timeout, PCMK__PARSE_INT_DEFAULT);
-
-        if (rc != pcmk_rc_ok || st_timeout >= 0) {
-            st_timeout = crm_get_msec(value);
-        }
+    if ((stonith_api == NULL) || (stonith_api->state == stonith_disconnected)
+        || !stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
+                                                           our_nodename)) {
+        // Anything is valid since it won't be used
+        return true;
     }
 
-    if (st_timeout == 0
-        || (stonith_api && (stonith_api->state != stonith_disconnected) &&
-            stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
-                                                           our_nodename))) {
-        return pcmk__valid_stonith_watchdog_timeout(value);
-    }
-    return true;
+    return pcmk__valid_stonith_watchdog_timeout(value);
 }
 
 /* end stonith API client functions */

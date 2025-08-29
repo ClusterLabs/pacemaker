@@ -338,115 +338,17 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 }
 
 /*!
- * \brief Parse a time+units string and return milliseconds equivalent
- *
- * \param[in] input  String with a nonnegative number and optional unit
- *                   (optionally with whitespace before and/or after the
- *                   number). If missing, the unit defaults to seconds.
- *
- * \return Milliseconds corresponding to string expression, or
- *         \c PCMK__PARSE_INT_DEFAULT on error
- */
-long long
-crm_get_msec(const char *input)
-{
-    char *units = NULL; // Do not free; will point to part of input
-    long long multiplier = 1000;
-    long long divisor = 1;
-    long long msec = PCMK__PARSE_INT_DEFAULT;
-    int rc = pcmk_rc_ok;
-
-    if (input == NULL) {
-        return PCMK__PARSE_INT_DEFAULT;
-    }
-
-    // Skip initial whitespace
-    while (isspace(*input)) {
-        input++;
-    }
-
-    rc = scan_ll(input, &msec, PCMK__PARSE_INT_DEFAULT, &units);
-
-    if ((rc == ERANGE) && (msec > 0)) {
-        crm_warn("'%s' will be clipped to %lld", input, msec);
-
-    } else if ((rc != pcmk_rc_ok) || (msec < 0)) {
-        crm_warn("'%s' is not a valid time duration: %s",
-                 input, ((rc == pcmk_rc_ok)? "Negative" : pcmk_rc_str(rc)));
-        return PCMK__PARSE_INT_DEFAULT;
-    }
-
-    /* If the number is a decimal, scan_ll() reads only the integer part. Skip
-     * any remaining digits or decimal characters.
-     *
-     * @COMPAT Well-formed and malformed decimals are both accepted inputs. For
-     * example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms" and
-     * parsed successfully. At a compatibility break, decide if this is still
-     * desired.
-     */
-    while (isdigit(*units) || (*units == '.')) {
-        units++;
-    }
-
-    // Skip any additional whitespace after the number
-    while (isspace(*units)) {
-        units++;
-    }
-
-    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
-     * second strncasecmp() in each case is redundant.
-     */
-    if ((*units == '\0')
-        || (strncasecmp(units, "s", 1) == 0)
-        || (strncasecmp(units, "sec", 3) == 0)) {
-        multiplier = 1000;
-        divisor = 1;
-
-    } else if ((strncasecmp(units, "ms", 2) == 0)
-               || (strncasecmp(units, "msec", 4) == 0)) {
-        multiplier = 1;
-        divisor = 1;
-
-    } else if ((strncasecmp(units, "us", 2) == 0)
-               || (strncasecmp(units, "usec", 4) == 0)) {
-        multiplier = 1;
-        divisor = 1000;
-
-    } else if ((strncasecmp(units, "m", 1) == 0)
-               || (strncasecmp(units, "min", 3) == 0)) {
-        multiplier = 60 * 1000;
-        divisor = 1;
-
-    } else if ((strncasecmp(units, "h", 1) == 0)
-               || (strncasecmp(units, "hr", 2) == 0)) {
-        multiplier = 60 * 60 * 1000;
-        divisor = 1;
-
-    } else {
-        // Invalid units
-        return PCMK__PARSE_INT_DEFAULT;
-    }
-
-    // Apply units, capping at LLONG_MAX
-    if (msec > (LLONG_MAX / multiplier)) {
-        return LLONG_MAX;
-    }
-    return (msec * multiplier) / divisor;
-}
-
-/*!
  * \brief Parse milliseconds from a Pacemaker interval specification
  *
  * \param[in]  input      Pacemaker time interval specification (a bare number
  *                        of seconds; a number with a unit, optionally with
  *                        whitespace before and/or after the number; or an ISO
- *                        8601 duration)
+ *                        8601 duration) (can be \c NULL)
  * \param[out] result_ms  Where to store milliseconds equivalent of \p input on
  *                        success (limited to the range of an unsigned integer),
  *                        or 0 if \p input is \c NULL or invalid
  *
- * \return Standard Pacemaker return code (specifically, \c pcmk_rc_ok if
- *         \p input is valid or \c NULL, and \c EINVAL otherwise)
+ * \return Standard Pacemaker return code
  */
 int
 pcmk_parse_interval_spec(const char *input, guint *result_ms)
@@ -469,14 +371,18 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
         }
 
     } else {
-        msec = crm_get_msec(input);
+        rc = pcmk__parse_ms(input, &msec);
     }
 
     if (msec < 0) {
         crm_warn("Using 0 instead of invalid interval specification '%s'",
                  input);
         msec = 0;
-        rc = EINVAL;
+
+        if (rc == pcmk_rc_ok) {
+            // Preserve any error from pcmk__parse_ms()
+            rc = EINVAL;
+        }
     }
 
 done:
@@ -484,38 +390,6 @@ done:
         *result_ms = (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
     }
     return rc;
-}
-
-gboolean
-crm_is_true(const char *s)
-{
-    gboolean ret = FALSE;
-
-    return (crm_str_to_boolean(s, &ret) < 0)? FALSE : ret;
-}
-
-int
-crm_str_to_boolean(const char *s, int *ret)
-{
-    if (s == NULL) {
-        return -1;
-    }
-
-    if (pcmk__strcase_any_of(s, PCMK_VALUE_TRUE, "on", "yes", "y", "1", NULL)) {
-        if (ret != NULL) {
-            *ret = TRUE;
-        }
-        return 1;
-    }
-
-    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, PCMK_VALUE_OFF, "no", "n",
-                             "0", NULL)) {
-        if (ret != NULL) {
-            *ret = FALSE;
-        }
-        return 1;
-    }
-    return -1;
 }
 
 /*!
@@ -738,7 +612,7 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
 
     *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
-                                  CRM_BZ2_BLOCKS, 0, CRM_BZ2_WORK);
+                                  PCMK__BZ2_BLOCKS, 0, PCMK__BZ2_WORK);
     rc = pcmk__bzlib2rc(rc);
 
     free(uncompressed);
@@ -778,6 +652,46 @@ crm_strdup_printf(char const *format, ...)
     pcmk__assert(len > 0);
     va_end(ap);
     return string;
+}
+
+/*!
+ * \internal
+ * \brief Parse a boolean value from a string
+ *
+ * Valid input strings (case-insensitive) are as follows:
+ * * \c PCMK_VALUE_TRUE, \c "on", \c "yes", \c "y", or \c "1" for \c true
+ * * \c PCMK_VALUE_FALSE, \c PCMK_VALUE_OFF, \c "no", \c "n", or \c "0" for
+ *   \c false
+ *
+ * \param[in]  input   Input string
+ * \param[out] result  Where to store parsed boolean value (can be \c NULL)
+ *
+ * \retval \c true if \p input was successfully parsed to a boolean value
+ * \retval \c false otherwise
+ */
+int
+pcmk__parse_bool(const char *input, bool *result)
+{
+    bool local_result = false;
+
+    CRM_CHECK(input != NULL, return EINVAL);
+
+    if (pcmk__strcase_any_of(input, PCMK_VALUE_TRUE, "on", "yes", "y", "1",
+                             NULL)) {
+        local_result = true;
+
+    } else if (pcmk__strcase_any_of(input, PCMK_VALUE_FALSE, PCMK_VALUE_OFF,
+                                    "no", "n", "0", NULL)) {
+        local_result = false;
+
+    } else {
+        return pcmk_rc_bad_input;
+    }
+
+    if (result != NULL) {
+        *result = local_result;
+    }
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -880,6 +794,142 @@ pcmk__parse_ll_range(const char *text, long long *start, long long *end)
 
 done:
     g_strfreev(split);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Get multiplier and divisor corresponding to given units string
+ *
+ * Multiplier and divisor convert from a number of seconds to an equivalent
+ * number of the unit described by the units string.
+ *
+ * \param[in]  units       String describing a unit of time (may be empty,
+ *                         \c "s", \c "sec", \c "ms", \c "msec", \c "us",
+ *                         \c "usec", \c "m", \c "min", \c "h", or \c "hr")
+ * \param[out] multiplier  Number of units in one second, if unit is smaller
+ *                         than one second, or 1 otherwise (unchanged on error)
+ * \param[out] divisor     Number of seconds in one unit, if unit is larger
+ *                         than one second, or 1 otherwise (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+get_multiplier_divisor(const char *units, long long *multiplier,
+                       long long *divisor)
+{
+    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
+     * second strncasecmp() in each case is redundant.
+     */
+    if ((*units == '\0')
+        || (strncasecmp(units, "s", 1) == 0)
+        || (strncasecmp(units, "sec", 3) == 0)) {
+        *multiplier = 1000;
+        *divisor = 1;
+
+    } else if ((strncasecmp(units, "ms", 2) == 0)
+               || (strncasecmp(units, "msec", 4) == 0)) {
+        *multiplier = 1;
+        *divisor = 1;
+
+    } else if ((strncasecmp(units, "us", 2) == 0)
+               || (strncasecmp(units, "usec", 4) == 0)) {
+        *multiplier = 1;
+        *divisor = 1000;
+
+    } else if ((strncasecmp(units, "m", 1) == 0)
+               || (strncasecmp(units, "min", 3) == 0)) {
+        *multiplier = 60 * 1000;
+        *divisor = 1;
+
+    } else if ((strncasecmp(units, "h", 1) == 0)
+               || (strncasecmp(units, "hr", 2) == 0)) {
+        *multiplier = 60 * 60 * 1000;
+        *divisor = 1;
+
+    } else {
+        // Invalid units
+        return pcmk_rc_bad_input;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Parse a time and units string into a milliseconds value
+ *
+ * \param[in]  input   String with a nonnegative number and optional unit
+ *                     (optionally with whitespace before and/or after the
+ *                     number). If absent, the unit defaults to seconds.
+ * \param[out] result  Where to store result in milliseconds (unchanged on error
+ *                     except \c ERANGE)
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__parse_ms(const char *input, long long *result)
+{
+    long long local_result = 0;
+    char *units = NULL; // Do not free; will point to part of input
+    long long multiplier = 1000;
+    long long divisor = 1;
+    int rc = pcmk_rc_ok;
+
+    CRM_CHECK(input != NULL, return EINVAL);
+
+    rc = scan_ll(input, &local_result, 0, &units);
+    if ((rc == pcmk_rc_ok) || (rc == ERANGE)) {
+        int units_rc = pcmk_rc_ok;
+
+        /* If the number is a decimal, scan_ll() reads only the integer part.
+         * Skip any remaining digits or decimal characters.
+         *
+         * @COMPAT Well-formed and malformed decimals are both accepted inputs.
+         * For example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms"
+         * and parsed successfully. At a compatibility break, decide if this is
+         * still desired.
+         */
+        for (; isdigit(*units) || (*units == '.'); units++);
+
+        // Skip any additional whitespace after the number
+        for (; isspace(*units); units++);
+
+        // Validate units and get conversion constants
+        units_rc = get_multiplier_divisor(units, &multiplier, &divisor);
+        if (units_rc != pcmk_rc_ok) {
+            rc = units_rc;
+        }
+    }
+
+    if (rc == ERANGE) {
+        crm_warn("'%s' will be clipped to %lld", input, local_result);
+
+        /* Continue through rest of body before returning ERANGE
+         *
+         * @COMPAT Improve handling of overflow. Units won't necessarily be
+         * respected right now, for one thing.
+         */
+
+    } else if (rc != pcmk_rc_ok) {
+        crm_warn("'%s' is not a valid time duration: %s", input,
+                 pcmk_rc_str(rc));
+        return rc;
+    }
+
+    if (result == NULL) {
+        return rc;
+    }
+
+    // Apply units, capping at LLONG_MAX
+    if (local_result > (LLONG_MAX / multiplier)) {
+        *result = LLONG_MAX;
+    } else if (local_result < (LLONG_MIN / multiplier)) {
+        *result = LLONG_MIN;
+    } else {
+        *result = (local_result * multiplier) / divisor;
+    }
+
     return rc;
 }
 
@@ -1232,3 +1282,130 @@ pcmk__g_strcat(GString *buffer, ...)
     }
     va_end(ap);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/strings_compat.h>
+
+long long
+crm_get_msec(const char *input)
+{
+    char *units = NULL; // Do not free; will point to part of input
+    long long multiplier = 1000;
+    long long divisor = 1;
+    long long msec = PCMK__PARSE_INT_DEFAULT;
+    int rc = pcmk_rc_ok;
+
+    if (input == NULL) {
+        return PCMK__PARSE_INT_DEFAULT;
+    }
+
+    // Skip initial whitespace
+    while (isspace(*input)) {
+        input++;
+    }
+
+    rc = scan_ll(input, &msec, PCMK__PARSE_INT_DEFAULT, &units);
+
+    if ((rc == ERANGE) && (msec > 0)) {
+        crm_warn("'%s' will be clipped to %lld", input, msec);
+
+    } else if ((rc != pcmk_rc_ok) || (msec < 0)) {
+        crm_warn("'%s' is not a valid time duration: %s",
+                 input, ((rc == pcmk_rc_ok)? "Negative" : pcmk_rc_str(rc)));
+        return PCMK__PARSE_INT_DEFAULT;
+    }
+
+    /* If the number is a decimal, scan_ll() reads only the integer part. Skip
+     * any remaining digits or decimal characters.
+     *
+     * @COMPAT Well-formed and malformed decimals are both accepted inputs. For
+     * example, "3.14 ms" and "3.1.4 ms" are treated the same as "3ms" and
+     * parsed successfully. At a compatibility break, decide if this is still
+     * desired.
+     */
+    while (isdigit(*units) || (*units == '.')) {
+        units++;
+    }
+
+    // Skip any additional whitespace after the number
+    while (isspace(*units)) {
+        units++;
+    }
+
+    /* @COMPAT Use exact comparisons. Currently, we match too liberally, and the
+     * second strncasecmp() in each case is redundant.
+     */
+    if ((*units == '\0')
+        || (strncasecmp(units, "s", 1) == 0)
+        || (strncasecmp(units, "sec", 3) == 0)) {
+        multiplier = 1000;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "ms", 2) == 0)
+               || (strncasecmp(units, "msec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "us", 2) == 0)
+               || (strncasecmp(units, "usec", 4) == 0)) {
+        multiplier = 1;
+        divisor = 1000;
+
+    } else if ((strncasecmp(units, "m", 1) == 0)
+               || (strncasecmp(units, "min", 3) == 0)) {
+        multiplier = 60 * 1000;
+        divisor = 1;
+
+    } else if ((strncasecmp(units, "h", 1) == 0)
+               || (strncasecmp(units, "hr", 2) == 0)) {
+        multiplier = 60 * 60 * 1000;
+        divisor = 1;
+
+    } else {
+        // Invalid units
+        return PCMK__PARSE_INT_DEFAULT;
+    }
+
+    // Apply units, capping at LLONG_MAX
+    if (msec > (LLONG_MAX / multiplier)) {
+        return LLONG_MAX;
+    }
+    return (msec * multiplier) / divisor;
+}
+
+gboolean
+crm_is_true(const char *s)
+{
+    gboolean ret = FALSE;
+
+    return (crm_str_to_boolean(s, &ret) < 0)? FALSE : ret;
+}
+
+int
+crm_str_to_boolean(const char *s, int *ret)
+{
+    if (s == NULL) {
+        return -1;
+    }
+
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_TRUE, "on", "yes", "y", "1", NULL)) {
+        if (ret != NULL) {
+            *ret = TRUE;
+        }
+        return 1;
+    }
+
+    if (pcmk__strcase_any_of(s, PCMK_VALUE_FALSE, PCMK_VALUE_OFF, "no", "n",
+                             "0", NULL)) {
+        if (ret != NULL) {
+            *ret = FALSE;
+        }
+        return 1;
+    }
+    return -1;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

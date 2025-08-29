@@ -251,7 +251,7 @@ pcmk__attrd_api_delete(pcmk_ipc_api_t *api, const char *node, const char *name,
 }
 
 int
-pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
+pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node)
 {
     int rc = pcmk_rc_ok;
     xmlNode *request = NULL;
@@ -261,15 +261,14 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
         node = target;
     }
 
-    crm_debug("Asking %s to purge transient attributes%s for %s",
-              pcmk_ipc_name(api, true),
-              (reap? " and node cache entries" : ""),
-              pcmk__s(node, "local node"));
+    crm_debug("Asking %s to purge transient attributes and node cache entries "
+              "for %s",
+              pcmk_ipc_name(api, true), pcmk__s(node, "local node"));
 
     request = create_attrd_op(NULL);
 
     pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-    pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
+    pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
     pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);

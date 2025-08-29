@@ -64,7 +64,7 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
             && ((ticket == NULL)
                 || !pcmk_is_set(ticket->flags, pcmk__ticket_granted))
-            && crm_is_true(value)) {
+            && pcmk__is_true(value)) {
 
             char *now = pcmk__ttoa(time(NULL));
 
