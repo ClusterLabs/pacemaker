@@ -139,7 +139,7 @@ crm_time_new_undefined(void)
  *
  * \param[in] t  Time object to check
  *
- * \return TRUE if time object has been initialized, FALSE otherwise
+ * \return \c true if time object has been initialized, \c false otherwise
  */
 bool
 crm_time_is_defined(const crm_time_t *t)
@@ -238,13 +238,13 @@ crm_time_days_in_month(int month, int year)
 bool
 crm_time_leapyear(int year)
 {
-    gboolean is_leap = FALSE;
+    bool is_leap = false;
 
     if (year % 4 == 0) {
-        is_leap = TRUE;
+        is_leap = true;
     }
     if (year % 100 == 0 && year % 400 != 0) {
-        is_leap = FALSE;
+        is_leap = false;
     }
     return is_leap;
 }
@@ -732,7 +732,7 @@ crm_time_as_string(const crm_time_t *dt, int flags)
  * \param[in]  time_str  Time specification string
  * \param[out] result    Number of seconds equivalent to time_str
  *
- * \return TRUE if specification was valid, FALSE (and set errno) otherwise
+ * \return \c true if specification was valid, \c false (and set errno) otherwise
  * \note This may return the number of seconds in a day (which is out of bounds
  *       for a time object) if given 24:00:00.
  */
@@ -756,7 +756,7 @@ crm_time_parse_sec(const char *time_str, int *result)
     if (rc == 0) {
         crm_err("%s is not a valid ISO 8601 time specification", time_str);
         errno = EINVAL;
-        return FALSE;
+        return false;
     }
 
     crm_trace("Got valid time: %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
@@ -768,23 +768,23 @@ crm_time_parse_sec(const char *time_str, int *result)
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid hour", time_str, hour);
         errno = EINVAL;
-        return FALSE;
+        return false;
     }
     if (minute >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid minute", time_str, minute);
         errno = EINVAL;
-        return FALSE;
+        return false;
     }
     if (second >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid second", time_str, second);
         errno = EINVAL;
-        return FALSE;
+        return false;
     }
 
     *result = (hour * HOUR_SECONDS) + (minute * 60) + second;
-    return TRUE;
+    return true;
 }
 
 static bool
@@ -805,34 +805,34 @@ crm_time_parse_offset(const char *offset_str, int *offset)
             m_offset = 0 - m_offset;
         }
         *offset = (HOUR_SECONDS * h_offset) + (60 * m_offset);
-        return TRUE;
+        return true;
     }
 
     if (offset_str[0] == 'Z') { // @TODO invalid if anything after?
         *offset = 0;
-        return TRUE;
+        return true;
     }
 
     *offset = 0;
     if ((offset_str[0] == '+') || (offset_str[0] == '-')
         || isdigit((int)offset_str[0])) {
 
-        gboolean negate = FALSE;
+        bool negate = false;
 
         if (offset_str[0] == '+') {
             offset_str++;
         } else if (offset_str[0] == '-') {
-            negate = TRUE;
+            negate = true;
             offset_str++;
         }
-        if (crm_time_parse_sec(offset_str, offset) == FALSE) {
-            return FALSE;
+        if (!crm_time_parse_sec(offset_str, offset)) {
+            return false;
         }
         if (negate) {
             *offset = 0 - *offset;
         }
     } // @TODO else invalid?
-    return TRUE;
+    return true;
 }
 
 /*!
@@ -842,7 +842,7 @@ crm_time_parse_offset(const char *offset_str, int *offset)
  * \param[in]     time_str  Time portion of specification (after any 'T')
  * \param[in,out] a_time    Time object to parse into
  *
- * \return TRUE if valid time was parsed, FALSE (and set errno) otherwise
+ * \return \c true if valid time was parsed, \c false (and set errno) otherwise
  * \note This may add a day to a_time (if the time is 24:00:00).
  */
 static bool
@@ -854,8 +854,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
     tzset();
 
     if (time_str) {
-        if (crm_time_parse_sec(time_str, &(a_time->seconds)) == FALSE) {
-            return FALSE;
+        if (!crm_time_parse_sec(time_str, &(a_time->seconds))) {
+            return false;
         }
         offset_s = strstr(time_str, "Z");
         if (offset_s == NULL) {
@@ -868,8 +868,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
         }
     }
 
-    if (crm_time_parse_offset(offset_s, &(a_time->offset)) == FALSE) {
-        return FALSE;
+    if (!crm_time_parse_offset(offset_s, &(a_time->offset))) {
+        return false;
     }
     crm_time_get_sec(a_time->offset, &h, &m, &s);
     crm_trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
@@ -880,7 +880,7 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
         a_time->seconds = 0;
         crm_time_add_days(a_time, 1);
     }
-    return TRUE;
+    return true;
 }
 
 /*
@@ -1050,12 +1050,12 @@ parse_date(const char *date_str)
             time_s = NULL;
         }
     }
-    if ((time_s != NULL) && (crm_time_parse(time_s, dt) == FALSE)) {
+    if ((time_s != NULL) && !crm_time_parse(time_s, dt)) {
         goto invalid;
     }
 
     crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
-    if (crm_time_check(dt) == FALSE) {
+    if (!crm_time_check(dt)) {
         crm_err("'%s' is not a valid ISO 8601 date/time specification",
                 date_str);
         goto invalid;
@@ -1126,7 +1126,7 @@ parse_int(const char *str, int *result)
 crm_time_t *
 crm_time_parse_duration(const char *period_s)
 {
-    gboolean is_time = FALSE;
+    bool is_time = false;
     crm_time_t *diff = NULL;
 
     if (pcmk__str_empty(period_s)) {
@@ -1158,7 +1158,7 @@ crm_time_parse_duration(const char *period_s)
              * require it strictly, but just use it to differentiate month from
              * minutes.
              */
-            is_time = TRUE;
+            is_time = true;
             continue;
         }
 
@@ -1351,12 +1351,12 @@ crm_time_parse_period(const char *period_str)
         period->end = crm_time_add(period->start, period->diff);
     }
 
-    if (crm_time_check(period->start) == FALSE) {
+    if (!crm_time_check(period->start)) {
         crm_err("'%s' is not a valid ISO 8601 time period "
                 "because the start is invalid", period_str);
         goto invalid;
     }
-    if (crm_time_check(period->end) == FALSE) {
+    if (!crm_time_check(period->end)) {
         crm_err("'%s' is not a valid ISO 8601 time period "
                 "because the end is invalid", period_str);
         goto invalid;
