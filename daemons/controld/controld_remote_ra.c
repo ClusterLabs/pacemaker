@@ -1440,8 +1440,6 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
-    int count = 0;
-    int count_remote = 0;
     xmlNode *maint = pcmk__xpath_find_one(xml->doc, XPATH_PSEUDO_MAINTENANCE,
                                           LOG_NEVER);
 
@@ -1452,7 +1450,6 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         const remote_ra_data_t *ra_data = NULL;
         const char *id = pcmk__xe_id(node);
 
-        count++;
         if (id == NULL) {
             continue;   // Shouldn't be possible
         }
@@ -1466,16 +1463,11 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
             const char *in_maint_s = NULL;
             int in_maint = 0;
 
-            count_remote++;
             in_maint_s = pcmk__xe_get(node, PCMK__XA_NODE_IN_MAINTENANCE);
             pcmk__scan_min_int(in_maint_s, &in_maint, 0);
             remote_ra_maintenance(lrm_state, in_maint);
         }
     }
-
-    crm_trace("Action holds %d nodes (%d remotes found) adjusting "
-              PCMK_OPT_MAINTENANCE_MODE,
-              count, count_remote);
 }
 
 gboolean
