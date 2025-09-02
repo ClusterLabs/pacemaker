@@ -1440,46 +1440,42 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
-    xmlXPathObject *search = pcmk__xpath_search(xml->doc,
-                                                XPATH_PSEUDO_MAINTENANCE);
+    int count = 0;
+    int count_remote = 0;
+    xmlNode *maint = pcmk__xpath_find_one(xml->doc, XPATH_PSEUDO_MAINTENANCE,
+                                          LOG_NEVER);
 
-    if (pcmk__xpath_num_results(search) == 1) {
-        xmlNode *node;
-        int cnt = 0, cnt_remote = 0;
+    for (xmlNode *node = pcmk__xe_first_child(maint, PCMK_XE_NODE, NULL, NULL);
+         node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
 
-        for (node = pcmk__xe_first_child(pcmk__xpath_result(search, 0),
-                                         PCMK_XE_NODE, NULL, NULL);
-             node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
+        lrm_state_t *lrm_state = NULL;
+        const remote_ra_data_t *ra_data = NULL;
+        const char *id = pcmk__xe_id(node);
 
-            lrm_state_t *lrm_state = NULL;
-            const remote_ra_data_t *ra_data = NULL;
-            const char *id = pcmk__xe_id(node);
-
-            cnt++;
-            if (id == NULL) {
-                continue; // Shouldn't be possible
-            }
-
-            lrm_state = controld_get_executor_state(id, false);
-            ra_data = (const remote_ra_data_t *) lrm_state->remote_ra_data;
-
-            if ((lrm_state != NULL) && (lrm_state->remote_ra_data != NULL)
-                && pcmk__is_set(ra_data->status, remote_active)) {
-
-                const char *in_maint_s = NULL;
-                int in_maint;
-
-                cnt_remote++;
-                in_maint_s = pcmk__xe_get(node, PCMK__XA_NODE_IN_MAINTENANCE);
-                pcmk__scan_min_int(in_maint_s, &in_maint, 0);
-                remote_ra_maintenance(lrm_state, in_maint);
-            }
+        count++;
+        if (id == NULL) {
+            continue;   // Shouldn't be possible
         }
-        crm_trace("Action holds %d nodes (%d remotes found) adjusting "
-                  PCMK_OPT_MAINTENANCE_MODE,
-                  cnt, cnt_remote);
+
+        lrm_state = controld_get_executor_state(id, false);
+        ra_data = (const remote_ra_data_t *) lrm_state->remote_ra_data;
+
+        if ((lrm_state != NULL) && (lrm_state->remote_ra_data != NULL)
+            && pcmk__is_set(ra_data->status, remote_active)) {
+
+            const char *in_maint_s = NULL;
+            int in_maint = 0;
+
+            count_remote++;
+            in_maint_s = pcmk__xe_get(node, PCMK__XA_NODE_IN_MAINTENANCE);
+            pcmk__scan_min_int(in_maint_s, &in_maint, 0);
+            remote_ra_maintenance(lrm_state, in_maint);
+        }
     }
-    xmlXPathFreeObject(search);
+
+    crm_trace("Action holds %d nodes (%d remotes found) adjusting "
+              PCMK_OPT_MAINTENANCE_MODE,
+              count, count_remote);
 }
 
 gboolean
