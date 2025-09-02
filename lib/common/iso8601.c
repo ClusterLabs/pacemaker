@@ -853,17 +853,19 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
 
     tzset();
 
-    if (time_str) {
+    if (time_str != NULL) {
         if (!crm_time_parse_sec(time_str, &(a_time->seconds))) {
             return false;
         }
+
         offset_s = strstr(time_str, "Z");
         if (offset_s == NULL) {
             offset_s = strstr(time_str, " ");
-            if (offset_s) {
-                while (isspace(offset_s[0])) {
-                    offset_s++;
-                }
+        }
+
+        if (offset_s != NULL) {
+            while (isspace(offset_s[0])) {
+                offset_s++;
             }
         }
     }
