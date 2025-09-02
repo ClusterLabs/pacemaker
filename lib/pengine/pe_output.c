@@ -929,7 +929,7 @@ cluster_dc_html(pcmk__output_t *out, va_list args) {
         child = pcmk__html_create(node, PCMK__XE_SPAN, NULL, NULL);
         pcmk__xe_set_content(child, " partition");
 
-        if (crm_is_true(quorum)) {
+        if (pcmk__is_true(quorum)) {
             child = pcmk__html_create(node, PCMK__XE_SPAN, NULL, NULL);
             pcmk__xe_set_content(child, " with");
 
@@ -966,7 +966,7 @@ cluster_dc_text(pcmk__output_t *out, va_list args) {
                        "%s (version %s) - %spartition %s quorum",
                        dc_name, dc_version_s ? dc_version_s : "unknown",
                        mixed_version ? "MIXED-VERSION " : "",
-                       crm_is_true(quorum) ? "with" : "WITHOUT");
+                       pcmk__is_true(quorum) ? "with" : "WITHOUT");
     } else {
         out->list_item(out, "Current DC", "NONE");
     }
@@ -985,7 +985,7 @@ cluster_dc_xml(pcmk__output_t *out, va_list args) {
     bool mixed_version = va_arg(args, int);
 
     if (dc) {
-        const char *with_quorum = pcmk__btoa(crm_is_true(quorum));
+        const char *with_quorum = pcmk__btoa(pcmk__is_true(quorum));
         const char *mixed_version_s = pcmk__btoa(mixed_version);
 
         pcmk__output_create_xml_node(out, PCMK_XE_CURRENT_DC,

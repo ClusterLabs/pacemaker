@@ -19,6 +19,18 @@
 extern "C" {
 #endif
 
+/* Define compression parameters for IPC messages
+ *
+ * Compression costs a LOT, so we don't want to do it unless we're hitting
+ * message limits. Currently, we use 128KB as the threshold, because higher
+ * values don't play well with the heartbeat stack. With an earlier limit of
+ * 10KB, compressing 184 of 1071 messages accounted for 23% of the total CPU
+ * used by the cib.
+ */
+#define PCMK__BZ2_BLOCKS    4
+#define PCMK__BZ2_WORK      20
+#define PCMK__BZ2_THRESHOLD (128 * 1024)
+
 int pcmk__real_path(const char *path, char **resolved_path);
 
 char *pcmk__series_filename(const char *directory, const char *series,

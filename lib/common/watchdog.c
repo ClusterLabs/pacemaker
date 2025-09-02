@@ -20,7 +20,8 @@
 #include <dirent.h>
 #include <signal.h>
 
-#include <glib.h>		// g_str_has_prefix()
+#include <glib.h>           // g_str_has_prefix()
+#include <qb/qbdefs.h>      // QB_MIN(), QB_MAX()
 
 static pid_t sbd_pid = 0;
 
@@ -210,13 +211,25 @@ pcmk__locate_sbd(void)
     return sbd_pid;
 }
 
+// 0 <= return value <= LONG_MAX
 long
 pcmk__get_sbd_watchdog_timeout(void)
 {
-    static long sbd_timeout = -2;
+    static long sbd_timeout = -1;
 
-    if (sbd_timeout == -2) {
-        sbd_timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+    if (sbd_timeout == -1) {
+        const char *timeout = getenv("SBD_WATCHDOG_TIMEOUT");
+        long long timeout_ms = 0;
+
+        if ((timeout != NULL)
+            && (pcmk__parse_ms(timeout, &timeout_ms) == pcmk_rc_ok)
+            && (timeout_ms >= 0)) {
+
+            sbd_timeout = (long) QB_MIN(timeout_ms, LONG_MAX);
+
+        } else {
+            sbd_timeout = 0;
+        }
     }
     return sbd_timeout;
 }
@@ -224,7 +237,7 @@ pcmk__get_sbd_watchdog_timeout(void)
 bool
 pcmk__get_sbd_sync_resource_startup(void)
 {
-    static int sync_resource_startup = PCMK__SBD_SYNC_DEFAULT;
+    static bool sync_resource_startup = PCMK__SBD_SYNC_DEFAULT;
     static bool checked_sync_resource_startup = false;
 
     if (!checked_sync_resource_startup) {
@@ -234,22 +247,25 @@ pcmk__get_sbd_sync_resource_startup(void)
             crm_trace("Defaulting to %sstart-up synchronization with sbd",
                       (PCMK__SBD_SYNC_DEFAULT? "" : "no "));
 
-        } else if (crm_str_to_boolean(sync_env, &sync_resource_startup) < 0) {
+        } else if (pcmk__parse_bool(sync_env,
+                                    &sync_resource_startup) != pcmk_rc_ok) {
             crm_warn("Defaulting to %sstart-up synchronization with sbd "
                      "because environment value '%s' is invalid",
                      (PCMK__SBD_SYNC_DEFAULT? "" : "no "), sync_env);
         }
         checked_sync_resource_startup = true;
     }
-    return sync_resource_startup != 0;
+    return sync_resource_startup;
 }
 
+// 0 <= return value <= min(LONG_MAX, (2 * SBD timeout))
 long
 pcmk__auto_stonith_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
+    long long st_timeout = 2 * (long long) sbd_timeout;
 
-    return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
+    return (long) QB_MIN(st_timeout, LONG_MAX);
 }
 
 bool
@@ -261,20 +277,14 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
      */
     long long st_timeout = 0;
 
-    if (value != NULL) {
-        /* @COMPAT So far it has been documented that a negative value is
-         * valid. Parse it as an integer first to avoid the warning from
-         * crm_get_msec().
-         */
-        int rc = pcmk__scan_ll(value, &st_timeout, PCMK__PARSE_INT_DEFAULT);
-
-        if (rc != pcmk_rc_ok || st_timeout >= 0) {
-            st_timeout = crm_get_msec(value);
-        }
+    if ((value != NULL) && (pcmk__parse_ms(value, &st_timeout) == pcmk_rc_ok)) {
+        st_timeout = QB_MIN(st_timeout, LONG_MAX);
     }
 
     if (st_timeout < 0) {
         st_timeout = pcmk__auto_stonith_watchdog_timeout();
+
+        // At this point, 0 <= sbd_timeout <= st_timeout
         crm_debug("Using calculated value %lld for "
                   PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
@@ -296,6 +306,9 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
         long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
         if (st_timeout < sbd_timeout) {
+            /* Passed-in value for PCMK_OPT_STONITH_WATCHDOG_TIMEOUT was
+             * parsable, positive, and less than the SBD_WATCHDOG_TIMEOUT
+             */
             crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
                       " (%s) too short (must be >%ldms)",
                       value, sbd_timeout);

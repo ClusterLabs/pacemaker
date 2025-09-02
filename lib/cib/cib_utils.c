@@ -153,7 +153,7 @@ createEmptyCib(int cib_epoch)
 static bool
 cib_acl_enabled(xmlNode *xml, const char *user)
 {
-    bool rc = FALSE;
+    bool rc = false;
 
     if(pcmk_acl_required(user)) {
         const char *value = NULL;
@@ -161,7 +161,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
         cib_read_config(options, xml);
         value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
-        rc = crm_is_true(value);
+        rc = pcmk__is_true(value);
         g_hash_table_destroy(options);
     }
 
@@ -451,10 +451,14 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                                              manage_counters);
 
                 if (test_rc != pcmk_ok) {
-                    save_xml_to_file(cib_copy, "PatchApply:calculated", NULL);
-                    save_xml_to_file(patchset_cib, "PatchApply:input", NULL);
-                    save_xml_to_file(scratch, "PatchApply:actual", NULL);
-                    save_xml_to_file(local_diff, "PatchApply:diff", NULL);
+                    pcmk__xml_write_temp_file(cib_copy, "PatchApply:calculated",
+                                              NULL);
+                    pcmk__xml_write_temp_file(patchset_cib, "PatchApply:input",
+                                              NULL);
+                    pcmk__xml_write_temp_file(scratch, "PatchApply:actual",
+                                              NULL);
+                    pcmk__xml_write_temp_file(local_diff, "PatchApply:diff",
+                                              NULL);
                     crm_err("v%d patchset error, patch failed to apply: %s "
                             "(%d)",
                             format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),

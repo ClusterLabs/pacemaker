@@ -336,7 +336,7 @@ pcmk_process_exit(pcmk_child_t * child)
     } else if (!pcmk_is_set(child->flags, child_respawn)) {
         /* nothing to do */
 
-    } else if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
+    } else if (pcmk__is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
         pcmk__panic("Subdaemon failed");
 
     } else if (child_liveness(child) == pcmk_rc_ok) {
@@ -447,7 +447,7 @@ start_child(pcmk_child_t * child)
     child->flags &= ~(child_active_before_startup | child_shutting_down);
     child->check_count = 0;
 
-    if (env_callgrind != NULL && crm_is_true(env_callgrind)) {
+    if (pcmk__is_true(env_callgrind)) {
         use_callgrind = true;
         use_valgrind = true;
 
@@ -456,7 +456,7 @@ start_child(pcmk_child_t * child)
         use_callgrind = true;
         use_valgrind = true;
 
-    } else if (env_valgrind != NULL && crm_is_true(env_valgrind)) {
+    } else if (pcmk__is_true(env_valgrind)) {
         use_valgrind = true;
 
     } else if ((env_valgrind != NULL)
@@ -703,7 +703,7 @@ child_alive(pcmk_child_t *child)
     const char *name = pcmk__server_name(child->server);
 
     if (child->pid == PCMK__SPECIAL_PID) {
-        if (crm_is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
+        if (pcmk__is_true(pcmk__env_option(PCMK__ENV_FAIL_FAST))) {
             crm_crit("Cannot track pre-existing process for %s IPC on this "
                      "platform and PCMK_" PCMK__ENV_FAIL_FAST " requested",
                      name);

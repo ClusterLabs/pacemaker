@@ -733,7 +733,7 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
 
     // Check action's PCMK_META_RECORD_PENDING meta-attribute (defaults to true)
     record_pending = crm_meta_value(op->params, PCMK_META_RECORD_PENDING);
-    if ((record_pending != NULL) && !crm_is_true(record_pending)) {
+    if ((record_pending != NULL) && !pcmk__is_true(record_pending)) {
         pcmk__warn_once(pcmk__wo_record_pending,
                         "The " PCMK_META_RECORD_PENDING " option (for example, "
                         "for the %s resource's %s operation) is deprecated and "

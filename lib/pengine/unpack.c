@@ -55,7 +55,7 @@ struct action_history {
         const char *scf_value = pcmk__cluster_option(config_hash, (option));  \
                                                                               \
         if (scf_value != NULL) {                                              \
-            if (crm_is_true(scf_value)) {                                     \
+            if (pcmk__is_true(scf_value)) {                                   \
                 (scheduler)->flags = pcmk__set_flags_as(__func__, __LINE__,   \
                                     LOG_TRACE, "Scheduler",                   \
                                     crm_system_name, (scheduler)->flags,      \
@@ -240,7 +240,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
-    if (value && crm_is_true(value)) {
+    if (pcmk__is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
                  "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
                  " is nonzero");
@@ -1017,7 +1017,7 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     }
 
     granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
-    if (granted && crm_is_true(granted)) {
+    if (pcmk__is_true(granted)) {
         pcmk__set_ticket_flags(ticket, pcmk__ticket_granted);
         crm_info("We have ticket '%s'", ticket->id);
     } else {
@@ -1040,7 +1040,7 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     }
 
     standby = g_hash_table_lookup(ticket->state, PCMK_XA_STANDBY);
-    if (standby && crm_is_true(standby)) {
+    if (pcmk__is_true(standby)) {
         pcmk__set_ticket_flags(ticket, pcmk__ticket_standby);
         if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
             crm_info("Granted ticket '%s' is in standby-mode", ticket->id);
@@ -1095,14 +1095,14 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
         this_node->details->shutdown = TRUE;
     }
 
-    if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_STANDBY, NULL,
-                                    pcmk__rsc_node_current))) {
+    if (pcmk__is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_STANDBY, NULL,
+                                      pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(this_node));
         pcmk__set_node_flags(this_node, pcmk__node_standby);
     }
 
-    if (crm_is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
-                                    pcmk__rsc_node_current))
+    if (pcmk__is_true(pcmk__node_attr(this_node, PCMK_NODE_ATTR_MAINTENANCE,
+                                      NULL, pcmk__rsc_node_current))
         || ((rsc != NULL) && !pcmk_is_set(rsc->flags, pcmk__rsc_managed))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(this_node));
         this_node->details->maintenance = TRUE;
@@ -1111,7 +1111,7 @@ unpack_handle_remote_attrs(pcmk_node_t *this_node, const xmlNode *state,
     discovery = pcmk__node_attr(this_node,
                                 PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED,
                                 NULL, pcmk__rsc_node_current);
-    if ((discovery != NULL) && !crm_is_true(discovery)) {
+    if ((discovery != NULL) && !pcmk__is_true(discovery)) {
         pcmk__warn_once(pcmk__wo_rdisc_enabled,
                         "Support for the "
                         PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
@@ -1157,14 +1157,14 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
 
     add_node_attrs(attrs, node, TRUE, scheduler);
 
-    if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_STANDBY, NULL,
-                                    pcmk__rsc_node_current))) {
+    if (pcmk__is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_STANDBY, NULL,
+                                      pcmk__rsc_node_current))) {
         crm_info("%s is in standby mode", pcmk__node_name(node));
         pcmk__set_node_flags(node, pcmk__node_standby);
     }
 
-    if (crm_is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
-                                    pcmk__rsc_node_current))) {
+    if (pcmk__is_true(pcmk__node_attr(node, PCMK_NODE_ATTR_MAINTENANCE, NULL,
+                                      pcmk__rsc_node_current))) {
         crm_info("%s is in maintenance mode", pcmk__node_name(node));
         node->details->maintenance = TRUE;
     }
@@ -1172,7 +1172,7 @@ unpack_transient_attributes(const xmlNode *state, pcmk_node_t *node,
     discovery = pcmk__node_attr(node,
                                 PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED,
                                 NULL, pcmk__rsc_node_current);
-    if ((discovery != NULL) && !crm_is_true(discovery)) {
+    if ((discovery != NULL) && !pcmk__is_true(discovery)) {
         pcmk__config_warn("Ignoring "
                           PCMK__NODE_ATTR_RESOURCE_DISCOVERY_ENABLED
                           " attribute for %s because disabling resource"
@@ -1482,24 +1482,13 @@ static long long
 unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
 {
     const char *member_time = pcmk__xe_get(node_state, PCMK__XA_IN_CCM);
-    int member = 0;
+    bool is_member = false;
 
     if (member_time == NULL) {
         return -1LL;
+    }
 
-    } else if (crm_str_to_boolean(member_time, &member) == 1) {
-        /* If in_ccm=0, we'll return 0 here. If in_ccm=1, either the entry was
-         * recorded as a boolean for a DC < 2.1.7, or the node is pending
-         * shutdown and has left the CPG, in which case it was set to 1 to avoid
-         * fencing for PCMK_OPT_NODE_PENDING_TIMEOUT.
-         *
-         * We return the effective time for in_ccm=1 because what's important to
-         * avoid fencing is that effective time minus this value is less than
-         * the pending node timeout.
-         */
-        return member? (long long) pcmk__scheduler_epoch_time(scheduler) : 0LL;
-
-    } else {
+    if (pcmk__parse_bool(member_time, &is_member) != pcmk_rc_ok) {
         long long when_member = 0LL;
 
         if ((pcmk__scan_ll(member_time, &when_member,
@@ -1510,6 +1499,17 @@ unpack_node_member(const xmlNode *node_state, pcmk_scheduler_t *scheduler)
         }
         return when_member;
     }
+
+    /* If in_ccm=0, we'll return 0 here. If in_ccm=1, either the entry was
+     * recorded as a boolean for a DC < 2.1.7, or the node is pending shutdown
+     * and has left the CPG, in which case it was set to 1 to avoid fencing for
+     * PCMK_OPT_NODE_PENDING_TIMEOUT.
+     *
+     * We return the effective time for in_ccm=1 because what's important to
+     * avoid fencing is that effective time minus this value is less than the
+     * pending node timeout.
+     */
+    return is_member? (long long) pcmk__scheduler_epoch_time(scheduler) : 0LL;
 }
 
 /*!
@@ -1559,19 +1559,21 @@ unpack_node_online(const xmlNode *node_state)
 static bool
 unpack_node_terminate(const pcmk_node_t *node, const xmlNode *node_state)
 {
-    long long value = 0LL;
-    int value_i = 0;
+    bool value_b = false;
+    long long value_ll = 0LL;
     int rc = pcmk_rc_ok;
     const char *value_s = pcmk__node_attr(node, PCMK_NODE_ATTR_TERMINATE,
                                           NULL, pcmk__rsc_node_current);
 
     // Value may be boolean or an epoch time
-    if (crm_str_to_boolean(value_s, &value_i) == 1) {
-        return (value_i != 0);
+    if ((value_s != NULL)
+        && (pcmk__parse_bool(value_s, &value_b) == pcmk_rc_ok)) {
+        return value_b;
     }
-    rc = pcmk__scan_ll(value_s, &value, 0LL);
+
+    rc = pcmk__scan_ll(value_s, &value_ll, 0LL);
     if (rc == pcmk_rc_ok) {
-        return (value > 0);
+        return (value_ll > 0);
     }
     crm_warn("Ignoring unrecognized value '%s' for " PCMK_NODE_ATTR_TERMINATE
              "node attribute for %s: %s",
