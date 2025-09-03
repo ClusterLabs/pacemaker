@@ -859,12 +859,16 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
         }
 
         offset_s = strstr(time_str, "Z");
+
+        /* @COMPAT: Spaces between the time and the offset are not supported
+         * by the standard according to section 3.4.1 and 4.2.5.2.
+         */
         if (offset_s == NULL) {
-            offset_s = strstr(time_str, " ");
+            offset_s = strpbrk(time_str, " +-");
         }
 
         if (offset_s != NULL) {
-            while (isspace(offset_s[0])) {
+            while (isspace(*offset_s)) {
                 offset_s++;
             }
         }
