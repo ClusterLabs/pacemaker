@@ -1508,16 +1508,11 @@ pcmk__xe_get_bool_attr(const xmlNode *xml, const char *attr, bool *dest)
 {
     const char *xml_value = NULL;
 
-    if (xml == NULL) {
-        return ENODATA;
-    }
-    if ((attr == NULL) || (dest == NULL)) {
-        return EINVAL;
-    }
+    CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
 
     xml_value = pcmk__xe_get(xml, attr);
     if (xml_value == NULL) {
-        return ENODATA;
+        return ENXIO;
     }
 
     return pcmk__parse_bool(xml_value, dest);
