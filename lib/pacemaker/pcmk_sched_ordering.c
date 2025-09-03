@@ -289,7 +289,7 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
      * PCMK_META_CLONE_MIN=1
      */
     if (pcmk__xe_get_bool_attr(xml, PCMK_XA_REQUIRE_ALL,
-                               &require_all) != ENODATA) {
+                               &require_all) != ENXIO) {
         pcmk__warn_once(pcmk__wo_require_all,
                         "Support for " PCMK_XA_REQUIRE_ALL " in ordering "
                         "constraints is deprecated and will be removed in a "
