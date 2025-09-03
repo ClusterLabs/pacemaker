@@ -1410,7 +1410,6 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
          node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
 
         lrm_state_t *lrm_state = NULL;
-        const remote_ra_data_t *ra_data = NULL;
         const char *id = pcmk__xe_id(node);
 
         if (id == NULL) {
@@ -1419,16 +1418,10 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         }
 
         lrm_state = controld_get_executor_state(id, false);
-        if (lrm_state == NULL) {
-            continue;
-        }
 
-        ra_data = (const remote_ra_data_t *) lrm_state->remote_ra_data;
-        if (ra_data == NULL) {
-            continue;
-        }
+        if ((lrm_state != NULL) && (lrm_state->remote_ra_data != NULL)
+            && pcmk__is_set(lrm_state->remote_ra_data->status, remote_active)) {
 
-        if (pcmk__is_set(ra_data->status, remote_active)) {
             const char *in_maint_s = NULL;
             int in_maint = 0;
 
