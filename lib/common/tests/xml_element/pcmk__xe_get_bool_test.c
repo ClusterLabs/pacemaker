@@ -18,10 +18,10 @@ empty_input(void **state)
     xmlNode *node = pcmk__xml_parse("<node/>");
     bool value;
 
-    assert_int_equal(pcmk__xe_get_bool_attr(NULL, NULL, &value), EINVAL);
-    assert_int_equal(pcmk__xe_get_bool_attr(NULL, "whatever", &value), EINVAL);
-    assert_int_equal(pcmk__xe_get_bool_attr(node, NULL, &value), EINVAL);
-    assert_int_equal(pcmk__xe_get_bool_attr(node, "whatever", NULL), EINVAL);
+    assert_int_equal(pcmk__xe_get_bool(NULL, NULL, &value), EINVAL);
+    assert_int_equal(pcmk__xe_get_bool(NULL, "whatever", &value), EINVAL);
+    assert_int_equal(pcmk__xe_get_bool(node, NULL, &value), EINVAL);
+    assert_int_equal(pcmk__xe_get_bool(node, "whatever", NULL), EINVAL);
 
     pcmk__xml_free(node);
 }
@@ -32,7 +32,7 @@ attr_missing(void **state)
     xmlNode *node = pcmk__xml_parse("<node a=\"true\" b=\"false\"/>");
     bool value;
 
-    assert_int_equal(pcmk__xe_get_bool_attr(node, "c", &value), ENXIO);
+    assert_int_equal(pcmk__xe_get_bool(node, "c", &value), ENXIO);
     pcmk__xml_free(node);
 }
 
@@ -44,14 +44,14 @@ attr_present(void **state)
     bool value;
 
     value = false;
-    assert_int_equal(pcmk__xe_get_bool_attr(node, "a", &value), pcmk_rc_ok);
+    assert_int_equal(pcmk__xe_get_bool(node, "a", &value), pcmk_rc_ok);
     assert_true(value);
 
     value = true;
-    assert_int_equal(pcmk__xe_get_bool_attr(node, "b", &value), pcmk_rc_ok);
+    assert_int_equal(pcmk__xe_get_bool(node, "b", &value), pcmk_rc_ok);
     assert_false(value);
 
-    assert_int_not_equal(pcmk__xe_get_bool_attr(node, "c", &value), pcmk_rc_ok);
+    assert_int_not_equal(pcmk__xe_get_bool(node, "c", &value), pcmk_rc_ok);
 
     pcmk__xml_free(node);
 }

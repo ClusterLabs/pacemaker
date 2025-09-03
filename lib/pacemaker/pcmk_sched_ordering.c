@@ -141,7 +141,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
     }
 
     // Check ordering XML (and parent) for explicit PCMK_XA_SYMMETRICAL setting
-    rc = pcmk__xe_get_bool_attr(xml_obj, PCMK_XA_SYMMETRICAL, &symmetric);
+    rc = pcmk__xe_get_bool(xml_obj, PCMK_XA_SYMMETRICAL, &symmetric);
 
     if (rc != pcmk_rc_ok && parent_symmetrical_s != NULL) {
         symmetric = pcmk__is_true(parent_symmetrical_s);
@@ -288,8 +288,7 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
      * PCMK_XA_REQUIRE_ALL=PCMK_VALUE_FALSE is deprecated equivalent of
      * PCMK_META_CLONE_MIN=1
      */
-    if (pcmk__xe_get_bool_attr(xml, PCMK_XA_REQUIRE_ALL,
-                               &require_all) != ENXIO) {
+    if (pcmk__xe_get_bool(xml, PCMK_XA_REQUIRE_ALL, &require_all) != ENXIO) {
         pcmk__warn_once(pcmk__wo_require_all,
                         "Support for " PCMK_XA_REQUIRE_ALL " in ordering "
                         "constraints is deprecated and will be removed in a "
@@ -691,7 +690,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
     bool require_all = true;
 
-    (void) pcmk__xe_get_bool_attr(set1, PCMK_XA_REQUIRE_ALL, &require_all);
+    (void) pcmk__xe_get_bool(set1, PCMK_XA_REQUIRE_ALL, &require_all);
 
     if (action_1 == NULL) {
         action_1 = PCMK_ACTION_START;

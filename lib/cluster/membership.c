@@ -245,8 +245,8 @@ remote_state_from_cib(const xmlNode *node_state)
 {
     bool in_ccm = false;
 
-    if ((pcmk__xe_get_bool_attr(node_state, PCMK__XA_IN_CCM,
-                                &in_ccm) == pcmk_rc_ok) && in_ccm) {
+    if ((pcmk__xe_get_bool(node_state, PCMK__XA_IN_CCM, &in_ccm) == pcmk_rc_ok)
+        && in_ccm) {
         return PCMK_VALUE_MEMBER;
     }
     return PCMK__VALUE_LOST;
