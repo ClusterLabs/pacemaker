@@ -42,35 +42,6 @@ enum remote_cmd_status {
     cmd_cancel              = (1 << 1),
 };
 
-typedef struct remote_ra_cmd_s {
-    /*! the local node the cmd is issued from */
-    char *owner;
-    /*! the remote node the cmd is executed on */
-    char *rsc_id;
-    /*! the action to execute */
-    char *action;
-    /*! some string the client wants us to give it back */
-    char *userdata;
-    /*! start delay in ms */
-    int start_delay;
-    /*! timer id used for start delay. */
-    int delay_id;
-    /*! timeout in ms for cmd */
-    int timeout;
-    /*! recurring interval in ms */
-    guint interval_ms;
-    /*! interval timer id */
-    int interval_id;
-    int monitor_timeout_id;
-    int takeover_timeout_id;
-    /*! action parameters */
-    lrmd_key_value_t *params;
-    pcmk__action_result_t result;
-    int call_id;
-    time_t start_time;
-    uint32_t status;
-} remote_ra_cmd_t;
-
 #define lrm_remote_set_flags(lrm_state, flags_to_set) do { \
     lrm_state_t *lrm = (lrm_state); \
     remote_ra_data_t *ra = lrm->remote_ra_data; \
@@ -103,14 +74,6 @@ enum remote_status {
      */
     controlling_guest   = (1 << 4),
 };
-
-typedef struct remote_ra_data_s {
-    crm_trigger_t *work;
-    remote_ra_cmd_t *cur_cmd;
-    GList *cmds;
-    GList *recurring_cmds;
-    uint32_t status;
-} remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
 static void handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd);
