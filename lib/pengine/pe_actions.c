@@ -103,8 +103,9 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
 
         // @TODO This does not consider meta-attributes, rules, defaults, etc.
         if (!include_disabled
-            && (pcmk__xe_get_bool_attr(operation, PCMK_META_ENABLED,
-                                       &enabled) == pcmk_rc_ok) && !enabled) {
+            && (pcmk__xe_get_bool(operation, PCMK_META_ENABLED,
+                                  &enabled) == pcmk_rc_ok)
+	        && !enabled) {
             continue;
         }
 
@@ -486,8 +487,9 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
             }
 
             // We only care about enabled monitors
-            if ((pcmk__xe_get_bool_attr(operation, PCMK_META_ENABLED,
-                                        &enabled) == pcmk_rc_ok) && !enabled) {
+            if ((pcmk__xe_get_bool(operation, PCMK_META_ENABLED,
+                                   &enabled) == pcmk_rc_ok)
+                && !enabled) {
                 continue;
             }
 
@@ -646,8 +648,9 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
         }
 
         // @TODO This does not consider meta-attributes, rules, defaults, etc.
-        if ((pcmk__xe_get_bool_attr(operation, PCMK_META_ENABLED,
-                                    &enabled) == pcmk_rc_ok) && !enabled) {
+        if ((pcmk__xe_get_bool(operation, PCMK_META_ENABLED,
+                               &enabled) == pcmk_rc_ok)
+            && !enabled) {
             continue;
         }
 

@@ -1504,7 +1504,7 @@ pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__xe_get_bool_attr(const xmlNode *xml, const char *attr, bool *dest)
+pcmk__xe_get_bool(const xmlNode *xml, const char *attr, bool *dest)
 {
     const char *xml_value = NULL;
 
@@ -1534,7 +1534,7 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
     bool value = false;
     int rc;
 
-    rc = pcmk__xe_get_bool_attr(node, name, &value);
+    rc = pcmk__xe_get_bool(node, name, &value);
     return rc == pcmk_rc_ok && value == true;
 }
 

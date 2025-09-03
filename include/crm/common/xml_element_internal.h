@@ -164,8 +164,8 @@ int pcmk__xe_get_timeval(const xmlNode *xml, const char *sec_attr,
 void pcmk__xe_set_timeval(xmlNode *xml, const char *sec_attr,
                           const char *usec_attr, const struct timeval *value);
 
+int pcmk__xe_get_bool(const xmlNode *xml, const char *attr, bool *dest);
 void pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value);
-int pcmk__xe_get_bool_attr(const xmlNode *xml, const char *attr, bool *dest);
 bool pcmk__xe_attr_is_true(const xmlNode *node, const char *name);
 
 /*!

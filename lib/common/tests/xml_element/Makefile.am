@@ -17,7 +17,7 @@ check_PROGRAMS = \
 		 pcmk__xe_copy_attrs_test	\
 		 pcmk__xe_first_child_test	\
 		 pcmk__xe_foreach_child_test 	\
-		 pcmk__xe_get_bool_attr_test 	\
+		 pcmk__xe_get_bool_test 	\
 		 pcmk__xe_get_datetime_test	\
 		 pcmk__xe_get_flags_test	\
 		 pcmk__xe_get_score_test	\

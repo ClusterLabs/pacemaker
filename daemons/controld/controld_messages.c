@@ -755,7 +755,7 @@ handle_remote_state(const xmlNode *msg)
     bool remote_is_up = false;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__xe_get_bool_attr(msg, PCMK__XA_IN_CCM, &remote_is_up);
+    rc = pcmk__xe_get_bool(msg, PCMK__XA_IN_CCM, &remote_is_up);
 
     CRM_CHECK(remote_uname && rc == pcmk_rc_ok, return I_NULL);
 
