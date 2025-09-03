@@ -1415,7 +1415,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
 
         if (id == NULL) {
             CRM_LOG_ASSERT(id != NULL);
-            continue;   // Shouldn't be possible
+            continue;
         }
 
         lrm_state = controld_get_executor_state(id, false);
