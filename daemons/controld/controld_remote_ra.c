@@ -1422,11 +1422,9 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
         if ((lrm_state != NULL) && (lrm_state->remote_ra_data != NULL)
             && pcmk__is_set(lrm_state->remote_ra_data->status, remote_active)) {
 
-            const char *in_maint_s = NULL;
-            int in_maint = 0;
+            const bool in_maint =
+                pcmk__xe_attr_is_true(node, PCMK__XA_NODE_IN_MAINTENANCE);
 
-            in_maint_s = pcmk__xe_get(node, PCMK__XA_NODE_IN_MAINTENANCE);
-            pcmk__scan_min_int(in_maint_s, &in_maint, 0);
             remote_ra_maintenance(lrm_state, in_maint);
         }
     }
