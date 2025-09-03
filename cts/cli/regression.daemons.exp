@@ -643,12 +643,30 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
+    <parameter name="stop-orphan-resources">
+      <longdesc lang="en">
+        Deprecated alias for stop-removed-resources
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with stop-removed-resources ***
+      </shortdesc>
+      <content type="boolean" default=""/>
+    </parameter>
     <parameter name="stop-removed-actions">
       <longdesc lang="en">
         Whether to cancel recurring actions removed from the configuration
       </longdesc>
       <shortdesc lang="en">
         Whether to cancel recurring actions removed from the configuration
+      </shortdesc>
+      <content type="boolean" default=""/>
+    </parameter>
+    <parameter name="stop-orphan-actions">
+      <longdesc lang="en">
+        Deprecated alias for stop-removed-actions
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with stop-removed-actions ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
