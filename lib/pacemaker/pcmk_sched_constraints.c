@@ -395,7 +395,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
         }
 
         // Set PCMK_XA_SEQUENTIAL=PCMK_VALUE_FALSE for the PCMK_XE_RESOURCE_SET
-        pcmk__xe_set_bool_attr(*rsc_set, PCMK_XA_SEQUENTIAL, false);
+        pcmk__xe_set_bool(*rsc_set, PCMK_XA_SEQUENTIAL, false);
 
     } else if ((rsc != NULL) && convert_rsc) {
         /* Even if a regular resource is referenced by "attr", convert it into a

@@ -3000,8 +3000,8 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
 
     // @COMPAT PCMK_XA_ORPHAN is deprecated since 3.0.2
     if (rsc == NULL) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_ORPHAN, true);
-        pcmk__xe_set_bool_attr(node, PCMK_XA_REMOVED, true);
+        pcmk__xe_set_bool(node, PCMK_XA_ORPHAN, true);
+        pcmk__xe_set_bool(node, PCMK_XA_REMOVED, true);
 
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = pcmk__itoa(rsc->priv->ban_after_failures);

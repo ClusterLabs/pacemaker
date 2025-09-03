@@ -549,8 +549,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                     stonith_local_history_diff_and_merge(received_history, TRUE, NULL);
                 if (out_history) {
                     crm_trace("Broadcasting history-diff to peers");
-                    pcmk__xe_set_bool_attr(out_history,
-                                           PCMK__XA_ST_DIFFERENTIAL, true);
+                    pcmk__xe_set_bool(out_history, PCMK__XA_ST_DIFFERENTIAL,
+                                      true);
                     stonith_send_broadcast_history(out_history,
                         st_opt_broadcast | st_opt_discard_reply,
                         NULL);

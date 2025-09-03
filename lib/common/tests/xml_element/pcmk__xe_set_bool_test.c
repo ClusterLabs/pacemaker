@@ -18,8 +18,8 @@ set_attr(void **state)
 {
     xmlNode *node = pcmk__xml_parse("<node/>");
 
-    pcmk__xe_set_bool_attr(node, "a", true);
-    pcmk__xe_set_bool_attr(node, "b", false);
+    pcmk__xe_set_bool(node, "a", true);
+    pcmk__xe_set_bool(node, "b", false);
 
     assert_string_equal(pcmk__xe_get(node, "a"), PCMK_VALUE_TRUE);
     assert_string_equal(pcmk__xe_get(node, "b"), PCMK_VALUE_FALSE);
