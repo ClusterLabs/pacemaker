@@ -644,10 +644,10 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
  *   \c false
  *
  * \param[in]  input   Input string
- * \param[out] result  Where to store parsed boolean value (can be \c NULL)
+ * \param[out] result  Where to store result (can be \c NULL; unchanged on
+ *                     error)
  *
- * \retval \c true if \p input was successfully parsed to a boolean value
- * \retval \c false otherwise
+ * \retval Standard Pacemaker return code
  */
 int
 pcmk__parse_bool(const char *input, bool *result)
