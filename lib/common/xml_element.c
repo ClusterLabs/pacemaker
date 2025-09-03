@@ -1493,37 +1493,34 @@ pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
 
 /*!
  * \internal
- * \brief Extract a boolean attribute's value from an XML element, with
- *        error checking
+ * \brief Retrieve a boolean value from an XML attribute
  *
- * \param[in]  node  XML node to get attribute from
- * \param[in]  name  XML attribute to get
- * \param[out] value Destination for the value of the attribute
+ * This is like \c pcmk__xe_get() but returns the value as a \c bool.
  *
- * \return EINVAL if \p name or \p value are NULL, ENODATA if \p node is
- *         NULL or the attribute does not exist, pcmk_rc_unknown_format
- *         if the attribute is not a boolean, and pcmk_rc_ok otherwise.
+ * \param[in]  xml   XML element whose attribute to get
+ * \param[in]  attr  Attribute name
+ * \param[out] dest  Where to store result (unchanged on error)
  *
- * \note \p value only has any meaning if the return value is pcmk_rc_ok.
+ * \return Standard Pacemaker return code
  */
 int
-pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
+pcmk__xe_get_bool_attr(const xmlNode *xml, const char *attr, bool *dest)
 {
     const char *xml_value = NULL;
 
-    if (node == NULL) {
+    if (xml == NULL) {
         return ENODATA;
-    } else if (name == NULL || value == NULL) {
+    }
+    if ((attr == NULL) || (dest == NULL)) {
         return EINVAL;
     }
 
-    xml_value = pcmk__xe_get(node, name);
-
+    xml_value = pcmk__xe_get(xml, attr);
     if (xml_value == NULL) {
         return ENODATA;
     }
 
-    return pcmk__parse_bool(xml_value, value);
+    return pcmk__parse_bool(xml_value, dest);
 }
 
 /*!
