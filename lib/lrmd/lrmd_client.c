@@ -1006,7 +1006,7 @@ lrmd_handshake_hello_msg(const char *name, bool is_proxy)
 
     /* advertise that we are a proxy provider */
     if (is_proxy) {
-        pcmk__xe_set_bool_attr(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
+        pcmk__xe_set_bool(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
     }
 
     return hello;

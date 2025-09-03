@@ -269,7 +269,7 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
     request = create_attrd_op(NULL);
 
     pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-    pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, reap);
+    pcmk__xe_set_bool(request, PCMK__XA_REAP, reap);
     pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node);
 
     rc = connect_and_send_attrd_request(api, request);
