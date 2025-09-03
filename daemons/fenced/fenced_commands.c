@@ -2341,7 +2341,7 @@ add_disallowed(xmlNode *xml, const char *action, const fenced_device_t *device,
     if (!localhost_is_eligible(device, action, target, allow_self)) {
         crm_trace("Action '%s' using %s is disallowed for local host",
                   action, device->id);
-        pcmk__xe_set_bool_attr(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
+        pcmk__xe_set_bool(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
     }
 }
 
@@ -2627,7 +2627,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
 
     reply = construct_async_reply(cmd, result);
     if (merged) {
-        pcmk__xe_set_bool_attr(reply, PCMK__XA_ST_OP_MERGED, true);
+        pcmk__xe_set_bool(reply, PCMK__XA_ST_OP_MERGED, true);
     }
 
     if (pcmk__is_fencing_action(cmd->action)

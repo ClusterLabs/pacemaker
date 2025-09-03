@@ -780,7 +780,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             pcmk__xe_set(request, PCMK__XA_T, PCMK__VALUE_ATTRD);
             pcmk__xe_set(request, PCMK__XA_SRC, crm_system_name);
             pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-            pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
+            pcmk__xe_set_bool(request, PCMK__XA_REAP, true);
             pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node_name);
             if (nodeid > 0) {
                 pcmk__xe_set_int(request, PCMK__XA_ATTR_HOST_ID, nodeid);

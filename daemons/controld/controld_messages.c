@@ -885,9 +885,9 @@ handle_node_info_request(const xmlNode *msg)
     pcmk__xe_set(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    pcmk__xe_set_bool_attr(reply_data, PCMK_XA_HAVE_QUORUM,
-                           pcmk__is_set(controld_globals.flags,
-                                        controld_has_quorum));
+    pcmk__xe_set_bool(reply_data, PCMK_XA_HAVE_QUORUM,
+                      pcmk__is_set(controld_globals.flags,
+                                   controld_has_quorum));
 
     /* Check whether client requested node info by ID and/or name
      *
@@ -911,9 +911,8 @@ handle_node_info_request(const xmlNode *msg)
         pcmk__xe_set(reply_data, PCMK_XA_ID, node->xml_id);
         pcmk__xe_set(reply_data, PCMK_XA_UNAME, node->name);
         pcmk__xe_set(reply_data, PCMK_XA_CRMD, node->state);
-        pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
-                               pcmk__is_set(node->flags,
-                                            pcmk__node_status_remote));
+        pcmk__xe_set_bool(reply_data, PCMK_XA_REMOTE_NODE,
+                          pcmk__is_set(node->flags, pcmk__node_status_remote));
     }
 
     // Send reply
@@ -1335,7 +1334,7 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
              node_name, node_up? "coming up" : "going down");
 
     pcmk__xe_set(msg, PCMK_XA_ID, node_name);
-    pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
+    pcmk__xe_set_bool(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {
         pcmk__xe_set(msg, PCMK__XA_CONNECTION_HOST,

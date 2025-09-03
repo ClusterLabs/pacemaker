@@ -507,9 +507,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     pcmk__refresh_node_caches_from_cib(output);
 
     pcmk__xe_set(output, PCMK_XA_DC_UUID, controld_globals.our_uuid);
-    pcmk__xe_set_bool_attr(output, PCMK_XA_HAVE_QUORUM,
-                           pcmk__is_set(controld_globals.flags,
-                                        controld_has_quorum));
+    pcmk__xe_set_bool(output, PCMK_XA_HAVE_QUORUM,
+                      pcmk__is_set(controld_globals.flags,
+                                   controld_has_quorum));
 
     force_local_option(output, PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
 

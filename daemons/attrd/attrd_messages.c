@@ -358,7 +358,7 @@ attrd_send_message(const pcmk__node_status_t *node, xmlNode *data, bool confirm)
      * acted upon.
      */
     if (!pcmk__str_eq(op, PCMK__ATTRD_CMD_CONFIRM, pcmk__str_none)) {
-        pcmk__xe_set_bool_attr(data, PCMK__XA_CONFIRM, confirm);
+        pcmk__xe_set_bool(data, PCMK__XA_CONFIRM, confirm);
     }
 
     attrd_xml_add_writer(data);

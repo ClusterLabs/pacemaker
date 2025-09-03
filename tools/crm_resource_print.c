@@ -553,15 +553,15 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (pcmk__is_set(checks->flags, rsc_remain_stopped)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_REMAIN_STOPPED, true);
+        pcmk__xe_set_bool(node, PCMK_XA_REMAIN_STOPPED, true);
     }
 
     if (pcmk__is_set(checks->flags, rsc_unpromotable)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_PROMOTABLE, false);
+        pcmk__xe_set_bool(node, PCMK_XA_PROMOTABLE, false);
     }
 
     if (pcmk__is_set(checks->flags, rsc_unmanaged)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_UNMANAGED, true);
+        pcmk__xe_set_bool(node, PCMK_XA_UNMANAGED, true);
     }
 
     if (pcmk__is_set(checks->flags, rsc_locked)) {
@@ -569,7 +569,7 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     }
 
     if (pcmk__is_set(checks->flags, rsc_node_health)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_UNHEALTHY, true);
+        pcmk__xe_set_bool(node, PCMK_XA_UNHEALTHY, true);
     }
 
     return pcmk_rc_ok;

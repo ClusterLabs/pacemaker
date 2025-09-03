@@ -239,9 +239,9 @@ create_dc_message(const char *join_op, const char *host_to)
     /* Add a field specifying whether the DC is shutting down. This keeps the
      * joining node from fencing the old DC if it becomes the new DC.
      */
-    pcmk__xe_set_bool_attr(msg, PCMK__XA_DC_LEAVING,
-                           pcmk__is_set(controld_globals.fsa_input_register,
-                                        R_SHUTDOWN));
+    pcmk__xe_set_bool(msg, PCMK__XA_DC_LEAVING,
+                      pcmk__is_set(controld_globals.fsa_input_register,
+                                   R_SHUTDOWN));
     return msg;
 }
 
@@ -947,7 +947,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     crm_debug("%sing join-%d request from %s",
               integrated? "Acknowledg" : "Nack", current_join_id, join_to);
     acknak = create_dc_message(CRM_OP_JOIN_ACKNAK, join_to);
-    pcmk__xe_set_bool_attr(acknak, CRM_OP_JOIN_ACKNAK, integrated);
+    pcmk__xe_set_bool(acknak, CRM_OP_JOIN_ACKNAK, integrated);
 
     if (integrated) {
         // No change needed for a nacked node

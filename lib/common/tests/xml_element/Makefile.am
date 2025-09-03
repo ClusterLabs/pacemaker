@@ -22,7 +22,7 @@ check_PROGRAMS = \
 		 pcmk__xe_get_flags_test	\
 		 pcmk__xe_get_score_test	\
 		 pcmk__xe_next_test		\
-		 pcmk__xe_set_bool_attr_test	\
+		 pcmk__xe_set_bool_test		\
 		 pcmk__xe_set_id_test		\
 		 pcmk__xe_set_score_test	\
 		 pcmk__xe_sort_attrs_test

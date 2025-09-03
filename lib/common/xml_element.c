@@ -1479,20 +1479,6 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
 
 /*!
  * \internal
- * \brief Add a boolean attribute to an XML node.
- *
- * \param[in,out] node  XML node to add attributes to
- * \param[in]     name  XML attribute to create
- * \param[in]     value Value to give to the attribute
- */
-void
-pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
-{
-    pcmk__xe_set(node, name, pcmk__btoa(value));
-}
-
-/*!
- * \internal
  * \brief Retrieve a boolean value from an XML attribute
  *
  * This is like \c pcmk__xe_get() but returns the value as a \c bool.
@@ -1516,6 +1502,24 @@ pcmk__xe_get_bool(const xmlNode *xml, const char *attr, bool *dest)
     }
 
     return pcmk__parse_bool(xml_value, dest);
+}
+
+/*!
+ * \internal
+ * \brief Set an XML attribute using a boolean value
+ *
+ * This is like \c pcmk__xe_set() but takes a \c bool.
+ *
+ * \param[in,out] xml    XML element whose attribute to set
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
+ *
+ * \return Standard Pacemaker return code
+ */
+void
+pcmk__xe_set_bool(xmlNode *xml, const char *attr, bool value)
+{
+    pcmk__xe_set(xml, attr, pcmk__btoa(value));
 }
 
 /*!

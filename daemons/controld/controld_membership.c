@@ -142,7 +142,7 @@ create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
     node_state = pcmk__xe_create(parent, PCMK__XE_NODE_STATE);
 
     if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
-        pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
+        pcmk__xe_set_bool(node_state, PCMK_XA_REMOTE_NODE, true);
     }
 
     id = pcmk__cluster_get_xml_id(node);
@@ -166,9 +166,9 @@ create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
             pcmk__xe_set_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
 
         } else {
-            pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
-                                   pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
-                                                pcmk__str_none));
+            pcmk__xe_set_bool(node_state, PCMK__XA_IN_CCM,
+                              pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
+                                           pcmk__str_none));
         }
     }
 

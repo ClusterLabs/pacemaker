@@ -369,7 +369,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
         pcmk__xe_set(xml, PCMK_XA_REASON, source->reason);
 
     } else if (!pcmk__is_set(action->flags, pcmk__action_runnable)) {
-        pcmk__xe_set_bool_attr(xml, PCMK_XA_BLOCKED, true);
+        pcmk__xe_set_bool(xml, PCMK_XA_BLOCKED, true);
 
     }
 

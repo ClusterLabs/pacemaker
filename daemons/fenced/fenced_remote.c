@@ -426,7 +426,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     pcmk__xe_set_int(bcast, PCMK_XA_COUNT, count);
 
     if (op_merged) {
-        pcmk__xe_set_bool_attr(bcast, PCMK__XA_ST_OP_MERGED, true);
+        pcmk__xe_set_bool(bcast, PCMK__XA_ST_OP_MERGED, true);
     }
 
     wrapper = pcmk__xe_create(bcast, PCMK__XE_ST_CALLDATA);
