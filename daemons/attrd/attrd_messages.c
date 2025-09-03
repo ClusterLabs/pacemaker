@@ -140,8 +140,8 @@ handle_remove_request(pcmk__request_t *request)
         const char *host = pcmk__xe_get(request->xml, PCMK__XA_ATTR_HOST);
         bool reap = false;
 
-        if (pcmk__xe_get_bool_attr(request->xml, PCMK__XA_REAP,
-                                   &reap) != pcmk_rc_ok) {
+        if (pcmk__xe_get_bool(request->xml, PCMK__XA_REAP,
+                              &reap) != pcmk_rc_ok) {
             reap = true; // Default to true for backward compatibility
         }
         attrd_peer_remove(host, reap, request->peer);
