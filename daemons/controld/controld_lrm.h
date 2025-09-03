@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,10 @@
 #ifndef CONTROLD_LRM__H
 #  define CONTROLD_LRM__H
 
+#include <crm/lrmd.h>               // lrmd_t
+
 #include <controld_messages.h>
+#include <controld_remote_ra.h>     // remote_ra_data_t
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
@@ -67,8 +70,8 @@ typedef struct active_op_s {
 
 typedef struct lrm_state_s {
     const char *node_name;
-    void *conn;                 // Reserved for controld_execd_state.c usage
-    void *remote_ra_data;       // Reserved for controld_remote_ra.c usage
+    lrmd_t *conn;                       // Reserved for controld_execd_state.c
+    remote_ra_data_t *remote_ra_data;   // Reserved for controld_remote_ra.c
 
     GHashTable *resource_history;
     GHashTable *active_ops;     // Pending and recurring actions
