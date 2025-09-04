@@ -308,12 +308,15 @@ map_legacy_option_type(const char *type)
  * \internal
  * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
  *
- * \param[in,out] out     Output object
- * \param[in]     option  Option to add as a \c PCMK_XE_PARAMETER element
+ * \param[in,out] out            Output object
+ * \param[in]     option         Option to add as a \c PCMK_XE_PARAMETER element
+ * \param[in]     replaced_with  Name of option that replaces this one (ignored
+ *                               if this option is not deprecated)
  */
 static void
 add_option_metadata_xml(pcmk__output_t *out,
-                        const pcmk__cluster_option_t *option)
+                        const pcmk__cluster_option_t *option,
+                        const char *replaced_with)
 {
     const char *type = option->type;
     const char *desc_long = option->description_long;
@@ -370,6 +373,12 @@ add_option_metadata_xml(pcmk__output_t *out,
             if (deprecated) {
                 pcmk__add_word(&desc_short_legacy, init_sz,
                                "*** Deprecated ***");
+
+                if (replaced_with != NULL) {
+                    pcmk__g_strcat(desc_short_legacy,
+                                   " *** Replaced with ", replaced_with, " ***",
+                                   NULL);
+                }
             }
             if (advanced) {
                 pcmk__add_word(&desc_short_legacy, init_sz,
@@ -395,8 +404,14 @@ add_option_metadata_xml(pcmk__output_t *out,
                                    NULL);
 
     if (deprecated && !legacy) {
-        // No need yet to support "replaced-with" or "desc"; add if needed
-        pcmk__output_create_xml_node(out, PCMK_XE_DEPRECATED, NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_DEPRECATED, NULL);
+
+        if (replaced_with != NULL) {
+            pcmk__output_create_xml_node(out, PCMK_XE_REPLACED_WITH,
+                                         PCMK_XA_NAME, replaced_with,
+                                         NULL);
+        }
+        pcmk__output_xml_pop_parent(out);
     }
     add_desc_xml(out, true, desc_long);
     add_desc_xml(out, false, desc_short);
@@ -465,7 +480,7 @@ option_list_xml(pcmk__output_t *out, va_list args)
          option->name != NULL; option++) {
 
         if (pcmk_all_flags_set(option->flags, filter)) {
-            add_option_metadata_xml(out, option);
+            add_option_metadata_xml(out, option, NULL);
         }
     }
 
