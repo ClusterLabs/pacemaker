@@ -368,14 +368,14 @@ add_option_metadata_xml(pcmk__output_t *out,
             }
 
             if (deprecated) {
-                pcmk__add_separated_word(&desc_short_legacy, init_sz,
-                                         "*** Deprecated ***", NULL);
+                pcmk__add_word(&desc_short_legacy, init_sz,
+                               "*** Deprecated ***");
             }
             if (advanced) {
-                pcmk__add_separated_word(&desc_short_legacy, init_sz,
-                                         "*** Advanced Use Only ***", NULL);
+                pcmk__add_word(&desc_short_legacy, init_sz,
+                               "*** Advanced Use Only ***");
             }
-            pcmk__add_separated_word(&desc_short_legacy, 0, desc_short, NULL);
+            pcmk__add_word(&desc_short_legacy, 0, desc_short);
 
             desc_short = desc_short_legacy->str;
         }

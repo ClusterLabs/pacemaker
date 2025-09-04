@@ -245,8 +245,11 @@ partition_list_default(pcmk__output_t *out, va_list args)
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
-        if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
-            pcmk__add_separated_word(&buffer, 128, pcmk__s(node->uname, ""), " ");
+
+        if (pcmk__str_eq(node->state, "member", pcmk__str_none)
+            && !pcmk__str_empty(node->uname)) {
+
+            pcmk__add_word(&buffer, 128, node->uname);
         }
     }
 
