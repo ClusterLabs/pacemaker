@@ -68,7 +68,7 @@ static GOptionEntry command_entries[] = {
 
     { "date", 'd', 0, G_OPTION_ARG_CALLBACK, date_now_cb,
       "Parse an ISO 8601 date/time (for example,\n"
-      INDENT "'2019-09-24 00:30:00 +01:00' or '2019-040')",
+      INDENT "'2019-09-24 00:30:00+01:00' or '2019-040')",
       "DATE" },
 
     { "period", 'p', 0, G_OPTION_ARG_STRING, &options.period_s,
