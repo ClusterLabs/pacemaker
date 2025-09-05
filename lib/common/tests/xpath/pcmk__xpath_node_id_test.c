@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,12 +44,12 @@ present(void **state) {
                         "/" PCMK__XE_LRM "[@" PCMK_XA_ID "='xyz']";
 
     s = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-    assert_int_equal(strcmp(s, "xyz"), 0);
+    assert_string_equal(s, "xyz");
     free(s);
 
     xpath = "/some/other/" PCMK__XE_LRM "[@" PCMK_XA_ID "='xyz']/xpath";
     s = pcmk__xpath_node_id(xpath, PCMK__XE_LRM);
-    assert_int_equal(strcmp(s, "xyz"), 0);
+    assert_string_equal(s, "xyz");
     free(s);
 }
 
