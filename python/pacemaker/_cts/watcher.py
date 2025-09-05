@@ -14,38 +14,6 @@ from pacemaker._cts.errors import OutputNotFoundError
 from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 
-# dateutil >=2.7.0 provides isoparser, but we support older versions
-try:
-    from dateutil.parser import isoparser
-except ImportError:
-    import datetime
-    import subprocess
-    # pylint: disable=ungrouped-imports
-    from pacemaker._cts.process import pipe_communicate
-
-    # pylint: disable=invalid-name
-    class isoparser():
-        """Mimic isoparser.isoparse when not available."""
-
-        def isoparse(self, timestamp):
-            """Mimic isoparser.isoparse when not available."""
-            with subprocess.Popen(["iso8601", "--output-as", "xml", "-d", timestamp],
-                                  stdout=subprocess.PIPE) as result:
-
-                output = pipe_communicate(result)
-                if result.returncode != 0:
-                    raise RuntimeError("Unable to run iso8601 command")
-                match = re.search(r".*<date>\s*(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)Z",
-                                  output)
-                if match is None:
-                    raise RuntimeError("Unable to parse iso8601 command output")
-                return datetime.datetime(int(match.group(1)),
-                                         int(match.group(2)),
-                                         int(match.group(3)),
-                                         int(match.group(4)),
-                                         int(match.group(5)),
-                                         int(match.group(6)))
-
 
 CTS_SUPPORT_BIN = f"{BuildOptions.DAEMON_DIR}/cts-support"
 
@@ -243,7 +211,6 @@ class JournalObj(SearchObj):
         name     -- A unique name to use when logging about this watch
         """
         SearchObj.__init__(self, "journal", host, name)
-        self._parser = isoparser()
 
     def _msg_after_limit(self, msg):
         """
@@ -262,9 +229,9 @@ class JournalObj(SearchObj):
         if not match:
             return False
 
-        msg_timestamp = match.group(0)
-        msg_dt = self._parser.isoparse(msg_timestamp)
-        return msg_dt > self.limit
+        # Seconds and microseconds since epoch
+        msg_timestamp = float(match.group(0))
+        return msg_timestamp > self.limit
 
     def _split_msgs_by_limit(self, msgs):
         """
@@ -333,7 +300,7 @@ class JournalObj(SearchObj):
 
         # Use --lines to prevent journalctl from overflowing the Popen input
         # buffer
-        command = "journalctl --quiet --output=short-iso --show-cursor"
+        command = "journalctl --quiet --output=short-unix --show-cursor"
         if self.offset == "EOF":
             command += " --lines 0"
         else:
@@ -356,14 +323,12 @@ class JournalObj(SearchObj):
         if self.limit:
             return
 
-        # --iso-8601=seconds yields YYYY-MM-DDTHH:MM:SSZ, where Z is timezone
-        # as offset from UTC
-
+        # Seconds and nanoseconds since epoch
         # pylint: disable=not-callable
-        (rc, lines) = self.rsh(self.host, "date --iso-8601=seconds", verbose=0)
+        (rc, lines) = self.rsh(self.host, "date +%s.%N", verbose=0)
 
         if rc == 0 and len(lines) == 1:
-            self.limit = self._parser.isoparse(lines[0].strip())
+            self.limit = float(lines[0].strip())
             self.debug(f"Set limit to: {self.limit}")
         else:
             self.debug(f"Unable to set limit for {self.host} because date returned "
