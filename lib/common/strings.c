@@ -540,7 +540,6 @@ pcmk__str_table_dup(GHashTable *old_table)
  * \param[in]     word       String to add to \p list (\p list will be
  *                           unchanged if this is \p NULL or the empty string)
  * \param[in]     separator  String to separate words in \p list
- *                           (a space will be used if this is NULL)
  *
  * \note \p word may contain \p separator, though that would be a bad idea if
  *       the string needs to be parsed later.
@@ -549,7 +548,7 @@ void
 pcmk__add_separated_word(GString **list, size_t init_size, const char *word,
                          const char *separator)
 {
-    pcmk__assert(list != NULL);
+    pcmk__assert((list != NULL) && (separator != NULL));
 
     if (pcmk__str_empty(word)) {
         return;
@@ -563,16 +562,10 @@ pcmk__add_separated_word(GString **list, size_t init_size, const char *word,
         }
     }
 
-    if ((*list)->len == 0) {
+    if ((*list)->len > 0) {
         // Don't add a separator before the first word in the list
-        separator = "";
-
-    } else if (separator == NULL) {
-        // Default to space-separated
-        separator = " ";
+        g_string_append(*list, separator);
     }
-
-    g_string_append(*list, separator);
     g_string_append(*list, word);
 }
 
