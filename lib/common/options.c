@@ -416,10 +416,10 @@ static const pcmk__cluster_option_t cluster_options[] = {
         PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
         "500", pcmk__valid_positive_int,
         pcmk__opt_based,
-        N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
+        N_("Maximum IPC message backlog before disconnecting a client"),
         N_("Raise this if log has \"Evicting client\" messages for cluster "
-            "daemon PIDs (a good value is the number of resources in the "
-            "cluster multiplied by the number of nodes)."),
+            "PIDs (a good value is the number of resources in the cluster "
+            "multiplied by the number of nodes)."),
     },
 
     // Stopping resources and removed resources
