@@ -276,6 +276,7 @@ class Environment:
                           help="Agent to use for a fencing resource")
         grp3.add_argument("--fencing-params",
                           metavar="PARAMS",
+                          default="",
                           help="Parameters for the fencing resource (as NAME=VALUE), separated by whitespace")
         grp3.add_argument("--once",
                           action="store_true",
