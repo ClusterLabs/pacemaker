@@ -56,9 +56,7 @@ unpack_config 	warning: Blind faith: not fencing unseen nodes
 <pacemaker-result api-version="X" request="crm_verify --xml-file CTS_CLI_DATA/crm_verify_invalid_no_stonith.xml --output-as=xml">
   <status code="78" message="Invalid configuration">
     <errors>
-      <error>error: Resource start-up disabled since no STONITH resources have been defined</error>
-      <error>error: Either configure some or disable STONITH with the stonith-enabled option</error>
-      <error>error: NOTE: Clusters with shared data need STONITH to ensure data integrity</error>
+      <error>error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.</error>
       <error>warning: Node pcmk-1 is unclean but cannot be fenced</error>
       <error>warning: Node pcmk-2 is unclean but cannot be fenced</error>
       <error>error: CIB did not pass schema validation</error>

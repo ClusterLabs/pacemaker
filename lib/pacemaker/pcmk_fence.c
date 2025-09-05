@@ -12,7 +12,7 @@
 #include <crm/common/results.h>
 #include <crm/common/output.h>
 #include <crm/common/output_internal.h>
-#include <crm/stonith-ng.h>
+#include <crm/stonith-ng.h>             // stonith_t, stonith_history_t, etc.
 #include <crm/fencing/internal.h>   // stonith__*
 
 #include <glib.h>

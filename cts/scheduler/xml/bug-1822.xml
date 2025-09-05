@@ -2,8 +2,8 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="set01">
-        <nvpair id="nvpair.id21867" name="stonith-enabled" value="false"/>
-        <nvpair id="nvpair.id21875" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21867" name="fencing-enabled" value="false"/>
+        <nvpair id="nvpair.id21875" name="fencing-action" value="reboot"/>
         <nvpair id="nvpair.id21884" name="cluster-delay" value="180s"/>
         <nvpair id="nvpair.id21901" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21910" name="symmetric-cluster" value="true"/>

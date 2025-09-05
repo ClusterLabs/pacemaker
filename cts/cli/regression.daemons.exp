@@ -89,18 +89,6 @@
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
-    <parameter name="fence-reaction">
-      <longdesc lang="en">
-        A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.  Allowed values: stop, panic
-      </longdesc>
-      <shortdesc lang="en">
-        How a cluster node should react if notified of its own fencing
-      </shortdesc>
-      <content type="select" default="">
-        <option value="stop"/>
-        <option value="panic"/>
-      </content>
-    </parameter>
     <parameter name="election-timeout">
       <longdesc lang="en">
         Declare an election failed if it is not decided within this much time. If you need to adjust this value, it probably indicates the presence of a bug.
@@ -146,7 +134,31 @@
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
-    <parameter name="stonith-watchdog-timeout">
+    <parameter name="fencing-reaction">
+      <longdesc lang="en">
+        A cluster node may receive notification of a "succeeded" fencing that targeted it if fencing is misconfigured, or if fabric fencing is in use that doesn't cut cluster communication. Use "stop" to attempt to immediately stop Pacemaker and stay stopped, or "panic" to attempt to immediately reboot the local node, falling back to stop on failure.  Allowed values: stop, panic
+      </longdesc>
+      <shortdesc lang="en">
+        How a cluster node should react if notified of its own fencing
+      </shortdesc>
+      <content type="select" default="">
+        <option value="stop"/>
+        <option value="panic"/>
+      </content>
+    </parameter>
+    <parameter name="fence-reaction">
+      <longdesc lang="en">
+        Deprecated alias for fencing-reaction  Allowed values: stop, panic
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-reaction ***
+      </shortdesc>
+      <content type="select" default="">
+        <option value="stop"/>
+        <option value="panic"/>
+      </content>
+    </parameter>
+    <parameter name="fencing-watchdog-timeout">
       <longdesc lang="en">
         If this is set to a positive value, lost nodes are assumed to achieve self-fencing using watchdog-based SBD within this much time. This does not require a fencing resource to be explicitly configured, though a fence_watchdog resource can be configured, to limit use to specific nodes. If this is set to 0 (the default), the cluster will never assume watchdog-based self-fencing. If this is set to a negative value, the cluster will use twice the local value of the `SBD_WATCHDOG_TIMEOUT` environment variable if that is positive, or otherwise treat this as 0. WARNING: When used, this timeout must be larger than `SBD_WATCHDOG_TIMEOUT` on all nodes that use watchdog-based SBD, and Pacemaker will refuse to start on any of those nodes where this is not true for the local value or SBD is not active. When this is set to a negative value, `SBD_WATCHDOG_TIMEOUT` must be set to the same value on all nodes that use SBD, otherwise data corruption or loss could occur.
       </longdesc>
@@ -155,12 +167,30 @@
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
-    <parameter name="stonith-max-attempts">
+    <parameter name="stonith-watchdog-timeout">
+      <longdesc lang="en">
+        Deprecated alias for fencing-watchdog-timeout
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-watchdog-timeout ***
+      </shortdesc>
+      <content type="time" default=""/>
+    </parameter>
+    <parameter name="fencing-max-attempts">
       <longdesc lang="en">
         How many times fencing can fail before it will no longer be immediately re-attempted on a target
       </longdesc>
       <shortdesc lang="en">
         How many times fencing can fail before it will no longer be immediately re-attempted on a target
+      </shortdesc>
+      <content type="integer" default=""/>
+    </parameter>
+    <parameter name="stonith-max-attempts">
+      <longdesc lang="en">
+        Deprecated alias for fencing-max-attempts
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-max-attempts ***
       </shortdesc>
       <content type="integer" default=""/>
     </parameter>
@@ -280,7 +310,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -307,7 +337,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'off' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'off' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -334,7 +364,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'on' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'on' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -361,7 +391,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'list' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'list' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -388,7 +418,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -415,7 +445,7 @@
         Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.
       </longdesc>
       <shortdesc lang="en">
-        *** Advanced Use Only *** Specify an alternate timeout to use for 'status' actions instead of stonith-timeout
+        *** Advanced Use Only *** Specify an alternate timeout to use for 'status' actions instead of fencing-timeout
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
@@ -523,7 +553,7 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stonith-enabled">
+    <parameter name="fencing-enabled">
       <longdesc lang="en">
         If false, unresponsive nodes are immediately assumed to be harmless, and resources that were active on them may be recovered elsewhere. This can result in a "split-brain" situation, potentially leading to data loss and/or service unavailability.
       </longdesc>
@@ -532,7 +562,16 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stonith-action">
+    <parameter name="stonith-enabled">
+      <longdesc lang="en">
+        Deprecated alias for fencing-enabled
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-enabled *** *** Advanced Use Only ***
+      </shortdesc>
+      <content type="boolean" default=""/>
+    </parameter>
+    <parameter name="fencing-action">
       <longdesc lang="en">
         Action to send to fence device when a node needs to be fenced  Allowed values: reboot, off
       </longdesc>
@@ -544,7 +583,19 @@
         <option value="off"/>
       </content>
     </parameter>
-    <parameter name="stonith-timeout">
+    <parameter name="stonith-action">
+      <longdesc lang="en">
+        Deprecated alias for fencing-action  Allowed values: reboot, off
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-action ***
+      </shortdesc>
+      <content type="select" default="">
+        <option value="reboot"/>
+        <option value="off"/>
+      </content>
+    </parameter>
+    <parameter name="fencing-timeout">
       <longdesc lang="en">
         How long to wait for on, off, and reboot fence actions to complete by default
       </longdesc>
@@ -553,9 +604,18 @@
       </shortdesc>
       <content type="time" default=""/>
     </parameter>
+    <parameter name="stonith-timeout">
+      <longdesc lang="en">
+        Deprecated alias for fencing-timeout
+      </longdesc>
+      <shortdesc lang="en">
+        *** Deprecated *** *** Replaced with fencing-timeout ***
+      </shortdesc>
+      <content type="time" default=""/>
+    </parameter>
     <parameter name="have-watchdog">
       <longdesc lang="en">
-        This is set automatically by the cluster according to whether SBD is detected to be in use. User-configured values are ignored. The value `true` is meaningful if diskless SBD is used and `stonith-watchdog-timeout` is nonzero. In that case, if fencing is required, watchdog-based self-fencing will be performed via SBD without requiring a fencing resource explicitly configured.
+        This is set automatically by the cluster according to whether SBD is detected to be in use. User-configured values are ignored. The value `true` is meaningful if diskless SBD is used and `fencing-watchdog-timeout` is nonzero. In that case, if fencing is required, watchdog-based self-fencing will be performed via SBD without requiring a fencing resource explicitly configured.
       </longdesc>
       <shortdesc lang="en">
         Whether watchdog integration is enabled

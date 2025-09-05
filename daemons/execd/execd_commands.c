@@ -1023,9 +1023,9 @@ finalize:
  * \param[in]     exit_reason       Human-friendly detail, if action failed
  */
 static void
-stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
-                        enum pcmk_exec_status execution_status,
-                        const char *exit_reason)
+fencing_rsc_action_complete(lrmd_cmd_t *cmd, int exit_status,
+                            enum pcmk_exec_status execution_status,
+                            const char *exit_reason)
 {
     // This can be NULL if resource was removed before command completed
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
@@ -1112,22 +1112,8 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
     cmd_finalize(cmd, rsc);
 }
 
-static void
-lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
-{
-    if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fence action result: "
-                "Invalid callback arguments (bug?)");
-    } else {
-        stonith_action_complete((lrmd_cmd_t *) data->userdata,
-                                stonith__exit_status(data),
-                                stonith__execution_status(data),
-                                stonith__exit_reason(data));
-    }
-}
-
 void
-stonith_connection_failed(void)
+execd_fencer_connection_failed(void)
 {
     GHashTableIter iter;
     lrmd_rsc_t *rsc = NULL;
@@ -1164,9 +1150,9 @@ stonith_connection_failed(void)
              * If cmd is rsc->active, this will set rsc->active to NULL, so we
              * don't have to worry about finalizing it a second time below.
              */
-            stonith_action_complete(cmd,
-                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
-                                    "Lost connection to fencer");
+            fencing_rsc_action_complete(cmd, CRM_EX_ERROR,
+                                        PCMK_EXEC_NOT_CONNECTED,
+                                        "Lost connection to fencer");
         }
 
         if (rsc->active != NULL) {
@@ -1174,36 +1160,36 @@ stonith_connection_failed(void)
         }
         while (rsc->pending_ops != NULL) {
             // This will free the op and remove it from rsc->pending_ops
-            stonith_action_complete((lrmd_cmd_t *) rsc->pending_ops->data,
-                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
-                                    "Lost connection to fencer");
+            fencing_rsc_action_complete((lrmd_cmd_t *) rsc->pending_ops->data,
+                                        CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                                        "Lost connection to fencer");
         }
     }
 }
 
 /*!
  * \internal
- * \brief Execute a stonith resource "start" action
+ * \brief Execute a fencing resource "start" action
  *
- * Start a stonith resource by registering it with the fencer.
- * (Stonith agents don't have a start command.)
+ * Start a fencing resource by registering it with the fencer. (Fencing agents
+ * don't have a start command.)
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in]     rsc          Stonith resource to start
- * \param[in]     cmd          Start command to execute
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in]     rsc         Fencing resource to start
+ * \param[in]     cmd         Start command to execute
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static int
-execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
-                    const lrmd_cmd_t *cmd)
+start_fencing_rsc(stonith_t *fencer_api, const lrmd_rsc_t *rsc,
+                  const lrmd_cmd_t *cmd)
 {
     char *key = NULL;
     char *value = NULL;
     stonith_key_value_t *device_params = NULL;
     int rc = pcmk_ok;
 
-    // Convert command parameters to stonith API key/values
+    // Convert command parameters to fencer API key/values
     if (cmd->params) {
         GHashTableIter iter;
 
@@ -1219,9 +1205,9 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
      * resource, the executor registers the device as well. The fencer knows how
      * to handle duplicate registrations.
      */
-    rc = stonith_api->cmds->register_device(stonith_api, st_opt_sync_call,
-                                            cmd->rsc_id, rsc->provider,
-                                            rsc->type, device_params);
+    rc = fencer_api->cmds->register_device(fencer_api, st_opt_sync_call,
+                                           cmd->rsc_id, rsc->provider,
+                                           rsc->type, device_params);
 
     stonith__key_value_freeall(device_params, true, true);
     return rc;
@@ -1229,45 +1215,59 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
 
 /*!
  * \internal
- * \brief Execute a stonith resource "stop" action
+ * \brief Execute a fencing resource "stop" action
  *
- * Stop a stonith resource by unregistering it with the fencer.
- * (Stonith agents don't have a stop command.)
+ * Stop a fencing resource by unregistering it with the fencer. (Fencing agents
+ * don't have a stop command.)
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in]     rsc          Stonith resource to stop
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in]     rsc         Fencing resource to stop
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static inline int
-execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
+stop_fencing_rsc(stonith_t *fencer_api, const lrmd_rsc_t *rsc)
 {
     /* @TODO Failure would indicate a problem communicating with fencer;
      * perhaps we should try reconnecting and retrying a few times?
      */
-    return stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call,
-                                            rsc->rsc_id);
+    return fencer_api->cmds->remove_device(fencer_api, st_opt_sync_call,
+                                           rsc->rsc_id);
+}
+
+static void
+fencing_rsc_monitor_cb(stonith_t *stonith, stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->userdata == NULL)) {
+        crm_err("Ignoring fencing resource monitor result: "
+                "Invalid callback arguments (bug?)");
+    } else {
+        fencing_rsc_action_complete((lrmd_cmd_t *) data->userdata,
+                                    stonith__exit_status(data),
+                                    stonith__execution_status(data),
+                                    stonith__exit_reason(data));
+    }
 }
 
 /*!
  * \internal
- * \brief Initiate a stonith resource agent recurring "monitor" action
+ * \brief Initiate a fencing resource recurring "monitor" action
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in,out] rsc          Stonith resource to monitor
- * \param[in]     cmd          Monitor command being executed
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in,out] rsc         Fencing resource to monitor
+ * \param[in]     cmd         Monitor command being executed
  *
  * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
  */
 static inline int
-execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+monitor_fencing_rsc(stonith_t *fencer_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
-    int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
-                                        pcmk__timeout_ms2s(cmd->timeout));
+    int rc = fencer_api->cmds->monitor(fencer_api, 0, cmd->rsc_id,
+                                       pcmk__timeout_ms2s(cmd->timeout));
 
-    rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
-                                              "lrmd_stonith_callback",
-                                              lrmd_stonith_callback);
+    rc = fencer_api->cmds->register_callback(fencer_api, rc, 0, 0, cmd,
+                                             "fencing_rsc_monitor_cb",
+                                             fencing_rsc_monitor_cb);
     if (rc == TRUE) {
         rsc->active = cmd;
         rc = pcmk_ok;
@@ -1285,46 +1285,46 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     bool do_monitor = false;
 
     // Don't free; belongs to pacemaker-execd.c
-    stonith_t *stonith_api = get_stonith_connection();
+    stonith_t *fencer_api = execd_get_fencer_connection();
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
         && (cmd->interval_ms == 0)) {
         // Probes don't require a fencer connection
-        stonith_action_complete(cmd, rsc->fence_probe_result.exit_status,
-                                rsc->fence_probe_result.execution_status,
-                                rsc->fence_probe_result.exit_reason);
+        fencing_rsc_action_complete(cmd, rsc->fence_probe_result.exit_status,
+                                    rsc->fence_probe_result.execution_status,
+                                    rsc->fence_probe_result.exit_reason);
         return;
     }
 
-    if (stonith_api == NULL) {
-        stonith_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
-                                PCMK_EXEC_NOT_CONNECTED,
-                                "No connection to fencer");
+    if (fencer_api == NULL) {
+        fencing_rsc_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
+                                    PCMK_EXEC_NOT_CONNECTED,
+                                    "No connection to fencer");
         return;
     }
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
-        rc = execd_stonith_start(stonith_api, rsc, cmd);
+        rc = start_fencing_rsc(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             do_monitor = true;
         }
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        rc = execd_stonith_stop(stonith_api, rsc);
+        rc = stop_fencing_rsc(fencer_api, rsc);
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
                             pcmk__str_casei)) {
         do_monitor = true;
 
     } else {
-        stonith_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
-                                PCMK_EXEC_ERROR,
-                                "Invalid fence device action (bug?)");
+        fencing_rsc_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
+                                    PCMK_EXEC_ERROR,
+                                    "Invalid fence device action (bug?)");
         return;
     }
 
     if (do_monitor) {
-        rc = execd_stonith_monitor(stonith_api, rsc, cmd);
+        rc = monitor_fencing_rsc(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             // Don't clean up yet. We will get the result of the monitor later.
             return;
@@ -1334,9 +1334,9 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     if (rc != -pcmk_err_generic) {
         rc_s = pcmk_strerror(rc);
     }
-    stonith_action_complete(cmd,
-                            ((rc == pcmk_rc_ok)? CRM_EX_OK : CRM_EX_ERROR),
-                            stonith__legacy2status(rc), rc_s);
+    fencing_rsc_action_complete(cmd,
+                                ((rc == pcmk_rc_ok)? CRM_EX_OK : CRM_EX_ERROR),
+                                stonith__legacy2status(rc), rc_s);
 }
 
 static void
@@ -1450,12 +1450,12 @@ execute_resource_action(gpointer user_data)
 }
 
 void
-free_rsc(gpointer data)
+execd_free_rsc(gpointer data)
 {
     GList *gIter = NULL;
     lrmd_rsc_t *rsc = data;
-    int is_stonith = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
-                                  pcmk__str_casei);
+    bool is_fencing_rsc = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                                       pcmk__str_casei);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
@@ -1476,11 +1476,11 @@ free_rsc(gpointer data)
         GList *next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
-        if (is_stonith) {
+        if (is_fencing_rsc) {
             cmd->result.execution_status = PCMK_EXEC_CANCELLED;
-            /* If a stonith command is in-flight, just mark it as cancelled;
-             * it is not safe to finalize/free the cmd until the stonith api
-             * says it has either completed or timed out.
+            /* If a fencing resource's recurring operation is in-flight, just
+             * mark it as cancelled. It is not safe to finalize/free the cmd
+             * until the fencer API says it has either completed or timed out.
              */
             if (rsc->active != cmd) {
                 cmd_finalize(cmd, NULL);
@@ -1586,7 +1586,7 @@ execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request
         pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
         crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
-        free_rsc(rsc);
+        execd_free_rsc(rsc);
         return;
     }
 

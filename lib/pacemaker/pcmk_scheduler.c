@@ -532,7 +532,7 @@ schedule_fencing(pcmk_node_t *node)
 
     pcmk__sched_warn(node->priv->scheduler, "Scheduling node %s for fencing",
                      pcmk__node_name(node));
-    pcmk__order_vs_fence(fencing, node->priv->scheduler);
+    pcmk__order_vs_fencing(fencing, node->priv->scheduler);
     return fencing;
 }
 

@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
+<transition_graph cluster-delay="60s" fencing-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="1000000">
     <action_set>
       <pseudo_event id="59" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">

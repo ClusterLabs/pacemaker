@@ -51,7 +51,7 @@ struct device_search_s {
     /* requested fence action */
     char *action;
     /* timeout to use if a device is queried dynamically for possible targets */
-    // @TODO This name is misleading now, it's the value of stonith-timeout
+    // @TODO This name is misleading now, it's the value of fencing-timeout
     int per_device_timeout;
     /* number of registered fencing devices at time of request */
     int replies_needed;
@@ -192,7 +192,7 @@ get_action_delay_max(const fenced_device_t *device, const char *action)
         return 0;
     }
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_MAX);
+    value = g_hash_table_lookup(device->params, PCMK_FENCING_DELAY_MAX);
     if (value) {
         pcmk_parse_interval_spec(value, &delay_max);
         delay_max /= 1000;
@@ -212,7 +212,7 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
         return 0;
     }
 
-    hash_value = g_hash_table_lookup(device->params, PCMK_STONITH_DELAY_BASE);
+    hash_value = g_hash_table_lookup(device->params, PCMK_FENCING_DELAY_BASE);
 
     if (hash_value) {
         char *value = pcmk__str_copy(hash_value);
@@ -464,7 +464,7 @@ get_action_limit(fenced_device_t *device)
     const char *value = NULL;
     int action_limit = 1;
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_ACTION_LIMIT);
+    value = g_hash_table_lookup(device->params, PCMK_FENCING_ACTION_LIMIT);
     if ((value == NULL)
         || (pcmk__scan_min_int(value, &action_limit, INT_MIN) != pcmk_rc_ok)
         || (action_limit == 0)) {
@@ -747,8 +747,8 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
         delay_max = delay_base;
     }
     if (delay_max < delay_base) {
-        crm_warn(PCMK_STONITH_DELAY_BASE " (%ds) is larger than "
-                 PCMK_STONITH_DELAY_MAX " (%ds) for %s using %s "
+        crm_warn(PCMK_FENCING_DELAY_BASE " (%ds) is larger than "
+                 PCMK_FENCING_DELAY_MAX " (%ds) for %s using %s "
                  "(limiting to maximum delay)",
                  delay_base, delay_max, cmd->action, device->id);
         delay_base = delay_max;
@@ -1040,13 +1040,13 @@ target_list_type(fenced_device_t *dev)
 {
     const char *check_type = NULL;
 
-    check_type = g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK);
+    check_type = g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_CHECK);
 
     if (check_type == NULL) {
 
-        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_LIST)) {
+        if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_LIST)) {
             check_type = PCMK_VALUE_STATIC_LIST;
-        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)) {
+        } else if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_MAP)) {
             check_type = PCMK_VALUE_STATIC_LIST;
         } else if (pcmk_is_set(dev->flags, fenced_df_supports_list)) {
             check_type = PCMK_VALUE_DYNAMIC_LIST;
@@ -1076,12 +1076,12 @@ build_device_from_xml(const xmlNode *dev)
     device->namespace = pcmk__xe_get_copy(dev, PCMK__XA_NAMESPACE);
     device->params = xml2list(dev);
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_LIST);
+    value = g_hash_table_lookup(device->params, PCMK_FENCING_HOST_LIST);
     if (value) {
         device->targets = stonith__parse_targets(value);
     }
 
-    value = g_hash_table_lookup(device->params, PCMK_STONITH_HOST_MAP);
+    value = g_hash_table_lookup(device->params, PCMK_FENCING_HOST_MAP);
     device->aliases = build_port_aliases(value, &(device->targets));
 
     value = target_list_type(device);
@@ -1281,9 +1281,9 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
         /* Fall back to pcmk_host_check=PCMK_VALUE_STATUS if the user didn't
          * explicitly specify PCMK_VALUE_DYNAMIC_LIST
          */
-        if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_CHECK) == NULL) {
+        if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_CHECK) == NULL) {
             crm_notice("Switching to pcmk_host_check='status' for %s", dev->id);
-            pcmk__insert_dup(dev->params, PCMK_STONITH_HOST_CHECK,
+            pcmk__insert_dup(dev->params, PCMK_FENCING_HOST_CHECK,
                              PCMK_VALUE_STATUS);
         }
     }
@@ -1374,9 +1374,9 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
         || pcmk__str_any_of(device->agent, STONITH_WATCHDOG_AGENT,
                             STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
 
-        if (stonith_watchdog_timeout_ms <= 0) {
+        if (fencing_watchdog_timeout_ms <= 0) {
             crm_err("Ignoring watchdog fence device without "
-                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " set");
+                    PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " set");
             rc = ENODEV;
             goto done;
         }
@@ -1417,7 +1417,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
         // Proceed as with any other fencing device
         g_list_free_full(device->targets, free);
         device->targets = stonith__parse_targets(local_node_name);
-        pcmk__insert_dup(device->params, PCMK_STONITH_HOST_LIST,
+        pcmk__insert_dup(device->params, PCMK_FENCING_HOST_LIST,
                          local_node_name);
     }
 
@@ -1927,7 +1927,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
 
     if (pcmk__str_eq(id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
         // Watchdog agent actions are implemented internally
-        if (stonith_watchdog_timeout_ms <= 0) {
+        if (fencing_watchdog_timeout_ms <= 0) {
             pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                              "Watchdog fence device not configured");
             return;
@@ -2145,7 +2145,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 
         if (pcmk__str_in_list(target, dev->targets, pcmk__str_casei)) {
             can = TRUE;
-        } else if (g_hash_table_lookup(dev->params, PCMK_STONITH_HOST_MAP)
+        } else if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_MAP)
                    && g_hash_table_lookup(dev->aliases, target)) {
             can = TRUE;
         }
@@ -2158,7 +2158,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 
             if (device_timeout > search->per_device_timeout) {
                 crm_notice("Since the pcmk_list_timeout (%ds) parameter of %s "
-                           "is larger than " PCMK_OPT_STONITH_TIMEOUT
+                           "is larger than " PCMK_OPT_FENCING_TIMEOUT
                            " (%ds), timeout may occur",
                            device_timeout, dev_id, search->per_device_timeout);
             }
@@ -2183,7 +2183,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 
         if (device_timeout > search->per_device_timeout) {
             crm_notice("Since the pcmk_status_timeout (%ds) parameter of %s is "
-                       "larger than " PCMK_OPT_STONITH_TIMEOUT " (%ds), "
+                       "larger than " PCMK_OPT_FENCING_TIMEOUT " (%ds), "
                        "timeout may occur",
                        device_timeout, dev_id, search->per_device_timeout);
         }
@@ -2195,8 +2195,9 @@ can_fence_host_with_device(fenced_device_t *dev,
         /* we'll respond to this search request async in the cb */
         return;
     } else {
-        crm_err("Invalid value for " PCMK_STONITH_HOST_CHECK ": %s", check_type);
-        check_type = "Invalid " PCMK_STONITH_HOST_CHECK;
+        crm_err("Invalid value for " PCMK_FENCING_HOST_CHECK ": %s",
+                check_type);
+        check_type = "Invalid " PCMK_FENCING_HOST_CHECK;
     }
 
   search_report_results:
