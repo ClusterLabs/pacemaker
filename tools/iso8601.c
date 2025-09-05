@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <crm/common/util.h>
 #include <unistd.h>
 
-#define SUMMARY "Display and parse ISO 8601 dates and times"
+#define SUMMARY "DEPRECATED: This tool will be removed in a future release"
 
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,

@@ -60,8 +60,7 @@ Also:
 * valgrind (if running valgrind tests in cts-cli or cts-scheduler, or if
   running Pacemaker daemons under valgrind)
 * python3-psutil (if running any CTS tests)
-* python3-dateutil and python3-systemd (if running CTS lab on cluster nodes
-  running systemd)
+* python3-systemd (if running CTS lab on cluster nodes running systemd)
 * nmap (if not specifying an IP address base)
 * dlm (to log DLM debugging info after CTS lab tests)
 * xmllint (to validate tool output in cts-cli)
