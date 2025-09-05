@@ -140,6 +140,7 @@ option_list_default(pcmk__output_t *out, va_list args)
 
     GSList *deprecated = NULL;
     GSList *advanced = NULL;
+    GSList *aliased = NULL;     // Options with deprecated aliases (alt_name)
 
     pcmk__assert((out != NULL) && (desc_short != NULL)
                  && (desc_long != NULL) && (option_list != NULL));
@@ -155,22 +156,28 @@ option_list_default(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
+        if (!pcmk_all_flags_set(option->flags, filter)) {
+            continue;
+        }
+
         // Store deprecated and advanced options to display later if appropriate
-        if (pcmk_all_flags_set(option->flags, filter)) {
-            if (pcmk_is_set(option->flags, pcmk__opt_deprecated)) {
-                if (show_deprecated) {
-                    deprecated = g_slist_prepend(deprecated, (gpointer) option);
-                }
-
-            } else if (pcmk_is_set(option->flags, pcmk__opt_advanced)) {
-                if (show_advanced) {
-                    advanced = g_slist_prepend(advanced, (gpointer) option);
-                }
-
-            } else {
-                out->spacer(out);
-                add_option_metadata_default(out, option);
+        if (pcmk_is_set(option->flags, pcmk__opt_deprecated)) {
+            if (show_deprecated) {
+                deprecated = g_slist_prepend(deprecated, (gpointer) option);
             }
+
+        } else if (pcmk_is_set(option->flags, pcmk__opt_advanced)) {
+            if (show_advanced) {
+                advanced = g_slist_prepend(advanced, (gpointer) option);
+            }
+
+        } else {
+            out->spacer(out);
+            add_option_metadata_default(out, option);
+        }
+
+        if (show_deprecated && (option->alt_name != NULL)) {
+            aliased = g_slist_prepend(aliased, (gpointer) option);
         }
     }
 
@@ -189,21 +196,42 @@ option_list_default(pcmk__output_t *out, va_list args)
         g_slist_free(advanced);
     }
 
-    if (deprecated != NULL) {
+    if ((deprecated != NULL) || (aliased != NULL)) {
         deprecated = g_slist_reverse(deprecated);
+        aliased = g_slist_reverse(aliased);
 
         out->spacer(out);
         out->begin_list(out, NULL, NULL,
                         _("DEPRECATED OPTIONS (will be removed in a future "
                           "release)"));
+
         for (const GSList *iter = deprecated; iter != NULL; iter = iter->next) {
             const pcmk__cluster_option_t *option = iter->data;
 
             out->spacer(out);
             add_option_metadata_default(out, option);
         }
+
+        for (const GSList *iter = aliased; iter != NULL; iter = iter->next) {
+            const pcmk__cluster_option_t *option = iter->data;
+            char *desc = crm_strdup_printf(_("Deprecated alias for %s"),
+                                           option->name);
+            pcmk__cluster_option_t alias = *option;
+
+            alias.name = option->alt_name;
+            alias.alt_name = NULL;
+            alias.flags |= pcmk__opt_deprecated;
+            alias.description_short = desc;
+            alias.description_long = NULL;
+
+            out->spacer(out);
+            add_option_metadata_default(out, &alias);
+            free(desc);
+        }
+
         out->end_list(out);
         g_slist_free(deprecated);
+        g_slist_free(aliased);
     }
 
     out->end_list(out);
@@ -308,12 +336,15 @@ map_legacy_option_type(const char *type)
  * \internal
  * \brief Add a \c PCMK_XE_PARAMETER element to an OCF-like metadata XML node
  *
- * \param[in,out] out     Output object
- * \param[in]     option  Option to add as a \c PCMK_XE_PARAMETER element
+ * \param[in,out] out            Output object
+ * \param[in]     option         Option to add as a \c PCMK_XE_PARAMETER element
+ * \param[in]     replaced_with  Name of option that replaces this one (ignored
+ *                               if this option is not deprecated)
  */
 static void
 add_option_metadata_xml(pcmk__output_t *out,
-                        const pcmk__cluster_option_t *option)
+                        const pcmk__cluster_option_t *option,
+                        const char *replaced_with)
 {
     const char *type = option->type;
     const char *desc_long = option->description_long;
@@ -368,14 +399,20 @@ add_option_metadata_xml(pcmk__output_t *out,
             }
 
             if (deprecated) {
-                pcmk__add_separated_word(&desc_short_legacy, init_sz,
-                                         "*** Deprecated ***", NULL);
+                pcmk__add_word(&desc_short_legacy, init_sz,
+                               "*** Deprecated ***");
+
+                if (replaced_with != NULL) {
+                    pcmk__g_strcat(desc_short_legacy,
+                                   " *** Replaced with ", replaced_with, " ***",
+                                   NULL);
+                }
             }
             if (advanced) {
-                pcmk__add_separated_word(&desc_short_legacy, init_sz,
-                                         "*** Advanced Use Only ***", NULL);
+                pcmk__add_word(&desc_short_legacy, init_sz,
+                               "*** Advanced Use Only ***");
             }
-            pcmk__add_separated_word(&desc_short_legacy, 0, desc_short, NULL);
+            pcmk__add_word(&desc_short_legacy, 0, desc_short);
 
             desc_short = desc_short_legacy->str;
         }
@@ -395,8 +432,14 @@ add_option_metadata_xml(pcmk__output_t *out,
                                    NULL);
 
     if (deprecated && !legacy) {
-        // No need yet to support "replaced-with" or "desc"; add if needed
-        pcmk__output_create_xml_node(out, PCMK_XE_DEPRECATED, NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_DEPRECATED, NULL);
+
+        if (replaced_with != NULL) {
+            pcmk__output_create_xml_node(out, PCMK_XE_REPLACED_WITH,
+                                         PCMK_XA_NAME, replaced_with,
+                                         NULL);
+        }
+        pcmk__output_xml_pop_parent(out);
     }
     add_desc_xml(out, true, desc_long);
     add_desc_xml(out, false, desc_short);
@@ -464,8 +507,25 @@ option_list_xml(pcmk__output_t *out, va_list args)
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
 
-        if (pcmk_all_flags_set(option->flags, filter)) {
-            add_option_metadata_xml(out, option);
+        if (!pcmk_all_flags_set(option->flags, filter)) {
+            continue;
+        }
+
+        add_option_metadata_xml(out, option, NULL);
+
+        if (option->alt_name != NULL) {
+            pcmk__cluster_option_t alias = *option;
+            char *desc = crm_strdup_printf(_("Deprecated alias for %s"),
+                                           option->name);
+
+            alias.name = option->alt_name;
+            alias.alt_name = NULL;
+            alias.flags |= pcmk__opt_deprecated;
+            alias.description_short = desc;
+            alias.description_long = NULL;
+
+            add_option_metadata_xml(out, &alias, option->name);
+            free(desc);
         }
     }
 

@@ -170,6 +170,7 @@ extern "C" {
 #define PCMK_XE_PSEUDO_ACTION               "pseudo_action"
 #define PCMK_XE_REASON                      "reason"
 #define PCMK_XE_RECIPIENT                   "recipient"
+#define PCMK_XE_REPLACED_WITH               "replaced-with"
 #define PCMK_XE_REPLICA                     "replica"
 #define PCMK_XE_RESOURCE                    "resource"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
