@@ -259,7 +259,7 @@ template_op_key(xmlNode * op)
         role = PCMK__ROLE_UNKNOWN;
     }
 
-    key = crm_strdup_printf("%s-%s", name, role);
+    key = pcmk__assert_asprintf("%s-%s", name, role);
     return key;
 }
 
@@ -517,45 +517,47 @@ unpack_requires(pcmk_resource_t *rsc, const char *value, bool is_default)
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_FENCING, pcmk__str_casei)) {
         pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_fencing);
-        if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        if (!pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             pcmk__config_warn("%s requires fencing but fencing is disabled",
                               rsc->id);
         }
 
     } else if (pcmk__str_eq(value, PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing "
                               "devices cannot require unfencing", rsc->id);
             unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
+        }
 
-        } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        if (!pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
             pcmk__config_warn("Resetting \"" PCMK_META_REQUIRES "\" for %s "
                               "to \"" PCMK_VALUE_QUORUM "\" because fencing is "
                               "disabled", rsc->id);
             unpack_requires(rsc, PCMK_VALUE_QUORUM, true);
             return;
-
-        } else {
-            pcmk__set_rsc_flags(rsc, pcmk__rsc_needs_fencing
-                                     |pcmk__rsc_needs_unfencing);
         }
+
+        pcmk__set_rsc_flags(rsc,
+                            pcmk__rsc_needs_fencing|pcmk__rsc_needs_unfencing);
 
     } else {
         const char *orig_value = value;
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
             value = PCMK_VALUE_QUORUM;
 
         } else if (pcmk__is_primitive(rsc)
                    && xml_contains_remote_node(rsc->priv->xml)) {
             value = PCMK_VALUE_QUORUM;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
+        } else if (pcmk__is_set(scheduler->flags,
+                                pcmk__sched_enable_unfencing)) {
             value = PCMK_VALUE_UNFENCING;
 
-        } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+        } else if (pcmk__is_set(scheduler->flags,
+                                pcmk__sched_fencing_enabled)) {
             value = PCMK_VALUE_FENCING;
 
         } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
@@ -774,7 +776,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     value = pcmk__xe_get(rsc_private->xml, PCMK__META_CLONE);
     if (value) {
-        (*rsc)->id = crm_strdup_printf("%s:%s", id, value);
+        (*rsc)->id = pcmk__assert_asprintf("%s:%s", id, value);
         pcmk__insert_meta(rsc_private, PCMK__META_CLONE, value);
 
     } else {
@@ -788,7 +790,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     (*rsc)->flags = 0;
     pcmk__set_rsc_flags(*rsc, pcmk__rsc_unassigned);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_managed);
     }
 
@@ -850,7 +852,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_in_maintenance)) {
         pcmk__clear_rsc_flags(*rsc, pcmk__rsc_managed);
         pcmk__set_rsc_flags(*rsc, pcmk__rsc_maintenance);
     }
@@ -952,7 +954,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         goto done;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
         // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", scheduler);
     } else if (guest_node) {
@@ -963,8 +965,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                           scheduler);
     }
 
-    pcmk__rsc_trace(*rsc, "%s action notification: %s", (*rsc)->id,
-                    pcmk_is_set((*rsc)->flags, pcmk__rsc_notify)? "required" : "not required");
+    if (pcmk__is_set((*rsc)->flags, pcmk__rsc_notify)) {
+        pcmk__rsc_trace(*rsc, "%s action notification: required", (*rsc)->id);
+    } else {
+        pcmk__rsc_trace(*rsc, "%s action notification: not required",
+                        (*rsc)->id);
+    }
 
     pe__unpack_dataset_nvpairs(rsc_private->xml, PCMK_XE_UTILIZATION,
                                &rule_input, rsc_private->utilization, NULL,
@@ -1056,7 +1062,7 @@ common_free(pcmk_resource_t * rsc)
     }
 
     if ((rsc->priv->parent == NULL)
-        && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+        && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
 
         pcmk__xml_free(rsc->priv->xml);
         rsc->priv->xml = NULL;
@@ -1145,7 +1151,7 @@ pe__count_active_node(const pcmk_resource_t *rsc, pcmk_node_t *node,
         } else {
             keep_looking = true;
         }
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         if (is_happy && ((*active == NULL) || !(*active)->details->online
                          || (*active)->details->unclean)) {
             *active = node; // This is the first clean node
@@ -1209,7 +1215,7 @@ pe__find_active_requires(const pcmk_resource_t *rsc, unsigned int *count)
         return NULL;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_needs_fencing)) {
         return rsc->priv->fns->active_node(rsc, count, NULL);
     } else {
         return rsc->priv->fns->active_node(rsc, NULL, count);
@@ -1227,13 +1233,13 @@ pe__count_common(pcmk_resource_t *rsc)
             child->priv->fns->count(item->data);
         }
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_removed)
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_removed)
                || (rsc->priv->orig_role > pcmk_role_stopped)) {
         rsc->priv->scheduler->priv->ninstances++;
         if (pe__resource_is_disabled(rsc)) {
             rsc->priv->scheduler->priv->disabled_resources++;
         }
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_blocked)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_blocked)) {
             rsc->priv->scheduler->priv->blocked_resources++;
         }
     }

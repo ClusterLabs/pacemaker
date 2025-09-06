@@ -41,6 +41,7 @@ typedef struct {
     char *digest_restart_calc;      // Digest of params_restart
 } pcmk__op_digest_t;
 
+char *pcmk__md5sum(const char *input);
 char *pcmk__digest_on_disk_cib(const xmlNode *input);
 char *pcmk__digest_op_params(const xmlNode *input);
 char *pcmk__digest_xml(const xmlNode *input, bool filter);

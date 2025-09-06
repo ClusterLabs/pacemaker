@@ -264,7 +264,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host,
         "and @" PCMK_XA_VALUE "='%s']"                              \
     "]"
 
-    xpath_string = crm_strdup_printf(XPATH_FMT, rsc_id, rsc_id, host);
+    xpath_string = pcmk__assert_asprintf(XPATH_FMT, rsc_id, rsc_id, host);
 
     rc = cib_conn->cmds->remove(cib_conn, xpath_string, NULL,
                                 cib_xpath|cib_sync_call);

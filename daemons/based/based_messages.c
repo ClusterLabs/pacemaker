@@ -432,7 +432,7 @@ sync_our_cib(xmlNode * request, gboolean all)
     // @TODO Keep for tracing, or drop?
     pcmk__xe_set(replace_request, PCMK__XA_ORIGINAL_CIB_OP, op);
 
-    pcmk__xe_set_bool_attr(replace_request, PCMK__XA_CIB_UPDATE, true);
+    pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_UPDATE, true);
 
     pcmk__xe_set(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     digest = pcmk__digest_xml(the_cib, true);

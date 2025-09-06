@@ -42,35 +42,6 @@ enum remote_cmd_status {
     cmd_cancel              = (1 << 1),
 };
 
-typedef struct remote_ra_cmd_s {
-    /*! the local node the cmd is issued from */
-    char *owner;
-    /*! the remote node the cmd is executed on */
-    char *rsc_id;
-    /*! the action to execute */
-    char *action;
-    /*! some string the client wants us to give it back */
-    char *userdata;
-    /*! start delay in ms */
-    int start_delay;
-    /*! timer id used for start delay. */
-    int delay_id;
-    /*! timeout in ms for cmd */
-    int timeout;
-    /*! recurring interval in ms */
-    guint interval_ms;
-    /*! interval timer id */
-    int interval_id;
-    int monitor_timeout_id;
-    int takeover_timeout_id;
-    /*! action parameters */
-    lrmd_key_value_t *params;
-    pcmk__action_result_t result;
-    int call_id;
-    time_t start_time;
-    uint32_t status;
-} remote_ra_cmd_t;
-
 #define lrm_remote_set_flags(lrm_state, flags_to_set) do { \
     lrm_state_t *lrm = (lrm_state); \
     remote_ra_data_t *ra = lrm->remote_ra_data; \
@@ -103,14 +74,6 @@ enum remote_status {
      */
     controlling_guest   = (1 << 4),
 };
-
-typedef struct remote_ra_data_s {
-    crm_trigger_t *work;
-    remote_ra_cmd_t *cur_cmd;
-    GList *cmds;
-    GList *recurring_cmds;
-    uint32_t status;
-} remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
 static void handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd);
@@ -240,7 +203,7 @@ should_purge_attributes(pcmk__node_status_t *node)
 static enum controld_section_e
 section_to_delete(bool purge)
 {
-    if (pcmk_is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
+    if (pcmk__is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
         if (purge) {
             return controld_section_all_unlocked;
         } else {
@@ -435,7 +398,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
 
         if (ra_data) {
-            if (!pcmk_is_set(ra_data->status, takeover_complete)) {
+            if (!pcmk__is_set(ra_data->status, takeover_complete)) {
                 /* Stop means down if we didn't successfully migrate elsewhere */
                 remote_node_down(cmd->rsc_id, DOWN_KEEP_LRM);
             } else if (AM_I_DC == FALSE) {
@@ -478,7 +441,9 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     lrmd__set_result(&op, cmd->result.exit_status, cmd->result.execution_status,
                      cmd->result.exit_reason);
 
-    if (pcmk_is_set(cmd->status, cmd_reported_success) && !pcmk__result_ok(&(cmd->result))) {
+    if (pcmk__is_set(cmd->status, cmd_reported_success)
+        && !pcmk__result_ok(&(cmd->result))) {
+
         op.t_rcchange = time(NULL);
         /* This edge case will likely never ever occur, but if it does the
          * result is that a failure will not be processed correctly. This is only
@@ -670,7 +635,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     if (op->type == lrmd_event_new_client) {
         // Another client has connected to the remote daemon
 
-        if (pcmk_is_set(ra_data->status, expect_takeover)) {
+        if (pcmk__is_set(ra_data->status, expect_takeover)) {
             // Great, we knew this was coming
             lrm_remote_clear_flags(lrm_state, expect_takeover);
             lrm_remote_set_flags(lrm_state, takeover_complete);
@@ -688,7 +653,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     /* filter all EXEC events up */
     if (op->type == lrmd_event_exec_complete) {
-        if (pcmk_is_set(ra_data->status, takeover_complete)) {
+        if (pcmk__is_set(ra_data->status, takeover_complete)) {
             crm_debug("ignoring event, this connection is taken over by another node");
         } else {
             lrm_op_callback(op);
@@ -698,7 +663,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     if ((op->type == lrmd_event_disconnect) && (ra_data->cur_cmd == NULL)) {
 
-        if (!pcmk_is_set(ra_data->status, remote_active)) {
+        if (!pcmk__is_set(ra_data->status, remote_active)) {
             crm_debug("Disconnection from Pacemaker Remote node %s complete",
                       lrm_state->node_name);
 
@@ -778,7 +743,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         /* Only report success the first time, after that only worry about failures.
          * For this function, if we get the poke pack, it is always a success. Pokes
          * only fail if the send fails, or the response times out. */
-        if (!pcmk_is_set(cmd->status, cmd_reported_success)) {
+        if (!pcmk__is_set(cmd->status, cmd_reported_success)) {
             pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             report_remote_ra_result(cmd);
             cmd_set_flags(cmd, cmd_reported_success);
@@ -787,7 +752,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         crm_debug("Remote poke event matched %s action", cmd->action);
 
         /* success, keep rescheduling if interval is present. */
-        if (cmd->interval_ms && !pcmk_is_set(cmd->status, cmd_cancel)) {
+        if (cmd->interval_ms && !pcmk__is_set(cmd->status, cmd_cancel)) {
             ra_data->recurring_cmds = g_list_append(ra_data->recurring_cmds, cmd);
             cmd->interval_id = pcmk__create_timer(cmd->interval_ms,
                                                   recurring_helper, cmd);
@@ -798,8 +763,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     } else if ((op->type == lrmd_event_disconnect)
                && pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
                                pcmk__str_casei)) {
-        if (pcmk_is_set(ra_data->status, remote_active) &&
-            !pcmk_is_set(cmd->status, cmd_cancel)) {
+        if (pcmk__is_set(ra_data->status, remote_active)
+            && !pcmk__is_set(cmd->status, cmd_cancel)) {
+
             pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                              PCMK_EXEC_ERROR,
                              "Remote connection unexpectedly dropped "
@@ -831,7 +797,7 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     pcmk__assert(lrm_state != NULL);
     ra_data = lrm_state->remote_ra_data;
 
-    if (!pcmk_is_set(ra_data->status, takeover_complete)) {
+    if (!pcmk__is_set(ra_data->status, takeover_complete)) {
         /* delete pending ops when ever the remote connection is intentionally stopped */
         g_hash_table_remove_all(lrm_state->active_ops);
     } else {
@@ -959,7 +925,7 @@ handle_remote_ra_exec(gpointer user_data)
 
         } else if (!strcmp(cmd->action, PCMK_ACTION_STOP)) {
 
-            if (pcmk_is_set(ra_data->status, expect_takeover)) {
+            if (pcmk__is_set(ra_data->status, expect_takeover)) {
                 /* Briefly wait on stop for an expected takeover to occur. If
                  * the takeover does not occur during the wait, that's fine; it
                  * just means that the remote node's resource history will be
@@ -1182,8 +1148,8 @@ handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
     }
 
     if (ra_data->cur_cmd &&
-        !pcmk_is_set(ra_data->cur_cmd->status, cmd_cancel) &&
-        (ra_data->cur_cmd->interval_ms == interval_ms)
+        !pcmk__is_set(ra_data->cur_cmd->status, cmd_cancel)
+        && (ra_data->cur_cmd->interval_ms == interval_ms)
         && pcmk__str_eq(ra_data->cur_cmd->action, PCMK_ACTION_MONITOR,
                         pcmk__str_casei)) {
 
@@ -1223,7 +1189,7 @@ handle_dup:
     }
 
     /* if we've already reported success, generate a new call id */
-    if (pcmk_is_set(cmd->status, cmd_reported_success)) {
+    if (pcmk__is_set(cmd->status, cmd_reported_success)) {
         cmd->start_time = time(NULL);
         cmd->call_id = generate_callid();
         cmd_clear_flags(cmd, cmd_reported_success);
@@ -1437,56 +1403,43 @@ remote_ra_maintenance(lrm_state_t * lrm_state, gboolean maintenance)
 void
 remote_ra_process_maintenance_nodes(xmlNode *xml)
 {
-    xmlXPathObject *search = pcmk__xpath_search(xml->doc,
-                                                XPATH_PSEUDO_MAINTENANCE);
+    xmlNode *maint = pcmk__xpath_find_one(xml->doc, XPATH_PSEUDO_MAINTENANCE,
+                                          LOG_NEVER);
 
-    if (pcmk__xpath_num_results(search) == 1) {
-        xmlNode *node;
-        int cnt = 0, cnt_remote = 0;
+    for (xmlNode *node = pcmk__xe_first_child(maint, PCMK_XE_NODE, NULL, NULL);
+         node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
 
-        for (node = pcmk__xe_first_child(pcmk__xpath_result(search, 0),
-                                         PCMK_XE_NODE, NULL, NULL);
-             node != NULL; node = pcmk__xe_next(node, PCMK_XE_NODE)) {
+        lrm_state_t *lrm_state = NULL;
+        const char *id = pcmk__xe_id(node);
 
-            lrm_state_t *lrm_state = NULL;
-            const char *id = pcmk__xe_id(node);
-
-            cnt++;
-            if (id == NULL) {
-                continue; // Shouldn't be possible
-            }
-
-            lrm_state = controld_get_executor_state(id, false);
-
-            if (lrm_state && lrm_state->remote_ra_data &&
-                pcmk_is_set(((remote_ra_data_t *) lrm_state->remote_ra_data)->status, remote_active)) {
-
-                const char *in_maint_s = NULL;
-                int in_maint;
-
-                cnt_remote++;
-                in_maint_s = pcmk__xe_get(node, PCMK__XA_NODE_IN_MAINTENANCE);
-                pcmk__scan_min_int(in_maint_s, &in_maint, 0);
-                remote_ra_maintenance(lrm_state, in_maint);
-            }
+        if (id == NULL) {
+            CRM_LOG_ASSERT(id != NULL);
+            continue;
         }
-        crm_trace("Action holds %d nodes (%d remotes found) adjusting "
-                  PCMK_OPT_MAINTENANCE_MODE,
-                  cnt, cnt_remote);
+
+        lrm_state = controld_get_executor_state(id, false);
+
+        if ((lrm_state != NULL) && (lrm_state->remote_ra_data != NULL)
+            && pcmk__is_set(lrm_state->remote_ra_data->status, remote_active)) {
+
+            const bool in_maint =
+                pcmk__xe_attr_is_true(node, PCMK__XA_NODE_IN_MAINTENANCE);
+
+            remote_ra_maintenance(lrm_state, in_maint);
+        }
     }
-    xmlXPathFreeObject(search);
 }
 
 gboolean
 remote_ra_is_in_maintenance(lrm_state_t * lrm_state)
 {
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
-    return pcmk_is_set(ra_data->status, remote_in_maint);
+    return pcmk__is_set(ra_data->status, remote_in_maint);
 }
 
 gboolean
 remote_ra_controlling_guest(lrm_state_t * lrm_state)
 {
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
-    return pcmk_is_set(ra_data->status, controlling_guest);
+    return pcmk__is_set(ra_data->status, controlling_guest);
 }

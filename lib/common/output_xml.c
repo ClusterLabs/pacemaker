@@ -416,7 +416,7 @@ xml_end_list(pcmk__output_t *out) {
 
         /* Do not free node here - it's still part of the document */
         node = g_queue_pop_tail(priv->parent_q);
-        buf = crm_strdup_printf("%lu", xmlChildElementCount(node));
+        buf = pcmk__assert_asprintf("%lu", xmlChildElementCount(node));
         pcmk__xe_set(node, PCMK_XA_COUNT, buf);
         free(buf);
     } else {

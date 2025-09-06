@@ -496,8 +496,8 @@ void controld_destroy_fsa_trigger(void);
 
 void free_max_generation(void);
 
-#  define AM_I_DC pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)
-#  define controld_trigger_fsa() controld_trigger_fsa_as(__func__, __LINE__)
+#define AM_I_DC pcmk__is_set(controld_globals.fsa_input_register, R_THE_DC)
+#define controld_trigger_fsa() controld_trigger_fsa_as(__func__, __LINE__)
 
 void controld_trigger_fsa_as(const char *fn, int line);
 

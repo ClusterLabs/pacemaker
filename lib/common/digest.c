@@ -72,6 +72,47 @@ dump_xml_for_digest(const xmlNode *xml)
 
 /*!
  * \internal
+ * \brief Compute an MD5 checksum for a given input string
+ *
+ * \param[in] input  Input string (can be \c NULL)
+ *
+ * \return Newly allocated string containing MD5 checksum for \p input, or
+ *         \c NULL on error or if \p input is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__md5sum(const char *input)
+{
+    char *checksum = NULL;
+    gchar *checksum_g = NULL;
+
+    if (input == NULL) {
+        return NULL;
+    }
+
+    /* g_compute_checksum_for_string() returns NULL if the input string is
+     * empty. There are instances where we may want to hash an empty, but
+     * non-NULL, string, so here we just hardcode the result.
+     */
+    if (pcmk__str_empty(input)) {
+        return pcmk__str_copy("d41d8cd98f00b204e9800998ecf8427e");
+    }
+
+    checksum_g = g_compute_checksum_for_string(G_CHECKSUM_MD5, input, -1);
+    if (checksum_g == NULL) {
+        crm_err("Failed to compute MD5 checksum for %s", input);
+        return NULL;
+    }
+
+    // Make a copy just so that callers can use free() instead of g_free()
+    checksum = pcmk__str_copy(checksum_g);
+    g_free(checksum_g);
+    return checksum;
+}
+
+/*!
+ * \internal
  * \brief Calculate and return v1 digest of XML tree
  *
  * \param[in] input  Root of XML to digest
@@ -91,8 +132,7 @@ calculate_xml_digest_v1(const xmlNode *input)
               g_string_free(buffer, TRUE);
               return NULL);
 
-    digest = crm_md5sum((const char *) buffer->str);
-    crm_log_xml_trace(input, "digest:source");
+    digest = pcmk__md5sum(buffer->str);
 
     g_string_free(buffer, TRUE);
     return digest;
@@ -175,14 +215,14 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
     GString *buf = g_string_sized_new(1024);
 
     pcmk__xml_string(xml, (filter? pcmk__xml_fmt_filtered : 0), buf, 0);
-    digest = crm_md5sum(buf->str);
+    digest = pcmk__md5sum(buf->str);
     if (digest == NULL) {
         goto done;
     }
 
     pcmk__if_tracing(
         {
-            char *trace_file = crm_strdup_printf("digest-%s", digest);
+            char *trace_file = pcmk__assert_asprintf("digest-%s", digest);
 
             crm_trace("Saving %s.%s.%s to %s",
                       pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
@@ -260,36 +300,6 @@ pcmk__xa_filterable(const char *name)
     return false;
 }
 
-char *
-crm_md5sum(const char *buffer)
-{
-    char *digest = NULL;
-    gchar *raw_digest = NULL;
-
-    /* g_compute_checksum_for_string returns NULL if the input string is empty.
-     * There are instances where we may want to hash an empty, but non-NULL,
-     * string so here we just hardcode the result.
-     */
-    if (buffer == NULL) {
-        return NULL;
-    } else if (pcmk__str_empty(buffer)) {
-        return pcmk__str_copy("d41d8cd98f00b204e9800998ecf8427e");
-    }
-
-    raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
-
-    if (raw_digest == NULL) {
-        crm_err("Failed to calculate hash");
-        return NULL;
-    }
-
-    digest = pcmk__str_copy(raw_digest);
-    g_free(raw_digest);
-
-    crm_trace("Digest %s.", digest);
-    return digest;
-}
-
 // Return true if a is an attribute that should be filtered
 static bool
 should_filter_for_digest(xmlAttrPtr a, void *user_data)
@@ -352,6 +362,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <crm/common/util_compat.h>         // crm_md5sum()
 #include <crm/common/xml_compat.h>
 #include <crm/common/xml_element_compat.h>
 
@@ -395,6 +406,36 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
     }
     crm_trace("Using v2 digest algorithm for %s", version);
     return pcmk__digest_xml(input, do_filter);
+}
+
+char *
+crm_md5sum(const char *buffer)
+{
+    char *digest = NULL;
+    gchar *raw_digest = NULL;
+
+    /* g_compute_checksum_for_string returns NULL if the input string is empty.
+     * There are instances where we may want to hash an empty, but non-NULL,
+     * string so here we just hardcode the result.
+     */
+    if (buffer == NULL) {
+        return NULL;
+    } else if (pcmk__str_empty(buffer)) {
+        return pcmk__str_copy("d41d8cd98f00b204e9800998ecf8427e");
+    }
+
+    raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
+
+    if (raw_digest == NULL) {
+        crm_err("Failed to calculate hash");
+        return NULL;
+    }
+
+    digest = pcmk__str_copy(raw_digest);
+    g_free(raw_digest);
+
+    crm_trace("Digest %s.", digest);
+    return digest;
 }
 
 // LCOV_EXCL_STOP

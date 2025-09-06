@@ -119,7 +119,7 @@ special_values(void **state)
 static void
 outside_limits(void **state)
 {
-    char *very_long = crm_strdup_printf(" %lld0", LLONG_MAX);
+    char *very_long = pcmk__assert_asprintf(" %lld0", LLONG_MAX);
 
     // Still within int range
     assert_score(B(PCMK_SCORE_INFINITY) "00", pcmk_rc_ok, PCMK_SCORE_INFINITY);

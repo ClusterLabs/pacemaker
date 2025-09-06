@@ -62,7 +62,7 @@ cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
     const char *rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
         needs_quorum = FALSE;
     } else {
         // @TODO check requires in resource meta-data and rsc_defaults
@@ -508,27 +508,27 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
 
     out->begin_list(out, NULL, NULL, "Resource Checks");
 
-    if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
+    if (pcmk__is_set(checks->flags, rsc_remain_stopped)) {
         out->list_item(out, "check", "Configuration specifies '%s' should remain stopped",
                        parent->id);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
+    if (pcmk__is_set(checks->flags, rsc_unpromotable)) {
         out->list_item(out, "check", "Configuration specifies '%s' should not be promoted",
                        parent->id);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
+    if (pcmk__is_set(checks->flags, rsc_unmanaged)) {
         out->list_item(out, "check", "Configuration prevents cluster from stopping or starting unmanaged '%s'",
                        parent->id);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_locked)) {
+    if (pcmk__is_set(checks->flags, rsc_locked)) {
         out->list_item(out, "check", "'%s' is locked to node %s due to shutdown",
                        parent->id, checks->lock_node);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_node_health)) {
+    if (pcmk__is_set(checks->flags, rsc_node_health)) {
         out->list_item(out, "check",
                        "'%s' cannot run on unhealthy nodes due to "
                        PCMK_OPT_NODE_HEALTH_STRATEGY "='%s'",
@@ -552,24 +552,24 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
                                                    PCMK_XA_ID, parent->id,
                                                    NULL);
 
-    if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_REMAIN_STOPPED, true);
+    if (pcmk__is_set(checks->flags, rsc_remain_stopped)) {
+        pcmk__xe_set_bool(node, PCMK_XA_REMAIN_STOPPED, true);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_PROMOTABLE, false);
+    if (pcmk__is_set(checks->flags, rsc_unpromotable)) {
+        pcmk__xe_set_bool(node, PCMK_XA_PROMOTABLE, false);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_UNMANAGED, true);
+    if (pcmk__is_set(checks->flags, rsc_unmanaged)) {
+        pcmk__xe_set_bool(node, PCMK_XA_UNMANAGED, true);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_locked)) {
+    if (pcmk__is_set(checks->flags, rsc_locked)) {
         pcmk__xe_set(node, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_node_health)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_UNHEALTHY, true);
+    if (pcmk__is_set(checks->flags, rsc_node_health)) {
+        pcmk__xe_set_bool(node, PCMK_XA_UNHEALTHY, true);
     }
 
     return pcmk_rc_ok;

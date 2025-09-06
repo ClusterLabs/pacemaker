@@ -256,12 +256,12 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
         const char *name = (const char *) attr->name;
         const char *value = pcmk__xml_attr_value(attr);
 
-        if (pcmk_is_set(flags, pcmk__xaf_no_overwrite)
+        if (pcmk__is_set(flags, pcmk__xaf_no_overwrite)
             && (pcmk__xe_get(target, name) != NULL)) {
             continue;
         }
 
-        if (pcmk_is_set(flags, pcmk__xaf_score_update)) {
+        if (pcmk__is_set(flags, pcmk__xaf_score_update)) {
             pcmk__xe_set_score(target, name, value);
         } else {
             pcmk__xe_set(target, name, value);
@@ -602,11 +602,11 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     pcmk__if_tracing(
         {
             if (update_id_attr != NULL) {
-                trace_s = crm_strdup_printf("<%s %s=%s/>",
-                                            update_name, update_id_attr,
-                                            update_id_val);
+                trace_s = pcmk__assert_asprintf("<%s %s=%s/>",
+                                                update_name, update_id_attr,
+                                                update_id_val);
             } else {
-                trace_s = crm_strdup_printf("<%s/>", update_name);
+                trace_s = pcmk__assert_asprintf("<%s/>", update_name);
             }
         },
         {}
@@ -1186,7 +1186,7 @@ pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value)
 
     CRM_CHECK((xml != NULL) && (attr != NULL), return);
 
-    value_s = crm_strdup_printf("%u", value);
+    value_s = pcmk__assert_asprintf("%u", value);
     pcmk__xe_set(xml, attr, value_s);
     free(value_s);
 }
@@ -1301,7 +1301,7 @@ pcmk__xe_set_ll(xmlNode *xml, const char *attr, long long value)
 
     CRM_CHECK((xml != NULL) && (attr != NULL), return EINVAL);
 
-    value_s = crm_strdup_printf("%lld", value);
+    value_s = pcmk__assert_asprintf("%lld", value);
 
     rc = pcmk__xe_set(xml, attr, value_s);
     free(value_s);
@@ -1479,51 +1479,47 @@ pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)
 
 /*!
  * \internal
- * \brief Add a boolean attribute to an XML node.
+ * \brief Retrieve a boolean value from an XML attribute
  *
- * \param[in,out] node  XML node to add attributes to
- * \param[in]     name  XML attribute to create
- * \param[in]     value Value to give to the attribute
+ * This is like \c pcmk__xe_get() but returns the value as a \c bool.
+ *
+ * \param[in]  xml   XML element whose attribute to get
+ * \param[in]  attr  Attribute name
+ * \param[out] dest  Where to store result (unchanged on error)
+ *
+ * \return Standard Pacemaker return code
  */
-void
-pcmk__xe_set_bool_attr(xmlNodePtr node, const char *name, bool value)
+int
+pcmk__xe_get_bool(const xmlNode *xml, const char *attr, bool *dest)
 {
-    pcmk__xe_set(node, name, pcmk__btoa(value));
+    const char *xml_value = NULL;
+
+    CRM_CHECK((xml != NULL) && (attr != NULL) && (dest != NULL), return EINVAL);
+
+    xml_value = pcmk__xe_get(xml, attr);
+    if (xml_value == NULL) {
+        return ENXIO;
+    }
+
+    return pcmk__parse_bool(xml_value, dest);
 }
 
 /*!
  * \internal
- * \brief Extract a boolean attribute's value from an XML element, with
- *        error checking
+ * \brief Set an XML attribute using a boolean value
  *
- * \param[in]  node  XML node to get attribute from
- * \param[in]  name  XML attribute to get
- * \param[out] value Destination for the value of the attribute
+ * This is like \c pcmk__xe_set() but takes a \c bool.
  *
- * \return EINVAL if \p name or \p value are NULL, ENODATA if \p node is
- *         NULL or the attribute does not exist, pcmk_rc_unknown_format
- *         if the attribute is not a boolean, and pcmk_rc_ok otherwise.
+ * \param[in,out] xml    XML element whose attribute to set
+ * \param[in]     attr   Attribute name
+ * \param[in]     value  Attribute value to set
  *
- * \note \p value only has any meaning if the return value is pcmk_rc_ok.
+ * \return Standard Pacemaker return code
  */
-int
-pcmk__xe_get_bool_attr(const xmlNode *node, const char *name, bool *value)
+void
+pcmk__xe_set_bool(xmlNode *xml, const char *attr, bool value)
 {
-    const char *xml_value = NULL;
-
-    if (node == NULL) {
-        return ENODATA;
-    } else if (name == NULL || value == NULL) {
-        return EINVAL;
-    }
-
-    xml_value = pcmk__xe_get(node, name);
-
-    if (xml_value == NULL) {
-        return ENODATA;
-    }
-
-    return pcmk__parse_bool(xml_value, value);
+    pcmk__xe_set(xml, attr, pcmk__btoa(value));
 }
 
 /*!
@@ -1542,7 +1538,7 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
     bool value = false;
     int rc;
 
-    rc = pcmk__xe_get_bool_attr(node, name, &value);
+    rc = pcmk__xe_get_bool(node, name, &value);
     return rc == pcmk_rc_ok && value == true;
 }
 
@@ -1609,7 +1605,7 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
     int len = 0;
     char *id = NULL;
 
-    /* equivalent to crm_strdup_printf() */
+    // Equivalent to pcmk__assert_asprintf()
     va_start(ap, format);
     len = vasprintf(&id, format, ap);
     va_end(ap);
@@ -1808,7 +1804,7 @@ crm_element_value_copy(const xmlNode *data, const char *name)
 const char *
 crm_xml_add_ll(xmlNode *xml, const char *name, long long value)
 {
-    char *str = crm_strdup_printf("%lld", value);
+    char *str = pcmk__assert_asprintf("%lld", value);
     const char *result = crm_xml_add(xml, name, str);
 
     free(str);
@@ -1834,7 +1830,7 @@ crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
 const char *
 crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
 {
-    char *number = crm_strdup_printf("%u", ms);
+    char *number = pcmk__assert_asprintf("%u", ms);
     const char *added = crm_xml_add(node, name, number);
 
     free(number);

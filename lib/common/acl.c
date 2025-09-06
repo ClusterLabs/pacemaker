@@ -200,13 +200,14 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 static const char *
 acl_to_text(enum pcmk__xml_flags flags)
 {
-    if (pcmk_is_set(flags, pcmk__xf_acl_deny)) {
+    if (pcmk__is_set(flags, pcmk__xf_acl_deny)) {
         return "deny";
 
-    } else if (pcmk_any_flags_set(flags, pcmk__xf_acl_write|pcmk__xf_acl_create)) {
+    } else if (pcmk__any_flags_set(flags,
+                                   pcmk__xf_acl_write|pcmk__xf_acl_create)) {
         return "read/write";
 
-    } else if (pcmk_is_set(flags, pcmk__xf_acl_read)) {
+    } else if (pcmk__is_set(flags, pcmk__xf_acl_read)) {
         return "read";
     }
     return "none";
@@ -392,18 +393,19 @@ pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
 static inline bool
 test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
 {
-    if (pcmk_is_set(allowed, pcmk__xf_acl_deny)) {
+    if (pcmk__is_set(allowed, pcmk__xf_acl_deny)) {
         return false;
 
-    } else if (pcmk_all_flags_set(allowed, requested)) {
+    } else if (pcmk__all_flags_set(allowed, requested)) {
         return true;
 
-    } else if (pcmk_is_set(requested, pcmk__xf_acl_read)
-               && pcmk_is_set(allowed, pcmk__xf_acl_write)) {
+    } else if (pcmk__is_set(requested, pcmk__xf_acl_read)
+               && pcmk__is_set(allowed, pcmk__xf_acl_write)) {
         return true;
 
-    } else if (pcmk_is_set(requested, pcmk__xf_acl_create)
-               && pcmk_any_flags_set(allowed, pcmk__xf_acl_write|pcmk__xf_created)) {
+    } else if (pcmk__is_set(requested, pcmk__xf_acl_create)
+               && pcmk__any_flags_set(allowed,
+                                      pcmk__xf_acl_write|pcmk__xf_created)) {
         return true;
     }
     return false;
@@ -617,7 +619,7 @@ pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 {
     xml_node_private_t *nodepriv = xml->_private;
 
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
         if (implicitly_allowed(xml)) {
             crm_trace("Creation of <%s> scaffolding with " PCMK_XA_ID "=\"%s\""
                       " is implicitly allowed",
@@ -677,7 +679,7 @@ xml_acl_denied(const xmlNode *xml)
     if (xml && xml->doc && xml->doc->_private){
         xml_doc_private_t *docpriv = xml->doc->_private;
 
-        return pcmk_is_set(docpriv->flags, pcmk__xf_acl_denied);
+        return pcmk__is_set(docpriv->flags, pcmk__xf_acl_denied);
     }
     return false;
 }
@@ -773,7 +775,7 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
             return true;
         }
 
-        if (pcmk_is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
+        if (pcmk__is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
             const char *pfx = (parent != xml)? "Parent " : "";
 
             check_acl_deny(xml, attr_name, pfx, docpriv->acl_user, mode);
@@ -927,7 +929,7 @@ xml_acl_enabled(const xmlNode *xml)
     if (xml && xml->doc && xml->doc->_private){
         xml_doc_private_t *docpriv = xml->doc->_private;
 
-        return pcmk_is_set(docpriv->flags, pcmk__xf_acl_enabled);
+        return pcmk__is_set(docpriv->flags, pcmk__xf_acl_enabled);
     }
     return false;
 }

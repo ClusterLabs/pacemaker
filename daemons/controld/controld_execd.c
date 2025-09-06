@@ -49,7 +49,7 @@ static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_
 static void
 lrm_connection_destroy(void)
 {
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Lost connection to local executor");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -59,7 +59,7 @@ lrm_connection_destroy(void)
 static char *
 make_stop_id(const char *rsc, int call_id)
 {
-    return crm_strdup_printf("%s:%d", rsc, call_id);
+    return pcmk__assert_asprintf("%s:%d", rsc, call_id);
 }
 
 static void
@@ -406,7 +406,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         log_level = LOG_ERR;
         when = "shutdown";
 
-    } else if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    } else if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         when = "shutdown... waiting";
     }
 
@@ -437,8 +437,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
                    counter, pcmk__plural_s(counter), when);
 
         if ((cur_state == S_TERMINATE)
-            || !pcmk_is_set(controld_globals.fsa_input_register,
-                            R_SENT_RSC_STOP)) {
+            || !pcmk__is_set(controld_globals.fsa_input_register,
+                             R_SENT_RSC_STOP)) {
             g_hash_table_iter_init(&gIter, lrm_state->active_ops);
             while (g_hash_table_iter_next(&gIter, (gpointer*)&key, (gpointer*)&pending)) {
                 do_crm_log(log_level, "Pending action: %s (%s)", key, pending->op_key);
@@ -454,7 +454,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         return rc;
     }
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         /* At this point we're not waiting, we're just shutting down */
         when = "shutdown";
     }
@@ -650,7 +650,7 @@ void
 controld_trigger_delete_refresh(const char *from_sys, const char *rsc_id)
 {
     if (!pcmk__str_eq(from_sys, CRM_SYSTEM_TENGINE, pcmk__str_casei)) {
-        char *now_s = crm_strdup_printf("%lld", (long long) time(NULL));
+        char *now_s = pcmk__assert_asprintf("%lld", (long long) time(NULL));
 
         crm_debug("Triggering a refresh after %s cleaned %s", from_sys, rsc_id);
         cib__update_node_attr(controld_globals.logger_out,
@@ -805,12 +805,12 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     pending = g_hash_table_lookup(lrm_state->active_ops, key);
 
     if (pending) {
-        if (remove && !pcmk_is_set(pending->flags, active_op_remove)) {
+        if (remove && !pcmk__is_set(pending->flags, active_op_remove)) {
             controld_set_active_op_flags(pending, active_op_remove);
             crm_debug("Scheduling %s for removal", key);
         }
 
-        if (pcmk_is_set(pending->flags, active_op_cancelled)) {
+        if (pcmk__is_set(pending->flags, active_op_cancelled)) {
             crm_debug("Operation %s already cancelled", key);
             free(local_key);
             return FALSE;
@@ -1380,7 +1380,7 @@ metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
         md = controld_cache_metadata(lrm_state->metadata_cache, data->rsc,
                                      result->action_stdout);
     }
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
         do_lrm_rsc_op(lrm_state, data->rsc, data->input_xml, md);
     }
     free_metadata_cb_data(data);
@@ -1630,9 +1630,9 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     primitive = pcmk__xe_first_child(rsc_op, PCMK_XE_PRIMITIVE, NULL, NULL);
     class = pcmk__xe_get(primitive, PCMK_XA_CLASS);
 
-    if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
-            && pcmk__str_eq(operation, PCMK_ACTION_MONITOR, pcmk__str_casei)
-            && (op->interval_ms > 0)) {
+    if (pcmk__is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_fence_params)
+        && pcmk__str_eq(operation, PCMK_ACTION_MONITOR, pcmk__str_casei)
+        && (op->interval_ms > 0)) {
 
         op_timeout = g_hash_table_lookup(params, "pcmk_monitor_timeout");
         if (op_timeout != NULL) {
@@ -1868,7 +1868,7 @@ should_cancel_recurring(const char *rsc_id, const char *action, guint interval_m
 static const char *
 should_nack_action(const char *action)
 {
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
 
         register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
@@ -1931,7 +1931,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
          * Default to the OCF 1.1 name.
          */
         if ((md != NULL)
-            && pcmk_is_set(md->ra_flags, ra_supports_legacy_reload)) {
+            && pcmk__is_set(md->ra_flags, ra_supports_legacy_reload)) {
             operation = PCMK_ACTION_RELOAD;
         } else {
             operation = PCMK_ACTION_RELOAD_AGENT;
@@ -2164,9 +2164,9 @@ log_executor_event(const lrmd_event_data_t *op, const char *op_key,
      * level, so just raise to notice if it looks like a failure.
      */
     if ((op->output != NULL) && (op->rc != PCMK_OCF_OK)) {
-        char *prefix = crm_strdup_printf(PCMK__OP_FMT "@%s output",
-                                         op->rsc_id, op->op_type,
-                                         op->interval_ms, node_name);
+        char *prefix = pcmk__assert_asprintf(PCMK__OP_FMT "@%s output",
+                                             op->rsc_id, op->op_type,
+                                             op->interval_ms, node_name);
 
         crm_log_output(LOG_NOTICE, prefix, op->output);
         free(prefix);
@@ -2312,7 +2312,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         crm_err("Recurring operation %s was cancelled without transition information",
                 op_key);
 
-    } else if (pcmk_is_set(pending->flags, active_op_remove)) {
+    } else if (pcmk__is_set(pending->flags, active_op_remove)) {
         /* This recurring operation was cancelled (by us) and pending, and we
          * have been waiting for it to finish.
          */

@@ -242,7 +242,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    read_only = !pcmk_is_set(operation->flags, cib__op_attr_modifies);
+    read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
 
     // Mirror the logic in prepare_input() in the CIB manager
     if ((section != NULL) && pcmk__xe_is(data, PCMK_XE_CIB)) {
@@ -254,7 +254,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
                         request, data, true, &changed, &private->cib_xml,
                         &result_cib, &cib_diff, output);
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
+    if (pcmk__is_set(call_options, cib_transaction)) {
         /* The rest of the logic applies only to the transaction as a whole, not
          * to individual requests.
          */
@@ -331,7 +331,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user_name);
     pcmk__xe_set(request, PCMK__XA_CIB_CLIENTID, private->id);
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
+    if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
         goto done;
     }
@@ -535,10 +535,10 @@ cib_file_signoff(cib_t *cib)
     cib->cmds->end_transaction(cib, false, cib_none);
 
     /* If the in-memory CIB has been changed, write it to disk */
-    if (pcmk_is_set(private->flags, cib_file_flag_dirty)) {
+    if (pcmk__is_set(private->flags, cib_file_flag_dirty)) {
 
         /* If this is the live CIB, write it out with a digest */
-        if (pcmk_is_set(private->flags, cib_file_flag_live)) {
+        if (pcmk__is_set(private->flags, cib_file_flag_live)) {
             if (cib_file_write_live(private->cib_xml, private->filename) < 0) {
                 rc = pcmk_err_generic;
             }
@@ -666,7 +666,7 @@ cib_file_new(const char *cib_location)
         return NULL;
     }
 
-    private->id = crm_generate_uuid();
+    private->id = pcmk__generate_uuid();
     private->filename = filename;
 
     cib->variant = cib_file;
@@ -776,7 +776,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
 
     /* If sigfile is not specified, use original file name plus .sig */
     if (sigfile == NULL) {
-        sigfile = local_sigfile = crm_strdup_printf("%s.sig", filename);
+        sigfile = local_sigfile = pcmk__assert_asprintf("%s.sig", filename);
     }
 
     /* Verify that digests match */
@@ -809,8 +809,8 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
     unsigned int seq = 0U;
-    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
-    char *cib_digest = crm_strdup_printf("%s.sig", cib_path);
+    char *cib_path = pcmk__assert_asprintf("%s/%s", cib_dirname, cib_filename);
+    char *cib_digest = pcmk__assert_asprintf("%s.sig", cib_path);
     char *backup_path;
     char *backup_digest;
 
@@ -822,7 +822,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
     }
     backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
                                         CIB_SERIES_BZIP);
-    backup_digest = crm_strdup_printf("%s.sig", backup_path);
+    backup_digest = pcmk__assert_asprintf("%s.sig", backup_path);
 
     /* Remove the old backups if they exist */
     unlink(backup_path);
@@ -933,12 +933,12 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     const char *admin_epoch = pcmk__xe_get(cib_root, PCMK_XA_ADMIN_EPOCH);
 
     /* Determine full CIB and signature pathnames */
-    char *cib_path = crm_strdup_printf("%s/%s", cib_dirname, cib_filename);
-    char *digest_path = crm_strdup_printf("%s.sig", cib_path);
+    char *cib_path = pcmk__assert_asprintf("%s/%s", cib_dirname, cib_filename);
+    char *digest_path = pcmk__assert_asprintf("%s.sig", cib_path);
 
     /* Create temporary file name patterns for writing out CIB and signature */
-    char *tmp_cib = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
-    char *tmp_digest = crm_strdup_printf("%s/cib.XXXXXX", cib_dirname);
+    char *tmp_cib = pcmk__assert_asprintf("%s/cib.XXXXXX", cib_dirname);
+    char *tmp_digest = pcmk__assert_asprintf("%s/cib.XXXXXX", cib_dirname);
 
     /* Ensure the admin didn't modify the existing CIB underneath us */
     crm_trace("Reading cluster configuration file %s", cib_path);

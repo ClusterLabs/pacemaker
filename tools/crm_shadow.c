@@ -160,13 +160,13 @@ shadow_default(pcmk__output_t *out, va_list args)
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(flags, shadow_disp_instance)) {
+    if (pcmk__is_set(flags, shadow_disp_instance)) {
         rc = out->info(out, "Instance: %s", pcmk__s(instance, "<unknown>"));
     }
-    if (pcmk_is_set(flags, shadow_disp_file)) {
+    if (pcmk__is_set(flags, shadow_disp_file)) {
         rc = out->info(out, "File name: %s", pcmk__s(filename, "<unknown>"));
     }
-    if (pcmk_is_set(flags, shadow_disp_content)) {
+    if (pcmk__is_set(flags, shadow_disp_content)) {
         rc = out->info(out, "Content:");
 
         if (content != NULL) {
@@ -187,7 +187,7 @@ shadow_default(pcmk__output_t *out, va_list args)
             out->info(out, "<unknown>");
         }
     }
-    if (pcmk_is_set(flags, shadow_disp_diff)) {
+    if (pcmk__is_set(flags, shadow_disp_diff)) {
         rc = out->info(out, "Diff:");
 
         if (diff != NULL) {
@@ -239,13 +239,13 @@ shadow_text(pcmk__output_t *out, va_list args)
          */
         out->quiet = false;
 
-        if (pcmk_is_set(flags, shadow_disp_instance) && (instance != NULL)) {
+        if (pcmk__is_set(flags, shadow_disp_instance) && (instance != NULL)) {
             rc = out->info(out, "%s", instance);
         }
-        if (pcmk_is_set(flags, shadow_disp_file) && (filename != NULL)) {
+        if (pcmk__is_set(flags, shadow_disp_file) && (filename != NULL)) {
             rc = out->info(out, "%s", filename);
         }
-        if (pcmk_is_set(flags, shadow_disp_content) && (content != NULL)) {
+        if (pcmk__is_set(flags, shadow_disp_content) && (content != NULL)) {
             GString *buf = g_string_sized_new(1024);
             gchar *str = NULL;
 
@@ -257,7 +257,7 @@ shadow_text(pcmk__output_t *out, va_list args)
             rc = out->info(out, "%s", str);
             g_free(str);
         }
-        if (pcmk_is_set(flags, shadow_disp_diff) && (diff != NULL)) {
+        if (pcmk__is_set(flags, shadow_disp_diff) && (diff != NULL)) {
             rc = out->message(out, "xml-patchset", diff);
         }
 
@@ -358,10 +358,10 @@ set_danger_error(const char *reason, bool for_shadow, bool show_mismatch,
     if (show_mismatch
         && !pcmk__str_eq(active, options.instance, pcmk__str_null_matches)) {
 
-        full = crm_strdup_printf("%s.\nAdditionally, the supplied shadow "
-                                 "instance (%s) is not the same as the active "
-                                 "one (%s)",
-                                reason, options.instance, active);
+        full = pcmk__assert_asprintf("%s.\nAdditionally, the supplied shadow "
+                                     "instance (%s) is not the same as the "
+                                     "active one (%s)",
+                                     reason, options.instance, active);
         reason = full;
     }
 
@@ -412,8 +412,9 @@ check_file_exists(const char *filename, bool should_exist, GError **error)
     struct stat buf;
 
     if (!should_exist && (stat(filename, &buf) == 0)) {
-        char *reason = crm_strdup_printf("A shadow instance '%s' already "
-                                         "exists", options.instance);
+        char *reason = pcmk__assert_asprintf("A shadow instance '%s' already "
+                                             "exists",
+                                             options.instance);
 
         exit_code = CRM_EX_CANTCREAT;
         set_danger_error(reason, true, false, error);
@@ -557,7 +558,7 @@ write_shadow_file(const xmlNode *xml, const char *filename, bool reset,
 static inline char *
 get_shadow_prompt(void)
 {
-    return crm_strdup_printf("shadow[%.40s] # ", options.instance);
+    return pcmk__assert_asprintf("shadow[%.40s] # ", options.instance);
 }
 
 /*!
@@ -611,9 +612,9 @@ shadow_setup(pcmk__output_t *out, bool do_switch, GError **error)
             prefix = "To switch to the named shadow instance";
         }
 
-        msg = crm_strdup_printf("%s, enter the following into your shell:\n"
-                                "\texport CIB_shadow=%s",
-                                prefix, options.instance);
+        msg = pcmk__assert_asprintf("%s, enter the following into your shell:\n"
+                                    "\texport CIB_shadow=%s",
+                                    prefix, options.instance);
         out->message(out, "instruction", msg);
         free(msg);
     }

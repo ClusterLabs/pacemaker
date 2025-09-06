@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -96,7 +96,7 @@ services__ocf_agent_exists(const char *provider, const char *agent)
     }
 
     for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        buf = crm_strdup_printf("%s/%s/%s", dir, provider, agent);
+        buf = pcmk__assert_asprintf("%s/%s/%s", dir, provider, agent);
         if (stat(buf, &st) == 0) {
             free(buf);
             rc = TRUE;
@@ -131,7 +131,8 @@ services__ocf_prepare(svc_action_t *op)
 
     // Look for agent on path
     for (char *dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        char *buf = crm_strdup_printf("%s/%s/%s", dir, op->provider, op->agent);
+        char *buf = pcmk__assert_asprintf("%s/%s/%s", dir, op->provider,
+                                          op->agent);
 
         if (stat(buf, &st) == 0) {
             op->opaque->exec = buf;

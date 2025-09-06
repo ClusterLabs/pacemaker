@@ -28,7 +28,7 @@ setup(void **state) {
 
     pcmk__xml_test_setup_group(state);
 
-    path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
+    path = pcmk__assert_asprintf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
     input = pcmk__xml_read(path);
     free(path);
 

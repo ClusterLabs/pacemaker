@@ -190,7 +190,7 @@ required_argument_missing(uint32_t ra_caps, const char *name,
         return true;
     }
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_provider)
         && pcmk__str_empty(provider)) {
         crm_info("Cannot create operation for %s resource %s "
                  "without provider (bug?)", standard, name);
@@ -232,7 +232,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
         return ENOMEM;
     }
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_status)
         && pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         action = PCMK_ACTION_STATUS;
     }
@@ -241,7 +241,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
         return ENOMEM;
     }
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_provider)) {
         op->provider = strdup(provider);
         if (op->provider == NULL) {
             return ENOMEM;
@@ -276,7 +276,7 @@ services__create_resource_action(const char *name, const char *standard,
     op->sequence = ++operations;
 
     // Take ownership of params
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_params)) {
         op->params = params;
     } else if (params != NULL) {
         g_hash_table_destroy(params);
@@ -867,8 +867,8 @@ services_action_async_fork_notify(svc_action_t * op,
         g_hash_table_replace(recurring_actions, op->id, op);
     }
 
-    if (!pcmk_is_set(op->flags, SVC_ACTION_NON_BLOCKED)
-        && op->rsc && is_op_blocked(op->rsc)) {
+    if (!pcmk__is_set(op->flags, SVC_ACTION_NON_BLOCKED)
+        && (op->rsc != NULL) && is_op_blocked(op->rsc)) {
         blocked_ops = g_list_append(blocked_ops, op);
         return TRUE;
     }
@@ -1066,7 +1066,7 @@ resources_list_standards(void)
 GList *
 resources_list_providers(const char *standard)
 {
-    if (pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
+    if (pcmk__is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
         return resources_os_list_ocf_providers();
     }
 
@@ -1146,7 +1146,8 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 
     rc = FALSE;
 
-    has_providers = pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+    has_providers = pcmk__is_set(pcmk_get_ra_caps(standard),
+                                 pcmk_ra_cap_provider);
     if (has_providers == TRUE && provider != NULL) {
         providers = resources_list_providers(standard);
         for (iter = providers; iter != NULL; iter = iter->next) {
