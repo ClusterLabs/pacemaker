@@ -832,7 +832,9 @@ static GOptionEntry addl_entries[] = {
       "ID" },
     { "timeout", 'T', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, timeout_cb,
       "(Advanced) Abort if command does not finish in this time (with\n"
-      INDENT "--restart, --wait, --force-*)",
+      INDENT "--restart, --wait, --force-*). The --restart command uses a\n"
+      INDENT "two-second granularity and the --wait command uses a one-second\n"
+      INDENT "granularity, with rounding.",
       "N" },
     { "all", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.all,
       "List all options, including advanced and deprecated (with\n"

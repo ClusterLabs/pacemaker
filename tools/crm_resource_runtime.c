@@ -2109,7 +2109,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
     if (timeout_ms == 0) {
         expire_time += WAIT_DEFAULT_TIMEOUT_S;
     } else {
-        expire_time += pcmk__timeout_ms2s(timeout_ms + 999);
+        expire_time += pcmk__timeout_ms2s(timeout_ms);
     }
 
     scheduler = pcmk_new_scheduler();
