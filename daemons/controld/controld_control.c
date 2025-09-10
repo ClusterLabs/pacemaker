@@ -238,7 +238,7 @@ crmd_exit(crm_exit_t exit_code)
     pcmk__cluster_destroy_node_caches();
 
     controld_free_fsa_timers();
-    te_cleanup_stonith_history_sync(NULL, TRUE);
+    controld_cleanup_fencing_history_sync(NULL, true);
     controld_free_sched_timer();
 
     free(controld_globals.our_uuid);
@@ -590,14 +590,14 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
      * environment. If invalid, the controller will exit with a fatal error.
      *
      * We do this via a wrapper in the controller, so that we call
-     * pcmk__valid_stonith_watchdog_timeout() only if watchdog fencing is
+     * pcmk__valid_fencing_watchdog_timeout() only if watchdog fencing is
      * enabled for the local node. Otherwise, we may exit unnecessarily.
      *
      * A validator function in libcrmcommon can't act as such a wrapper, because
-     * it doesn't have a stonith API connection or the local node name.
+     * it doesn't have a fencer API connection or the local node name.
      */
-    value = g_hash_table_lookup(config_hash, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT);
-    controld_verify_stonith_watchdog_timeout(value);
+    value = g_hash_table_lookup(config_hash, PCMK_OPT_FENCING_WATCHDOG_TIMEOUT);
+    controld_validate_fencing_watchdog_timeout(value);
 
     value = g_hash_table_lookup(config_hash, PCMK_OPT_NO_QUORUM_POLICY);
     if (pcmk__strcase_any_of(value, PCMK_VALUE_FENCE, PCMK_VALUE_FENCE_LEGACY,

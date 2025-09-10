@@ -144,10 +144,10 @@ fencing_topology_init(void)
 
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
                                "[@" PCMK_XA_NAME "='"   \
-                                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
+                                    PCMK_OPT_FENCING_WATCHDOG_TIMEOUT "']"
 
 static void
-update_stonith_watchdog_timeout_ms(xmlNode *cib)
+update_fencing_watchdog_timeout_ms(xmlNode *cib)
 {
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
@@ -166,10 +166,10 @@ update_stonith_watchdog_timeout_ms(xmlNode *cib)
         return;
     }
 
-    rc = pcmk__parse_ms(value, &stonith_watchdog_timeout_ms);
+    rc = pcmk__parse_ms(value, &fencing_watchdog_timeout_ms);
 
-    if ((rc != pcmk_rc_ok) || (stonith_watchdog_timeout_ms < 0)) {
-        stonith_watchdog_timeout_ms = pcmk__auto_stonith_watchdog_timeout();
+    if ((rc != pcmk_rc_ok) || (fencing_watchdog_timeout_ms < 0)) {
+        fencing_watchdog_timeout_ms = pcmk__auto_fencing_watchdog_timeout();
     }
 }
 
@@ -325,7 +325,7 @@ update_cib_stonith_devices(const xmlNode *patchset)
 static void
 watchdog_device_update(void)
 {
-    if (stonith_watchdog_timeout_ms > 0) {
+    if (fencing_watchdog_timeout_ms > 0) {
         if (!fenced_has_watchdog_device()
             && (stonith_watchdog_targets == NULL)) {
             /* getting here watchdog-fencing enabled, no device there yet
@@ -339,7 +339,7 @@ watchdog_device_update(void)
                     st_namespace_internal,
                     STONITH_WATCHDOG_AGENT,
                     NULL, /* fenced_device_register() will add our
-                             own name as PCMK_STONITH_HOST_LIST param
+                             own name as PCMK_FENCING_HOST_LIST param
                              so we can skip that here
                            */
                     NULL);
@@ -478,7 +478,7 @@ static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     xmlNode *patchset = NULL;
-    long long timeout_ms_saved = stonith_watchdog_timeout_ms;
+    long long timeout_ms_saved = fencing_watchdog_timeout_ms;
     bool need_full_refresh = false;
 
     if(!have_cib_devices) {
@@ -537,9 +537,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
-    update_stonith_watchdog_timeout_ms(local_cib);
+    update_fencing_watchdog_timeout_ms(local_cib);
 
-    if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
+    if (timeout_ms_saved != fencing_watchdog_timeout_ms) {
         need_full_refresh = true;
     }
 
@@ -563,7 +563,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     local_cib = pcmk__xml_copy(NULL, output);
 
     pcmk__refresh_node_caches_from_cib(local_cib);
-    update_stonith_watchdog_timeout_ms(local_cib);
+    update_fencing_watchdog_timeout_ms(local_cib);
 
     fencing_topology_init();
     cib_devices_update();

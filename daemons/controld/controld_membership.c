@@ -156,6 +156,10 @@ create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
 
     pcmk__xe_set(node_state, PCMK_XA_UNAME, node->name);
 
+    /* @COMPAT CRM_FEATURE_SET was bumped to 3.18.0 in Pacemaker 2.1.7. When we
+     * no longer support rolling upgrades from 2.1.6 and below, we can drop the
+     * "< 3.18.0" code here and below.
+     */
     if (pcmk_is_set(flags, controld_node_update_cluster)) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.

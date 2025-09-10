@@ -761,10 +761,10 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        SBD_WATCHDOG_TIMEOUT
      - :ref:`duration <duration>`
      -
-     - If the ``stonith-watchdog-timeout`` cluster property is set to a negative
+     - If the ``fencing-watchdog-timeout`` cluster property is set to a negative
        or invalid value, use double this value as the default if positive, or
        use 0 as the default otherwise. This value must be greater than the value
-       of ``stonith-watchdog-timeout`` if both are set.
+       of ``fencing-watchdog-timeout`` if both are set.
 
    * - .. _valgrind_opts:
 

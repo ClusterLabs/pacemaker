@@ -2,7 +2,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
-        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+        <nvpair id="opt-no-stonith" name="fencing-enabled" value="false"/>
         <nvpair id="nvpair.id21832" name="no-quorum-policy" value="ignore"/>
       </cluster_property_set>
     </crm_config>

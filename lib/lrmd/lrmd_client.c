@@ -982,7 +982,7 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
 
     pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
 
-    value = g_hash_table_lookup(hash, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT);
+    value = g_hash_table_lookup(hash, PCMK_OPT_FENCING_WATCHDOG_TIMEOUT);
     if ((value) &&
         (stonith__watchdog_fencing_enabled_for_node(native->remote_nodename))) {
        pcmk__xe_set(data, PCMK__XA_LRMD_WATCHDOG, value);

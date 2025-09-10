@@ -64,7 +64,7 @@ int lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg);
 
 void notify_of_new_client(pcmk__client_t *new_client);
 
-void free_rsc(gpointer data);
+void execd_free_rsc(gpointer data);
 
 void handle_shutdown_ack(void);
 
@@ -75,17 +75,13 @@ void lrmd_client_destroy(pcmk__client_t *client);
 void client_disconnect_cleanup(const char *client_id);
 
 /*!
+ * \internal
  * \brief Don't worry about freeing this connection. It is
  *        taken care of after mainloop exits by the main() function.
  */
-stonith_t *get_stonith_connection(void);
+stonith_t *execd_get_fencer_connection(void);
 
-/*!
- * \brief This is a callback that tells the lrmd
- * the current stonith connection has gone away. This allows
- * us to timeout any pending stonith commands
- */
-void stonith_connection_failed(void);
+void execd_fencer_connection_failed(void);
 
 #ifdef PCMK__COMPILE_REMOTE
 void ipc_proxy_init(void);

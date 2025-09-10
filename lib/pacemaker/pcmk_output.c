@@ -11,7 +11,7 @@
 #include <crm/common/output.h>
 #include <crm/common/results.h>
 #include <crm/common/xml.h>
-#include <crm/stonith-ng.h>
+#include <crm/stonith-ng.h>         // stonith_history_t
 #include <crm/fencing/internal.h>   // stonith__*
 #include <crm/pengine/internal.h>
 #include <libxml/tree.h>
@@ -1865,7 +1865,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
                                   resources, show_opts, rc == pcmk_rc_ok));
     }
 
-    /* Print failed stonith actions */
+    // Print failed fencing actions
     if (pcmk_is_set(section_opts, pcmk_section_fence_failed) &&
         fence_history != pcmk__fence_history_none) {
         if (history_rc == 0) {
@@ -1903,7 +1903,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
                                   show_opts, rc == pcmk_rc_ok));
     }
 
-    /* Print stonith history */
+    // Print fencing history
     if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
         fence_history != pcmk__fence_history_none) {
         if (history_rc != 0) {
@@ -2003,7 +2003,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
                      show_opts, false);
     }
 
-    /* Print stonith history */
+    // Print fencing history
     if (pcmk_is_set(section_opts, pcmk_section_fencing_all) &&
         fence_history != pcmk__fence_history_none) {
         out->message(out, "full-fencing-list", history_rc, stonith_history,
@@ -2084,7 +2084,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
                      show_opts, false);
     }
 
-    /* Print failed stonith actions */
+    // Print failed fencing actions
     if (pcmk_is_set(section_opts, pcmk_section_fence_failed) &&
         fence_history != pcmk__fence_history_none) {
         if (history_rc == 0) {
@@ -2105,7 +2105,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
         }
     }
 
-    /* Print stonith history */
+    // Print fencing history
     if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
         fence_history != pcmk__fence_history_none) {
         if (history_rc != 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -123,7 +123,7 @@ typedef struct {
 
     int batch_limit;
     guint network_delay;
-    guint stonith_timeout;
+    guint fencing_timeout;
 
     int fired;
     int pending;

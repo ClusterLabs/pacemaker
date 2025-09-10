@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
+<transition_graph cluster-delay="60s" fencing-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="46" operation="notify" operation_key="MS_RSC_NATIVE:0_post_notify_demote_0" on_node="node2" on_node_uuid="1048225984">
