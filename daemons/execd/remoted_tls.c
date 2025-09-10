@@ -89,7 +89,7 @@ lrmd_remote_client_msg(gpointer data)
     xmlNode *request = NULL;
     pcmk__client_t *client = data;
 
-    if (!pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
+    if (!pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
         return remoted__read_handshake_data(client);
     }
 
@@ -177,8 +177,7 @@ lrmd_auth_timeout_cb(gpointer data)
 
     client->remote->auth_timeout = 0;
 
-    if (pcmk_is_set(client->flags,
-                    pcmk__client_tls_handshake_complete)) {
+    if (pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
         return FALSE;
     }
 

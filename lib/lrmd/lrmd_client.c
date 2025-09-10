@@ -1006,7 +1006,7 @@ lrmd_handshake_hello_msg(const char *name, bool is_proxy)
 
     /* advertise that we are a proxy provider */
     if (is_proxy) {
-        pcmk__xe_set_bool_attr(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
+        pcmk__xe_set_bool(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
     }
 
     return hello;
@@ -1442,8 +1442,8 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
     lrmd_private_t *native = lrmd->lrmd_private;
     int rc = pcmk_rc_ok;
 
-    char *name = crm_strdup_printf("pacemaker-remote-%s:%d",
-                                   native->server, native->port);
+    char *name = pcmk__assert_asprintf("pacemaker-remote-%s:%d",
+                                       native->server, native->port);
 
     struct mainloop_fd_callbacks tls_fd_callbacks = {
         .dispatch = lrmd_tls_dispatch,
@@ -1829,7 +1829,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     if (!class || !type || !rsc_id) {
         return -EINVAL;
     }
-    if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
+    if (pcmk__is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
         && (provider == NULL)) {
         return -EINVAL;
     }
@@ -1920,8 +1920,8 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     if (!class || !type) {
         pcmk__xml_free(output);
         return NULL;
-    } else if (pcmk_is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
-               && !provider) {
+    } else if (pcmk__is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)
+               && (provider == NULL)) {
         pcmk__xml_free(output);
         return NULL;
     }

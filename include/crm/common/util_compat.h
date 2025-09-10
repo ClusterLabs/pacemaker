@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,8 @@
 #define PCMK__CRM_COMMON_UTIL_COMPAT__H
 
 #include <stdbool.h>    // bool
+#include <stdint.h>     // uint64_t
+
 #include <glib.h>       // gboolean
 
 #ifdef __cplusplus
@@ -33,12 +35,35 @@ void crm_gnutls_global_init(void);
 bool crm_is_daemon_name(const char *name);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-//! \deprecated Use pcmk_is_set() or pcmk_all_flags_set() instead
+//! \deprecated Do not use
 static inline gboolean
 is_set(long long word, long long bit)
 {
     return ((word & bit) == bit);
 }
+
+//! \deprecated Do not use
+static inline bool
+pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) != 0;
+}
+
+//! \deprecated Do not use
+static inline bool
+pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) == flags_to_check;
+}
+
+//! \deprecated Do not use
+#define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
+
+//! \deprecated Do not use
+char *crm_md5sum(const char *buffer);
+
+//! \deprecated Do not use
+char *crm_generate_uuid(void);
 
 #ifdef __cplusplus
 }

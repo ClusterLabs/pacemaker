@@ -405,7 +405,7 @@ apply_include_exclude(GSList *lst, GError **error) {
 
 static gboolean
 user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+    char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.user_includes_excludes = g_slist_append(options.user_includes_excludes, s);
     return TRUE;
@@ -413,7 +413,7 @@ user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer 
 
 static gboolean
 include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
-    char *s = crm_strdup_printf("%s=%s", option_name, optarg);
+    char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.includes_excludes = g_slist_append(options.includes_excludes, s);
     return TRUE;
@@ -579,7 +579,7 @@ show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 static gboolean
 show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
     if (optarg != NULL) {
-        char *s = crm_strdup_printf("bans:%s", optarg);
+        char *s = pcmk__assert_asprintf("bans:%s", optarg);
         gboolean rc = user_include_exclude_cb("--include", s, data, err);
         free(s);
         return rc;
@@ -1101,7 +1101,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'o':
                 show ^= pcmk_section_operations;
-                if (!pcmk_is_set(show, pcmk_section_operations)) {
+                if (!pcmk__is_set(show, pcmk_section_operations)) {
                     show_opts &= ~pcmk_show_timing;
                 }
                 break;
@@ -1113,7 +1113,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 't':
                 show_opts ^= pcmk_show_timing;
-                if (pcmk_is_set(show_opts, pcmk_show_timing)) {
+                if (pcmk__is_set(show_opts, pcmk_show_timing)) {
                     show |= pcmk_section_operations;
                 }
                 break;
@@ -1125,7 +1125,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
                 break;
             case 'D':
                 /* If any header is shown, clear them all, otherwise set them all */
-                if (pcmk_any_flags_set(show, pcmk_section_summary)) {
+                if (pcmk__any_flags_set(show, pcmk_section_summary)) {
                     show &= ~pcmk_section_summary;
                 } else {
                     show |= pcmk_section_summary;
@@ -1154,18 +1154,24 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_dat
         refresh();
 
         curses_formatted_printf(out, "%s", "Display option change mode\n");
-        print_option_help(out, 'c', pcmk_is_set(show, pcmk_section_tickets));
-        print_option_help(out, 'f', pcmk_is_set(show, pcmk_section_failcounts));
-        print_option_help(out, 'n', pcmk_is_set(show_opts, pcmk_show_rscs_by_node));
-        print_option_help(out, 'o', pcmk_is_set(show, pcmk_section_operations));
-        print_option_help(out, 'r', pcmk_is_set(show_opts, pcmk_show_inactive_rscs));
-        print_option_help(out, 't', pcmk_is_set(show_opts, pcmk_show_timing));
-        print_option_help(out, 'A', pcmk_is_set(show, pcmk_section_attributes));
-        print_option_help(out, 'L', pcmk_is_set(show, pcmk_section_bans));
-        print_option_help(out, 'D', !pcmk_is_set(show, pcmk_section_summary));
-        print_option_help(out, 'R', pcmk_any_flags_set(show_opts, pcmk_show_details));
-        print_option_help(out, 'b', pcmk_is_set(show_opts, pcmk_show_brief));
-        print_option_help(out, 'j', pcmk_is_set(show_opts, pcmk_show_pending));
+        print_option_help(out, 'c', pcmk__is_set(show, pcmk_section_tickets));
+        print_option_help(out, 'f',
+                          pcmk__is_set(show, pcmk_section_failcounts));
+        print_option_help(out, 'n',
+                          pcmk__is_set(show_opts, pcmk_show_rscs_by_node));
+        print_option_help(out, 'o',
+                          pcmk__is_set(show, pcmk_section_operations));
+        print_option_help(out, 'r',
+                          pcmk__is_set(show_opts, pcmk_show_inactive_rscs));
+        print_option_help(out, 't', pcmk__is_set(show_opts, pcmk_show_timing));
+        print_option_help(out, 'A',
+                          pcmk__is_set(show, pcmk_section_attributes));
+        print_option_help(out, 'L', pcmk__is_set(show, pcmk_section_bans));
+        print_option_help(out, 'D', !pcmk__is_set(show, pcmk_section_summary));
+        print_option_help(out, 'R',
+                          pcmk__any_flags_set(show_opts, pcmk_show_details));
+        print_option_help(out, 'b', pcmk__is_set(show_opts, pcmk_show_brief));
+        print_option_help(out, 'j', pcmk__is_set(show_opts, pcmk_show_pending));
         curses_formatted_printf(out, "%d m: \t%s\n", interactive_fence_level, get_option_desc('m'));
         curses_formatted_printf(out, "%s", "\nToggle fields via field letter, type any other key to return\n");
     }
@@ -1507,11 +1513,13 @@ main(int argc, char **argv)
     /* Sync up the initial value of interactive_fence_level with whatever was set with
      * --include/--exclude= options.
      */
-    if (pcmk_all_flags_set(show, pcmk_section_fencing_all)) {
+    if (pcmk__all_flags_set(show, pcmk_section_fencing_all)) {
         interactive_fence_level = 3;
-    } else if (pcmk_is_set(show, pcmk_section_fence_worked)) {
+    } else if (pcmk__is_set(show, pcmk_section_fence_worked)) {
         interactive_fence_level = 2;
-    } else if (pcmk_any_flags_set(show, pcmk_section_fence_failed | pcmk_section_fence_pending)) {
+    } else if (pcmk__any_flags_set(show,
+                                   pcmk_section_fence_failed
+                                   |pcmk_section_fence_pending)) {
         interactive_fence_level = 1;
     } else {
         interactive_fence_level = 0;
@@ -1614,7 +1622,9 @@ main(int argc, char **argv)
     scheduler = pcmk_new_scheduler();
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
-    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
+    if ((cib->variant == cib_native)
+        && pcmk__is_set(show, pcmk_section_times)) {
+
         // Currently used only in the times section
         pcmk__query_node_name(out, 0, &(scheduler->priv->local_node_name), 0);
     }
@@ -1998,9 +2008,10 @@ mon_refresh_display(gpointer user_data)
         return G_SOURCE_REMOVE;
     }
 
-    if (fence_history == pcmk__fence_history_full &&
-        !pcmk_all_flags_set(show, pcmk_section_fencing_all) &&
-        output_format != mon_output_xml) {
+    if ((fence_history == pcmk__fence_history_full)
+        && !pcmk__all_flags_set(show, pcmk_section_fencing_all)
+        && (output_format != mon_output_xml)) {
+
         fence_history = pcmk__fence_history_reduced;
     }
 

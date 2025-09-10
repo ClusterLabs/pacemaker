@@ -249,27 +249,29 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
 
             } else if (pcmk__str_eq(node_type, PCMK_XE_TICKETS,
                                     pcmk__str_casei)) {
-                local_set_name = crm_strdup_printf("%s-%s", section,
-                                                   PCMK_XE_TICKETS);
+                local_set_name = pcmk__assert_asprintf("%s-%s", section,
+                                                       PCMK_XE_TICKETS);
 
             } else if (node_uuid) {
-                local_set_name = crm_strdup_printf("%s-%s", section, node_uuid);
+                local_set_name = pcmk__assert_asprintf("%s-%s", section,
+                                                       node_uuid);
 
                 if (set_type) {
                     char *tmp_set_name = local_set_name;
 
-                    local_set_name = crm_strdup_printf("%s-%s", tmp_set_name,
-                                                       set_type);
+                    local_set_name = pcmk__assert_asprintf("%s-%s",
+                                                           tmp_set_name,
+                                                           set_type);
                     free(tmp_set_name);
                 }
             } else {
-                local_set_name = crm_strdup_printf("%s-options", section);
+                local_set_name = pcmk__assert_asprintf("%s-options", section);
             }
             set_name = local_set_name;
         }
 
         if (attr_id == NULL) {
-            local_attr_id = crm_strdup_printf("%s-%s", set_name, attr_name);
+            local_attr_id = pcmk__assert_asprintf("%s-%s", set_name, attr_name);
             pcmk__xml_sanitize_id(local_attr_id);
             attr_id = local_attr_id;
 
@@ -319,7 +321,7 @@ cib__update_node_attr(pcmk__output_t *out, cib_t *cib, int call_options, const c
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_MODIFY, NULL, section, xml_top,
                          NULL, call_options, user_name);
 
-    if (!pcmk_is_set(call_options, cib_sync_call) && (cib->variant != cib_file)
+    if (!pcmk__is_set(call_options, cib_sync_call) && (cib->variant != cib_file)
         && (rc >= 0)) {
         // For async call, positive rc is the call ID (file always synchronous)
         rc = pcmk_rc_ok;
@@ -400,7 +402,7 @@ cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options, const char *
     rc = cib_internal_op(cib, PCMK__CIB_REQUEST_DELETE, NULL, section, xml_obj,
                          NULL, options, user_name);
 
-    if (!pcmk_is_set(options, cib_sync_call) && (cib->variant != cib_file)
+    if (!pcmk__is_set(options, cib_sync_call) && (cib->variant != cib_file)
         && (rc >= 0)) {
         // For async call, positive rc is the call ID (file always synchronous)
         rc = pcmk_rc_ok;
@@ -642,7 +644,9 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
         *is_remote_node = FALSE;
     }
 
-    xpath_string = crm_strdup_printf(XPATH_NODE, host_lowercase, host_lowercase, host_lowercase, host_lowercase);
+    xpath_string = pcmk__assert_asprintf(XPATH_NODE, host_lowercase,
+                                         host_lowercase, host_lowercase,
+                                         host_lowercase);
     if (cib_internal_op(the_cib, PCMK__CIB_REQUEST_QUERY, NULL, xpath_string,
                         NULL, &xml_search, cib_sync_call|cib_xpath,
                         NULL) == pcmk_ok) {

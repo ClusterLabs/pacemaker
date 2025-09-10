@@ -60,7 +60,7 @@ static void
 contents_too_long(void **state)
 {
     // String length equals PATH_MAX
-    char *long_path = crm_strdup_printf("%0*d", PATH_MAX, 0);
+    char *long_path = pcmk__assert_asprintf("%0*d", PATH_MAX, 0);
 
     assert_pid2path(0, long_path, ENAMETOOLONG, NULL);
     free(long_path);
@@ -75,7 +75,7 @@ contents_ok(void **state)
     free(real_path);
 
     // String length equals PATH_MAX - 1
-    real_path = crm_strdup_printf("%0*d", PATH_MAX - 1, 0);
+    real_path = pcmk__assert_asprintf("%0*d", PATH_MAX - 1, 0);
 
     assert_pid2path(0, real_path, pcmk_rc_ok, real_path);
     free(real_path);

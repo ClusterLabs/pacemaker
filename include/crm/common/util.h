@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,44 +44,7 @@ int crm_default_remote_port(void);
 
 int compare_version(const char *version1, const char *version2);
 
-/*!
- * \brief Check whether any of specified flags are set in a flag group
- *
- * \param[in] flag_group        The flag group being examined
- * \param[in] flags_to_check    Which flags in flag_group should be checked
- *
- * \return true if \p flags_to_check is nonzero and any of its flags are set in
- *         \p flag_group, or false otherwise
- */
-static inline bool
-pcmk_any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
-{
-    return (flag_group & flags_to_check) != 0;
-}
-
-/*!
- * \brief Check whether all of specified flags are set in a flag group
- *
- * \param[in] flag_group        The flag group being examined
- * \param[in] flags_to_check    Which flags in flag_group should be checked
- *
- * \return true if \p flags_to_check is zero or all of its flags are set in
- *         \p flag_group, or false otherwise
- */
-static inline bool
-pcmk_all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
-{
-    return (flag_group & flags_to_check) == flags_to_check;
-}
-
-/*!
- * \brief Convenience alias for pcmk_all_flags_set(), to check single flag
- */
-#define pcmk_is_set(g, f)   pcmk_all_flags_set((g), (f))
-
 void pcmk_common_cleanup(void);
-char *crm_md5sum(const char *buffer);
-char *crm_generate_uuid(void);
 int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 

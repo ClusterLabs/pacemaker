@@ -85,7 +85,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return rc;
     }
 
-    if (pcmk_is_set(call_options, cib_transaction)) {
+    if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
         pcmk__xml_free(op_msg);
         return rc;

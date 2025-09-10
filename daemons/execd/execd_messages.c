@@ -26,8 +26,6 @@
 #include <crm/common/ipc.h>                 // crm_ipc_flags
 #include <crm/common/ipc_internal.h>        // pcmk__client_s, pcmk__find_client
 #include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
-#include <crm/common/strings.h>             // crm_strdup_printf
-#include <crm/common/util.h>                // pcmk_is_set
 #include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*, pcmk__xe_is
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
@@ -43,8 +41,8 @@ handle_ipc_fwd_request(pcmk__request_t *request)
     xmlNode *reply = NULL;
 
 #ifdef PCMK__COMPILE_REMOTE
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
 
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
@@ -91,8 +89,8 @@ handle_alert_exec_request(pcmk__request_t *request)
 {
     int call_id = 0;
     int rc = pcmk_rc_ok;
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *reply = NULL;
 
     if (!allowed) {
@@ -124,8 +122,8 @@ handle_alert_exec_request(pcmk__request_t *request)
 static xmlNode *
 handle_check_request(pcmk__request_t *request)
 {
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *wrapper = NULL;
     xmlNode *data = NULL;
     const char *timeout = NULL;
@@ -164,8 +162,8 @@ handle_get_recurring_request(pcmk__request_t *request)
 {
     int call_id = 0;
     int rc = pcmk_rc_ok;
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *reply = NULL;
 
     if (!allowed) {
@@ -208,8 +206,8 @@ handle_rsc_cancel_request(pcmk__request_t *request)
 {
     int call_id = 0;
     int rc = pcmk_rc_ok;
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *reply = NULL;
 
     if (!allowed) {
@@ -243,8 +241,8 @@ handle_rsc_exec_request(pcmk__request_t *request)
 {
     int call_id = 0;
     int rc = pcmk_rc_ok;
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *reply = NULL;
 
     if (!allowed) {
@@ -283,8 +281,8 @@ handle_rsc_info_request(pcmk__request_t *request)
 {
     int call_id = 0;
     int rc = pcmk_rc_ok;
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *reply = NULL;
 
     if (!allowed) {
@@ -317,8 +315,8 @@ static xmlNode *
 handle_rsc_reg_request(pcmk__request_t *request)
 {
     int call_id = 0;
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *reply = NULL;
 
     if (!allowed) {
@@ -346,8 +344,8 @@ handle_rsc_unreg_request(pcmk__request_t *request)
 {
     int call_id = 0;
     int rc = pcmk_rc_ok;
-    bool allowed = pcmk_is_set(request->ipc_client->flags,
-                               pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
     xmlNode *reply = NULL;
 
     if (!allowed) {
@@ -579,6 +577,7 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
     } else {
         char *log_msg = NULL;
         const char *reason = NULL;
+        const char *status_s = NULL;
         xmlNode *reply = NULL;
 
         pcmk__request_t request = {
@@ -616,14 +615,17 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
         }
 
         reason = request.result.exit_reason;
+        status_s = pcmk_exec_status_str(request.result.execution_status);
 
-        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
-                                    request.op, pcmk__request_origin_type(&request),
-                                    pcmk__request_origin(&request),
-                                    pcmk_exec_status_str(request.result.execution_status),
-                                    (reason == NULL)? "" : " (",
-                                    (reason == NULL)? "" : reason,
-                                    (reason == NULL)? "" : ")");
+        log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
+                                        "%s%s%s%s",
+                                        request.op,
+                                        pcmk__request_origin_type(&request),
+                                        pcmk__request_origin(&request),
+                                        status_s,
+                                        ((reason == NULL)? "" : " ("),
+                                        ((reason == NULL)? "" : reason),
+                                        ((reason == NULL)? "" : ")"));
 
         if (!pcmk__result_ok(&request.result)) {
             crm_warn("%s", log_msg);

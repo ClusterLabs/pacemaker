@@ -447,10 +447,9 @@ crm_control_blackbox(int nsig, bool enable)
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
-        blackbox_file_prefix = crm_strdup_printf("%s/%s-%lu",
-                                                 CRM_BLACKBOX_DIR,
-                                                 crm_system_name,
-                                                 (unsigned long) pid);
+        blackbox_file_prefix = pcmk__assert_asprintf(CRM_BLACKBOX_DIR "/%s-%lu",
+                                                     crm_system_name,
+                                                     (unsigned long) pid);
     }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
@@ -536,8 +535,8 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
                 return;
             }
 
-            buffer = crm_strdup_printf("%s.%d", blackbox_file_prefix,
-                                       counter++);
+            buffer = pcmk__assert_asprintf("%s.%d", blackbox_file_prefix,
+                                           counter++);
             if (nsig == SIGTRAP) {
                 crm_notice("Blackbox dump requested, please see %s for contents", buffer);
 
@@ -607,7 +606,8 @@ crm_log_filter_source(int source, const char *trace_files, const char *trace_fns
             qb_bit_set(cs->targets, source);
 
         } else if (trace_blackbox) {
-            char *key = crm_strdup_printf("%s:%d", cs->function, cs->lineno);
+            char *key = pcmk__assert_asprintf("%s:%d", cs->function,
+                                              cs->lineno);
 
             if (strstr(trace_blackbox, key) != NULL) {
                 qb_bit_set(cs->targets, source);
@@ -680,7 +680,8 @@ crm_log_filter(struct qb_log_callsite *cs)
                 offset = next;
                 next = strchrnul(offset, ',');
 
-                token = crm_strdup_printf("%.*s", (int) (next - offset), offset);
+                token = pcmk__assert_asprintf("%.*s", (int) (next - offset),
+                                              offset);
                 tag = g_quark_from_string(token);
                 crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);
 

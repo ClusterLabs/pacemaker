@@ -140,8 +140,8 @@ handle_remove_request(pcmk__request_t *request)
         const char *host = pcmk__xe_get(request->xml, PCMK__XA_ATTR_HOST);
         bool reap = false;
 
-        if (pcmk__xe_get_bool_attr(request->xml, PCMK__XA_REAP,
-                                   &reap) != pcmk_rc_ok) {
+        if (pcmk__xe_get_bool(request->xml, PCMK__XA_REAP,
+                              &reap) != pcmk_rc_ok) {
             reap = true; // Default to true for backward compatibility
         }
         attrd_peer_remove(host, reap, request->peer);
@@ -261,6 +261,7 @@ attrd_handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
     char *log_msg = NULL;
+    const char *exec_status_s = NULL;
     const char *reason = NULL;
 
     if (attrd_handlers == NULL) {
@@ -282,14 +283,16 @@ attrd_handle_request(pcmk__request_t *request)
         pcmk__xml_free(reply);
     }
 
+    exec_status_s = pcmk_exec_status_str(request->result.execution_status);
     reason = request->result.exit_reason;
-    log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
-                                request->op, pcmk__request_origin_type(request),
-                                pcmk__request_origin(request),
-                                pcmk_exec_status_str(request->result.execution_status),
-                                (reason == NULL)? "" : " (",
-                                pcmk__s(reason, ""),
-                                (reason == NULL)? "" : ")");
+    log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: %s%s%s%s",
+                                    request->op,
+                                    pcmk__request_origin_type(request),
+                                    pcmk__request_origin(request),
+                                    exec_status_s,
+                                    (reason == NULL)? "" : " (",
+                                    pcmk__s(reason, ""),
+                                    (reason == NULL)? "" : ")");
 
     if (!pcmk__result_ok(&request->result)) {
         crm_warn("%s", log_msg);
@@ -355,7 +358,7 @@ attrd_send_message(const pcmk__node_status_t *node, xmlNode *data, bool confirm)
      * acted upon.
      */
     if (!pcmk__str_eq(op, PCMK__ATTRD_CMD_CONFIRM, pcmk__str_none)) {
-        pcmk__xe_set_bool_attr(data, PCMK__XA_CONFIRM, confirm);
+        pcmk__xe_set_bool(data, PCMK__XA_CONFIRM, confirm);
     }
 
     attrd_xml_add_writer(data);

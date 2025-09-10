@@ -26,9 +26,9 @@ get_gnutls_priorities(gnutls_credentials_type_t cred_type)
     }
 
     if (cred_type == GNUTLS_CRD_ANON) {
-        return crm_strdup_printf("%s:+ANON-DH", prio_base);
+        return pcmk__assert_asprintf("%s:+ANON-DH", prio_base);
     } else if (cred_type == GNUTLS_CRD_PSK) {
-        return crm_strdup_printf("%s:+DHE-PSK:+PSK", prio_base);
+        return pcmk__assert_asprintf("%s:+DHE-PSK:+PSK", prio_base);
     } else {
         return strdup(prio_base);
     }

@@ -35,7 +35,10 @@ find_cib_loadfile(const char *server)
 {
     pid_t pid = pcmk__procfs_pid_of(server);
 
-    return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
+    if (pid == 0) {
+        return NULL;
+    }
+    return pcmk__assert_asprintf("/proc/%lld/stat", (long long) pid);
 }
 
 /*!
@@ -215,7 +218,7 @@ pcmk__procfs_pid2path(pid_t pid, char **path)
 
     pcmk__assert((path == NULL) || (*path == NULL));
 
-    procfs_path = crm_strdup_printf("/proc/%lld/exe", (long long) pid);
+    procfs_path = pcmk__assert_asprintf("/proc/%lld/exe", (long long) pid);
 
     link_rc = readlink(procfs_path, real_path, sizeof(real_path));
     free(procfs_path);

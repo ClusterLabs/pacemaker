@@ -63,7 +63,7 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
             && ((ticket == NULL)
-                || !pcmk_is_set(ticket->flags, pcmk__ticket_granted))
+                || !pcmk__is_set(ticket->flags, pcmk__ticket_granted))
             && pcmk__is_true(value)) {
 
             char *now = pcmk__ttoa(time(NULL));
@@ -87,11 +87,14 @@ pcmk__get_ticket_state(cib_t *cib, const char *ticket_id, xmlNode **state)
     *state = NULL;
 
     if (ticket_id != NULL) {
-        xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS
-                                  "/" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"%s\"]",
-                                  ticket_id);
+        xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                                      "/" PCMK_XE_TICKETS
+                                      "/" PCMK__XE_TICKET_STATE
+                                      "[@" PCMK_XA_ID "=\"%s\"]",
+                                      ticket_id);
     } else {
-        xpath = crm_strdup_printf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS "/" PCMK_XE_TICKETS);
+        xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
+                                      "/" PCMK_XE_TICKETS);
     }
 
     rc = cib->cmds->query(cib, xpath, &xml_search, cib_sync_call|cib_xpath);
@@ -125,10 +128,11 @@ pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
     pcmk__assert(xpath_base != NULL);
 
     if (ticket_id != NULL) {
-        xpath = crm_strdup_printf("%s/" PCMK_XE_RSC_TICKET "[@" PCMK_XA_TICKET "=\"%s\"]",
-                                  xpath_base, ticket_id);
+        xpath = pcmk__assert_asprintf("%s/" PCMK_XE_RSC_TICKET
+                                      "[@" PCMK_XA_TICKET "=\"%s\"]",
+                                      xpath_base, ticket_id);
     } else {
-        xpath = crm_strdup_printf("%s/" PCMK_XE_RSC_TICKET, xpath_base);
+        xpath = pcmk__assert_asprintf("%s/" PCMK_XE_RSC_TICKET, xpath_base);
     }
 
     rc = cib->cmds->query(cib, xpath, &result, cib_sync_call|cib_xpath);
@@ -200,7 +204,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
             return ENXIO;
         }
 
-        if (pcmk_is_set(ticket->flags, pcmk__ticket_granted)) {
+        if (pcmk__is_set(ticket->flags, pcmk__ticket_granted)) {
             return EACCES;
         }
     }

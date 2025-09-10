@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,7 +64,8 @@ out_of_range(void **state)
 {
     char *expected_datetime = NULL;
 
-    expected_datetime = crm_strdup_printf("%d-01-01 00:00:00 +00:00", INT_MAX);
+    expected_datetime = pcmk__assert_asprintf("%d-01-01 00:00:00 +00:00",
+                                              INT_MAX);
     assert_add_years("2024-01-01 00:00:00 +00:00", INT_MAX, expected_datetime);
     free(expected_datetime);
 
