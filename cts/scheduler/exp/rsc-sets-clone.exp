@@ -45,7 +45,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="7" operation="stop" operation_key="rsc:0_stop_0" on_node="node1" on_node_uuid="node1">
+      <rsc_op id="9" operation="stop" operation_key="rsc:0_stop_0" on_node="node1" on_node_uuid="node1">
         <primitive id="rsc" long-id="rsc:0" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -64,7 +64,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="stop" operation_key="rsc:0_stop_0" on_node="node1" on_node_uuid="node1"/>
+        <rsc_op id="9" operation="stop" operation_key="rsc:0_stop_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
       <trigger>
         <pseudo_event id="12" operation="stop" operation_key="clone-rsc_stop_0"/>

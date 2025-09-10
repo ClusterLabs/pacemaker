@@ -10,8 +10,8 @@ Current cluster status:
       * Stopped: [ node1 ]
 
 Transition Summary:
-  * Demote     dummy:1     ( Promoted -> Unpromoted node2 )
   * Promote    dummy:2     (    Stopped -> Promoted node1 )
+  * Demote     dummy:1     ( Promoted -> Unpromoted node2 )
 
 Executing Cluster Transition:
   * Resource action: dummy           cancel=10000 on node2
@@ -19,8 +19,8 @@ Executing Cluster Transition:
   * Resource action: dummy           demote on node2
   * Pseudo action:   dummy-clone_demoted_0
   * Pseudo action:   dummy-clone_start_0
-  * Resource action: dummy           monitor=11000 on node2
   * Resource action: dummy           start on node1
+  * Resource action: dummy           monitor=11000 on node2
   * Pseudo action:   dummy-clone_running_0
   * Pseudo action:   dummy-clone_promote_0
   * Resource action: dummy           promote on node1
