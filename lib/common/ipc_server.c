@@ -477,27 +477,28 @@ crm_ipcs_flush_events(pcmk__client_t *c)
 
     if (c == NULL) {
         return rc;
+    }
 
-    } else if (c->event_timer) {
+    if (c->event_timer != 0) {
         /* There is already a timer, wait until it goes off */
         crm_trace("Timer active for %p - %d", c->ipcs, c->event_timer);
         return rc;
     }
 
-    if (c->event_queue) {
+    if (c->event_queue != NULL) {
         queue_len = g_queue_get_length(c->event_queue);
     }
+
     while (sent < 100) {
         pcmk__ipc_header_t *header = NULL;
         struct iovec *event = NULL;
 
-        if (c->event_queue) {
-            // We don't pop unless send is successful
-            event = g_queue_peek_head(c->event_queue);
-        }
-        if (event == NULL) { // Queue is empty
+        if ((c->event_queue == NULL) || g_queue_is_empty(c->event_queue)) {
             break;
         }
+
+        // We don't pop unless send is successful
+        event = g_queue_peek_head(c->event_queue);
 
         /* Retry sending the event up to five times.  If we get -EAGAIN, sleep
          * a very short amount of time (too long here is bad) and try again.
@@ -512,16 +513,16 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         for (unsigned int retries = 5; retries > 0; retries--) {
             qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
 
-            if (qb_rc < 0) {
-                if (retries == 1 || qb_rc != -EAGAIN) {
-                    rc = (int) -qb_rc;
-                    goto no_more_retries;
-                } else {
-                    pcmk__sleep_ms(5);
-                }
-            } else {
+            if (qb_rc >= 0) {
                 break;
             }
+
+            if (retries == 1 || qb_rc != -EAGAIN) {
+                rc = (int) -qb_rc;
+                goto no_more_retries;
+            }
+
+            pcmk__sleep_ms(5);
         }
 
         event = g_queue_pop_head(c->event_queue);
@@ -541,33 +542,42 @@ no_more_retries:
                   sent, queue_len, c->ipcs, c->pid, pcmk_rc_str(rc), qb_rc);
     }
 
-    if (queue_len) {
-
-        /* Allow clients to briefly fall behind on processing incoming messages,
-         * but drop completely unresponsive clients so the connection doesn't
-         * consume resources indefinitely.
-         */
-        if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
-            if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
-                /* Don't evict for a new or shrinking backlog */
-                crm_warn("Client with process ID %u has a backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
-            } else {
-                crm_err("Evicting client with process ID %u due to backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
-                c->queue_backlog = 0;
-                qb_ipcs_disconnect(c->ipcs);
-                return rc;
-            }
-        }
-
-        c->queue_backlog = queue_len;
-        delay_next_flush(c, queue_len);
-
-    } else {
+    if (queue_len == 0) {
         /* Event queue is empty, there is no backlog */
         c->queue_backlog = 0;
+        return rc;
     }
+
+    /* Allow clients to briefly fall behind on processing incoming messages,
+     * but drop completely unresponsive clients so the connection doesn't
+     * consume resources indefinitely.
+     */
+    if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
+        /* Don't evict:
+         * - Clients with a new backlog.
+         * - Clients with a shrinking backlog (the client is processing
+         *   messages faster than the server is sending them).
+         * - Clients that are pacemaker daemons and have had any messages sent
+         *   to them in this flush call (the server is sending messages faster
+         *   than the client is processing them, but the client is not dead).
+         */
+        if ((c->queue_backlog <= 1)
+            || (queue_len < c->queue_backlog)
+            || ((sent > 0) && (pcmk__parse_server(c->name) != pcmk_ipc_unknown))) {
+            crm_warn("Client with process ID %u has a backlog of %u messages "
+                     QB_XS " %p", c->pid, queue_len, c->ipcs);
+
+        } else {
+            crm_err("Evicting client with process ID %u due to backlog of %u messages "
+                     QB_XS " %p", c->pid, queue_len, c->ipcs);
+            c->queue_backlog = 0;
+            qb_ipcs_disconnect(c->ipcs);
+            return rc;
+        }
+    }
+
+    c->queue_backlog = queue_len;
+    delay_next_flush(c, queue_len);
 
     return rc;
 }
