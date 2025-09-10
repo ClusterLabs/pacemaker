@@ -295,20 +295,15 @@ remote_node_up(const char *node_name)
     pcmk__xml_free(update);
 }
 
-enum down_opts {
-    DOWN_KEEP_LRM,
-    DOWN_ERASE_LRM
-};
-
 /*!
  * \internal
  * \brief Handle cluster communication related to pacemaker_remote node leaving
  *
  * \param[in] node_name  Name of lost node
- * \param[in] opts       Whether to keep or erase LRM history
+ * \param[in] erase_lrm  If \c true, erase the LRM history
  */
 static void
-remote_node_down(const char *node_name, const enum down_opts opts)
+remote_node_down(const char *node_name, bool erase_lrm)
 {
     xmlNode *update;
     int call_opt = crmd_cib_smart_opt();
@@ -321,7 +316,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
      * up. However, after a successful fence, clear the history so we don't
      * think resources are still running on the node.
      */
-    if (opts == DOWN_ERASE_LRM) {
+    if (erase_lrm) {
         controld_delete_node_history(node_name, false, call_opt);
     }
 
@@ -381,7 +376,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         if (ra_data) {
             if (!pcmk__is_set(ra_data->status, takeover_complete)) {
                 /* Stop means down if we didn't successfully migrate elsewhere */
-                remote_node_down(cmd->rsc_id, DOWN_KEEP_LRM);
+                remote_node_down(cmd->rsc_id, false);
             } else if (AM_I_DC == FALSE) {
                 /* Only the connection host and DC track node state,
                  * so if the connection migrated elsewhere and we aren't DC,
@@ -659,7 +654,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                        lrm_state->node_name);
             /* Do roughly what a 'stop' on the remote-resource would do */
             handle_remote_ra_stop(lrm_state, NULL);
-            remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);
+            remote_node_down(lrm_state->node_name, false);
             /* now fake the reply of a successful 'stop' */
             synthesize_lrmd_success(NULL, lrm_state->node_name,
                                     PCMK_ACTION_STOP);
@@ -1334,11 +1329,11 @@ remote_ra_process_pseudo(xmlNode *xml)
          * peer cache state will be incorrect unless and until the guest is
          * recovered.
          */
-        if (result) {
+        if (result != NULL) {
             const char *remote = pcmk__xe_id(result);
 
-            if (remote) {
-                remote_node_down(remote, DOWN_ERASE_LRM);
+            if (remote != NULL) {
+                remote_node_down(remote, true);
             }
         }
     }
