@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,15 +40,15 @@ full_path(void **state)
     char *path = NULL;
 
     path = pcmk__full_path("file", "/dir");
-    assert_int_equal(strcmp(path, "/dir/file"), 0);
+    assert_string_equal(path, "/dir/file");
     free(path);
 
     path = pcmk__full_path("/full/path", "/dir");
-    assert_int_equal(strcmp(path, "/full/path"), 0);
+    assert_string_equal(path, "/full/path");
     free(path);
 
     path = pcmk__full_path("../relative/path", "/dir");
-    assert_int_equal(strcmp(path, "/dir/../relative/path"), 0);
+    assert_string_equal(path, "/dir/../relative/path");
     free(path);
 }
 
