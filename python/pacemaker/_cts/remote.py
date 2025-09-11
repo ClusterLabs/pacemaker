@@ -111,8 +111,8 @@ class RemoteExec:
         cp_command -- The scp command string to use for copying files
         silent     -- Should we log command status?
         """
-        self._command = command
-        self._cp_command = cp_command
+        self.command = command
+        self.cp_command = cp_command
         self._logger = LogFactory()
         self._silent = silent
         self._our_node = os.uname()[1].lower()
@@ -129,7 +129,7 @@ class RemoteExec:
         if sysname is None or sysname.lower() in [self._our_node, "localhost"]:
             ret = command
         else:
-            ret = f"{self._command} {sysname} '{self._fixcmd(command)}'"
+            ret = f"{self.command} {sysname} '{self._fixcmd(command)}'"
 
         return ret
 
@@ -223,8 +223,8 @@ class RemoteExec:
         Returns the return code of the cp_command.
         """
         # @TODO Use subprocess module with argument array instead
-        # (self._cp_command should be an array too)
-        cmd = f"{self._cp_command} '{source}' '{target}'"
+        # (self.cp_command should be an array too)
+        cmd = f"{self.cp_command} '{source}' '{target}'"
         rc = os.system(cmd)
 
         if not silent:
