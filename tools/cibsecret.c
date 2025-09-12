@@ -664,6 +664,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if (g_mkdir_with_parents(lf_dir, 0700) != 0) {
         rc = errno;
+        out->err(out, "Could not create directory %s: %s", lf_dir,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -671,6 +673,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     contents = crm_strdup_printf("%s\n", value);
     if (!g_file_set_contents(lf_file, contents, -1, NULL)) {
         rc = EIO;
+        out->err(out, "Could not create file %s: %s", lf_file,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -682,6 +686,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if (!g_file_set_contents(sign_file, contents, -1, NULL)) {
         rc = EIO;
+        out->err(out, "Could not create file %s: %s", sign_file,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
