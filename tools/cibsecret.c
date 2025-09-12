@@ -13,7 +13,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>             // setenv, unsetenv
-#include <string.h>
 #include <syslog.h>             // LOG_DEBUG
 #include <sys/stat.h>           // umask, S_IRGRP, S_IROTH, ...
 #include <sys/wait.h>           // WEXITSTATUS
