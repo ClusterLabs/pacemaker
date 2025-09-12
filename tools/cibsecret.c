@@ -59,6 +59,10 @@ static GOptionEntry entries[] = {
  * \param[in,out] out     Output object
  * \param[in]     nodes   A list of remote hosts
  * \param[in]     cmdline The command line to run
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
  */
 typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline);
 
@@ -71,10 +75,14 @@ typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline)
  * \param[in]     to      The destination path on the remote host
  * \param[in]     from    The local file (or directory) to copy
  *
+ * \return Standard Pacemaker return code
+ *
  * \note \p from can either be a single file or a directory.  It cannot be
  *       be multiple files in a space-separated string.  If multiple files need
  *       to be copied, either copy the entire directory at once or call this
  *       function multiple times.
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
  */
 typedef int (*rcp_fn_t)(pcmk__output_t *out, gchar **nodes, const char *to,
                         const char *from);
@@ -99,6 +107,18 @@ struct subcommand_entry {
                    crm_exit_t *exit_code);
 };
 
+/*!
+ * \internal
+ * \brief Run a command line process
+ *
+ * \param[in,out] out          Output object
+ * \param[in]     cmdline      The command line to execute
+ * \param[out]    standard_out If not NULL, where to save stdout of the process
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
+ */
 static int
 run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
 {
