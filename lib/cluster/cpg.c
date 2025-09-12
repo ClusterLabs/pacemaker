@@ -128,14 +128,14 @@ pcmk__cpg_local_nodeid(cpg_handle_t handle)
                                        NULL));
         if (rc != CS_OK) {
             crm_err("Could not connect to the CPG API: %s (%d)",
-                    cs_strerror(rc), rc);
+                    pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
             return 0;
         }
 
         rc = cpg_fd_get(local_handle, &fd);
         if (rc != CS_OK) {
             crm_err("Could not obtain the CPG API connection: %s (%d)",
-                    cs_strerror(rc), rc);
+                    pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
             goto bail;
         }
 
@@ -823,14 +823,14 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     cs_repeat(rc, retries, 30, cpg_model_initialize(&handle, CPG_MODEL_V1, (cpg_model_data_t *)&cpg_model_info, NULL));
     if (rc != CS_OK) {
         crm_err("Could not connect to the CPG API: %s (%d)",
-                cs_strerror(rc), rc);
+                pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 
     rc = cpg_fd_get(handle, &fd);
     if (rc != CS_OK) {
         crm_err("Could not obtain the CPG API connection: %s (%d)",
-                cs_strerror(rc), rc);
+                pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 

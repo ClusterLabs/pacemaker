@@ -152,14 +152,14 @@ cluster_connect_cfg(void)
 
     if (rc != CS_OK) {
         crm_crit("Could not connect to Corosync CFG: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         return FALSE;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
     if (rc != CS_OK) {
         crm_crit("Could not get Corosync CFG descriptor: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 
@@ -181,7 +181,7 @@ cluster_connect_cfg(void)
     cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, &nodeid));
     if (rc != CS_OK) {
         crm_crit("Could not get local node ID from Corosync: %s "
-                 QB_XS " rc=%d", cs_strerror(rc), rc);
+                 QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
     crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
@@ -191,7 +191,7 @@ cluster_connect_cfg(void)
     cs_repeat(retries, 30, rc = corosync_cfg_trackstart(cfg_handle, 0));
     if (rc != CS_OK) {
         crm_crit("Could not enable Corosync CFG shutdown tracker: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 #endif
@@ -220,7 +220,7 @@ pcmkd_shutdown_corosync(void)
         close_cfg();
     } else {
         crm_warn("Corosync shutdown failed: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
     }
 }
 
@@ -281,7 +281,8 @@ pacemakerd_read_config(void)
         if (rc != CS_OK) {
             retries++;
             crm_info("Could not connect to Corosync CMAP: %s (retrying in %ds) "
-                     QB_XS " rc=%d", cs_strerror(rc), retries, rc);
+                     QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)),
+                     retries, rc);
             sleep(retries);
 
         } else {
@@ -292,14 +293,14 @@ pacemakerd_read_config(void)
 
     if (rc != CS_OK) {
         crm_crit("Could not connect to Corosync CMAP: %s "
-                 QB_XS " rc=%d", cs_strerror(rc), rc);
+                 QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         return FALSE;
     }
 
     rc = cmap_fd_get(local_handle, &fd);
     if (rc != CS_OK) {
         crm_crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
-                 cs_strerror(rc), rc);
+                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         cmap_finalize(local_handle);
         return FALSE;
     }
