@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -101,6 +101,7 @@ void pcmk__copy_result(const pcmk__action_result_t *src,
 
 int pcmk__gaierror2rc(int gai);
 int pcmk__bzlib2rc(int bz2);
+int pcmk__corosync2rc(int cs);
 
 /*!
  * \internal
