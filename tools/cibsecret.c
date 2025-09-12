@@ -772,10 +772,12 @@ subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
     if (rc != pcmk_rc_ok) {
+        *exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
 
     rc = remove_cib_param(out, rsc, param);
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     return rc;
@@ -791,6 +793,7 @@ subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     const char *param = remainder[2];
 
     if (rc != pcmk_rc_ok) {
+        /* exit_code is already set by subcommand_check */
         return rc;
     }
 
@@ -833,10 +836,12 @@ subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = local_files_set(out, rsh_fn, rcp_fn, rsc, param, value);
     if (rc != pcmk_rc_ok) {
+        *exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
 
     rc = set_cib_param(out, rsc, param, LRM_MAGIC);
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     free(current);
@@ -922,10 +927,7 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     }
 
     rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
-
-    if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
-    }
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     g_strfreev(peers);
@@ -966,10 +968,12 @@ subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
     if (rc != pcmk_rc_ok) {
+        *exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
 
     rc = set_cib_param(out, rsc, param, local_value);
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     free(cib_value);
