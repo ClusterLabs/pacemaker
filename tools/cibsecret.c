@@ -13,7 +13,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>             // setenv, unsetenv
-#include <string.h>
 #include <syslog.h>             // LOG_DEBUG
 #include <sys/stat.h>           // umask, S_IRGRP, S_IROTH, ...
 #include <sys/wait.h>           // WEXITSTATUS
@@ -24,7 +23,7 @@
 #include <libxml/xmlmemory.h>   // xmlFree
 #include <libxml/xmlstring.h>   // xmlChar
 
-#include <crm/cib/internal.h>   // cib__signon_query
+#include <crm/cib/internal.h>   // cib__clean_up_connection, cib__signon_query
 #include <crm/common/internal.h>
 #include <crm/common/results.h>
 #include <crm/common/strings.h> // crm_strdup_printf
@@ -60,6 +59,10 @@ static GOptionEntry entries[] = {
  * \param[in,out] out     Output object
  * \param[in]     nodes   A list of remote hosts
  * \param[in]     cmdline The command line to run
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
  */
 typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline);
 
@@ -72,10 +75,14 @@ typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline)
  * \param[in]     to      The destination path on the remote host
  * \param[in]     from    The local file (or directory) to copy
  *
+ * \return Standard Pacemaker return code
+ *
  * \note \p from can either be a single file or a directory.  It cannot be
  *       be multiple files in a space-separated string.  If multiple files need
  *       to be copied, either copy the entire directory at once or call this
  *       function multiple times.
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
  */
 typedef int (*rcp_fn_t)(pcmk__output_t *out, gchar **nodes, const char *to,
                         const char *from);
@@ -100,6 +107,18 @@ struct subcommand_entry {
                    crm_exit_t *exit_code);
 };
 
+/*!
+ * \internal
+ * \brief Run a command line process
+ *
+ * \param[in,out] out          Output object
+ * \param[in]     cmdline      The command line to execute
+ * \param[out]    standard_out If not NULL, where to save stdout of the process
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
+ */
 static int
 run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
 {
@@ -338,26 +357,33 @@ get_live_peers(pcmk__output_t *out)
     int rc = pcmk_rc_ok;
     xmlNode *xml_node = NULL;
     gchar **reachable = NULL;
+    cib_t *cib = NULL;
 
     struct node_data nd = {
         .out = out,
+        .local_node = NULL,
         .all_nodes = NULL
     };
 
-    /* Get the local node name. */
-    rc = pcmk__query_node_name(out, 0, &(nd.local_node), 0);
-    if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not get local node name");
-        goto done;
-    }
-
-    /* Get a list of all node names, filtering out the local node. */
-    rc = cib__signon_query(out, NULL, &xml_node);
+    rc = cib__signon_query(out, &cib, &xml_node);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not get list of cluster nodes");
         goto done;
     }
 
+    /* Get the local node name if possible. */
+    if (cib->variant != cib_file) {
+        rc = pcmk__query_node_name(out, 0, &(nd.local_node), 0);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "Could not get local node name");
+            goto done;
+        }
+    }
+
+    /* Filter out the local node from the list of all node names.  If we don't
+     * have a local node (for instance, because CIB_file is set) then we'll
+     * just use the list of all node names instead.
+     */
     nd.field = PCMK_XA_ID;
     pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
                                node_iter_helper, &nd);
@@ -393,6 +419,8 @@ get_live_peers(pcmk__output_t *out)
     }
 
 done:
+    cib__clean_up_connection(&cib);
+
     free(nd.local_node);
     free(xml_node);
 
@@ -621,13 +649,10 @@ local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     cmdline = crm_strdup_printf("rm -f %s %s.sign", lf_file, lf_file);
     rc = run_cmdline(out, cmdline, NULL);
 
-    if (rc != pcmk_rc_ok) {
-        goto done;
+    if (rc == pcmk_rc_ok) {
+        rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
     }
 
-    rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
-
-done:
     free(lf_file);
     free(cmdline);
     return rc;
@@ -648,6 +673,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if (g_mkdir_with_parents(lf_dir, 0700) != 0) {
         rc = errno;
+        out->err(out, "Could not create directory %s: %s", lf_dir,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -655,6 +682,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     contents = crm_strdup_printf("%s\n", value);
     if (!g_file_set_contents(lf_file, contents, -1, NULL)) {
         rc = EIO;
+        out->err(out, "Could not create file %s: %s", lf_file,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -666,6 +695,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if (!g_file_set_contents(sign_file, contents, -1, NULL)) {
         rc = EIO;
+        out->err(out, "Could not create file %s: %s", sign_file,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -750,10 +781,12 @@ subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
     if (rc != pcmk_rc_ok) {
+        *exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
 
     rc = remove_cib_param(out, rsc, param);
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     return rc;
@@ -769,6 +802,7 @@ subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     const char *param = remainder[2];
 
     if (rc != pcmk_rc_ok) {
+        /* exit_code is already set by subcommand_check */
         return rc;
     }
 
@@ -811,10 +845,12 @@ subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = local_files_set(out, rsh_fn, rcp_fn, rsc, param, value);
     if (rc != pcmk_rc_ok) {
+        *exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
 
     rc = set_cib_param(out, rsc, param, LRM_MAGIC);
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     free(current);
@@ -900,10 +936,7 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     }
 
     rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
-
-    if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
-    }
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     g_strfreev(peers);
@@ -944,10 +977,12 @@ subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
     if (rc != pcmk_rc_ok) {
+        *exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
 
     rc = set_cib_param(out, rsc, param, local_value);
+    *exit_code = pcmk_rc2exitc(rc);
 
 done:
     free(cib_value);
