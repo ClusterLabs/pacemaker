@@ -519,7 +519,7 @@ pcmk__corosync_is_active(void)
     }
 
     crm_info("Failed to initialize the cmap API: %s (%d)",
-             pcmk__cs_err_str(rc), rc);
+             pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
     return false;
 }
 

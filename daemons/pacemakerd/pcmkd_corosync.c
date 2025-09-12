@@ -367,7 +367,8 @@ pacemakerd_read_config(void)
 
             if (rc != CS_OK) {
                 crm_warn("Could not authorize group with Corosync: %s " QB_XS
-                         " group=%u rc=%d", pcmk__cs_err_str(rc), gid, rc);
+                         " group=%u rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)),
+                         gid, rc);
             }
         }
     }

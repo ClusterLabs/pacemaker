@@ -164,7 +164,7 @@ pcmk__cpg_local_nodeid(cpg_handle_t handle)
 
     if (rc != CS_OK) {
         crm_err("Could not get local node id from the CPG API: %s (%d)",
-                pcmk__cs_err_str(rc), rc);
+                pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
     }
 
 bail:
@@ -247,8 +247,8 @@ crm_cs_flush(gpointer data)
     queue_len -= sent;
     do_crm_log((queue_len > 5)? LOG_INFO : LOG_TRACE,
                "Sent %u CPG message%s (%d still queued): %s (rc=%d)",
-               sent, pcmk__plural_s(sent), queue_len, pcmk__cs_err_str(rc),
-               (int) rc);
+               sent, pcmk__plural_s(sent), queue_len,
+               pcmk_rc_str(pcmk__corosync2rc(rc)), (int) rc);
 
     if (cs_message_queue) {
         uint32_t delay_ms = 100;
@@ -277,7 +277,7 @@ pcmk_cpg_dispatch(gpointer user_data)
     rc = cpg_dispatch(cluster->priv->cpg_handle, CS_DISPATCH_ONE);
     if (rc != CS_OK) {
         crm_err("Connection to the CPG API failed: %s (%d)",
-                pcmk__cs_err_str(rc), rc);
+                pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         cpg_finalize(cluster->priv->cpg_handle);
         cluster->priv->cpg_handle = 0;
         return -1;
