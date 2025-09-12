@@ -640,13 +640,10 @@ local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     cmdline = crm_strdup_printf("rm -f %s %s.sign", lf_file, lf_file);
     rc = run_cmdline(out, cmdline, NULL);
 
-    if (rc != pcmk_rc_ok) {
-        goto done;
+    if (rc == pcmk_rc_ok) {
+        rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
     }
 
-    rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
-
-done:
     free(lf_file);
     free(cmdline);
     return rc;
