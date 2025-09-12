@@ -434,6 +434,10 @@ static const struct pcmk__rc_info {
       "More IPC message fragments to send",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_cs_internal",
+      "Internal corosync error",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
@@ -849,6 +853,7 @@ pcmk_rc2exitc(int rc)
         case EOVERFLOW:
         case pcmk_rc_underflow:
         case pcmk_rc_compression:
+        case pcmk_rc_cs_internal:
             return CRM_EX_SOFTWARE;
 
         case EBADMSG:
