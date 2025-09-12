@@ -92,19 +92,7 @@ struct subcommand_entry {
     int args;
     const char *usage;
     bool requires_cib;
-    /* The shell version of cibsecret exited with a wide variety of error codes
-     * for all sorts of situations.  Our standard Pacemaker return codes don't
-     * really line up with what it was doing - either we don't have a code with
-     * the right name, or we have one that doesn't map to the right exit code,
-     * etc.
-     *
-     * For backwards compatibility, the subcommand handler functions will
-     * return a standard Pacemaker so other functions here know what to do, but
-     * it will also take exit_code as an out parameter for the subcommands to
-     * set and for us to exit with.
-     */
-    int (*handler)(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                   crm_exit_t *exit_code);
+    int (*handler)(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn);
 };
 
 /*!
@@ -703,8 +691,7 @@ done:
 }
 
 static int
-subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                 crm_exit_t *exit_code)
+subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -715,7 +702,6 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *local_value = NULL;
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -724,15 +710,18 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     if ((value == NULL) || !is_secret(value)) {
         out->err(out, "Resource %s parameter %s not set as secret, nothing to check",
                  rsc, param);
-        *exit_code = CRM_EX_CONFIG;
-        rc = EINVAL;
+
+        /* I don't like this error code, but (1) it maps to CRM_EX_CONFIG which
+         * is what the old cibsecret.in would return in this case, and (2) we
+         * return it all over the place for a variety of CIB checking errors.
+         */
+        rc = pcmk_rc_unpack_error;
         goto done;
     }
 
     local_sum = local_files_getsum(rsc, param);
     if (local_sum == NULL) {
         out->err(out, "No checksum for resource %s parameter %s", rsc, param);
-        *exit_code = CRM_EX_OSFILE;
         rc = ENOENT;
         goto done;
     }
@@ -744,8 +733,7 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if ((local_value == NULL) || !pcmk__str_eq(calc_sum, local_sum, pcmk__str_none)) {
         out->err(out, "Checksum mismatch for resource %s parameter %s", rsc, param);
-        *exit_code = CRM_EX_DIGEST;
-        rc = EINVAL;
+        rc = pcmk_rc_digest_mismatch;
     }
 
 done:
@@ -757,35 +745,28 @@ done:
 }
 
 static int
-subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                  crm_exit_t *exit_code)
+subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
     const char *param = remainder[2];
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
-        rc = ENODEV;
-        goto done;
+        return ENODEV;
     }
 
     rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
     if (rc != pcmk_rc_ok) {
-        goto done;
+        return rc;
     }
 
-    rc = remove_cib_param(out, rsc, param);
-
-done:
-    return rc;
+    return remove_cib_param(out, rsc, param);
 }
 
 static int
-subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-               crm_exit_t *exit_code)
+subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
-    int rc = subcommand_check(out, rsh_fn, rcp_fn, exit_code);
+    int rc = subcommand_check(out, rsh_fn, rcp_fn);
     char *value = NULL;
     const char *rsc = remainder[1];
     const char *param = remainder[2];
@@ -807,8 +788,7 @@ subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
  * here at the moment.
  */
 static int
-subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-               crm_exit_t *exit_code)
+subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -817,7 +797,6 @@ subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *current = NULL;
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -826,8 +805,12 @@ subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     if ((current != NULL) && !pcmk__str_any_of(current, LRM_MAGIC, value, NULL)) {
         out->err(out, "CIB value <%s> different for %s rsc parameter %s; please "
                  "delete it first", current, rsc, param);
-        *exit_code = CRM_EX_CONFIG;
-        rc = EINVAL;
+
+        /* I don't like this error code, but (1) it maps to CRM_EX_CONFIG which
+         * is what the old cibsecret.in would return in this case, and (2) we
+         * return it all over the place for a variety of CIB checking errors.
+         */
+        rc = pcmk_rc_unpack_error;
         goto done;
     }
 
@@ -844,8 +827,7 @@ done:
 }
 
 static int
-subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                 crm_exit_t *exit_code)
+subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -853,7 +835,6 @@ subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *value = NULL;
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -863,14 +844,13 @@ subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
         if (value == NULL) {
             out->err(out, "Nothing to stash for resource %s parameter %s", rsc,
                      param);
-            *exit_code = CRM_EX_NOSUCH;
+            rc = ENOENT;
         } else {
             out->err(out, "Resource %s parameter %s already set as secret", rsc,
                      param);
-            *exit_code = CRM_EX_EXISTS;
+            rc = EEXIST;
         }
 
-        rc = EINVAL;
         goto done;
     }
 
@@ -878,7 +858,7 @@ subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     remainder[3] = g_strdup(value);
     remainder[4] = NULL;
 
-    rc = subcommand_set(out, rsh_fn, rcp_fn, exit_code);
+    rc = subcommand_set(out, rsh_fn, rcp_fn);
 
 done:
     free(value);
@@ -886,8 +866,7 @@ done:
 }
 
 static int
-subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                crm_exit_t *exit_code)
+subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     gchar *dirname = NULL;
@@ -908,7 +887,6 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = rsh_fn(out, peers, "rm -rf " PCMK__CIB_SECRETS_DIR);
     if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
         goto done;
     }
 
@@ -917,15 +895,10 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     free(cmdline);
 
     if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
         goto done;
     }
 
     rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
-
-    if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
-    }
 
 done:
     g_strfreev(peers);
@@ -934,8 +907,7 @@ done:
 }
 
 static int
-subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                   crm_exit_t *exit_code)
+subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -947,13 +919,11 @@ subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     if (local_value == NULL) {
         out->err(out, "Nothing to unstash for resource %s parameter %s",
                  rsc, param);
-        *exit_code = CRM_EX_NOSUCH;
-        rc = EINVAL;
+        rc = ENOENT;
         goto done;
     }
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -1217,7 +1187,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    cmd.handler(out, rsh_fn, rcp_fn, &exit_code);
+    rc = cmd.handler(out, rsh_fn, rcp_fn);
+    exit_code = pcmk_rc2exitc(rc);
 
  done:
     g_strfreev(processed_args);
