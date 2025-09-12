@@ -23,7 +23,7 @@
 #include <libxml/xmlmemory.h>   // xmlFree
 #include <libxml/xmlstring.h>   // xmlChar
 
-#include <crm/cib/internal.h>   // cib__signon_query
+#include <crm/cib/internal.h>   // cib__clean_up_connection, cib__signon_query
 #include <crm/common/internal.h>
 #include <crm/common/results.h>
 #include <crm/common/strings.h> // crm_strdup_printf
@@ -345,26 +345,33 @@ get_live_peers(pcmk__output_t *out)
     int rc = pcmk_rc_ok;
     xmlNode *xml_node = NULL;
     gchar **reachable = NULL;
+    cib_t *cib = NULL;
 
     struct node_data nd = {
         .out = out,
+        .local_node = NULL,
         .all_nodes = NULL
     };
 
-    /* Get the local node name. */
-    rc = pcmk__query_node_name(out, 0, &(nd.local_node), 0);
-    if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not get local node name");
-        goto done;
-    }
-
-    /* Get a list of all node names, filtering out the local node. */
-    rc = cib__signon_query(out, NULL, &xml_node);
+    rc = cib__signon_query(out, &cib, &xml_node);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not get list of cluster nodes");
         goto done;
     }
 
+    /* Get the local node name if possible. */
+    if (cib->variant != cib_file) {
+        rc = pcmk__query_node_name(out, 0, &(nd.local_node), 0);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "Could not get local node name");
+            goto done;
+        }
+    }
+
+    /* Filter out the local node from the list of all node names.  If we don't
+     * have a local node (for instance, because CIB_file is set) then we'll
+     * just use the list of all node names instead.
+     */
     nd.field = PCMK_XA_ID;
     pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
                                node_iter_helper, &nd);
@@ -400,6 +407,8 @@ get_live_peers(pcmk__output_t *out)
     }
 
 done:
+    cib__clean_up_connection(&cib);
+
     free(nd.local_node);
     free(xml_node);
 
