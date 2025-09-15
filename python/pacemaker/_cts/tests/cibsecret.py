@@ -4,6 +4,7 @@ __all__ = ["CibsecretTest"]
 __copyright__ = "Copyright 2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.timer import Timer
@@ -229,3 +230,22 @@ class CibsecretTest(CTSTest):
     @property
     def errors_to_ignore(self):
         return [r"Reloading .* \(agent\)"]
+
+    def is_applicable(self):
+        # This test requires that the node it runs on can ssh into the other
+        # nodes without a password.  Testing every combination is probably
+        # overkill (and will slow down `cts-lab --list-tests`), so here we're
+        # just going to test that the first node can ssh into the others.
+        if len(self._cm.env["nodes"]) < 2:
+            return False
+
+        node = self._cm.env["nodes"][0]
+        other = self._cm.env["nodes"][1:]
+
+        for o in other:
+            (rc, _) = self._cm.rsh(node, f"{self._cm.rsh.command} {o} exit",
+                                   verbose=0)
+            if rc != ExitStatus.OK:
+                return False
+
+        return True
