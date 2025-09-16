@@ -1673,7 +1673,6 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      bool force)
 {
     int rc = pcmk_rc_ok;
-    int lpc = 0;
     int before = 0;
     guint step_timeout_s = 0;
 
@@ -1859,7 +1858,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         }
 
         /* We probably don't need the entire step timeout */
-        for(lpc = 0; (lpc < step_timeout_s) && (list_delta != NULL); lpc++) {
+        for (int i = 0; (i < step_timeout_s) && (list_delta != NULL); i++) {
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
@@ -1938,7 +1937,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         }
 
         /* We probably don't need the entire step timeout */
-        for (lpc = 0; (lpc < step_timeout_s) && waiting_for_starts(list_delta, rsc, host); lpc++) {
+        for (int i = 0;
+             (i < step_timeout_s) && waiting_for_starts(list_delta, rsc, host);
+             i++) {
 
             sleep(sleep_interval);
             if(timeout) {
