@@ -64,7 +64,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 int
 cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
                  const char *move_lifetime, cib_t *cib_conn,
-                 gboolean promoted_role_only, const char *promoted_role)
+                 bool promoted_role_only, const char *promoted_role)
 {
     char *later_s = NULL;
     int rc = pcmk_rc_ok;
@@ -151,7 +151,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 int
 cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
                     const char *move_lifetime, cib_t *cib_conn,
-                    gboolean promoted_role_only, const char *promoted_role)
+                    bool promoted_role_only, const char *promoted_role)
 {
     char *later_s = parse_cli_lifetime(out, move_lifetime);
     int rc = pcmk_rc_ok;
@@ -281,7 +281,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host,
 // \return Standard Pacemaker return code
 static int
 resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn,
-                                bool clear_ban_constraints, gboolean force)
+                                bool clear_ban_constraints, bool force)
 {
     int rc = pcmk_rc_ok;
     xmlNode *fragment = NULL;
@@ -289,14 +289,14 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 
     fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
 
-    if (clear_ban_constraints == TRUE) {
+    if (clear_ban_constraints) {
         location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
         pcmk__xe_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
     }
 
     location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     pcmk__xe_set_id(location, "cli-prefer-%s", rsc_id);
-    if (force == FALSE) {
+    if (!force) {
         pcmk__xe_set(location, PCMK_XE_NODE, host);
     }
 
@@ -316,7 +316,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 // \return Standard Pacemaker return code
 int
 cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t * cib_conn,
-                   bool clear_ban_constraints, gboolean force)
+                   bool clear_ban_constraints, bool force)
 {
     int rc = pcmk_rc_ok;
 
@@ -443,7 +443,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
 // \return Standard Pacemaker return code
 int
 cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
-                               const char *node, gboolean promoted_role_only)
+                               const char *node, bool promoted_role_only)
 {
     GString *buf = NULL;
     xmlXPathObject *xpathObj = NULL;

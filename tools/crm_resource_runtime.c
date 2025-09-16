@@ -225,7 +225,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
                              const char * rsc_id, const char * attr_set,
                              const char * attr_set_type, const char * attr_id,
                              const char * attr_name, cib_t * cib, const char * cmd,
-                             gboolean force)
+                             bool force)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
@@ -234,7 +234,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     /* If --force is used, update only the requested resource (clone or primitive).
      * Otherwise, if the primitive has the attribute, use that.
      * Otherwise use the clone. */
-    if(force == TRUE) {
+    if (force) {
         return g_list_append(result, rsc);
     }
     if (pcmk__is_clone(rsc->priv->parent)) {
@@ -324,7 +324,7 @@ static int
 resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
                     const char *requested_name, const char *attr_set,
                     const char *attr_set_type, const char *attr_id,
-                    const char *attr_name, const char *top_id, gboolean force,
+                    const char *attr_name, const char *top_id, bool force,
                     GList **resources)
 {
     if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
@@ -405,8 +405,8 @@ static int
 update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_set, const char *attr_set_type,
                  const char *attr_id, const char *attr_name,
-                 const char *attr_value, gboolean recursive, cib_t *cib,
-                 xmlNode *cib_xml_orig, gboolean force, GList **results)
+                 const char *attr_value, bool recursive, cib_t *cib,
+                 xmlNode *cib_xml_orig, bool force, GList **results)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -572,8 +572,8 @@ int
 cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              const char *attr_value, gboolean recursive,
-                              cib_t *cib, xmlNode *cib_xml_orig, gboolean force)
+                              const char *attr_value, bool recursive,
+                              cib_t *cib, xmlNode *cib_xml_orig, bool force)
 {
     static bool need_init = true;
     int rc = pcmk_rc_ok;
@@ -620,7 +620,7 @@ int
 cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              cib_t *cib, xmlNode *cib_xml_orig, gboolean force)
+                              cib_t *cib, xmlNode *cib_xml_orig, bool force)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -1669,8 +1669,8 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 int
 cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const char *move_lifetime,
-                     guint timeout_ms, cib_t *cib, gboolean promoted_role_only,
-                     gboolean force)
+                     guint timeout_ms, cib_t *cib, bool promoted_role_only,
+                     bool force)
 {
     int rc = pcmk_rc_ok;
     int lpc = 0;
@@ -1820,7 +1820,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           PCMK_ACTION_STOPPED, FALSE, cib,
+                                           PCMK_ACTION_STOPPED, false, cib,
                                            cib_xml_orig, force);
     }
     if(rc != pcmk_rc_ok) {
@@ -1902,7 +1902,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           orig_target_role, FALSE, cib,
+                                           orig_target_role, false, cib,
                                            cib_xml_orig, force);
         free(orig_target_role);
         orig_target_role = NULL;
@@ -1987,7 +1987,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
-                                      FALSE, cib, cib_xml_orig, force);
+                                      false, cib, cib_xml_orig, force);
         free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
@@ -2273,7 +2273,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_type, const char *rsc_action,
                                  GHashTable *params, GHashTable *override_hash,
                                  guint timeout_ms, int resource_verbose,
-                                 gboolean force, int check_level)
+                                 bool force, int check_level)
 {
     const char *class = rsc_class;
     const char *action = get_action(rsc_action);
@@ -2386,7 +2386,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         if (pcmk__is_clone(rsc)) {
             GList *nodes = cli_resource_search(rsc, requested_name);
 
-            if(nodes != NULL && force == FALSE) {
+            if ((nodes != NULL) && !force) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          rsc_action, rsc->id);
                 out->err(out,
