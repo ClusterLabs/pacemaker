@@ -11,6 +11,9 @@
 "nfs_1_start_0 hs21c" [ style=bold color="green" fontcolor="black"]
 "stonith 'reboot' hs21d" -> "apache_1_start_0 hs21c" [ style = bold]
 "stonith 'reboot' hs21d" -> "nfs_1_start_0 hs21c" [ style = bold]
+"stonith 'reboot' hs21d" -> "stonith-1_start_0 hs21c" [ style = bold]
 "stonith 'reboot' hs21d" [ style=bold color="green" fontcolor="black"]
+"stonith-1_monitor_0 hs21c" -> "stonith-1_start_0 hs21c" [ style = bold]
 "stonith-1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"]
+"stonith-1_start_0 hs21c" [ style=bold color="green" fontcolor="black"]
 }

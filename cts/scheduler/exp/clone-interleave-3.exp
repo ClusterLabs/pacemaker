@@ -26,7 +26,7 @@
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="14" operation="start" operation_key="child-2:2_start_0" internal_operation_key="child-2:0_start_0" on_node="pcmk-1" on_node_uuid="1">
+      <rsc_op id="18" operation="start" operation_key="child-2:2_start_0" internal_operation_key="child-2:0_start_0" on_node="pcmk-1" on_node_uuid="1">
         <primitive id="child-2" long-id="child-2:2" class="ocf" provider="pacemaker" type="Dummy"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -91,7 +91,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="14" operation="start" operation_key="child-2:2_start_0" internal_operation_key="child-2:0_start_0" on_node="pcmk-1" on_node_uuid="1"/>
+        <rsc_op id="18" operation="start" operation_key="child-2:2_start_0" internal_operation_key="child-2:0_start_0" on_node="pcmk-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <pseudo_event id="19" operation="start" operation_key="clone-2_start_0"/>
@@ -119,7 +119,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="14" operation="start" operation_key="child-2:2_start_0" internal_operation_key="child-2:0_start_0" on_node="pcmk-1" on_node_uuid="1"/>
+        <rsc_op id="18" operation="start" operation_key="child-2:2_start_0" internal_operation_key="child-2:0_start_0" on_node="pcmk-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <rsc_op id="23" operation="stop" operation_key="child-3:2_stop_0" internal_operation_key="child-3:0_stop_0" on_node="pcmk-1" on_node_uuid="1"/>

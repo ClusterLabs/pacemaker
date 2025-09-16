@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -216,7 +216,7 @@ order_stop_vs_fencing(pcmk_resource_t *rsc, pcmk_action_t *stonith_op)
     for (iter = action_list; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
-        if (!(action->node->details->online) || action->node->details->unclean
+        if (!pcmk__node_available(action->node, pcmk__node_alive)
             || pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
 
             if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {

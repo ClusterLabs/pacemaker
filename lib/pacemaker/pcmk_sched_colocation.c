@@ -1414,7 +1414,9 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
 
     if ((colocation->score <= -PCMK_SCORE_INFINITY)
         || (colocation->score >= PCMK_SCORE_INFINITY)
-        || pcmk__any_node_available(work)) {
+        || pcmk__any_node_available(work, pcmk__node_alive
+                                          |pcmk__node_usable
+                                          |pcmk__node_no_negative)) {
 
         g_hash_table_destroy(dependent->priv->allowed_nodes);
         dependent->priv->allowed_nodes = work;
@@ -1575,7 +1577,7 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
     while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
 
         if ((node->assign->score > best_score)
-            && pcmk__node_available(node, false, false)
+            && pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)
             && pcmk__str_eq(value, pcmk__colocation_node_attr(node, attr, rsc),
                             pcmk__str_casei)) {
 
@@ -1836,7 +1838,14 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         return;
     }
 
-    if (pcmk__any_node_available(work)) {
+    /* @TODO Using pcmk__node_banned here instead of pcmk__node_no_negative
+     * should allow more dependents to be active. Investigate the results of
+     * that on existing regression tests and come up with a new one that
+     * is targeted to it.
+     */
+    if (pcmk__any_node_available(work, pcmk__node_alive
+                                       |pcmk__node_usable
+                                       |pcmk__node_no_negative)) {
         GList *colocations = NULL;
 
         if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {

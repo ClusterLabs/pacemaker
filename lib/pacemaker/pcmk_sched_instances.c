@@ -40,7 +40,7 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (!pcmk__node_available(node, false, false)) {
+    if (!pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)) {
         pcmk__rsc_trace(instance,
                         "%s cannot run on %s: node cannot run resources",
                         instance->id, pcmk__node_name(node));
@@ -436,8 +436,8 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     }
 
     // Prefer instance whose current node can run resources
-    can1 = pcmk__node_available(node1, false, false);
-    can2 = pcmk__node_available(node2, false, false);
+    can1 = pcmk__node_available(node1, pcmk__node_alive|pcmk__node_usable);
+    can2 = pcmk__node_available(node2, pcmk__node_alive|pcmk__node_usable);
     if (can1 && !can2) {
         crm_trace("Assign %s before %s: current node can run resources",
                   instance1->id, instance2->id);
@@ -615,7 +615,9 @@ assign_instance_early(const pcmk_resource_t *rsc, pcmk_resource_t *instance,
 
     allowed_node = g_hash_table_lookup(instance->priv->allowed_nodes,
                                        current->priv->id);
-    if (!pcmk__node_available(allowed_node, true, false)) {
+    if (!pcmk__node_available(allowed_node, pcmk__node_alive
+                                            |pcmk__node_usable
+                                            |pcmk__node_no_negative)) {
         pcmk__rsc_info(instance,
                        "Not assigning %s to current node %s: unavailable",
                        instance->id, pcmk__node_name(current));
@@ -728,7 +730,7 @@ reset_allowed_node_counts(pcmk_resource_t *rsc)
     g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
         node->assign->count = 0;
-        if (pcmk__node_available(node, false, false)) {
+        if (pcmk__node_available(node, pcmk__node_alive|pcmk__node_usable)) {
             available_nodes++;
         }
     }
@@ -759,7 +761,9 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
 
     // Check whether instance's current node can run resources
     node = pcmk__current_node(instance);
-    if (!pcmk__node_available(node, true, false)) {
+    if (!pcmk__node_available(node, pcmk__node_alive
+                                    |pcmk__node_usable
+                                    |pcmk__node_no_negative)) {
         pcmk__rsc_trace(instance, "Not assigning %s to %s early (unavailable)",
                         instance->id, pcmk__node_name(node));
         return NULL;

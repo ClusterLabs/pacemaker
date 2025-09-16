@@ -15,44 +15,44 @@ Transition Summary:
   * Recover    dummy01     (          bl460g1n13 -> bl460g1n14 )
   * Move       dummy02     (          bl460g1n13 -> bl460g1n14 )
   * Start      dummy03     (                        bl460g1n14 )
-  * Demote     prmDRBD:0   ( Promoted -> Unpromoted bl460g1n13 )
   * Promote    prmDRBD:1   ( Unpromoted -> Promoted bl460g1n14 )
+  * Demote     prmDRBD:0   ( Promoted -> Unpromoted bl460g1n13 )
 
 Executing Cluster Transition:
   * Pseudo action:   grpDRBD_stop_0
   * Resource action: dummy02         stop on bl460g1n13
-  * Resource action: prmDRBD:0       cancel=10000 on bl460g1n13
   * Resource action: prmDRBD:1       cancel=20000 on bl460g1n14
+  * Resource action: prmDRBD:0       cancel=10000 on bl460g1n13
   * Pseudo action:   msDRBD_pre_notify_demote_0
   * Resource action: dummy01         stop on bl460g1n13
-  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Resource action: prmDRBD:1       notify on bl460g1n14
+  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Pseudo action:   msDRBD_confirmed-pre_notify_demote_0
   * Pseudo action:   grpDRBD_stopped_0
   * Pseudo action:   msDRBD_demote_0
   * Resource action: prmDRBD:0       demote on bl460g1n13
   * Pseudo action:   msDRBD_demoted_0
   * Pseudo action:   msDRBD_post_notify_demoted_0
-  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Resource action: prmDRBD:1       notify on bl460g1n14
+  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Pseudo action:   msDRBD_confirmed-post_notify_demoted_0
   * Pseudo action:   msDRBD_pre_notify_promote_0
-  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Resource action: prmDRBD:1       notify on bl460g1n14
+  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Pseudo action:   msDRBD_confirmed-pre_notify_promote_0
   * Pseudo action:   msDRBD_promote_0
   * Resource action: prmDRBD:1       promote on bl460g1n14
   * Pseudo action:   msDRBD_promoted_0
   * Pseudo action:   msDRBD_post_notify_promoted_0
-  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Resource action: prmDRBD:1       notify on bl460g1n14
+  * Resource action: prmDRBD:0       notify on bl460g1n13
   * Pseudo action:   msDRBD_confirmed-post_notify_promoted_0
   * Pseudo action:   grpDRBD_start_0
   * Resource action: dummy01         start on bl460g1n14
   * Resource action: dummy02         start on bl460g1n14
   * Resource action: dummy03         start on bl460g1n14
-  * Resource action: prmDRBD:0       monitor=20000 on bl460g1n13
   * Resource action: prmDRBD:1       monitor=10000 on bl460g1n14
+  * Resource action: prmDRBD:0       monitor=20000 on bl460g1n13
   * Pseudo action:   grpDRBD_running_0
   * Resource action: dummy01         monitor=10000 on bl460g1n14
   * Resource action: dummy02         monitor=10000 on bl460g1n14

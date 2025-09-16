@@ -19,9 +19,9 @@ Executing Cluster Transition:
   * Resource action: child_DoFencing:2 stop on xen-2
   * Pseudo action:   DoFencing_stopped_0
   * Resource action: ocfs2:1         notify on xen-3
-  * Resource action: ocfs2:1         notify on xen-2
   * Resource action: ocfs2:3         notify on xen-1
   * Resource action: ocfs2:0         notify on xen-4
+  * Resource action: ocfs2:1         notify on xen-2
   * Pseudo action:   ocfs2-clone_confirmed-pre_notify_stop_0
   * Pseudo action:   ocfs2-clone_stop_0
   * Resource action: ocfs2:1         stop on xen-2

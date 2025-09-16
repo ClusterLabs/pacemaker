@@ -49,8 +49,8 @@ Transition Summary:
   * Migrate    ip_voip_vlan855         (            asttest1 -> asttest2 )
   * Migrate    ip_voip_vlan856         (            asttest1 -> asttest2 )
   * Move       fs_drbd                 (            asttest1 -> asttest2 )
-  * Demote     drbd:0                  ( Promoted -> Unpromoted asttest1 )
   * Promote    drbd:1                  ( Unpromoted -> Promoted asttest2 )
+  * Demote     drbd:0                  ( Promoted -> Unpromoted asttest1 )
 
 Executing Cluster Transition:
   * Pseudo action:   voip_stop_0
@@ -79,8 +79,8 @@ Executing Cluster Transition:
   * Resource action: ip_voip_vlan854 migrate_from on asttest2
   * Resource action: ip_voip_vlan855 migrate_from on asttest2
   * Resource action: ip_voip_vlan856 migrate_from on asttest2
-  * Resource action: drbd:0          notify on asttest1
   * Resource action: drbd:1          notify on asttest2
+  * Resource action: drbd:0          notify on asttest1
   * Pseudo action:   ms_drbd_confirmed-pre_notify_demote_0
   * Resource action: dahdi           migrate_from on asttest2
   * Resource action: dahdi           stop on asttest1
@@ -105,19 +105,19 @@ Executing Cluster Transition:
   * Resource action: drbd:0          demote on asttest1
   * Pseudo action:   ms_drbd_demoted_0
   * Pseudo action:   ms_drbd_post_notify_demoted_0
-  * Resource action: drbd:0          notify on asttest1
   * Resource action: drbd:1          notify on asttest2
+  * Resource action: drbd:0          notify on asttest1
   * Pseudo action:   ms_drbd_confirmed-post_notify_demoted_0
   * Pseudo action:   ms_drbd_pre_notify_promote_0
-  * Resource action: drbd:0          notify on asttest1
   * Resource action: drbd:1          notify on asttest2
+  * Resource action: drbd:0          notify on asttest1
   * Pseudo action:   ms_drbd_confirmed-pre_notify_promote_0
   * Pseudo action:   ms_drbd_promote_0
   * Resource action: drbd:1          promote on asttest2
   * Pseudo action:   ms_drbd_promoted_0
   * Pseudo action:   ms_drbd_post_notify_promoted_0
-  * Resource action: drbd:0          notify on asttest1
   * Resource action: drbd:1          notify on asttest2
+  * Resource action: drbd:0          notify on asttest1
   * Pseudo action:   ms_drbd_confirmed-post_notify_promoted_0
   * Resource action: fs_drbd         start on asttest2
   * Resource action: drbd:0          monitor=31000 on asttest1

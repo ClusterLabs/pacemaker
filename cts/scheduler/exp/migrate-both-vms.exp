@@ -1,26 +1,26 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
-      <rsc_op id="31" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
+      <rsc_op id="35" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="fs-libvirt-VM-xcm" long-id="fs-libvirt-VM-xcm:0" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="110000"  device="cvmstorage-ib:/libvirt/VM-xcm" directory="/srv/libvirt/VM-xcm" fstype="nfs" options="rw,relatime"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="36" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="39" operation="stop" operation_key="c-fs-libvirt-VM-xcm_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="69" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="73" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="34" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
+      <rsc_op id="36" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="fs-libvirt-VM-xcm" long-id="fs-libvirt-VM-xcm:2" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="110000"  device="cvmstorage-ib:/libvirt/VM-xcm" directory="/srv/libvirt/VM-xcm" fstype="nfs" options="rw,relatime"/>
       </rsc_op>
@@ -30,7 +30,7 @@
         <pseudo_event id="39" operation="stop" operation_key="c-fs-libvirt-VM-xcm_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="72" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="74" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
     </inputs>
   </synapse>
@@ -42,10 +42,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="31" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="35" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
       <trigger>
-        <rsc_op id="34" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="36" operation="stop" operation_key="fs-libvirt-VM-xcm_stop_0" internal_operation_key="fs-libvirt-VM-xcm:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="39" operation="stop" operation_key="c-fs-libvirt-VM-xcm_stop_0"/>
@@ -66,14 +66,14 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="41" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
+      <rsc_op id="45" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="p-watch-ib0" long-id="p-watch-ib0:0" class="ocf" provider="heartbeat" type="ethmonitor"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="20000"  interface="ib0"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="44" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="46" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="49" operation="stop" operation_key="c-watch-ib0_stop_0"/>
@@ -82,7 +82,7 @@
   </synapse>
   <synapse id="5">
     <action_set>
-      <rsc_op id="44" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
+      <rsc_op id="46" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="p-watch-ib0" long-id="p-watch-ib0:2" class="ocf" provider="heartbeat" type="ethmonitor"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="20000"  interface="ib0"/>
       </rsc_op>
@@ -101,10 +101,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="41" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="45" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
       <trigger>
-        <rsc_op id="44" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="46" operation="stop" operation_key="p-watch-ib0_stop_0" internal_operation_key="p-watch-ib0:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="49" operation="stop" operation_key="c-watch-ib0_stop_0"/>
@@ -121,26 +121,26 @@
   </synapse>
   <synapse id="8">
     <action_set>
-      <rsc_op id="51" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
+      <rsc_op id="55" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="p-fs-gpfs" long-id="p-fs-gpfs:0" class="ocf" provider="ccni" type="gpfs"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="120000"  fspath="/gpfs/lb/utility"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="54" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="56" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="59" operation="stop" operation_key="c-fs-gpfs_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="79" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="83" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="54" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
+      <rsc_op id="56" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="p-fs-gpfs" long-id="p-fs-gpfs:2" class="ocf" provider="ccni" type="gpfs"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="120000"  fspath="/gpfs/lb/utility"/>
       </rsc_op>
@@ -150,7 +150,7 @@
         <pseudo_event id="59" operation="stop" operation_key="c-fs-gpfs_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="82" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="84" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
     </inputs>
   </synapse>
@@ -162,10 +162,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="51" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="55" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
       <trigger>
-        <rsc_op id="54" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="56" operation="stop" operation_key="p-fs-gpfs_stop_0" internal_operation_key="p-fs-gpfs:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="59" operation="stop" operation_key="c-fs-gpfs_stop_0"/>
@@ -186,14 +186,14 @@
   </synapse>
   <synapse id="12">
     <action_set>
-      <rsc_op id="69" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
+      <rsc_op id="73" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="p-libvirtd" long-id="p-libvirtd:0" class="lsb" type="libvirtd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="72" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="74" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="77" operation="stop" operation_key="c-p-libvirtd_stop_0"/>
@@ -202,7 +202,7 @@
   </synapse>
   <synapse id="13">
     <action_set>
-      <rsc_op id="72" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
+      <rsc_op id="74" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="p-libvirtd" long-id="p-libvirtd:2" class="lsb" type="libvirtd"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="20000" />
       </rsc_op>
@@ -221,10 +221,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="69" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="73" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
       <trigger>
-        <rsc_op id="72" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="74" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="77" operation="stop" operation_key="c-p-libvirtd_stop_0"/>
@@ -248,17 +248,17 @@
   </synapse>
   <synapse id="16">
     <action_set>
-      <rsc_op id="79" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
+      <rsc_op id="83" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04">
         <primitive id="fs-bind-libvirt-VM-cvmh" long-id="fs-bind-libvirt-VM-cvmh:0" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh04" CRM_meta_on_node_uuid="cvmh04" CRM_meta_timeout="120000"  device="/gpfs/lb/utility/VM-cvmh" directory="/srv/libvirt/VM-cvmh" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="69" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="73" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
       <trigger>
-        <rsc_op id="82" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="84" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="87" operation="stop" operation_key="c-fs-bind-libvirt-VM-cvmh_stop_0"/>
@@ -267,14 +267,14 @@
   </synapse>
   <synapse id="17">
     <action_set>
-      <rsc_op id="82" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
+      <rsc_op id="84" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03">
         <primitive id="fs-bind-libvirt-VM-cvmh" long-id="fs-bind-libvirt-VM-cvmh:2" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="cvmh03" CRM_meta_on_node_uuid="cvmh03" CRM_meta_timeout="120000"  device="/gpfs/lb/utility/VM-cvmh" directory="/srv/libvirt/VM-cvmh" fstype="none" options="bind"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="72" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="74" operation="stop" operation_key="p-libvirtd_stop_0" internal_operation_key="p-libvirtd:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="87" operation="stop" operation_key="c-fs-bind-libvirt-VM-cvmh_stop_0"/>
@@ -289,10 +289,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="79" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
+        <rsc_op id="83" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:0_stop_0" on_node="cvmh04" on_node_uuid="cvmh04"/>
       </trigger>
       <trigger>
-        <rsc_op id="82" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
+        <rsc_op id="84" operation="stop" operation_key="fs-bind-libvirt-VM-cvmh_stop_0" internal_operation_key="fs-bind-libvirt-VM-cvmh:2_stop_0" on_node="cvmh03" on_node_uuid="cvmh03"/>
       </trigger>
       <trigger>
         <pseudo_event id="87" operation="stop" operation_key="c-fs-bind-libvirt-VM-cvmh_stop_0"/>

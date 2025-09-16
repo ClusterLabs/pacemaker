@@ -11,8 +11,8 @@ Current cluster status:
 
 Transition Summary:
   * Start      stonith-1     (          dktest1sles10 )
-  * Stop       drbd1:0       ( Promoted dktest2sles10 )  due to node availability
   * Start      drbd1:1       (          dktest1sles10 )
+  * Stop       drbd1:0       ( Promoted dktest2sles10 )  due to node availability
   * Stop       testip        (          dktest2sles10 )  due to node availability
 
 Executing Cluster Transition:

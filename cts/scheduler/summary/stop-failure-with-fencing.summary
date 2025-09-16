@@ -17,8 +17,8 @@ Current cluster status:
 Transition Summary:
   * Fence (reboot) pcmk-2 'clvm:0 failed there'
   * Start      dlm:0         ( pcmk-1 )  due to no quorum (blocked)
-  * Stop       clvm:0        ( pcmk-2 )  due to node availability
   * Start      clvm:1        ( pcmk-1 )  due to no quorum (blocked)
+  * Stop       clvm:0        ( pcmk-2 )  due to node availability
   * Start      ClusterIP     ( pcmk-1 )  due to no quorum (blocked)
   * Start      Fencing       ( pcmk-1 )  due to no quorum (blocked)
 

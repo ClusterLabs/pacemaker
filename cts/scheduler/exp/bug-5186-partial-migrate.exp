@@ -226,7 +226,7 @@
   </synapse>
   <synapse id="16">
     <action_set>
-      <pseudo_event id="44" operation="stop" operation_key="prmDiskd1_stop_0" internal_operation_key="prmDiskd1:0_stop_0">
+      <pseudo_event id="48" operation="stop" operation_key="prmDiskd1_stop_0" internal_operation_key="prmDiskd1:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  device="/dev/mapper/lun1" interval="10" name="diskcheck_status" options="-e"/>
       </pseudo_event>
     </action_set>
@@ -247,7 +247,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="44" operation="stop" operation_key="prmDiskd1_stop_0" internal_operation_key="prmDiskd1:0_stop_0"/>
+        <pseudo_event id="48" operation="stop" operation_key="prmDiskd1_stop_0" internal_operation_key="prmDiskd1:0_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="51" operation="stop" operation_key="clnDiskd1_stop_0"/>
@@ -268,7 +268,7 @@
   </synapse>
   <synapse id="19">
     <action_set>
-      <pseudo_event id="53" operation="stop" operation_key="prmDiskd2_stop_0" internal_operation_key="prmDiskd2:0_stop_0">
+      <pseudo_event id="57" operation="stop" operation_key="prmDiskd2_stop_0" internal_operation_key="prmDiskd2:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000"  interval="10" name="diskcheck_status_internal" write_dir="/tmp/tmp2"/>
       </pseudo_event>
     </action_set>
@@ -289,7 +289,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="53" operation="stop" operation_key="prmDiskd2_stop_0" internal_operation_key="prmDiskd2:0_stop_0"/>
+        <pseudo_event id="57" operation="stop" operation_key="prmDiskd2_stop_0" internal_operation_key="prmDiskd2:0_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="60" operation="stop" operation_key="clnDiskd2_stop_0"/>
@@ -310,7 +310,7 @@
   </synapse>
   <synapse id="22">
     <action_set>
-      <pseudo_event id="62" operation="stop" operation_key="prmPing_stop_0" internal_operation_key="prmPing:0_stop_0">
+      <pseudo_event id="66" operation="stop" operation_key="prmPing_stop_0" internal_operation_key="prmPing:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_fail="ignore" CRM_meta_record_pending="true" CRM_meta_timeout="60000" attempts="2"  host_list="192.168.201.254" multiplier="100" name="default_ping_set" timeout="2"/>
       </pseudo_event>
     </action_set>
@@ -331,7 +331,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="62" operation="stop" operation_key="prmPing_stop_0" internal_operation_key="prmPing:0_stop_0"/>
+        <pseudo_event id="66" operation="stop" operation_key="prmPing_stop_0" internal_operation_key="prmPing:0_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="69" operation="stop" operation_key="clnPing_stop_0"/>
