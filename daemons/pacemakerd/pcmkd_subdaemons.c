@@ -444,6 +444,7 @@ start_child(pcmk_child_t * child)
     const char *name = pcmk__server_name(child->server);
     const char *env_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
     const char *env_callgrind = pcmk__env_option(PCMK__ENV_CALLGRIND_ENABLED);
+    char *path = NULL;
 
     child->flags &= ~(child_active_before_startup | child_shutting_down);
     child->check_count = 0;
@@ -497,57 +498,58 @@ start_child(pcmk_child_t * child)
                  valgrind_s);
 
         return pcmk_rc_ok;
+    }
+
+    // Child
+    path = subdaemon_path(child);
+
+    // Start a new session
+    setsid();
+
+    if (gid != 0) {
+        // Drop root group access if not needed
+        if (!need_root_group && (setgid(gid) < 0)) {
+            crm_warn("Could not set subdaemon %s group to %lld: %s", name,
+                     (long long) gid, strerror(errno));
+        }
+
+        /* Initialize supplementary groups to only those always granted to the
+         * user, plus haclient (so we can access IPC)
+         */
+        if (initgroups(child->uid, gid) < 0) {
+            crm_err("Cannot initialize system groups for subdaemon %s: %s "
+                    QB_XS " errno=%d",
+                    name, strerror(errno), errno);
+        }
+    }
+
+    if ((uid != 0) && (setuid(uid) < 0)) {
+        crm_warn("Could not set subdaemon %s user to %s: %s "
+                 QB_XS " uid=%lld errno=%d",
+                 name, strerror(errno), child->uid, (long long) uid, errno);
+    }
+
+    pcmk__close_fds_in_child();
+    pcmk__null_std_streams();
+
+    if (use_callgrind) {
+        char *out_file = pcmk__str_copy("--callgrind-out-file="
+                                        CRM_STATE_DIR "/callgrind.opt.%p");
+        execlp(PCMK__VALGRIND_EXEC, PCMK__VALGRIND_EXEC, "--tool=callgrind",
+               out_file, path, (char *) NULL);
+        free(out_file);
+
+    } else if (use_valgrind) {
+        execlp(PCMK__VALGRIND_EXEC, PCMK__VALGRIND_EXEC, path, (char *) NULL);
 
     } else {
-        char *path = subdaemon_path(child);
-
-        /* Start a new session */
-        setsid();
-
-        if(gid) {
-            // Drop root group access if not needed
-            if (!need_root_group && (setgid(gid) < 0)) {
-                crm_warn("Could not set subdaemon %s group to %lu: %s",
-                         name, (unsigned long) gid, strerror(errno));
-            }
-
-            /* Initialize supplementary groups to only those always granted to
-             * the user, plus haclient (so we can access IPC).
-             */
-            if (initgroups(child->uid, gid) < 0) {
-                crm_err("Cannot initialize system groups for subdaemon %s: %s "
-                        QB_XS " errno=%d",
-                        name, pcmk_rc_str(errno), errno);
-            }
-        }
-
-        if (uid && setuid(uid) < 0) {
-            crm_warn("Could not set subdaemon %s user to %s: %s "
-                     QB_XS " uid=%lu errno=%d",
-                     name, strerror(errno), child->uid, (unsigned long) uid,
-                     errno);
-        }
-
-        pcmk__close_fds_in_child();
-        pcmk__null_std_streams();
-
-        if (use_callgrind) {
-            char *out_file = pcmk__str_copy("--callgrind-out-file="
-                                            CRM_STATE_DIR "/callgrind.opt.%p");
-            execlp(PCMK__VALGRIND_EXEC, PCMK__VALGRIND_EXEC, "--tool=callgrind",
-                   out_file, path, (char *) NULL);
-            free(out_file);
-        } else if (use_valgrind) {
-            execlp(PCMK__VALGRIND_EXEC, PCMK__VALGRIND_EXEC, path, (char *) NULL);
-        } else {
-            execlp(path, path, (char *) NULL);
-        }
-
-        free(path);
-        crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
-        crm_exit(CRM_EX_FATAL);
+        execlp(path, path, (char *) NULL);
     }
-    return pcmk_rc_ok;          /* never reached */
+
+    free(path);
+    crm_crit("Could not execute subdaemon %s: %s", name, strerror(errno));
+    crm_exit(CRM_EX_FATAL);
+    return pcmk_rc_ok;  // Never reached
 }
 
 /*!
