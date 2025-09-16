@@ -1672,13 +1672,13 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      guint timeout_ms, cib_t *cib, bool promoted_role_only,
                      bool force)
 {
-    int rc = pcmk_rc_ok;
-    guint step_timeout_s = 0;
-
     /* @TODO Due to this sleep interval, a timeout <2s will cause problems and
      * should be rejected
      */
-    guint sleep_interval = 2U;
+    static const guint sleep_interval = 2U;
+
+    int rc = pcmk_rc_ok;
+    guint step_timeout_s = 0;
     guint timeout = pcmk__timeout_ms2s(timeout_ms);
 
     bool stop_via_ban = false;
