@@ -438,6 +438,10 @@ static const struct pcmk__rc_info {
       "Internal corosync error",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_digest_mismatch",
+      "Digest does not match expected value",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
@@ -940,6 +944,9 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_no_dc:
             return CRM_EX_NO_DC;
+
+        case pcmk_rc_digest_mismatch:
+            return CRM_EX_DIGEST;
 
         default:
             return CRM_EX_ERROR;

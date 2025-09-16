@@ -194,8 +194,7 @@ generate_patch(pcmk__output_t *out, xmlNode *source, xmlNode *target,
     g_string_free(buffer, TRUE);
 
     /* pcmk_rc_error means there's a non-empty diff.
-     * @COMPAT Choose a more descriptive return code, like one that maps to
-     * CRM_EX_DIGEST?
+     * @COMPAT return pcmk_rc_digest_mismatch
      */
     return pcmk_rc_error;
 }
