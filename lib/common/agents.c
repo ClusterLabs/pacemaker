@@ -171,7 +171,7 @@ pcmk_stonith_param(const char *param)
         return false;
     }
 
-    /* @COMPAT Pacemaker does not handle PCMK_STONITH_STONITH_TIMEOUT specially
+    /* @COMPAT Pacemaker does not handle PCMK__FENCING_STONITH_TIMEOUT specially
      * as a resource parameter, so pcmk_stonith_param() should not return true
      * for it. It is unclear from the commit history why we returned true for it
      * in the first place.
@@ -182,11 +182,11 @@ pcmk_stonith_param(const char *param)
      * have configured this as a fence resource parameter in the first place.
      *
      * But out of an abundance of caution, we should wait to drop
-     * PCMK_STONITH_STONITH_TIMEOUT from this function until we no longer
+     * PCMK__FENCING_STONITH_TIMEOUT from this function until we no longer
      * support rolling upgrades from below Pacemaker 2.1.5.
      */
     if (pcmk__str_any_of(param, PCMK_FENCING_PROVIDES,
-                         PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
+                         PCMK__FENCING_STONITH_TIMEOUT, NULL)) {
         return true;
     }
 
