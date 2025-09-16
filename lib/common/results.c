@@ -434,6 +434,10 @@ static const struct pcmk__rc_info {
       "More IPC message fragments to send",
       -pcmk_err_generic,
     },
+    { "pcmk_rc_cs_internal",
+      "Internal corosync error",
+      -pcmk_err_generic,
+    },
 };
 
 /*!
@@ -849,6 +853,7 @@ pcmk_rc2exitc(int rc)
         case EOVERFLOW:
         case pcmk_rc_underflow:
         case pcmk_rc_compression:
+        case pcmk_rc_cs_internal:
             return CRM_EX_SOFTWARE;
 
         case EBADMSG:
@@ -1052,6 +1057,107 @@ pcmk__bzlib2rc(int bz2)
         default:
             return pcmk_rc_compression;
     }
+}
+
+/*!
+ * \internal
+ * \brief Map a corosync return code to the most similar Pacemaker return code
+ *
+ * \param[in] cs  corosync return code
+ *
+ * \return Most similar Pacemaker return code
+ */
+int
+pcmk__corosync2rc(int cs)
+{
+#if SUPPORT_COROSYNC
+    switch (cs) {
+        case CS_OK:
+            return pcmk_rc_ok;
+
+        /* These are all-purpose internal error occurred codes. */
+        case CS_ERR_LIBRARY:
+        case CS_ERR_FAILED_OPERATION:
+            return pcmk_rc_cs_internal;
+
+        /* None of these are returned by corosync >= 2.0.0 so it's not worth
+         * defining standard Pacemaker return codes to match.
+         */
+        case CS_ERR_VERSION:
+        case CS_ERR_BAD_FLAGS:
+            return pcmk_rc_error;
+
+        /* This is only returned by corosync when qb_trie_create fails, which
+         * only happens when malloc fails, therefore...
+         */
+        case CS_ERR_INIT:
+        case CS_ERR_NO_MEMORY:
+            return ENOMEM;
+
+        case CS_ERR_TIMEOUT:
+            return ETIMEDOUT;
+
+        case CS_ERR_TRY_AGAIN:
+            return EAGAIN;
+
+        case CS_ERR_INVALID_PARAM:
+            return EINVAL;
+
+        case CS_ERR_BAD_HANDLE:
+            return EBADF;
+
+        case CS_ERR_BUSY:
+            return EBUSY;
+
+        case CS_ERR_ACCESS:
+            return EACCES;
+
+        case CS_ERR_NOT_EXIST:
+        case CS_ERR_NAME_NOT_FOUND:
+            return ENOENT;
+
+        case CS_ERR_NAME_TOO_LONG:
+            return ENAMETOOLONG;
+
+        case CS_ERR_EXIST:
+            return EEXIST;
+
+        case CS_ERR_NO_SPACE:
+            return ENOSPC;
+
+        case CS_ERR_INTERRUPT:
+            return EINTR;
+
+        case CS_ERR_NO_RESOURCES:
+            return EMFILE;
+
+        case CS_ERR_NOT_SUPPORTED:
+            return ENOTSUP;
+
+        case CS_ERR_BAD_OPERATION:
+            return EOPNOTSUPP;
+
+        case CS_ERR_MESSAGE_ERROR:
+            return EBADMSG;
+
+        /* These are still handled by corosync, but I can't find any evidence
+         * that they are returned anywhere.  At one point, certain libqb error
+         * codes were converted into these errors but I don't see that happening
+         * anymore.  Thus, just turn them into the default as well.
+         */
+        case CS_ERR_QUEUE_FULL:
+        case CS_ERR_QUEUE_NOT_AVAILABLE:
+            return pcmk_rc_error;
+
+        case CS_ERR_TOO_BIG:
+            return EFBIG;
+
+        case CS_ERR_NO_SECTIONS:
+            return ENODATA;
+    }
+#endif
+
+    return pcmk_rc_error;
 }
 
 crm_exit_t

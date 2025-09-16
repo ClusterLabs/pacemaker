@@ -124,8 +124,8 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
             rc = pcmk__init_cmap(&local_handle);
             if (rc != CS_OK) {
                 retries++;
-                crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
-                          retries);
+                crm_debug("API connection setup failed: %s.  Retrying in %ds",
+                          pcmk_rc_str(pcmk__corosync2rc(rc)), retries);
                 sleep(retries);
             }
 
@@ -133,7 +133,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 
         if (rc != CS_OK) {
             crm_warn("Could not connect to Cluster Configuration Database API, error %s",
-                     cs_strerror(rc));
+                     pcmk_rc_str(pcmk__corosync2rc(rc)));
             local_handle = 0;
         }
     }
@@ -144,7 +144,7 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         rc = cmap_fd_get(cmap_handle, &fd);
         if (rc != CS_OK) {
             crm_err("Could not obtain the CMAP API connection: %s (%d)",
-                    cs_strerror(rc), rc);
+                    pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
             goto bail;
         }
 
@@ -386,7 +386,7 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
 
     if (rc != CS_OK) {
         crm_err("Could not connect to the Quorum API: %s (%d)",
-                cs_strerror(rc), rc);
+                pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
 
     } else if (quorum_type != QUORUM_SET) {
@@ -519,7 +519,7 @@ pcmk__corosync_is_active(void)
     }
 
     crm_info("Failed to initialize the cmap API: %s (%d)",
-             pcmk__cs_err_str(rc), rc);
+             pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
     return false;
 }
 
@@ -577,8 +577,8 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
         rc = pcmk__init_cmap(&cmap_handle);
         if (rc != CS_OK) {
             retries++;
-            crm_debug("API connection setup failed: %s.  Retrying in %ds", cs_strerror(rc),
-                      retries);
+            crm_debug("API connection setup failed: %s.  Retrying in %ds",
+                      pcmk_rc_str(pcmk__corosync2rc(rc)), retries);
             sleep(retries);
         }
 
@@ -592,7 +592,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
     rc = cmap_fd_get(cmap_handle, &fd);
     if (rc != CS_OK) {
         crm_err("Could not obtain the CMAP API connection: %s (%d)",
-                cs_strerror(rc), rc);
+                pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 
@@ -689,14 +689,14 @@ pcmk__corosync_cluster_name(void)
     rc = pcmk__init_cmap(&handle);
     if (rc != CS_OK) {
         crm_info("Failed to initialize the cmap API: %s (%d)",
-                 cs_strerror(rc), rc);
+                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         return NULL;
     }
 
     rc = cmap_fd_get(handle, &fd);
     if (rc != CS_OK) {
         crm_err("Could not obtain the CMAP API connection: %s (%d)",
-                cs_strerror(rc), rc);
+                pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 
@@ -716,7 +716,8 @@ pcmk__corosync_cluster_name(void)
 
     rc = cmap_get_string(handle, "totem.cluster_name", &cluster_name);
     if (rc != CS_OK) {
-        crm_info("Cannot get totem.cluster_name: %s (%d)", cs_strerror(rc), rc);
+        crm_info("Cannot get totem.cluster_name: %s (%d)",
+                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
 
     } else {
         crm_debug("cmap totem.cluster_name = '%s'", cluster_name);
@@ -760,14 +761,14 @@ pcmk__corosync_has_nodelist(void)
         if (cs_rc != CS_OK) {
             retries++;
             crm_debug("CMAP connection failed: %s (rc=%d, retrying in %ds)",
-                      cs_strerror(cs_rc), cs_rc, retries);
+                      pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc, retries);
             sleep(retries);
         }
     } while ((retries < 5) && (cs_rc != CS_OK));
     if (cs_rc != CS_OK) {
         crm_warn("Assuming Corosync does not have node list: "
                  "CMAP connection failed (%s) " QB_XS " rc=%d",
-                 cs_strerror(cs_rc), cs_rc);
+                 pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         return false;
     }
 
@@ -776,7 +777,7 @@ pcmk__corosync_has_nodelist(void)
     if (cs_rc != CS_OK) {
         crm_warn("Assuming Corosync does not have node list: "
                  "CMAP unusable (%s) " QB_XS " rc=%d",
-                 cs_strerror(cs_rc), cs_rc);
+                 pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         goto bail;
     }
 
@@ -802,7 +803,7 @@ pcmk__corosync_has_nodelist(void)
     if (cs_rc != CS_OK) {
         crm_warn("Assuming Corosync does not have node list: "
                  "CMAP not readable (%s) " QB_XS " rc=%d",
-                 cs_strerror(cs_rc), cs_rc);
+                 pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         goto bail;
     }
 

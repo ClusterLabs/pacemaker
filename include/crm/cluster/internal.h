@@ -185,51 +185,6 @@ crm_get_cluster_proc(void)
     return crm_proc_none;
 }
 
-/*!
- * \internal
- * \brief Get log-friendly string description of a Corosync return code
- *
- * \param[in] error  Corosync return code
- *
- * \return Log-friendly string description corresponding to \p error
- */
-static inline const char *
-pcmk__cs_err_str(int error)
-{
-#  if SUPPORT_COROSYNC
-    switch (error) {
-        case CS_OK:                         return "OK";
-        case CS_ERR_LIBRARY:                return "Library error";
-        case CS_ERR_VERSION:                return "Version error";
-        case CS_ERR_INIT:                   return "Initialization error";
-        case CS_ERR_TIMEOUT:                return "Timeout";
-        case CS_ERR_TRY_AGAIN:              return "Try again";
-        case CS_ERR_INVALID_PARAM:          return "Invalid parameter";
-        case CS_ERR_NO_MEMORY:              return "No memory";
-        case CS_ERR_BAD_HANDLE:             return "Bad handle";
-        case CS_ERR_BUSY:                   return "Busy";
-        case CS_ERR_ACCESS:                 return "Access error";
-        case CS_ERR_NOT_EXIST:              return "Doesn't exist";
-        case CS_ERR_NAME_TOO_LONG:          return "Name too long";
-        case CS_ERR_EXIST:                  return "Exists";
-        case CS_ERR_NO_SPACE:               return "No space";
-        case CS_ERR_INTERRUPT:              return "Interrupt";
-        case CS_ERR_NAME_NOT_FOUND:         return "Name not found";
-        case CS_ERR_NO_RESOURCES:           return "No resources";
-        case CS_ERR_NOT_SUPPORTED:          return "Not supported";
-        case CS_ERR_BAD_OPERATION:          return "Bad operation";
-        case CS_ERR_FAILED_OPERATION:       return "Failed operation";
-        case CS_ERR_MESSAGE_ERROR:          return "Message error";
-        case CS_ERR_QUEUE_FULL:             return "Queue full";
-        case CS_ERR_QUEUE_NOT_AVAILABLE:    return "Queue not available";
-        case CS_ERR_BAD_FLAGS:              return "Bad flags";
-        case CS_ERR_TOO_BIG:                return "Too big";
-        case CS_ERR_NO_SECTIONS:            return "No sections";
-    }
-#  endif
-    return "Corosync error";
-}
-
 #  if SUPPORT_COROSYNC
 
 #if 0
