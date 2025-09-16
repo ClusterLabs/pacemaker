@@ -38,6 +38,7 @@
 
 #include <crm/lrmd.h>
 #include <crm/cluster/internal.h>
+#include <crm/common/agents_internal.h>
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/logging.h>

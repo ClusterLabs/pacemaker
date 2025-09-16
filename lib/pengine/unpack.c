@@ -190,7 +190,7 @@ pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
 
 // nvpair with provides or requires set to unfencing
 #define XPATH_UNFENCING_NVPAIR PCMK_XE_NVPAIR           \
-    "[(@" PCMK_XA_NAME "='" PCMK_STONITH_PROVIDES "'"   \
+    "[(@" PCMK_XA_NAME "='" PCMK_FENCING_PROVIDES "'"   \
     "or @" PCMK_XA_NAME "='" PCMK_META_REQUIRES "') "   \
     "and @" PCMK_XA_VALUE "='" PCMK_VALUE_UNFENCING "']"
 
@@ -242,7 +242,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
     if (pcmk__is_true(value)) {
         crm_info("Watchdog-based self-fencing will be performed via SBD if "
-                 "fencing is required and " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+                 "fencing is required and " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
                  " is nonzero");
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_fencing);
     }
@@ -253,23 +253,23 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_if_xpath(pcmk__sched_enable_unfencing, XPATH_ENABLE_UNFENCING,
                  scheduler);
 
-    value = pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_TIMEOUT);
+    value = pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_TIMEOUT);
     pcmk_parse_interval_spec(value, &(scheduler->priv->fence_timeout_ms));
 
     crm_debug("Default fencing action timeout: %s",
               pcmk__readable_interval(scheduler->priv->fence_timeout_ms));
 
-    set_config_flag(scheduler, PCMK_OPT_STONITH_ENABLED,
+    set_config_flag(scheduler, PCMK_OPT_FENCING_ENABLED,
                     pcmk__sched_fencing_enabled);
     if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-        crm_debug("STONITH of failed nodes is enabled");
+        crm_debug("Fencing of failed nodes is enabled");
     } else {
-        crm_debug("STONITH of failed nodes is disabled");
+        crm_debug("Fencing of failed nodes is disabled");
     }
 
     scheduler->priv->fence_action =
-        pcmk__cluster_option(config_hash, PCMK_OPT_STONITH_ACTION);
-    crm_trace("STONITH will %s nodes", scheduler->priv->fence_action);
+        pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_ACTION);
+    crm_trace("Fencing will %s nodes", scheduler->priv->fence_action);
 
     set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
                     pcmk__sched_concurrent_fencing);
@@ -879,10 +879,12 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     } else if (pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)
                && !pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
 
-        pcmk__config_err("Resource start-up disabled since no STONITH resources have been defined");
-        pcmk__config_err("Either configure some or disable STONITH with the "
-                         PCMK_OPT_STONITH_ENABLED " option");
-        pcmk__config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
+        pcmk__config_err("Resource start-up disabled since no fencing "
+                         "resources have been defined. Either configure some "
+                         "or disable fencing with the "
+                         PCMK_OPT_FENCING_ENABLED " option. NOTE: Clusters "
+                         "with shared data need fencing to ensure data "
+                         "integrity.");
     }
 
     return TRUE;
@@ -5096,9 +5098,10 @@ find_operations(const char *rsc, const char *node, gboolean active_filter,
 
         if (this_node->details->online
             || pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-            /* offline nodes run no resources...
-             * unless stonith is enabled in which case we need to
-             *   make sure rsc start events happen after the stonith
+
+            /* Offline nodes run no resources if fencing is disabled. If fencing
+             * is enabled, we need to ensure that resource start events happen
+             * after the fencing event.
              */
             xmlNode *lrm_rsc = NULL;
 

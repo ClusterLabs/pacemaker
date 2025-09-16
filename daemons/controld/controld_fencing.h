@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,31 +8,30 @@
  */
 
 #ifndef CONTROLD_FENCING__H
-#  define CONTROLD_FENCING__H
+#define CONTROLD_FENCING__H
 
 #include <stdbool.h>                // bool
 #include <pacemaker-internal.h>     // pcmk__graph_t, pcmk__graph_action_t
 
 void controld_configure_fencing(GHashTable *options);
 
-// stonith fail counts
-void st_fail_count_reset(const char * target);
+// Fencing fail counts
+void controld_reset_fencing_fail_count(const char *target);
 
-// stonith API client
+// Fencer API client
 gboolean controld_timer_fencer_connect(gpointer user_data);
 void controld_disconnect_fencer(bool destroy);
 int controld_execute_fence_action(pcmk__graph_t *graph,
                                   pcmk__graph_action_t *action);
-bool controld_verify_stonith_watchdog_timeout(const char *value);
+void controld_validate_fencing_watchdog_timeout(const char *value);
 
-// stonith cleanup list
-void add_stonith_cleanup(const char *target);
-void remove_stonith_cleanup(const char *target);
-void purge_stonith_cleanup(void);
-void execute_stonith_cleanup(void);
+// Fencing cleanup list
+void controld_remove_fencing_cleanup(const char *target);
+void controld_purge_fencing_cleanup(void);
+void controld_execute_fencing_cleanup(void);
 
-// stonith history synchronization
-void te_trigger_stonith_history_sync(bool long_timeout);
-void te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers);
+// Fencing history synchronization
+void controld_trigger_fencing_history_sync(bool long_timeout);
+void controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers);
 
 #endif

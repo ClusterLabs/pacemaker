@@ -233,8 +233,8 @@ static int mon_refresh_display(gpointer user_data);
 static int setup_cib_connection(void);
 static int setup_fencer_connection(void);
 static int setup_api_connections(void);
-static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
-static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
+static void crm_mon_fencer_event_cb(stonith_t *st, stonith_event_t *e);
+static void crm_mon_fencer_display_cb(stonith_t *st, stonith_event_t *e);
 static void refresh_after_event(gboolean data_updated, gboolean enforce);
 
 static uint32_t
@@ -876,19 +876,19 @@ setup_fencer_connection(void)
 
     rc = st->cmds->connect(st, crm_system_name, NULL);
     if (rc == pcmk_ok) {
-        crm_trace("Setting up stonith callbacks");
+        crm_trace("Setting up fencer API callbacks");
         if (options.watch_fencing) {
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                            mon_st_callback_event);
+                                            crm_mon_fencer_event_cb);
             st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
-                                            mon_st_callback_event);
+                                            crm_mon_fencer_event_cb);
         } else {
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                            mon_st_callback_display);
+                                            crm_mon_fencer_display_cb);
             st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_HISTORY,
-                                            mon_st_callback_display);
+                                            crm_mon_fencer_display_cb);
         }
     } else {
         stonith__api_free(st);
@@ -2036,7 +2036,7 @@ mon_refresh_display(gpointer user_data)
  * which ones) when --watch-fencing is used on the command line
  */
 static void
-mon_st_callback_event(stonith_t * st, stonith_event_t * e)
+crm_mon_fencer_event_cb(stonith_t *st, stonith_event_t *e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */
@@ -2101,7 +2101,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
  * which ones) when --watch-fencing is NOT used on the command line
  */
 static void
-mon_st_callback_display(stonith_t * st, stonith_event_t * e)
+crm_mon_fencer_display_cb(stonith_t *st, stonith_event_t *e)
 {
     if (st->state == stonith_disconnected) {
         /* disconnect cib as well and have everything reconnect */

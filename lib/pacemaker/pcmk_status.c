@@ -17,7 +17,7 @@
 #include <crm/common/results.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
-#include <crm/stonith-ng.h> // stonith__register_messages()
+#include <crm/stonith-ng.h>         // stonith_t
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
@@ -95,7 +95,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
         return rc;
     }
 
-    /* get the stonith-history if there is evidence we need it */
+    // Get the fencing history if there is evidence that we need it
     if (fence_history != pcmk__fence_history_none) {
         history_rc = pcmk__get_fencing_history(stonith, &stonith_history,
                                                fence_history);
@@ -130,7 +130,6 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
     g_list_free_full(resources, free);
 
     stonith__history_free(stonith_history);
-    stonith_history = NULL;
     return rc;
 }
 

@@ -39,7 +39,7 @@
 
 static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
-static stonith_t *stonith_api = NULL;
+static stonith_t *fencer_api = NULL;
 time_t start_time;
 
 static struct {
@@ -57,43 +57,43 @@ static gboolean shutting_down = FALSE;
 static void exit_executor(void);
 
 static void
-stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
+fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
 {
-    stonith_api->state = stonith_disconnected;
-    stonith_connection_failed();
+    fencer_api->state = stonith_disconnected;
+    execd_fencer_connection_failed();
 }
 
 stonith_t *
-get_stonith_connection(void)
+execd_get_fencer_connection(void)
 {
-    if (stonith_api && stonith_api->state == stonith_disconnected) {
-        stonith__api_free(stonith_api);
-        stonith_api = NULL;
+    if ((fencer_api != NULL) && (fencer_api->state == stonith_disconnected)) {
+        stonith__api_free(fencer_api);
+        fencer_api = NULL;
     }
 
-    if (stonith_api == NULL) {
+    if (fencer_api == NULL) {
         int rc = pcmk_ok;
 
-        stonith_api = stonith__api_new();
-        if (stonith_api == NULL) {
+        fencer_api = stonith__api_new();
+        if (fencer_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return NULL;
         }
-        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 10);
+        rc = stonith__api_connect_retry(fencer_api, crm_system_name, 10);
         if (rc != pcmk_rc_ok) {
             crm_err("Could not connect to fencer in 10 attempts: %s "
                     QB_XS " rc=%d", pcmk_rc_str(rc), rc);
-            stonith__api_free(stonith_api);
-            stonith_api = NULL;
+            stonith__api_free(fencer_api);
+            fencer_api = NULL;
         } else {
-            stonith_api_operations_t *cmds = stonith_api->cmds;
+            stonith_api_operations_t *cmds = fencer_api->cmds;
 
-            cmds->register_notification(stonith_api,
+            cmds->register_notification(fencer_api,
                                         PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                        stonith_connection_destroy_cb);
+                                        fencer_connection_destroy_cb);
         }
     }
-    return stonith_api;
+    return fencer_api;
 }
 
 /*!
@@ -177,7 +177,7 @@ exit_executor(void)
 
     crm_info("Terminating with %d client%s",
              nclients, pcmk__plural_s(nclients));
-    stonith__api_free(stonith_api);
+    stonith__api_free(fencer_api);
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
@@ -425,7 +425,7 @@ main(int argc, char **argv)
         }
     }
 
-    rsc_list = pcmk__strkey_table(NULL, free_rsc);
+    rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");

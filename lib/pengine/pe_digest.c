@@ -185,6 +185,10 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
+    /* @COMPAT CRM_FEATURE_SET was bumped to 3.16.0 in Pacemaker 2.1.5. When we
+     * no longer support rolling upgrades from 2.1.4 and below, we can drop the
+     * old_version code.
+     */
     const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
     bool old_version = (compare_version(op_version, "3.16.0") < 0);
@@ -215,10 +219,10 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     if (old_version
         && pcmk_is_set(pcmk_get_ra_caps(class),
                        pcmk_ra_cap_fence_params)) {
-        /* For stonith resources, Pacemaker adds special parameters,
-         * but these are not listed in fence agent meta-data, so with older
-         * versions of DC, the controller will not hash them. That means we have
-         * to filter them out before calculating our hash for comparison.
+        /* For fencing resources, Pacemaker adds special parameters, but these
+         * are not listed in fence agent meta-data, so with older versions of
+         * DC, the controller will not hash them. That means we have to filter
+         * them out before calculating our hash for comparison.
          */
         pcmk__xe_remove_matching_attrs(data->params_secure, false,
                                        is_fence_param, NULL);

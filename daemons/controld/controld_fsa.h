@@ -54,7 +54,7 @@ enum crmd_fsa_state {
     S_TERMINATE,                /* We are going to shutdown, this is the equiv of
                                  * "Sending TERM signal to all processes" in Linux
                                  * and in worst case scenarios could be considered
-                                 * a self STONITH
+                                 * self-fencing
                                  */
     S_TRANSITION_ENGINE,        /* Attempt to make the calculated next stable
                                  * state of the cluster a reality
@@ -381,7 +381,7 @@ enum crmd_fsa_input {
 #  define R_TE_REQUIRED     0x00004000ULL
                                         /* Is the Transition Engine required? */
 #  define R_ST_REQUIRED     0x00008000ULL
-                                        /* Is the Stonith daemon required? */
+                                        /* Is the fencer daemon required? */
 
 #  define R_CIB_DONE        0x00010000ULL
                                         /* Have we calculated the CIB? */

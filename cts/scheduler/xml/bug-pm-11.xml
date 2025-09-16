@@ -2,7 +2,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
-        <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+        <nvpair id="opt-no-stonith" name="fencing-enabled" value="false"/>
       </cluster_property_set>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21848" name="dc-version" value="0.6.2-node: 000d7573fbf8ac5f0c2835c8739973e826d0671b"/>

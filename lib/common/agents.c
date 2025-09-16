@@ -170,21 +170,37 @@ pcmk_stonith_param(const char *param)
     if (param == NULL) {
         return false;
     }
-    if (pcmk__str_any_of(param, PCMK_STONITH_PROVIDES,
-                         PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
+
+    /* @COMPAT Pacemaker does not handle PCMK__FENCING_STONITH_TIMEOUT specially
+     * as a resource parameter, so pcmk_stonith_param() should not return true
+     * for it. It is unclear from the commit history why we returned true for it
+     * in the first place.
+     *
+     * However, when the feature set is less than 3.16.0,
+     * calculate_secure_digest() filters out these special fencing parameters
+     * when calculating the digest. There's no good reason why a user should
+     * have configured this as a fence resource parameter in the first place.
+     *
+     * But out of an abundance of caution, we should wait to drop
+     * PCMK__FENCING_STONITH_TIMEOUT from this function until we no longer
+     * support rolling upgrades from below Pacemaker 2.1.5.
+     */
+    if (pcmk__str_any_of(param, PCMK_FENCING_PROVIDES,
+                         PCMK__FENCING_STONITH_TIMEOUT, NULL)) {
         return true;
     }
+
     if (!g_str_has_prefix(param, "pcmk_")) { // Short-circuit common case
         return false;
     }
     if (pcmk__str_any_of(param,
-                         PCMK_STONITH_ACTION_LIMIT,
-                         PCMK_STONITH_DELAY_BASE,
-                         PCMK_STONITH_DELAY_MAX,
-                         PCMK_STONITH_HOST_ARGUMENT,
-                         PCMK_STONITH_HOST_CHECK,
-                         PCMK_STONITH_HOST_LIST,
-                         PCMK_STONITH_HOST_MAP,
+                         PCMK_FENCING_ACTION_LIMIT,
+                         PCMK_FENCING_DELAY_BASE,
+                         PCMK_FENCING_DELAY_MAX,
+                         PCMK_FENCING_HOST_ARGUMENT,
+                         PCMK_FENCING_HOST_CHECK,
+                         PCMK_FENCING_HOST_LIST,
+                         PCMK_FENCING_HOST_MAP,
                          NULL)) {
         return true;
     }

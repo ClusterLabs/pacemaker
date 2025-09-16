@@ -4,12 +4,12 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-3.el6-a02c0f19a00c1eb2527ad38f146ebc0834814558"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1333120140"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="9"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="9"/>
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="9"/>
-        <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
+        <nvpair id="cib-bootstrap-options-fencing-action" name="fencing-action" value="reboot"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -67,7 +67,11 @@
       </primitive>
       <primitive class="stonith" description="How to shut down hypatia via its UPS" id="StonithHypatia" type="fence_nut">
         <instance_attributes id="StonithHypatia-instance_attributes">
+          <!--
+           Don't drop or rename to "fencing-timeout", as this causes restart
+           -->
           <nvpair id="StonithHypatia-instance_attributes-stonith-timeout" name="stonith-timeout" value="120s"/>
+
           <nvpair id="StonithHypatia-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
           <nvpair id="StonithHypatia-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="hypatia-corosync.nevis.columbia.edu"/>
           <nvpair id="StonithHypatia-instance_attributes-ups" name="ups" value="sofia-ups"/>
@@ -82,7 +86,11 @@
       </primitive>
       <primitive class="stonith" description="How to shut down orestes via its UPS" id="StonithOrestes" type="fence_nut">
         <instance_attributes id="StonithOrestes-instance_attributes">
+          <!--
+           Don't drop or rename to "fencing-timeout", as this causes restart
+           -->
           <nvpair id="StonithOrestes-instance_attributes-stonith-timeout" name="stonith-timeout" value="120s"/>
+
           <nvpair id="StonithOrestes-instance_attributes-pcmk_host_check" name="pcmk_host_check" value="static-list"/>
           <nvpair id="StonithOrestes-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="orestes-corosync.nevis.columbia.edu"/>
           <nvpair id="StonithOrestes-instance_attributes-ups" name="ups" value="dc-test-stand-ups"/>

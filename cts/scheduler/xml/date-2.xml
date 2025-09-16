@@ -10,7 +10,7 @@
         </rule>
       </cluster_property_set>
       <cluster_property_set id="boo" score="1">
-        <nvpair name="stonith-enabled" id="nvpair.id21890" value="false"/>
+        <nvpair name="fencing-enabled" id="nvpair.id21890" value="false"/>
         <nvpair name="cluster-delay" id="nvpair.id21900" value="50s"/>
         <nvpair name="cluster-recheck-interval" id="nvpair.id21909" value="60"/>
       </cluster_property_set>

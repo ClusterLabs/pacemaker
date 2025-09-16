@@ -3,8 +3,8 @@
     <crm_config>
       <cluster_property_set id="cibbootstrap">
         <nvpair id="nvpair.id21849" name="cluster-delay" value="60"/>
-        <nvpair id="nvpair.id21858" name="stonith-enabled" value="true"/>
-        <nvpair id="nvpair.id21866" name="stonith-action" value="reboot"/>
+        <nvpair id="nvpair.id21858" name="fencing-enabled" value="true"/>
+        <nvpair id="nvpair.id21866" name="fencing-action" value="reboot"/>
         <nvpair id="nvpair.id21875" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21884" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21893" name="stop-removed-resources" value="true"/>

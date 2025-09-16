@@ -64,7 +64,7 @@ enum pcmk__scheduler_flags {
     // Whether cluster is in maintenance mode (via maintenance-mode property)
     pcmk__sched_in_maintenance          = (1ULL << 3),
 
-    // Whether fencing is enabled (via stonith-enabled property)
+    // Whether fencing is enabled (via \c PCMK_OPT_FENCING_ENABLED property)
     pcmk__sched_fencing_enabled         = (1ULL << 4),
 
     // Whether cluster has a fencing resource (via CIB resources)

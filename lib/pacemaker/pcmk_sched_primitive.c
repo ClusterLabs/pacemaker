@@ -780,7 +780,7 @@ pcmk__primitive_create_actions(pcmk_resource_t *rsc)
     } else {
         /* If a resource has PCMK_META_REQUIRES set to PCMK_VALUE_NOTHING or
          * PCMK_VALUE_QUORUM, don't consider it active on unclean nodes (similar
-         * to how all resources behave when PCMK_OPT_STONITH_ENABLED is false).
+         * to how all resources behave when PCMK_OPT_FENCING_ENABLED is false).
          * We can start such resources elsewhere before fencing completes, and
          * if we considered the resource active on the failed node, we would
          * attempt recovery for being active on multiple nodes.
@@ -1361,7 +1361,7 @@ start_resource(pcmk_resource_t *rsc, pcmk_node_t *node, bool optional)
                     pcmk__node_name(node), node->assign->score);
     start = start_action(rsc, node, TRUE);
 
-    pcmk__order_vs_unfence(rsc, node, start, pcmk__ar_first_implies_then);
+    pcmk__order_vs_unfencing(rsc, node, start, pcmk__ar_first_implies_then);
 
     if (pcmk_is_set(start->flags, pcmk__action_runnable) && !optional) {
         pcmk__clear_action_flags(start, pcmk__action_optional);

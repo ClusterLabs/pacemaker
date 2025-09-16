@@ -201,8 +201,8 @@ STONITH-related configuration:
    .. code-block:: none
 
       # cibadmin --query | grep stonith
-       <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
-       <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+       <nvpair id="cib-bootstrap-options-fencing-action" name="fencing-action" value="reboot"/>
+       <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="1"/>
        <primitive id="child_DoFencing" class="stonith" type="external/vmware">
        <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
        <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
@@ -301,7 +301,7 @@ For a full list of ``crm_shadow`` options and commands, invoke it with the
          <configuration>
             <crm_config>
                <cluster_property_set id="cib-bootstrap-options">
-                  <nvpair id="cib-bootstrap-1" name="stonith-enabled" value="1"/>
+                  <nvpair id="cib-bootstrap-1" name="fencing-enabled" value="1"/>
                   <nvpair id="cib-bootstrap-2" name="pe-input-series-max" value="30000"/>
 
 See the next section, :ref:`crm_simulate`, for how to test your changes before

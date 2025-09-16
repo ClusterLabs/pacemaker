@@ -777,12 +777,8 @@ pcmk__update_schema 	debug: Schema pacemaker-3.9 validates
 pcmk__update_schema 	debug: Schema pacemaker-3.10 validates
 pcmk__update_schema 	debug: Schema pacemaker-4.0 validates
 pcmk__update_schema 	info: Transformed the configuration schema to pacemaker-4.0
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped

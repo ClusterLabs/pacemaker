@@ -59,13 +59,13 @@ Manage Nodes
 Manage Cluster Properties
 #########################
 
-.. topic:: Set the "stonith-enabled" cluster property to "false"
+.. topic:: Set the "fencing-enabled" cluster property to "false"
 
    .. code-block:: none
 
-      crmsh     # crm configure property stonith-enabled=false
-      pcs       # pcs property set stonith-enabled=false
-      pacemaker # crm_attribute -n stonith-enabled -v false
+      crmsh     # crm configure property fencing-enabled=false
+      pcs       # pcs property set fencing-enabled=false
+      pacemaker # crm_attribute -n fencing-enabled -v false
 
 Show Resource Agent Information
 ###############################

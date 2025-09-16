@@ -13,7 +13,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="3s"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.7-5.fc39-0ee39f2"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>

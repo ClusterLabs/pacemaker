@@ -15,26 +15,21 @@
 
 #include <pacemaker-controld.h>
 
-static void
-tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event);
+static void fencing_history_synced(stonith_t *st, stonith_event_t *st_event);
+
+#define DEFAULT_FENCING_MAX_ATTEMPTS 10
+
+static bool fence_reaction_panic = false;
+static unsigned long int fencing_max_attempts = DEFAULT_FENCING_MAX_ATTEMPTS;
 
 /*
- * stonith failure counting
+ * Fencing failure counting
  *
  * We don't want to get stuck in a permanent fencing loop. Keep track of the
  * number of fencing failures for each target node, and the most we'll restart a
  * transition for.
  */
-
-struct st_fail_rec {
-    int count;
-};
-
-#define DEFAULT_STONITH_MAX_ATTEMPTS 10
-
-static bool fence_reaction_panic = false;
-static unsigned long int stonith_max_attempts = DEFAULT_STONITH_MAX_ATTEMPTS;
-static GHashTable *stonith_failures = NULL;
+static GHashTable *fencing_fail_counts = NULL;
 
 /*!
  * \internal
@@ -43,19 +38,19 @@ static GHashTable *stonith_failures = NULL;
  * \param[in] value  New max fencing attempts
  */
 static void
-update_stonith_max_attempts(const char *value)
+update_fencing_max_attempts(const char *value)
 {
     int score = 0;
-    int rc = pcmk_parse_score(value, &score, DEFAULT_STONITH_MAX_ATTEMPTS);
+    int rc = pcmk_parse_score(value, &score, DEFAULT_FENCING_MAX_ATTEMPTS);
 
     // The option validator ensures invalid values shouldn't be possible
     CRM_CHECK((rc == pcmk_rc_ok) && (score > 0), return);
 
-    if (stonith_max_attempts != score) {
+    if (fencing_max_attempts != score) {
         crm_debug("Maximum fencing attempts per transition is now %d (was %lu)",
-                  score, stonith_max_attempts);
+                  score, fencing_max_attempts);
     }
-    stonith_max_attempts = score;
+    fencing_max_attempts = score;
 }
 
 /*!
@@ -73,7 +68,7 @@ set_fence_reaction(const char *reaction_s)
     } else {
         if (!pcmk__str_eq(reaction_s, PCMK_VALUE_STOP, pcmk__str_casei)) {
             crm_warn("Invalid value '%s' for %s, using 'stop'",
-                     reaction_s, PCMK_OPT_FENCE_REACTION);
+                     reaction_s, PCMK_OPT_FENCING_REACTION);
         }
         fence_reaction_panic = false;
     }
@@ -90,105 +85,90 @@ controld_configure_fencing(GHashTable *options)
 {
     const char *value = NULL;
 
-    value = g_hash_table_lookup(options, PCMK_OPT_FENCE_REACTION);
+    value = g_hash_table_lookup(options, PCMK_OPT_FENCING_REACTION);
     set_fence_reaction(value);
 
-    value = g_hash_table_lookup(options, PCMK_OPT_STONITH_MAX_ATTEMPTS);
-    update_stonith_max_attempts(value);
+    value = g_hash_table_lookup(options, PCMK_OPT_FENCING_MAX_ATTEMPTS);
+    update_fencing_max_attempts(value);
 }
 
-static gboolean
-too_many_st_failures(const char *target)
+static bool
+too_many_fencing_failures(const char *target)
 {
     GHashTableIter iter;
-    const char *key = NULL;
-    struct st_fail_rec *value = NULL;
+    gpointer value = NULL;
 
-    if (stonith_failures == NULL) {
-        return FALSE;
+    if (fencing_fail_counts == NULL) {
+        return false;
     }
 
     if (target == NULL) {
-        g_hash_table_iter_init(&iter, stonith_failures);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-               (gpointer *) &value)) {
-
-            if (value->count >= stonith_max_attempts) {
-                target = (const char*)key;
+        g_hash_table_iter_init(&iter, fencing_fail_counts);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &target, &value)) {
+            if (GPOINTER_TO_INT(value) >= fencing_max_attempts) {
                 goto too_many;
             }
         }
-    } else {
-        value = g_hash_table_lookup(stonith_failures, target);
-        if ((value != NULL) && (value->count >= stonith_max_attempts)) {
-            goto too_many;
-        }
+
+    } else if (g_hash_table_lookup_extended(fencing_fail_counts, target, NULL,
+                                            &value)
+               && (GPOINTER_TO_INT(value) >= fencing_max_attempts)) {
+        goto too_many;
     }
-    return FALSE;
+    return false;
 
 too_many:
     crm_warn("Too many failures (%d) to fence %s, giving up",
-             value->count, target);
-    return TRUE;
+             GPOINTER_TO_INT(value), target);
+    return true;
 }
 
 /*!
  * \internal
- * \brief Reset a stonith fail count
+ * \brief Reset the count of failed fencing operations for a node
  *
- * \param[in] target  Name of node to reset, or NULL for all
+ * \param[in] target  Name of node whose count to reset, or \c NULL to reset all
  */
 void
-st_fail_count_reset(const char *target)
+controld_reset_fencing_fail_count(const char *target)
 {
-    if (stonith_failures == NULL) {
+    if (fencing_fail_counts == NULL) {
         return;
     }
 
-    if (target) {
-        struct st_fail_rec *rec = NULL;
+    if (target != NULL) {
+        g_hash_table_remove(fencing_fail_counts, target);
 
-        rec = g_hash_table_lookup(stonith_failures, target);
-        if (rec) {
-            rec->count = 0;
-        }
     } else {
-        GHashTableIter iter;
-        const char *key = NULL;
-        struct st_fail_rec *rec = NULL;
-
-        g_hash_table_iter_init(&iter, stonith_failures);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-                                      (gpointer *) &rec)) {
-            rec->count = 0;
-        }
+        g_hash_table_remove_all(fencing_fail_counts);
     }
 }
 
 static void
-st_fail_count_increment(const char *target)
+increment_fencing_fail_count(const char *target)
 {
-    struct st_fail_rec *rec = NULL;
+    gpointer key = NULL;
+    gpointer value = NULL;
 
-    if (stonith_failures == NULL) {
-        stonith_failures = pcmk__strkey_table(free, free);
+    if (fencing_fail_counts == NULL) {
+        fencing_fail_counts = pcmk__strikey_table(free, NULL);
     }
 
-    rec = g_hash_table_lookup(stonith_failures, target);
-    if (rec) {
-        rec->count++;
-    } else {
-        rec = malloc(sizeof(struct st_fail_rec));
-        if(rec == NULL) {
-            return;
-        }
+    if (g_hash_table_lookup_extended(fencing_fail_counts, target, &key,
+                                     &value)) {
+        gpointer new_value = GINT_TO_POINTER(GPOINTER_TO_INT(value) + 1);
 
-        rec->count = 1;
-        g_hash_table_insert(stonith_failures, pcmk__str_copy(target), rec);
+        // Increment value in the table without freeing key
+        g_hash_table_steal(fencing_fail_counts, key);
+        g_hash_table_insert(fencing_fail_counts, key, new_value);
+
+    } else {
+        g_hash_table_insert(fencing_fail_counts, pcmk__str_copy(target),
+                            GINT_TO_POINTER(1));
     }
 }
 
-/* end stonith fail count functions */
+/* end fencing fail count functions */
 
 
 static void
@@ -224,7 +204,7 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     /* We (usually) rely on the membership layer to do
      * controld_node_update_cluster, and the peer status callback to do
      * controld_node_update_peer, because the node might have already rejoined
-     * before we get the stonith result here.
+     * before we get the fencing result here.
      */
     uint32_t flags = controld_node_update_join|controld_node_update_expected;
 
@@ -272,20 +252,24 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
 
 /*!
  * \internal
- * \brief Abort transition due to stonith failure
+ * \brief Abort transition due to fencing failure
  *
  * \param[in] abort_action  Whether to restart or stop transition
- * \param[in] target  Don't restart if this (NULL for any) has too many failures
- * \param[in] reason  Log this stonith action XML as abort reason (or NULL)
+ * \param[in] target        Don't restart if this node has too many failures
+ *                          (\c NULL to check if any node has too many failures)
+ * \param[in] reason        Log this fencing action XML as abort reason (can be
+ *                          \c NULL)
  */
 static void
-abort_for_stonith_failure(enum pcmk__graph_next abort_action,
+abort_for_fencing_failure(enum pcmk__graph_next abort_action,
                           const char *target, const xmlNode *reason)
 {
-    /* If stonith repeatedly fails, we eventually give up on starting a new
+    /* If fencing repeatedly fails, we eventually give up on starting a new
      * transition for that reason.
      */
-    if ((abort_action != pcmk__graph_wait) && too_many_st_failures(target)) {
+    if ((abort_action != pcmk__graph_wait)
+        && too_many_fencing_failures(target)) {
+
         abort_action = pcmk__graph_wait;
     }
     abort_transition(PCMK_SCORE_INFINITY, abort_action, "Stonith failed",
@@ -294,37 +278,38 @@ abort_for_stonith_failure(enum pcmk__graph_next abort_action,
 
 
 /*
- * stonith cleanup list
+ * Fencing cleanup list
  *
- * If the DC is shot, proper notifications might not go out.
- * The stonith cleanup list allows the cluster to (re-)send
- * notifications once a new DC is elected.
+ * If the DC is fenced, proper notifications might not go out. The fencing
+ * cleanup list allows the cluster to (re-)send notifications once a new DC is
+ * elected.
  */
 
-static GList *stonith_cleanup_list = NULL;
+static GList *fencing_cleanup_list = NULL;
 
 /*!
  * \internal
- * \brief Add a node to the stonith cleanup list
+ * \brief Add a node to the fencing cleanup list
  *
  * \param[in] target  Name of node to add
  */
-void
-add_stonith_cleanup(const char *target) {
-    stonith_cleanup_list = g_list_append(stonith_cleanup_list,
+static void
+add_fencing_cleanup(const char *target)
+{
+    fencing_cleanup_list = g_list_append(fencing_cleanup_list,
                                          pcmk__str_copy(target));
 }
 
 /*!
  * \internal
- * \brief Remove a node from the stonith cleanup list
+ * \brief Remove a node from the fencing cleanup list
  *
  * \param[in] Name of node to remove
  */
 void
-remove_stonith_cleanup(const char *target)
+controld_remove_fencing_cleanup(const char *target)
 {
-    GList *iter = stonith_cleanup_list;
+    GList *iter = fencing_cleanup_list;
 
     while (iter != NULL) {
         GList *tmp = iter;
@@ -333,7 +318,8 @@ remove_stonith_cleanup(const char *target)
         iter = iter->next;
         if (pcmk__str_eq(target, iter_name, pcmk__str_casei)) {
             crm_trace("Removing %s from the cleanup list", iter_name);
-            stonith_cleanup_list = g_list_delete_link(stonith_cleanup_list, tmp);
+            fencing_cleanup_list = g_list_delete_link(fencing_cleanup_list,
+                                                      tmp);
             free(iter_name);
         }
     }
@@ -341,69 +327,63 @@ remove_stonith_cleanup(const char *target)
 
 /*!
  * \internal
- * \brief Purge all entries from the stonith cleanup list
+ * \brief Purge all entries from the fencing cleanup list
  */
 void
-purge_stonith_cleanup(void)
+controld_purge_fencing_cleanup(void)
 {
-    if (stonith_cleanup_list) {
-        GList *iter = NULL;
+    for (GList *iter = fencing_cleanup_list; iter != NULL; iter = iter->next) {
+        char *target = iter->data;
 
-        for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
-            char *target = iter->data;
-
-            crm_info("Purging %s from stonith cleanup list", target);
-            free(target);
-        }
-        g_list_free(stonith_cleanup_list);
-        stonith_cleanup_list = NULL;
+        crm_info("Purging %s from fencing cleanup list", target);
+        free(target);
     }
+    g_list_free(fencing_cleanup_list);
+    fencing_cleanup_list = NULL;
 }
 
 /*!
  * \internal
- * \brief Send stonith updates for all entries in cleanup list, then purge it
+ * \brief Send fencing updates for all entries in cleanup list, then purge it
  */
 void
-execute_stonith_cleanup(void)
+controld_execute_fencing_cleanup(void)
 {
-    GList *iter;
-
-    for (iter = stonith_cleanup_list; iter != NULL; iter = iter->next) {
+    for (GList *iter = fencing_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
         pcmk__node_status_t *target_node =
             pcmk__get_node(0, target, NULL, pcmk__node_search_cluster_member);
         const char *uuid = pcmk__cluster_get_xml_id(target_node);
 
-        crm_notice("Marking %s, target of a previous stonith action, as clean", target);
+        crm_notice("Marking %s, target of a previous fencing action, as clean", target);
         update_node_state_after_fencing(target, uuid);
         free(target);
     }
-    g_list_free(stonith_cleanup_list);
-    stonith_cleanup_list = NULL;
+    g_list_free(fencing_cleanup_list);
+    fencing_cleanup_list = NULL;
 }
 
-/* end stonith cleanup list functions */
+/* end fencing cleanup list functions */
 
 
-/* stonith API client
+/* Fencer API client
  *
  * Functions that need to interact directly with the fencer via its API
  */
 
-static stonith_t *stonith_api = NULL;
+static stonith_t *fencer_api = NULL;
 static mainloop_timer_t *controld_fencer_connect_timer = NULL;
 static char *te_client_id = NULL;
 
-static gboolean
-fail_incompletable_stonith(pcmk__graph_t *graph)
+static bool
+fail_incompletable_fencing(pcmk__graph_t *graph)
 {
     GList *lpc = NULL;
     const char *task = NULL;
     xmlNode *last_action = NULL;
 
     if (graph == NULL) {
-        return FALSE;
+        return false;
     }
 
     for (lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
@@ -434,18 +414,18 @@ fail_incompletable_stonith(pcmk__graph_t *graph)
     }
 
     if (last_action != NULL) {
-        crm_warn("Fencer failure resulted in unrunnable actions");
-        abort_for_stonith_failure(pcmk__graph_restart, NULL, last_action);
-        return TRUE;
+        crm_warn("Fencing failure resulted in unrunnable actions");
+        abort_for_fencing_failure(pcmk__graph_restart, NULL, last_action);
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 static void
-tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
+destroy_fencer_connection(stonith_t *st, stonith_event_t *e)
 {
-    te_cleanup_stonith_history_sync(st, FALSE);
+    controld_cleanup_fencing_history_sync(st, false);
 
     if (pcmk_is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         crm_err("Lost fencer connection (will attempt to reconnect)");
@@ -456,18 +436,18 @@ tengine_stonith_connection_destroy(stonith_t *st, stonith_event_t *e)
         crm_info("Disconnected from fencer");
     }
 
-    if (stonith_api) {
+    if (fencer_api != NULL) {
         /* the client API won't properly reconnect notifications
          * if they are still in the table - so remove them
          */
-        if (stonith_api->state != stonith_disconnected) {
-            stonith_api->cmds->disconnect(st);
+        if (fencer_api->state != stonith_disconnected) {
+            fencer_api->cmds->disconnect(st);
         }
-        stonith_api->cmds->remove_notification(stonith_api, NULL);
+        fencer_api->cmds->remove_notification(fencer_api, NULL);
     }
 
     if (AM_I_DC) {
-        fail_incompletable_stonith(controld_globals.transition_graph);
+        fail_incompletable_fencing(controld_globals.transition_graph);
         trigger_graph();
     }
 }
@@ -555,13 +535,13 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
 
     /* Update the count of fencing failures for this target, in case we become
      * DC later. The current DC has already updated its fail count in
-     * tengine_stonith_callback().
+     * fencing_cb().
      */
     if (!AM_I_DC) {
         if (succeeded) {
-            st_fail_count_reset(event->target);
+            controld_reset_fencing_fail_count(event->target);
         } else {
-            st_fail_count_increment(event->target);
+            increment_fencing_fail_count(event->target);
         }
     }
 
@@ -630,7 +610,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
             if (controld_is_local_node(event->executioner)) {
                 update_node_state_after_fencing(event->target, uuid);
             }
-            add_stonith_cleanup(event->target);
+            add_fencing_cleanup(event->target);
         }
 
         /* If the target is a remote node, and we host its connection,
@@ -660,29 +640,29 @@ controld_timer_fencer_connect(gpointer user_data)
 {
     int rc = pcmk_ok;
 
-    if (stonith_api == NULL) {
-        stonith_api = stonith__api_new();
-        if (stonith_api == NULL) {
+    if (fencer_api == NULL) {
+        fencer_api = stonith__api_new();
+        if (fencer_api == NULL) {
             crm_err("Could not connect to fencer: API memory allocation failed");
             return G_SOURCE_REMOVE;
         }
     }
 
-    if (stonith_api->state != stonith_disconnected) {
+    if (fencer_api->state != stonith_disconnected) {
         crm_trace("Already connected to fencer, no need to retry");
         return G_SOURCE_REMOVE;
     }
 
     if (user_data == NULL) {
         // Blocking (retry failures now until successful)
-        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 30);
+        rc = stonith__api_connect_retry(fencer_api, crm_system_name, 30);
         if (rc != pcmk_rc_ok) {
             crm_err("Could not connect to fencer in 30 attempts: %s "
                     QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
-        rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
+        rc = fencer_api->cmds->connect(fencer_api, crm_system_name, NULL);
 
         if (controld_fencer_connect_timer == NULL) {
             controld_fencer_connect_timer =
@@ -711,17 +691,17 @@ controld_timer_fencer_connect(gpointer user_data)
     }
 
     if (rc == pcmk_ok) {
-        stonith_api_operations_t *cmds = stonith_api->cmds;
+        stonith_api_operations_t *cmds = fencer_api->cmds;
 
-        cmds->register_notification(stonith_api,
+        cmds->register_notification(fencer_api,
                                     PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                    tengine_stonith_connection_destroy);
-        cmds->register_notification(stonith_api, PCMK__VALUE_ST_NOTIFY_FENCE,
+                                    destroy_fencer_connection);
+        cmds->register_notification(fencer_api, PCMK__VALUE_ST_NOTIFY_FENCE,
                                     handle_fence_notification);
-        cmds->register_notification(stonith_api,
+        cmds->register_notification(fencer_api,
                                     PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
-                                    tengine_stonith_history_synced);
-        te_trigger_stonith_history_sync(TRUE);
+                                    fencing_history_synced);
+        controld_trigger_fencing_history_sync(true);
         crm_notice("Fencer successfully connected");
     }
 
@@ -731,19 +711,19 @@ controld_timer_fencer_connect(gpointer user_data)
 void
 controld_disconnect_fencer(bool destroy)
 {
-    if (stonith_api) {
+    if (fencer_api != NULL) {
         // Prevent fencer connection from coming up again
         controld_clear_fsa_input_flags(R_ST_REQUIRED);
 
-        if (stonith_api->state != stonith_disconnected) {
-            stonith_api->cmds->disconnect(stonith_api);
+        if (fencer_api->state != stonith_disconnected) {
+            fencer_api->cmds->disconnect(fencer_api);
         }
-        stonith_api->cmds->remove_notification(stonith_api, NULL);
+        fencer_api->cmds->remove_notification(fencer_api, NULL);
     }
     if (destroy) {
-        if (stonith_api) {
-            stonith_api->cmds->free(stonith_api);
-            stonith_api = NULL;
+        if (fencer_api != NULL) {
+            fencer_api->cmds->free(fencer_api);
+            fencer_api = NULL;
         }
         if (controld_fencer_connect_timer) {
             mainloop_timer_del(controld_fencer_connect_timer);
@@ -757,29 +737,29 @@ controld_disconnect_fencer(bool destroy)
 }
 
 static gboolean
-do_stonith_history_sync(gpointer user_data)
+sync_fencing_history(gpointer user_data)
 {
-    if (stonith_api && (stonith_api->state != stonith_disconnected)) {
+    if ((fencer_api != NULL) && (fencer_api->state != stonith_disconnected)) {
         stonith_history_t *history = NULL;
 
-        te_cleanup_stonith_history_sync(stonith_api, FALSE);
-        stonith_api->cmds->history(stonith_api,
-                                   st_opt_sync_call | st_opt_broadcast,
-                                   NULL, &history, 5);
+        controld_cleanup_fencing_history_sync(fencer_api, false);
+        fencer_api->cmds->history(fencer_api, st_opt_sync_call|st_opt_broadcast,
+                                  NULL, &history, 5);
         stonith__history_free(history);
         return TRUE;
     } else {
-        crm_info("Skip triggering stonith history-sync as stonith is disconnected");
+        crm_info("Skipping triggering fencing history sync because fencer is "
+                 "disconnected");
         return FALSE;
     }
 }
 
 static void
-tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
+fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
 {
     char *uuid = NULL;
-    int stonith_id = -1;
     int transition_id = -1;
+    int action_id = -1;
     pcmk__graph_action_t *action = NULL;
     const char *target = NULL;
 
@@ -803,10 +783,10 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
     }
 
     CRM_CHECK(decode_transition_key(data->userdata, &uuid, &transition_id,
-                                    &stonith_id, NULL),
+                                    &action_id, NULL),
               goto bail);
 
-    if (controld_globals.transition_graph->complete || (stonith_id < 0)
+    if (controld_globals.transition_graph->complete || (action_id < 0)
         || !pcmk__str_eq(uuid, controld_globals.te_uuid, pcmk__str_none)
         || (controld_globals.transition_graph->id != transition_id)) {
         crm_info("Ignoring fence operation %d result: "
@@ -814,17 +794,17 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                  " complete=%s action=%d uuid=%s (vs %s) transition=%d (vs %d)",
                  data->call_id,
                  pcmk__btoa(controld_globals.transition_graph->complete),
-                 stonith_id, uuid, controld_globals.te_uuid, transition_id,
+                 action_id, uuid, controld_globals.te_uuid, transition_id,
                  controld_globals.transition_graph->id);
         goto bail;
     }
 
-    action = controld_get_action(stonith_id);
+    action = controld_get_action(action_id);
     if (action == NULL) {
         crm_err("Ignoring fence operation %d result: "
                 "Action %d not found in transition graph (bug?) "
                 QB_XS " uuid=%s transition=%d",
-                data->call_id, stonith_id, uuid, transition_id);
+                data->call_id, action_id, uuid, transition_id);
         goto bail;
     }
 
@@ -880,7 +860,7 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                                              pcmk__graph_action_sent_update);
             }
         }
-        st_fail_count_reset(target);
+        controld_reset_fencing_fail_count(target);
 
     } else {
         enum pcmk__graph_next abort_action = pcmk__graph_restart;
@@ -909,12 +889,12 @@ tengine_stonith_callback(stonith_t *stonith, stonith_callback_data_t *data)
                        "(aborting transition)", data->call_id, target, reason);
         }
 
-        /* Increment the fail count now, so abort_for_stonith_failure() can
+        /* Increment the fail count now, so abort_for_fencing_failure() can
          * check it. Non-DC nodes will increment it in
          * handle_fence_notification().
          */
-        st_fail_count_increment(target);
-        abort_for_stonith_failure(abort_action, target, NULL);
+        increment_fencing_fail_count(target);
+        abort_for_fencing_failure(abort_action, target, NULL);
     }
 
     pcmk__update_graph(controld_globals.transition_graph, action);
@@ -930,13 +910,14 @@ static int
 fence_with_delay(const char *target, const char *type, int delay)
 {
     uint32_t options = st_opt_none; // Group of enum stonith_call_options
-    int timeout_sec = pcmk__timeout_ms2s(controld_globals.transition_graph->stonith_timeout);
+    int timeout_sec =
+        pcmk__timeout_ms2s(controld_globals.transition_graph->fencing_timeout);
 
     if (crmd_join_phase_count(controld_join_confirmed) == 1) {
         stonith__set_call_options(options, target, st_opt_allow_self_fencing);
     }
-    return stonith_api->cmds->fence_with_delay(stonith_api, options, target,
-                                               type, timeout_sec, 0, delay);
+    return fencer_api->cmds->fence_with_delay(fencer_api, options, target, type,
+                                              timeout_sec, 0, delay);
 }
 
 /*!
@@ -962,7 +943,8 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     const char *priority_delay = NULL;
     int delay_i = 0;
     gboolean invalid_action = FALSE;
-    int stonith_timeout = pcmk__timeout_ms2s(controld_globals.transition_graph->stonith_timeout);
+    int timeout_sec =
+        pcmk__timeout_ms2s(controld_globals.transition_graph->fencing_timeout);
 
     CRM_CHECK(id != NULL, invalid_action = TRUE);
     CRM_CHECK(uuid != NULL, invalid_action = TRUE);
@@ -979,7 +961,7 @@ controld_execute_fence_action(pcmk__graph_t *graph,
 
     crm_notice("Requesting fencing (%s) targeting node %s "
                QB_XS " action=%s timeout=%i%s%s",
-               type, target, id, stonith_timeout,
+               type, target, id, timeout_sec,
                priority_delay ? " priority_delay=" : "",
                priority_delay ? priority_delay : "");
 
@@ -991,55 +973,53 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     transition_key = pcmk__transition_key(controld_globals.transition_graph->id,
                                           action->id, 0,
                                           controld_globals.te_uuid),
-    stonith_api->cmds->register_callback(stonith_api, rc,
-                                         (stonith_timeout
-                                          + (delay_i > 0 ? delay_i : 0)),
-                                         st_opt_timeout_updates, transition_key,
-                                         "tengine_stonith_callback",
-                                         tengine_stonith_callback);
+    fencer_api->cmds->register_callback(fencer_api, rc,
+                                        (timeout_sec
+                                         + (delay_i > 0 ? delay_i : 0)),
+                                        st_opt_timeout_updates, transition_key,
+                                        "fencing_cb", fencing_cb);
     return pcmk_rc_ok;
 }
 
-bool
-controld_verify_stonith_watchdog_timeout(const char *value)
+void
+controld_validate_fencing_watchdog_timeout(const char *value)
 {
     const char *our_nodename = controld_globals.cluster->priv->node_name;
 
-    if ((stonith_api == NULL) || (stonith_api->state == stonith_disconnected)
-        || !stonith__watchdog_fencing_enabled_for_node_api(stonith_api,
-                                                           our_nodename)) {
-        // Anything is valid since it won't be used
-        return true;
-    }
+    // Validate only if the timeout will be used
+    if ((fencer_api != NULL) && (fencer_api->state != stonith_disconnected)
+        && stonith__watchdog_fencing_enabled_for_node_api(fencer_api,
+                                                          our_nodename)) {
 
-    return pcmk__valid_stonith_watchdog_timeout(value);
+        pcmk__valid_fencing_watchdog_timeout(value);
+    }
 }
 
-/* end stonith API client functions */
+/* end fencer API client functions */
 
 
 /*
- * stonith history synchronization
+ * Fencing history synchronization
  *
  * Each node's fencer keeps track of a cluster-wide fencing history. When a node
  * joins or leaves, we need to synchronize the history across all nodes.
  */
 
-static crm_trigger_t *stonith_history_sync_trigger = NULL;
-static mainloop_timer_t *stonith_history_sync_timer_short = NULL;
-static mainloop_timer_t *stonith_history_sync_timer_long = NULL;
+static crm_trigger_t *fencing_history_sync_trigger = NULL;
+static mainloop_timer_t *fencing_history_sync_timer_short = NULL;
+static mainloop_timer_t *fencing_history_sync_timer_long = NULL;
 
 void
-te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
+controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
 {
     if (free_timers) {
-        mainloop_timer_del(stonith_history_sync_timer_short);
-        stonith_history_sync_timer_short = NULL;
-        mainloop_timer_del(stonith_history_sync_timer_long);
-        stonith_history_sync_timer_long = NULL;
+        mainloop_timer_del(fencing_history_sync_timer_short);
+        fencing_history_sync_timer_short = NULL;
+        mainloop_timer_del(fencing_history_sync_timer_long);
+        fencing_history_sync_timer_long = NULL;
     } else {
-        mainloop_timer_stop(stonith_history_sync_timer_short);
-        mainloop_timer_stop(stonith_history_sync_timer_long);
+        mainloop_timer_stop(fencing_history_sync_timer_short);
+        mainloop_timer_stop(fencing_history_sync_timer_long);
     }
 
     if (st) {
@@ -1048,25 +1028,25 @@ te_cleanup_stonith_history_sync(stonith_t *st, bool free_timers)
 }
 
 static void
-tengine_stonith_history_synced(stonith_t *st, stonith_event_t *st_event)
+fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 {
-    te_cleanup_stonith_history_sync(st, FALSE);
-    crm_debug("Fence-history synced - cancel all timers");
+    controld_cleanup_fencing_history_sync(st, false);
+    crm_debug("Fencing history synced - cancel all timers");
 }
 
 static gboolean
-stonith_history_sync_set_trigger(gpointer user_data)
+fencing_history_sync_set_trigger(gpointer user_data)
 {
-    mainloop_set_trigger(stonith_history_sync_trigger);
+    mainloop_set_trigger(fencing_history_sync_trigger);
     return FALSE;
 }
 
 void
-te_trigger_stonith_history_sync(bool long_timeout)
+controld_trigger_fencing_history_sync(bool long_timeout)
 {
     /* trigger a sync in 5s to give more nodes the
      * chance to show up so that we don't create
-     * unnecessary stonith-history-sync traffic
+     * unnecessary fencing-history-sync traffic
      *
      * the long timeout of 30s is there as a fallback
      * so that after a successful connection to fenced
@@ -1076,37 +1056,38 @@ te_trigger_stonith_history_sync(bool long_timeout)
      * (e.g. fenced segfaults and is restarted by pacemakerd)
      */
 
-    /* as we are finally checking the stonith-connection
-     * in do_stonith_history_sync we should be fine
-     * leaving stonith_history_sync_time & stonith_history_sync_trigger
+    /* as we are finally checking the fencer connection
+     * in sync_fencing_history() we should be fine
+     * leaving fencing_history_sync_timer_short,
+     * fencing_history_sync_timer_long, and fencing_history_sync_trigger
      * around
      */
-    if (stonith_history_sync_trigger == NULL) {
-        stonith_history_sync_trigger =
-            mainloop_add_trigger(G_PRIORITY_LOW,
-                                 do_stonith_history_sync, NULL);
+    if (fencing_history_sync_trigger == NULL) {
+        fencing_history_sync_trigger =
+            mainloop_add_trigger(G_PRIORITY_LOW, sync_fencing_history, NULL);
     }
 
     if (long_timeout) {
-        if(stonith_history_sync_timer_long == NULL) {
-            stonith_history_sync_timer_long =
+        if (fencing_history_sync_timer_long == NULL) {
+            fencing_history_sync_timer_long =
                 mainloop_timer_add("history_sync_long", 30000,
-                                   FALSE, stonith_history_sync_set_trigger,
+                                   FALSE, fencing_history_sync_set_trigger,
                                    NULL);
         }
         crm_info("Fence history will be synchronized cluster-wide within 30 seconds");
-        mainloop_timer_start(stonith_history_sync_timer_long);
+        mainloop_timer_start(fencing_history_sync_timer_long);
+
     } else {
-        if(stonith_history_sync_timer_short == NULL) {
-            stonith_history_sync_timer_short =
+        if (fencing_history_sync_timer_short == NULL) {
+            fencing_history_sync_timer_short =
                 mainloop_timer_add("history_sync_short", 5000,
-                                   FALSE, stonith_history_sync_set_trigger,
+                                   FALSE, fencing_history_sync_set_trigger,
                                    NULL);
         }
         crm_info("Fence history will be synchronized cluster-wide within 5 seconds");
-        mainloop_timer_start(stonith_history_sync_timer_short);
+        mainloop_timer_start(fencing_history_sync_timer_short);
     }
 
 }
 
-/* end stonith history synchronization functions */
+/* end fencing history synchronization functions */

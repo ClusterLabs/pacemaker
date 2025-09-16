@@ -147,7 +147,7 @@ If not specified, the default from the table below is used.
        on-fail
      - :ref:`enumeration <enumeration>`
      - * If ``name`` is ``stop``: ``fence`` if
-         :ref:`stonith-enabled <stonith_enabled>` is true, otherwise ``block``
+         :ref:`fencing-enabled <fencing_enabled>` is true, otherwise ``block``
        * If ``name`` is ``demote``: ``on-fail`` of the ``monitor`` action with
          ``role`` set to ``Promoted``, if present, enabled, and configured to a
          value other than ``demote``, or ``restart`` otherwise

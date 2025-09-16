@@ -754,11 +754,11 @@ pcmk__unpack_graph(const xmlNode *xml_graph, const char *reference)
                   pcmk__free_graph(new_graph); return NULL);
         pcmk_parse_interval_spec(buf, &(new_graph->network_delay));
 
-        buf = pcmk__xe_get(xml_graph, PCMK_OPT_STONITH_TIMEOUT);
+        buf = pcmk__xe_get(xml_graph, PCMK_OPT_FENCING_TIMEOUT);
         if (buf == NULL) {
-            new_graph->stonith_timeout = new_graph->network_delay;
+            new_graph->fencing_timeout = new_graph->network_delay;
         } else {
-            pcmk_parse_interval_spec(buf, &(new_graph->stonith_timeout));
+            pcmk_parse_interval_spec(buf, &(new_graph->fencing_timeout));
         }
 
         // Use 0 (dynamic limit) as default/invalid, -1 (no limit) as minimum

@@ -7,8 +7,8 @@
         <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="stop-removed-resources" name="stop-removed-resources" value="false"/>
         <nvpair id="stop-removed-actions" name="stop-removed-actions" value="true"/>
-        <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
-        <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
+        <nvpair id="fencing-enabled" name="fencing-enabled" value="true"/>
+        <nvpair id="fencing-action" name="fencing-action" value="reboot"/>
       </cluster_property_set>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.1-node: 6fc5ce8302abf145a02891ec41e5a492efbe8efe"/>

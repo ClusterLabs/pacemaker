@@ -145,7 +145,7 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
                           rsc->priv->scheduler);
     pcmk__clear_action_flags(probe, pcmk__action_optional);
 
-    pcmk__order_vs_unfence(rsc, node, probe, pcmk__ar_ordered);
+    pcmk__order_vs_unfencing(rsc, node, probe, pcmk__ar_ordered);
     add_expected_result(probe, rsc, node);
     return probe;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -435,13 +435,13 @@ void pcmk__create_graph(pcmk_scheduler_t *scheduler);
 // Fencing (pcmk_sched_fencing.c)
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_fence(pcmk_action_t *stonith_op,
-                          pcmk_scheduler_t *scheduler);
+void pcmk__order_vs_fencing(pcmk_action_t *fencing,
+                            pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
-                            pcmk_action_t *action,
-                            enum pcmk__action_relation_flags order);
+void pcmk__order_vs_unfencing(const pcmk_resource_t *rsc, pcmk_node_t *node,
+                              pcmk_action_t *action,
+                              enum pcmk__action_relation_flags order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pcmk_node_t *node);

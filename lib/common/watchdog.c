@@ -260,7 +260,7 @@ pcmk__get_sbd_sync_resource_startup(void)
 
 // 0 <= return value <= min(LONG_MAX, (2 * SBD timeout))
 long
-pcmk__auto_stonith_watchdog_timeout(void)
+pcmk__auto_fencing_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
     long long st_timeout = 2 * (long long) sbd_timeout;
@@ -269,7 +269,7 @@ pcmk__auto_stonith_watchdog_timeout(void)
 }
 
 bool
-pcmk__valid_stonith_watchdog_timeout(const char *value)
+pcmk__valid_fencing_watchdog_timeout(const char *value)
 {
     /* @COMPAT At a compatibility break, accept either negative values or a
      * specific string like "auto" (but not both) to mean "auto-calculate the
@@ -282,21 +282,21 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
     }
 
     if (st_timeout < 0) {
-        st_timeout = pcmk__auto_stonith_watchdog_timeout();
+        st_timeout = pcmk__auto_fencing_watchdog_timeout();
 
         // At this point, 0 <= sbd_timeout <= st_timeout
         crm_debug("Using calculated value %lld for "
-                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
+                  PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " (%s)",
                   st_timeout, value);
     }
 
     if (st_timeout == 0) {
         crm_debug("Watchdog may be enabled but "
-                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " is disabled (%s)",
+                  PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " is disabled (%s)",
                   value? value : "default");
 
     } else if (pcmk__locate_sbd() == 0) {
-        crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+        crm_emerg("Shutting down: " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
                   " configured (%s) but SBD not active",
                   pcmk__s(value, "auto"));
         crm_exit(CRM_EX_FATAL);
@@ -306,16 +306,16 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
         long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
         if (st_timeout < sbd_timeout) {
-            /* Passed-in value for PCMK_OPT_STONITH_WATCHDOG_TIMEOUT was
+            /* Passed-in value for PCMK_OPT_FENCING_WATCHDOG_TIMEOUT was
              * parsable, positive, and less than the SBD_WATCHDOG_TIMEOUT
              */
-            crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+            crm_emerg("Shutting down: " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
                       " (%s) too short (must be >%ldms)",
                       value, sbd_timeout);
             crm_exit(CRM_EX_FATAL);
             return false;
         }
-        crm_info("Watchdog configured with " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
+        crm_info("Watchdog configured with " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
                  " %s and SBD timeout %ldms",
                  value, sbd_timeout);
     }

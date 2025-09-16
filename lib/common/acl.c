@@ -186,7 +186,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
       </acl_target>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_target id="badidea"><role id="auto-badidea"/></acl_target>

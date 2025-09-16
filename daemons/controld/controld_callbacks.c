@@ -170,7 +170,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             if (pcmk__str_eq(PCMK_VALUE_MEMBER, node->state, pcmk__str_none)) {
                 appeared = TRUE;
                 if (!is_remote) {
-                    remove_stonith_cleanup(node->name);
+                    controld_remove_fencing_cleanup(node->name);
                 }
             } else {
                 controld_remove_failed_sync_node(node->name);
@@ -255,7 +255,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                  * there is no other way to ensure some one node does it.
                  */
                 if (appeared) {
-                    te_trigger_stonith_history_sync(FALSE);
+                    controld_trigger_fencing_history_sync(false);
                 } else {
                     controld_delete_node_state(node->name,
                                                controld_section_attrs,
@@ -285,7 +285,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 const bool confirmed =
                     pcmk_is_set(down->flags, pcmk__graph_action_confirmed);
 
-                /* tengine_stonith_callback() confirms fence actions */
+                // fencing_cb() confirms fence actions
                 crm_trace("Updating CIB %s fencer reported fencing of %s complete",
                           (confirmed? "after" : "before"), node->name);
 
@@ -326,10 +326,10 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
         } else if (appeared == FALSE) {
             if ((controld_globals.transition_graph == NULL)
                 || (controld_globals.transition_graph->id <= 0)) {
-                crm_info("Stonith/shutdown of node %s is unknown to the "
+                crm_info("Fencing/shutdown of node %s is unknown to the "
                          "current DC", node->name);
             } else {
-                crm_warn("Stonith/shutdown of node %s was not expected",
+                crm_warn("Fencing/shutdown of node %s was not expected",
                          node->name);
             }
             if (!is_remote) {

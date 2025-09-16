@@ -1156,7 +1156,7 @@ find_unfencing_devices(GList *candidates, GList *matches)
             matches = g_list_prepend(matches, candidate);
 
         } else if (pcmk__str_eq(g_hash_table_lookup(candidate->priv->meta,
-                                                    PCMK_STONITH_PROVIDES),
+                                                    PCMK_FENCING_PROVIDES),
                                 PCMK_VALUE_UNFENCING, pcmk__str_casei)) {
             matches = g_list_prepend(matches, candidate);
         }
@@ -1238,7 +1238,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             pcmk_scheduler_t *scheduler)
 {
     char *op_key = NULL;
-    pcmk_action_t *stonith_op = NULL;
+    pcmk_action_t *fencing_op = NULL;
 
     if(op == NULL) {
         op = scheduler->priv->fence_action;
@@ -1247,15 +1247,14 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
     op_key = crm_strdup_printf("%s-%s-%s",
                                PCMK_ACTION_STONITH, node->priv->name, op);
 
-    stonith_op = lookup_singleton(scheduler, op_key);
-    if(stonith_op == NULL) {
-        stonith_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
+    fencing_op = lookup_singleton(scheduler, op_key);
+    if (fencing_op == NULL) {
+        fencing_op = custom_action(NULL, op_key, PCMK_ACTION_STONITH, node,
                                    TRUE, scheduler);
 
-        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE, node->priv->name);
-        pcmk__insert_meta(stonith_op, PCMK__META_ON_NODE_UUID,
-                          node->priv->id);
-        pcmk__insert_meta(stonith_op, PCMK__META_STONITH_ACTION, op);
+        pcmk__insert_meta(fencing_op, PCMK__META_ON_NODE, node->priv->name);
+        pcmk__insert_meta(fencing_op, PCMK__META_ON_NODE_UUID, node->priv->id);
+        pcmk__insert_meta(fencing_op, PCMK__META_STONITH_ACTION, op);
 
         if (pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
             /* Extra work to detect device changes
@@ -1295,11 +1294,11 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
                                match->id, ":", agent, ":",
                                data->digest_secure_calc, ",", NULL);
             }
-            pcmk__insert_dup(stonith_op->meta, PCMK__META_DIGESTS_ALL,
+            pcmk__insert_dup(fencing_op->meta, PCMK__META_DIGESTS_ALL,
                              digests_all->str);
             g_string_free(digests_all, TRUE);
 
-            pcmk__insert_dup(stonith_op->meta, PCMK__META_DIGESTS_SECURE,
+            pcmk__insert_dup(fencing_op->meta, PCMK__META_DIGESTS_SECURE,
                              digests_secure->str);
             g_string_free(digests_secure, TRUE);
 
@@ -1322,7 +1321,7 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
              * been called by schedule_fencing_and_shutdowns() after node
              * priority has already been calculated by native_add_running().
              */
-            || g_hash_table_lookup(stonith_op->meta,
+            || g_hash_table_lookup(fencing_op->meta,
                                    PCMK_OPT_PRIORITY_FENCING_DELAY) != NULL)) {
 
             /* Add PCMK_OPT_PRIORITY_FENCING_DELAY to the fencing op even if
@@ -1332,20 +1331,20 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             char *delay_s = pcmk__itoa(node_priority_fencing_delay(node,
                                                                    scheduler));
 
-            g_hash_table_insert(stonith_op->meta,
+            g_hash_table_insert(fencing_op->meta,
                                 strdup(PCMK_OPT_PRIORITY_FENCING_DELAY),
                                 delay_s);
     }
 
     if(optional == FALSE && pe_can_fence(scheduler, node)) {
-        pcmk__clear_action_flags(stonith_op, pcmk__action_optional);
-        pe_action_set_reason(stonith_op, reason, false);
+        pcmk__clear_action_flags(fencing_op, pcmk__action_optional);
+        pe_action_set_reason(fencing_op, reason, false);
 
-    } else if(reason && stonith_op->reason == NULL) {
-        stonith_op->reason = strdup(reason);
+    } else if ((reason != NULL) && (fencing_op->reason == NULL)) {
+        fencing_op->reason = strdup(reason);
     }
 
-    return stonith_op;
+    return fencing_op;
 }
 
 enum pcmk__action_type

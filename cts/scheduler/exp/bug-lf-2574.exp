@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
+<transition_graph cluster-delay="60s" fencing-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="main_rsc_monitor_10000" on_node="srv03" on_node_uuid="e2ffc1ed-3ebe-47e2-b51b-b0f04b454311">
