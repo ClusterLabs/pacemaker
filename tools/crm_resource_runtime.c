@@ -1673,7 +1673,6 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      bool force)
 {
     int rc = pcmk_rc_ok;
-    int before = 0;
     guint step_timeout_s = 0;
 
     /* @TODO Due to this sleep interval, a timeout <2s will cause problems and
@@ -1851,7 +1850,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     step_timeout_s = timeout / sleep_interval;
     while (list_delta != NULL) {
-        before = g_list_length(list_delta);
+        guint before = g_list_length(list_delta);
+
         if(timeout_ms == 0) {
             step_timeout_s = wait_time_estimate(scheduler, list_delta)
                              / sleep_interval;
@@ -1883,7 +1883,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             dump_list(list_delta, "Delta");
         }
 
-        crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
+        crm_trace("%u (was %u) resources remaining", g_list_length(list_delta),
+                  before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
             out->err(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
@@ -1930,7 +1931,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     step_timeout_s = timeout / sleep_interval;
     while (waiting_for_starts(list_delta, rsc, host)) {
-        before = g_list_length(list_delta);
+        guint before = g_list_length(list_delta);
+
         if(timeout_ms == 0) {
             step_timeout_s = wait_time_estimate(scheduler, list_delta)
                              / sleep_interval;
