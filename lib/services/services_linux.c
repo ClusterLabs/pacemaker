@@ -1465,10 +1465,10 @@ services__list_dir(const char *dir, bool files, bool executable)
         } else if (S_ISREG(sb.st_mode)) {
             if (!files) {
                 continue;
+            }
 
-            } else if (executable
-                       && (sb.st_mode & S_IXUSR) == 0
-                       && (sb.st_mode & S_IXGRP) == 0 && (sb.st_mode & S_IXOTH) == 0) {
+            if (executable
+                && !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
                 continue;
             }
         }
