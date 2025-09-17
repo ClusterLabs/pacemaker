@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                // true, false
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -23,7 +24,15 @@
 GList *
 resources_os_list_ocf_providers(void)
 {
-    return get_directory_list(PCMK__OCF_RA_PATH, FALSE, TRUE);
+    GList *list = NULL;
+    gchar **dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
+
+    for (gchar **dir = dirs; *dir != NULL; dir++) {
+        list = g_list_concat(list, services__list_dir(*dir, false, true));
+    }
+
+    g_strfreev(dirs);
+    return list;
 }
 
 static GList *
