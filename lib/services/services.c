@@ -1032,26 +1032,6 @@ services_action_sync(svc_action_t * op)
 }
 
 GList *
-get_directory_list(const char *root, gboolean files, gboolean executable)
-{
-    gchar **dir_paths = NULL;
-    GList *list = NULL;
-
-    if (pcmk__str_empty(root)) {
-        return NULL;
-    }
-
-    dir_paths = g_strsplit(root, ":", 0);
-
-    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
-        list = g_list_concat(list, services__list_dir(*dir, files, executable));
-    }
-
-    g_strfreev(dir_paths);
-    return list;
-}
-
-GList *
 resources_list_standards(void)
 {
     GList *standards = NULL;
@@ -1395,3 +1375,31 @@ services__grab_stderr(svc_action_t *action)
     action->stderr_data = NULL;
     return output;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/services_compat.h>
+
+GList *
+get_directory_list(const char *root, gboolean files, gboolean executable)
+{
+    gchar **dir_paths = NULL;
+    GList *list = NULL;
+
+    if (pcmk__str_empty(root)) {
+        return NULL;
+    }
+
+    dir_paths = g_strsplit(root, ":", 0);
+
+    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
+        list = g_list_concat(list, services__list_dir(*dir, files, executable));
+    }
+
+    g_strfreev(dir_paths);
+    return list;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
