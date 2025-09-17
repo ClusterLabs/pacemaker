@@ -63,7 +63,7 @@ G_GNUC_INTERNAL
 GList *services__list_dir(const char *dir, bool files, bool executable);
 
 G_GNUC_INTERNAL
-GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
+GList *services__list_dirs(const char *dirs, bool files, bool executable);
 
 G_GNUC_INTERNAL
 int services__execute_file(svc_action_t *op);
