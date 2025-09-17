@@ -591,33 +591,24 @@ child_liveness(pcmkd_child_t *child)
 
     rc = pcmk__ipc_is_authentic_process_active(ipc_name, *ref_uid, *ref_gid,
                                                &ipc_pid);
-    if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_unresponsive)) {
-        return rc;
-    }
-
-    if (child->pid <= 0) {
-        /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this initializes a new
-         * child. If rc is pcmk_rc_ipc_unresponsive, ipc_pid is zero, and we
-         * will investigate further.
-         */
-        child->pid = ipc_pid;
-
-    } else if ((rc == pcmk_rc_ok) && (child->pid != ipc_pid)) {
-        /* An unexpected (but authorized) process is responding to IPC.
-         * Investigate further.
-         */
-        rc = pcmk_rc_ipc_unresponsive;
-    }
-
     if (rc == pcmk_rc_ok) {
+        if (child->pid == 0) {
+            // Initialize the child using the found PID
+            child->pid = ipc_pid;
+        }
+        if (child->pid == ipc_pid) {
+            // The found PID matches the expected one (if any)
+            return pcmk_rc_ok;
+        }
+
+    } else if (rc != pcmk_rc_ipc_unresponsive) {
         return rc;
     }
 
-    /* If we get here, a child without IPC is being tracked, no IPC liveness
-     * has been detected, or IPC liveness has been detected with an
-     * unexpected (but authorized) process. This is safe on FreeBSD since
-     * the only change possible from a proper child's PID into "special" PID
-     * of 1 behind more loosely related process.
+    /* If we get here, either no IPC liveness has been detected, or IPC liveness
+     * has been detected with an unexpected (but authorized) process. This is
+     * safe on FreeBSD since the only change possible from a proper child's PID
+     * into "special" PID of 1 behind more loosely related process.
      */
     rc = pcmk__pid_active(child->pid, name);
 
