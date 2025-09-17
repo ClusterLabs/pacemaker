@@ -591,23 +591,25 @@ child_liveness(pcmkd_child_t *child)
 
     rc = pcmk__ipc_is_authentic_process_active(ipc_name, *ref_uid, *ref_gid,
                                                &ipc_pid);
-    if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_unresponsive)) {
-        if (child->pid <= 0) {
-            /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this initializes a
-             * new child. If rc is pcmk_rc_ipc_unresponsive, ipc_pid is zero,
-             * and we will investigate further.
-             */
-            child->pid = ipc_pid;
-
-        } else if ((ipc_pid != 0) && (child->pid != ipc_pid)) {
-            /* An unexpected (but authorized) process is responding to IPC.
-             * Investigate further.
-             */
-            rc = pcmk_rc_ipc_unresponsive;
-        }
+    if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_unresponsive)) {
+        return rc;
     }
 
-    if (rc != pcmk_rc_ipc_unresponsive) {
+    if (child->pid <= 0) {
+        /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this initializes a new
+         * child. If rc is pcmk_rc_ipc_unresponsive, ipc_pid is zero, and we
+         * will investigate further.
+         */
+        child->pid = ipc_pid;
+
+    } else if ((rc == pcmk_rc_ok) && (child->pid != ipc_pid)) {
+        /* An unexpected (but authorized) process is responding to IPC.
+         * Investigate further.
+         */
+        rc = pcmk_rc_ipc_unresponsive;
+    }
+
+    if (rc == pcmk_rc_ok) {
         return rc;
     }
 
