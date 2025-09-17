@@ -35,34 +35,39 @@ resources_os_list_ocf_providers(void)
     return list;
 }
 
+/*!
+ * \internal
+ * \brief List the agents from the given OCF provider
+ *
+ * For each directory along \c PCMK__OCF_RA_PATH (a colon-delimited list), this
+ * function looks for a subdirectory called \p provider. It then finds the top-
+ * level executable files inside that subdirectory, excluding those beginning
+ * with \c '.', and adds them to the list.
+ *
+ * \param[in] provider  OCF provider
+ *
+ * \return Newly allocated list of OCF agents as newly allocated strings
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       <tt>g_list_free_full(list, free)</tt>.
+ */
 static GList *
-services_os_get_directory_list_provider(const char *root, const char *provider,
-                                        gboolean files, gboolean executable)
+list_provider_agents(const char *provider)
 {
-    GList *result = NULL;
-    char *dirs = strdup(root);
-    char *dir = NULL;
-    char buffer[PATH_MAX];
+    gchar **dirs = NULL;
+    GList *list = NULL;
 
-    if (pcmk__str_empty(dirs)) {
-        free(dirs);
-        return result;
+    dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
+
+    for (gchar **dir = dirs; *dir != NULL; dir++) {
+        char *buf = pcmk__assert_asprintf("%s/%s", *dir, provider);
+
+        list = g_list_concat(list, services__list_dir(buf, true, true));
+        free(buf);
     }
 
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        GList *tmp = NULL;
-
-        sprintf(buffer, "%s/%s", dir, provider);
-        tmp = services__list_dir(buffer, files, executable);
-
-        if (tmp) {
-            result = g_list_concat(result, tmp);
-        }
-    }
-
-    free(dirs);
-
-    return result;
+    g_strfreev(dirs);
+    return list;
 }
 
 GList *
@@ -73,8 +78,7 @@ resources_os_list_ocf_agents(const char *provider)
     GList *providers = NULL;
 
     if (provider) {
-        return services_os_get_directory_list_provider(PCMK__OCF_RA_PATH, provider,
-                                                       TRUE, TRUE);
+        return list_provider_agents(provider);
     }
 
     providers = resources_os_list_ocf_providers();
