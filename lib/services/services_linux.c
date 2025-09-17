@@ -1473,7 +1473,7 @@ services__list_dir(const char *dir, bool files, bool executable)
             }
         }
 
-        list = g_list_append(list, strdup(namelist[i]->d_name));
+        list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
     }
 
     for (int i = 0; i < entries; i++) {
