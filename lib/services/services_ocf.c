@@ -44,7 +44,7 @@ services_os_get_directory_list_provider(const char *root, const char *provider,
         GList *tmp = NULL;
 
         sprintf(buffer, "%s/%s", dir, provider);
-        tmp = services_os_get_single_directory_list(buffer, files, executable);
+        tmp = services__list_dir(buffer, files, executable);
 
         if (tmp) {
             result = g_list_concat(result, tmp);

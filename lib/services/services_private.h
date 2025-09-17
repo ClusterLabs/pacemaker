@@ -11,6 +11,7 @@
 #ifndef PCMK__SERVICES_SERVICES_PRIVATE__H
 #define PCMK__SERVICES_SERVICES_PRIVATE__H
 
+#include <stdbool.h>                // bool
 #include <unistd.h>                 // uid_t, gid_t
 
 #include <glib.h>                   // G_GNUC_INTERNAL, gboolean, guint, etc.
@@ -59,8 +60,7 @@ G_GNUC_INTERNAL
 const char *services__action_kind(const svc_action_t *action);
 
 G_GNUC_INTERNAL
-GList *services_os_get_single_directory_list(const char *root, gboolean files,
-                                             gboolean executable);
+GList *services__list_dir(const char *dir, bool files, bool executable);
 
 G_GNUC_INTERNAL
 GList *services_os_get_directory_list(const char *root, gboolean files, gboolean executable);
