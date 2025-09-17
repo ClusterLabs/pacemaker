@@ -261,18 +261,14 @@ add_desc_xml(pcmk__output_t *out, bool for_long, const char *desc)
     pcmk__xe_set(node, PCMK_XA_LANG, PCMK__VALUE_EN);
 
 #ifdef ENABLE_NLS
-    {
-        static const char *locale = NULL;
+    if (!pcmk__str_eq(desc, _(desc), pcmk__str_none)) {
+        // The locale should have been set already by crm_log_preinit()
+        gchar **parts = g_strsplit(setlocale(LC_ALL, NULL), "_", 2);
 
-        if (strcmp(desc, _(desc)) == 0) {
-            return;
-        }
-
-        if (locale == NULL) {
-            locale = strtok(setlocale(LC_ALL, NULL), "_");
-        }
         node = pcmk__output_create_xml_text_node(out, tag, _(desc));
-        pcmk__xe_set(node, PCMK_XA_LANG, locale);
+        pcmk__xe_set(node, PCMK_XA_LANG, parts[0]);
+
+        g_strfreev(parts);
     }
 #endif
 }
