@@ -569,7 +569,6 @@ child_liveness(pcmkd_child_t *child)
     const char *name = pcmk__server_name(child->server);
     const char *ipc_name = pcmk__server_ipc_name(child->server);
     int rc = pcmk_rc_ipc_unresponsive;
-    int pid_active = pcmk_rc_ok;
     pid_t ipc_pid = 0;
 
     if (pcmk__is_set(child->flags, child_as_root)) {
@@ -618,10 +617,10 @@ child_liveness(pcmkd_child_t *child)
      * the only change possible from a proper child's PID into "special" PID
      * of 1 behind more loosely related process.
      */
-    pid_active = pcmk__pid_active(child->pid, name);
+    rc = pcmk__pid_active(child->pid, name);
 
     if ((ipc_pid != 0)
-        && ((pid_active != pcmk_rc_ok)
+        && ((rc != pcmk_rc_ok)
             || (ipc_pid == PCMK__SPECIAL_PID)
             || (pcmk__pid_active(ipc_pid, name) == pcmk_rc_ok))) {
         /* An unexpected (but authorized) process was detected at the IPC
@@ -629,7 +628,7 @@ child_liveness(pcmkd_child_t *child)
          * not.
          */
 
-        if (pid_active == pcmk_rc_ok) {
+        if (rc == pcmk_rc_ok) {
             /* The child we're tracking is active. Kill it, and adopt the
              * detected process. This assumes that our children don't fork
              * (thus getting a different PID owning the IPC), but rather the
@@ -640,23 +639,24 @@ child_liveness(pcmkd_child_t *child)
             /* not possessing IPC, afterall (what about corosync CPG?) */
             stop_child(child, SIGKILL);
         }
-        rc = pcmk_rc_ok;
         child->pid = ipc_pid;
-    } else if (pid_active == pcmk_rc_ok) {
-        // Our tracked child's PID was found active, but not its IPC
-        rc = pcmk_rc_ipc_pid_only;
-    } else if ((child->pid == 0) && (pid_active == EINVAL)) {
-        // FreeBSD can return EINVAL
-        rc = pcmk_rc_ipc_unresponsive;
-    } else if (pid_active == EACCES) {
-        rc = pcmk_rc_ipc_unauthorized;
-    } else if (pid_active == ESRCH) {
-        rc = pcmk_rc_ipc_unresponsive;
-    } else {
-        rc = pid_active;
+        return pcmk_rc_ok;
     }
 
-    return rc;
+    switch (rc) {
+        case pcmk_rc_ok:
+            // Our tracked child's PID was found active, but not its IPC
+            return pcmk_rc_ipc_pid_only;
+        case EINVAL:
+            // FreeBSD can return EINVAL
+            return (child->pid == 0)? pcmk_rc_ipc_unresponsive : EINVAL;
+        case EACCES:
+            return pcmk_rc_ipc_unauthorized;
+        case ESRCH:
+            return pcmk_rc_ipc_unresponsive;
+        default:
+            return rc;
+    }
 }
 
 static void
