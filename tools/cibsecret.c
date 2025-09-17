@@ -13,7 +13,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>             // setenv, unsetenv
-#include <string.h>
 #include <syslog.h>             // LOG_DEBUG
 #include <sys/stat.h>           // umask, S_IRGRP, S_IROTH, ...
 #include <sys/wait.h>           // WEXITSTATUS
@@ -24,7 +23,7 @@
 #include <libxml/xmlmemory.h>   // xmlFree
 #include <libxml/xmlstring.h>   // xmlChar
 
-#include <crm/cib/internal.h>   // cib__signon_query
+#include <crm/cib/internal.h>   // cib__clean_up_connection, cib__signon_query
 #include <crm/common/internal.h>
 #include <crm/common/results.h>
 #include <crm/common/strings.h> // crm_strdup_printf
@@ -60,6 +59,10 @@ static GOptionEntry entries[] = {
  * \param[in,out] out     Output object
  * \param[in]     nodes   A list of remote hosts
  * \param[in]     cmdline The command line to run
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
  */
 typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline);
 
@@ -72,10 +75,14 @@ typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline)
  * \param[in]     to      The destination path on the remote host
  * \param[in]     from    The local file (or directory) to copy
  *
+ * \return Standard Pacemaker return code
+ *
  * \note \p from can either be a single file or a directory.  It cannot be
  *       be multiple files in a space-separated string.  If multiple files need
  *       to be copied, either copy the entire directory at once or call this
  *       function multiple times.
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
  */
 typedef int (*rcp_fn_t)(pcmk__output_t *out, gchar **nodes, const char *to,
                         const char *from);
@@ -85,21 +92,21 @@ struct subcommand_entry {
     int args;
     const char *usage;
     bool requires_cib;
-    /* The shell version of cibsecret exited with a wide variety of error codes
-     * for all sorts of situations.  Our standard Pacemaker return codes don't
-     * really line up with what it was doing - either we don't have a code with
-     * the right name, or we have one that doesn't map to the right exit code,
-     * etc.
-     *
-     * For backwards compatibility, the subcommand handler functions will
-     * return a standard Pacemaker so other functions here know what to do, but
-     * it will also take exit_code as an out parameter for the subcommands to
-     * set and for us to exit with.
-     */
-    int (*handler)(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                   crm_exit_t *exit_code);
+    int (*handler)(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn);
 };
 
+/*!
+ * \internal
+ * \brief Run a command line process
+ *
+ * \param[in,out] out          Output object
+ * \param[in]     cmdline      The command line to execute
+ * \param[out]    standard_out If not NULL, where to save stdout of the process
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On error, \p out->err() will be called to record stderr of the process
+ */
 static int
 run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
 {
@@ -338,26 +345,33 @@ get_live_peers(pcmk__output_t *out)
     int rc = pcmk_rc_ok;
     xmlNode *xml_node = NULL;
     gchar **reachable = NULL;
+    cib_t *cib = NULL;
 
     struct node_data nd = {
         .out = out,
+        .local_node = NULL,
         .all_nodes = NULL
     };
 
-    /* Get the local node name. */
-    rc = pcmk__query_node_name(out, 0, &(nd.local_node), 0);
-    if (rc != pcmk_rc_ok) {
-        out->err(out, "Could not get local node name");
-        goto done;
-    }
-
-    /* Get a list of all node names, filtering out the local node. */
-    rc = cib__signon_query(out, NULL, &xml_node);
+    rc = cib__signon_query(out, &cib, &xml_node);
     if (rc != pcmk_rc_ok) {
         out->err(out, "Could not get list of cluster nodes");
         goto done;
     }
 
+    /* Get the local node name if possible. */
+    if (cib->variant != cib_file) {
+        rc = pcmk__query_node_name(out, 0, &(nd.local_node), 0);
+        if (rc != pcmk_rc_ok) {
+            out->err(out, "Could not get local node name");
+            goto done;
+        }
+    }
+
+    /* Filter out the local node from the list of all node names.  If we don't
+     * have a local node (for instance, because CIB_file is set) then we'll
+     * just use the list of all node names instead.
+     */
     nd.field = PCMK_XA_ID;
     pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
                                node_iter_helper, &nd);
@@ -393,6 +407,8 @@ get_live_peers(pcmk__output_t *out)
     }
 
 done:
+    cib__clean_up_connection(&cib);
+
     free(nd.local_node);
     free(xml_node);
 
@@ -621,13 +637,10 @@ local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     cmdline = crm_strdup_printf("rm -f %s %s.sign", lf_file, lf_file);
     rc = run_cmdline(out, cmdline, NULL);
 
-    if (rc != pcmk_rc_ok) {
-        goto done;
+    if (rc == pcmk_rc_ok) {
+        rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
     }
 
-    rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
-
-done:
     free(lf_file);
     free(cmdline);
     return rc;
@@ -648,6 +661,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if (g_mkdir_with_parents(lf_dir, 0700) != 0) {
         rc = errno;
+        out->err(out, "Could not create directory %s: %s", lf_dir,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -655,6 +670,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     contents = crm_strdup_printf("%s\n", value);
     if (!g_file_set_contents(lf_file, contents, -1, NULL)) {
         rc = EIO;
+        out->err(out, "Could not create file %s: %s", lf_file,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -666,6 +683,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if (!g_file_set_contents(sign_file, contents, -1, NULL)) {
         rc = EIO;
+        out->err(out, "Could not create file %s: %s", sign_file,
+                 pcmk_rc_str(rc));
         goto done;
     }
 
@@ -681,8 +700,7 @@ done:
 }
 
 static int
-subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                 crm_exit_t *exit_code)
+subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -693,7 +711,6 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *local_value = NULL;
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -702,15 +719,18 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     if ((value == NULL) || !is_secret(value)) {
         out->err(out, "Resource %s parameter %s not set as secret, nothing to check",
                  rsc, param);
-        *exit_code = CRM_EX_CONFIG;
-        rc = EINVAL;
+
+        /* I don't like this error code, but (1) it maps to CRM_EX_CONFIG which
+         * is what the old cibsecret.in would return in this case, and (2) we
+         * return it all over the place for a variety of CIB checking errors.
+         */
+        rc = pcmk_rc_unpack_error;
         goto done;
     }
 
     local_sum = local_files_getsum(rsc, param);
     if (local_sum == NULL) {
         out->err(out, "No checksum for resource %s parameter %s", rsc, param);
-        *exit_code = CRM_EX_OSFILE;
         rc = ENOENT;
         goto done;
     }
@@ -722,8 +742,7 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     if ((local_value == NULL) || !pcmk__str_eq(calc_sum, local_sum, pcmk__str_none)) {
         out->err(out, "Checksum mismatch for resource %s parameter %s", rsc, param);
-        *exit_code = CRM_EX_DIGEST;
-        rc = EINVAL;
+        rc = pcmk_rc_digest_mismatch;
     }
 
 done:
@@ -735,35 +754,28 @@ done:
 }
 
 static int
-subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                  crm_exit_t *exit_code)
+subcommand_delete(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
     const char *param = remainder[2];
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
-        rc = ENODEV;
-        goto done;
+        return ENODEV;
     }
 
     rc = local_files_remove(out, rsh_fn, rcp_fn, rsc, param);
     if (rc != pcmk_rc_ok) {
-        goto done;
+        return rc;
     }
 
-    rc = remove_cib_param(out, rsc, param);
-
-done:
-    return rc;
+    return remove_cib_param(out, rsc, param);
 }
 
 static int
-subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-               crm_exit_t *exit_code)
+subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
-    int rc = subcommand_check(out, rsh_fn, rcp_fn, exit_code);
+    int rc = subcommand_check(out, rsh_fn, rcp_fn);
     char *value = NULL;
     const char *rsc = remainder[1];
     const char *param = remainder[2];
@@ -785,8 +797,7 @@ subcommand_get(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
  * here at the moment.
  */
 static int
-subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-               crm_exit_t *exit_code)
+subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -795,7 +806,6 @@ subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *current = NULL;
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -804,8 +814,12 @@ subcommand_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     if ((current != NULL) && !pcmk__str_any_of(current, LRM_MAGIC, value, NULL)) {
         out->err(out, "CIB value <%s> different for %s rsc parameter %s; please "
                  "delete it first", current, rsc, param);
-        *exit_code = CRM_EX_CONFIG;
-        rc = EINVAL;
+
+        /* I don't like this error code, but (1) it maps to CRM_EX_CONFIG which
+         * is what the old cibsecret.in would return in this case, and (2) we
+         * return it all over the place for a variety of CIB checking errors.
+         */
+        rc = pcmk_rc_unpack_error;
         goto done;
     }
 
@@ -822,8 +836,7 @@ done:
 }
 
 static int
-subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                 crm_exit_t *exit_code)
+subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -831,7 +844,6 @@ subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *value = NULL;
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -841,14 +853,13 @@ subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
         if (value == NULL) {
             out->err(out, "Nothing to stash for resource %s parameter %s", rsc,
                      param);
-            *exit_code = CRM_EX_NOSUCH;
+            rc = ENOENT;
         } else {
             out->err(out, "Resource %s parameter %s already set as secret", rsc,
                      param);
-            *exit_code = CRM_EX_EXISTS;
+            rc = EEXIST;
         }
 
-        rc = EINVAL;
         goto done;
     }
 
@@ -856,7 +867,7 @@ subcommand_stash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     remainder[3] = g_strdup(value);
     remainder[4] = NULL;
 
-    rc = subcommand_set(out, rsh_fn, rcp_fn, exit_code);
+    rc = subcommand_set(out, rsh_fn, rcp_fn);
 
 done:
     free(value);
@@ -864,8 +875,7 @@ done:
 }
 
 static int
-subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                crm_exit_t *exit_code)
+subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     gchar *dirname = NULL;
@@ -886,7 +896,6 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     rc = rsh_fn(out, peers, "rm -rf " PCMK__CIB_SECRETS_DIR);
     if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
         goto done;
     }
 
@@ -895,15 +904,10 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     free(cmdline);
 
     if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
         goto done;
     }
 
     rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
-
-    if (rc != pcmk_rc_ok) {
-        *exit_code = CRM_EX_ERROR;
-    }
 
 done:
     g_strfreev(peers);
@@ -912,8 +916,7 @@ done:
 }
 
 static int
-subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
-                   crm_exit_t *exit_code)
+subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     const char *rsc = remainder[1];
@@ -925,13 +928,11 @@ subcommand_unstash(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     if (local_value == NULL) {
         out->err(out, "Nothing to unstash for resource %s parameter %s",
                  rsc, param);
-        *exit_code = CRM_EX_NOSUCH;
-        rc = EINVAL;
+        rc = ENOENT;
         goto done;
     }
 
     if (check_cib_rsc(out, rsc) != pcmk_rc_ok) {
-        *exit_code = CRM_EX_NOSUCH;
         rc = ENODEV;
         goto done;
     }
@@ -1195,7 +1196,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    cmd.handler(out, rsh_fn, rcp_fn, &exit_code);
+    rc = cmd.handler(out, rsh_fn, rcp_fn);
+    exit_code = pcmk_rc2exitc(rc);
 
  done:
     g_strfreev(processed_args);

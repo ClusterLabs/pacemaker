@@ -110,6 +110,7 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_digest_mismatch     = -1043,
     pcmk_rc_cs_internal         = -1042,
     pcmk_rc_ipc_more            = -1041,
     pcmk_rc_no_dc               = -1040,
