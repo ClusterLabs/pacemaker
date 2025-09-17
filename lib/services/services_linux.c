@@ -1486,24 +1486,19 @@ services__list_dir(const char *dir, bool files, bool executable)
 GList *
 services__list_dirs(const char *dirs, bool files, bool executable)
 {
-    GList *result = NULL;
-    char *dirs_copy = strdup(dirs);
-    char *dir = NULL;
+    gchar **dir_paths = NULL;
+    GList *list = NULL;
 
-    if (pcmk__str_empty(dirs_copy)) {
-        free(dirs_copy);
-        return result;
+    if (pcmk__str_empty(dirs)) {
+        return NULL;
     }
 
-    for (dir = strtok(dirs_copy, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        GList *tmp = services__list_dir(dir, files, executable);
+    dir_paths = g_strsplit(dirs, ":", 0);
 
-        if (tmp) {
-            result = g_list_concat(result, tmp);
-        }
+    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
+        list = g_list_concat(list, services__list_dir(*dir, files, executable));
     }
 
-    free(dirs_copy);
-
-    return result;
+    g_strfreev(dir_paths);
+    return list;
 }
