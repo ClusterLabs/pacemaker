@@ -567,44 +567,44 @@ child_liveness(pcmkd_child_t *child)
     const uid_t *ref_uid;
     const gid_t *ref_gid;
     const char *name = pcmk__server_name(child->server);
+    const char *ipc_name = pcmk__server_ipc_name(child->server);
     int rc = pcmk_rc_ipc_unresponsive;
     int pid_active = pcmk_rc_ok;
-    int legacy_rc = pcmk_ok;
     pid_t ipc_pid = 0;
 
     if (pcmk__is_set(child->flags, child_as_root)) {
         ref_uid = &root_uid;
         ref_gid = &root_gid;
+
     } else {
         ref_uid = &cl_uid;
         ref_gid = &cl_gid;
-        legacy_rc = pcmk_daemon_user(&cl_uid, &cl_gid);
+
+        rc = pcmk_daemon_user(&cl_uid, &cl_gid);
+        rc = pcmk_legacy2rc(rc);
+        if (rc != pcmk_rc_ok) {
+            crm_err("Could not find user and group IDs for user "
+                    CRM_DAEMON_USER ": %s " QB_XS " rc=%d",
+                    pcmk_rc_str(rc), rc);
+            return rc;
+        }
     }
 
-    if (legacy_rc < 0) {
-        rc = pcmk_legacy2rc(legacy_rc);
-        crm_err("Could not find user and group IDs for user %s: %s "
-                QB_XS " rc=%d", CRM_DAEMON_USER, pcmk_rc_str(rc), rc);
-    } else {
-        const char *ipc_name = pcmk__server_ipc_name(child->server);
+    rc = pcmk__ipc_is_authentic_process_active(ipc_name, *ref_uid, *ref_gid,
+                                               &ipc_pid);
+    if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_unresponsive)) {
+        if (child->pid <= 0) {
+            /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this initializes a
+             * new child. If rc is pcmk_rc_ipc_unresponsive, ipc_pid is zero,
+             * and we will investigate further.
+             */
+            child->pid = ipc_pid;
 
-        rc = pcmk__ipc_is_authentic_process_active(ipc_name,
-                                                   *ref_uid, *ref_gid,
-                                                   &ipc_pid);
-        if ((rc == pcmk_rc_ok) || (rc == pcmk_rc_ipc_unresponsive)) {
-            if (child->pid <= 0) {
-                /* If rc is pcmk_rc_ok, ipc_pid is nonzero and this
-                 * initializes a new child. If rc is
-                 * pcmk_rc_ipc_unresponsive, ipc_pid is zero, and we will
-                 * investigate further.
-                 */
-                child->pid = ipc_pid;
-            } else if ((ipc_pid != 0) && (child->pid != ipc_pid)) {
-                /* An unexpected (but authorized) process is responding to
-                 * IPC. Investigate further.
-                 */
-                rc = pcmk_rc_ipc_unresponsive;
-            }
+        } else if ((ipc_pid != 0) && (child->pid != ipc_pid)) {
+            /* An unexpected (but authorized) process is responding to IPC.
+             * Investigate further.
+             */
+            rc = pcmk_rc_ipc_unresponsive;
         }
     }
 
