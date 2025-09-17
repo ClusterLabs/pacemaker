@@ -1482,23 +1482,3 @@ services__list_dir(const char *dir, bool files, bool executable)
     free(namelist);
     return list;
 }
-
-GList *
-services__list_dirs(const char *dirs, bool files, bool executable)
-{
-    gchar **dir_paths = NULL;
-    GList *list = NULL;
-
-    if (pcmk__str_empty(dirs)) {
-        return NULL;
-    }
-
-    dir_paths = g_strsplit(dirs, ":", 0);
-
-    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
-        list = g_list_concat(list, services__list_dir(*dir, files, executable));
-    }
-
-    g_strfreev(dir_paths);
-    return list;
-}

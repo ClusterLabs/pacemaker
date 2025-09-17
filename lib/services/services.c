@@ -1034,7 +1034,21 @@ services_action_sync(svc_action_t * op)
 GList *
 get_directory_list(const char *root, gboolean files, gboolean executable)
 {
-    return services__list_dirs(root, files, executable);
+    gchar **dir_paths = NULL;
+    GList *list = NULL;
+
+    if (pcmk__str_empty(root)) {
+        return NULL;
+    }
+
+    dir_paths = g_strsplit(root, ":", 0);
+
+    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
+        list = g_list_concat(list, services__list_dir(*dir, files, executable));
+    }
+
+    g_strfreev(dir_paths);
+    return list;
 }
 
 GList *
