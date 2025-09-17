@@ -175,7 +175,8 @@ done:
 char *
 pcmk__format_nvpair(const char *name, const char *value, const char *units)
 {
-    return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
+    return pcmk__assert_asprintf("%s=\"%s%s\"", name, value,
+                                 pcmk__s(units, ""));
 }
 
 /*!
@@ -528,7 +529,7 @@ crm_meta_name(const char *attr_name)
 
     pcmk__assert(!pcmk__str_empty(attr_name));
 
-    env_name = crm_strdup_printf(CRM_META "_%s", attr_name);
+    env_name = pcmk__assert_asprintf(CRM_META "_%s", attr_name);
     for (char *c = env_name; *c != '\0'; ++c) {
         if (*c == '-') {
             *c = '_';

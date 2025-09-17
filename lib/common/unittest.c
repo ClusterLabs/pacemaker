@@ -27,8 +27,8 @@ pcmk__assert_validates(xmlNode *xml)
     gchar *err = NULL;
     gint status;
     GError *gerr = NULL;
-    char *xmllint_input = crm_strdup_printf("%s/test-xmllint.XXXXXX",
-                                            pcmk__get_tmpdir());
+    char *xmllint_input = pcmk__assert_asprintf("%s/test-xmllint.XXXXXX",
+                                                pcmk__get_tmpdir());
     int fd;
     int rc;
 
@@ -52,8 +52,8 @@ pcmk__assert_validates(xmlNode *xml)
         fail_msg("PCMK_schema_directory is not set in test environment");
     }
 
-    cmd = crm_strdup_printf("xmllint --relaxng %s/api/api-result.rng %s",
-                            schema_dir, xmllint_input);
+    cmd = pcmk__assert_asprintf("xmllint --relaxng %s/api/api-result.rng %s",
+                                schema_dir, xmllint_input);
 
     if (!g_spawn_command_line_sync(cmd, &out, &err, &status, &gerr)) {
         unlink(xmllint_input);
@@ -112,13 +112,14 @@ pcmk__xml_test_teardown_group(void **state)
 char *
 pcmk__cib_test_copy_cib(const char *in_file)
 {
-    char *in_path = crm_strdup_printf("%s/%s", getenv("PCMK_CTS_CLI_DIR"), in_file);
+    char *in_path = pcmk__assert_asprintf("%s/%s", getenv("PCMK_CTS_CLI_DIR"),
+                                          in_file);
     char *out_path = NULL;
     char *contents = NULL;
     int fd;
 
     /* Copy the CIB over to a temp location so we can modify it. */
-    out_path = crm_strdup_printf("%s/test-cib.XXXXXX", pcmk__get_tmpdir());
+    out_path = pcmk__assert_asprintf("%s/test-cib.XXXXXX", pcmk__get_tmpdir());
 
     fd = mkstemp(out_path);
     if (fd < 0) {

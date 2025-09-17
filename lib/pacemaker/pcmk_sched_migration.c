@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -125,7 +125,7 @@ pcmk__create_migration_actions(pcmk_resource_t *rsc, const pcmk_node_t *current)
     if (migrate_to != NULL) {
         add_migration_meta(migrate_to, current, rsc->priv->assigned_node);
 
-        if (!pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
+        if (!pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             /* migrate_to takes place on the source node, but can affect the
              * target node depending on how the agent is written. Because of
              * this, pending migrate_to actions must be recorded in the CIB,
@@ -181,25 +181,25 @@ pcmk__rsc_can_migrate(const pcmk_resource_t *rsc, const pcmk_node_t *current)
 {
     CRM_CHECK(rsc != NULL, return false);
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_migratable)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_migratable)) {
         pcmk__rsc_trace(rsc,
                         "%s cannot migrate because "
                         "the configuration does not allow it", rsc->id);
         return false;
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__rsc_trace(rsc, "%s cannot migrate because it is not managed",
                         rsc->id);
         return false;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
         pcmk__rsc_trace(rsc, "%s cannot migrate because it is failed", rsc->id);
         return false;
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_start_pending)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_start_pending)) {
         pcmk__rsc_trace(rsc, "%s cannot migrate because it has a start pending",
                         rsc->id);
         return false;
@@ -275,8 +275,8 @@ pcmk__order_migration_equivalents(pcmk__action_relation_t *order)
     }
 
     // Only orderings involving at least one migratable resource are relevant
-    first_migratable = pcmk_is_set(order->rsc1->flags, pcmk__rsc_migratable);
-    then_migratable = pcmk_is_set(order->rsc2->flags, pcmk__rsc_migratable);
+    first_migratable = pcmk__is_set(order->rsc1->flags, pcmk__rsc_migratable);
+    then_migratable = pcmk__is_set(order->rsc2->flags, pcmk__rsc_migratable);
     if (!first_migratable && !then_migratable) {
         return;
     }

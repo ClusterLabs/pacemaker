@@ -102,10 +102,10 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     // Get appropriate index into series[] array
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_error)
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_error)
         || pcmk__config_has_error) {
         series_id = 0;
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_processing_warning)
+    } else if (pcmk__is_set(scheduler->flags, pcmk__sched_processing_warning)
                || pcmk__config_has_warning) {
         series_id = 1;
     } else {
@@ -284,6 +284,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     } else {
         char *log_msg = NULL;
+        const char *exec_status_s = NULL;
         const char *reason = NULL;
         xmlNode *reply = NULL;
 
@@ -307,15 +308,18 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             pcmk__xml_free(reply);
         }
 
+        exec_status_s = pcmk_exec_status_str(request.result.execution_status);
         reason = request.result.exit_reason;
 
-        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
-                                    request.op, pcmk__request_origin_type(&request),
-                                    pcmk__request_origin(&request),
-                                    pcmk_exec_status_str(request.result.execution_status),
-                                    (reason == NULL)? "" : " (",
-                                    (reason == NULL)? "" : reason,
-                                    (reason == NULL)? "" : ")");
+        log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
+                                        "%s%s%s%s",
+                                        request.op,
+                                        pcmk__request_origin_type(&request),
+                                        pcmk__request_origin(&request),
+                                        exec_status_s,
+                                        (reason == NULL)? "" : " (",
+                                        pcmk__s(reason, ""),
+                                        (reason == NULL)? "" : ")");
 
         if (!pcmk__result_ok(&request.result)) {
             crm_warn("%s", log_msg);

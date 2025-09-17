@@ -53,7 +53,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // If this XML node is new, just report that
-    if (patchset && pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
         GString *xpath = pcmk__element_xpath(xml->parent);
 
         if (xpath != NULL) {
@@ -77,7 +77,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         xmlNode *attr = NULL;
 
         nodepriv = pIter->_private;
-        if (!pcmk_any_flags_set(nodepriv->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
+        if (!pcmk__any_flags_set(nodepriv->flags,
+                                 pcmk__xf_deleted|pcmk__xf_dirty)) {
             continue;
         }
 
@@ -118,7 +119,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
              pIter = pIter->next) {
             nodepriv = pIter->_private;
-            if (!pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
+            if (!pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 value = pcmk__xe_get(xml, (const char *) pIter->name);
                 pcmk__xe_set(result, (const char *)pIter->name, value);
             }
@@ -132,7 +133,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     nodepriv = xml->_private;
-    if (patchset && pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
+    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
         GString *xpath = pcmk__element_xpath(xml);
 
         crm_trace("%s.%s moved to position %d",
@@ -163,7 +164,7 @@ is_config_change(xmlNode *xml)
     if (config) {
         nodepriv = config->_private;
     }
-    if ((nodepriv != NULL) && pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
+    if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
         return TRUE;
     }
 
@@ -939,7 +940,7 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
      * @TODO Use POSIX word boundary instead of (/|$), if it works:
      * https://www.regular-expressions.info/wordboundaries.html.
      */
-    element_regex = crm_strdup_printf("^%s(/|$)", element_xpath);
+    element_regex = pcmk__assert_asprintf("^%s(/|$)", element_xpath);
 
     for (const xmlNode *change = pcmk__xe_first_child(patchset, PCMK_XE_CHANGE,
                                                       NULL, NULL);

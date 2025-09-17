@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,6 @@
 
 #include <limits.h>                         // INT_MIN, INT_MAX
 
-#include <crm/common/util.h>                // crm_strdup_printf()
 #include <crm/common/rules_internal.h>
 #include <crm/common/unittest_internal.h>
 #include "crmcommon_private.h"
@@ -46,8 +45,8 @@ compare_string_type(void **state)
 static void
 compare_integer_type(void **state)
 {
-    char *int_min = crm_strdup_printf("%d", INT_MIN);
-    char *int_max = crm_strdup_printf("%d", INT_MAX);
+    char *int_min = pcmk__assert_asprintf("%d", INT_MIN);
+    char *int_max = pcmk__assert_asprintf("%d", INT_MAX);
 
     assert_int_equal(pcmk__cmp_by_type("0", "0", pcmk__type_integer), 0);
     assert_true(pcmk__cmp_by_type("0", "1", pcmk__type_integer) < 0);

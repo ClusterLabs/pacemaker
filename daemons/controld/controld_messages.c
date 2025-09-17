@@ -643,7 +643,7 @@ handle_failcount_op(xmlNode * stored_msg)
               pcmk__readable_interval(interval_ms), rsc, uname);
 
     if (interval_ms) {
-        interval_spec = crm_strdup_printf("%ums", interval_ms);
+        interval_spec = pcmk__assert_asprintf("%ums", interval_ms);
     }
     update_attrd_clear_failures(uname, rsc, op, interval_spec, is_remote_node);
     free(interval_spec);
@@ -755,7 +755,7 @@ handle_remote_state(const xmlNode *msg)
     bool remote_is_up = false;
     int rc = pcmk_rc_ok;
 
-    rc = pcmk__xe_get_bool_attr(msg, PCMK__XA_IN_CCM, &remote_is_up);
+    rc = pcmk__xe_get_bool(msg, PCMK__XA_IN_CCM, &remote_is_up);
 
     CRM_CHECK(remote_uname && rc == pcmk_rc_ok, return I_NULL);
 
@@ -885,9 +885,9 @@ handle_node_info_request(const xmlNode *msg)
     pcmk__xe_set(reply_data, PCMK__XA_CRM_SUBSYSTEM, CRM_SYSTEM_CRMD);
 
     // Add whether current partition has quorum
-    pcmk__xe_set_bool_attr(reply_data, PCMK_XA_HAVE_QUORUM,
-                           pcmk_is_set(controld_globals.flags,
-                                       controld_has_quorum));
+    pcmk__xe_set_bool(reply_data, PCMK_XA_HAVE_QUORUM,
+                      pcmk__is_set(controld_globals.flags,
+                                   controld_has_quorum));
 
     /* Check whether client requested node info by ID and/or name
      *
@@ -911,9 +911,8 @@ handle_node_info_request(const xmlNode *msg)
         pcmk__xe_set(reply_data, PCMK_XA_ID, node->xml_id);
         pcmk__xe_set(reply_data, PCMK_XA_UNAME, node->name);
         pcmk__xe_set(reply_data, PCMK_XA_CRMD, node->state);
-        pcmk__xe_set_bool_attr(reply_data, PCMK_XA_REMOTE_NODE,
-                               pcmk_is_set(node->flags,
-                                           pcmk__node_status_remote));
+        pcmk__xe_set_bool(reply_data, PCMK_XA_REMOTE_NODE,
+                          pcmk__is_set(node->flags, pcmk__node_status_remote));
     }
 
     // Send reply
@@ -959,7 +958,7 @@ handle_shutdown_self_ack(xmlNode *stored_msg)
 {
     const char *host_from = pcmk__xe_get(stored_msg, PCMK__XA_SRC);
 
-    if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // The expected case -- we initiated own shutdown sequence
         crm_info("Shutting down controller");
         return I_STOP;
@@ -1000,7 +999,7 @@ handle_shutdown_ack(xmlNode *stored_msg)
     if (pcmk__str_eq(host_from, controld_globals.dc_name,
                      pcmk__str_null_matches|pcmk__str_casei)) {
 
-        if (pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+        if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_info("Shutting down controller after confirmation from %s",
                      host_from);
         } else {
@@ -1335,7 +1334,7 @@ broadcast_remote_state_message(const char *node_name, bool node_up)
              node_name, node_up? "coming up" : "going down");
 
     pcmk__xe_set(msg, PCMK_XA_ID, node_name);
-    pcmk__xe_set_bool_attr(msg, PCMK__XA_IN_CCM, node_up);
+    pcmk__xe_set_bool(msg, PCMK__XA_IN_CCM, node_up);
 
     if (node_up) {
         pcmk__xe_set(msg, PCMK__XA_CONNECTION_HOST,

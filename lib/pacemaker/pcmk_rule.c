@@ -57,7 +57,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
      * We do this in steps to provide better error messages. First, check that
      * there's any rule with the given ID.
      */
-    xpath = crm_strdup_printf(XPATH_NODE_RULE, rule_id);
+    xpath = pcmk__assert_asprintf(XPATH_NODE_RULE, rule_id);
     xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
     num_results = pcmk__xpath_num_results(xpath_obj);
 
@@ -76,7 +76,9 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     }
 
     /* Next, make sure it has exactly one date_expression. */
-    xpath = crm_strdup_printf(XPATH_NODE_RULE "//date_expression", rule_id);
+    xpath = pcmk__assert_asprintf(XPATH_NODE_RULE "//"
+                                  PCMK_XE_DATE_EXPRESSION,
+                                  rule_id);
     xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
     num_results = pcmk__xpath_num_results(xpath_obj);
 
@@ -93,11 +95,11 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     }
 
     /* Then, check that it's something we actually support. */
-    xpath = crm_strdup_printf(XPATH_NODE_RULE
-                              "//" PCMK_XE_DATE_EXPRESSION
-                              "[@" PCMK_XA_OPERATION
-                                  "!='" PCMK_VALUE_DATE_SPEC "']",
-                              rule_id);
+    xpath = pcmk__assert_asprintf(XPATH_NODE_RULE
+                                  "//" PCMK_XE_DATE_EXPRESSION
+                                  "[@" PCMK_XA_OPERATION
+                                      "!='" PCMK_VALUE_DATE_SPEC "']",
+                                  rule_id);
     xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
     num_results = pcmk__xpath_num_results(xpath_obj);
 
@@ -106,13 +108,13 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
     if (num_results == 0) {
         xmlXPathFreeObject(xpath_obj);
 
-        xpath = crm_strdup_printf(XPATH_NODE_RULE
-                                  "//" PCMK_XE_DATE_EXPRESSION
-                                  "[@" PCMK_XA_OPERATION
-                                      "='" PCMK_VALUE_DATE_SPEC "' "
-                                  "and " PCMK_XE_DATE_SPEC
-                                      "/@" PCMK_XA_YEARS "]",
-                                  rule_id);
+        xpath = pcmk__assert_asprintf(XPATH_NODE_RULE
+                                      "//" PCMK_XE_DATE_EXPRESSION
+                                      "[@" PCMK_XA_OPERATION
+                                          "='" PCMK_VALUE_DATE_SPEC "' "
+                                      "and " PCMK_XE_DATE_SPEC
+                                          "/@" PCMK_XA_YEARS "]",
+                                      rule_id);
         xpath_obj = pcmk__xpath_search(cib_constraints->doc, xpath);
         num_results = pcmk__xpath_num_results(xpath_obj);
 

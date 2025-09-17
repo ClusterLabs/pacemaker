@@ -1392,7 +1392,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
 static xmlNode *
 get_event_data_xml(xmlNode *msg, const char *ntype)
 {
-    char *data_addr = crm_strdup_printf("//%s", ntype);
+    char *data_addr = pcmk__assert_asprintf("//%s", ntype);
     xmlNode *data = pcmk__xpath_find_one(msg->doc, data_addr, LOG_DEBUG);
 
     free(data_addr);
@@ -1811,7 +1811,8 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
             rc = errno;
 
             if (error_output) {
-                *error_output = crm_strdup_printf("Agent %s not found", agent);
+                *error_output = pcmk__assert_asprintf("Agent %s not found",
+                                                      agent);
             } else {
                 crm_err("Agent %s not found", agent);
             }
@@ -1823,8 +1824,9 @@ stonith__validate(stonith_t *st, int call_options, const char *rsc_id,
             rc = errno;
 
             if (error_output) {
-                *error_output = crm_strdup_printf("Agent %s does not support validation",
-                                                  agent);
+                *error_output = pcmk__assert_asprintf("Agent %s does not "
+                                                      "support validation",
+                                                      agent);
             } else {
                 crm_err("Agent %s does not support validation", agent);
             }
@@ -2513,9 +2515,9 @@ stonith__event_state_neq(stonith_history_t *history, void *user_data)
 static bool
 param_is_supported(xmlNode *metadata, const char *name)
 {
-    char *xpath_s = crm_strdup_printf("//" PCMK_XE_PARAMETER
-                                      "[@" PCMK_XA_NAME "='%s']",
-                                      name);
+    char *xpath_s = pcmk__assert_asprintf("//" PCMK_XE_PARAMETER
+                                          "[@" PCMK_XA_NAME "='%s']",
+                                          name);
     xmlXPathObject *xpath = pcmk__xpath_search(metadata->doc, xpath_s);
     bool supported = (pcmk__xpath_num_results(xpath) > 0);
 
@@ -2618,8 +2620,8 @@ stonith__metadata_async(const char *agent, int timeout_sec,
                 pcmk__action_result_t result = {
                     .exit_status = CRM_EX_NOSUCH,
                     .execution_status = PCMK_EXEC_ERROR_HARD,
-                    .exit_reason = crm_strdup_printf("No such agent '%s'",
-                                                     agent),
+                    .exit_reason = pcmk__assert_asprintf("No such agent '%s'",
+                                                         agent),
                     .action_stdout = NULL,
                     .action_stderr = NULL,
                 };
@@ -2779,35 +2781,39 @@ stonith__event_description(const stonith_event_t *event)
 
     if (pcmk__str_eq(event->operation, PCMK__VALUE_ST_NOTIFY_HISTORY,
                      pcmk__str_none)) {
-        return crm_strdup_printf("Fencing history may have changed");
+        return pcmk__assert_asprintf("Fencing history may have changed");
 
     } else if (pcmk__str_eq(event->operation, STONITH_OP_DEVICE_ADD,
                             pcmk__str_none)) {
-        return crm_strdup_printf("A fencing device (%s) was added", device);
+        return pcmk__assert_asprintf("A fencing device (%s) was added", device);
 
     } else if (pcmk__str_eq(event->operation, STONITH_OP_DEVICE_DEL,
                             pcmk__str_none)) {
-        return crm_strdup_printf("A fencing device (%s) was removed", device);
+        return pcmk__assert_asprintf("A fencing device (%s) was removed",
+                                     device);
 
     } else if (pcmk__str_eq(event->operation, STONITH_OP_LEVEL_ADD,
                             pcmk__str_none)) {
-        return crm_strdup_printf("A fencing topology level (%s) was added",
-                                 device);
+        return pcmk__assert_asprintf("A fencing topology level (%s) was added",
+                                     device);
 
     } else if (pcmk__str_eq(event->operation, STONITH_OP_LEVEL_DEL,
                             pcmk__str_none)) {
-        return crm_strdup_printf("A fencing topology level (%s) was removed",
-                                 device);
+        return pcmk__assert_asprintf("A fencing topology level (%s) was "
+                                     "removed",
+                                     device);
     }
 
     // event->operation should be PCMK__VALUE_ST_NOTIFY_FENCE at this point
 
-    return crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s%s%s%s (ref=%s)",
-                             action, target, executioner, origin, origin_node,
-                             status,
-                             ((reason == NULL)? "" : " ("), pcmk__s(reason, ""),
-                             ((reason == NULL)? "" : ")"),
-                             pcmk__s(event->id, "(none)"));
+    return pcmk__assert_asprintf("Operation %s of %s by %s for %s@%s: %s%s%s%s "
+                                 "(ref=%s)",
+                                 action, target, executioner, origin,
+                                 origin_node, status,
+                                 ((reason == NULL)? "" : " ("),
+                                 pcmk__s(reason, ""),
+                                 ((reason == NULL)? "" : ")"),
+                                 pcmk__s(event->id, "(none)"));
 }
 
 // Deprecated functions kept only for backward API compatibility

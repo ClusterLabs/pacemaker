@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -211,9 +211,10 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     if (rsc == NULL) {
         pattern = pcmk__str_copy(ATTRD_RE_CLEAR_ALL);
     } else if (op == NULL) {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+        pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP, rsc, op, interval_ms);
+        pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_OP, rsc, op,
+                                        interval_ms);
     }
 
     /* Compile pattern into regular expression */

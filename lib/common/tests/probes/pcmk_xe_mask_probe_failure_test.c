@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,12 +40,12 @@ op_does_not_have_right_values_test(void **state) {
     assert_false(pcmk_xe_mask_probe_failure(node));
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"\"/>",
-                          PCMK_OCF_OK);
+                              PCMK_OCF_OK);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
@@ -58,142 +58,142 @@ check_values_test(void **state) {
     char *s = NULL;
 
     /* PCMK_EXEC_NOT_SUPPORTED */
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_OK, PCMK_EXEC_NOT_SUPPORTED);
+                              PCMK_OCF_OK, PCMK_EXEC_NOT_SUPPORTED);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_NOT_SUPPORTED);
+                              PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_NOT_SUPPORTED);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
     /* PCMK_EXEC_DONE */
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_OK, PCMK_EXEC_DONE);
+                              PCMK_OCF_OK, PCMK_EXEC_DONE);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_INVALID_PARAM, PCMK_EXEC_DONE);
+                              PCMK_OCF_INVALID_PARAM, PCMK_EXEC_DONE);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_DONE);
+                              PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_DONE);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_DONE);
+                              PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_DONE);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE);
+                              PCMK_OCF_NOT_RUNNING, PCMK_EXEC_DONE);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
     /* PCMK_EXEC_NOT_INSTALLED */
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_OK, PCMK_EXEC_NOT_INSTALLED);
+                              PCMK_OCF_OK, PCMK_EXEC_NOT_INSTALLED);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_NOT_INSTALLED);
+                              PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_NOT_INSTALLED);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
     /* PCMK_EXEC_ERROR */
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_OK, PCMK_EXEC_ERROR);
+                              PCMK_OCF_OK, PCMK_EXEC_ERROR);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_INVALID_PARAM, PCMK_EXEC_ERROR);
+                              PCMK_OCF_INVALID_PARAM, PCMK_EXEC_ERROR);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_ERROR);
+                              PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_ERROR);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
@@ -204,124 +204,124 @@ check_values_test(void **state) {
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_RUNNING, PCMK_EXEC_ERROR);
+                              PCMK_OCF_NOT_RUNNING, PCMK_EXEC_ERROR);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
     /* PCMK_EXEC_ERROR_HARD */
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_OK, PCMK_EXEC_ERROR_HARD);
+                              PCMK_OCF_OK, PCMK_EXEC_ERROR_HARD);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_INVALID_PARAM, PCMK_EXEC_ERROR_HARD);
+                              PCMK_OCF_INVALID_PARAM, PCMK_EXEC_ERROR_HARD);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_ERROR_HARD);
+                              PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_ERROR_HARD);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_HARD);
+                              PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_HARD);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_RUNNING, PCMK_EXEC_ERROR_HARD);
+                              PCMK_OCF_NOT_RUNNING, PCMK_EXEC_ERROR_HARD);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
     /* PCMK_EXEC_ERROR_FATAL */
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_OK, PCMK_EXEC_ERROR_FATAL);
+                              PCMK_OCF_OK, PCMK_EXEC_ERROR_FATAL);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_INVALID_PARAM, PCMK_EXEC_ERROR_FATAL);
+                              PCMK_OCF_INVALID_PARAM, PCMK_EXEC_ERROR_FATAL);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_ERROR_FATAL);
+                              PCMK_OCF_NOT_INSTALLED, PCMK_EXEC_ERROR_FATAL);
     node = pcmk__xml_parse(s);
     assert_true(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL);
+                              PCMK_OCF_NOT_CONFIGURED, PCMK_EXEC_ERROR_FATAL);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);
     pcmk__xml_free(node);
 
-    s = crm_strdup_printf("<" PCMK__XE_LRM_RSC_OP " "
+    s = pcmk__assert_asprintf("<" PCMK__XE_LRM_RSC_OP " "
                               PCMK_XA_OPERATION "=\"" PCMK_ACTION_MONITOR "\" "
                               PCMK_META_INTERVAL "=\"0\" "
                               PCMK__XA_RC_CODE "=\"%d\" "
                               PCMK__XA_OP_STATUS "=\"%d\"/>",
-                          PCMK_OCF_NOT_RUNNING, PCMK_EXEC_ERROR_FATAL);
+                              PCMK_OCF_NOT_RUNNING, PCMK_EXEC_ERROR_FATAL);
     node = pcmk__xml_parse(s);
     assert_false(pcmk_xe_mask_probe_failure(node));
     free(s);

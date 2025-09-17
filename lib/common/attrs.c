@@ -44,11 +44,11 @@ pcmk__node_attr_target(const char *name)
         const char *target = NULL;
         const char *host_physical = NULL;
 
-        buf = crm_strdup_printf(OCF_RESKEY_PREFIX "%s", target_var);
+        buf = pcmk__assert_asprintf(OCF_RESKEY_PREFIX "%s", target_var);
         target = getenv(buf);
         free(buf);
 
-        buf = crm_strdup_printf(OCF_RESKEY_PREFIX "%s", phys_var);
+        buf = pcmk__assert_asprintf(OCF_RESKEY_PREFIX "%s", phys_var);
         host_physical = getenv(buf);
         free(buf);
 
@@ -95,7 +95,7 @@ pcmk_promotion_score_name(const char *rsc_id)
             return NULL;
         }
     }
-    return crm_strdup_printf("master-%s", rsc_id);
+    return pcmk__assert_asprintf("master-%s", rsc_id);
 }
 
 /*!

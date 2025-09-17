@@ -149,7 +149,7 @@ pcmk__xml_doc_all_flags_set(const xmlDoc *doc, uint32_t flags)
     if (doc != NULL) {
         xml_doc_private_t *docpriv = doc->_private;
 
-        return (docpriv != NULL) && pcmk_all_flags_set(docpriv->flags, flags);
+        return (docpriv != NULL) && pcmk__all_flags_set(docpriv->flags, flags);
     }
     return false;
 }
@@ -418,7 +418,7 @@ pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
     for (const xmlNode *cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_node_private_t *nodepriv = ((xmlNode*)cIter->prev)->_private;
 
-        if (!pcmk_is_set(nodepriv->flags, ignore_if_set)) {
+        if (!pcmk__is_set(nodepriv->flags, ignore_if_set)) {
             position++;
         }
     }
@@ -478,7 +478,7 @@ pcmk__xml_commit_changes(xmlDoc *doc)
         return;
     }
 
-    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+    if (pcmk__is_set(docpriv->flags, pcmk__xf_dirty)) {
         pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
                                NULL);
     }
@@ -770,7 +770,7 @@ free_xml_with_position(xmlNode *node, int position)
     }
 
     if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
-        && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        && !pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
 
         xml_doc_private_t *docpriv = doc->_private;
         GString *xpath = pcmk__element_xpath(node);
@@ -1254,7 +1254,7 @@ mark_created_attrs(xmlNode *new_xml)
         xml_node_private_t *nodepriv = attr_iter->_private;
 
         attr_iter = attr_iter->next;
-        if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
             const char *attr_name = (const char *) new_attr->name;
 
             crm_trace("Created new attribute %s=%s in %s",
@@ -1396,7 +1396,7 @@ new_comment_matches(const xmlNode *old_comment, const xmlNode *new_comment)
 {
     xml_node_private_t *nodepriv = new_comment->_private;
 
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_skip)) {
         /* @TODO Should we also return false if old_comment has pcmk__xf_skip
          * set? This preserves existing behavior at time of writing.
          */
@@ -1651,7 +1651,7 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
             break;
         case pcmk__xml_artefact_ns_base_rng:
         case pcmk__xml_artefact_ns_base_xslt:
-            ret = crm_strdup_printf("%s/base", base);
+            ret = pcmk__assert_asprintf("%s/base", base);
             break;
         default:
             crm_err("XML artefact family specified as %u not recognized", ns);
@@ -1668,17 +1668,17 @@ find_artefact(enum pcmk__xml_artefact_ns ns, const char *path, const char *files
         case pcmk__xml_artefact_ns_legacy_rng:
         case pcmk__xml_artefact_ns_base_rng:
             if (g_str_has_suffix(filespec, ".rng")) {
-                ret = crm_strdup_printf("%s/%s", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.rng", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s.rng", path, filespec);
             }
             break;
         case pcmk__xml_artefact_ns_legacy_xslt:
         case pcmk__xml_artefact_ns_base_xslt:
             if (g_str_has_suffix(filespec, ".xsl")) {
-                ret = crm_strdup_printf("%s/%s", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.xsl", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s.xsl", path, filespec);
             }
             break;
         default:

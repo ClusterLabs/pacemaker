@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <regex.h>
+#include <stdarg.h>     // va_list, etc.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -633,20 +634,6 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     return pcmk_rc_ok;
 }
 
-char *
-crm_strdup_printf(char const *format, ...)
-{
-    va_list ap;
-    int len = 0;
-    char *string = NULL;
-
-    va_start(ap, format);
-    len = vasprintf(&string, format, ap);
-    pcmk__assert(len > 0);
-    va_end(ap);
-    return string;
-}
-
 /*!
  * \internal
  * \brief Parse a boolean value from a string
@@ -657,10 +644,10 @@ crm_strdup_printf(char const *format, ...)
  *   \c false
  *
  * \param[in]  input   Input string
- * \param[out] result  Where to store parsed boolean value (can be \c NULL)
+ * \param[out] result  Where to store result (can be \c NULL; unchanged on
+ *                     error)
  *
- * \retval \c true if \p input was successfully parsed to a boolean value
- * \retval \c false otherwise
+ * \retval Standard Pacemaker return code
  */
 int
 pcmk__parse_bool(const char *input, bool *result)
@@ -1128,7 +1115,7 @@ int
 pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
 {
     /* If this flag is set, the second string is a regex. */
-    if (pcmk_is_set(flags, pcmk__str_regex)) {
+    if (pcmk__is_set(flags, pcmk__str_regex)) {
         regex_t r_patt;
         int reg_flags = REG_EXTENDED | REG_NOSUB;
         int regcomp_rc = 0;
@@ -1138,7 +1125,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
             return 1;
         }
 
-        if (pcmk_is_set(flags, pcmk__str_casei)) {
+        if (pcmk__is_set(flags, pcmk__str_casei)) {
             reg_flags |= REG_ICASE;
         }
         regcomp_rc = regcomp(&r_patt, s2, reg_flags);
@@ -1164,7 +1151,7 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
      * are NULL.  If neither one is NULL, we need to continue and compare
      * them normally.
      */
-    if (pcmk_is_set(flags, pcmk__str_null_matches)) {
+    if (pcmk__is_set(flags, pcmk__str_null_matches)) {
         if (s1 == NULL || s2 == NULL) {
             return 0;
         }
@@ -1183,13 +1170,13 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
      * are "*".  If neither one is, we need to continue and compare them
      * normally.
      */
-    if (pcmk_is_set(flags, pcmk__str_star_matches)) {
+    if (pcmk__is_set(flags, pcmk__str_star_matches)) {
         if (strcmp(s1, "*") == 0 || strcmp(s2, "*") == 0) {
             return 0;
         }
     }
 
-    if (pcmk_is_set(flags, pcmk__str_casei)) {
+    if (pcmk__is_set(flags, pcmk__str_casei)) {
         return strcasecmp(s1, s2);
     } else {
         return strcmp(s1, s2);
@@ -1245,6 +1232,34 @@ pcmk__str_update(char **str, const char *value)
         free(*str);
         *str = pcmk__str_copy(value);
     }
+}
+
+/*!
+ * \internal
+ * \brief Print to an allocated string using \c printf()-style formatting
+ *
+ * This is like \c asprintf() but asserts on any error. The return value cannot
+ * be \c NULL, but it may be an empty string, depending on the format string and
+ * variadic arguments.
+ *
+ * \param[in] format  \c printf() format string
+ * \param[in] ...     \c printf() format arguments
+ *
+ * \return Newly allocated string (guaranteed not to be \c NULL).
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__assert_asprintf(const char *format, ...)
+{
+    char *result = NULL;
+    va_list ap;
+
+    va_start(ap, format);
+    pcmk__assert(vasprintf(&result, format, ap) >= 0);
+    va_end(ap);
+
+    return result;
 }
 
 /*!
@@ -1398,6 +1413,20 @@ crm_str_to_boolean(const char *s, int *ret)
         return 1;
     }
     return -1;
+}
+
+char *
+crm_strdup_printf(char const *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *string = NULL;
+
+    va_start(ap, format);
+    len = vasprintf(&string, format, ap);
+    pcmk__assert(len > 0);
+    va_end(ap);
+    return string;
 }
 
 // LCOV_EXCL_STOP

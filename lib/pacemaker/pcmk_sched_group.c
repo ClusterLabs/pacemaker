@@ -45,10 +45,10 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
 
     pcmk__assert(pcmk__is_group(rsc));
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unassigned)) {
         return rsc->priv->assigned_node; // Assignment already done
     }
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_assigning)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(rsc, "Assignment dependency loop detected involving %s",
                         rsc->id);
         return NULL;
@@ -64,8 +64,8 @@ pcmk__group_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
     first_member = (pcmk_resource_t *) rsc->priv->children->data;
     rsc->priv->orig_role = first_member->priv->orig_role;
 
-    pe__show_node_scores(!pcmk_is_set(rsc->priv->scheduler->flags,
-                                      pcmk__sched_output_scores),
+    pe__show_node_scores(!pcmk__is_set(rsc->priv->scheduler->flags,
+                                       pcmk__sched_output_scores),
                          rsc, __func__, rsc->priv->allowed_nodes,
                          rsc->priv->scheduler);
 
@@ -192,7 +192,7 @@ member_internal_constraints(gpointer data, gpointer user_data)
     } else if (member_data->colocated) {
         uint32_t flags = pcmk__coloc_none;
 
-        if (pcmk_is_set(member->flags, pcmk__rsc_critical)) {
+        if (pcmk__is_set(member->flags, pcmk__rsc_critical)) {
             flags |= pcmk__coloc_influence;
         }
 
@@ -344,7 +344,7 @@ pcmk__group_internal_constraints(pcmk_resource_t *rsc)
 
     member_data.ordered = pe__group_flag_is_set(rsc, pcmk__group_ordered);
     member_data.colocated = pe__group_flag_is_set(rsc, pcmk__group_colocated);
-    member_data.promotable = pcmk_is_set(top->flags, pcmk__rsc_promotable);
+    member_data.promotable = pcmk__is_set(top->flags, pcmk__rsc_promotable);
     g_list_foreach(rsc->priv->children, member_internal_constraints,
                    &member_data);
 }
@@ -452,7 +452,7 @@ colocate_with_group(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                     "Processing colocation %s (%s with group %s) for primary",
                     colocation->id, dependent->id, primary->id);
 
-    if (pcmk_is_set(primary->flags, pcmk__rsc_unassigned)) {
+    if (pcmk__is_set(primary->flags, pcmk__rsc_unassigned)) {
         return 0;
     }
 
@@ -576,8 +576,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
                                                             node);
 
             // Group action is mandatory if any member action is
-            if (pcmk_is_set(flags, pcmk__action_optional)
-                && !pcmk_is_set(member_flags, pcmk__action_optional)) {
+            if (pcmk__is_set(flags, pcmk__action_optional)
+                && !pcmk__is_set(member_flags, pcmk__action_optional)) {
                 pcmk__rsc_trace(action->rsc, "%s is mandatory because %s is",
                                 action->uuid, member_action->uuid);
                 pcmk__clear_raw_action_flags(flags, "group action",
@@ -587,8 +587,8 @@ pcmk__group_action_flags(pcmk_action_t *action, const pcmk_node_t *node)
 
             // Group action is unrunnable if any member action is
             if (!pcmk__str_eq(task_s, action->task, pcmk__str_none)
-                && pcmk_is_set(flags, pcmk__action_runnable)
-                && !pcmk_is_set(member_flags, pcmk__action_runnable)) {
+                && pcmk__is_set(flags, pcmk__action_runnable)
+                && !pcmk__is_set(member_flags, pcmk__action_runnable)) {
 
                 pcmk__rsc_trace(action->rsc, "%s is unrunnable because %s is",
                                 action->uuid, member_action->uuid);
@@ -887,7 +887,7 @@ pcmk__group_with_colocations(const pcmk_resource_t *rsc,
             break; // We've seen all earlier members, and none are unmanaged
         }
 
-        if (!pcmk_is_set(member->flags, pcmk__rsc_managed)) {
+        if (!pcmk__is_set(member->flags, pcmk__rsc_managed)) {
             crm_trace("Adding mandatory '%s with' colocations to list for "
                       "member %s because earlier member %s is unmanaged",
                       rsc->id, orig_rsc->id, member->id);
@@ -954,7 +954,7 @@ pcmk__group_add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
     // Avoid infinite recursion
-    if (pcmk_is_set(source_rsc->flags, pcmk__rsc_updating_nodes)) {
+    if (pcmk__is_set(source_rsc->flags, pcmk__rsc_updating_nodes)) {
         pcmk__rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
                        log_id, source_rsc->id);
         return;
@@ -1001,7 +1001,7 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
     pcmk__assert((orig_rsc != NULL) && (utilization != NULL)
                  && pcmk__is_group(rsc));
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unassigned)) {
         return;
     }
 
@@ -1016,7 +1016,7 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
 
             member = (pcmk_resource_t *) iter->data;
 
-            if (pcmk_is_set(member->flags, pcmk__rsc_unassigned)
+            if (pcmk__is_set(member->flags, pcmk__rsc_unassigned)
                 && (g_list_find(all_rscs, member) == NULL)) {
                 member->priv->cmds->add_utilization(member, orig_rsc, all_rscs,
                                                     utilization);
@@ -1027,7 +1027,7 @@ pcmk__group_add_utilization(const pcmk_resource_t *rsc,
         // Just add first member's utilization
         member = (pcmk_resource_t *) rsc->priv->children->data;
         if ((member != NULL)
-            && pcmk_is_set(member->flags, pcmk__rsc_unassigned)
+            && pcmk__is_set(member->flags, pcmk__rsc_unassigned)
             && (g_list_find(all_rscs, member) == NULL)) {
 
             member->priv->cmds->add_utilization(member, orig_rsc, all_rscs,

@@ -20,7 +20,6 @@
 
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
-#include <crm/common/strings.h>  // crm_strdup_printf()
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
@@ -30,7 +29,7 @@
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
 #include <crm/common/scores_internal.h>
-#include <crm/common/strings_internal.h>
+#include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
 #include <crm/common/acl_internal.h>
 
 #ifdef __cplusplus
@@ -171,6 +170,61 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 
 /*!
  * \internal
+ * \brief Check whether any of specified flags are set in a flag group
+ *
+ * \param[in] flag_group      Flag group to check whether \p flags_to_check are
+ *                            set
+ * \param[in] flags_to_check  Flags to check whether set in \p flag_group
+ *
+ * \retval \c true   if \p flags_to_check is nonzero and any of its flags are
+ *                   set in \p flag_group
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__any_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) != 0;
+}
+
+/*!
+ * \internal
+ * \brief Check whether all of specified flags are set in a flag group
+ *
+ * \param[in] flag_group      Flag group to check whether \p flags_to_check are
+ *                            set
+ * \param[in] flags_to_check  Flags to check whether set in \p flag_group
+ *
+ * \retval \c true   if all flags in \p flags_to_check are set in \p flag_group
+ *                   or if \p flags_to_check is 0
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__all_flags_set(uint64_t flag_group, uint64_t flags_to_check)
+{
+    return (flag_group & flags_to_check) == flags_to_check;
+}
+
+/*!
+ * \internal
+ * \brief Convenience alias for \c pcmk__all_flags_set(), to check single flag
+ *
+ * This is truly identical to \c pcmk__all_flags_set() but allows a call that's
+ * shorter and semantically clearer for checking a single flag.
+ *
+ * \param[in] flag_group  Flag group (check whether \p flag is set in this)
+ * \param[in] flag        Flag (check whether this is set in \p flag_group)
+ *
+ * \retval \c true   if \p flag is set in \p flag_group or if \p flag is 0
+ * \retval \c false  otherwise
+ */
+static inline bool
+pcmk__is_set(uint64_t flag_group, uint64_t flag)
+{
+    return pcmk__all_flags_set(flag_group, flag);
+}
+
+/*!
+ * \internal
  * \brief Get readable string for whether specified flags are set
  *
  * \param[in] flag_group    Group of flags to check
@@ -181,12 +235,13 @@ pcmk__clear_flags_as(const char *function, int line, uint8_t log_level,
 static inline const char *
 pcmk__flag_text(uint64_t flag_group, uint64_t flags)
 {
-    return pcmk__btoa(pcmk_all_flags_set(flag_group, flags));
+    return pcmk__btoa(pcmk__all_flags_set(flag_group, flags));
 }
 
 
 // miscellaneous utilities (from utils.c)
 
+char *pcmk__generate_uuid(void);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);
@@ -271,7 +326,7 @@ pcmk__realloc(void *ptr, size_t size)
 static inline char *
 pcmk__getpid_s(void)
 {
-    return crm_strdup_printf("%lu", (unsigned long) getpid());
+    return pcmk__assert_asprintf("%lu", (unsigned long) getpid());
 }
 
 // More efficient than g_list_length(list) == 1
@@ -315,7 +370,8 @@ pcmk__fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
                    guint interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
-    return crm_strdup_printf("%s-%s#%s_%u", prefix, rsc_id, op, interval_ms);
+    return pcmk__assert_asprintf("%s-%s#%s_%u", prefix, rsc_id, op,
+                                 interval_ms);
 }
 
 static inline char *

@@ -90,7 +90,7 @@ pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data)
 {
     xml_node_private_t *nodepriv = a->_private;
 
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
         return true;
     }
     nodepriv->flags = pcmk__xf_none;
@@ -117,7 +117,7 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
     }
 
     nodepriv = attr->_private;
-    if (nodepriv && pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
+    if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
         return;
     }
 

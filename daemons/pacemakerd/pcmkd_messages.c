@@ -104,7 +104,8 @@ handle_shutdown_request(pcmk__request_t *request)
      * Pacemaker from the command line (or direct IPC), so that other users
      * are forced to go through the CIB and have ACLs applied.
      */
-    bool allowed = pcmk_is_set(request->ipc_client->flags, pcmk__client_privileged);
+    bool allowed = pcmk__is_set(request->ipc_client->flags,
+                                pcmk__client_privileged);
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
@@ -253,6 +254,7 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
     } else {
         char *log_msg = NULL;
+        const char *exec_status_s = NULL;
         const char *reason = NULL;
         xmlNode *reply = NULL;
 
@@ -276,15 +278,18 @@ pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
             pcmk__xml_free(reply);
         }
 
+        exec_status_s = pcmk_exec_status_str(request.result.execution_status);
         reason = request.result.exit_reason;
 
-        log_msg = crm_strdup_printf("Processed %s request from %s %s: %s%s%s%s",
-                                    request.op, pcmk__request_origin_type(&request),
-                                    pcmk__request_origin(&request),
-                                    pcmk_exec_status_str(request.result.execution_status),
-                                    (reason == NULL)? "" : " (",
-                                    (reason == NULL)? "" : reason,
-                                    (reason == NULL)? "" : ")");
+        log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
+                                        "%s%s%s%s",
+                                        request.op,
+                                        pcmk__request_origin_type(&request),
+                                        pcmk__request_origin(&request),
+                                        exec_status_s,
+                                        (reason == NULL)? "" : " (",
+                                        pcmk__s(reason, ""),
+                                        (reason == NULL)? "" : ")");
 
         if (!pcmk__result_ok(&request.result)) {
             crm_warn("%s", log_msg);

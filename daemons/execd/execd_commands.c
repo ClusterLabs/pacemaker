@@ -272,7 +272,7 @@ static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
     if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei) &&
-        pcmk_is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
+        pcmk__is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
         return PCMK_ACTION_STATUS;
     }
     return action;
@@ -570,7 +570,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
         crm_trace("Skipping notification to client without name");
         return;
     }
-    if (pcmk_is_set(client->flags, pcmk__client_to_proxy)) {
+    if (pcmk__is_set(client->flags, pcmk__client_to_proxy)) {
         /* We only want to notify clients of the executor IPC API. If we are
          * running as Pacemaker Remote, we may have clients proxied to other
          * IPC services in the cluster, so skip those.
@@ -617,7 +617,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
      * operation results, skip the notification if the result hasn't changed.
      */
     if (cmd->first_notify_sent
-        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_changes_only)
+        && pcmk__is_set(cmd->call_opts, lrmd_opt_notify_changes_only)
         && (cmd->last_notify_rc == cmd->result.exit_status)
         && (cmd->last_notify_op_status == cmd->result.execution_status)) {
         return;
@@ -678,7 +678,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         }
     }
     if ((cmd->client_id != NULL)
-        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_orig_only)) {
+        && pcmk__is_set(cmd->call_opts, lrmd_opt_notify_orig_only)) {
 
         pcmk__client_t *client = pcmk__find_client_by_id(cmd->client_id);
 
@@ -810,7 +810,7 @@ client_disconnect_cleanup(const char *client_id)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (pcmk_all_flags_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
+        if (pcmk__is_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
             /* This client is disconnecting, drop any recurring operations
              * it may have initiated on the resource */
             cancel_all_recurring(rsc, client_id);
@@ -1528,8 +1528,8 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     if (pcmk__xe_attr_is_true(request, PCMK__XA_LRMD_IS_IPC_PROVIDER)) {
 #ifdef PCMK__COMPILE_REMOTE
         if ((client->remote != NULL)
-            && pcmk_is_set(client->flags,
-                           pcmk__client_tls_handshake_complete)) {
+            && pcmk__is_set(client->flags,
+                            pcmk__client_tls_handshake_complete)) {
             const char *op = pcmk__xe_get(request, PCMK__XA_LRMD_OP);
 
             // This is a remote connection from a cluster node's controller

@@ -26,15 +26,17 @@ colocations_header(pcmk_resource_t *rsc, pcmk__colocation_t *cons,
     char *retval = NULL;
 
     if (cons->primary_role > pcmk_role_started) {
-        retval = crm_strdup_printf("%s (score=%s, %s role=%s, id=%s)",
-                                   rsc->id, pcmk_readable_score(cons->score),
-                                   (dependents? "needs" : "with"),
-                                   pcmk_role_text(cons->primary_role),
-                                   cons->id);
+        retval = pcmk__assert_asprintf("%s (score=%s, %s role=%s, id=%s)",
+                                       rsc->id,
+                                       pcmk_readable_score(cons->score),
+                                       (dependents? "needs" : "with"),
+                                       pcmk_role_text(cons->primary_role),
+                                       cons->id);
     } else {
-        retval = crm_strdup_printf("%s (score=%s, id=%s)",
-                                   rsc->id, pcmk_readable_score(cons->score),
-                                   cons->id);
+        retval = pcmk__assert_asprintf("%s (score=%s, id=%s)",
+                                       rsc->id,
+                                       pcmk_readable_score(cons->score),
+                                       cons->id);
     }
     return retval;
 }
@@ -151,60 +153,60 @@ rsc_action_item(pcmk__output_t *out, va_list args)
 
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk_role_text(rsc->priv->next_role),
-                                    pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s -> %s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk_role_text(rsc->priv->next_role),
+                                        pcmk__node_name(destination));
 
     } else if (origin == NULL) {
         /* Starting a resource */
-        details = crm_strdup_printf("%s", pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s", pcmk__node_name(destination));
 
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
-        details = crm_strdup_printf("%s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk__node_name(origin));
 
     } else if (destination == NULL) {
         /* Stopping a resource */
-        details = crm_strdup_printf("%s", pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s", pcmk__node_name(origin));
 
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
-        details = crm_strdup_printf("%s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk__node_name(origin));
 
     } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
-        details = crm_strdup_printf("%s", pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s", pcmk__node_name(origin));
 
     } else if (need_role && same_role) {
         /* Moving a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s", pcmk__node_name(origin),
-                                    pcmk__node_name(destination),
-                                    pcmk_role_text(rsc->priv->orig_role));
+        details = pcmk__assert_asprintf("%s -> %s %s", pcmk__node_name(origin),
+                                        pcmk__node_name(destination),
+                                        pcmk_role_text(rsc->priv->orig_role));
 
     } else if (same_role) {
         /* Moving a normal resource */
-        details = crm_strdup_printf("%s -> %s", pcmk__node_name(origin),
-                                    pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s -> %s", pcmk__node_name(origin),
+                                        pcmk__node_name(destination));
 
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
-        details = crm_strdup_printf("%s -> %s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk_role_text(rsc->priv->next_role),
-                                    pcmk__node_name(origin));
+        details = pcmk__assert_asprintf("%s -> %s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk_role_text(rsc->priv->next_role),
+                                        pcmk__node_name(origin));
 
     } else {
         /* Moving and promoting/demoting */
-        details = crm_strdup_printf("%s %s -> %s %s",
-                                    pcmk_role_text(rsc->priv->orig_role),
-                                    pcmk__node_name(origin),
-                                    pcmk_role_text(rsc->priv->next_role),
-                                    pcmk__node_name(destination));
+        details = pcmk__assert_asprintf("%s %s -> %s %s",
+                                        pcmk_role_text(rsc->priv->orig_role),
+                                        pcmk__node_name(origin),
+                                        pcmk_role_text(rsc->priv->next_role),
+                                        pcmk__node_name(destination));
     }
 
     len = strlen(details);
@@ -213,13 +215,13 @@ rsc_action_item(pcmk__output_t *out, va_list args)
     }
 
     if ((source->reason != NULL)
-        && !pcmk_is_set(action->flags, pcmk__action_runnable)) {
-        reason = crm_strdup_printf("due to %s (blocked)", source->reason);
+        && !pcmk__is_set(action->flags, pcmk__action_runnable)) {
+        reason = pcmk__assert_asprintf("due to %s (blocked)", source->reason);
 
     } else if (source->reason) {
-        reason = crm_strdup_printf("due to %s", source->reason);
+        reason = pcmk__assert_asprintf("due to %s", source->reason);
 
-    } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
+    } else if (!pcmk__is_set(action->flags, pcmk__action_runnable)) {
         reason = strdup("blocked");
 
     }
@@ -357,7 +359,7 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     }
 
     if ((source->reason != NULL)
-        && !pcmk_is_set(action->flags, pcmk__action_runnable)) {
+        && !pcmk__is_set(action->flags, pcmk__action_runnable)) {
         pcmk__xe_set_props(xml,
                            PCMK_XA_REASON, source->reason,
                            PCMK_XA_BLOCKED, PCMK_VALUE_TRUE,
@@ -366,8 +368,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
     } else if (source->reason != NULL) {
         pcmk__xe_set(xml, PCMK_XA_REASON, source->reason);
 
-    } else if (!pcmk_is_set(action->flags, pcmk__action_runnable)) {
-        pcmk__xe_set_bool_attr(xml, PCMK_XA_BLOCKED, true);
+    } else if (!pcmk__is_set(action->flags, pcmk__action_runnable)) {
+        pcmk__xe_set_bool(xml, PCMK_XA_BLOCKED, true);
 
     }
 
@@ -382,7 +384,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
@@ -399,7 +401,7 @@ rsc_is_colocated_with_list(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc,
                                  "Resources %s is colocated with", rsc->id);
 
-        if (pcmk_is_set(cons->primary->flags, pcmk__rsc_detect_loop)) {
+        if (pcmk__is_set(cons->primary->flags, pcmk__rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->primary->id, cons->id);
             continue;
@@ -433,7 +435,7 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
@@ -446,7 +448,7 @@ rsc_is_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
          lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->primary->flags, pcmk__rsc_detect_loop)) {
+        if (pcmk__is_set(cons->primary->flags, pcmk__rsc_detect_loop)) {
             colocations_xml_node(out, cons->primary, cons);
             continue;
         }
@@ -471,7 +473,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
@@ -488,7 +490,7 @@ rscs_colocated_with_list(pcmk__output_t *out, va_list args) {
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Resources colocated with %s",
                                  rsc->id);
 
-        if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {
+        if (pcmk__is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {
             out->list_item(out, NULL, "%s (id=%s - loop)",
                            cons->dependent->id, cons->id);
             continue;
@@ -522,7 +524,7 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_detect_loop)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_detect_loop)) {
         return rc;
     }
 
@@ -535,7 +537,7 @@ rscs_colocated_with_list_xml(pcmk__output_t *out, va_list args) {
          lpc != NULL; lpc = lpc->next) {
         pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-        if (pcmk_is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {
+        if (pcmk__is_set(cons->dependent->flags, pcmk__rsc_detect_loop)) {
             colocations_xml_node(out, cons->dependent, cons);
             continue;
         }
@@ -777,9 +779,9 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
                                          |crm_time_log_with_timezone);
     }
 
-    msg = crm_strdup_printf("Status of %s: '%s' (last updated %s)",
-                            sys_from, state_s,
-                            pcmk__s(last_updated_s, "at unknown time"));
+    msg = pcmk__assert_asprintf("Status of %s: '%s' (last updated %s)",
+                                sys_from, state_s,
+                                pcmk__s(last_updated_s, "at unknown time"));
     pcmk__output_create_html_node(out, "li", NULL, NULL, msg);
 
     free(msg);
@@ -992,13 +994,14 @@ digests_text(pcmk__output_t *out, va_list args)
     const char *node_desc = "unknown node";
 
     if (interval_ms != 0) {
-        action_desc = crm_strdup_printf("%ums-interval %s action", interval_ms,
-                                        ((task == NULL)? "unknown" : task));
+        action_desc = pcmk__assert_asprintf("%ums-interval %s action",
+                                            interval_ms,
+                                            pcmk__s(task, "unknown"));
     } else if (pcmk__str_eq(task, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         action_desc = strdup("probe action");
     } else {
-        action_desc = crm_strdup_printf("%s action",
-                                        ((task == NULL)? "unknown" : task));
+        action_desc = pcmk__assert_asprintf("%s action",
+                                            pcmk__s(task, "unknown"));
     }
     if ((rsc != NULL) && (rsc->id != NULL)) {
         rsc_desc = rsc->id;
@@ -1055,7 +1058,7 @@ digests_xml(pcmk__output_t *out, va_list args)
     guint interval_ms = va_arg(args, guint);
     const pcmk__op_digest_t *digests = va_arg(args, const pcmk__op_digest_t *);
 
-    char *interval_s = crm_strdup_printf("%ums", interval_ms);
+    char *interval_s = pcmk__assert_asprintf("%ums", interval_ms);
     xmlNode *xml = NULL;
 
     xml = pcmk__output_create_xml_node(out, PCMK_XE_DIGESTS,
@@ -1084,10 +1087,11 @@ digests_xml(pcmk__output_t *out, va_list args)
             crm_err("%s:%d: No stop action exists for %s",                  \
                     __func__, lineno, rsc->id);                             \
             pcmk__assert(stop != NULL);                                     \
-        } else if (pcmk_is_set(stop->flags, pcmk__action_optional)) {       \
+        } else if (pcmk__is_set(stop->flags, pcmk__action_optional)) {      \
             crm_err("%s:%d: Action %s is still optional",                   \
                     __func__, lineno, stop->uuid);                          \
-            pcmk__assert(!pcmk_is_set(stop->flags, pcmk__action_optional)); \
+            pcmk__assert(!pcmk__is_set(stop->flags,                         \
+                                       pcmk__action_optional));             \
         }                                                                   \
     } while (0)
 
@@ -1112,9 +1116,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     pcmk_action_t *demote = NULL;
     pcmk_action_t *reason_op = NULL;
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)
-        || (current == NULL && next == NULL)) {
-        const bool managed = pcmk_is_set(rsc->flags, pcmk__rsc_managed);
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)
+        || ((current == NULL) && (next == NULL))) {
+        const bool managed = pcmk__is_set(rsc->flags, pcmk__rsc_managed);
 
         pcmk__rsc_info(rsc, "Leave   %s\t(%s%s)",
                        rsc->id, pcmk_role_text(rsc->priv->orig_role),
@@ -1133,7 +1137,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     }
 
     if ((start == NULL)
-        || !pcmk_is_set(start->flags, pcmk__action_runnable)) {
+        || !pcmk__is_set(start->flags, pcmk__action_runnable)) {
         start_node = NULL;
     } else {
         start_node = current;
@@ -1143,7 +1147,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if (possible_matches) {
         stop = possible_matches->data;
         g_list_free(possible_matches);
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_stop_unexpected)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_stop_unexpected)) {
         /* The resource is multiply active with PCMK_META_MULTIPLE_ACTIVE set to
          * PCMK_VALUE_STOP_UNEXPECTED, and not stopping on its current node, but
          * it should be stopping elsewhere.
@@ -1183,19 +1187,19 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         }
 
         if ((migrate_op != NULL) && (current != NULL)
-            && pcmk_is_set(migrate_op->flags, pcmk__action_runnable)) {
+            && pcmk__is_set(migrate_op->flags, pcmk__action_runnable)) {
             rc = out->message(out, "rsc-action-item", "Migrate", rsc, current,
                               next, start, NULL);
 
-        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_reload)) {
+        } else if (pcmk__is_set(rsc->flags, pcmk__rsc_reload)) {
             rc = out->message(out, "rsc-action-item", "Reload", rsc, current,
                               next, start, NULL);
 
         } else if ((start == NULL)
-                   || pcmk_is_set(start->flags, pcmk__action_optional)) {
+                   || pcmk__is_set(start->flags, pcmk__action_optional)) {
             if ((demote != NULL) && (promote != NULL)
-                && !pcmk_is_set(demote->flags, pcmk__action_optional)
-                && !pcmk_is_set(promote->flags, pcmk__action_optional)) {
+                && !pcmk__is_set(demote->flags, pcmk__action_optional)
+                && !pcmk__is_set(promote->flags, pcmk__action_optional)) {
                 rc = out->message(out, "rsc-action-item", "Re-promote", rsc,
                                   current, next, promote, demote);
             } else {
@@ -1204,7 +1208,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                                pcmk__node_name(next));
             }
 
-        } else if (!pcmk_is_set(start->flags, pcmk__action_runnable)) {
+        } else if (!pcmk__is_set(start->flags, pcmk__action_runnable)) {
             if ((stop == NULL) || (stop->reason == NULL)) {
                 reason_op = start;
             } else {
@@ -1215,13 +1219,13 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
-            const bool failed = pcmk_is_set(rsc->flags, pcmk__rsc_failed);
+            const bool failed = pcmk__is_set(rsc->flags, pcmk__rsc_failed);
 
             rc = out->message(out, "rsc-action-item",
                               (failed? "Recover" : "Move"), rsc, current, next,
                               stop, NULL);
 
-        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
+        } else if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
             rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
                               NULL, stop, NULL);
             STOP_SANITY_ASSERT(__LINE__);
@@ -1244,7 +1248,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
     if ((stop != NULL)
         && ((rsc->priv->next_role == pcmk_role_stopped)
             || ((start != NULL)
-                && !pcmk_is_set(start->flags, pcmk__action_runnable)))) {
+                && !pcmk__is_set(start->flags, pcmk__action_runnable)))) {
 
         key = stop_key(rsc);
         for (GList *iter = rsc->priv->active_nodes;
@@ -1261,7 +1265,7 @@ rsc_action_default(pcmk__output_t *out, va_list args)
             }
 
             if (stop_op != NULL) {
-                if (pcmk_is_set(stop_op->flags, pcmk__action_runnable)) {
+                if (pcmk__is_set(stop_op->flags, pcmk__action_runnable)) {
                     STOP_SANITY_ASSERT(__LINE__);
                 }
                 if (stop_op->reason != NULL) {
@@ -1278,9 +1282,9 @@ rsc_action_default(pcmk__output_t *out, va_list args)
         free(key);
 
     } else if ((stop != NULL)
-               && pcmk_all_flags_set(rsc->flags,
-                                     pcmk__rsc_failed
-                                     |pcmk__rsc_stop_if_failed)) {
+               && pcmk__all_flags_set(rsc->flags,
+                                      pcmk__rsc_failed
+                                      |pcmk__rsc_stop_if_failed)) {
         /* 'stop' may be NULL if the failure was ignored */
         rc = out->message(out, "rsc-action-item", "Recover", rsc, current,
                           next, stop, start);
@@ -1291,12 +1295,12 @@ rsc_action_default(pcmk__output_t *out, va_list args)
                           stop, NULL);
         STOP_SANITY_ASSERT(__LINE__);
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_reload)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_reload)) {
         rc = out->message(out, "rsc-action-item", "Reload", rsc, current, next,
                           start, NULL);
 
     } else if ((stop != NULL)
-               && !pcmk_is_set(stop->flags, pcmk__action_optional)) {
+               && !pcmk__is_set(stop->flags, pcmk__action_optional)) {
         rc = out->message(out, "rsc-action-item", "Restart", rsc, current,
                           next, start, NULL);
         STOP_SANITY_ASSERT(__LINE__);
@@ -1394,7 +1398,7 @@ node_info_xml(pcmk__output_t *out, va_list args)
     bool have_quorum = (bool) va_arg(args, int);
     bool is_remote = (bool) va_arg(args, int);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
@@ -1828,19 +1832,19 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     CHECK_RC(rc, out->message(out, "cluster-summary", scheduler, pcmkd_state,
                               section_opts, show_opts));
 
-    if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
+    if (pcmk__is_set(section_opts, pcmk_section_nodes) && unames) {
         CHECK_RC(rc, out->message(out, "node-list", scheduler->nodes, unames,
                                   resources, show_opts, rc == pcmk_rc_ok));
     }
 
     /* Print resources section, if needed */
-    if (pcmk_is_set(section_opts, pcmk_section_resources)) {
+    if (pcmk__is_set(section_opts, pcmk_section_resources)) {
         CHECK_RC(rc, out->message(out, "resource-list", scheduler, show_opts,
                                   true, unames, resources, rc == pcmk_rc_ok));
     }
 
     /* print Node Attributes section if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
+    if (pcmk__is_set(section_opts, pcmk_section_attributes)) {
         CHECK_RC(rc, out->message(out, "node-attribute-list", scheduler,
                                   show_opts, (rc == pcmk_rc_ok), unames,
                                   resources));
@@ -1849,15 +1853,15 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_any_flags_set(section_opts,
-                           pcmk_section_operations|pcmk_section_failcounts)) {
+    if (pcmk__any_flags_set(section_opts,
+                            pcmk_section_operations|pcmk_section_failcounts)) {
         CHECK_RC(rc, out->message(out, "node-summary", scheduler, unames,
                                   resources, section_opts, show_opts,
                                   (rc == pcmk_rc_ok)));
     }
 
     /* If there were any failed actions, print them */
-    if (pcmk_is_set(section_opts, pcmk_section_failures)
+    if (pcmk__is_set(section_opts, pcmk_section_failures)
         && (scheduler->priv->failed != NULL)
         && (scheduler->priv->failed->children != NULL)) {
 
@@ -1866,8 +1870,9 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     }
 
     // Print failed fencing actions
-    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) &&
-        fence_history != pcmk__fence_history_none) {
+    if (pcmk__is_set(section_opts, pcmk_section_fence_failed)
+        && (fence_history != pcmk__fence_history_none)) {
+
         if (history_rc == 0) {
             stonith_history_t *hp = NULL;
 
@@ -1891,21 +1896,22 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
     }
 
     /* Print tickets if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
+    if (pcmk__is_set(section_opts, pcmk_section_tickets)) {
         CHECK_RC(rc, out->message(out, "ticket-list",
                                   scheduler->priv->ticket_constraints,
                                   (rc == pcmk_rc_ok), false, false));
     }
 
     /* Print negative location constraints if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_bans)) {
+    if (pcmk__is_set(section_opts, pcmk_section_bans)) {
         CHECK_RC(rc, out->message(out, "ban-list", scheduler, prefix, resources,
                                   show_opts, rc == pcmk_rc_ok));
     }
 
     // Print fencing history
-    if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
-        fence_history != pcmk__fence_history_none) {
+    if (pcmk__any_flags_set(section_opts, pcmk_section_fencing_all)
+        && (fence_history != pcmk__fence_history_none)) {
+
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 PCMK__OUTPUT_SPACER_IF(out, rc == pcmk_rc_ok);
@@ -1914,7 +1920,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
                                crm_exit_str(history_rc));
                 out->end_list(out);
             }
-        } else if (pcmk_is_set(section_opts, pcmk_section_fence_worked)) {
+        } else if (pcmk__is_set(section_opts, pcmk_section_fence_worked)) {
             stonith_history_t *hp = NULL;
 
             hp = stonith__first_matching_event(stonith_history,
@@ -1925,7 +1931,7 @@ pcmk__cluster_status_text(pcmk__output_t *out, va_list args)
                                           section_opts, show_opts,
                                           rc == pcmk_rc_ok));
             }
-        } else if (pcmk_is_set(section_opts, pcmk_section_fence_pending)) {
+        } else if (pcmk__is_set(section_opts, pcmk_section_fence_pending)) {
             stonith_history_t *hp = NULL;
 
             hp = stonith__first_matching_event(stonith_history,
@@ -1965,13 +1971,13 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
                  show_opts);
 
     /*** NODES ***/
-    if (pcmk_is_set(section_opts, pcmk_section_nodes)) {
+    if (pcmk__is_set(section_opts, pcmk_section_nodes)) {
         out->message(out, "node-list", scheduler->nodes, unames, resources,
                      show_opts, false);
     }
 
     /* Print resources section, if needed */
-    if (pcmk_is_set(section_opts, pcmk_section_resources)) {
+    if (pcmk__is_set(section_opts, pcmk_section_resources)) {
         /* XML output always displays full details. */
         uint32_t full_show_opts = show_opts & ~pcmk_show_brief;
 
@@ -1980,7 +1986,7 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     }
 
     /* print Node Attributes section if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
+    if (pcmk__is_set(section_opts, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", scheduler, show_opts, false,
                      unames, resources);
     }
@@ -1988,14 +1994,14 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_any_flags_set(section_opts,
-                           pcmk_section_operations|pcmk_section_failcounts)) {
+    if (pcmk__any_flags_set(section_opts,
+                            pcmk_section_operations|pcmk_section_failcounts)) {
         out->message(out, "node-summary", scheduler, unames,
                      resources, section_opts, show_opts, false);
     }
 
     /* If there were any failed actions, print them */
-    if (pcmk_is_set(section_opts, pcmk_section_failures)
+    if (pcmk__is_set(section_opts, pcmk_section_failures)
         && (scheduler->priv->failed != NULL)
         && (scheduler->priv->failed->children != NULL)) {
 
@@ -2004,20 +2010,21 @@ cluster_status_xml(pcmk__output_t *out, va_list args)
     }
 
     // Print fencing history
-    if (pcmk_is_set(section_opts, pcmk_section_fencing_all) &&
-        fence_history != pcmk__fence_history_none) {
+    if (pcmk__is_set(section_opts, pcmk_section_fencing_all)
+        && (fence_history != pcmk__fence_history_none)) {
+
         out->message(out, "full-fencing-list", history_rc, stonith_history,
                      unames, section_opts, show_opts, false);
     }
 
     /* Print tickets if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
+    if (pcmk__is_set(section_opts, pcmk_section_tickets)) {
         out->message(out, "ticket-list", scheduler->priv->ticket_constraints,
                      false, false, false);
     }
 
     /* Print negative location constraints if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_bans)) {
+    if (pcmk__is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
     }
@@ -2049,19 +2056,19 @@ cluster_status_html(pcmk__output_t *out, va_list args)
                  show_opts);
 
     /*** NODE LIST ***/
-    if (pcmk_is_set(section_opts, pcmk_section_nodes) && unames) {
+    if (pcmk__is_set(section_opts, pcmk_section_nodes) && (unames != NULL)) {
         out->message(out, "node-list", scheduler->nodes, unames, resources,
                      show_opts, false);
     }
 
     /* Print resources section, if needed */
-    if (pcmk_is_set(section_opts, pcmk_section_resources)) {
+    if (pcmk__is_set(section_opts, pcmk_section_resources)) {
         out->message(out, "resource-list", scheduler, show_opts, true, unames,
                      resources, false);
     }
 
     /* print Node Attributes section if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_attributes)) {
+    if (pcmk__is_set(section_opts, pcmk_section_attributes)) {
         out->message(out, "node-attribute-list", scheduler, show_opts, false,
                      unames, resources);
     }
@@ -2069,14 +2076,14 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     /* If requested, print resource operations (which includes failcounts)
      * or just failcounts
      */
-    if (pcmk_any_flags_set(section_opts,
-                           pcmk_section_operations|pcmk_section_failcounts)) {
+    if (pcmk__any_flags_set(section_opts,
+                            pcmk_section_operations|pcmk_section_failcounts)) {
         out->message(out, "node-summary", scheduler, unames,
                      resources, section_opts, show_opts, false);
     }
 
     /* If there were any failed actions, print them */
-    if (pcmk_is_set(section_opts, pcmk_section_failures)
+    if (pcmk__is_set(section_opts, pcmk_section_failures)
         && (scheduler->priv->failed != NULL)
         && (scheduler->priv->failed->children != NULL)) {
 
@@ -2085,8 +2092,9 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     }
 
     // Print failed fencing actions
-    if (pcmk_is_set(section_opts, pcmk_section_fence_failed) &&
-        fence_history != pcmk__fence_history_none) {
+    if (pcmk__is_set(section_opts, pcmk_section_fence_failed)
+        && (fence_history != pcmk__fence_history_none)) {
+
         if (history_rc == 0) {
             stonith_history_t *hp = NULL;
 
@@ -2106,8 +2114,9 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     }
 
     // Print fencing history
-    if (pcmk_any_flags_set(section_opts, pcmk_section_fencing_all) &&
-        fence_history != pcmk__fence_history_none) {
+    if (pcmk__any_flags_set(section_opts, pcmk_section_fencing_all)
+        && (fence_history != pcmk__fence_history_none)) {
+
         if (history_rc != 0) {
             if (!already_printed_failure) {
                 out->begin_list(out, NULL, NULL, "Failed Fencing Actions");
@@ -2115,7 +2124,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
                                crm_exit_str(history_rc));
                 out->end_list(out);
             }
-        } else if (pcmk_is_set(section_opts, pcmk_section_fence_worked)) {
+        } else if (pcmk__is_set(section_opts, pcmk_section_fence_worked)) {
             stonith_history_t *hp = NULL;
 
             hp = stonith__first_matching_event(stonith_history,
@@ -2125,7 +2134,7 @@ cluster_status_html(pcmk__output_t *out, va_list args)
                 out->message(out, "fencing-list", hp, unames, section_opts,
                              show_opts, false);
             }
-        } else if (pcmk_is_set(section_opts, pcmk_section_fence_pending)) {
+        } else if (pcmk__is_set(section_opts, pcmk_section_fence_pending)) {
             stonith_history_t *hp = NULL;
 
             hp = stonith__first_matching_event(stonith_history,
@@ -2139,13 +2148,13 @@ cluster_status_html(pcmk__output_t *out, va_list args)
     }
 
     /* Print tickets if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_tickets)) {
+    if (pcmk__is_set(section_opts, pcmk_section_tickets)) {
         out->message(out, "ticket-list", scheduler->priv->ticket_constraints,
                      false, false, false);
     }
 
     /* Print negative location constraints if requested */
-    if (pcmk_is_set(section_opts, pcmk_section_bans)) {
+    if (pcmk__is_set(section_opts, pcmk_section_bans)) {
         out->message(out, "ban-list", scheduler, prefix, resources, show_opts,
                      false);
     }

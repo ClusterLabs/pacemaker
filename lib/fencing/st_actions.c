@@ -79,7 +79,8 @@ log_action(stonith_action_t *action, pid_t pid)
      */
     if (action->result.action_stderr != NULL) {
         /* Logging the whole string confuses syslog when the string is xml */
-        char *prefix = crm_strdup_printf("%s[%d] stderr:", action->agent, pid);
+        char *prefix = pcmk__assert_asprintf("%s[%d] stderr:", action->agent,
+                                             pid);
 
         crm_log_output(LOG_WARNING, prefix, action->result.action_stderr);
         free(prefix);
@@ -133,7 +134,7 @@ make_args(const char *agent, const char *action, const char *target,
 
     // Add action to arguments (using an alias if requested)
     if (device_args) {
-        char *buffer = crm_strdup_printf("pcmk_%s_action", action);
+        char *buffer = pcmk__assert_asprintf("pcmk_%s_action", action);
 
         value = g_hash_table_lookup(device_args, buffer);
         free(buffer);
@@ -271,7 +272,7 @@ stonith__action_create(const char *agent, const char *action_name,
                      "Initialization bug in fencing library");
 
     if (device_args) {
-        char *buffer = crm_strdup_printf("pcmk_%s_retries", action_name);
+        char *buffer = pcmk__assert_asprintf("pcmk_%s_retries", action_name);
         const char *value = g_hash_table_lookup(device_args, buffer);
 
         free(buffer);
@@ -578,7 +579,7 @@ stonith_action_to_svc(stonith_action_t *action)
 {
     static int stonith_sequence = 0;
 
-    char *path = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", action->agent);
+    char *path = pcmk__assert_asprintf(PCMK__FENCE_BINDIR "/%s", action->agent);
     svc_action_t *svc_action = services_action_create_generic(path, NULL);
 
     free(path);
@@ -590,9 +591,9 @@ stonith_action_to_svc(stonith_action_t *action)
 
     svc_action->timeout = action->remaining_timeout * 1000;
     svc_action->standard = pcmk__str_copy(PCMK_RESOURCE_CLASS_STONITH);
-    svc_action->id = crm_strdup_printf("%s_%s_%dof%d", action->agent,
-                                       action->action, action->tries,
-                                       action->max_retries);
+    svc_action->id = pcmk__assert_asprintf("%s_%s_%dof%d", action->agent,
+                                           action->action, action->tries,
+                                           action->max_retries);
     svc_action->agent = pcmk__str_copy(action->agent);
     svc_action->sequence = stonith_sequence++;
     svc_action->params = action->args;

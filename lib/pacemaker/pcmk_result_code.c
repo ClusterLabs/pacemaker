@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,11 +47,11 @@ pcmk__show_result_code(pcmk__output_t *out, int code,
     }
 
     // out->quiet controls whether the code is shown (if quiet is supported)
-    out->quiet = !pcmk_is_set(flags, pcmk_rc_disp_code);
+    out->quiet = !pcmk__is_set(flags, pcmk_rc_disp_code);
 
     out->message(out, "result-code", code,
-                 pcmk_is_set(flags, pcmk_rc_disp_name)? name : NULL,
-                 pcmk_is_set(flags, pcmk_rc_disp_desc)? desc : NULL);
+                 pcmk__is_set(flags, pcmk_rc_disp_name)? name : NULL,
+                 pcmk__is_set(flags, pcmk_rc_disp_desc)? desc : NULL);
     out->quiet = quiet_orig;
 
     return rc;
@@ -133,11 +133,11 @@ pcmk__list_result_codes(pcmk__output_t *out, enum pcmk_result_type type,
         }
 
         // out->quiet controls whether the code is shown (if quiet is supported)
-        out->quiet = !pcmk_is_set(flags, pcmk_rc_disp_code);
+        out->quiet = !pcmk__is_set(flags, pcmk_rc_disp_code);
 
         out->message(out, "result-code", code,
-                     pcmk_is_set(flags, pcmk_rc_disp_name)? name : NULL,
-                     pcmk_is_set(flags, pcmk_rc_disp_desc)? desc : NULL);
+                     pcmk__is_set(flags, pcmk_rc_disp_name)? name : NULL,
+                     pcmk__is_set(flags, pcmk_rc_disp_desc)? desc : NULL);
         out->quiet = quiet_orig;
 
         code++;

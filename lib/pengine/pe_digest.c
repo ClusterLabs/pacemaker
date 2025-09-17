@@ -50,7 +50,7 @@ static bool
 attr_not_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
-    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
+    char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
 
     if (strstr((const char *) user_data, name) == NULL) {
         crm_trace("Filtering %s (not found in '%s')",
@@ -66,7 +66,7 @@ static bool
 attr_in_string(xmlAttrPtr a, void *user_data)
 {
     bool filter = false;
-    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
+    char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
 
     if (strstr((const char *) user_data, name) != NULL) {
         crm_trace("Filtering %s (found in '%s')",
@@ -217,8 +217,8 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                                        attr_in_string, (void *) secure_list);
     }
     if (old_version
-        && pcmk_is_set(pcmk_get_ra_caps(class),
-                       pcmk_ra_cap_fence_params)) {
+        && pcmk__is_set(pcmk_get_ra_caps(class),
+                        pcmk_ra_cap_fence_params)) {
         /* For fencing resources, Pacemaker adds special parameters, but these
          * are not listed in fence agent meta-data, so with older versions of
          * DC, the controller will not hash them. That means we have to filter
@@ -408,8 +408,8 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
 
     pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
-                             pcmk_is_set(scheduler->flags,
-                                         pcmk__sched_sanitized),
+                             pcmk__is_set(scheduler->flags,
+                                          pcmk__sched_sanitized),
                              scheduler);
 
     if (!pcmk__str_eq(data->digest_restart_calc, digest_restart,
@@ -488,7 +488,7 @@ static inline char *
 create_unfencing_summary(const char *rsc_id, const char *agent_type,
                          const char *param_digest)
 {
-    return crm_strdup_printf("%s:%s:%s", rsc_id, agent_type, param_digest);
+    return pcmk__assert_asprintf("%s:%s:%s", rsc_id, agent_type, param_digest);
 }
 
 /*!
@@ -588,7 +588,7 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
 
     // Parameters don't match
     data->rc = pcmk__digest_mismatch;
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_sanitized)
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_sanitized)
         && (data->digest_secure_calc != NULL)) {
 
         if (scheduler->priv->out != NULL) {

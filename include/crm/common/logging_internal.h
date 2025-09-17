@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 
 #include <glib.h>
 
+#include <crm/common/internal.h>        // pcmk__is_set()
 #include <crm/common/logging.h>
 #include <crm/common/output_internal.h>
 
@@ -48,7 +49,7 @@ enum pcmk__warnings {
  * \param[in] fmt...   printf(3)-style format and arguments
  */
 #define pcmk__warn_once(wo_flag, fmt...) do {                           \
-        if (!pcmk_is_set(pcmk__warnings, wo_flag)) {                    \
+        if (!pcmk__is_set(pcmk__warnings, wo_flag)) {                   \
             if (wo_flag == pcmk__wo_blind) {                            \
                 crm_warn(fmt);                                          \
             } else {                                                    \

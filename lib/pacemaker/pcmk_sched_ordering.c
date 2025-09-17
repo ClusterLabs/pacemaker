@@ -141,7 +141,7 @@ get_ordering_symmetry(const xmlNode *xml_obj, enum pe_order_kind parent_kind,
     }
 
     // Check ordering XML (and parent) for explicit PCMK_XA_SYMMETRICAL setting
-    rc = pcmk__xe_get_bool_attr(xml_obj, PCMK_XA_SYMMETRICAL, &symmetric);
+    rc = pcmk__xe_get_bool(xml_obj, PCMK_XA_SYMMETRICAL, &symmetric);
 
     if (rc != pcmk_rc_ok && parent_symmetrical_s != NULL) {
         symmetric = pcmk__is_true(parent_symmetrical_s);
@@ -288,8 +288,7 @@ get_minimum_first_instances(const pcmk_resource_t *rsc, const xmlNode *xml)
      * PCMK_XA_REQUIRE_ALL=PCMK_VALUE_FALSE is deprecated equivalent of
      * PCMK_META_CLONE_MIN=1
      */
-    if (pcmk__xe_get_bool_attr(xml, PCMK_XA_REQUIRE_ALL,
-                               &require_all) != ENODATA) {
+    if (pcmk__xe_get_bool(xml, PCMK_XA_REQUIRE_ALL, &require_all) != ENXIO) {
         pcmk__warn_once(pcmk__wo_require_all,
                         "Support for " PCMK_XA_REQUIRE_ALL " in ordering "
                         "constraints is deprecated and will be removed in a "
@@ -322,7 +321,7 @@ clone_min_ordering(const char *id,
                    uint32_t flags, int clone_min)
 {
     // Create a pseudo-action for when the minimum instances are active
-    char *task = crm_strdup_printf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
+    char *task = pcmk__assert_asprintf(PCMK_ACTION_CLONE_ONE_OR_MORE ":%s", id);
     pcmk_action_t *clone_min_met = get_pseudo_op(task,
                                                  rsc_first->priv->scheduler);
 
@@ -691,7 +690,7 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
 
     bool require_all = true;
 
-    (void) pcmk__xe_get_bool_attr(set1, PCMK_XA_REQUIRE_ALL, &require_all);
+    (void) pcmk__xe_get_bool(set1, PCMK_XA_REQUIRE_ALL, &require_all);
 
     if (action_1 == NULL) {
         action_1 = PCMK_ACTION_START;
@@ -722,8 +721,8 @@ order_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
      * irrelevant in regards to set2.
      */
     if (!require_all) {
-        char *task = crm_strdup_printf(PCMK_ACTION_ONE_OR_MORE ":%s",
-                                       pcmk__xe_id(set1));
+        char *task = pcmk__assert_asprintf(PCMK_ACTION_ONE_OR_MORE ":%s",
+                                           pcmk__xe_id(set1));
         pcmk_action_t *unordered_action = get_pseudo_op(task, scheduler);
 
         free(task);
@@ -1069,7 +1068,7 @@ ordering_is_invalid(pcmk_action_t *action, pcmk__related_action_t *input)
     /* Prevent user-defined ordering constraints between resources
      * running in a guest node and the resource that defines that node.
      */
-    if (!pcmk_is_set(input->flags, pcmk__ar_guest_allowed)
+    if (!pcmk__is_set(input->flags, pcmk__ar_guest_allowed)
         && (input->action->rsc != NULL)
         && pcmk__rsc_corresponds_to_guest(action->rsc, input->action->node)) {
 
@@ -1138,7 +1137,7 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
 
         // Resources and nodes in maintenance mode won't be touched
 
-        if (pcmk_is_set(action->rsc->flags, pcmk__rsc_maintenance)) {
+        if (pcmk__is_set(action->rsc->flags, pcmk__rsc_maintenance)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource in maintenance mode",
@@ -1159,8 +1158,8 @@ pcmk__order_stops_before_shutdown(pcmk_node_t *node, pcmk_action_t *shutdown_op)
          *
          * @TODO This "if" looks wrong, create a regression test for these cases
          */
-        if (!pcmk_any_flags_set(action->rsc->flags,
-                                pcmk__rsc_managed|pcmk__rsc_blocked)) {
+        if (!pcmk__any_flags_set(action->rsc->flags,
+                                 pcmk__rsc_managed|pcmk__rsc_blocked)) {
             pcmk__rsc_trace(action->rsc,
                             "Not ordering %s before shutdown of %s because "
                             "resource is unmanaged or blocked",
@@ -1246,7 +1245,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
     }
 
     if ((first_action != NULL) && (first_action->rsc == rsc)
-        && pcmk_is_set(first_action->flags, pcmk__action_migration_abort)) {
+        && pcmk__is_set(first_action->flags, pcmk__action_migration_abort)) {
 
         pcmk__rsc_trace(rsc,
                         "Detected dangling migration ordering (%s then %s %s)",
@@ -1255,7 +1254,7 @@ order_resource_actions_after(pcmk_action_t *first_action,
     }
 
     if ((first_action == NULL)
-        && !pcmk_is_set(flags, pcmk__ar_first_implies_then)) {
+        && !pcmk__is_set(flags, pcmk__ar_first_implies_then)) {
 
         pcmk__rsc_debug(rsc,
                         "Ignoring ordering %d for %s: No first action found",

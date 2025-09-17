@@ -361,7 +361,8 @@ pacemakerd_read_config(void)
                      " No group found for user %s", CRM_DAEMON_USER);
 
         } else {
-            char *key = crm_strdup_printf("uidgid.gid.%lld", (long long) gid);
+            char *key = pcmk__assert_asprintf("uidgid.gid.%lld",
+                                              (long long) gid);
 
             rc = cmap_set_uint8(local_handle, key, 1);
             free(key);

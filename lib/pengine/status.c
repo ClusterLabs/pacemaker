@@ -80,7 +80,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
         return FALSE;
     }
 
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_have_status)) {
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_have_status)) {
         /* cluster_status() has already been called since the last time the
          * scheduler was reset. Unpacking the input CIB again would cause
          * duplication within the scheduler object's data structures.
@@ -127,8 +127,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
                                    "//" PCMK_XE_CRM_CONFIG, LOG_TRACE);
     unpack_config(section, scheduler);
 
-   if (!pcmk_any_flags_set(scheduler->flags,
-                           pcmk__sched_location_only|pcmk__sched_quorate)
+   if (!pcmk__any_flags_set(scheduler->flags,
+                            pcmk__sched_location_only|pcmk__sched_quorate)
        && (scheduler->no_quorum_policy != pcmk_no_quorum_ignore)) {
         pcmk__sched_warn(scheduler,
                          "Fencing and resource management disabled "
@@ -141,7 +141,7 @@ cluster_status(pcmk_scheduler_t * scheduler)
 
     section = pcmk__xpath_find_one(scheduler->input->doc,
                                    "//" PCMK_XE_RESOURCES, LOG_TRACE);
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }
     unpack_resources(section, scheduler);
@@ -154,13 +154,13 @@ cluster_status(pcmk_scheduler_t * scheduler)
                                    LOG_NEVER);
     unpack_tags(section, scheduler);
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_location_only)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         section = pcmk__xpath_find_one(scheduler->input->doc,
                                        "//" PCMK_XE_STATUS, LOG_TRACE);
         unpack_status(section, scheduler);
     }
 
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_no_counts)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_no_counts)) {
         for (GList *item = scheduler->priv->resources;
              item != NULL; item = item->next) {
 

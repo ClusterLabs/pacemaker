@@ -35,7 +35,7 @@ do_te_control(long long action,
     cib_t *cib_conn = controld_globals.cib_conn;
     gboolean init_ok = TRUE;
 
-    if (pcmk_is_set(action, A_TE_STOP)) {
+    if (pcmk__is_set(action, A_TE_STOP)) {
         pcmk__free_graph(controld_globals.transition_graph);
         controld_globals.transition_graph = NULL;
 
@@ -52,8 +52,8 @@ do_te_control(long long action,
     if ((action & A_TE_START) == 0) {
         return;
 
-    } else if (pcmk_is_set(controld_globals.fsa_input_register,
-                           R_TE_CONNECTED)) {
+    } else if (pcmk__is_set(controld_globals.fsa_input_register,
+                            R_TE_CONNECTED)) {
         crm_debug("The transitioner is already active");
         return;
 
@@ -63,7 +63,7 @@ do_te_control(long long action,
     }
 
     if (controld_globals.te_uuid == NULL) {
-        controld_globals.te_uuid = crm_generate_uuid();
+        controld_globals.te_uuid = pcmk__generate_uuid();
         crm_info("Registering TE UUID: %s", controld_globals.te_uuid);
     }
 
@@ -99,7 +99,7 @@ do_te_invoke(long long action,
 
     if (!AM_I_DC
         || ((controld_globals.fsa_state != S_TRANSITION_ENGINE)
-            && pcmk_is_set(action, A_TE_INVOKE))) {
+            && pcmk__is_set(action, A_TE_INVOKE))) {
         crm_notice("No need to invoke the TE (%s) in state %s",
                    fsa_action2string(action),
                    fsa_state2string(controld_globals.fsa_state));

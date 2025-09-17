@@ -98,7 +98,8 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
     for (; gIter != NULL; gIter = gIter->next) {
         pcmk__graph_synapse_t *synapse = (pcmk__graph_synapse_t *) gIter->data;
 
-        if (pcmk_any_flags_set(synapse->flags, pcmk__synapse_confirmed|pcmk__synapse_failed)) {
+        if (pcmk__any_flags_set(synapse->flags,
+                                pcmk__synapse_confirmed|pcmk__synapse_failed)) {
             /* We've already been here */
             continue;
         }
@@ -108,7 +109,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
             pcmk__graph_action_t *action = (pcmk__graph_action_t *) gIter2->data;
 
             if ((action->type == pcmk__pseudo_graph_action)
-                || pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+                || pcmk__is_set(action->flags, pcmk__graph_action_confirmed)) {
                 continue;
             } else if (action->type == pcmk__cluster_graph_action) {
                 const char *task = pcmk__xe_get(action->xml, PCMK_XA_OPERATION);
@@ -137,7 +138,7 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 stop_te_timer(action);
                 pcmk__update_graph(graph, action);
 
-                if (pcmk_is_set(synapse->flags, pcmk__synapse_executed)) {
+                if (pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
                     crm_notice("Action %d (%s) was pending on %s (offline)",
                                action->id,
                                pcmk__xe_get(action->xml,
@@ -384,7 +385,7 @@ match_down_event(const char *target)
     xmlXPathObject *xpath_ret = NULL;
     GList *gIter, *gIter2;
 
-    char *xpath = crm_strdup_printf(XPATH_DOWNED, target);
+    char *xpath = pcmk__assert_asprintf(XPATH_DOWNED, target);
 
     for (gIter = controld_globals.transition_graph->synapses;
          gIter != NULL && match == NULL;
@@ -395,7 +396,7 @@ match_down_event(const char *target)
              gIter2 = gIter2->next) {
 
             match = (pcmk__graph_action_t *) gIter2->data;
-            if (pcmk_is_set(match->flags, pcmk__graph_action_executed)) {
+            if (pcmk__is_set(match->flags, pcmk__graph_action_executed)) {
                 xpath_ret = pcmk__xpath_search(match->xml->doc, xpath);
                 if (pcmk__xpath_num_results(xpath_ret) == 0) {
                     match = NULL;
@@ -528,7 +529,7 @@ process_graph_event(xmlNode *event, const char *event_node)
             abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                              "Unknown event", event);
 
-        } else if (pcmk_is_set(action->flags, pcmk__graph_action_confirmed)) {
+        } else if (pcmk__is_set(action->flags, pcmk__graph_action_confirmed)) {
             /* Nothing further needs to be done if the action has already been
              * confirmed. This can happen e.g. when processing both an
              * "xxx_last_0" or "xxx_last_failure_0" record as well as the main
@@ -554,7 +555,7 @@ process_graph_event(xmlNode *event, const char *event_node)
             stop_te_timer(action);
             te_action_confirmed(action, controld_globals.transition_graph);
 
-            if (pcmk_is_set(action->flags, pcmk__graph_action_failed)) {
+            if (pcmk__is_set(action->flags, pcmk__graph_action_failed)) {
                 abort_transition(action->synapse->priority + 1,
                                  pcmk__graph_restart, "Event failed", event);
             }

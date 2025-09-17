@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,10 +12,11 @@
 
 #include <stdio.h>                          // NULL
 #include <stdbool.h>                        // bool
+
+#include <crm/common/internal.h>            // pcmk__is_set()
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t
 #include <crm/common/resources.h>           // pcmk_rsc_unique,
 #include <crm/common/resources_internal.h>  // pcmk__rsc_variant_clone etc.
-#include <crm/common/util.h>                // pcmk_is_set
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +61,7 @@ pcmk__is_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk__rsc_unique);
+    return pcmk__is_clone(rsc) && pcmk__is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 /*!
@@ -74,7 +75,7 @@ pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_anonymous_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk__rsc_unique);
+    return pcmk__is_clone(rsc) && !pcmk__is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 #ifdef __cplusplus

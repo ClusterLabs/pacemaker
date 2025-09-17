@@ -26,8 +26,6 @@
 #include <crm/cib/internal.h>   // cib__clean_up_connection, cib__signon_query
 #include <crm/common/internal.h>
 #include <crm/common/results.h>
-#include <crm/common/strings.h> // crm_strdup_printf
-#include <crm/common/util.h>    // crm_md5sum
 #include <crm/common/xml.h>     // crm_element_value, PCMK_XA_*
 
 #include <pacemaker-internal.h> // pcmk__query_node_name
@@ -158,8 +156,8 @@ pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
     char *s = NULL;
     gchar *hosts = g_strjoinv(" ", nodes);
 
-    s = crm_strdup_printf("pssh -i -H \"%s\" -x \"" SSH_OPTS "\" -- \"%s\"",
-                          hosts, cmdline);
+    s = pcmk__assert_asprintf("pssh -i -H \"%s\" -x \"" SSH_OPTS "\" -- \"%s\"",
+                              hosts, cmdline);
     rc = run_cmdline(out, s, NULL);
 
     free(s);
@@ -174,7 +172,7 @@ pdsh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
     char *s = NULL;
     gchar *hosts = g_strjoinv(",", nodes);
 
-    s = crm_strdup_printf("pdsh -w \"%s\" -- \"%s\"", hosts, cmdline);
+    s = pcmk__assert_asprintf("pdsh -w \"%s\" -- \"%s\"", hosts, cmdline);
     setenv("PDSH_SSH_ARGS_APPEND", SSH_OPTS, 1);
     rc = run_cmdline(out, s, NULL);
     unsetenv("PDSH_SSH_ARGS_APPEND");
@@ -190,8 +188,8 @@ ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
     int rc = pcmk_rc_ok;
 
     for (gchar **node = nodes; *node != NULL; node++) {
-        char *s = crm_strdup_printf("ssh " SSH_OPTS " \"%s\" -- \"%s\"",
-                                    *node, cmdline);
+        char *s = pcmk__assert_asprintf("ssh " SSH_OPTS " \"%s\" -- \"%s\"",
+                                        *node, cmdline);
 
         rc = run_cmdline(out, s, NULL);
         free(s);
@@ -212,8 +210,9 @@ pscp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
     char *s = NULL;
     gchar *hosts = g_strjoinv(" ", nodes);
 
-    s = crm_strdup_printf("pscp.pssh -H \"%s\" -x \"-pr\" -x \"" SSH_OPTS "\" -- \"%s\" \"%s\"",
-                          hosts, from, to);
+    s = pcmk__assert_asprintf("pscp.pssh -H \"%s\" -x \"-pr\" "
+                              "-x \"" SSH_OPTS "\" -- \"%s\" \"%s\"",
+                              hosts, from, to);
     rc = run_cmdline(out, s, NULL);
 
     free(s);
@@ -228,7 +227,8 @@ pdcp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
     char *s = NULL;
     gchar *hosts = g_strjoinv(",", nodes);
 
-    s = crm_strdup_printf("pdcp -pr -w \"%s\" -- \"%s\" \"%s\"", hosts, from, to);
+    s = pcmk__assert_asprintf("pdcp -pr -w \"%s\" -- \"%s\" \"%s\"", hosts,
+                              from, to);
     setenv("PDSH_SSH_ARGS_APPEND", SSH_OPTS, 1);
     rc = run_cmdline(out, s, NULL);
     unsetenv("PDSH_SSH_ARGS_APPEND");
@@ -244,8 +244,9 @@ scp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
     int rc = pcmk_rc_ok;
 
     for (gchar **node = nodes; *node != NULL; node++) {
-        char *s = crm_strdup_printf("scp -pqr " SSH_OPTS " \"%s\" \"%s:%s\"",
-                                    from, *node, to);
+        char *s = pcmk__assert_asprintf("scp -pqr " SSH_OPTS " \"%s\" "
+                                        "\"%s:%s\"",
+                                        from, *node, to);
 
         rc = run_cmdline(out, s, NULL);
         free(s);
@@ -272,7 +273,8 @@ reachable_hosts(pcmk__output_t *out, GList *all)
     if ((path == NULL) || (geteuid() != 0)) {
         for (GList *host = all; host != NULL; host = host->next) {
             int rc = pcmk_rc_ok;
-            char *cmdline = crm_strdup_printf("ping -c 2 -q %s", (char *) host->data);
+            char *cmdline = pcmk__assert_asprintf("ping -c 2 -q %s",
+                                                  (char *) host->data);
 
             rc = run_cmdline(out, cmdline, NULL);
 
@@ -293,7 +295,7 @@ reachable_hosts(pcmk__output_t *out, GList *all)
             pcmk__add_word(&all_str, 64, host->data);
         }
 
-        cmdline = crm_strdup_printf("fping -a -q %s", all_str->str);
+        cmdline = pcmk__assert_asprintf("fping -a -q %s", all_str->str);
         run_cmdline(out, cmdline, &standard_out);
 
         parts = g_strsplit(standard_out, "\n", 0);
@@ -443,7 +445,7 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     dirname = g_path_get_dirname(path);
 
-    cmdline = crm_strdup_printf("mkdir -p %s", dirname);
+    cmdline = pcmk__assert_asprintf("mkdir -p %s", dirname);
     rc = rsh_fn(out, peers, cmdline);
     if (rc != pcmk_rc_ok) {
         goto done;
@@ -457,13 +459,13 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
             goto done;
         }
 
-        sign_path = crm_strdup_printf("%s.sign", path);
+        sign_path = pcmk__assert_asprintf("%s.sign", path);
         rc = rcp_fn(out, peers, dirname, sign_path);
         free(sign_path);
 
     } else {
         free(cmdline);
-        cmdline = crm_strdup_printf("rm -f %s %s.sign", path, path);
+        cmdline = pcmk__assert_asprintf("rm -f %s %s.sign", path, path);
         rc = rsh_fn(out, peers, cmdline);
     }
 
@@ -485,7 +487,7 @@ check_cib_rsc(pcmk__output_t *out, const char *rsc)
         return rc;
     }
 
-    cmdline = crm_strdup_printf("crm_resource -r %s -W", rsc);
+    cmdline = pcmk__assert_asprintf("crm_resource -r %s -W", rsc);
     rc = run_cmdline(out, cmdline, NULL);
 
     free(cmdline);
@@ -519,7 +521,8 @@ get_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
         return NULL;
     }
 
-    cmdline = crm_strdup_printf("crm_resource -r %s -g %s --output-as=xml", rsc, param);
+    cmdline = pcmk__assert_asprintf("crm_resource -r %s -g %s --output-as=xml",
+                                    rsc, param);
     rc = run_cmdline(out, cmdline, &standard_out);
 
     if (rc != pcmk_rc_ok) {
@@ -532,7 +535,8 @@ get_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
         goto done;
     }
 
-    xpath = crm_strdup_printf("//" PCMK_XE_ITEM "[@" PCMK_XA_NAME "='%s']", param);
+    xpath = pcmk__assert_asprintf("//" PCMK_XE_ITEM "[@" PCMK_XA_NAME "='%s']",
+                                  param);
     node = pcmk__xpath_find_one(xml->doc, xpath, LOG_DEBUG);
 
     if (node == NULL) {
@@ -564,7 +568,7 @@ remove_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
         return rc;
     }
 
-    cmdline = crm_strdup_printf("crm_resource -r %s -d %s", rsc, param);
+    cmdline = pcmk__assert_asprintf("crm_resource -r %s -d %s", rsc, param);
     rc = run_cmdline(out, cmdline, NULL);
     free(cmdline);
     return rc;
@@ -581,8 +585,8 @@ set_cib_param(pcmk__output_t *out, const char *rsc, const char *param,
         return rc;
     }
 
-    cmdline = crm_strdup_printf("crm_resource -r %s -p %s -v %s", rsc, param,
-                                value);
+    cmdline = pcmk__assert_asprintf("crm_resource -r %s -p %s -v %s", rsc,
+                                    param, value);
     rc = run_cmdline(out, cmdline, NULL);
     free(cmdline);
     return rc;
@@ -595,7 +599,7 @@ local_files_get(const char *rsc, const char *param)
     char *lf_file = NULL;
     gchar *contents = NULL;
 
-    lf_file = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s/%s", rsc, param);
+    lf_file = pcmk__assert_asprintf(PCMK__CIB_SECRETS_DIR "/%s/%s", rsc, param);
     if (g_file_get_contents(lf_file, &contents, NULL, NULL)) {
         contents = g_strchomp(contents);
         retval = pcmk__str_copy(contents);
@@ -613,7 +617,8 @@ local_files_getsum(const char *rsc, const char *param)
     char *lf_file = NULL;
     gchar *contents = NULL;
 
-    lf_file = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s/%s.sign", rsc, param);
+    lf_file = pcmk__assert_asprintf(PCMK__CIB_SECRETS_DIR "/%s/%s.sign", rsc,
+                                    param);
     if (g_file_get_contents(lf_file, &contents, NULL, NULL)) {
         contents = g_strchomp(contents);
         retval = pcmk__str_copy(contents);
@@ -632,9 +637,9 @@ local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *lf_file = NULL;
     char *cmdline = NULL;
 
-    lf_file = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s/%s", rsc, param);
+    lf_file = pcmk__assert_asprintf(PCMK__CIB_SECRETS_DIR "/%s/%s", rsc, param);
 
-    cmdline = crm_strdup_printf("rm -f %s %s.sign", lf_file, lf_file);
+    cmdline = pcmk__assert_asprintf("rm -f %s %s.sign", lf_file, lf_file);
     rc = run_cmdline(out, cmdline, NULL);
 
     if (rc == pcmk_rc_ok) {
@@ -657,7 +662,7 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     char *calc_sum = NULL;
     int rc = pcmk_rc_ok;
 
-    lf_dir = crm_strdup_printf(PCMK__CIB_SECRETS_DIR "/%s", rsc);
+    lf_dir = pcmk__assert_asprintf(PCMK__CIB_SECRETS_DIR "/%s", rsc);
 
     if (g_mkdir_with_parents(lf_dir, 0700) != 0) {
         rc = errno;
@@ -666,8 +671,8 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
         goto done;
     }
 
-    lf_file = crm_strdup_printf("%s/%s", lf_dir, param);
-    contents = crm_strdup_printf("%s\n", value);
+    lf_file = pcmk__assert_asprintf("%s/%s", lf_dir, param);
+    contents = pcmk__assert_asprintf("%s\n", value);
     if (!g_file_set_contents(lf_file, contents, -1, NULL)) {
         rc = EIO;
         out->err(out, "Could not create file %s: %s", lf_file,
@@ -677,9 +682,9 @@ local_files_set(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     free(contents);
 
-    sign_file = crm_strdup_printf("%s/%s.sign", lf_dir, param);
-    calc_sum = crm_md5sum(value);
-    contents = crm_strdup_printf("%s\n", calc_sum);
+    sign_file = pcmk__assert_asprintf("%s/%s.sign", lf_dir, param);
+    calc_sum = pcmk__md5sum(value);
+    contents = pcmk__assert_asprintf("%s\n", calc_sum);
 
     if (!g_file_set_contents(sign_file, contents, -1, NULL)) {
         rc = EIO;
@@ -737,7 +742,7 @@ subcommand_check(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 
     local_value = local_files_get(rsc, param);
     if (local_value != NULL) {
-        calc_sum = crm_md5sum(local_value);
+        calc_sum = pcmk__md5sum(local_value);
     }
 
     if ((local_value == NULL) || !pcmk__str_eq(calc_sum, local_sum, pcmk__str_none)) {
@@ -899,7 +904,7 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
         goto done;
     }
 
-    cmdline = crm_strdup_printf("mkdir -p %s", dirname);
+    cmdline = pcmk__assert_asprintf("mkdir -p %s", dirname);
     rc = rsh_fn(out, peers, cmdline);
     free(cmdline);
 

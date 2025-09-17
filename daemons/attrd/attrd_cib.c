@@ -194,7 +194,7 @@ attrd_cib_erase_transient_attrs(const char *node)
 
     CRM_CHECK(node != NULL, return);
 
-    xpath = crm_strdup_printf(XPATH_TRANSIENT, node);
+    xpath = pcmk__assert_asprintf(XPATH_TRANSIENT, node);
 
     crm_debug("Clearing transient node attributes for %s from CIB using %s",
               node, xpath);
@@ -301,7 +301,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
         }
     }
 
-    if (pcmk_is_set(a->flags, attrd_attr_changed) && attrd_election_won()) {
+    if (pcmk__is_set(a->flags, attrd_attr_changed) && attrd_election_won()) {
         if (rc == pcmk_ok) {
             /* We deferred a write of a new update because this update was in
              * progress. Write out the new value without additional delay.
@@ -392,18 +392,18 @@ static int
 add_unset_attr_update(const attribute_t *attr, const char *attr_id,
                       const char *node_id, const char *set_id)
 {
-    char *xpath = crm_strdup_printf("/" PCMK_XE_CIB
-                                    "/" PCMK_XE_STATUS
-                                    "/" PCMK__XE_NODE_STATE
-                                        "[@" PCMK_XA_ID "='%s']"
-                                    "/" PCMK__XE_TRANSIENT_ATTRIBUTES
-                                        "[@" PCMK_XA_ID "='%s']"
-                                    "/%s[@" PCMK_XA_ID "='%s']"
-                                    "/" PCMK_XE_NVPAIR
-                                        "[@" PCMK_XA_ID "='%s' "
-                                         "and @" PCMK_XA_NAME "='%s']",
-                                    node_id, node_id, attr->set_type, set_id,
-                                    attr_id, attr->id);
+    char *xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB
+                                        "/" PCMK_XE_STATUS
+                                        "/" PCMK__XE_NODE_STATE
+                                            "[@" PCMK_XA_ID "='%s']"
+                                        "/" PCMK__XE_TRANSIENT_ATTRIBUTES
+                                            "[@" PCMK_XA_ID "='%s']"
+                                        "/%s[@" PCMK_XA_ID "='%s']"
+                                        "/" PCMK_XE_NVPAIR
+                                            "[@" PCMK_XA_ID "='%s' "
+                                             "and @" PCMK_XA_NAME "='%s']",
+                                        node_id, node_id, attr->set_type,
+                                        set_id, attr_id, attr->id);
 
     int rc = the_cib->cmds->remove(the_cib, xpath, NULL,
                                    cib_xpath|cib_transaction);
@@ -501,7 +501,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     // Private attributes (or any in standalone mode) are not written to the CIB
-    if (stand_alone || pcmk_is_set(a->flags, attrd_attr_is_private)) {
+    if (stand_alone || pcmk__is_set(a->flags, attrd_attr_is_private)) {
         should_write = false;
     }
 
@@ -571,7 +571,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         prev_xml_id = attrd_get_node_xml_id(v->nodename);
 
-        if (pcmk_is_set(v->flags, attrd_value_remote)) {
+        if (pcmk__is_set(v->flags, attrd_value_remote)) {
             // A Pacemaker Remote node's XML ID is the same as its name
             node_xml_id = v->nodename;
 
@@ -674,23 +674,24 @@ attrd_write_attributes(uint32_t options)
     attribute_t *a = NULL;
 
     crm_debug("Writing out %s attributes",
-              pcmk_is_set(options, attrd_write_all)? "all" : "changed");
+              pcmk__is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (!pcmk_is_set(options, attrd_write_all)
-            && pcmk_is_set(a->flags, attrd_attr_node_unknown)) {
+        if (!pcmk__is_set(options, attrd_write_all)
+            && pcmk__is_set(a->flags, attrd_attr_node_unknown)) {
             // Try writing this attribute again, in case peer ID was learned
             attrd_set_attr_flags(a, attrd_attr_changed);
-        } else if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
+        } else if (pcmk__is_set(a->flags, attrd_attr_force_write)) {
             /* If the force_write flag is set, write the attribute. */
             attrd_set_attr_flags(a, attrd_attr_changed);
         }
 
-        if (pcmk_is_set(options, attrd_write_all) ||
-            pcmk_is_set(a->flags, attrd_attr_changed)) {
-            bool ignore_delay = pcmk_is_set(options, attrd_write_no_delay);
+        if (pcmk__is_set(options, attrd_write_all)
+            || pcmk__is_set(a->flags, attrd_attr_changed)) {
 
-            if (pcmk_is_set(a->flags, attrd_attr_force_write)) {
+            bool ignore_delay = pcmk__is_set(options, attrd_write_no_delay);
+
+            if (pcmk__is_set(a->flags, attrd_attr_force_write)) {
                 // Always ignore delay when forced write flag is set
                 ignore_delay = true;
             }

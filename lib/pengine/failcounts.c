@@ -91,12 +91,12 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * Ideally, we'd unpack the operation before this point, and pass in a
      * meta-attributes table that takes all that into consideration.
      */
-    char *xpath = crm_strdup_printf("//" PCMK_XE_PRIMITIVE
-                                    "[@" PCMK_XA_ID "='%s']"
-                                    "//" PCMK_XE_OP
-                                    "[@" PCMK_META_ON_FAIL
-                                        "='" PCMK_VALUE_BLOCK "']",
-                                    xml_name);
+    char *xpath = pcmk__assert_asprintf("//" PCMK_XE_PRIMITIVE
+                                        "[@" PCMK_XA_ID "='%s']"
+                                        "//" PCMK_XE_OP
+                                        "[@" PCMK_META_ON_FAIL
+                                            "='" PCMK_VALUE_BLOCK "']",
+                                        xml_name);
 
     xmlXPathObject *xpathObj = pcmk__xpath_search(rsc->priv->xml->doc, xpath);
     gboolean should_block = FALSE;
@@ -135,10 +135,10 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
                   "/" PCMK__XE_LRM_RSC_OP "[@" PCMK_XA_OPERATION "='%s']"   \
                   "[@" PCMK_META_INTERVAL "='%u']"
 
-                lrm_op_xpath = crm_strdup_printf(XPATH_FMT,
-                                                 node->priv->name, xml_name,
-                                                 conf_op_name,
-                                                 conf_op_interval_ms);
+                lrm_op_xpath = pcmk__assert_asprintf(XPATH_FMT,
+                                                     node->priv->name, xml_name,
+                                                     conf_op_name,
+                                                     conf_op_interval_ms);
                 lrm_op_xpathObj = pcmk__xpath_search(scheduler->input->doc,
                                                      lrm_op_xpath);
 
@@ -188,7 +188,10 @@ rsc_fail_name(const pcmk_resource_t *rsc)
 {
     const char *name = pcmk__s(rsc->priv->history_id, rsc->id);
 
-    return pcmk_is_set(rsc->flags, pcmk__rsc_unique)? strdup(name) : clone_strip(name);
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
+        return strdup(name);
+    }
+    return clone_strip(name);
 }
 
 /*!
@@ -217,8 +220,8 @@ generate_fail_regex(const char *prefix, const char *rsc_name, bool is_unique,
      */
     const char *instance_pattern = (is_unique? "" : "(:[0-9]+)?");
 
-    pattern = crm_strdup_printf("^%s-%s%s%s$", prefix, rsc_name,
-                                instance_pattern, op_pattern);
+    pattern = pcmk__assert_asprintf("^%s-%s%s%s$", prefix, rsc_name,
+                                    instance_pattern, op_pattern);
     if (regcomp(re, pattern, REG_EXTENDED|REG_NOSUB) != 0) {
         free(pattern);
         return EINVAL;
@@ -248,12 +251,12 @@ generate_fail_regexes(const pcmk_resource_t *rsc, regex_t *failcount_re,
     char *rsc_name = rsc_fail_name(rsc);
 
     if (generate_fail_regex(PCMK__FAIL_COUNT_PREFIX, rsc_name,
-                            pcmk_is_set(rsc->flags, pcmk__rsc_unique),
+                            pcmk__is_set(rsc->flags, pcmk__rsc_unique),
                             failcount_re) != pcmk_rc_ok) {
         rc = EINVAL;
 
     } else if (generate_fail_regex(PCMK__LAST_FAILURE_PREFIX, rsc_name,
-                                   pcmk_is_set(rsc->flags, pcmk__rsc_unique),
+                                   pcmk__is_set(rsc->flags, pcmk__rsc_unique),
                                    lastfailure_re) != pcmk_rc_ok) {
         rc = EINVAL;
         regfree(failcount_re);
@@ -396,7 +399,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
     }
 
     // If all failures have expired, ignore fail count
-    if (pcmk_is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
+    if (pcmk__is_set(flags, pcmk__fc_effective) && (fc_data.failcount > 0)
         && (fc_data.last_failure > 0)
         && (rsc->priv->failure_expiration_ms > 0)) {
 
@@ -421,7 +424,7 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
      * container's fail count on that node could lead to attempting to stop the
      * container on the wrong node.
      */
-    if (pcmk_is_set(flags, pcmk__fc_launched)
+    if (pcmk__is_set(flags, pcmk__fc_launched)
         && (rsc->priv->launched != NULL) && !pcmk__is_bundled(rsc)) {
 
         g_list_foreach(rsc->priv->launched, update_launched_failcount,

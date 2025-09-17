@@ -97,7 +97,7 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
         return;
     }
 
-    path = crm_strdup_printf("%s/%s", remote_schema_dir, file);
+    path = pcmk__assert_asprintf("%s/%s", remote_schema_dir, file);
 
     /* The schema is a CDATA node, which is a child of the <file> node.  Traverse
      * all children and look for the first CDATA child.  There can't be more than

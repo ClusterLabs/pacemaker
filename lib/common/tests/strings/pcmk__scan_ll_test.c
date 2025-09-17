@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,7 +53,7 @@ static void
 out_of_range(void **state)
 {
     long long result = 0LL;
-    char *very_long = crm_strdup_printf(" %lld0", LLONG_MAX);
+    char *very_long = pcmk__assert_asprintf(" %lld0", LLONG_MAX);
 
     assert_int_equal(pcmk__scan_ll(very_long, &result, 47), ERANGE);
     assert_true(result == LLONG_MAX);

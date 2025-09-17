@@ -49,7 +49,7 @@ static lrmd_key_value_t *
 alert_key2param_ms(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                    guint value)
 {
-    char *value_s = crm_strdup_printf("%u", value);
+    char *value_s = pcmk__assert_asprintf("%u", value);
 
     head = alert_key2param(head, name, value_s);
     free(value_s);
@@ -139,7 +139,7 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         lrmd_key_value_t *head = NULL;
         int rc;
 
-        if (!pcmk_is_set(entry->flags, kind)) {
+        if (!pcmk__is_set(entry->flags, kind)) {
             crm_trace("Filtering unwanted %s alert to %s via %s",
                       kind_s, entry->recipient, entry->id);
             continue;
@@ -169,9 +169,9 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
 
         if (now) {
             char *timestamp = pcmk__time_format_hr(entry->tstamp_format, now);
-            char *timestamp_epoch = crm_strdup_printf("%lld",
-                                                      (long long) epoch);
-            char *timestamp_usec = crm_strdup_printf("%06d", now->useconds);
+            char *timestamp_epoch = pcmk__assert_asprintf("%lld",
+                                                          (long long) epoch);
+            char *timestamp_usec = pcmk__assert_asprintf("%06d", now->useconds);
 
             if (timestamp) {
                 copy_params = alert_key2param(copy_params,

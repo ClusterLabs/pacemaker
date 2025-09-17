@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2023 the Pacemaker project contributors
+# Copyright 2012-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #

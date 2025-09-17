@@ -272,7 +272,7 @@ next_ip(const char *last_ip)
         ++oct4;
     }
 
-    return crm_strdup_printf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
+    return pcmk__assert_asprintf("%u.%u.%u.%u", oct1, oct2, oct3, oct4);
 }
 
 static void
@@ -363,7 +363,7 @@ create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         xmlNode *xml_ip = NULL;
         xmlNode *xml_obj = NULL;
 
-        id = crm_strdup_printf("%s-ip-%s", data->prefix, replica->ipaddr);
+        id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
         pcmk__xml_sanitize_id(id);
         xml_ip = create_resource(id, "heartbeat", "IPaddr2");
         free(id);
@@ -445,8 +445,8 @@ create_container_resource(pcmk_resource_t *parent,
 
     buffer = g_string_sized_new(4096);
 
-    id = crm_strdup_printf("%s-%s-%d", data->prefix, agent_str,
-                           replica->offset);
+    id = pcmk__assert_asprintf("%s-%s-%d", data->prefix, agent_str,
+                               replica->offset);
     pcmk__xml_sanitize_id(id);
     xml_container = create_resource(id, "heartbeat", agent_str);
     free(id);
@@ -490,9 +490,9 @@ create_container_resource(pcmk_resource_t *parent,
         pe__bundle_mount_t *mount = (pe__bundle_mount_t *) iter->data;
         char *source = NULL;
 
-        if (pcmk_is_set(mount->flags, pe__bundle_mount_subdir)) {
-            source = crm_strdup_printf("%s/%s-%d", mount->source, data->prefix,
-                                       replica->offset);
+        if (pcmk__is_set(mount->flags, pe__bundle_mount_subdir)) {
+            source = pcmk__assert_asprintf("%s/%s-%d", mount->source,
+                                           data->prefix, replica->offset);
             pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
@@ -652,7 +652,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         GHashTableIter gIter;
         pcmk_node_t *node = NULL;
         xmlNode *xml_remote = NULL;
-        char *id = crm_strdup_printf("%s-%d", data->prefix, replica->offset);
+        char *id = pcmk__assert_asprintf("%s-%d", data->prefix,
+                                         replica->offset);
         char *port_s = NULL;
         const char *uname = NULL;
         const char *connect_name = NULL;
@@ -661,8 +662,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
             free(id);
             // The biggest hammer we have
-            id = crm_strdup_printf("pcmk-internal-%s-remote-%d",
-                                   replica->child->id, replica->offset);
+            id = pcmk__assert_asprintf("pcmk-internal-%s-remote-%d",
+                                       replica->child->id, replica->offset);
             //@TODO return error instead of asserting?
             pcmk__assert(pe_find_resource(scheduler->priv->resources,
                                           id) == NULL);
@@ -1231,7 +1232,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
             replica->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
-            if (pcmk_is_set(replica->child->flags, pcmk__rsc_notify)) {
+            if (pcmk__is_set(replica->child->flags, pcmk__rsc_notify)) {
                 pcmk__set_rsc_flags(bundle_data->child, pcmk__rsc_notify);
             }
 
@@ -1554,10 +1555,10 @@ pe__bundle_replica_output_html(pcmk__output_t *out,
 static const char *
 get_unmanaged_str(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)) {
         return " (maintenance)";
     }
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         return " (unmanaged)";
     }
     return "";
@@ -1616,18 +1617,24 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
                        && !remote->priv->fns->is_filtered(remote, only_rsc,
                                                           print_everything);
 
-        if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs) ||
-            (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
+        if (pcmk__is_set(show_opts, pcmk_show_implicit_rscs)
+            || (!print_everything
+                && (print_ip || print_child || print_ctnr || print_remote))) {
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+            const uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1660,11 +1667,17 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_html(out, replica,
@@ -1755,18 +1768,24 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
                        && !remote->priv->fns->is_filtered(remote, only_rsc,
                                                           print_everything);
 
-        if (pcmk_is_set(show_opts, pcmk_show_implicit_rscs) ||
-            (print_everything == FALSE && (print_ip || print_child || print_ctnr || print_remote))) {
+        if (pcmk__is_set(show_opts, pcmk_show_implicit_rscs)
+            || (!print_everything
+                && (print_ip || print_child || print_ctnr || print_remote))) {
             /* The text output messages used below require pe_print_implicit to
              * be set to do anything.
              */
-            uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+            const uint32_t new_show_opts = show_opts | pcmk_show_implicit_rscs;
 
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             if (pcmk__list_of_multiple(bundle_data->replicas)) {
@@ -1799,11 +1818,17 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
         } else if (print_everything == FALSE && !(print_ip || print_child || print_ctnr || print_remote)) {
             continue;
         } else {
-            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc, "Container bundle%s: %s [%s]%s%s%s%s%s",
-                                     (bundle_data->nreplicas > 1)? " set" : "",
-                                     rsc->id, bundle_data->image,
-                                     pcmk_is_set(rsc->flags, pcmk__rsc_unique)? " (unique)" : "",
-                                     desc ? " (" : "", desc ? desc : "", desc ? ")" : "",
+            const bool multiple = (bundle_data->nreplicas > 1);
+            const bool unique = pcmk__is_set(rsc->flags, pcmk__rsc_unique);
+
+            PCMK__OUTPUT_LIST_HEADER(out, FALSE, rc,
+                                     "Container bundle%s: %s [%s]%s%s%s%s%s",
+                                     (multiple? " set" : ""), rsc->id,
+                                     bundle_data->image,
+                                     (unique? " (unique)" : ""),
+                                     ((desc != NULL)? " (" : ""),
+                                     pcmk__s(desc, ""),
+                                     ((desc != NULL)? ")" : ""),
                                      get_unmanaged_str(rsc));
 
             pe__bundle_replica_output_text(out, replica,

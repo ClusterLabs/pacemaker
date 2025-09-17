@@ -127,12 +127,12 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
      * tests)
      */
     if (pcmk__is_clone(rsc1)) {
-        if (pcmk_is_set(rsc1->flags, pcmk__rsc_promotable)
-            && !pcmk_is_set(rsc2->flags, pcmk__rsc_promotable)) {
+        if (pcmk__is_set(rsc1->flags, pcmk__rsc_promotable)
+            && !pcmk__is_set(rsc2->flags, pcmk__rsc_promotable)) {
             return -1;
         }
-        if (!pcmk_is_set(rsc1->flags, pcmk__rsc_promotable)
-            && pcmk_is_set(rsc2->flags, pcmk__rsc_promotable)) {
+        if (!pcmk__is_set(rsc1->flags, pcmk__rsc_promotable)
+            && pcmk__is_set(rsc2->flags, pcmk__rsc_promotable)) {
             return 1;
         }
     }
@@ -466,7 +466,7 @@ unpack_influence(const char *coloc_id, const pcmk_resource_t *rsc,
                          PCMK_XA_INFLUENCE " (using default)",
                          coloc_id);
     }
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_critical)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_critical)) {
         return pcmk__coloc_influence;
     }
     return pcmk__coloc_none;
@@ -520,8 +520,7 @@ unpack_colocation_set(xmlNode *set, int score, const char *coloc_id,
                         set_id);
     }
 
-    if ((pcmk__xe_get_bool_attr(set, PCMK_XA_SEQUENTIAL,
-                                &sequential) == pcmk_rc_ok)
+    if ((pcmk__xe_get_bool(set, PCMK_XA_SEQUENTIAL, &sequential) == pcmk_rc_ok)
         && !sequential) {
         return;
     }
@@ -642,7 +641,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         return;
     }
 
-    rc = pcmk__xe_get_bool_attr(set1, PCMK_XA_SEQUENTIAL, &sequential);
+    rc = pcmk__xe_get_bool(set1, PCMK_XA_SEQUENTIAL, &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the first one
         xml_rsc = pcmk__xe_first_child(set1, PCMK_XE_RESOURCE_REF, NULL, NULL);
@@ -661,7 +660,7 @@ colocate_rsc_sets(const char *id, const xmlNode *set1, const xmlNode *set2,
         }
     }
 
-    rc = pcmk__xe_get_bool_attr(set2, PCMK_XA_SEQUENTIAL, &sequential);
+    rc = pcmk__xe_get_bool(set2, PCMK_XA_SEQUENTIAL, &sequential);
     if ((rc != pcmk_rc_ok) || sequential) {
         // Get the last one
         for (xml_rsc = pcmk__xe_first_child(set2, PCMK_XE_RESOURCE_REF, NULL,
@@ -1073,9 +1072,9 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
      * This also avoids problematic scenarios where two containers want to
      * perpetually swap places.
      */
-    if (pcmk_is_set(colocation->dependent->flags,
-                    pcmk__rsc_remote_nesting_allowed)
-        && !pcmk_is_set(rsc->flags, pcmk__rsc_failed)
+    if (pcmk__is_set(colocation->dependent->flags,
+                     pcmk__rsc_remote_nesting_allowed)
+        && !pcmk__is_set(rsc->flags, pcmk__rsc_failed)
         && pcmk__list_of_1(rsc->priv->active_nodes)) {
         return false;
     }
@@ -1083,7 +1082,7 @@ pcmk__colocation_has_influence(const pcmk__colocation_t *colocation,
     /* The dependent in a colocation influences the primary's location
      * if the PCMK_XA_INFLUENCE option is true or the primary is not yet active.
      */
-    return pcmk_is_set(colocation->flags, pcmk__coloc_influence)
+    return pcmk__is_set(colocation->flags, pcmk__coloc_influence)
            || (rsc->priv->active_nodes == NULL);
 }
 
@@ -1100,12 +1099,12 @@ mark_action_blocked(pcmk_resource_t *rsc, const char *task,
                     const pcmk_resource_t *reason)
 {
     GList *iter = NULL;
-    char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
+    char *reason_text = pcmk__assert_asprintf("colocation with %s", reason->id);
 
     for (iter = rsc->priv->actions; iter != NULL; iter = iter->next) {
         pcmk_action_t *action = iter->data;
 
-        if (pcmk_is_set(action->flags, pcmk__action_runnable)
+        if (pcmk__is_set(action->flags, pcmk__action_runnable)
             && pcmk__str_eq(action->task, task, pcmk__str_none)) {
 
             pcmk__clear_action_flags(action, pcmk__action_runnable);
@@ -1140,7 +1139,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
     pcmk_resource_t *rsc = NULL;
     bool is_start = false;
 
-    if (pcmk_is_set(action->flags, pcmk__action_runnable)) {
+    if (pcmk__is_set(action->flags, pcmk__action_runnable)) {
         return; // Only unrunnable actions block dependents
     }
 
@@ -1169,7 +1168,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
         child_action = find_first_action(child->priv->actions, NULL,
                                          action->task, NULL);
         if ((child_action == NULL)
-            || pcmk_is_set(child_action->flags, pcmk__action_runnable)) {
+            || pcmk__is_set(child_action->flags, pcmk__action_runnable)) {
             crm_trace("Not blocking %s colocation dependents because "
                       "at least %s has runnable %s",
                       rsc->id, child->id, action->task);
@@ -1232,7 +1231,7 @@ pcmk__block_colocation_dependents(pcmk_action_t *action)
 static const pcmk_resource_t *
 get_resource_for_role(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_replica_container)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_replica_container)) {
         const pcmk_resource_t *child = pe__get_rsc_in_container(rsc);
 
         if (child != NULL) {
@@ -1271,7 +1270,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
     pcmk__assert((dependent != NULL) && (primary != NULL)
                  && (colocation != NULL));
 
-    if (!preview && pcmk_is_set(primary->flags, pcmk__rsc_unassigned)) {
+    if (!preview && pcmk__is_set(primary->flags, pcmk__rsc_unassigned)) {
         // Primary resource has not been assigned yet, so we can't do anything
         return pcmk__coloc_affects_nothing;
     }
@@ -1282,9 +1281,9 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
 
     if ((colocation->dependent_role >= pcmk_role_unpromoted)
         && (dependent_role_rsc->priv->parent != NULL)
-        && pcmk_is_set(dependent_role_rsc->priv->parent->flags,
-                       pcmk__rsc_promotable)
-        && !pcmk_is_set(dependent_role_rsc->flags, pcmk__rsc_unassigned)) {
+        && pcmk__is_set(dependent_role_rsc->priv->parent->flags,
+                        pcmk__rsc_promotable)
+        && !pcmk__is_set(dependent_role_rsc->flags, pcmk__rsc_unassigned)) {
 
         /* This is a colocation by role, and the dependent is a promotable clone
          * that has already been assigned, so the colocation should now affect
@@ -1293,7 +1292,7 @@ pcmk__colocation_affects(const pcmk_resource_t *dependent,
         return pcmk__coloc_affects_role;
     }
 
-    if (!preview && !pcmk_is_set(dependent->flags, pcmk__rsc_unassigned)) {
+    if (!preview && !pcmk__is_set(dependent->flags, pcmk__rsc_unassigned)) {
         /* The dependent resource has already been through assignment, so the
          * constraint no longer matters.
          */
@@ -1543,7 +1542,7 @@ best_node_score_matching_attr(const pcmk__colocation_t *colocation,
     const char *best_node = NULL;
 
     if ((colocation != NULL) && (rsc == colocation->dependent)
-        && pcmk_is_set(colocation->flags, pcmk__coloc_explicit)
+        && pcmk__is_set(colocation->flags, pcmk__coloc_explicit)
         && pcmk__is_group(rsc->priv->parent)
         && (rsc != rsc->priv->parent->priv->children->data)) {
         /* The resource is a user-configured colocation's explicit dependent,
@@ -1811,7 +1810,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
     // Avoid infinite recursion
-    if (pcmk_is_set(source_rsc->flags, pcmk__rsc_updating_nodes)) {
+    if (pcmk__is_set(source_rsc->flags, pcmk__rsc_updating_nodes)) {
         pcmk__rsc_info(source_rsc, "%s: Breaking dependency loop at %s",
                        log_id, source_rsc->id);
         return;
@@ -1822,7 +1821,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         work = pcmk__copy_node_table(source_rsc->priv->allowed_nodes);
         target_rsc = source_rsc;
     } else {
-        const bool pos = pcmk_is_set(flags, pcmk__coloc_select_nonnegative);
+        const bool pos = pcmk__is_set(flags, pcmk__coloc_select_nonnegative);
 
         pcmk__rsc_trace(source_rsc, "%s: Merging %s scores from %s (at %.6f)",
                         log_id, (pos? "positive" : "all"), source_rsc->id, factor);
@@ -1839,7 +1838,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     if (pcmk__any_node_available(work)) {
         GList *colocations = NULL;
 
-        if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
+        if (pcmk__is_set(flags, pcmk__coloc_select_this_with)) {
             colocations = pcmk__this_with_colocations(source_rsc);
             pcmk__rsc_trace(source_rsc,
                             "Checking additional %d optional '%s with' "
@@ -1861,7 +1860,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
             float other_factor = factor * constraint->score
                                  / (float) PCMK_SCORE_INFINITY;
 
-            if (pcmk_is_set(flags, pcmk__coloc_select_this_with)) {
+            if (pcmk__is_set(flags, pcmk__coloc_select_this_with)) {
                 other = constraint->primary;
             } else if (!pcmk__colocation_has_influence(constraint, NULL)) {
                 continue;
@@ -1883,7 +1882,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         }
         g_list_free(colocations);
 
-    } else if (pcmk_is_set(flags, pcmk__coloc_select_active)) {
+    } else if (pcmk__is_set(flags, pcmk__coloc_select_active)) {
         pcmk__rsc_info(source_rsc, "%s: Rolling back optional scores from %s",
                        log_id, source_rsc->id);
         g_hash_table_destroy(work);
@@ -1892,7 +1891,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
     }
 
 
-    if (pcmk_is_set(flags, pcmk__coloc_select_nonnegative)) {
+    if (pcmk__is_set(flags, pcmk__coloc_select_nonnegative)) {
         pcmk_node_t *node = NULL;
         GHashTableIter iter;
 

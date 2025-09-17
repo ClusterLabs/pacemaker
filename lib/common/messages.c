@@ -73,9 +73,9 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
 
     if (reply_to == NULL) {
         subtype = PCMK__VALUE_REQUEST;
-        message_id = crm_strdup_printf("%s-%s-%llu-%u", task, sender_system,
-                                       (unsigned long long) time(NULL),
-                                       message_counter++);
+        message_id = pcmk__assert_asprintf("%s-%s-%llu-%u", task, sender_system,
+                                           (unsigned long long) time(NULL),
+                                           message_counter++);
         reply_to = message_id;
     }
 
@@ -212,7 +212,7 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
     CRM_CHECK((request != NULL) && (request->op != NULL) && (handlers != NULL),
               return NULL);
 
-    if (pcmk_is_set(request->flags, pcmk__request_sync)
+    if (pcmk__is_set(request->flags, pcmk__request_sync)
         && (request->ipc_client != NULL)) {
         CRM_CHECK(request->ipc_client->request_id == request->ipc_id,
                   return NULL);

@@ -780,7 +780,7 @@ create_purge_node_request(const pcmk_ipc_api_t *api, const char *node_name,
             pcmk__xe_set(request, PCMK__XA_T, PCMK__VALUE_ATTRD);
             pcmk__xe_set(request, PCMK__XA_SRC, crm_system_name);
             pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_PEER_REMOVE);
-            pcmk__xe_set_bool_attr(request, PCMK__XA_REAP, true);
+            pcmk__xe_set_bool(request, PCMK__XA_REAP, true);
             pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node_name);
             if (nodeid > 0) {
                 pcmk__xe_set_int(request, PCMK__XA_ATTR_HOST_ID, nodeid);
@@ -1319,8 +1319,8 @@ discard_old_replies(crm_ipc_t *client, int32_t ms_timeout)
     if (!pcmk__valid_ipc_header(header)) {
         rc = EBADMSG;
 
-    } else if (!pcmk_is_set(header->flags, crm_ipc_multipart)
-               || pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
+    } else if (!pcmk__is_set(header->flags, crm_ipc_multipart)
+               || pcmk__is_set(header->flags, crm_ipc_multipart_end)) {
         crm_notice("Sending %s IPC re-enabled after pending reply received",
                    client->server_name);
         client->need_reply = FALSE;
@@ -1412,13 +1412,13 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         header = iov[0].iov_base;
         pcmk__set_ipc_flags(header->flags, client->server_name, flags);
 
-        if (pcmk_is_set(flags, crm_ipc_proxied)) {
+        if (pcmk__is_set(flags, crm_ipc_proxied)) {
             /* Don't look for a synchronous response */
             pcmk__clear_ipc_flags(flags, "client", crm_ipc_client_response);
         }
 
-        if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
-            bool is_end = pcmk_is_set(header->flags, crm_ipc_multipart_end);
+        if (pcmk__is_set(header->flags, crm_ipc_multipart)) {
+            bool is_end = pcmk__is_set(header->flags, crm_ipc_multipart_end);
             crm_trace("Sending %s IPC request %" PRId32 " (%spart %" PRIu16 ") of "
                       "%" PRId32 " bytes using %dms timeout",
                       client->server_name, header->qb.id, is_end ? "final " : "",
@@ -1473,7 +1473,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     } while (true);
 
     /* If we should not wait for a response, bail now */
-    if (!pcmk_is_set(flags, crm_ipc_client_response)) {
+    if (!pcmk__is_set(flags, crm_ipc_client_response)) {
         crm_trace("Not waiting for reply to %s IPC request %d",
                   client->server_name, header->qb.id);
         goto send_cleanup;

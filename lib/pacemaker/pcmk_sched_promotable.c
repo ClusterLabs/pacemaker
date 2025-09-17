@@ -100,7 +100,7 @@ check_for_role_change(const pcmk_resource_t *rsc, bool *demoting,
         if (*promoting && *demoting) {
             return;
 
-        } else if (pcmk_is_set(action->flags, pcmk__action_optional)) {
+        } else if (pcmk__is_set(action->flags, pcmk__action_optional)) {
             continue;
 
         } else if (pcmk__str_eq(PCMK_ACTION_DEMOTE, action->task,
@@ -191,7 +191,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
                         rsc->id);
         return NULL;
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         if (rsc->priv->fns->state(rsc, true) == pcmk_role_promoted) {
             crm_notice("Unmanaged instance %s will be left promoted on %s",
                        rsc->id, pcmk__node_name(node));
@@ -224,7 +224,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
          * instance to a node where its parent is not allowed, but it's good to
          * have a fail-safe.
          */
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
             pcmk__sched_err(node->priv->scheduler,
                             "%s can't be promoted because %s is not allowed "
                             "on %s (scheduler bug?)",
@@ -233,7 +233,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
         return NULL;
 
     } else if ((local_node->assign->count >= pe__clone_promoted_node_max(parent))
-               && pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+               && pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__rsc_trace(rsc,
                         "%s can't be promoted because %s has "
                         "maximum promoted instances already",
@@ -402,7 +402,7 @@ set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
     pcmk_node_t *chosen = child->priv->fns->location(child, NULL,
                                                      pcmk__rsc_node_assigned);
 
-    if (!pcmk_is_set(child->flags, pcmk__rsc_managed)
+    if (!pcmk__is_set(child->flags, pcmk__rsc_managed)
         && (child->priv->next_role == pcmk_role_promoted)) {
         child->priv->promotion_priority = PCMK_SCORE_INFINITY;
         pcmk__rsc_trace(clone,
@@ -593,7 +593,7 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     const char *reason = "allowed";
 
     // Some checks apply only to anonymous clone instances
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
 
         // If instance is active on the node, its score definitely applies
         active = find_active_anon_instance(parent, id, node);
@@ -672,7 +672,7 @@ promotion_attr_value(const pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *target = NULL;
     enum pcmk__rsc_node node_type = pcmk__rsc_node_assigned;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_unassigned)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unassigned)) {
         // Not assigned yet
         node_type = pcmk__rsc_node_current;
     }
@@ -745,7 +745,7 @@ promotion_score(const pcmk_resource_t *rsc, const pcmk_node_t *node,
         pcmk__rsc_trace(rsc, "Promotion score for %s on %s = %s",
                         name, pcmk__node_name(node),
                         pcmk__s(attr_value, "(unset)"));
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         /* If we don't have any resource history yet, we won't have history_id.
          * In that case, for anonymous clones, try the resource name without
          * any instance number.
@@ -911,8 +911,8 @@ show_promotion_score(pcmk_resource_t *instance)
     chosen = instance->priv->fns->location(instance, NULL,
                                            pcmk__rsc_node_assigned);
     score_s = pcmk_readable_score(instance->priv->promotion_priority);
-    if (pcmk_is_set(instance->priv->scheduler->flags,
-                    pcmk__sched_output_scores)
+    if (pcmk__is_set(instance->priv->scheduler->flags,
+                     pcmk__sched_output_scores)
         && !pcmk__is_daemon
         && (instance->priv->scheduler->priv->out != NULL)) {
 
@@ -1054,7 +1054,7 @@ set_instance_role(gpointer data, gpointer user_data)
                         instance->id);
 
     } else if ((*count < pe__clone_promoted_max(instance))
-               || !pcmk_is_set(clone->flags, pcmk__rsc_managed)) {
+               || !pcmk__is_set(clone->flags, pcmk__rsc_managed)) {
         chosen = node_to_be_promoted_on(instance);
     }
 
@@ -1064,7 +1064,7 @@ set_instance_role(gpointer data, gpointer user_data)
     }
 
     if ((instance->priv->orig_role < pcmk_role_promoted)
-        && !pcmk_is_set(scheduler->flags, pcmk__sched_quorate)
+        && !pcmk__is_set(scheduler->flags, pcmk__sched_quorate)
         && (scheduler->no_quorum_policy == pcmk_no_quorum_freeze)) {
         crm_notice("Clone instance %s cannot be promoted without quorum",
                    instance->id);

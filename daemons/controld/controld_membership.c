@@ -141,8 +141,8 @@ create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
 
     node_state = pcmk__xe_create(parent, PCMK__XE_NODE_STATE);
 
-    if (pcmk_is_set(node->flags, pcmk__node_status_remote)) {
-        pcmk__xe_set_bool_attr(node_state, PCMK_XA_REMOTE_NODE, true);
+    if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
+        pcmk__xe_set_bool(node_state, PCMK_XA_REMOTE_NODE, true);
     }
 
     id = pcmk__cluster_get_xml_id(node);
@@ -160,20 +160,20 @@ create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
      * no longer support rolling upgrades from 2.1.6 and below, we can drop the
      * "< 3.18.0" code here and below.
      */
-    if (pcmk_is_set(flags, controld_node_update_cluster)) {
+    if (pcmk__is_set(flags, controld_node_update_cluster)) {
         if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
             // A value 0 means the node is not a cluster member.
             pcmk__xe_set_ll(node_state, PCMK__XA_IN_CCM, node->when_member);
 
         } else {
-            pcmk__xe_set_bool_attr(node_state, PCMK__XA_IN_CCM,
-                                   pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
-                                                pcmk__str_none));
+            pcmk__xe_set_bool(node_state, PCMK__XA_IN_CCM,
+                              pcmk__str_eq(node->state, PCMK_VALUE_MEMBER,
+                                           pcmk__str_none));
         }
     }
 
-    if (!pcmk_is_set(node->flags, pcmk__node_status_remote)) {
-        if (pcmk_is_set(flags, controld_node_update_peer)) {
+    if (!pcmk__is_set(node->flags, pcmk__node_status_remote)) {
+        if (pcmk__is_set(flags, controld_node_update_peer)) {
             if (compare_version(controld_globals.dc_version, "3.18.0") >= 0) {
                 // A value 0 means the peer is offline in CPG.
                 pcmk__xe_set_ll(node_state, PCMK_XA_CRMD, node->when_online);
@@ -181,14 +181,14 @@ create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
             } else {
                 // @COMPAT DCs < 2.1.7 use online/offline rather than timestamp
                 value = PCMK_VALUE_OFFLINE;
-                if (pcmk_is_set(node->processes, crm_get_cluster_proc())) {
+                if (pcmk__is_set(node->processes, crm_get_cluster_proc())) {
                     value = PCMK_VALUE_ONLINE;
                 }
                 pcmk__xe_set(node_state, PCMK_XA_CRMD, value);
             }
         }
 
-        if (pcmk_is_set(flags, controld_node_update_join)) {
+        if (pcmk__is_set(flags, controld_node_update_join)) {
             if (controld_get_join_phase(node) <= controld_join_none) {
                 value = CRMD_JOINSTATE_DOWN;
             } else {
@@ -197,7 +197,7 @@ create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
             pcmk__xe_set(node_state, PCMK__XA_JOIN, value);
         }
 
-        if (pcmk_is_set(flags, controld_node_update_expected)) {
+        if (pcmk__is_set(flags, controld_node_update_expected)) {
             pcmk__xe_set(node_state, PCMK_XA_EXPECTED, node->expected);
         }
     }
@@ -376,7 +376,7 @@ populate_cib_nodes(uint32_t flags, const char *source)
     pcmk__node_status_t *node = NULL;
 
 #if SUPPORT_COROSYNC
-    if (!pcmk_is_set(flags, controld_node_update_quick)
+    if (!pcmk__is_set(flags, controld_node_update_quick)
         && (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync)) {
 
         from_cache = !pcmk__corosync_add_nodes(node_list);
@@ -444,14 +444,14 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
 void
 crm_update_quorum(gboolean quorum, gboolean force_update)
 {
-    bool has_quorum = pcmk_is_set(controld_globals.flags, controld_has_quorum);
+    bool has_quorum = pcmk__is_set(controld_globals.flags, controld_has_quorum);
 
     if (quorum) {
         controld_set_global_flags(controld_ever_had_quorum);
 
-    } else if (pcmk_all_flags_set(controld_globals.flags,
-                                  controld_ever_had_quorum
-                                  |controld_no_quorum_panic)) {
+    } else if (pcmk__all_flags_set(controld_globals.flags,
+                                   controld_ever_had_quorum
+                                   |controld_no_quorum_panic)) {
         pcmk__panic("Quorum lost");
     }
 

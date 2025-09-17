@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,6 +21,7 @@
 #include <controld_membership.h>
 #include <controld_messages.h>
 #include <controld_metadata.h>
+#include <controld_remote_ra.h>
 #include <controld_throttle.h>
 #include <controld_transition.h>
 #include <controld_utils.h>

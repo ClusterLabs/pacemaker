@@ -189,7 +189,7 @@ mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    if (pcmk_is_set(device->flags, fenced_df_cib_registered)) {
+    if (pcmk__is_set(device->flags, fenced_df_cib_registered)) {
         fenced_device_set_flags(device, fenced_df_dirty);
     }
 }
@@ -212,7 +212,7 @@ device_is_dirty(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    return pcmk_is_set(device->flags, fenced_df_dirty);
+    return pcmk__is_set(device->flags, fenced_df_dirty);
 }
 
 /*!
@@ -308,7 +308,7 @@ update_cib_stonith_devices(const xmlNode *patchset)
 
             const char *shortpath = strrchr(xpath, '/');
 
-            reason = crm_strdup_printf("%s %s", op, shortpath + 1);
+            reason = pcmk__assert_asprintf("%s %s", op, shortpath + 1);
             break;
         }
     }
