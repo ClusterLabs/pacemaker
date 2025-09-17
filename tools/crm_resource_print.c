@@ -56,14 +56,14 @@ void
 cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     const char *host = NULL;
-    bool needs_quorum = TRUE;
+    bool needs_quorum = true;
     const char *rtype = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
     const char *rprov = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
     const char *rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
     if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
-        needs_quorum = FALSE;
+        needs_quorum = false;
     } else {
         // @TODO check requires in resource meta-data and rsc_defaults
     }

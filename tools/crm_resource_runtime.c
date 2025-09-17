@@ -225,7 +225,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
                              const char * rsc_id, const char * attr_set,
                              const char * attr_set_type, const char * attr_id,
                              const char * attr_name, cib_t * cib, const char * cmd,
-                             gboolean force)
+                             bool force)
 {
     int rc = pcmk_rc_ok;
     char *lookup_id = NULL;
@@ -234,7 +234,7 @@ find_matching_attr_resources(pcmk__output_t *out, pcmk_resource_t *rsc,
     /* If --force is used, update only the requested resource (clone or primitive).
      * Otherwise, if the primitive has the attribute, use that.
      * Otherwise use the clone. */
-    if(force == TRUE) {
+    if (force) {
         return g_list_append(result, rsc);
     }
     if (pcmk__is_clone(rsc->priv->parent)) {
@@ -324,7 +324,7 @@ static int
 resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
                     const char *requested_name, const char *attr_set,
                     const char *attr_set_type, const char *attr_id,
-                    const char *attr_name, const char *top_id, gboolean force,
+                    const char *attr_name, const char *top_id, bool force,
                     GList **resources)
 {
     if (pcmk__str_eq(attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
@@ -405,8 +405,8 @@ static int
 update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  const char *attr_set, const char *attr_set_type,
                  const char *attr_id, const char *attr_name,
-                 const char *attr_value, gboolean recursive, cib_t *cib,
-                 xmlNode *cib_xml_orig, gboolean force, GList **results)
+                 const char *attr_value, bool recursive, cib_t *cib,
+                 xmlNode *cib_xml_orig, bool force, GList **results)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -572,8 +572,8 @@ int
 cli_resource_update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              const char *attr_value, gboolean recursive,
-                              cib_t *cib, xmlNode *cib_xml_orig, gboolean force)
+                              const char *attr_value, bool recursive,
+                              cib_t *cib, xmlNode *cib_xml_orig, bool force)
 {
     static bool need_init = true;
     int rc = pcmk_rc_ok;
@@ -620,7 +620,7 @@ int
 cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
                               const char *attr_set, const char *attr_set_type,
                               const char *attr_id, const char *attr_name,
-                              cib_t *cib, xmlNode *cib_xml_orig, gboolean force)
+                              cib_t *cib, xmlNode *cib_xml_orig, bool force)
 {
     pcmk__output_t *out = rsc->priv->scheduler->priv->out;
     int rc = pcmk_rc_ok;
@@ -1669,18 +1669,16 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 int
 cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const char *move_lifetime,
-                     guint timeout_ms, cib_t *cib, gboolean promoted_role_only,
-                     gboolean force)
+                     guint timeout_ms, cib_t *cib, bool promoted_role_only,
+                     bool force)
 {
-    int rc = pcmk_rc_ok;
-    int lpc = 0;
-    int before = 0;
-    guint step_timeout_s = 0;
-
     /* @TODO Due to this sleep interval, a timeout <2s will cause problems and
      * should be rejected
      */
-    guint sleep_interval = 2U;
+    static const guint sleep_interval = 2U;
+
+    int rc = pcmk_rc_ok;
+    guint step_timeout_s = 0;
     guint timeout = pcmk__timeout_ms2s(timeout_ms);
 
     bool stop_via_ban = false;
@@ -1820,7 +1818,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           PCMK_ACTION_STOPPED, FALSE, cib,
+                                           PCMK_ACTION_STOPPED, false, cib,
                                            cib_xml_orig, force);
     }
     if(rc != pcmk_rc_ok) {
@@ -1852,14 +1850,15 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     step_timeout_s = timeout / sleep_interval;
     while (list_delta != NULL) {
-        before = g_list_length(list_delta);
+        guint before = g_list_length(list_delta);
+
         if(timeout_ms == 0) {
             step_timeout_s = wait_time_estimate(scheduler, list_delta)
                              / sleep_interval;
         }
 
         /* We probably don't need the entire step timeout */
-        for(lpc = 0; (lpc < step_timeout_s) && (list_delta != NULL); lpc++) {
+        for (int i = 0; (i < step_timeout_s) && (list_delta != NULL); i++) {
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
@@ -1884,7 +1883,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             dump_list(list_delta, "Delta");
         }
 
-        crm_trace("%d (was %d) resources remaining", g_list_length(list_delta), before);
+        crm_trace("%u (was %u) resources remaining", g_list_length(list_delta),
+                  before);
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
             out->err(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
@@ -1902,7 +1902,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         rc = cli_resource_update_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
                                            PCMK_META_TARGET_ROLE,
-                                           orig_target_role, FALSE, cib,
+                                           orig_target_role, false, cib,
                                            cib_xml_orig, force);
         free(orig_target_role);
         orig_target_role = NULL;
@@ -1931,14 +1931,17 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     step_timeout_s = timeout / sleep_interval;
     while (waiting_for_starts(list_delta, rsc, host)) {
-        before = g_list_length(list_delta);
+        guint before = g_list_length(list_delta);
+
         if(timeout_ms == 0) {
             step_timeout_s = wait_time_estimate(scheduler, list_delta)
                              / sleep_interval;
         }
 
         /* We probably don't need the entire step timeout */
-        for (lpc = 0; (lpc < step_timeout_s) && waiting_for_starts(list_delta, rsc, host); lpc++) {
+        for (int i = 0;
+             (i < step_timeout_s) && waiting_for_starts(list_delta, rsc, host);
+             i++) {
 
             sleep(sleep_interval);
             if(timeout) {
@@ -1987,7 +1990,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         cli_resource_update_attribute(rsc, rsc_id, NULL,
                                       PCMK_XE_META_ATTRIBUTES, NULL,
                                       PCMK_META_TARGET_ROLE, orig_target_role,
-                                      FALSE, cib, cib_xml_orig, force);
+                                      false, cib, cib_xml_orig, force);
         free(orig_target_role);
     } else {
         cli_resource_delete_attribute(rsc, rsc_id, NULL,
@@ -2109,7 +2112,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
     if (timeout_ms == 0) {
         expire_time += WAIT_DEFAULT_TIMEOUT_S;
     } else {
-        expire_time += pcmk__timeout_ms2s(timeout_ms + 999);
+        expire_time += pcmk__timeout_ms2s(timeout_ms);
     }
 
     scheduler = pcmk_new_scheduler();
@@ -2273,7 +2276,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_type, const char *rsc_action,
                                  GHashTable *params, GHashTable *override_hash,
                                  guint timeout_ms, int resource_verbose,
-                                 gboolean force, int check_level)
+                                 bool force, int check_level)
 {
     const char *class = rsc_class;
     const char *action = get_action(rsc_action);
@@ -2386,7 +2389,7 @@ cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
         if (pcmk__is_clone(rsc)) {
             GList *nodes = cli_resource_search(rsc, requested_name);
 
-            if(nodes != NULL && force == FALSE) {
+            if ((nodes != NULL) && !force) {
                 out->err(out, "It is not safe to %s %s here: the cluster claims it is already active",
                          rsc_action, rsc->id);
                 out->err(out,
