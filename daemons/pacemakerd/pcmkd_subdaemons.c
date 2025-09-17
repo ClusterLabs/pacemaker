@@ -565,26 +565,17 @@ start_child(pcmkd_child_t * child)
 static int
 child_liveness(pcmkd_child_t *child)
 {
-    uid_t cl_uid = 0;
-    gid_t cl_gid = 0;
-    const uid_t root_uid = 0;
-    const gid_t root_gid = 0;
-    const uid_t *ref_uid;
-    const gid_t *ref_gid;
+    // Initialize to root UID and GID
+    uid_t uid = 0;
+    gid_t gid = 0;
+
     const char *name = pcmk__server_name(child->server);
     const char *ipc_name = pcmk__server_ipc_name(child->server);
     int rc = pcmk_rc_ok;
     pid_t ipc_pid = 0;
 
-    if (pcmk__is_set(child->flags, child_as_root)) {
-        ref_uid = &root_uid;
-        ref_gid = &root_gid;
-
-    } else {
-        ref_uid = &cl_uid;
-        ref_gid = &cl_gid;
-
-        rc = pcmk__daemon_user(&cl_uid, &cl_gid);
+    if (!pcmk__is_set(child->flags, child_as_root)) {
+        rc = pcmk__daemon_user(&uid, &gid);
         if (rc != pcmk_rc_ok) {
             crm_err("Could not find user and group IDs for user "
                     CRM_DAEMON_USER ": %s " QB_XS " rc=%d",
@@ -593,8 +584,7 @@ child_liveness(pcmkd_child_t *child)
         }
     }
 
-    rc = pcmk__ipc_is_authentic_process_active(ipc_name, *ref_uid, *ref_gid,
-                                               &ipc_pid);
+    rc = pcmk__ipc_is_authentic_process_active(ipc_name, uid, gid, &ipc_pid);
     if (rc == pcmk_rc_ok) {
         if (child->pid == 0) {
             // Initialize the child using the found PID
