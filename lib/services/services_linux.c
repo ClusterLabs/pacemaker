@@ -1484,18 +1484,18 @@ services__list_dir(const char *dir, bool files, bool executable)
 }
 
 GList *
-services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
+services__list_dirs(const char *dirs, bool files, bool executable)
 {
     GList *result = NULL;
-    char *dirs = strdup(root);
+    char *dirs_copy = strdup(dirs);
     char *dir = NULL;
 
-    if (pcmk__str_empty(dirs)) {
-        free(dirs);
+    if (pcmk__str_empty(dirs_copy)) {
+        free(dirs_copy);
         return result;
     }
 
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
+    for (dir = strtok(dirs_copy, ":"); dir != NULL; dir = strtok(NULL, ":")) {
         GList *tmp = services__list_dir(dir, files, executable);
 
         if (tmp) {
@@ -1503,7 +1503,7 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
         }
     }
 
-    free(dirs);
+    free(dirs_copy);
 
     return result;
 }

@@ -1034,7 +1034,7 @@ services_action_sync(svc_action_t * op)
 GList *
 get_directory_list(const char *root, gboolean files, gboolean executable)
 {
-    return services_os_get_directory_list(root, files, executable);
+    return services__list_dirs(root, files, executable);
 }
 
 GList *
