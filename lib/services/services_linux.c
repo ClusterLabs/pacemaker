@@ -1434,11 +1434,10 @@ services__list_dir(const char *dir, bool files, bool executable)
 {
     GList *list = NULL;
     struct dirent **namelist = NULL;
-    int entries = 0;
+    int entries = scandir(dir, &namelist, NULL, alphasort);
 
-    entries = scandir(dir, &namelist, NULL, alphasort);
-    if (entries <= 0) {
-        return list;
+    if (entries < 0) {
+        return NULL;
     }
 
     for (int i = 0; i < entries; i++) {
@@ -1447,7 +1446,6 @@ services__list_dir(const char *dir, bool files, bool executable)
         int rc = 0;
 
         if ('.' == namelist[i]->d_name[0]) {
-            free(namelist[i]);
             continue;
         }
 
@@ -1461,28 +1459,26 @@ services__list_dir(const char *dir, bool files, bool executable)
 
         if (S_ISDIR(sb.st_mode)) {
             if (files) {
-                free(namelist[i]);
                 continue;
             }
 
         } else if (S_ISREG(sb.st_mode)) {
             if (!files) {
-                free(namelist[i]);
                 continue;
 
             } else if (executable
                        && (sb.st_mode & S_IXUSR) == 0
                        && (sb.st_mode & S_IXGRP) == 0 && (sb.st_mode & S_IXOTH) == 0) {
-                free(namelist[i]);
                 continue;
             }
         }
 
         list = g_list_append(list, strdup(namelist[i]->d_name));
-
-        free(namelist[i]);
     }
 
+    for (int i = 0; i < entries; i++) {
+        free(namelist[i]);
+    }
     free(namelist);
     return list;
 }
