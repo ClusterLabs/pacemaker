@@ -35,15 +35,17 @@ enum child_daemon_flags {
     child_needs_retry           = 1 << 2,
     child_active_before_startup = 1 << 3,
     child_shutting_down         = 1 << 4,
+
+    //! Child runs as \c root if set, or as \c CRM_DAEMON_USER otherwise
+    child_as_root               = 1 << 5,
 };
 
 typedef struct pcmk_child_s {
     enum pcmk_ipc_server server;
+    uint32_t flags;
     pid_t pid;
     int respawn_count;
-    const char *uid;
     int check_count;
-    uint32_t flags;
 } pcmk_child_t;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 1000    /* 1s */
@@ -54,30 +56,12 @@ typedef struct pcmk_child_s {
 #define PCMK_CHILD_CONTROLD  5
 
 static pcmk_child_t pcmk_children[] = {
-    {
-        pcmk_ipc_based, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn | child_needs_cluster
-    },
-    {
-        pcmk_ipc_fenced, 0, 0, NULL,
-        0, child_respawn | child_needs_cluster
-    },
-    {
-        pcmk_ipc_execd, 0, 0, NULL,
-        0, child_respawn
-    },
-    {
-        pcmk_ipc_attrd, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn | child_needs_cluster
-    },
-    {
-        pcmk_ipc_schedulerd, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn
-    },
-    {
-        pcmk_ipc_controld, 0, 0, CRM_DAEMON_USER,
-        0, child_respawn | child_needs_cluster
-    },
+    { pcmk_ipc_based, child_respawn|child_needs_cluster },
+    { pcmk_ipc_fenced, child_respawn|child_needs_cluster|child_as_root },
+    { pcmk_ipc_execd, child_respawn|child_as_root },
+    { pcmk_ipc_attrd, child_respawn|child_needs_cluster },
+    { pcmk_ipc_schedulerd, child_respawn },
+    { pcmk_ipc_controld, child_respawn|child_needs_cluster },
 };
 
 crm_trigger_t *shutdown_trigger = NULL;
@@ -437,8 +421,11 @@ pcmk_shutdown_worker(gpointer user_data)
 static int
 start_child(pcmk_child_t * child)
 {
+    const bool as_root = pcmk__is_set(child->flags, child_as_root);
+    const char *user = as_root? "root" : CRM_DAEMON_USER;
     uid_t uid = 0;
     gid_t gid = 0;
+
     bool use_valgrind = false;
     bool use_callgrind = false;
     const char *name = pcmk__server_name(child->server);
@@ -472,9 +459,8 @@ start_child(pcmk_child_t * child)
         use_valgrind = false;
     }
 
-    if ((child->uid != NULL) && (crm_user_lookup(child->uid, &uid, &gid) < 0)) {
-        crm_err("Invalid user (%s) for subdaemon %s: not found",
-                child->uid, name);
+    if (!as_root && (pcmk_daemon_user(&uid, &gid) < 0)) {
+        crm_err("User %s not found for subdaemon %s", user, name);
         return EACCES;
     }
 
@@ -493,9 +479,8 @@ start_child(pcmk_child_t * child)
 
         crm_info("Forked process %lld using user %lld (%s) and group %lld "
                  "for subdaemon %s%s",
-                 (long long) child->pid, (long long) uid,
-                 pcmk__s(child->uid, "root"), (long long) gid, name,
-                 valgrind_s);
+                 (long long) child->pid, (long long) uid, user, (long long) gid,
+                 name, valgrind_s);
 
         return pcmk_rc_ok;
     }
@@ -514,9 +499,11 @@ start_child(pcmk_child_t * child)
         }
 
         /* Initialize supplementary groups to only those always granted to the
-         * user, plus haclient (so we can access IPC)
+         * user, plus haclient (so we can access IPC).
+         *
+         * @TODO initgroups() is not portable (not part of any standard).
          */
-        if (initgroups(child->uid, gid) < 0) {
+        if (initgroups(user, gid) < 0) {
             crm_err("Cannot initialize system groups for subdaemon %s: %s "
                     QB_XS " errno=%d",
                     name, strerror(errno), errno);
@@ -526,7 +513,7 @@ start_child(pcmk_child_t * child)
     if ((uid != 0) && (setuid(uid) < 0)) {
         crm_warn("Could not set subdaemon %s user to %s: %s "
                  QB_XS " uid=%lld errno=%d",
-                 name, strerror(errno), child->uid, (long long) uid, errno);
+                 name, strerror(errno), user, (long long) uid, errno);
     }
 
     pcmk__close_fds_in_child();
@@ -585,7 +572,7 @@ child_liveness(pcmk_child_t *child)
     int legacy_rc = pcmk_ok;
     pid_t ipc_pid = 0;
 
-    if (child->uid == NULL) {
+    if (pcmk__is_set(child->flags, child_as_root)) {
         ref_uid = &root_uid;
         ref_gid = &root_gid;
     } else {
