@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                    // bool, true, false
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -1429,28 +1430,28 @@ done:
 }
 
 GList *
-services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
+services__list_dir(const char *dir, bool files, bool executable)
 {
     GList *list = NULL;
     struct dirent **namelist = NULL;
-    int entries = 0, lpc = 0;
+    int entries = 0;
 
-    entries = scandir(root, &namelist, NULL, alphasort);
+    entries = scandir(dir, &namelist, NULL, alphasort);
     if (entries <= 0) {
         return list;
     }
 
-    for (lpc = 0; lpc < entries; lpc++) {
+    for (int i = 0; i < entries; i++) {
         char *buffer = NULL;
         struct stat sb;
         int rc = 0;
 
-        if ('.' == namelist[lpc]->d_name[0]) {
-            free(namelist[lpc]);
+        if ('.' == namelist[i]->d_name[0]) {
+            free(namelist[i]);
             continue;
         }
 
-        buffer = pcmk__assert_asprintf("%s/%s", root, namelist[lpc]->d_name);
+        buffer = pcmk__assert_asprintf("%s/%s", dir, namelist[i]->d_name);
         rc = stat(buffer, &sb);
         free(buffer);
 
@@ -1460,26 +1461,26 @@ services_os_get_single_directory_list(const char *root, gboolean files, gboolean
 
         if (S_ISDIR(sb.st_mode)) {
             if (files) {
-                free(namelist[lpc]);
+                free(namelist[i]);
                 continue;
             }
 
         } else if (S_ISREG(sb.st_mode)) {
-            if (files == FALSE) {
-                free(namelist[lpc]);
+            if (!files) {
+                free(namelist[i]);
                 continue;
 
             } else if (executable
                        && (sb.st_mode & S_IXUSR) == 0
                        && (sb.st_mode & S_IXGRP) == 0 && (sb.st_mode & S_IXOTH) == 0) {
-                free(namelist[lpc]);
+                free(namelist[i]);
                 continue;
             }
         }
 
-        list = g_list_append(list, strdup(namelist[lpc]->d_name));
+        list = g_list_append(list, strdup(namelist[i]->d_name));
 
-        free(namelist[lpc]);
+        free(namelist[i]);
     }
 
     free(namelist);
@@ -1499,7 +1500,7 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
     }
 
     for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        GList *tmp = services_os_get_single_directory_list(dir, files, executable);
+        GList *tmp = services__list_dir(dir, files, executable);
 
         if (tmp) {
             result = g_list_concat(result, tmp);
