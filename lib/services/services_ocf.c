@@ -116,27 +116,23 @@ bool
 services__ocf_agent_exists(const char *provider, const char *agent)
 {
     bool found = false;
-    char *dirs = NULL;
+    gchar **dirs = NULL;
 
-    if ((provider == NULL) || (agent == NULL)
-        || pcmk__str_empty(PCMK__OCF_RA_PATH)) {
-
+    if ((provider == NULL) || (agent == NULL)) {
         return false;
     }
 
-    dirs = pcmk__str_copy(PCMK__OCF_RA_PATH);
+    dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
-    for (char *dir = strtok(dirs, ":"); !found && (dir != NULL);
-         dir = strtok(NULL, ":")) {
-
-        char *buf = pcmk__assert_asprintf("%s/%s/%s", dir, provider, agent);
+    for (gchar **dir = dirs; !found && (*dir != NULL); dir++) {
+        char *buf = pcmk__assert_asprintf("%s/%s/%s", *dir, provider, agent);
         struct stat sb;
 
         found = (stat(buf, &sb) == 0);
         free(buf);
     }
 
-    free(dirs);
+    g_strfreev(dirs);
     return found;
 }
 
