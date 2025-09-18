@@ -28,6 +28,8 @@
 
 #include "services_private.h"
 
+static const char *filter_dir = NULL;
+
 static void close_pipe(int fildes[]);
 
 /* We have two alternative ways of handling SIGCHLD when synchronously waiting
@@ -1431,6 +1433,69 @@ done:
 
 /*!
  * \internal
+ * \brief \c scandir() filter for non-hidden executable regular files
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if the entry is an executable regular file and its name does not
+ *           begin with \c "."
+ * \retval 0 otherwise
+ */
+static int
+exec_file_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (entry->d_name[0] == '.') {
+        return rc;
+    }
+
+    buf = pcmk__assert_asprintf("%s/%s", filter_dir, entry->d_name);
+
+    if ((stat(buf, &sb) == 0) && S_ISREG(sb.st_mode)
+        && pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
+
+        rc = 1;
+    }
+
+    free(buf);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief \c scandir() filter for non-hidden directories
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if the entry is a directory and its name does not begin with \c "."
+ * \retval 0 otherwise
+ */
+static int
+directory_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (entry->d_name[0] == '.') {
+        return rc;
+    }
+
+    buf = pcmk__assert_asprintf("%s/%s", filter_dir, entry->d_name);
+
+    if ((stat(buf, &sb) == 0) && S_ISDIR(sb.st_mode)) {
+        rc = 1;
+    }
+
+    free(buf);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief List directory's top-level contents of the given type
  *
  * Hidden files (those beginning with \c '.') are skipped.
@@ -1449,43 +1514,20 @@ services__list_dir(const char *dir, bool exec_files)
 {
     GList *list = NULL;
     struct dirent **namelist = NULL;
-    int entries = scandir(dir, &namelist, NULL, alphasort);
+    int entries = 0;
+
+    filter_dir = dir;
+    entries = scandir(dir, &namelist,
+                      (exec_files? exec_file_filter : directory_filter),
+                      alphasort);
+    filter_dir = NULL;
 
     if (entries < 0) {
         return NULL;
     }
 
     for (int i = 0; i < entries; i++) {
-        char *buffer = NULL;
-        struct stat sb;
-        int rc = 0;
-
-        // Skip hidden files
-        if (namelist[i]->d_name[0] == '.') {
-            continue;
-        }
-
-        buffer = pcmk__assert_asprintf("%s/%s", dir, namelist[i]->d_name);
-        rc = stat(buffer, &sb);
-        free(buffer);
-
-        if (rc != 0) {
-            continue;
-        }
-
-        if (exec_files) {
-            if (!S_ISREG(sb.st_mode)
-                || !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
-                continue;
-            }
-        } else if (!S_ISDIR(sb.st_mode)) {
-            continue;
-        }
-
         list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
-    }
-
-    for (int i = 0; i < entries; i++) {
         free(namelist[i]);
     }
     free(namelist);
