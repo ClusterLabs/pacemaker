@@ -230,7 +230,7 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
             char *mapval = strchr(val, ':');
 
             if (mapval == NULL || mapval[1] == 0) {
-                crm_err("pcmk_delay_base: empty value in mapping", val);
+                crm_err("pcmk_delay_base: empty mapping for %s", val);
                 continue;
             }
 
