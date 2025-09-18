@@ -201,6 +201,38 @@ get_action_delay_max(const fenced_device_t *device, const char *action)
     return (int) delay_max;
 }
 
+static gchar *
+get_value_if_matching(const char *mapping, const char *target)
+{
+    gchar **nvpair = NULL;
+    gchar *value = NULL;
+
+    if (pcmk__str_empty(mapping)) {
+        goto done;
+    }
+
+    nvpair = g_strsplit(mapping, ":", 2);
+
+    if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+        crm_err(PCMK_FENCING_DELAY_BASE ": Malformed mapping '%s'", mapping);
+        goto done;
+    }
+
+    if (!pcmk__str_eq(target, nvpair[0], pcmk__str_casei)) {
+        goto done;
+    }
+
+    // Take ownership so that we don't free nvpair[1] with nvpair
+    value = nvpair[1];
+    nvpair[1] = NULL;
+
+    crm_debug(PCMK_FENCING_DELAY_BASE " mapped to %s for %s", value, target);
+
+done:
+    g_strfreev(nvpair);
+    return value;
+}
+
 static int
 get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
@@ -230,34 +262,11 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
          * avoids a "Malformed mapping" error message below.
          */
         if (g_strv_length(mappings) >= 2) {
-            for (gchar **mapping = mappings;
-                 (*mapping != NULL) && (delay_base_s == NULL);
-                 mapping++) {
-
-                gchar **nvpair = NULL;
-
-                if (pcmk__str_empty(*mapping)) {
-                    continue;
+            for (gchar **mapping = mappings; *mapping != NULL; mapping++) {
+                delay_base_s = get_value_if_matching(*mapping, target);
+                if (delay_base_s != NULL) {
+                    break;
                 }
-
-                nvpair = g_strsplit(*mapping, ":", 2);
-
-                if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
-                    crm_err("pcmk_delay_base: Malformed mapping '%s'",
-                            *mapping);
-
-                } else if (pcmk__str_eq(target, nvpair[0], pcmk__str_casei)) {
-                    /* Take ownership so that we don't free nvpair[1] with
-                     * nvpair
-                     */
-                    delay_base_s = nvpair[1];
-                    nvpair[1] = NULL;
-
-                    crm_debug("pcmk_delay_base mapped to %s for %s",
-                              delay_base_s, target);
-                }
-
-                g_strfreev(nvpair);
             }
         }
         g_strfreev(mappings);
