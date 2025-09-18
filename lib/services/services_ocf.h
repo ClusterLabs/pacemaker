@@ -24,7 +24,7 @@ G_GNUC_INTERNAL
 GList *services__list_ocf_providers(void);
 
 G_GNUC_INTERNAL
-GList *resources_os_list_ocf_agents(const char *provider);
+GList *services__list_ocf_agents(const char *provider);
 
 G_GNUC_INTERNAL
 gboolean services__ocf_agent_exists(const char *provider, const char *agent);

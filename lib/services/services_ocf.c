@@ -50,25 +50,41 @@ services__list_ocf_providers(void)
 
 /*!
  * \internal
- * \brief List the agents from the given OCF provider
+ * \brief List the agents from the given OCF provider or from all OCF providers
  *
- * For each directory along \c PCMK__OCF_RA_PATH (a colon-delimited list), this
- * function looks for a subdirectory called \p provider. It then finds the top-
- * level executable files inside that subdirectory, excluding those beginning
- * with \c '.', and adds them to the list.
+ * If \p provider is not \c NULL, for each directory along \c PCMK__OCF_RA_PATH
+ * (a colon-delimited list), this function looks for a subdirectory called
+ * \p provider. It then finds the top-level executable files inside that
+ * subdirectory, excluding those beginning with \c '.', and adds them to the
+ * list.
  *
- * \param[in] provider  OCF provider
+ * If \p provider is \c NULL, this function does the above for each provider and
+ * concatenates the results.
+ *
+ * \param[in] provider  OCF provider (\c NULL to list agents from all providers)
  *
  * \return Newly allocated list of OCF agents as newly allocated strings
  *
  * \note The caller is responsible for freeing the return value using
  *       <tt>g_list_free_full(list, free)</tt>.
  */
-static GList *
-list_provider_agents(const char *provider)
+GList *
+services__list_ocf_agents(const char *provider)
 {
-    gchar **dirs = NULL;
     GList *list = NULL;
+    gchar **dirs = NULL;
+
+    if (provider == NULL) {
+        // Make a recursive call for each provider and concatenate the results
+        GList *providers = services__list_ocf_providers();
+
+        for (const GList *iter = providers; iter != NULL; iter = iter->next) {
+            provider = (const char *) iter->data;
+            list = g_list_concat(list, services__list_ocf_agents(provider));
+        }
+        g_list_free_full(providers, free);
+        return list;
+    }
 
     dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
@@ -80,26 +96,6 @@ list_provider_agents(const char *provider)
     }
 
     g_strfreev(dirs);
-    return list;
-}
-
-GList *
-resources_os_list_ocf_agents(const char *provider)
-{
-    GList *list = NULL;
-    GList *providers = NULL;
-
-    if (provider != NULL) {
-        return list_provider_agents(provider);
-    }
-
-    providers = services__list_ocf_providers();
-    for (const GList *iter = providers; iter != NULL; iter = iter->next) {
-        provider = (const char *) iter->data;
-        list = g_list_concat(list, resources_os_list_ocf_agents(provider));
-    }
-
-    g_list_free_full(providers, free);
     return list;
 }
 

@@ -1087,7 +1087,7 @@ resources_list_agents(const char *standard, const char *provider)
 
         if (standard == NULL) {
             tmp1 = result;
-            tmp2 = resources_os_list_ocf_agents(NULL);
+            tmp2 = services__list_ocf_agents(NULL);
             if (tmp2) {
                 result = g_list_concat(tmp1, tmp2);
             }
@@ -1108,7 +1108,7 @@ resources_list_agents(const char *standard, const char *provider)
         return result;
 
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        return resources_os_list_ocf_agents(provider);
+        return services__list_ocf_agents(provider);
 #if PCMK__ENABLE_LSB
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         return services__list_lsb_agents();
