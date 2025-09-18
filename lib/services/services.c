@@ -1066,7 +1066,7 @@ GList *
 resources_list_providers(const char *standard)
 {
     if (pcmk__is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
-        return resources_os_list_ocf_providers();
+        return services__list_ocf_providers();
     }
 
     return NULL;
