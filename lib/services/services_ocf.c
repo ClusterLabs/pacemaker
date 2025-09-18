@@ -99,34 +99,45 @@ services__list_ocf_agents(const char *provider)
     return list;
 }
 
-gboolean
+/*!
+ * \internal
+ * \brief Check whether the given OCF agent from the given provider exists
+ *
+ * For each directory along \c PCMK__OCF_RA_PATH (a colon-delimited list), this
+ * function looks for a file called \p agent in a subdirectory called
+ * \p provider. It returns \c true if such a file is found.
+ *
+ * \param[in] provider  OCF provider
+ * \param[in] agent     OCF agent
+ *
+ * \return \c true if the agent is found or \c false otherwise
+ */
+bool
 services__ocf_agent_exists(const char *provider, const char *agent)
 {
-    gboolean rc = FALSE;
-    struct stat st;
-    char *dirs = strdup(PCMK__OCF_RA_PATH);
-    char *dir = NULL;
-    char *buf = NULL;
+    bool found = false;
+    char *dirs = NULL;
 
-    if (provider == NULL || agent == NULL || pcmk__str_empty(dirs)) {
-        free(dirs);
-        return rc;
+    if ((provider == NULL) || (agent == NULL)
+        || pcmk__str_empty(PCMK__OCF_RA_PATH)) {
+
+        return false;
     }
 
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        buf = pcmk__assert_asprintf("%s/%s/%s", dir, provider, agent);
-        if (stat(buf, &st) == 0) {
-            free(buf);
-            rc = TRUE;
-            break;
-        }
+    dirs = pcmk__str_copy(PCMK__OCF_RA_PATH);
 
+    for (char *dir = strtok(dirs, ":"); !found && (dir != NULL);
+         dir = strtok(NULL, ":")) {
+
+        char *buf = pcmk__assert_asprintf("%s/%s/%s", dir, provider, agent);
+        struct stat sb;
+
+        found = (stat(buf, &sb) == 0);
         free(buf);
     }
 
     free(dirs);
-
-    return rc;
+    return found;
 }
 
 /*!

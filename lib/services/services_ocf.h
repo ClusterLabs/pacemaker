@@ -11,6 +11,8 @@
 #ifndef PCMK__SERVICES_SERVICES_OCF__H
 #define PCMK__SERVICES_SERVICES_OCF__H
 
+#include <stdbool.h>            // bool
+
 #include <glib.h>               // G_GNUC_INTERNAL, GList, gboolean
 
 #include <crm/common/results.h> // enum ocf_exitcode
@@ -27,7 +29,7 @@ G_GNUC_INTERNAL
 GList *services__list_ocf_agents(const char *provider);
 
 G_GNUC_INTERNAL
-gboolean services__ocf_agent_exists(const char *provider, const char *agent);
+bool services__ocf_agent_exists(const char *provider, const char *agent);
 
 G_GNUC_INTERNAL
 int services__ocf_prepare(svc_action_t *op);
