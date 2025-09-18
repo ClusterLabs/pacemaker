@@ -1183,7 +1183,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 #endif
 
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
-        rc = services__ocf_agent_exists(provider, agent);
+        rc = services__ocf_agent_exists(provider, agent, NULL);
 
 #if PCMK__ENABLE_LSB
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {

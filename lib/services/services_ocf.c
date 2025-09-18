@@ -107,16 +107,23 @@ services__list_ocf_agents(const char *provider)
  * function looks for a file called \p agent in a subdirectory called
  * \p provider. It returns \c true if such a file is found.
  *
- * \param[in] provider  OCF provider
- * \param[in] agent     OCF agent
+ * \param[in]  provider  OCF provider
+ * \param[in]  agent     OCF agent
+ * \param[out] path      If not \c NULL, where to store full path to agent if
+ *                       found; unchanged if agent is not found
  *
  * \return \c true if the agent is found or \c false otherwise
+ *
+ * \note The caller is responsible for freeing \p *path on success using
+ *       \c free().
  */
 bool
-services__ocf_agent_exists(const char *provider, const char *agent)
+services__ocf_agent_exists(const char *provider, const char *agent, char **path)
 {
     bool found = false;
     gchar **dirs = NULL;
+
+    pcmk__assert((path == NULL) || (*path == NULL));
 
     if ((provider == NULL) || (agent == NULL)) {
         return false;
@@ -128,7 +135,14 @@ services__ocf_agent_exists(const char *provider, const char *agent)
         char *buf = pcmk__assert_asprintf("%s/%s/%s", *dir, provider, agent);
         struct stat sb;
 
-        found = (stat(buf, &sb) == 0);
+        if (stat(buf, &sb) != 0) {
+            found = true;
+
+            if (path != NULL) {
+                *path = buf;
+                buf = NULL;
+            }
+        }
         free(buf);
     }
 
