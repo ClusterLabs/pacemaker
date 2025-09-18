@@ -206,10 +206,10 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
 {
     const char *param = NULL;
+    char *delay_base_s = NULL;
     guint delay_base = 0U;
 
     char *value = NULL;
-    char *valptr = NULL;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -221,39 +221,45 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
     }
 
     value = pcmk__str_copy(param);
-    valptr = value;
 
     if (target != NULL) {
-        for (char *val = strtok(value, "; \t"); val != NULL;
+        for (char *val = strtok(value, "; \t");
+             (val != NULL) && (delay_base_s == NULL);
              val = strtok(NULL, "; \t")) {
 
-            char *mapval = strchr(val, ':');
+            gchar **nvpair = g_strsplit(val, ":", 2);
 
-            if (mapval == val) {
-                // val starts with a colon, so the mapping key is empty
+            if ((g_strv_length(nvpair) != 2)
+                || pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+
                 crm_err("pcmk_delay_base: Malformed value '%s'", val);
-                continue;
+
+            } else if (pcmk__str_eq(target, nvpair[0], pcmk__str_casei)) {
+                delay_base_s = pcmk__str_copy(nvpair[1]);
+                crm_debug("pcmk_delay_base mapped to %s for %s", delay_base_s,
+                          target);
             }
 
-            if (mapval == NULL || mapval[1] == 0) {
-                crm_err("pcmk_delay_base: empty mapping for %s", val);
-                continue;
-            }
-
-            if (strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
-                value = mapval + 1;
-                crm_debug("pcmk_delay_base mapped to %s for %s", value, target);
-                break;
-            }
+            g_strfreev(nvpair);
         }
     }
 
-    if (strchr(value, ':') == NULL) {
-        pcmk_parse_interval_spec(value, &delay_base);
+    if (delay_base_s == NULL) {
+        /* Either target is NULL or we didn't find a mapping for it. Try to
+         * parse the entire stripped value as an interval spec. Take ownership
+         * so that we don't free stripped twice.
+         */
+        delay_base_s = value;
+        value = NULL;
+    }
+
+    if (strchr(delay_base_s, ':') == NULL) {
+        pcmk_parse_interval_spec(delay_base_s, &delay_base);
         delay_base /= 1000;
     }
 
-    free(valptr);
+    free(delay_base_s);
+    free(value);
 
     return (int) delay_base;
 }
