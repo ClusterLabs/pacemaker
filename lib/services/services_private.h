@@ -60,7 +60,7 @@ G_GNUC_INTERNAL
 const char *services__action_kind(const svc_action_t *action);
 
 G_GNUC_INTERNAL
-GList *services__list_dir(const char *dir, bool files, bool executable);
+GList *services__list_dir(const char *dir, bool exec_files);
 
 G_GNUC_INTERNAL
 int services__execute_file(svc_action_t *op);

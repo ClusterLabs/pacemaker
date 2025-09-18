@@ -244,7 +244,7 @@ services__get_lsb_metadata(const char *type, char **output)
 GList *
 services__list_lsb_agents(void)
 {
-    return services__list_dir(PCMK__LSB_INIT_DIR, true, true);
+    return services__list_dir(PCMK__LSB_INIT_DIR, true);
 }
 
 bool

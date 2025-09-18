@@ -1429,8 +1429,23 @@ done:
     }
 }
 
+/*!
+ * \internal
+ * \brief List directory's top-level contents of the given type
+ *
+ * Hidden files (those beginning with \c '.') are skipped.
+ *
+ * \param[in] dir         Full path of directory to list
+ * \param[in] exec_files  If \c true, list only executable files within \p dir.
+ *                        If \c false, list only directories within \p dir.
+ *
+ * \return Newly allocated list of newly allocated names of directory entries
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       <tt>g_list_free_full(list, free)</tt>.
+ */
 GList *
-services__list_dir(const char *dir, bool files, bool executable)
+services__list_dir(const char *dir, bool exec_files)
 {
     GList *list = NULL;
     struct dirent **namelist = NULL;
@@ -1445,7 +1460,8 @@ services__list_dir(const char *dir, bool files, bool executable)
         struct stat sb;
         int rc = 0;
 
-        if ('.' == namelist[i]->d_name[0]) {
+        // Skip hidden files
+        if (namelist[i]->d_name[0] == '.') {
             continue;
         }
 
@@ -1458,17 +1474,13 @@ services__list_dir(const char *dir, bool files, bool executable)
         }
 
         if (S_ISDIR(sb.st_mode)) {
-            if (files) {
+            if (exec_files) {
                 continue;
             }
 
         } else if (S_ISREG(sb.st_mode)) {
-            if (!files) {
-                continue;
-            }
-
-            if (executable
-                && !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
+            if (!exec_files
+                || !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
                 continue;
             }
         }
