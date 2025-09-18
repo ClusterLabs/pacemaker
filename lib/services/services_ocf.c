@@ -147,36 +147,29 @@ services__ocf_agent_exists(const char *provider, const char *agent)
 int
 services__ocf_prepare(svc_action_t *op)
 {
-    char *dirs = strdup(PCMK__OCF_RA_PATH);
-    struct stat st;
-
-    if (dirs == NULL) {
-        return ENOMEM;
-    }
+    gchar **dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
     // Look for agent on path
-    for (char *dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        char *buf = pcmk__assert_asprintf("%s/%s/%s", dir, op->provider,
+    for (gchar **dir = dirs; *dir != NULL; dir++) {
+        char *buf = pcmk__assert_asprintf("%s/%s/%s", *dir, op->provider,
                                           op->agent);
+        struct stat sb;
 
-        if (stat(buf, &st) == 0) {
+        if (stat(buf, &sb) == 0) {
             op->opaque->exec = buf;
             break;
         }
         free(buf);
     }
-    free(dirs);
+
+    g_strfreev(dirs);
 
     if (op->opaque->exec == NULL) {
         return ENOENT;
     }
 
-    op->opaque->args[0] = strdup(op->opaque->exec);
-    op->opaque->args[1] = strdup(op->action);
-    if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
-        return ENOMEM;
-    }
-
+    op->opaque->args[0] = pcmk__str_copy(op->opaque->exec);
+    op->opaque->args[1] = pcmk__str_copy(op->action);
     return pcmk_rc_ok;
 }
 
