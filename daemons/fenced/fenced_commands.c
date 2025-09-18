@@ -239,6 +239,8 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
 {
     const char *param = NULL;
     gchar *stripped = NULL;
+    gchar **mappings = NULL;
+
     gchar *delay_base_s = NULL;
     guint delay_base = 0U;
 
@@ -252,24 +254,21 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
     }
 
     stripped = g_strstrip(g_strdup(param));
+    mappings = g_strsplit_set(stripped, "; \t", 0);
 
-    if (target != NULL) {
-        gchar **mappings = g_strsplit_set(stripped, "; \t", 0);
-
-        /* If there are no delimiters after stripping leading and trailing
-         * whitespace, then we want to parse the string as a single interval,
-         * rather than as a delimited list of mappings. Short-circuiting here
-         * avoids a "Malformed mapping" error message below.
-         */
-        if (g_strv_length(mappings) >= 2) {
-            for (gchar **mapping = mappings; *mapping != NULL; mapping++) {
-                delay_base_s = get_value_if_matching(*mapping, target);
-                if (delay_base_s != NULL) {
-                    break;
-                }
+    /* If there are no delimiters after stripping leading and trailing
+     * whitespace, then we want to parse the string as a single interval, rather
+     * than as a delimited list of mappings. Short-circuiting here when we split
+     * into fewer than two mappings avoids a "Malformed mapping" error message
+     * below.
+     */
+    if ((target != NULL) && (g_strv_length(mappings) >= 2)) {
+        for (gchar **mapping = mappings; *mapping != NULL; mapping++) {
+            delay_base_s = get_value_if_matching(*mapping, target);
+            if (delay_base_s != NULL) {
+                break;
             }
         }
-        g_strfreev(mappings);
     }
 
     if (delay_base_s == NULL) {
@@ -287,6 +286,7 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
     }
 
     g_free(stripped);
+    g_strfreev(mappings);
     g_free(delay_base_s);
 
     return (int) delay_base;
