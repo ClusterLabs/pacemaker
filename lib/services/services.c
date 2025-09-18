@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                // bool, true, false
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -1381,6 +1382,60 @@ services__grab_stderr(svc_action_t *action)
 
 #include <crm/services_compat.h>
 
+static GList *
+gdl_helper(const char *dir, bool files, bool executable)
+{
+    GList *list = NULL;
+    struct dirent **namelist = NULL;
+    int entries = scandir(dir, &namelist, NULL, alphasort);
+
+    if (entries < 0) {
+        return NULL;
+    }
+
+    for (int i = 0; i < entries; i++) {
+        char *buffer = NULL;
+        struct stat sb;
+        int rc = 0;
+
+        if ('.' == namelist[i]->d_name[0]) {
+            continue;
+        }
+
+        buffer = pcmk__assert_asprintf("%s/%s", dir, namelist[i]->d_name);
+        rc = stat(buffer, &sb);
+        free(buffer);
+
+        if (rc != 0) {
+            continue;
+        }
+
+        if (S_ISDIR(sb.st_mode)) {
+            if (files) {
+                continue;
+            }
+
+        } else if (S_ISREG(sb.st_mode)) {
+            if (!files) {
+                continue;
+            }
+
+            if (executable
+                && !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
+                continue;
+            }
+        }
+
+        list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
+    }
+
+    for (int i = 0; i < entries; i++) {
+        free(namelist[i]);
+    }
+    free(namelist);
+    return list;
+}
+
 GList *
 get_directory_list(const char *root, gboolean files, gboolean executable)
 {
@@ -1394,7 +1449,7 @@ get_directory_list(const char *root, gboolean files, gboolean executable)
     dir_paths = g_strsplit(root, ":", 0);
 
     for (gchar **dir = dir_paths; *dir != NULL; dir++) {
-        list = g_list_concat(list, services__list_dir(*dir, files, executable));
+        list = g_list_concat(list, gdl_helper(*dir, files, executable));
     }
 
     g_strfreev(dir_paths);
