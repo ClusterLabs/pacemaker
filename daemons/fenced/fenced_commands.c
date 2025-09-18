@@ -245,6 +245,45 @@ done:
     return value;
 }
 
+/*!
+ * \internal
+ * \brief If a mapping exists from the target node to a port, return the port
+ *
+ * \param[in] target  Fencing target node
+ * \param[in] values  List of target-to-port mappings (delimited by semicolon,
+ *                    space, or tab characters), or a single interval spec
+ *
+ * \return Port to which \p target is mapped, or \c NULL if no such mapping
+ *         exists
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
+ */
+static gchar *
+get_value_for_target(const char *target, const char *values)
+{
+    gchar *value = NULL;
+    gchar **mappings = NULL;
+
+    /* If there are no colons, don't try to parse as a list of mappings.
+     * The caller will try to parse the values string as an interval spec.
+     */
+    if (strchr(values, ':') == NULL) {
+        return NULL;
+    }
+
+    mappings = g_strsplit_set(values, "; \t", 0);
+
+    for (gchar **mapping = mappings; (*mapping != NULL) && (value == NULL);
+         mapping++) {
+
+        value = get_value_if_matching(target, *mapping);
+    }
+
+    g_strfreev(mappings);
+    return value;
+}
+
 static int
 get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
@@ -265,16 +304,8 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
 
     stripped = g_strstrip(g_strdup(param));
 
-    // If there are no colons, don't try to parse as a list of mappings
-    if ((target != NULL) && (strchr(stripped, ':') != NULL)) {
-        gchar **mappings = g_strsplit_set(stripped, "; \t", 0);
-
-        for (gchar **mapping = mappings;
-             (*mapping != NULL) && (delay_base_s == NULL); mapping++) {
-
-            delay_base_s = get_value_if_matching(target, *mapping);
-        }
-        g_strfreev(mappings);
+    if (target != NULL) {
+        delay_base_s = get_value_for_target(target, stripped);
     }
 
     if (delay_base_s == NULL) {
@@ -299,7 +330,6 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
 
     g_free(stripped);
     g_free(delay_base_s);
-
     return (int) delay_base;
 }
 
