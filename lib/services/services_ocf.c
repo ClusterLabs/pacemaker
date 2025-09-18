@@ -73,25 +73,21 @@ list_provider_agents(const char *provider)
 GList *
 resources_os_list_ocf_agents(const char *provider)
 {
-    GList *gIter = NULL;
-    GList *result = NULL;
+    GList *list = NULL;
     GList *providers = NULL;
 
-    if (provider) {
+    if (provider != NULL) {
         return list_provider_agents(provider);
     }
 
     providers = resources_os_list_ocf_providers();
-    for (gIter = providers; gIter != NULL; gIter = gIter->next) {
-        GList *tmp1 = result;
-        GList *tmp2 = resources_os_list_ocf_agents(gIter->data);
-
-        if (tmp2) {
-            result = g_list_concat(tmp1, tmp2);
-        }
+    for (const GList *iter = providers; iter != NULL; iter = iter->next) {
+        provider = (const char *) iter->data;
+        list = g_list_concat(list, resources_os_list_ocf_agents(provider));
     }
+
     g_list_free_full(providers, free);
-    return result;
+    return list;
 }
 
 gboolean
