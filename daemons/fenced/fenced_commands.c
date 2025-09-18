@@ -205,44 +205,49 @@ static int
 get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
 {
-    char *hash_value = NULL;
+    const char *param = NULL;
     guint delay_base = 0U;
+
+    char *value = NULL;
+    char *valptr = NULL;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
     }
 
-    hash_value = g_hash_table_lookup(device->params, PCMK_FENCING_DELAY_BASE);
+    param = g_hash_table_lookup(device->params, PCMK_FENCING_DELAY_BASE);
+    if (param == NULL) {
+        return 0;
+    }
 
-    if (hash_value) {
-        char *value = pcmk__str_copy(hash_value);
-        char *valptr = value;
+    value = pcmk__str_copy(param);
+    valptr = value;
 
-        if (target != NULL) {
-            for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
-                char *mapval = strchr(val, ':');
+    if (target != NULL) {
+        for (char *val = strtok(value, "; \t"); val != NULL;
+             val = strtok(NULL, "; \t")) {
 
-                if (mapval == NULL || mapval[1] == 0) {
-                    crm_err("pcmk_delay_base: empty value in mapping", val);
-                    continue;
-                }
+            char *mapval = strchr(val, ':');
 
-                if (mapval != val && strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
-                    value = mapval + 1;
-                    crm_debug("pcmk_delay_base mapped to %s for %s",
-                              value, target);
-                    break;
-                }
+            if (mapval == NULL || mapval[1] == 0) {
+                crm_err("pcmk_delay_base: empty value in mapping", val);
+                continue;
+            }
+
+            if (mapval != val && strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
+                value = mapval + 1;
+                crm_debug("pcmk_delay_base mapped to %s for %s", value, target);
+                break;
             }
         }
-
-        if (strchr(value, ':') == 0) {
-            pcmk_parse_interval_spec(value, &delay_base);
-            delay_base /= 1000;
-        }
-
-        free(valptr);
     }
+
+    if (strchr(value, ':') == NULL) {
+        pcmk_parse_interval_spec(value, &delay_base);
+        delay_base /= 1000;
+    }
+
+    free(valptr);
 
     return (int) delay_base;
 }
