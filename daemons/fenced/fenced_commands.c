@@ -229,12 +229,18 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
 
             char *mapval = strchr(val, ':');
 
+            if (mapval == val) {
+                // val starts with a colon, so the mapping key is empty
+                crm_err("pcmk_delay_base: Malformed value '%s'", val);
+                continue;
+            }
+
             if (mapval == NULL || mapval[1] == 0) {
                 crm_err("pcmk_delay_base: empty mapping for %s", val);
                 continue;
             }
 
-            if (mapval != val && strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
+            if (strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
                 value = mapval + 1;
                 crm_debug("pcmk_delay_base mapped to %s for %s", value, target);
                 break;
