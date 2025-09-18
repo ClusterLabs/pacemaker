@@ -261,6 +261,10 @@ done:
     return value;
 }
 
+/* @TODO Consolidate some of this with build_port_aliases(). But keep in mind
+ * that build_port_aliases()/pcmk__host_map supports either '=' or ':' as a
+ * mapping separator, while pcmk_delay_base supports only ':'.
+ */
 static int
 get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
@@ -293,10 +297,11 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
         stripped = NULL;
     }
 
-    if (strchr(delay_base_s, ':') == NULL) {
-        pcmk_parse_interval_spec(delay_base_s, &delay_base);
-        delay_base /= 1000;
-    }
+    /* @TODO Should we accept only a simple time+units string, rather than an
+     * ISO 8601 interval?
+     */
+    pcmk_parse_interval_spec(delay_base_s, &delay_base);
+    delay_base /= 1000;
 
     g_free(stripped);
     g_free(delay_base_s);
