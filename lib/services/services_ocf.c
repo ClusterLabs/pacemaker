@@ -28,7 +28,7 @@ resources_os_list_ocf_providers(void)
     gchar **dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
     for (gchar **dir = dirs; *dir != NULL; dir++) {
-        list = g_list_concat(list, services__list_dir(*dir, false, true));
+        list = g_list_concat(list, services__list_dir(*dir, false));
     }
 
     g_strfreev(dirs);
@@ -62,7 +62,7 @@ list_provider_agents(const char *provider)
     for (gchar **dir = dirs; *dir != NULL; dir++) {
         char *buf = pcmk__assert_asprintf("%s/%s", *dir, provider);
 
-        list = g_list_concat(list, services__list_dir(buf, true, true));
+        list = g_list_concat(list, services__list_dir(buf, true));
         free(buf);
     }
 
