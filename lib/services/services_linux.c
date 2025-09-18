@@ -1473,16 +1473,13 @@ services__list_dir(const char *dir, bool exec_files)
             continue;
         }
 
-        if (S_ISDIR(sb.st_mode)) {
-            if (exec_files) {
-                continue;
-            }
-
-        } else if (S_ISREG(sb.st_mode)) {
-            if (!exec_files
+        if (exec_files) {
+            if (!S_ISREG(sb.st_mode)
                 || !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
                 continue;
             }
+        } else if (!S_ISDIR(sb.st_mode)) {
+            continue;
         }
 
         list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
