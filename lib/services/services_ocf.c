@@ -21,8 +21,21 @@
 #include "services_private.h"
 #include "services_ocf.h"
 
+/*!
+ * \internal
+ * \brief List the OCF providers from \c PCMK__OCF_RA_PATH
+ *
+ * For each directory along \c PCMK__OCF_RA_PATH (a colon-delimited list), this
+ * function adds all top-level subdirectories to the list, excluding those
+ * beginning with \c '.'.
+ *
+ * \return Newly allocated list of OCF providers as newly allocated strings
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       <tt>g_list_free_full(list, free)</tt>.
+ */
 GList *
-resources_os_list_ocf_providers(void)
+services__list_ocf_providers(void)
 {
     GList *list = NULL;
     gchar **dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
@@ -80,7 +93,7 @@ resources_os_list_ocf_agents(const char *provider)
         return list_provider_agents(provider);
     }
 
-    providers = resources_os_list_ocf_providers();
+    providers = services__list_ocf_providers();
     for (const GList *iter = providers; iter != NULL; iter = iter->next) {
         provider = (const char *) iter->data;
         list = g_list_concat(list, resources_os_list_ocf_agents(provider));
