@@ -161,24 +161,8 @@ services__ocf_agent_exists(const char *provider, const char *agent, char **path)
 int
 services__ocf_prepare(svc_action_t *op)
 {
-    gchar **dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
-
-    // Look for agent on path
-    for (gchar **dir = dirs; *dir != NULL; dir++) {
-        char *buf = pcmk__assert_asprintf("%s/%s/%s", *dir, op->provider,
-                                          op->agent);
-        struct stat sb;
-
-        if (stat(buf, &sb) == 0) {
-            op->opaque->exec = buf;
-            break;
-        }
-        free(buf);
-    }
-
-    g_strfreev(dirs);
-
-    if (op->opaque->exec == NULL) {
+    if (!services__ocf_agent_exists(op->provider, op->agent,
+                                    &(op->opaque->exec))) {
         return ENOENT;
     }
 
