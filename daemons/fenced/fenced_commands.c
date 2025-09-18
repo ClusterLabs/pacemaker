@@ -206,10 +206,9 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
 {
     const char *param = NULL;
-    char *delay_base_s = NULL;
+    gchar *stripped = NULL;
+    gchar *delay_base_s = NULL;
     guint delay_base = 0U;
-
-    char *value = NULL;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -220,28 +219,42 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
         return 0;
     }
 
-    value = pcmk__str_copy(param);
+    stripped = g_strstrip(g_strdup(param));
 
-    if (target != NULL) {
-        for (char *val = strtok(value, "; \t");
-             (val != NULL) && (delay_base_s == NULL);
-             val = strtok(NULL, "; \t")) {
+    // If there are no colons, don't try to parse as a list of mappings
+    if ((target != NULL) && (strchr(stripped, ':') != NULL)) {
+        gchar **mappings = g_strsplit_set(stripped, "; \t", 0);
 
-            gchar **nvpair = g_strsplit(val, ":", 2);
+        for (gchar **mapping = mappings;
+             (*mapping != NULL) && (delay_base_s == NULL); mapping++) {
+
+            gchar **nvpair = NULL;
+
+            if (pcmk__str_empty(*mapping)) {
+                continue;
+            }
+
+            nvpair = g_strsplit(*mapping, ":", 2);
 
             if ((g_strv_length(nvpair) != 2)
                 || pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
 
-                crm_err("pcmk_delay_base: Malformed value '%s'", val);
+                crm_err("pcmk_delay_base: Malformed mapping '%s'",
+                        *mapping);
 
             } else if (pcmk__str_eq(target, nvpair[0], pcmk__str_casei)) {
-                delay_base_s = pcmk__str_copy(nvpair[1]);
+                // Take ownership so that we don't free nvpair[1] with nvpair
+                delay_base_s = nvpair[1];
+                nvpair[1] = NULL;
+
                 crm_debug("pcmk_delay_base mapped to %s for %s", delay_base_s,
                           target);
             }
 
             g_strfreev(nvpair);
         }
+
+        g_strfreev(mappings);
     }
 
     if (delay_base_s == NULL) {
@@ -254,8 +267,8 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
          * contain a colon, and a Pacemaker time-and-units string may contain
          * whitespace.
          */
-        delay_base_s = value;
-        value = NULL;
+        delay_base_s = stripped;
+        stripped = NULL;
     }
 
     /* @COMPAT Should we accept only a simple time-and-units string, rather than
@@ -264,8 +277,8 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
     pcmk_parse_interval_spec(delay_base_s, &delay_base);
     delay_base /= 1000;
 
-    free(delay_base_s);
-    free(value);
+    g_free(stripped);
+    g_free(delay_base_s);
 
     return (int) delay_base;
 }
