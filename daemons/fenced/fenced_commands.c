@@ -206,10 +206,9 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
 {
     const char *param = NULL;
-    char *delay_base_s = NULL;
+    gchar *stripped = NULL;
+    gchar *delay_base_s = NULL;
     guint delay_base = 0U;
-
-    char *value = NULL;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -220,34 +219,57 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
         return 0;
     }
 
-    value = pcmk__str_copy(param);
+    stripped = g_strstrip(g_strdup(param));
 
     if (target != NULL) {
-        for (char *val = strtok(value, "; \t");
-             (val != NULL) && (delay_base_s == NULL);
-             val = strtok(NULL, "; \t")) {
+        gchar **mappings = g_strsplit_set(stripped, "; \t", 0);
 
-            gchar **nvpair = g_strsplit(val, ":", 2);
+        /* If there are no delimiters after stripping leading and trailing
+         * whitespace, then we want to parse the string as a single interval,
+         * rather than as a delimited list of mappings. Short-circuiting here
+         * avoids a "Malformed mapping" error message below.
+         */
+        if (g_strv_length(mappings) >= 2) {
+            for (gchar **mapping = mappings;
+                 (*mapping != NULL) && (delay_base_s == NULL);
+                 mapping++) {
 
-            if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
-                crm_err("pcmk_delay_base: Malformed value '%s'", val);
+                gchar **nvpair = NULL;
 
-            } else if (pcmk__str_eq(target, nvpair[0], pcmk__str_casei)) {
-                delay_base_s = pcmk__str_copy(nvpair[1]);
-                crm_debug("pcmk_delay_base mapped to %s for %s", delay_base_s,
-                          target);
+                if (pcmk__str_empty(*mapping)) {
+                    continue;
+                }
+
+                nvpair = g_strsplit(*mapping, ":", 2);
+
+                if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+                    crm_err("pcmk_delay_base: Malformed mapping '%s'",
+                            *mapping);
+
+                } else if (pcmk__str_eq(target, nvpair[0], pcmk__str_casei)) {
+                    /* Take ownership so that we don't free nvpair[1] with
+                     * nvpair
+                     */
+                    delay_base_s = nvpair[1];
+                    nvpair[1] = NULL;
+
+                    crm_debug("pcmk_delay_base mapped to %s for %s",
+                              delay_base_s, target);
+                }
+
+                g_strfreev(nvpair);
             }
-
-            g_strfreev(nvpair);
         }
+        g_strfreev(mappings);
     }
 
     if (delay_base_s == NULL) {
-        /* Either target is NULL or we didn't find a mapping. Try to parse value
-         * itself, but take ownership so that we don't free value twice.
+        /* Either target is NULL or we didn't find a mapping. Try to parse the
+         * stripped value itself. Take ownership so that we don't free stripped
+         * twice.
          */
-        delay_base_s = value;
-        value = NULL;
+        delay_base_s = stripped;
+        stripped = NULL;
     }
 
     if (strchr(delay_base_s, ':') == NULL) {
@@ -255,8 +277,8 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
         delay_base /= 1000;
     }
 
-    free(delay_base_s);
-    free(value);
+    g_free(stripped);
+    g_free(delay_base_s);
 
     return (int) delay_base;
 }
