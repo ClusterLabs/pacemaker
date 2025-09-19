@@ -925,63 +925,43 @@ fenced_free_device_table(void)
 }
 
 static GHashTable *
-build_port_aliases(const char *hostmap, GList ** targets)
+build_port_aliases(const char *hostmap, GList **targets)
 {
-    char *name = NULL;
-    int last = 0;
-    size_t len = 0;
     GHashTable *aliases = pcmk__strikey_table(free, free);
+    gchar *stripped = NULL;
+    gchar **mappings = NULL;
 
-    if (hostmap == NULL) {
-        return aliases;
+    if (pcmk__str_empty(hostmap)) {
+        goto done;
     }
 
-    len = strlen(hostmap);
-    for (int i = 0; i <= len; i++) {
-        switch (hostmap[i]) {
-                /* Assignment chars */
-            case '=':
-            case ':':
-                if (i > last) {
-                    free(name);
-                    name = pcmk__assert_alloc(1 + i - last, sizeof(char));
-                    memcpy(name, hostmap + last, i - last);
-                }
-                last = i + 1;
-                break;
+    stripped = g_strstrip(g_strdup(hostmap));
+    mappings = g_strsplit_set(stripped, "; \t", 0);
 
-                /* Delimeter chars */
-                /* case ',': Potentially used to specify multiple ports */
-            case 0:
-            case ';':
-            case ' ':
-            case '\t':
-                if (name) {
-                    char *value = pcmk__assert_alloc(1 + i - last,
-                                                     sizeof(char));
+    for (gchar **mapping = mappings; *mapping != NULL; mapping++) {
+        gchar **nvpair = NULL;
 
-                    memcpy(value, hostmap + last, i - last);
-
-                    crm_debug("Adding alias '%s'='%s'", name, value);
-                    g_hash_table_replace(aliases, name, value);
-                    *targets = g_list_append(*targets, pcmk__str_copy(value));
-                    name = NULL;
-
-                } else if (i > last) {
-                    crm_debug("Parse error at offset %d near '%s'", i - last,
-                              hostmap + last);
-                }
-
-                last = i + 1;
-                break;
+        if (pcmk__str_empty(*mapping)) {
+            continue;
         }
 
-        if (hostmap[i] == 0) {
-            break;
+        // @COMPAT Drop support for '=' as delimiter
+        nvpair = g_strsplit_set(*mapping, ":=", 2);
+
+        if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+            crm_err(PCMK_FENCING_HOST_MAP ": Malformed mapping '%s'", *mapping);
+
+        } else {
+            crm_debug("Adding alias '%s'='%s'", nvpair[0], nvpair[1]);
+            pcmk__insert_dup(aliases, nvpair[0], nvpair[1]);
+            *targets = g_list_append(*targets, pcmk__str_copy(nvpair[1]));
         }
+        g_strfreev(nvpair);
     }
 
-    free(name);
+done:
+    g_free(stripped);
+    g_strfreev(mappings);
     return aliases;
 }
 
