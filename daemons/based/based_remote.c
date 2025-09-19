@@ -147,8 +147,8 @@ init_remote_listener(int port, gboolean encrypted)
     return *ssock;
 }
 
-static int
-check_group_membership(const char *usr, const char *grp)
+static bool
+is_daemon_group_member(const char *usr)
 {
     int index = 0;
     gid_t gid = 0;
@@ -159,34 +159,36 @@ check_group_membership(const char *usr, const char *grp)
     if (rc != pcmk_rc_ok) {
         crm_notice("Rejecting remote client: could not find user '%s': %s",
                    usr, pcmk_rc_str(rc));
-        return FALSE;
+        return false;
     }
 
     group = getgrgid(gid);
-    if (group != NULL && pcmk__str_eq(grp, group->gr_name, pcmk__str_none)) {
-        return TRUE;
+    if ((group != NULL)
+        && pcmk__str_eq(group->gr_name, CRM_DAEMON_GROUP, pcmk__str_none)) {
+        return true;
     }
 
-    group = getgrnam(grp);
+    group = getgrnam(CRM_DAEMON_GROUP);
     if (group == NULL) {
-        crm_err("Rejecting remote client: '%s' is not a valid group", grp);
-        return FALSE;
+        crm_err("Rejecting remote client: " CRM_DAEMON_GROUP " is not a valid "
+                "group");
+        return false;
     }
 
-    while (TRUE) {
+    while (true) {
         char *member = group->gr_mem[index++];
 
         if (member == NULL) {
             break;
 
         } else if (pcmk__str_eq(usr, member, pcmk__str_none)) {
-            return TRUE;
+            return true;
         }
     }
 
-    crm_notice("Rejecting remote client: User '%s' is not a member of "
-               "group '%s'", usr, grp);
-    return FALSE;
+    crm_notice("Rejecting remote client: User %s is not a member of "
+               "group " CRM_DAEMON_GROUP, usr);
+    return false;
 }
 
 static gboolean
@@ -226,8 +228,7 @@ cib_remote_auth(xmlNode * login)
 
     crm_log_xml_debug(login, "auth");
 
-    return check_group_membership(user, CRM_DAEMON_GROUP)
-           && authenticate_user(user, pass);
+    return is_daemon_group_member(user) && authenticate_user(user, pass);
 }
 
 static gboolean
