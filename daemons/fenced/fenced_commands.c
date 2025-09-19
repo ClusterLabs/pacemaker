@@ -962,10 +962,9 @@ build_port_aliases(const char *hostmap, GList ** targets)
             case ' ':
             case '\t':
                 if (name) {
-                    char *value = NULL;
                     int k = 0;
+                    char *value = pcmk__assert_alloc(1, 1 + i - last);
 
-                    value = pcmk__assert_alloc(1, 1 + i - last);
                     memcpy(value, hostmap + last, i - last);
 
                     for (int i = 0; value[i] != '\0'; i++) {
@@ -978,7 +977,6 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     crm_debug("Adding alias '%s'='%s'", name, value);
                     g_hash_table_replace(aliases, name, value);
                     *targets = g_list_append(*targets, pcmk__str_copy(value));
-                    value = NULL;
                     name = NULL;
 
                 } else if (i > last) {
