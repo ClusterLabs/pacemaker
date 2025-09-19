@@ -581,8 +581,8 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
 
     out->message(out, "inject-spec", spec);
 
-    key = pcmk__assert_alloc(1, strlen(spec) + 1);
-    node = pcmk__assert_alloc(1, strlen(spec) + 1);
+    key = pcmk__assert_alloc(strlen(spec) + 1, sizeof(char));
+    node = pcmk__assert_alloc(strlen(spec) + 1, sizeof(char));
     rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
     if (rc != 3) {
         out->err(out, "Invalid operation spec: %s.  Only found %d fields",

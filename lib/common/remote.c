@@ -293,7 +293,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         int rc = 0;
         unsigned int size_u = 1 + header->payload_uncompressed;
         char *uncompressed =
-            pcmk__assert_alloc(1, header->payload_offset + size_u);
+            pcmk__assert_alloc(header->payload_offset + size_u, sizeof(char));
 
         crm_trace("Decompressing message data %d bytes into %d bytes",
                  header->payload_compressed, size_u);
