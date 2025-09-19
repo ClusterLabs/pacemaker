@@ -928,30 +928,32 @@ static GHashTable *
 build_port_aliases(const char *hostmap, GList ** targets)
 {
     char *name = NULL;
-    int last = 0, lpc = 0, max = 0, added = 0;
+    int last = 0;
+    int added = 0;
+    size_t len = 0;
     GHashTable *aliases = pcmk__strikey_table(free, free);
 
     if (hostmap == NULL) {
         return aliases;
     }
 
-    max = strlen(hostmap);
-    for (; lpc <= max; lpc++) {
-        switch (hostmap[lpc]) {
+    len = strlen(hostmap);
+    for (int i = 0; i <= len; i++) {
+        switch (hostmap[i]) {
                 /* Skip escaped chars */
             case '\\':
-                lpc++;
+                i++;
                 break;
 
                 /* Assignment chars */
             case '=':
             case ':':
-                if (lpc > last) {
+                if (i > last) {
                     free(name);
-                    name = pcmk__assert_alloc(1, 1 + lpc - last);
-                    memcpy(name, hostmap + last, lpc - last);
+                    name = pcmk__assert_alloc(1, 1 + i - last);
+                    memcpy(name, hostmap + last, i - last);
                 }
-                last = lpc + 1;
+                last = i + 1;
                 break;
 
                 /* Delimeter chars */
@@ -964,8 +966,8 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     char *value = NULL;
                     int k = 0;
 
-                    value = pcmk__assert_alloc(1, 1 + lpc - last);
-                    memcpy(value, hostmap + last, lpc - last);
+                    value = pcmk__assert_alloc(1, 1 + i - last);
+                    memcpy(value, hostmap + last, i - last);
 
                     for (int i = 0; value[i] != '\0'; i++) {
                         if (value[i] != '\\') {
@@ -983,15 +985,16 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     name = NULL;
                     added++;
 
-                } else if (lpc > last) {
-                    crm_debug("Parse error at offset %d near '%s'", lpc - last, hostmap + last);
+                } else if (i > last) {
+                    crm_debug("Parse error at offset %d near '%s'", i - last,
+                              hostmap + last);
                 }
 
-                last = lpc + 1;
+                last = i + 1;
                 break;
         }
 
-        if (hostmap[lpc] == 0) {
+        if (hostmap[i] == 0) {
             break;
         }
     }
