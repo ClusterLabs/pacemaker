@@ -161,9 +161,9 @@ create_pcmk_dirs(void)
         NULL
     };
 
-    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
-        crm_err("Cluster user %s does not exist, aborting Pacemaker startup",
-                CRM_DAEMON_USER);
+    if (pcmk__daemon_user(&pcmk_uid, &pcmk_gid) != pcmk_rc_ok) {
+        crm_err("Cluster user " CRM_DAEMON_USER " does not exist, aborting "
+                "Pacemaker startup");
         crm_exit(CRM_EX_NOUSER);
     }
 

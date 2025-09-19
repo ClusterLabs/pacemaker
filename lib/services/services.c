@@ -435,8 +435,12 @@ services_alert_create(const char *id, const char *exec, int timeout,
 int
 services_action_user(svc_action_t *op, const char *user)
 {
+    int rc = pcmk_ok;
+
     CRM_CHECK((op != NULL) && (user != NULL), return -EINVAL);
-    return crm_user_lookup(user, &(op->opaque->uid), &(op->opaque->gid));
+
+    rc = pcmk__lookup_user(user, &(op->opaque->uid), &(op->opaque->gid));
+    return pcmk_rc2legacy(rc);
 }
 
 /*!

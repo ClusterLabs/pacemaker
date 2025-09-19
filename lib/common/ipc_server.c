@@ -215,13 +215,13 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 
     CRM_CHECK(c != NULL, return NULL);
 
-    if (pcmk_daemon_user(&uid_cluster, &gid_cluster) < 0) {
-        static bool need_log = TRUE;
+    if (pcmk__daemon_user(&uid_cluster, &gid_cluster) != pcmk_rc_ok) {
+        static bool need_log = true;
 
         if (need_log) {
-            crm_warn("Could not find user and group IDs for user %s",
+            crm_warn("Could not find user and group IDs for user "
                      CRM_DAEMON_USER);
-            need_log = FALSE;
+            need_log = false;
         }
     }
 

@@ -439,32 +439,34 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
  * \param[in]     cib_root  Root of XML tree to write
  * \param[in,out] path      Full path to file to write
  *
- * \return 0 on success, -1 on failure
+ * \return Standard Pacemaker return code
  */
 static int
 cib_file_write_live(xmlNode *cib_root, char *path)
 {
-    uid_t uid = geteuid();
-    struct passwd *daemon_pwent;
+    uid_t euid = geteuid();
+    uid_t daemon_uid = 0;
+    gid_t daemon_gid = 0;
     char *sep = strrchr(path, '/');
     const char *cib_dirname, *cib_filename;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     /* Get the desired uid/gid */
-    errno = 0;
-    daemon_pwent = getpwnam(CRM_DAEMON_USER);
-    if (daemon_pwent == NULL) {
-        crm_err("Could not find " CRM_DAEMON_USER " user: %s", strerror(errno));
-        return -1;
+    rc = pcmk__daemon_user(&daemon_uid, &daemon_gid);
+    if (rc != pcmk_rc_ok) {
+        crm_err("Could not find user " CRM_DAEMON_USER ": %s", pcmk_rc_str(rc));
+        return rc;
     }
 
     /* If we're root, we can change the ownership;
      * if we're daemon, anything we create will be OK;
      * otherwise, block access so we don't create wrong owner
      */
-    if ((uid != 0) && (uid != daemon_pwent->pw_uid)) {
+    if ((euid != 0) && (euid != daemon_uid)) {
         crm_err("Must be root or " CRM_DAEMON_USER " to modify live CIB");
-        return 0;
+
+        // @TODO Should this return an error instead?
+        return pcmk_rc_ok;
     }
 
     /* fancy footwork to separate dirname from filename
@@ -484,20 +486,18 @@ cib_file_write_live(xmlNode *cib_root, char *path)
     }
 
     /* if we're root, we want to update the file ownership */
-    if (uid == 0) {
-        cib_file_owner = daemon_pwent->pw_uid;
-        cib_file_group = daemon_pwent->pw_gid;
+    if (euid == 0) {
+        cib_file_owner = daemon_uid;
+        cib_file_group = daemon_gid;
         cib_do_chown = TRUE;
     }
 
     /* write the file */
-    if (cib_file_write_with_digest(cib_root, cib_dirname,
-                                   cib_filename) != pcmk_ok) {
-        rc = -1;
-    }
+    rc = cib_file_write_with_digest(cib_root, cib_dirname, cib_filename);
+    rc = pcmk_legacy2rc(rc);
 
     /* turn off file ownership changes, for other callers */
-    if (uid == 0) {
+    if (euid == 0) {
         cib_do_chown = FALSE;
     }
 
@@ -539,9 +539,8 @@ cib_file_signoff(cib_t *cib)
 
         /* If this is the live CIB, write it out with a digest */
         if (pcmk__is_set(private->flags, cib_file_flag_live)) {
-            if (cib_file_write_live(private->cib_xml, private->filename) < 0) {
-                rc = pcmk_err_generic;
-            }
+            rc = cib_file_write_live(private->cib_xml, private->filename);
+            rc = pcmk_rc2legacy(rc);
 
         /* Otherwise, it's a simple write */
         } else {

@@ -100,68 +100,77 @@ pcmk__is_user_in_group(const char *user, const char *group)
 }
 
 int
-crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
+pcmk__lookup_user(const char *name, uid_t *uid, gid_t *gid)
 {
-    int rc = pcmk_ok;
-    char *buffer = NULL;
-    struct passwd pwd;
     struct passwd *pwentry = NULL;
 
-    buffer = calloc(1, PCMK__PW_BUFFER_LEN);
-    if (buffer == NULL) {
-        return -ENOMEM;
+    CRM_CHECK(name != NULL, return EINVAL);
+
+    // getpwnam() is not thread-safe, but Pacemaker is single-threaded
+    errno = 0;
+    pwentry = getpwnam(name);
+    if (pwentry == NULL) {
+        /* Either an error occurred or no passwd entry was found.
+         *
+         * The value of errno is implementation-dependent if no passwd entry is
+         * found. The POSIX specification does not consider it an error.
+         * POSIX.1-2008 specifies that errno shall not be changed in this case,
+         * while POSIX.1-2001 does not specify the value of errno in this case.
+         * The man page on Linux notes that a variety of values have been
+         * observed in practice. So an implementation may set errno to an
+         * arbitrary value, despite the POSIX specification.
+         *
+         * However, if pwentry == NULL and errno == 0, then we know that no
+         * matching entry was found and there was no error. So we default to
+         * ENOENT as our return code.
+         */
+        return ((errno != 0)? errno : ENOENT);
     }
 
-    rc = getpwnam_r(name, &pwd, buffer, PCMK__PW_BUFFER_LEN, &pwentry);
-    if (pwentry) {
-        if (uid) {
-            *uid = pwentry->pw_uid;
-        }
-        if (gid) {
-            *gid = pwentry->pw_gid;
-        }
-        crm_trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
-
-    } else {
-        rc = rc? -rc : -EINVAL;
-        crm_info("User %s lookup: %s", name, pcmk_strerror(rc));
+    if (uid != NULL) {
+        *uid = pwentry->pw_uid;
     }
+    if (gid != NULL) {
+        *gid = pwentry->pw_gid;
+    }
+    crm_trace("User %s has uid=%lld gid=%lld", name,
+              (long long) pwentry->pw_uid, (long long) pwentry->pw_gid);
 
-    free(buffer);
-    return rc;
+    return pcmk_rc_ok;
 }
 
 /*!
- * \brief Get user and group IDs of pacemaker daemon user
+ * \internal
+ * \brief Get user and group IDs of Pacemaker daemon user
  *
- * \param[out] uid  If non-NULL, where to store daemon user ID
- * \param[out] gid  If non-NULL, where to store daemon group ID
+ * \param[out] uid  Where to store daemon user ID (can be \c NULL)
+ * \param[out] gid  Where to store daemon group ID (can be \c NULL)
  *
- * \return pcmk_ok on success, -errno otherwise
+ * \return Standard Pacemaker return code
  */
 int
-pcmk_daemon_user(uid_t *uid, gid_t *gid)
+pcmk__daemon_user(uid_t *uid, gid_t *gid)
 {
-    static uid_t daemon_uid;
-    static gid_t daemon_gid;
+    static uid_t daemon_uid = 0;
+    static gid_t daemon_gid = 0;
     static bool found = false;
-    int rc = pcmk_ok;
 
     if (!found) {
-        rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
-        if (rc == pcmk_ok) {
-            found = true;
+        int rc = pcmk__lookup_user(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
+
+        if (rc != pcmk_rc_ok) {
+            return rc;
         }
+        found = true;
     }
-    if (found) {
-        if (uid) {
-            *uid = daemon_uid;
-        }
-        if (gid) {
-            *gid = daemon_gid;
-        }
+
+    if (uid != NULL) {
+        *uid = daemon_uid;
     }
-    return rc;
+    if (gid != NULL) {
+        *gid = daemon_gid;
+    }
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -468,6 +477,65 @@ char *
 crm_generate_uuid(void)
 {
     return pcmk__generate_uuid();
+}
+
+#define PW_BUFFER_LEN 500
+
+int
+crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
+{
+    int rc = pcmk_ok;
+    char *buffer = NULL;
+    struct passwd pwd;
+    struct passwd *pwentry = NULL;
+
+    buffer = calloc(1, PW_BUFFER_LEN);
+    if (buffer == NULL) {
+        return -ENOMEM;
+    }
+
+    rc = getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    if (pwentry) {
+        if (uid) {
+            *uid = pwentry->pw_uid;
+        }
+        if (gid) {
+            *gid = pwentry->pw_gid;
+        }
+        crm_trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
+
+    } else {
+        rc = rc? -rc : -EINVAL;
+        crm_info("User %s lookup: %s", name, pcmk_strerror(rc));
+    }
+
+    free(buffer);
+    return rc;
+}
+
+int
+pcmk_daemon_user(uid_t *uid, gid_t *gid)
+{
+    static uid_t daemon_uid;
+    static gid_t daemon_gid;
+    static bool found = false;
+    int rc = pcmk_ok;
+
+    if (!found) {
+        rc = crm_user_lookup(CRM_DAEMON_USER, &daemon_uid, &daemon_gid);
+        if (rc == pcmk_ok) {
+            found = true;
+        }
+    }
+    if (found) {
+        if (uid) {
+            *uid = daemon_uid;
+        }
+        if (gid) {
+            *gid = daemon_gid;
+        }
+    }
+    return rc;
 }
 
 // LCOV_EXCL_STOP
