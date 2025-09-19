@@ -9,21 +9,19 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/resource.h>
-
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
-#include <pwd.h>
-#include <grp.h>
+#include <stdbool.h>            // bool, true, false
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/param.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <crm/crm.h>
 #include <crm/common/util.h>
@@ -251,23 +249,23 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
     if (rc != pcmk_rc_ok) {
         crm_notice("Could not find user " CRM_DAEMON_USER ": %s",
                    pcmk_rc_str(rc));
-        return FALSE;
+        return false;
     }
     if (target_stat->st_uid != daemon_uid) {
         crm_notice("%s is not owned by user " CRM_DAEMON_USER " "
                    QB_XS " uid %lld != %lld",
                    target_name, (long long) daemon_uid,
                    (long long) target_stat->st_uid);
-        return FALSE;
+        return false;
     }
     if ((target_stat->st_mode & (S_IRUSR | S_IWUSR)) == 0) {
         crm_notice("%s is not readable and writable by user %s "
                    QB_XS " st_mode=0%lo",
                    target_name, CRM_DAEMON_USER,
                    (unsigned long) target_stat->st_mode);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 static bool
@@ -279,7 +277,7 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
     if (rc != pcmk_rc_ok) {
         crm_notice("Could not find group '" CRM_DAEMON_GROUP "': %s",
                    pcmk_rc_str(rc));
-        return FALSE;
+        return false;
     }
 
     if (target_stat->st_gid != daemon_gid) {
@@ -287,7 +285,7 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
                    QB_XS " gid %lld != %lld",
                    target_name, (long long) daemon_gid,
                    (long long) target_stat->st_gid);
-        return FALSE;
+        return false;
     }
 
     if ((target_stat->st_mode & (S_IRGRP | S_IWGRP)) == 0) {
@@ -295,9 +293,9 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
                    QB_XS " st_mode=0%lo",
                    target_name, CRM_DAEMON_GROUP,
                    (unsigned long) target_stat->st_mode);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 /*!
@@ -337,7 +335,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
             full_file = NULL;
             target = NULL;
 
-        } else if (S_ISREG(buf.st_mode) == FALSE) {
+        } else if (!S_ISREG(buf.st_mode)) {
             crm_err("%s must be a regular file " QB_XS " st_mode=0%lo",
                     target, (unsigned long) buf.st_mode);
             free(full_file);
@@ -353,7 +351,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
             crm_err("%s not found: %s", dir, pcmk_rc_str(errno));
             return false;
 
-        } else if (S_ISDIR(buf.st_mode) == FALSE) {
+        } else if (!S_ISDIR(buf.st_mode)) {
             crm_err("%s must be a directory " QB_XS " st_mode=0%lo",
                     dir, (unsigned long) buf.st_mode);
             return false;
