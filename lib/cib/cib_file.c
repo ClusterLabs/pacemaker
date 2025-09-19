@@ -439,7 +439,7 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
  * \param[in]     cib_root  Root of XML tree to write
  * \param[in,out] path      Full path to file to write
  *
- * \return 0 on success, -1 on failure
+ * \return Standard Pacemaker return code
  */
 static int
 cib_file_write_live(xmlNode *cib_root, char *path)
@@ -455,7 +455,7 @@ cib_file_write_live(xmlNode *cib_root, char *path)
     rc = pcmk__daemon_user(&daemon_uid, &daemon_gid);
     if (rc != pcmk_rc_ok) {
         crm_err("Could not find user " CRM_DAEMON_USER ": %s", pcmk_rc_str(rc));
-        return -1;
+        return rc;
     }
 
     /* If we're root, we can change the ownership;
@@ -465,8 +465,8 @@ cib_file_write_live(xmlNode *cib_root, char *path)
     if ((euid != 0) && (euid != daemon_uid)) {
         crm_err("Must be root or " CRM_DAEMON_USER " to modify live CIB");
 
-        // @TODO Should this return -1 instead?
-        return 0;
+        // @TODO Should this return an error instead?
+        return pcmk_rc_ok;
     }
 
     /* fancy footwork to separate dirname from filename
@@ -493,10 +493,8 @@ cib_file_write_live(xmlNode *cib_root, char *path)
     }
 
     /* write the file */
-    if (cib_file_write_with_digest(cib_root, cib_dirname,
-                                   cib_filename) != pcmk_ok) {
-        rc = -1;
-    }
+    rc = cib_file_write_with_digest(cib_root, cib_dirname, cib_filename);
+    rc = pcmk_legacy2rc(rc);
 
     /* turn off file ownership changes, for other callers */
     if (euid == 0) {
@@ -541,9 +539,8 @@ cib_file_signoff(cib_t *cib)
 
         /* If this is the live CIB, write it out with a digest */
         if (pcmk__is_set(private->flags, cib_file_flag_live)) {
-            if (cib_file_write_live(private->cib_xml, private->filename) < 0) {
-                rc = pcmk_err_generic;
-            }
+            rc = cib_file_write_live(private->cib_xml, private->filename);
+            rc = pcmk_rc2legacy(rc);
 
         /* Otherwise, it's a simple write */
         } else {
