@@ -398,7 +398,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
     }
 
     if (fgets(buffer, sizeof(buffer), stream) != NULL) {
-        char *comm = pcmk__assert_alloc(1, 256);
+        char *comm = pcmk__assert_alloc(256, sizeof(char));
         char state = 0;
         int rc = 0, pid = 0, ppid = 0, pgrp = 0, session = 0, tty_nr = 0, tpgid = 0;
         unsigned long flags = 0, minflt = 0, cminflt = 0, majflt = 0, cmajflt = 0, utime = 0, stime = 0;

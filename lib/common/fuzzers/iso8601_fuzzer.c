@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (size < 10) {
         return -1; // Do not add input to testing corpus
     }
-    ns = pcmk__assert_alloc(1, size + 1);
+    ns = pcmk__assert_alloc(size + 1, sizeof(char));
     memcpy(ns, data, size);
 
     period = crm_time_parse_period(ns);

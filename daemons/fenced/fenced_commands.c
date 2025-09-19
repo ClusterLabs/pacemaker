@@ -949,7 +949,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
             case ':':
                 if (i > last) {
                     free(name);
-                    name = pcmk__assert_alloc(1, 1 + i - last);
+                    name = pcmk__assert_alloc(1 + i - last, sizeof(char));
                     memcpy(name, hostmap + last, i - last);
                 }
                 last = i + 1;
@@ -963,7 +963,8 @@ build_port_aliases(const char *hostmap, GList ** targets)
             case '\t':
                 if (name) {
                     int k = 0;
-                    char *value = pcmk__assert_alloc(1, 1 + i - last);
+                    char *value = pcmk__assert_alloc(1 + i - last,
+                                                     sizeof(char));
 
                     memcpy(value, hostmap + last, i - last);
 
