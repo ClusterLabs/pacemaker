@@ -978,9 +978,7 @@ build_port_aliases(const char *hostmap, GList ** targets)
 
                     crm_debug("Adding alias '%s'='%s'", name, value);
                     g_hash_table_replace(aliases, name, value);
-                    if (targets) {
-                        *targets = g_list_append(*targets, pcmk__str_copy(value));
-                    }
+                    *targets = g_list_append(*targets, pcmk__str_copy(value));
                     value = NULL;
                     name = NULL;
                     added++;
