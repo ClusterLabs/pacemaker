@@ -929,7 +929,6 @@ build_port_aliases(const char *hostmap, GList ** targets)
 {
     char *name = NULL;
     int last = 0;
-    int added = 0;
     size_t len = 0;
     GHashTable *aliases = pcmk__strikey_table(free, free);
 
@@ -981,7 +980,6 @@ build_port_aliases(const char *hostmap, GList ** targets)
                     *targets = g_list_append(*targets, pcmk__str_copy(value));
                     value = NULL;
                     name = NULL;
-                    added++;
 
                 } else if (i > last) {
                     crm_debug("Parse error at offset %d near '%s'", i - last,
@@ -995,10 +993,6 @@ build_port_aliases(const char *hostmap, GList ** targets)
         if (hostmap[i] == 0) {
             break;
         }
-    }
-
-    if (added == 0) {
-        crm_info("No host mappings detected in '%s'", hostmap);
     }
 
     free(name);
