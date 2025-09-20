@@ -42,9 +42,6 @@ enum cib_client_flags {
     cib_notify_post    = (UINT64_C(1) << 1),
     cib_notify_confirm = (UINT64_C(1) << 3),
     cib_notify_diff    = (UINT64_C(1) << 4),
-
-    // Whether client is another cluster daemon
-    cib_is_daemon      = (UINT64_C(1) << 12),
 };
 
 extern bool based_is_primary;

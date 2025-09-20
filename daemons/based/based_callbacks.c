@@ -371,9 +371,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
             cib_client->name = pcmk__itoa(cib_client->pid);
         } else {
             cib_client->name = pcmk__str_copy(value);
-            if (pcmk__parse_server(value) != pcmk_ipc_unknown) {
-                pcmk__set_client_flags(cib_client, cib_is_daemon);
-            }
         }
     }
 
