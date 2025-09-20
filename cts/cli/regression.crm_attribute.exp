@@ -111,10 +111,6 @@ Also known as properties, these are options that affect behavior across the enti
   * migration-limit: The number of live migration actions that the cluster is allowed to execute in parallel on a node (-1 means no limit)
     * Possible values: integer (default: )
 
-  * cluster-ipc-limit: Maximum IPC message backlog before disconnecting a client
-    * Raise this if log has "Evicting client" messages for cluster PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).
-    * Possible values: nonnegative_integer (default: )
-
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
 
@@ -411,9 +407,10 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="integer" default=""/>
       </parameter>
       <parameter name="cluster-ipc-limit" advanced="0" generated="0">
-        <longdesc lang="en">Raise this if log has "Evicting client" messages for cluster PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).</longdesc>
-        <shortdesc lang="en">Maximum IPC message backlog before disconnecting a client</shortdesc>
-        <content type="nonnegative_integer" default=""/>
+        <deprecated/>
+        <longdesc lang="en">Ignored</longdesc>
+        <shortdesc lang="en">Ignored</shortdesc>
+        <content type="nonnegative_integer"/>
       </parameter>
       <parameter name="stop-all-resources" advanced="0" generated="0">
         <longdesc lang="en">Whether the cluster should stop all active resources</longdesc>
@@ -607,10 +604,6 @@ Also known as properties, these are options that affect behavior across the enti
   * migration-limit: The number of live migration actions that the cluster is allowed to execute in parallel on a node (-1 means no limit)
     * Possible values: integer (default: )
 
-  * cluster-ipc-limit: Maximum IPC message backlog before disconnecting a client
-    * Raise this if log has "Evicting client" messages for cluster PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).
-    * Possible values: nonnegative_integer (default: )
-
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
 
@@ -689,6 +682,9 @@ Also known as properties, these are options that affect behavior across the enti
 
     * concurrent-fencing: Allow performing fencing operations in parallel
       * Possible values: boolean (default: )
+
+    * cluster-ipc-limit: Ignored
+      * Possible values: nonnegative_integer (no default)
 
     * stonith-enabled: Deprecated alias for fencing-enabled
       * Possible values: boolean (default: )
@@ -966,9 +962,10 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="integer" default=""/>
       </parameter>
       <parameter name="cluster-ipc-limit" advanced="0" generated="0">
-        <longdesc lang="en">Raise this if log has "Evicting client" messages for cluster PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).</longdesc>
-        <shortdesc lang="en">Maximum IPC message backlog before disconnecting a client</shortdesc>
-        <content type="nonnegative_integer" default=""/>
+        <deprecated/>
+        <longdesc lang="en">Ignored</longdesc>
+        <shortdesc lang="en">Ignored</shortdesc>
+        <content type="nonnegative_integer"/>
       </parameter>
       <parameter name="stop-all-resources" advanced="0" generated="0">
         <longdesc lang="en">Whether the cluster should stop all active resources</longdesc>
