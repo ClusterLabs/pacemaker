@@ -377,13 +377,6 @@ cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean 
         }
     }
 
-    /* Allow cluster daemons more leeway before being evicted */
-    if (pcmk__is_set(cib_client->flags, cib_is_daemon)) {
-        const char *qmax = cib_config_lookup(PCMK_OPT_CLUSTER_IPC_LIMIT);
-
-        pcmk__set_client_queue_max(cib_client, qmax);
-    }
-
     pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
     pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
 
