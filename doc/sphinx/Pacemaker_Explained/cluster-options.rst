@@ -685,21 +685,6 @@ values, by running the ``man pacemaker-schedulerd`` and
      - How long to wait for a response from other nodes when electing a DC. The
        ideal value will depend on the speed and load of your network and
        cluster nodes.
-   * - .. _cluster_ipc_limit:
-
-       .. index::
-          pair: cluster option; cluster-ipc-limit
-
-       cluster-ipc-limit
-     - :ref:`nonnegative integer <nonnegative_integer>`
-     - 500
-     - The maximum IPC message backlog before a cluster daemon will disconnect
-       a client.  Other cluster daemons are not subject to this limit as long as
-       they are still processing messages.  This is of use in large clusters,
-       for which a good value is the number of resources in the cluster
-       multiplied by the number of nodes. The default of 500 is also the
-       minimum. Raise this if you see "Evicting client" log messages for
-       cluster process IDs.
    * - .. _pe_error_series_max:
 
        .. index::
