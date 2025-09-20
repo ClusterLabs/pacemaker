@@ -406,7 +406,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
+        "cluster-ipc-limit", NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
         NULL, NULL,
         pcmk__opt_based|pcmk__opt_deprecated,
         N_("Ignored"),

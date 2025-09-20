@@ -30,6 +30,7 @@ header_HEADERS = acl.h 			\
 		 nvpair.h 		\
 		 nvpair_compat.h 	\
 		 options.h 		\
+		 options_compat.h 	\
 		 output.h 		\
 		 probes.h 		\
 		 resources.h		\

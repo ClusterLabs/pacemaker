@@ -27,7 +27,6 @@ extern     "C" {
 #define PCMK_OPT_BATCH_LIMIT                    "batch-limit"
 #define PCMK_OPT_CLUSTER_DELAY                  "cluster-delay"
 #define PCMK_OPT_CLUSTER_INFRASTRUCTURE         "cluster-infrastructure"
-#define PCMK_OPT_CLUSTER_IPC_LIMIT              "cluster-ipc-limit"
 #define PCMK_OPT_CLUSTER_NAME                   "cluster-name"
 #define PCMK_OPT_CLUSTER_RECHECK_INTERVAL       "cluster-recheck-interval"
 #define PCMK_OPT_CONCURRENT_FENCING             "concurrent-fencing"
@@ -253,6 +252,10 @@ extern     "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/options_compat.h>
 #endif
 
 #endif // PCMK__CRM_COMMON_OPTIONS__H
