@@ -68,7 +68,6 @@ extern     "C" {
 #define PCMK_OPT_START_FAILURE_IS_FATAL         "start-failure-is-fatal"
 #define PCMK_OPT_STARTUP_FENCING                "startup-fencing"
 #define PCMK_OPT_STOP_ALL_RESOURCES             "stop-all-resources"
-#define PCMK_OPT_STOP_REMOVED_ACTIONS           "stop-removed-actions"
 #define PCMK_OPT_STOP_REMOVED_RESOURCES         "stop-removed-resources"
 #define PCMK_OPT_SYMMETRIC_CLUSTER              "symmetric-cluster"
 #define PCMK_OPT_TRANSITION_DELAY               "transition-delay"
