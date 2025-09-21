@@ -88,7 +88,7 @@ enum pcmk__scheduler_flags {
 
     /*
      * Whether recurring actions removed from the configuration should be
-     * cancelled (via PCMK_OPT_STOP_REMOVED_ACTIONS property)
+     * cancelled (via PCMK_OPT_CANCEL_REMOVED_ACTIONS property)
      */
     pcmk__sched_cancel_removed_actions  = (1ULL << 9),
 

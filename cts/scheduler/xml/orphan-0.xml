@@ -8,7 +8,7 @@
         <nvpair id="nvpair.id21842" name="cluster-delay" value="3m"/>
         <nvpair id="nvpair.id21868" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21877" name="stop-removed-resources" value="false"/>
-        <nvpair id="nvpair.id21886" name="stop-removed-actions" value="false"/>
+        <nvpair id="nvpair.id21886" name="cancel-removed-actions" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

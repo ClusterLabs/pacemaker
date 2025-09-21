@@ -363,7 +363,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Removed resources are ignored");
     }
 
-    set_config_flag(scheduler, PCMK_OPT_STOP_REMOVED_ACTIONS,
+    set_config_flag(scheduler, PCMK_OPT_CANCEL_REMOVED_ACTIONS,
                     pcmk__sched_cancel_removed_actions);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_cancel_removed_actions)) {
         crm_trace("Removed resource actions are stopped");
