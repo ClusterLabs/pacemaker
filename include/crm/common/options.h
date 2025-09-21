@@ -25,6 +25,7 @@ extern     "C" {
  */
 
 #define PCMK_OPT_BATCH_LIMIT                    "batch-limit"
+#define PCMK_OPT_CANCEL_REMOVED_ACTIONS         "cancel-removed-actions"
 #define PCMK_OPT_CLUSTER_DELAY                  "cluster-delay"
 #define PCMK_OPT_CLUSTER_INFRASTRUCTURE         "cluster-infrastructure"
 #define PCMK_OPT_CLUSTER_NAME                   "cluster-name"
