@@ -126,6 +126,7 @@ bool pcmk__valid_fencing_watchdog_timeout(const char *value);
 #define PCMK__OPT_CANCEL_REMOVED_ACTIONS    "cancel-removed-actions"
 #define PCMK__OPT_CONCURRENT_FENCING        "concurrent-fencing"
 #define PCMK__OPT_ENABLE_STARTUP_PROBES     "enable-startup-probes"
+#define PCMK__OPT_STOP_REMOVED_RESOURCES    "stop-removed-resources"
 
 // Constants for environment variable names
 #define PCMK__ENV_AUTHKEY_LOCATION          "authkey_location"

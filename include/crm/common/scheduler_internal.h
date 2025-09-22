@@ -84,9 +84,10 @@ enum pcmk__scheduler_flags {
      */
     pcmk__sched_concurrent_fencing      = (1ULL << 7),
 
-    /*
-     * Whether resources removed from the configuration should be stopped (via
-     * PCMK_OPT_STOP_REMOVED_RESOURCES property)
+    /* Whether resources removed from the configuration should be stopped (via
+     * PCMK__OPT_STOP_REMOVED_RESOURCES property)
+     *
+     * @COMPAT The PCMK__OPT_STOP_REMOVED_RESOURCES property is deprecated.
      */
     pcmk__sched_stop_removed_resources  = (1ULL << 8),
 

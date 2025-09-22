@@ -364,13 +364,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             break;
     }
 
-    set_config_flag(scheduler, PCMK_OPT_STOP_REMOVED_RESOURCES,
+    set_config_flag(scheduler, PCMK__OPT_STOP_REMOVED_RESOURCES,
                     pcmk__sched_stop_removed_resources);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
         crm_trace("Removed resources are stopped");
     } else {
         pcmk__warn_once(pcmk__wo_stop_removed_resources,
-                        "Support for the " PCMK_OPT_STOP_REMOVED_RESOURCES " "
+                        "Support for the " PCMK__OPT_STOP_REMOVED_RESOURCES " "
                         "cluster property is deprecated and will be removed "
                         "(and behave as true) in a future release.");
     }
@@ -2546,7 +2546,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                            rsc->id, pcmk__node_name(node));
             } else {
                 crm_notice("Removed resource %s must be stopped manually on %s "
-                           "because " PCMK_OPT_STOP_REMOVED_RESOURCES
+                           "because " PCMK__OPT_STOP_REMOVED_RESOURCES
                            " is set to false", rsc->id, pcmk__node_name(node));
             }
         }
