@@ -717,7 +717,7 @@
         Whether to cancel recurring actions removed from the configuration
       </longdesc>
       <shortdesc lang="en">
-        Whether to cancel recurring actions removed from the configuration
+        *** Deprecated ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
