@@ -111,9 +111,6 @@ Also known as properties, these are options that affect behavior across the enti
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
 
-  * stop-removed-resources: Whether to stop resources that were removed from the configuration
-    * Possible values: boolean (default: )
-
   * pe-error-series-max: The number of scheduler inputs resulting in errors to save
     * Zero to disable, -1 to store unlimited.
     * Possible values: integer (default: )
@@ -413,6 +410,7 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="stop-removed-resources" advanced="0" generated="0">
+        <deprecated/>
         <longdesc lang="en">Whether to stop resources that were removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to stop resources that were removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
@@ -600,9 +598,6 @@ Also known as properties, these are options that affect behavior across the enti
   * stop-all-resources: Whether the cluster should stop all active resources
     * Possible values: boolean (default: )
 
-  * stop-removed-resources: Whether to stop resources that were removed from the configuration
-    * Possible values: boolean (default: )
-
   * pe-error-series-max: The number of scheduler inputs resulting in errors to save
     * Zero to disable, -1 to store unlimited.
     * Possible values: integer (default: )
@@ -678,6 +673,9 @@ Also known as properties, these are options that affect behavior across the enti
 
     * cluster-ipc-limit: Ignored
       * Possible values: nonnegative_integer (no default)
+
+    * stop-removed-resources: Whether to stop resources that were removed from the configuration
+      * Possible values: boolean (default: )
 
     * cancel-removed-actions: Whether to cancel recurring actions removed from the configuration
       * Possible values: boolean (default: )
@@ -970,6 +968,7 @@ Also known as properties, these are options that affect behavior across the enti
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="stop-removed-resources" advanced="0" generated="0">
+        <deprecated/>
         <longdesc lang="en">Whether to stop resources that were removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to stop resources that were removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
