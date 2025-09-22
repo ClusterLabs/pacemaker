@@ -116,7 +116,11 @@ enum pcmk__scheduler_flags {
 
     /*
      * Whether resources' current state should be probed (when unknown) before
-     * scheduling any other actions (via the enable-startup-probes property)
+     * scheduling any other actions (via the PCMK_OPT_ENABLE_STARTUP_PROBES
+     * property).
+     *
+     * @COMPAT Drop this when the PCMK_OPT_ENABLE_STARTUP_PROBES property is
+     * dropped.
      */
     pcmk__sched_probe_resources         = (1ULL << 16),
 

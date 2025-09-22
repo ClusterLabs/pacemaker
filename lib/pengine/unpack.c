@@ -236,7 +236,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
                     pcmk__sched_probe_resources);
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_probe_resources)) {
-        crm_info("Startup probes: disabled (dangerous)");
+        pcmk__warn_once(pcmk__wo_enable_startup_probes,
+                        "Support for the " PCMK_OPT_ENABLE_STARTUP_PROBES " "
+                        "cluster property is deprecated and will be removed "
+                        "(and behave as true) in a future release. Use a "
+                        "location constraint with "
+                        PCMK_XA_RESOURCE_DISCOVERY "=" PCMK_VALUE_NEVER " "
+                        "instead to disable probes where desired.");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
