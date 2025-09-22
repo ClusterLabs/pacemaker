@@ -540,7 +540,7 @@
         Whether the cluster should check for active resources during start-up
       </longdesc>
       <shortdesc lang="en">
-        Whether the cluster should check for active resources during start-up
+        *** Deprecated ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
