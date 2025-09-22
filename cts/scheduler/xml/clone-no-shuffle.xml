@@ -8,7 +8,6 @@
         <nvpair name="fencing-enabled" value="true" id="nvpair.id21877"/>
         <nvpair name="fencing-action" value="reboot" id="nvpair.id21886"/>
         <nvpair name="stop-removed-resources" value="true" id="nvpair.id21930"/>
-        <nvpair name="cancel-removed-actions" value="true" id="nvpair.id21939"/>
         <nvpair name="startup-fencing" value="true" id="nvpair.id21957"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21965" value="1204805697"/>
       </cluster_property_set>

@@ -6,7 +6,6 @@
         <nvpair id="nvpair.id21858" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21868" name="fencing-enabled" value="false"/>
         <nvpair id="nvpair.id21903" name="stop-removed-resources" value="true"/>
-        <nvpair id="nvpair.id21912" name="cancel-removed-actions" value="true"/>
         <nvpair id="nvpair.id21940" name="fencing-action" value="reboot"/>
         <nvpair id="nvpair.id21957" name="dc-deadtime" value="10s"/>
         <nvpair id="nvpair.id21965" name="cluster-recheck-interval" value="0"/>

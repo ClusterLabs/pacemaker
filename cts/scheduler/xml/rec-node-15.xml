@@ -7,7 +7,6 @@
         <nvpair id="nvpair.id21885" name="fencing-enabled" value="true"/>
         <nvpair id="nvpair.id21894" name="fencing-action" value="reboot"/>
         <nvpair id="nvpair.id21903" name="stop-removed-resources" value="true"/>
-        <nvpair id="nvpair.id21913" name="cancel-removed-actions" value="true"/>
         <nvpair id="nvpair.id21941" name="cluster-delay" value="5min"/>
       </cluster_property_set>
     </crm_config>

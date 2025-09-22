@@ -8,7 +8,6 @@
         <nvpair id="nvpair.id21892" name="fencing-action" value="reboot"/>
         <nvpair id="nvpair.id21900" name="startup-fencing" value="true"/>
         <nvpair id="nvpair.id21909" name="stop-removed-resources" value="true"/>
-        <nvpair id="nvpair.id21918" name="cancel-removed-actions" value="true"/>
         <nvpair id="nvpair.id21945" name="transition-idle-timeout" value="5min"/>
         <nvpair id="nvpair.id21972" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id21980" name="pe-error-series-max" value="-1"/>

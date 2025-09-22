@@ -5,7 +5,6 @@
         <nvpair id="nvpair.id21844" name="cluster-delay" value="3m"/>
         <nvpair id="nvpair.id21852" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21870" name="stop-removed-resources" value="true"/>
-        <nvpair id="nvpair.id21878" name="cancel-removed-actions" value="true"/>
         <nvpair id="nvpair.id21905" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21922" name="fencing-enabled" value="true"/>
       </cluster_property_set>

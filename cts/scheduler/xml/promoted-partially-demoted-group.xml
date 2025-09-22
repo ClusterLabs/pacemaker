@@ -30,7 +30,6 @@
         <nvpair name="startup-fencing" value="true" id="cib-bootstrap-options-startup-fencing"/>
         <nvpair name="fencing-action" value="reboot" id="cib-bootstrap-options-fencing-action"/>
         <nvpair name="fencing-timeout" value="60s" id="cib-bootstrap-options-fencing-timeout"/>
-        <nvpair name="cancel-removed-actions" value="true" id="cib-bootstrap-options-cancel-removed-actions"/>
         <nvpair name="symmetric-cluster" value="true" id="cib-bootstrap-options-symmetric-cluster"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1383203544"/>
       </cluster_property_set>

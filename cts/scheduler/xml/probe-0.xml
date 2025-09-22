@@ -8,7 +8,6 @@
         <nvpair id="nvpair.id21890" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21899" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21908" name="stop-removed-resources" value="true"/>
-        <nvpair id="nvpair.id21916" name="cancel-removed-actions" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
