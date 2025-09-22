@@ -712,7 +712,7 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stop-removed-actions">
+    <parameter name="cancel-removed-actions">
       <longdesc lang="en">
         Whether to cancel recurring actions removed from the configuration
       </longdesc>
@@ -723,10 +723,10 @@
     </parameter>
     <parameter name="stop-orphan-actions">
       <longdesc lang="en">
-        Deprecated alias for stop-removed-actions
+        Deprecated alias for cancel-removed-actions
       </longdesc>
       <shortdesc lang="en">
-        *** Deprecated *** *** Replaced with stop-removed-actions ***
+        *** Deprecated *** *** Replaced with cancel-removed-actions ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>

@@ -117,7 +117,7 @@ Also known as properties, these are options that affect behavior across the enti
   * stop-removed-resources: Whether to stop resources that were removed from the configuration
     * Possible values: boolean (default: )
 
-  * stop-removed-actions: Whether to cancel recurring actions removed from the configuration
+  * cancel-removed-actions: Whether to cancel recurring actions removed from the configuration
     * Possible values: boolean (default: )
 
   * pe-error-series-max: The number of scheduler inputs resulting in errors to save
@@ -430,17 +430,17 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Deprecated alias for stop-removed-resources</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stop-removed-actions" advanced="0" generated="0">
+      <parameter name="cancel-removed-actions" advanced="0" generated="0">
         <longdesc lang="en">Whether to cancel recurring actions removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to cancel recurring actions removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="stop-orphan-actions" advanced="0" generated="0">
         <deprecated>
-          <replaced-with name="stop-removed-actions"/>
+          <replaced-with name="cancel-removed-actions"/>
         </deprecated>
-        <longdesc lang="en">Deprecated alias for stop-removed-actions</longdesc>
-        <shortdesc lang="en">Deprecated alias for stop-removed-actions</shortdesc>
+        <longdesc lang="en">Deprecated alias for cancel-removed-actions</longdesc>
+        <shortdesc lang="en">Deprecated alias for cancel-removed-actions</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="pe-error-series-max" advanced="0" generated="0">
@@ -610,7 +610,7 @@ Also known as properties, these are options that affect behavior across the enti
   * stop-removed-resources: Whether to stop resources that were removed from the configuration
     * Possible values: boolean (default: )
 
-  * stop-removed-actions: Whether to cancel recurring actions removed from the configuration
+  * cancel-removed-actions: Whether to cancel recurring actions removed from the configuration
     * Possible values: boolean (default: )
 
   * pe-error-series-max: The number of scheduler inputs resulting in errors to save
@@ -707,7 +707,7 @@ Also known as properties, these are options that affect behavior across the enti
     * stop-orphan-resources: Deprecated alias for stop-removed-resources
       * Possible values: boolean (default: )
 
-    * stop-orphan-actions: Deprecated alias for stop-removed-actions
+    * stop-orphan-actions: Deprecated alias for cancel-removed-actions
       * Possible values: boolean (default: )
 =#=#=#= End test: List all available cluster options - OK (0) =#=#=#=
 * Passed: crm_attribute         - List all available cluster options
@@ -985,17 +985,17 @@ Also known as properties, these are options that affect behavior across the enti
         <shortdesc lang="en">Deprecated alias for stop-removed-resources</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
-      <parameter name="stop-removed-actions" advanced="0" generated="0">
+      <parameter name="cancel-removed-actions" advanced="0" generated="0">
         <longdesc lang="en">Whether to cancel recurring actions removed from the configuration</longdesc>
         <shortdesc lang="en">Whether to cancel recurring actions removed from the configuration</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="stop-orphan-actions" advanced="0" generated="0">
         <deprecated>
-          <replaced-with name="stop-removed-actions"/>
+          <replaced-with name="cancel-removed-actions"/>
         </deprecated>
-        <longdesc lang="en">Deprecated alias for stop-removed-actions</longdesc>
-        <shortdesc lang="en">Deprecated alias for stop-removed-actions</shortdesc>
+        <longdesc lang="en">Deprecated alias for cancel-removed-actions</longdesc>
+        <shortdesc lang="en">Deprecated alias for cancel-removed-actions</shortdesc>
         <content type="boolean" default=""/>
       </parameter>
       <parameter name="pe-error-series-max" advanced="0" generated="0">
