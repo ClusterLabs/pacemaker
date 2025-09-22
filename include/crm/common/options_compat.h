@@ -29,6 +29,30 @@ extern "C" {
 //! \deprecated Do not use
 #define PCMK_OPT_ENABLE_STARTUP_PROBES "enable-startup-probes"
 
+//! \deprecated Do not use
+#define PCMK_OPT_STOP_ORPHAN_ACTIONS "stop-orphan-actions"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STOP_ORPHAN_RESOURCES "stop-orphan-resources"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_ENABLED "stonith-enabled"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_ACTION "stonith-action"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_MAX_ATTEMPTS "stonith-max-attempts"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_TIMEOUT "stonith-timeout"
+
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "stonith-watchdog-timeout"
+
+//! \deprecated Do not use
+#define PCMK_OPT_FENCE_REACTION "fence-reaction"
+
 #ifdef __cplusplus
 }
 #endif
