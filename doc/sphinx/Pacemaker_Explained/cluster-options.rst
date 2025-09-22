@@ -440,18 +440,6 @@ values, by running the ``man pacemaker-schedulerd`` and
      - false
      - Whether all resources should be disallowed from running (can be useful
        during maintenance or troubleshooting)
-   * - .. _stop_removed_resources:
-
-       .. index::
-          pair: cluster option; stop-removed-resources
-
-       stop-removed-resources
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether resources that have been deleted from the configuration should
-       be stopped. This value takes precedence over
-       :ref:`is-managed <is_managed>` (that is, even unmanaged resources will
-       be stopped when removed if this value is ``true``).
    * - .. _start_failure_is_fatal:
 
        .. index::
