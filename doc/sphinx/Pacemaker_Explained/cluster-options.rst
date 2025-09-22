@@ -591,20 +591,6 @@ values, by running the ``man pacemaker-schedulerd`` and
        true for the local value or SBD is not active. When this is set to a
        negative value, ``SBD_WATCHDOG_TIMEOUT`` must be set to the same value
        on all nodes that use SBD, otherwise data corruption or loss could occur.
-
-   * - .. _concurrent-fencing:
-
-       .. index::
-          pair: cluster option; concurrent-fencing
-
-       concurrent-fencing
-     - :ref:`boolean <boolean>`
-     - false
-     - Whether the cluster is allowed to initiate multiple fence actions
-       concurrently. Fence actions initiated externally, such as via the
-       ``stonith_admin`` tool or an application such as DLM, or by the fencer
-       itself such as recurring device monitors and ``status`` and ``list``
-       commands, are not limited by this option.
    * - .. _fencing_reaction:
 
        .. index::

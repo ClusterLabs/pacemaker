@@ -184,8 +184,7 @@ Step 4: Obtain the agent's possible parameters:
       pcmk_delay_base: Enable a base delay for fencing actions and specify base delay value. This enables a static delay for fencing actions, which can help avoid "death matches" where two nodes try to fence each
                        other at the same time. If pcmk_delay_max is also used, a random delay will be added such that the total delay is kept below that value. This can be set to a single time value to apply to any
                        node targeted by this device (useful if a separate device is configured for each target), or to a node map (for example, "node1:1s;node2:5") to set a different value per target.
-      pcmk_action_limit: The maximum number of actions can be performed in parallel on this device Cluster property concurrent-fencing=true needs to be configured first. Then use this to specify the maximum number
-                         of actions can be performed in parallel on this device. -1 is unlimited.
+      pcmk_action_limit: If the concurrent-fencing cluster property is "true", this specifies the maximum number of actions that can be performed in parallel on this device. A value of -1 means unlimited.
 
     Default operations:
       monitor: interval=60s

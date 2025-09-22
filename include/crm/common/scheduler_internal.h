@@ -77,7 +77,11 @@ enum pcmk__scheduler_flags {
     // Whether any resource provides or requires unfencing (via CIB resources)
     pcmk__sched_enable_unfencing        = (1ULL << 6),
 
-    // Whether concurrent fencing is allowed (via concurrent-fencing property)
+    /* Whether concurrent fencing is allowed (via PCMK__OPT_CONCURRENT_FENCING
+     * property).
+     *
+     * @COMPAT The PCMK__OPT_CONCURRENT_FENCING property is deprecated.
+     */
     pcmk__sched_concurrent_fencing      = (1ULL << 7),
 
     /*
