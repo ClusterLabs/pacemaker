@@ -123,6 +123,7 @@ long pcmk__auto_fencing_watchdog_timeout(void);
 bool pcmk__valid_fencing_watchdog_timeout(const char *value);
 
 // @COMPAT Deprecated cluster options
+#define PCMK__OPT_CONCURRENT_FENCING        "concurrent-fencing"
 #define PCMK__OPT_ENABLE_STARTUP_PROBES     "enable-startup-probes"
 
 // Constants for environment variable names

@@ -53,6 +53,9 @@ extern "C" {
 //! \deprecated Do not use
 #define PCMK_OPT_FENCE_REACTION "fence-reaction"
 
+//! \deprecated Do not use
+#define PCMK_OPT_CONCURRENT_FENCING "concurrent-fencing"
+
 #ifdef __cplusplus
 }
 #endif

@@ -304,7 +304,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
 #if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
         PCMK_VALUE_TRUE,
 #else

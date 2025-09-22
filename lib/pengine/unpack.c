@@ -277,7 +277,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_ACTION);
     crm_trace("Fencing will %s nodes", scheduler->priv->fence_action);
 
-    set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
+    set_config_flag(scheduler, PCMK__OPT_CONCURRENT_FENCING,
                     pcmk__sched_concurrent_fencing);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_concurrent_fencing)) {
         crm_debug("Concurrent fencing is enabled");

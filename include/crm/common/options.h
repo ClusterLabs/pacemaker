@@ -30,7 +30,6 @@ extern     "C" {
 #define PCMK_OPT_CLUSTER_INFRASTRUCTURE         "cluster-infrastructure"
 #define PCMK_OPT_CLUSTER_NAME                   "cluster-name"
 #define PCMK_OPT_CLUSTER_RECHECK_INTERVAL       "cluster-recheck-interval"
-#define PCMK_OPT_CONCURRENT_FENCING             "concurrent-fencing"
 #define PCMK_OPT_DC_DEADTIME                    "dc-deadtime"
 #define PCMK_OPT_DC_VERSION                     "dc-version"
 #define PCMK_OPT_ELECTION_TIMEOUT               "election-timeout"
