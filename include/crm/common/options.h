@@ -35,7 +35,6 @@ extern     "C" {
 #define PCMK_OPT_DC_VERSION                     "dc-version"
 #define PCMK_OPT_ELECTION_TIMEOUT               "election-timeout"
 #define PCMK_OPT_ENABLE_ACL                     "enable-acl"
-#define PCMK_OPT_ENABLE_STARTUP_PROBES          "enable-startup-probes"
 #define PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM    "fence-remote-without-quorum"
 #define PCMK_OPT_FENCING_ACTION                 "fencing-action"
 #define PCMK_OPT_FENCING_ENABLED                "fencing-enabled"

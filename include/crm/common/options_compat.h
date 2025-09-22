@@ -26,6 +26,9 @@ extern "C" {
 //! \deprecated Do not use
 #define PCMK_OPT_CLUSTER_IPC_LIMIT "cluster-ipc-limit"
 
+//! \deprecated Do not use
+#define PCMK_OPT_ENABLE_STARTUP_PROBES "enable-startup-probes"
+
 #ifdef __cplusplus
 }
 #endif
