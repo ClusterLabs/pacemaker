@@ -474,16 +474,6 @@ values, by running the ``man pacemaker-schedulerd`` and
        further start attempts on that node. If ``false``, the cluster will
        decide whether the node is still eligible based on the resource's
        current failure count and ``migration-threshold``.
-   * - .. _enable_startup_probes:
-
-       .. index::
-          pair: cluster option; enable-startup-probes
-
-       enable-startup-probes
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether the cluster should check the pre-existing state of resources
-       when the cluster starts
    * - .. _maintenance_mode:
 
        .. index::
