@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.0-86e282fa7964+ tip"/>
         <nvpair name="symmetric-cluster" value="true" id="nvpair.id2245184"/>
         <nvpair name="fencing-enabled" value="false" id="nvpair.id2244260"/>
-        <nvpair name="stop-removed-resources" value="true" id="nvpair.id2245052"/>
         <nvpair name="startup-fencing" value="true" id="nvpair.id2244608"/>
         <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1225707410"/>
       </cluster_property_set>

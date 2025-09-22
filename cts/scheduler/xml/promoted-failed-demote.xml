@@ -10,7 +10,6 @@
         <nvpair id="nvpair.id21903" name="cluster-delay" value="180s"/>
         <nvpair id="nvpair.id21920" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21929" name="symmetric-cluster" value="true"/>
-        <nvpair id="nvpair.id21957" name="stop-removed-resources" value="true"/>
         <nvpair id="nvpair.id21984" name="dc-deadtime" value="10s"/>
         <nvpair id="nvpair.id21992" name="cluster-recheck-interval" value="0"/>
         <nvpair id="nvpair.id22001" name="election-timeout" value="2min"/>
