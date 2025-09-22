@@ -191,7 +191,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "check the resource's fail count against its migration-threshold.")
     },
     {
-        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether the cluster should check for active resources during "

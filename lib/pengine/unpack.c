@@ -233,11 +233,11 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pcmk__validate_cluster_options(config_hash);
 
-    set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
+    set_config_flag(scheduler, PCMK__OPT_ENABLE_STARTUP_PROBES,
                     pcmk__sched_probe_resources);
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_probe_resources)) {
         pcmk__warn_once(pcmk__wo_enable_startup_probes,
-                        "Support for the " PCMK_OPT_ENABLE_STARTUP_PROBES " "
+                        "Support for the " PCMK__OPT_ENABLE_STARTUP_PROBES " "
                         "cluster property is deprecated and will be removed "
                         "(and behave as true) in a future release. Use a "
                         "location constraint with "
