@@ -33,6 +33,7 @@ enum pcmk__warnings {
     pcmk__wo_require_all            = (1 << 4),
     pcmk__wo_order_score            = (1 << 5),
     pcmk__wo_cancel_removed_actions = (1 << 6),
+    pcmk__wo_stop_removed_resources = (1 << 7),
     pcmk__wo_group_order            = (1 << 11),
     pcmk__wo_group_coloc            = (1 << 12),
     pcmk__wo_set_ordering           = (1 << 15),
