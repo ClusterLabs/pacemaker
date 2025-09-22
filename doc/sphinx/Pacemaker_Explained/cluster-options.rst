@@ -452,12 +452,12 @@ values, by running the ``man pacemaker-schedulerd`` and
        be stopped. This value takes precedence over
        :ref:`is-managed <is_managed>` (that is, even unmanaged resources will
        be stopped when removed if this value is ``true``).
-   * - .. _stop_removed_actions:
+   * - .. _cancel_removed_actions:
 
        .. index::
-          pair: cluster option; stop-removed-actions
+          pair: cluster option; cancel-removed-actions
 
-       stop-removed-actions
+       cancel-removed-actions
      - :ref:`boolean <boolean>`
      - true
      - Whether recurring :ref:`operations <operation>` that have been deleted
