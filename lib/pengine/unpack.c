@@ -282,7 +282,10 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     if (pcmk__is_set(scheduler->flags, pcmk__sched_concurrent_fencing)) {
         crm_debug("Concurrent fencing is enabled");
     } else {
-        crm_debug("Concurrent fencing is disabled");
+        pcmk__warn_once(pcmk__wo_concurrent_fencing,
+                        "Support for the " PCMK__OPT_CONCURRENT_FENCING " "
+                        "cluster property is deprecated and will be removed "
+                        "(and behave as true) in a future release.");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
