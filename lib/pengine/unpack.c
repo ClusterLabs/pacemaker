@@ -372,13 +372,13 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         crm_trace("Removed resources are ignored");
     }
 
-    set_config_flag(scheduler, PCMK_OPT_CANCEL_REMOVED_ACTIONS,
+    set_config_flag(scheduler, PCMK__OPT_CANCEL_REMOVED_ACTIONS,
                     pcmk__sched_cancel_removed_actions);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_cancel_removed_actions)) {
         crm_trace("Removed resource actions are stopped");
     } else {
         pcmk__warn_once(pcmk__wo_cancel_removed_actions,
-                        "Support for the " PCMK_OPT_CANCEL_REMOVED_ACTIONS " "
+                        "Support for the " PCMK__OPT_CANCEL_REMOVED_ACTIONS " "
                         "cluster property is deprecated and will be removed "
                         "(and behave as true) in a future release.");
     }

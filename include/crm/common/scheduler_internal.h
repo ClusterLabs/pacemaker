@@ -90,9 +90,10 @@ enum pcmk__scheduler_flags {
      */
     pcmk__sched_stop_removed_resources  = (1ULL << 8),
 
-    /*
-     * Whether recurring actions removed from the configuration should be
-     * cancelled (via PCMK_OPT_CANCEL_REMOVED_ACTIONS property)
+    /* Whether recurring actions removed from the configuration should be
+     * cancelled (via PCMK__OPT_CANCEL_REMOVED_ACTIONS property)
+     *
+     * @COMPAT The PCMK__OPT_CANCEL_REMOVED_ACTIONS property is deprecated.
      */
     pcmk__sched_cancel_removed_actions  = (1ULL << 9),
 

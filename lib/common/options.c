@@ -429,7 +429,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CANCEL_REMOVED_ACTIONS, "stop-orphan-actions",
+        PCMK__OPT_CANCEL_REMOVED_ACTIONS, "stop-orphan-actions",
             PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_deprecated,
