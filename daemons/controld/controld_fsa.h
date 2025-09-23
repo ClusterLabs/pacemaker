@@ -210,143 +210,171 @@ enum crmd_fsa_input {
  *
  *======================================*/
 
-         /* Don't do anything */
-#  define A_NOTHING                 0x0000000000000000ULL
+/* Don't do anything */
+#define A_NOTHING                   (UINT64_C(0))
 
 /* -- Startup actions -- */
-        /* Hook to perform any actions (other than connecting to other daemons)
-         * that might be needed as part of the startup.
-         */
-#  define A_STARTUP                 0x0000000000000001ULL
-        /* Hook to perform any actions that might be needed as part
-         * after startup is successful.
-         */
-#  define A_STARTED                 0x0000000000000002ULL
-        /* Connect to cluster layer */
-#  define A_HA_CONNECT              0x0000000000000004ULL
-#  define A_HA_DISCONNECT           0x0000000000000008ULL
 
-#  define A_INTEGRATE_TIMER_START   0x0000000000000010ULL
-#  define A_INTEGRATE_TIMER_STOP    0x0000000000000020ULL
-#  define A_FINALIZE_TIMER_START    0x0000000000000040ULL
-#  define A_FINALIZE_TIMER_STOP     0x0000000000000080ULL
+/* Hook to perform any actions (other than connecting to other daemons) that
+ * might be needed as part of the startup.
+ */
+#define A_STARTUP                   (UINT64_C(1) << 0)
+
+/* Hook to perform any actions that might be needed as part after startup is
+ * successful.
+ */
+#define A_STARTED                   (UINT64_C(1) << 1)
+
+/* Connect to cluster layer */
+#define A_HA_CONNECT                (UINT64_C(1) << 2)
+
+#define A_HA_DISCONNECT             (UINT64_C(1) << 3)
+
+#define A_INTEGRATE_TIMER_START     (UINT64_C(1) << 4)
+#define A_INTEGRATE_TIMER_STOP      (UINT64_C(1) << 5)
+#define A_FINALIZE_TIMER_START      (UINT64_C(1) << 6)
+#define A_FINALIZE_TIMER_STOP       (UINT64_C(1) << 7)
 
 /* -- Election actions -- */
-#  define A_DC_TIMER_START          0x0000000000000100ULL
-#  define A_DC_TIMER_STOP           0x0000000000000200ULL
-#  define A_ELECTION_COUNT          0x0000000000000400ULL
-#  define A_ELECTION_VOTE           0x0000000000000800ULL
 
-#  define A_ELECTION_START          0x0000000000001000ULL
+#define A_DC_TIMER_START            (UINT64_C(1) << 8)
+#define A_DC_TIMER_STOP             (UINT64_C(1) << 9)
+#define A_ELECTION_COUNT            (UINT64_C(1) << 10)
+#define A_ELECTION_VOTE             (UINT64_C(1) << 11)
+
+#define A_ELECTION_START            (UINT64_C(1) << 12)
 
 /* -- Message processing -- */
-        /* Process the queue of requests */
-#  define A_MSG_PROCESS             0x0000000000002000ULL
-        /* Send the message to the correct recipient */
-#  define A_MSG_ROUTE               0x0000000000004000ULL
 
-        /* Send a welcome message to new node(s) */
-#  define A_DC_JOIN_OFFER_ONE       0x0000000000008000ULL
+/* Process the queue of requests */
+#define A_MSG_PROCESS               (UINT64_C(1) << 13)
+
+/* Send the message to the correct recipient */
+#define A_MSG_ROUTE                 (UINT64_C(1) << 14)
+
+/* Send a welcome message to new node(s) */
+#define A_DC_JOIN_OFFER_ONE         (UINT64_C(1) << 15)
 
 /* -- Server Join protocol actions -- */
-        /* Send a welcome message to all nodes */
-#  define A_DC_JOIN_OFFER_ALL       0x0000000000010000ULL
-        /* Process the remote node's ack of our join message */
-#  define A_DC_JOIN_PROCESS_REQ     0x0000000000020000ULL
-        /* Send out the results of the Join phase */
-#  define A_DC_JOIN_FINALIZE        0x0000000000040000ULL
-        /* Send out the results of the Join phase */
-#  define A_DC_JOIN_PROCESS_ACK     0x0000000000080000ULL
+
+/* Send a welcome message to all nodes */
+#define A_DC_JOIN_OFFER_ALL         (UINT64_C(1) << 16)
+
+/* Process the remote node's ack of our join message */
+#define A_DC_JOIN_PROCESS_REQ       (UINT64_C(1) << 17)
+
+/* Send out the results of the Join phase */
+#define A_DC_JOIN_FINALIZE          (UINT64_C(1) << 18)
+
+/* Send out the results of the Join phase */
+#define A_DC_JOIN_PROCESS_ACK       (UINT64_C(1) << 19)
 
 /* -- Client Join protocol actions -- */
-#  define A_CL_JOIN_QUERY           0x0000000000100000ULL
-#  define A_CL_JOIN_ANNOUNCE        0x0000000000200000ULL
-        /* Request membership to the DC list */
-#  define A_CL_JOIN_REQUEST         0x0000000000400000ULL
-        /* Did the DC accept or reject the request */
-#  define A_CL_JOIN_RESULT          0x0000000000800000ULL
+
+#define A_CL_JOIN_QUERY             (UINT64_C(1) << 20)
+#define A_CL_JOIN_ANNOUNCE          (UINT64_C(1) << 21)
+
+/* Request membership to the DC list */
+#define A_CL_JOIN_REQUEST           (UINT64_C(1) << 22)
+
+/* Did the DC accept or reject the request */
+#define A_CL_JOIN_RESULT            (UINT64_C(1) << 23)
 
 /* -- Recovery, DC start/stop -- */
-        /* Something bad happened, try to recover */
-#  define A_RECOVER                 0x0000000001000000ULL
-        /* Hook to perform any actions (apart from starting, the TE, scheduler,
-         * and gathering the latest CIB) that might be necessary before
-         * giving up the responsibilities of being the DC.
-         */
-#  define A_DC_RELEASE              0x0000000002000000ULL
-        /* */
-#  define A_DC_RELEASED             0x0000000004000000ULL
-        /* Hook to perform any actions (apart from starting, the TE, scheduler,
-         * and gathering the latest CIB) that might be necessary before
-         * taking over the responsibilities of being the DC.
-         */
-#  define A_DC_TAKEOVER             0x0000000008000000ULL
+
+/* Something bad happened, try to recover */
+#define A_RECOVER                   (UINT64_C(1) << 24)
+
+/* Hook to perform any actions (apart from starting, the TE, scheduler, and
+ * gathering the latest CIB) that might be necessary before giving up the
+ * responsibilities of being the DC.
+ */
+#define A_DC_RELEASE                (UINT64_C(1) << 25)
+
+#define A_DC_RELEASED               (UINT64_C(1) << 26)
+
+/* Hook to perform any actions (apart from starting, the TE, scheduler, and
+ * gathering the latest CIB) that might be necessary before taking over the
+ * responsibilities of being the DC.
+ */
+#define A_DC_TAKEOVER               (UINT64_C(1) << 27)
 
 /* -- Shutdown actions -- */
-#  define A_SHUTDOWN                0x0000000010000000ULL
-#  define A_STOP                    0x0000000020000000ULL
-#  define A_EXIT_0                  0x0000000040000000ULL
-#  define A_EXIT_1                  0x0000000080000000ULL
 
-#  define A_SHUTDOWN_REQ            0x0000000100000000ULL
-#  define A_ELECTION_CHECK          0x0000000200000000ULL
-#  define A_DC_JOIN_FINAL           0x0000000400000000ULL
+#define A_SHUTDOWN                  (UINT64_C(1) << 28)
+#define A_STOP                      (UINT64_C(1) << 29)
+#define A_EXIT_0                    (UINT64_C(1) << 30)
+#define A_EXIT_1                    (UINT64_C(1) << 31)
+
+#define A_SHUTDOWN_REQ              (UINT64_C(1) << 32)
+#define A_ELECTION_CHECK            (UINT64_C(1) << 33)
+#define A_DC_JOIN_FINAL             (UINT64_C(1) << 34)
 
 /* -- CIB actions -- */
-#  define A_CIB_START               0x0000020000000000ULL
-#  define A_CIB_STOP                0x0000040000000000ULL
+
+#define A_CIB_START                 (UINT64_C(1) << 41)
+#define A_CIB_STOP                  (UINT64_C(1) << 42)
 
 /* -- Transition Engine actions -- */
-        /* Attempt to reach the newly calculated cluster state. This is
-         * only called once per transition (except if it is asked to
-         * stop the transition or start a new one).
-         * Once given a cluster state to reach, the TE will determine
-         * tasks that can be performed in parallel, execute them, wait
-         * for replies and then determine the next set until the new
-         * state is reached or no further tasks can be taken.
-         */
-#  define A_TE_INVOKE               0x0000100000000000ULL
-#  define A_TE_START                0x0000200000000000ULL
-#  define A_TE_STOP                 0x0000400000000000ULL
-#  define A_TE_CANCEL               0x0000800000000000ULL
-#  define A_TE_HALT                 0x0001000000000000ULL
+
+/* Attempt to reach the newly calculated cluster state. This is only called
+ * once per transition (except if it is asked to stop the transition or start
+ * a new one). Once given a cluster state to reach, the TE will determine
+ * tasks that can be performed in parallel, execute them, wait for replies and
+ * then determine the next set until the new state is reached or no further
+ * tasks can be taken.
+ */
+#define A_TE_INVOKE                 (UINT64_C(1) << 44)
+
+#define A_TE_START                  (UINT64_C(1) << 45)
+#define A_TE_STOP                   (UINT64_C(1) << 46)
+#define A_TE_CANCEL                 (UINT64_C(1) << 47)
+#define A_TE_HALT                   (UINT64_C(1) << 48)
 
 /* -- Scheduler actions -- */
-        /* Calculate the next state for the cluster.  This is only
-         * invoked once per needed calculation.
-         */
-#  define A_PE_INVOKE               0x0002000000000000ULL
-#  define A_PE_START                0x0004000000000000ULL
-#  define A_PE_STOP                 0x0008000000000000ULL
+
+/* Calculate the next state for the cluster. This is only invoked once per
+ * needed calculation.
+ */
+#define A_PE_INVOKE                 (UINT64_C(1) << 49)
+#define A_PE_START                  (UINT64_C(1) << 50)
+#define A_PE_STOP                   (UINT64_C(1) << 51)
+
 /* -- Misc actions -- */
-        /* Add a system generate "block" so that resources arent moved
-         * to or are activly moved away from the affected node.  This
-         * way we can return quickly even if busy with other things.
-         */
-#  define A_NODE_BLOCK              0x0010000000000000ULL
-        /* Update our information in the local CIB */
-#  define A_UPDATE_NODESTATUS       0x0020000000000000ULL
-#  define A_READCONFIG              0x0080000000000000ULL
+
+/* Add a system generate "block" so that resources arent moved to or are
+ * activly moved away from the affected node. This way we can return quickly
+ * even if busy with other things.
+ */
+#define A_NODE_BLOCK                (UINT64_C(1) << 52)
+
+/* Update our information in the local CIB */
+#define A_UPDATE_NODESTATUS         (UINT64_C(1) << 53)
+#define A_READCONFIG                (UINT64_C(1) << 55)
 
 /* -- LRM Actions -- */
-        // Connect to the local executor
-#  define A_LRM_CONNECT             0x0100000000000000ULL
-        // Disconnect from the local executor
-#  define A_LRM_DISCONNECT          0x0200000000000000ULL
-#  define A_LRM_INVOKE              0x0400000000000000ULL
+
+/* Connect to the local executor */
+#define A_LRM_CONNECT               (UINT64_C(1) << 56)
+
+/* Disconnect from the local executor */
+#define A_LRM_DISCONNECT            (UINT64_C(1) << 57)
+
+#define A_LRM_INVOKE                (UINT64_C(1) << 58)
 
 /* -- Logging actions -- */
-#  define A_LOG                     0x1000000000000000ULL
-#  define A_ERROR                   0x2000000000000000ULL
-#  define A_WARN                    0x4000000000000000ULL
 
-#  define O_EXIT                (A_SHUTDOWN|A_STOP|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
-#  define O_RELEASE             (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
-#  define O_PE_RESTART          (A_PE_START|A_PE_STOP)
-#  define O_TE_RESTART          (A_TE_START|A_TE_STOP)
-#  define O_CIB_RESTART         (A_CIB_START|A_CIB_STOP)
-#  define O_LRM_RECONNECT       (A_LRM_CONNECT|A_LRM_DISCONNECT)
-#  define O_DC_TIMER_RESTART    (A_DC_TIMER_STOP|A_DC_TIMER_START)
+#define A_LOG                       (UINT64_C(1) << 60)
+#define A_ERROR                     (UINT64_C(1) << 61)
+#define A_WARN                      (UINT64_C(1) << 62)
+
+#define O_EXIT                      (A_SHUTDOWN|A_STOP|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
+#define O_RELEASE                   (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
+#define O_PE_RESTART                (A_PE_START|A_PE_STOP)
+#define O_TE_RESTART                (A_TE_START|A_TE_STOP)
+#define O_CIB_RESTART               (A_CIB_START|A_CIB_STOP)
+#define O_LRM_RECONNECT             (A_LRM_CONNECT|A_LRM_DISCONNECT)
+#define O_DC_TIMER_RESTART          (A_DC_TIMER_STOP|A_DC_TIMER_START)
 
 /*======================================
  *
