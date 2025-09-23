@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>                 // uint64_t
+#include <inttypes.h>               // PRIx64
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -477,73 +478,73 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     }
 
     if (pcmk__is_set(input_register, R_THE_DC)) {
-        crm_trace("%s %.16llx (R_THE_DC)", text, R_THE_DC);
+        crm_trace("%s %.16" PRIx64 " (R_THE_DC)", text, R_THE_DC);
     }
     if (pcmk__is_set(input_register, R_STARTING)) {
-        crm_trace("%s %.16llx (R_STARTING)", text, R_STARTING);
+        crm_trace("%s %.16" PRIx64 " (R_STARTING)", text, R_STARTING);
     }
     if (pcmk__is_set(input_register, R_SHUTDOWN)) {
-        crm_trace("%s %.16llx (R_SHUTDOWN)", text, R_SHUTDOWN);
+        crm_trace("%s %.16" PRIx64 " (R_SHUTDOWN)", text, R_SHUTDOWN);
     }
     if (pcmk__is_set(input_register, R_STAYDOWN)) {
-        crm_trace("%s %.16llx (R_STAYDOWN)", text, R_STAYDOWN);
+        crm_trace("%s %.16" PRIx64 " (R_STAYDOWN)", text, R_STAYDOWN);
     }
     if (pcmk__is_set(input_register, R_JOIN_OK)) {
-        crm_trace("%s %.16llx (R_JOIN_OK)", text, R_JOIN_OK);
+        crm_trace("%s %.16" PRIx64 " (R_JOIN_OK)", text, R_JOIN_OK);
     }
     if (pcmk__is_set(input_register, R_READ_CONFIG)) {
-        crm_trace("%s %.16llx (R_READ_CONFIG)", text, R_READ_CONFIG);
+        crm_trace("%s %.16" PRIx64 " (R_READ_CONFIG)", text, R_READ_CONFIG);
     }
     if (pcmk__is_set(input_register, R_INVOKE_PE)) {
-        crm_trace("%s %.16llx (R_INVOKE_PE)", text, R_INVOKE_PE);
+        crm_trace("%s %.16" PRIx64 " (R_INVOKE_PE)", text, R_INVOKE_PE);
     }
     if (pcmk__is_set(input_register, R_CIB_CONNECTED)) {
-        crm_trace("%s %.16llx (R_CIB_CONNECTED)", text, R_CIB_CONNECTED);
+        crm_trace("%s %.16" PRIx64 " (R_CIB_CONNECTED)", text, R_CIB_CONNECTED);
     }
     if (pcmk__is_set(input_register, R_PE_CONNECTED)) {
-        crm_trace("%s %.16llx (R_PE_CONNECTED)", text, R_PE_CONNECTED);
+        crm_trace("%s %.16" PRIx64 " (R_PE_CONNECTED)", text, R_PE_CONNECTED);
     }
     if (pcmk__is_set(input_register, R_TE_CONNECTED)) {
-        crm_trace("%s %.16llx (R_TE_CONNECTED)", text, R_TE_CONNECTED);
+        crm_trace("%s %.16" PRIx64 " (R_TE_CONNECTED)", text, R_TE_CONNECTED);
     }
     if (pcmk__is_set(input_register, R_LRM_CONNECTED)) {
-        crm_trace("%s %.16llx (R_LRM_CONNECTED)", text, R_LRM_CONNECTED);
+        crm_trace("%s %.16" PRIx64 " (R_LRM_CONNECTED)", text, R_LRM_CONNECTED);
     }
     if (pcmk__is_set(input_register, R_CIB_REQUIRED)) {
-        crm_trace("%s %.16llx (R_CIB_REQUIRED)", text, R_CIB_REQUIRED);
+        crm_trace("%s %.16" PRIx64 " (R_CIB_REQUIRED)", text, R_CIB_REQUIRED);
     }
     if (pcmk__is_set(input_register, R_PE_REQUIRED)) {
-        crm_trace("%s %.16llx (R_PE_REQUIRED)", text, R_PE_REQUIRED);
+        crm_trace("%s %.16" PRIx64 " (R_PE_REQUIRED)", text, R_PE_REQUIRED);
     }
     if (pcmk__is_set(input_register, R_TE_REQUIRED)) {
-        crm_trace("%s %.16llx (R_TE_REQUIRED)", text, R_TE_REQUIRED);
+        crm_trace("%s %.16" PRIx64 " (R_TE_REQUIRED)", text, R_TE_REQUIRED);
     }
     if (pcmk__is_set(input_register, R_REQ_PEND)) {
-        crm_trace("%s %.16llx (R_REQ_PEND)", text, R_REQ_PEND);
+        crm_trace("%s %.16" PRIx64 " (R_REQ_PEND)", text, R_REQ_PEND);
     }
     if (pcmk__is_set(input_register, R_PE_PEND)) {
-        crm_trace("%s %.16llx (R_PE_PEND)", text, R_PE_PEND);
+        crm_trace("%s %.16" PRIx64 " (R_PE_PEND)", text, R_PE_PEND);
     }
     if (pcmk__is_set(input_register, R_TE_PEND)) {
-        crm_trace("%s %.16llx (R_TE_PEND)", text, R_TE_PEND);
+        crm_trace("%s %.16" PRIx64 " (R_TE_PEND)", text, R_TE_PEND);
     }
     if (pcmk__is_set(input_register, R_RESP_PEND)) {
-        crm_trace("%s %.16llx (R_RESP_PEND)", text, R_RESP_PEND);
+        crm_trace("%s %.16" PRIx64 " (R_RESP_PEND)", text, R_RESP_PEND);
     }
     if (pcmk__is_set(input_register, R_CIB_DONE)) {
-        crm_trace("%s %.16llx (R_CIB_DONE)", text, R_CIB_DONE);
+        crm_trace("%s %.16" PRIx64 " (R_CIB_DONE)", text, R_CIB_DONE);
     }
     if (pcmk__is_set(input_register, R_HAVE_CIB)) {
-        crm_trace("%s %.16llx (R_HAVE_CIB)", text, R_HAVE_CIB);
+        crm_trace("%s %.16" PRIx64 " (R_HAVE_CIB)", text, R_HAVE_CIB);
     }
     if (pcmk__is_set(input_register, R_MEMBERSHIP)) {
-        crm_trace("%s %.16llx (R_MEMBERSHIP)", text, R_MEMBERSHIP);
+        crm_trace("%s %.16" PRIx64 " (R_MEMBERSHIP)", text, R_MEMBERSHIP);
     }
     if (pcmk__is_set(input_register, R_PEER_DATA)) {
-        crm_trace("%s %.16llx (R_PEER_DATA)", text, R_PEER_DATA);
+        crm_trace("%s %.16" PRIx64 " (R_PEER_DATA)", text, R_PEER_DATA);
     }
     if (pcmk__is_set(input_register, R_IN_RECOVERY)) {
-        crm_trace("%s %.16llx (R_IN_RECOVERY)", text, R_IN_RECOVERY);
+        crm_trace("%s %.16" PRIx64 " (R_IN_RECOVERY)", text, R_IN_RECOVERY);
     }
 }
 

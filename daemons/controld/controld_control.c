@@ -479,35 +479,35 @@ do_started(long long action,
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_MEMBERSHIP)) {
-        crm_info("Delaying start, no membership data (%.16llx)", R_MEMBERSHIP);
+        crm_info("Delaying start, no membership data (%.16" PRIx64 ")", R_MEMBERSHIP);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_LRM_CONNECTED)) {
-        crm_info("Delaying start, not connected to executor (%.16llx)", R_LRM_CONNECTED);
+        crm_info("Delaying start, not connected to executor (%.16" PRIx64 ")", R_LRM_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_CIB_CONNECTED)) {
-        crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
+        crm_info("Delaying start, CIB not connected (%.16" PRIx64 ")", R_CIB_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_READ_CONFIG)) {
-        crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
+        crm_info("Delaying start, Config not read (%.16" PRIx64 ")", R_READ_CONFIG);
 
         crmd_fsa_stall(TRUE);
         return;
 
     } else if (!pcmk__is_set(controld_globals.fsa_input_register,
                              R_PEER_DATA)) {
-        crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
+        crm_info("Delaying start, No peer data (%.16" PRIx64 ")", R_PEER_DATA);
         crmd_fsa_stall(TRUE);
         return;
     }

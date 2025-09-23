@@ -10,6 +10,7 @@
 #ifndef CRMD_FSA__H
 #  define CRMD_FSA__H
 
+#  include <inttypes.h>                          // UINT64_C, PRIx64
 #  include <crm/crm.h>
 #  include <crm/cib.h>
 #  include <crm/common/xml.h>
@@ -346,6 +347,7 @@ enum crmd_fsa_input {
 #  define O_CIB_RESTART         (A_CIB_START|A_CIB_STOP)
 #  define O_LRM_RECONNECT       (A_LRM_CONNECT|A_LRM_DISCONNECT)
 #  define O_DC_TIMER_RESTART    (A_DC_TIMER_STOP|A_DC_TIMER_START)
+
 /*======================================
  *
  * "register" contents
@@ -355,62 +357,87 @@ enum crmd_fsa_input {
  * These also count as inputs for synthesizing I_*
  *
  *======================================*/
-#  define R_THE_DC          0x00000001ULL
-                                        /* Are we the DC? */
-#  define R_STARTING        0x00000002ULL
-                                        /* Are we starting up? */
-#  define R_SHUTDOWN        0x00000004ULL
-                                        /* Are we trying to shut down? */
-#  define R_STAYDOWN        0x00000008ULL
-                                        /* Should we restart? */
 
-#  define R_JOIN_OK         0x00000010ULL   /* Have we completed the join process */
-#  define R_READ_CONFIG     0x00000040ULL
-#  define R_INVOKE_PE       0x00000080ULL   // Should the scheduler be invoked?
+// Are we the DC?
+#define R_THE_DC          (UINT64_C(1) << 0)
 
-#  define R_CIB_CONNECTED   0x00000100ULL
-                                        /* Is the CIB connected? */
-#  define R_PE_CONNECTED    0x00000200ULL   // Is the scheduler connected?
-#  define R_TE_CONNECTED    0x00000400ULL
-                                        /* Is the Transition Engine connected? */
-#  define R_LRM_CONNECTED   0x00000800ULL   // Is the executor connected?
+// Are we starting up?
+#define R_STARTING        (UINT64_C(1) << 1)
 
-#  define R_CIB_REQUIRED    0x00001000ULL
-                                        /* Is the CIB required? */
-#  define R_PE_REQUIRED     0x00002000ULL   // Is the scheduler required?
-#  define R_TE_REQUIRED     0x00004000ULL
-                                        /* Is the Transition Engine required? */
-#  define R_ST_REQUIRED     0x00008000ULL
-                                        /* Is the fencer daemon required? */
+// Are we trying to shut down?
+#define R_SHUTDOWN        (UINT64_C(1) << 2)
 
-#  define R_CIB_DONE        0x00010000ULL
-                                        /* Have we calculated the CIB? */
-#  define R_HAVE_CIB        0x00020000ULL   /* Do we have an up-to-date CIB */
+// Should we restart?
+#define R_STAYDOWN        (UINT64_C(1) << 3)
 
-#  define R_MEMBERSHIP      0x00100000ULL   /* Have we got cluster layer data yet */
+// Have we completed the join process?
+#define R_JOIN_OK         (UINT64_C(1) << 4)
+
+// Has the configuration been read?
+#define R_READ_CONFIG     (UINT64_C(1) << 6)
+
+// Should the scheduler be invoked?
+#define R_INVOKE_PE       (UINT64_C(1) << 7)
+
+// Is the CIB connected?
+#define R_CIB_CONNECTED   (UINT64_C(1) << 8)
+
+// Is the scheduler connected?
+#define R_PE_CONNECTED    (UINT64_C(1) << 9)
+
+// Is the Transition Engine connected?
+#define R_TE_CONNECTED    (UINT64_C(1) << 10)
+
+// Is the executor connected?
+#define R_LRM_CONNECTED   (UINT64_C(1) << 11)
+
+// Is the CIB required?
+#define R_CIB_REQUIRED    (UINT64_C(1) << 12)
+
+// Is the scheduler required?
+#define R_PE_REQUIRED     (UINT64_C(1) << 13)
+
+// Is the Transition Engine required?
+#define R_TE_REQUIRED     (UINT64_C(1) << 14)
+
+// Is the fencer daemon required?
+#define R_ST_REQUIRED     (UINT64_C(1) << 15)
+
+// Have we calculated the CIB?
+#define R_CIB_DONE        (UINT64_C(1) << 16)
+
+// Do we have an up-to-date CIB?
+#define R_HAVE_CIB        (UINT64_C(1) << 17)
+
+// Have we received cluster layer data yet?
+#define R_MEMBERSHIP      (UINT64_C(1) << 20)
 
 // Ever received membership-layer data
-#  define R_PEER_DATA       0x00200000ULL
+#define R_PEER_DATA       (UINT64_C(1) << 21)
 
-#  define R_HA_DISCONNECTED 0x00400000ULL      /* did we sign out of our own accord */
+// Did we sign out of our own accord?
+#define R_HA_DISCONNECTED (UINT64_C(1) << 22)
 
-#  define R_REQ_PEND        0x01000000ULL
-                                        /* Are there Requests waiting for
-                                           processing? */
-#  define R_PE_PEND         0x02000000ULL   // Are we awaiting reply from scheduler?
-#  define R_TE_PEND         0x04000000ULL
-                                        /* Has the TE been invoked and we're
-                                           awaiting completion? */
-#  define R_RESP_PEND       0x08000000ULL
-                                        /* Do we have clients waiting on a
-                                           response? if so perhaps we shouldn't
-                                           stop yet */
+// Are there requests waiting for processing?
+#define R_REQ_PEND        (UINT64_C(1) << 24)
 
-#  define R_SENT_RSC_STOP   0x20000000ULL /* Have we sent a stop action to all
-                                         * resources in preparation for
-                                         * shutting down */
+// Are we awaiting reply from scheduler?
+#define R_PE_PEND         (UINT64_C(1) << 25)
 
-#  define R_IN_RECOVERY     0x80000000ULL
+// Has the TE been invoked and we're awaiting completion?
+#define R_TE_PEND         (UINT64_C(1) << 26)
+
+// Do we have clients waiting on a response? If so perhaps we
+// shouldn't stop yet.
+#define R_RESP_PEND       (UINT64_C(1) << 27)
+
+/* Have we sent a stop action to all resources in preparation for
+ * shutting down?
+ */
+#define R_SENT_RSC_STOP   (UINT64_C(1) << 29)
+
+// Are we in recovery mode?
+#define R_IN_RECOVERY     (UINT64_C(1) << 31)
 
 #define CRM_DIRECT_NACK_RC (99) // Deprecated (see PCMK_EXEC_INVALID)
 
