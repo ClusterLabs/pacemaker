@@ -41,7 +41,6 @@ if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs
 from pacemaker._cts.environment import set_cts_path
 from pacemaker._cts.errors import XmlValidationError
 from pacemaker._cts.validate import validate
-from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
@@ -2404,9 +2403,9 @@ class CrmDiffRegressionTest(RegressionTest):
         cib_patch_file = f"{cts_cli_data}/crm_diff_patchset_cib.xml"
 
         # Enclose the strings in quotes now rather than in the command lines
-        with open(f"{cts_cli_data}/crm_diff_old.xml", "r") as file:
+        with open(f"{cts_cli_data}/crm_diff_old.xml", "r", encoding="utf-8") as file:
             old_str = f"'{file.read()}'"
-        with open(f"{cts_cli_data}/crm_diff_new.xml", "r") as file:
+        with open(f"{cts_cli_data}/crm_diff_new.xml", "r", encoding="utf-8") as file:
             new_str = f"'{file.read()}'"
 
         return [
