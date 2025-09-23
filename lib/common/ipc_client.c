@@ -934,8 +934,7 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
         return -rc;
     }
 
-    rc = pcmk_daemon_user(&cl_uid, &cl_gid);
-    rc = pcmk_legacy2rc(rc);
+    rc = pcmk__daemon_user(&cl_uid, &cl_gid);
     if (rc != pcmk_rc_ok) {
         crm_ipc_close(ipc);
         return rc;

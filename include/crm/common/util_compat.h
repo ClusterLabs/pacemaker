@@ -12,6 +12,7 @@
 
 #include <stdbool.h>    // bool
 #include <stdint.h>     // uint64_t
+#include <sys/types.h>  // uid_t, gid_t
 
 #include <glib.h>       // gboolean
 
@@ -64,6 +65,12 @@ char *crm_md5sum(const char *buffer);
 
 //! \deprecated Do not use
 char *crm_generate_uuid(void);
+
+//! \deprecated Do not use
+int pcmk_daemon_user(uid_t *uid, gid_t *gid);
+
+//! \deprecated Do not use
+int crm_user_lookup(const char *name, uid_t *uid, gid_t *gid);
 
 #ifdef __cplusplus
 }

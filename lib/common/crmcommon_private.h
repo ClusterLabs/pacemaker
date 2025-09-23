@@ -437,12 +437,6 @@ int pcmk__evaluate_op_expression(const xmlNode *expr,
 
 
 /*
- * Utils
- */
-#define PCMK__PW_BUFFER_LEN 500
-
-
-/*
  * Schemas
  */
 typedef struct {

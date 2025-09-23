@@ -356,41 +356,30 @@ __wrap_fopen64(const char *pathname, const char *mode)
 }
 #endif
 
-/* getpwnam_r()
+/* getpwnam()
  *
- * If pcmk__mock_getpwnam_r is set to true, later calls to getpwnam_r() must be
+ * If pcmk__mock_getpwnam is set to true, later calls to getpwnam() must be
  * preceded by:
  *
- *     expect_*(__wrap_getpwnam_r, name[, ...]);
- *     expect_*(__wrap_getpwnam_r, pwd[, ...]);
- *     expect_*(__wrap_getpwnam_r, buf[, ...]);
- *     expect_*(__wrap_getpwnam_r, buflen[, ...]);
- *     expect_*(__wrap_getpwnam_r, result[, ...]);
- *     will_return(__wrap_getpwnam_r, return_value);
- *     will_return(__wrap_getpwnam_r, ptr_to_result_struct);
+ *     expect_*(__wrap_getpwnam, name[, ...]);
+ *     will_return(__wrap_getpwnam, errno_to_set);
+ *     will_return(__wrap_getpwnam, ptr_to_result_struct);
  *
  * expect_* functions: https://api.cmocka.org/group__cmocka__param.html
  */
 
-bool pcmk__mock_getpwnam_r = false;
+bool pcmk__mock_getpwnam = false;
 
-int
-__wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
-                  size_t buflen, struct passwd **result)
+struct passwd *
+__wrap_getpwnam(const char *name)
 {
-    if (pcmk__mock_getpwnam_r) {
-        int retval = mock_type(int);
-
+    if (pcmk__mock_getpwnam) {
         check_expected_ptr(name);
-        check_expected_ptr(pwd);
-        check_expected_ptr(buf);
-        check_expected(buflen);
-        check_expected_ptr(result);
-        *result = mock_ptr_type(struct passwd *);
-        return retval;
+        errno = mock_type(int);
+        return mock_ptr_type(struct passwd *);
 
     } else {
-        return __real_getpwnam_r(name, pwd, buf, buflen, result);
+        return __real_getpwnam(name);
     }
 }
 
