@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_CIB_INTERNAL__H
 #define PCMK__CRM_CIB_INTERNAL__H
 
+#include <stdint.h>                      // UINT32_C
+
 #include <crm/cib.h>
 #include <crm/common/ipc_internal.h>
 #include <crm/common/output_internal.h>
@@ -46,13 +48,26 @@ extern "C" {
  * \brief Flags for CIB operation attributes
  */
 enum cib__op_attr {
-    cib__op_attr_none           = 0,        //!< No special attributes
-    cib__op_attr_modifies       = (1 << 1), //!< Modifies CIB
-    cib__op_attr_privileged     = (1 << 2), //!< Requires privileges
-    cib__op_attr_local          = (1 << 3), //!< Must only be processed locally
-    cib__op_attr_replaces       = (1 << 4), //!< Replaces CIB
-    cib__op_attr_writes_through = (1 << 5), //!< Writes to disk on success
-    cib__op_attr_transaction    = (1 << 6), //!< Supported in a transaction
+    //! No special attributes
+    cib__op_attr_none           = 0,
+
+    //! Modifies CIB
+    cib__op_attr_modifies       = (UINT32_C(1) << 1),
+
+    //! Requires privileges
+    cib__op_attr_privileged     = (UINT32_C(1) << 2),
+
+    //! Must only be processed locally
+    cib__op_attr_local          = (UINT32_C(1) << 3),
+
+    //! Replaces CIB
+    cib__op_attr_replaces       = (UINT32_C(1) << 4),
+
+    //! Writes to disk on success
+    cib__op_attr_writes_through = (UINT32_C(1) << 5),
+
+    //! Supported in a transaction
+    cib__op_attr_transaction    = (UINT32_C(1) << 6),
 };
 
 /*!
