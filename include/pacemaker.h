@@ -329,10 +329,17 @@ pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
 
 //! Bit flags to control which fields of result code info are displayed
 enum pcmk_rc_disp_flags {
-    pcmk_rc_disp_none = 0,          //!< (Does nothing)
-    pcmk_rc_disp_code = (1 << 0),   //!< Display result code number
-    pcmk_rc_disp_name = (1 << 1),   //!< Display result code name
-    pcmk_rc_disp_desc = (1 << 2),   //!< Display result code description
+    //! (Does nothing)
+    pcmk_rc_disp_none = 0,
+
+    //! Display result code number
+    pcmk_rc_disp_code = (UINT32_C(1) << 0),
+
+    //! Display result code name
+    pcmk_rc_disp_name = (UINT32_C(1) << 1),
+
+    //! Display result code description
+    pcmk_rc_disp_desc = (UINT32_C(1) << 2),
 };
 
 /*!
