@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 #define PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 
+#include <stdint.h>                     // UINT32_C
 #include <glib.h>
 
 #include <crm/common/internal.h>        // pcmk__is_set()
@@ -26,23 +27,23 @@ extern "C" {
  * those warnings needs a flag defined here.
  */
 enum pcmk__warnings {
-    pcmk__wo_blind                  = (1 << 0),
-    pcmk__wo_record_pending         = (1 << 1),
-    pcmk__wo_enable_startup_probes  = (1 << 2),
-    pcmk__wo_concurrent_fencing     = (1 << 3),
-    pcmk__wo_require_all            = (1 << 4),
-    pcmk__wo_order_score            = (1 << 5),
-    pcmk__wo_cancel_removed_actions = (1 << 6),
-    pcmk__wo_stop_removed_resources = (1 << 7),
-    pcmk__wo_group_order            = (1 << 11),
-    pcmk__wo_group_coloc            = (1 << 12),
-    pcmk__wo_set_ordering           = (1 << 15),
-    pcmk__wo_rdisc_enabled          = (1 << 16),
-    pcmk__wo_op_attr_expr           = (1 << 19),
-    pcmk__wo_clone_master_max       = (1 << 23),
-    pcmk__wo_clone_master_node_max  = (1 << 24),
-    pcmk__wo_master_role            = (1 << 26),
-    pcmk__wo_slave_role             = (1 << 27),
+    pcmk__wo_blind                  = (UINT32_C(1) << 0),
+    pcmk__wo_record_pending         = (UINT32_C(1) << 1),
+    pcmk__wo_enable_startup_probes  = (UINT32_C(1) << 2),
+    pcmk__wo_concurrent_fencing     = (UINT32_C(1) << 3),
+    pcmk__wo_require_all            = (UINT32_C(1) << 4),
+    pcmk__wo_order_score            = (UINT32_C(1) << 5),
+    pcmk__wo_cancel_removed_actions = (UINT32_C(1) << 6),
+    pcmk__wo_stop_removed_resources = (UINT32_C(1) << 7),
+    pcmk__wo_group_order            = (UINT32_C(1) << 11),
+    pcmk__wo_group_coloc            = (UINT32_C(1) << 12),
+    pcmk__wo_set_ordering           = (UINT32_C(1) << 15),
+    pcmk__wo_rdisc_enabled          = (UINT32_C(1) << 16),
+    pcmk__wo_op_attr_expr           = (UINT32_C(1) << 19),
+    pcmk__wo_clone_master_max       = (UINT32_C(1) << 23),
+    pcmk__wo_clone_master_node_max  = (UINT32_C(1) << 24),
+    pcmk__wo_master_role            = (UINT32_C(1) << 26),
+    pcmk__wo_slave_role             = (UINT32_C(1) << 27),
 };
 
 /*!
