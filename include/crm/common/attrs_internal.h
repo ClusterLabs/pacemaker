@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_COMMON_ATTRS_INTERNAL__H
 #define PCMK__CRM_COMMON_ATTRS_INTERNAL__H
+
+#include <stdint.h>                         // UINT32_C
 
 #include <crm/crm.h>                        // crm_system_name
 #include <crm/common/logging.h>             // LOG_TRACE
@@ -22,16 +24,23 @@ extern "C" {
 // Options for clients to use with functions below
 enum pcmk__node_attr_opts {
     pcmk__node_attr_none           = 0,
-    pcmk__node_attr_remote         = (1 << 0),
-    pcmk__node_attr_private        = (1 << 1),
-    pcmk__node_attr_pattern        = (1 << 2),
-    pcmk__node_attr_value          = (1 << 3),
-    pcmk__node_attr_delay          = (1 << 4),
-    pcmk__node_attr_perm           = (1 << 5),
-    pcmk__node_attr_sync_local     = (1 << 6),
-    pcmk__node_attr_sync_cluster   = (1 << 7),
-    pcmk__node_attr_utilization    = (1 << 8),
-    pcmk__node_attr_query_all      = (1 << 9),
+    pcmk__node_attr_remote         = (UINT32_C(1) << 0),
+    pcmk__node_attr_private        = (UINT32_C(1) << 1),
+    pcmk__node_attr_pattern        = (UINT32_C(1) << 2),
+    pcmk__node_attr_value          = (UINT32_C(1) << 3),
+    pcmk__node_attr_delay          = (UINT32_C(1) << 4),
+
+    /* @TODO pcmk__node_attr_perm is unused at the moment, but it is intended
+     * to help with implementing `attrd_updater -l/--lifetime` (see the comment
+     * in that file).  This is made more complicated by wanting to combine
+     * crm_attribute and attrd_updater functionality (see upstream task T120).
+     */
+    pcmk__node_attr_perm           = (UINT32_C(1) << 5),
+
+    pcmk__node_attr_sync_local     = (UINT32_C(1) << 6),
+    pcmk__node_attr_sync_cluster   = (UINT32_C(1) << 7),
+    pcmk__node_attr_utilization    = (UINT32_C(1) << 8),
+    pcmk__node_attr_query_all      = (UINT32_C(1) << 9),
 };
 
 #define pcmk__set_node_attr_flags(node_attr_flags, flags_to_set) do {   \
