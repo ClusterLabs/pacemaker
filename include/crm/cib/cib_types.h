@@ -10,8 +10,11 @@
 #ifndef PCMK__CRM_CIB_CIB_TYPES__H
 #  define PCMK__CRM_CIB_CIB_TYPES__H
 
+#  include <stdint.h>           // UINT32_C
+
 #  include <glib.h>             // gboolean, GList
 #  include <libxml/tree.h>      // xmlNode
+
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
 
@@ -54,23 +57,23 @@ enum cib_conn_type {
 
 enum cib_call_options {
     cib_none            = 0,
-    cib_verbose         = (1 << 0),  //!< Prefer stderr to logs
-    cib_xpath           = (1 << 1),
-    cib_multiple        = (1 << 2),
-    cib_can_create      = (1 << 3),
-    cib_discard_reply   = (1 << 4),
-    cib_no_children     = (1 << 5),
+    cib_verbose         = (UINT32_C(1) << 0),  //!< Prefer stderr to logs
+    cib_xpath           = (UINT32_C(1) << 1),
+    cib_multiple        = (UINT32_C(1) << 2),
+    cib_can_create      = (UINT32_C(1) << 3),
+    cib_discard_reply   = (UINT32_C(1) << 4),
+    cib_no_children     = (UINT32_C(1) << 5),
 
     //! \deprecated This value will be removed in a future release
-    cib_xpath_address   = (1 << 6),
+    cib_xpath_address   = (UINT32_C(1) << 6),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     // NOTE: sbd (as of at least 1.5.2) uses this value
     //! \deprecated This value will be removed in a future release
-    cib_scope_local     = (1 << 8),
+    cib_scope_local     = (UINT32_C(1) << 8),
 #endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
-    cib_dryrun          = (1 << 9),
+    cib_dryrun          = (UINT32_C(1) << 9),
 
     /*!
      * \brief Process request when the client commits the active transaction
@@ -86,7 +89,7 @@ enum cib_call_options {
      * \p cib_api_operations_t:end_transaction() for more details on CIB
      * transactions.
      */
-    cib_transaction     = (1 << 10),
+    cib_transaction     = (UINT32_C(1) << 10),
 
     /*!
      * \brief Treat new attribute values as atomic score updates where possible
@@ -108,14 +111,14 @@ enum cib_call_options {
      *
      * Note: This is implemented only for modify operations.
      */
-    cib_score_update    = (1 << 11),
+    cib_score_update    = (UINT32_C(1) << 11),
 
     // NOTE: sbd (as of at least 1.5.2) uses this value
-    cib_sync_call       = (1 << 12),
+    cib_sync_call       = (UINT32_C(1) << 12),
 
-    cib_no_mtime        = (1 << 13),
-    cib_inhibit_notify  = (1 << 16),
-    cib_force_diff      = (1 << 28),
+    cib_no_mtime        = (UINT32_C(1) << 13),
+    cib_inhibit_notify  = (UINT32_C(1) << 16),
+    cib_force_diff      = (UINT32_C(1) << 28),
 };
 
 typedef struct cib_s cib_t;
