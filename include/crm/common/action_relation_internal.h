@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,44 +25,44 @@ enum pcmk__action_relation_flags {
     pcmk__ar_none                           = 0U,
 
     //! Actions are ordered (optionally, if no other flags are set)
-    pcmk__ar_ordered                        = (1U << 0),
+    pcmk__ar_ordered                        = (UINT32_C(1) << 0),
 
     //! Relation applies only if 'first' cannot be part of a live migration
-    pcmk__ar_if_first_unmigratable          = (1U << 1),
+    pcmk__ar_if_first_unmigratable          = (UINT32_C(1) << 1),
 
     /*!
      * If 'then' is required, 'first' becomes required (and becomes unmigratable
      * if 'then' is); also, if 'first' is a stop of a blocked resource, 'then'
      * becomes unrunnable
      */
-    pcmk__ar_then_implies_first             = (1U << 4),
+    pcmk__ar_then_implies_first             = (UINT32_C(1) << 4),
 
     /*!
      * If 'first' is required, 'then' becomes required; if 'first' is a stop of
      * a blocked resource, 'then' becomes unrunnable
      */
-    pcmk__ar_first_implies_then             = (1U << 5),
+    pcmk__ar_first_implies_then             = (UINT32_C(1) << 5),
 
     /*!
      * If 'then' is required and for a promoted instance, 'first' becomes
      * required (and becomes unmigratable if 'then' is)
      */
-    pcmk__ar_promoted_then_implies_first    = (1U << 6),
+    pcmk__ar_promoted_then_implies_first    = (UINT32_C(1) << 6),
 
     /*!
      * 'first' is runnable only if 'then' is both runnable and migratable,
      * and 'first' becomes required if 'then' is
      */
-    pcmk__ar_unmigratable_then_blocks       = (1U << 7),
+    pcmk__ar_unmigratable_then_blocks       = (UINT32_C(1) << 7),
 
     //! 'then' is runnable (and migratable) only if 'first' is runnable
-    pcmk__ar_unrunnable_first_blocks        = (1U << 8),
+    pcmk__ar_unrunnable_first_blocks        = (UINT32_C(1) << 8),
 
     //! If 'first' is unrunnable, 'then' becomes a real, unmigratable action
-    pcmk__ar_first_else_then                = (1U << 9),
+    pcmk__ar_first_else_then                = (UINT32_C(1) << 9),
 
     //! If 'first' is required, 'then' action for instance on same node is
-    pcmk__ar_first_implies_same_node_then   = (1U << 10),
+    pcmk__ar_first_implies_same_node_then   = (UINT32_C(1) << 10),
 
     /*!
      * Disable relation if 'first' is unrunnable and for an active resource,
@@ -73,7 +73,7 @@ enum pcmk__action_relation_flags {
      * REMOTE_CONTAINER_HACK to replace the connection address with where the
      * container is running.
      */
-    pcmk__ar_nested_remote_probe            = (1U << 11),
+    pcmk__ar_nested_remote_probe            = (UINT32_C(1) << 11),
 
     /*!
      * If 'first' is for a blocked resource, make 'then' unrunnable.
@@ -89,7 +89,7 @@ enum pcmk__action_relation_flags {
      * This is used for "stop then start primitive" (restarts) and
      * "stop group member then stop previous member".
      */
-    pcmk__ar_intermediate_stop              = (1U << 12),
+    pcmk__ar_intermediate_stop              = (UINT32_C(1) << 12),
 
     /*!
      * The actions must be serialized if in the same transition but can be in
@@ -101,34 +101,34 @@ enum pcmk__action_relation_flags {
      * least one if there is a failure during the transition. Or, we could
      * prefer certain action types over others, or base it on resource priority.
      */
-    pcmk__ar_serialize                      = (1U << 14),
+    pcmk__ar_serialize                      = (UINT32_C(1) << 14),
 
     //! Relation applies only if actions are on same node
-    pcmk__ar_if_on_same_node                = (1U << 15),
+    pcmk__ar_if_on_same_node                = (UINT32_C(1) << 15),
 
     //! If 'then' is required, 'first' must be added to the transition graph
-    pcmk__ar_then_implies_first_graphed     = (1U << 16),
+    pcmk__ar_then_implies_first_graphed     = (UINT32_C(1) << 16),
 
     //! If 'first' is required and runnable, 'then' must be in graph
-    pcmk__ar_first_implies_then_graphed     = (1U << 17),
+    pcmk__ar_first_implies_then_graphed     = (UINT32_C(1) << 17),
 
     //! User-configured asymmetric ordering
-    pcmk__ar_asymmetric                     = (1U << 20),
+    pcmk__ar_asymmetric                     = (UINT32_C(1) << 20),
 
     //! Actions are ordered if on same node (or migration target for migrate_to)
-    pcmk__ar_if_on_same_node_or_target      = (1U << 21),
+    pcmk__ar_if_on_same_node_or_target      = (UINT32_C(1) << 21),
 
     //! 'then' action is runnable if certain number of 'first' instances are
-    pcmk__ar_min_runnable                   = (1U << 22),
+    pcmk__ar_min_runnable                   = (UINT32_C(1) << 22),
 
     //! Ordering applies only if 'first' is required and on same node as 'then'
-    pcmk__ar_if_required_on_same_node       = (1U << 23),
+    pcmk__ar_if_required_on_same_node       = (UINT32_C(1) << 23),
 
     //! Ordering applies even if 'first' runs on guest node created by 'then'
-    pcmk__ar_guest_allowed                  = (1U << 24),
+    pcmk__ar_guest_allowed                  = (UINT32_C(1) << 24),
 
     //! If 'then' action becomes required, 'first' becomes optional
-    pcmk__ar_then_cancels_first             = (1U << 25),
+    pcmk__ar_then_cancels_first             = (UINT32_C(1) << 25),
 };
 
 /* Action relation object
