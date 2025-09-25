@@ -34,10 +34,10 @@ enum pcmk__graph_action_type {
 };
 
 enum pcmk__synapse_flags {
-    pcmk__synapse_ready       = (1 << 0),
-    pcmk__synapse_failed      = (1 << 1),
-    pcmk__synapse_executed    = (1 << 2),
-    pcmk__synapse_confirmed   = (1 << 3),
+    pcmk__synapse_ready       = (UINT32_C(1) << 0),
+    pcmk__synapse_failed      = (UINT32_C(1) << 1),
+    pcmk__synapse_executed    = (UINT32_C(1) << 2),
+    pcmk__synapse_confirmed   = (UINT32_C(1) << 3),
 };
 
 typedef struct {
