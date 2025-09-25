@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>                    // UINT32_C
+
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
@@ -59,20 +61,20 @@ enum remote_cmd_status {
         } while (0)
 
 enum remote_status {
-    expect_takeover     = (1 << 0),
-    takeover_complete   = (1 << 1),
-    remote_active       = (1 << 2),
+    expect_takeover     = (UINT32_C(1) << 0),
+    takeover_complete   = (UINT32_C(1) << 1),
+    remote_active       = (UINT32_C(1) << 2),
     /* Maintenance mode is difficult to determine from the controller's context,
      * so we have it signalled back with the transition from the scheduler.
      */
-    remote_in_maint     = (1 << 3),
+    remote_in_maint     = (UINT32_C(1) << 3),
     /* Similar for whether we are controlling a guest node or remote node.
      * Fortunately there is a meta-attribute in the transition already and
      * as the situation doesn't change over time we can use the
      * resource start for noting down the information for later use when
      * the attributes aren't at hand.
      */
-    controlling_guest   = (1 << 4),
+    controlling_guest   = (UINT32_C(1) << 4),
 };
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);
