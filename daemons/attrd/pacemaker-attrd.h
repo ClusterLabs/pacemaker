@@ -11,6 +11,7 @@
 #  define PACEMAKER_ATTRD__H
 
 #include <regex.h>
+#include <stdint.h>
 #include <glib.h>
 #include <crm/crm.h>
 #include <crm/cluster.h>
@@ -114,19 +115,19 @@ void attrd_remove_voter(const pcmk__node_status_t *peer);
 void attrd_xml_add_writer(xmlNode *xml);
 
 enum attrd_attr_flags {
-    attrd_attr_none         = 0U,
+    attrd_attr_none         = 0,
 
     // At least one of attribute's values has changed since last write
-    attrd_attr_changed      = (1U << 0),
+    attrd_attr_changed      = (UINT32_C(1) << 0),
 
     // At least one of attribute's values has an unknown node XML ID
-    attrd_attr_node_unknown = (1U << 1),
+    attrd_attr_node_unknown = (UINT32_C(1) << 1),
 
     // This attribute should never be written to the CIB
-    attrd_attr_is_private   = (1U << 2),
+    attrd_attr_is_private   = (UINT32_C(1) << 2),
 
     // Ignore any configured delay for next write of this attribute
-    attrd_attr_force_write  = (1U << 3),
+    attrd_attr_force_write  = (UINT32_C(1) << 3),
 };
 
 typedef struct attribute_s {
