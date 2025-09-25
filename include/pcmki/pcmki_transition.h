@@ -65,10 +65,14 @@ typedef struct {
     } while (0)
 
 enum pcmk__graph_action_flags {
-    pcmk__graph_action_sent_update   = (1 << 0),     /* sent to the CIB */
-    pcmk__graph_action_executed      = (1 << 1),     /* sent to the CRM */
-    pcmk__graph_action_confirmed     = (1 << 2),
-    pcmk__graph_action_failed        = (1 << 3),
+    //! Sent to the CIB
+    pcmk__graph_action_sent_update   = (UINT32_C(1) << 0),
+
+    //! Sent to the CRM
+    pcmk__graph_action_executed      = (UINT32_C(1) << 1),
+
+    pcmk__graph_action_confirmed     = (UINT32_C(1) << 2),
+    pcmk__graph_action_failed        = (UINT32_C(1) << 3),
 };
 
 typedef struct {
