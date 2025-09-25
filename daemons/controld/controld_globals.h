@@ -129,22 +129,22 @@ controld_fsa_message_queue_length(void)
  */
 enum controld_flags {
     //! The DC left in a membership change that is being processed
-    controld_dc_left                = (1 << 0),
+    controld_dc_left                = (UINT32_C(1) << 0),
 
     //! The FSA is stalled waiting for further input
-    controld_fsa_is_stalled         = (1 << 1),
+    controld_fsa_is_stalled         = (UINT32_C(1) << 1),
 
     //! The local node has been in a quorate partition at some point
-    controld_ever_had_quorum        = (1 << 2),
+    controld_ever_had_quorum        = (UINT32_C(1) << 2),
 
     //! The local node is currently in a quorate partition
-    controld_has_quorum             = (1 << 3),
+    controld_has_quorum             = (UINT32_C(1) << 3),
 
     //! Panic the local node if it loses quorum
-    controld_no_quorum_panic        = (1 << 4),
+    controld_no_quorum_panic        = (UINT32_C(1) << 4),
 
     //! Lock resources to the local node when it shuts down cleanly
-    controld_shutdown_lock_enabled  = (1 << 5),
+    controld_shutdown_lock_enabled  = (UINT32_C(1) << 5),
 };
 
 #  define controld_set_global_flags(flags_to_set) do {                      \
