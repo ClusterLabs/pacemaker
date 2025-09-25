@@ -49,13 +49,13 @@ enum pcmk__coloc_select {
     pcmk__coloc_select_default      = 0,
 
     // Apply "this with" colocations instead of "with this" colocations
-    pcmk__coloc_select_this_with    = (1 << 0),
+    pcmk__coloc_select_this_with    = (UINT32_C(1) << 0),
 
     // Apply only colocations with non-negative scores
-    pcmk__coloc_select_nonnegative  = (1 << 1),
+    pcmk__coloc_select_nonnegative  = (UINT32_C(1) << 1),
 
     // Apply only colocations with at least one matching node
-    pcmk__coloc_select_active       = (1 << 2),
+    pcmk__coloc_select_active       = (UINT32_C(1) << 2),
 };
 
 // Flags the update_ordered_actions() method can return
