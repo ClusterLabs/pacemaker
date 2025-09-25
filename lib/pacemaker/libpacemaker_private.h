@@ -61,8 +61,8 @@ enum pcmk__coloc_select {
 // Flags the update_ordered_actions() method can return
 enum pcmk__updated {
     pcmk__updated_none      = 0,        // Nothing changed
-    pcmk__updated_first     = (1 << 0), // First action was updated
-    pcmk__updated_then      = (1 << 1), // Then action was updated
+    pcmk__updated_first     = (UINT32_C(1) << 0), // First action was updated
+    pcmk__updated_then      = (UINT32_C(1) << 1), // Then action was updated
 };
 
 #define pcmk__set_updated_flags(au_flags, action, flags_to_set) do {        \
