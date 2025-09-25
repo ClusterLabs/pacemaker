@@ -18,6 +18,7 @@
 #include <grp.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,14 +31,14 @@
 
 enum child_daemon_flags {
     child_none                  = 0,
-    child_respawn               = 1 << 0,
-    child_needs_cluster         = 1 << 1,
-    child_needs_retry           = 1 << 2,
-    child_active_before_startup = 1 << 3,
-    child_shutting_down         = 1 << 4,
+    child_respawn               = (UINT32_C(1) << 0),
+    child_needs_cluster         = (UINT32_C(1) << 1),
+    child_needs_retry           = (UINT32_C(1) << 2),
+    child_active_before_startup = (UINT32_C(1) << 3),
+    child_shutting_down         = (UINT32_C(1) << 4),
 
     //! Child runs as \c root if set, or as \c CRM_DAEMON_USER otherwise
-    child_as_root               = 1 << 5,
+    child_as_root               = (UINT32_C(1) << 5),
 };
 
 typedef struct {
