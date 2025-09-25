@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,6 @@
 #define PCMK__CRM_COMMON_ACTIONS__H
 
 #include <stdbool.h>                    // bool
-#include <strings.h>                    // strcasecmp()
 #include <glib.h>                       // gboolean, guint
 #include <libxml/tree.h>                // xmlNode
 
