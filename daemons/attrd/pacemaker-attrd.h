@@ -215,8 +215,8 @@ char *attrd_nvpair_id(const attribute_t *attr, const char *node_state_id);
 
 enum attrd_write_options {
     attrd_write_changed         = 0,
-    attrd_write_all             = (1 << 0),
-    attrd_write_no_delay        = (1 << 1),
+    attrd_write_all             = (UINT32_C(1) << 0),
+    attrd_write_no_delay        = (UINT32_C(1) << 1),
 };
 
 void attrd_write_attributes(uint32_t options);
