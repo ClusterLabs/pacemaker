@@ -40,8 +40,8 @@
 static GHashTable *client_table = NULL;
 
 enum cib_file_flags {
-    cib_file_flag_dirty = (1 << 0),
-    cib_file_flag_live  = (1 << 1),
+    cib_file_flag_dirty = (UINT32_C(1) << 0),
+    cib_file_flag_live  = (UINT32_C(1) << 1),
 };
 
 typedef struct cib_file_opaque_s {
