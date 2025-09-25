@@ -34,13 +34,13 @@ extern "C" {
 
 // Colocation flags
 enum pcmk__coloc_flags {
-    pcmk__coloc_none        = 0U,
+    pcmk__coloc_none        = 0,
 
     // Primary is affected even if already active
-    pcmk__coloc_influence   = (1U << 0),
+    pcmk__coloc_influence   = (UINT32_C(1) << 0),
 
     // Colocation was explicitly configured in CIB
-    pcmk__coloc_explicit    = (1U << 1),
+    pcmk__coloc_explicit    = (UINT32_C(1) << 1),
 };
 
 // Flags to modify the behavior of add_colocated_node_scores()
