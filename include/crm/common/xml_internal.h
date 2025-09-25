@@ -144,23 +144,23 @@ do {                                                                            
  */
 enum pcmk__xml_fmt_options {
     //! Exclude certain XML attributes (for calculating digests)
-    pcmk__xml_fmt_filtered   = (1 << 0),
+    pcmk__xml_fmt_filtered   = (UINT32_C(1) << 0),
 
     //! Include indentation and newlines
-    pcmk__xml_fmt_pretty     = (1 << 1),
+    pcmk__xml_fmt_pretty     = (UINT32_C(1) << 1),
 
     //! Include the opening tag of an XML element, and include XML comments
-    pcmk__xml_fmt_open       = (1 << 3),
+    pcmk__xml_fmt_open       = (UINT32_C(1) << 3),
 
     //! Include the children of an XML element
-    pcmk__xml_fmt_children   = (1 << 4),
+    pcmk__xml_fmt_children   = (UINT32_C(1) << 4),
 
     //! Include the closing tag of an XML element
-    pcmk__xml_fmt_close      = (1 << 5),
+    pcmk__xml_fmt_close      = (UINT32_C(1) << 5),
 
     // @COMPAT Can we start including text nodes unconditionally?
     //! Include XML text nodes
-    pcmk__xml_fmt_text       = (1 << 6),
+    pcmk__xml_fmt_text       = (UINT32_C(1) << 6),
 };
 
 int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
