@@ -9,6 +9,7 @@
 #ifndef CONTROLD_LRM__H
 #  define CONTROLD_LRM__H
 
+#include <stdint.h>                 // UINT32_C
 #include <crm/lrmd.h>               // lrmd_t
 
 #include <controld_messages.h>
@@ -38,8 +39,8 @@ typedef struct resource_history_s {
 void history_free(gpointer data);
 
 enum active_op_e {
-    active_op_remove    = (1 << 0),
-    active_op_cancelled = (1 << 1),
+    active_op_remove    = (UINT32_C(1) << 0),
+    active_op_cancelled = (UINT32_C(1) << 1),
 };
 
 // In-flight action (recurring or pending)
