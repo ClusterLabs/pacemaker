@@ -40,8 +40,8 @@
         } while (0)
 
 enum remote_cmd_status {
-    cmd_reported_success    = (1 << 0),
-    cmd_cancel              = (1 << 1),
+    cmd_reported_success    = (UINT32_C(1) << 0),
+    cmd_cancel              = (UINT32_C(1) << 1),
 };
 
 #define lrm_remote_set_flags(lrm_state, flags_to_set) do { \
