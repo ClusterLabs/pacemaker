@@ -13,6 +13,7 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>                 // UINT32_C
 #include <glib.h>                   // g_str_has_suffix()
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
@@ -876,17 +877,18 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
 }
 
 enum instance_state {
-    instance_starting   = (1 << 0),
-    instance_stopping   = (1 << 1),
+    instance_none       = 0,
+    instance_starting   = (UINT32_C(1) << 0),
+    instance_stopping   = (UINT32_C(1) << 1),
 
     /* This indicates that some instance is restarting. It's not the same as
      * instance_starting|instance_stopping, which would indicate that some
      * instance is starting, and some instance (not necessarily the same one) is
      * stopping.
      */
-    instance_restarting = (1 << 2),
+    instance_restarting = (UINT32_C(1) << 2),
 
-    instance_active     = (1 << 3),
+    instance_active     = (UINT32_C(1) << 3),
 
     instance_all        = instance_starting|instance_stopping
                           |instance_restarting|instance_active,
@@ -903,7 +905,7 @@ static void
 check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 {
     const GList *iter = NULL;
-    uint32_t instance_state = 0; // State of just this instance
+    uint32_t instance_state = instance_none; // State of just this instance
 
     // No need to check further if all conditions have already been detected
     if (pcmk__all_flags_set(*state, instance_all)) {
@@ -988,7 +990,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 void
 pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
 {
-    uint32_t state = 0;
+    uint32_t state = instance_none;
 
     pcmk_action_t *stop = NULL;
     pcmk_action_t *stopped = NULL;
