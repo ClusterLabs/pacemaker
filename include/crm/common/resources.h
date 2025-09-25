@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #define PCMK__CRM_COMMON_RESOURCES__H
 
 #include <stdbool.h>                    // bool
+#include <stdint.h>                     // UINT32_C
 #include <sys/types.h>                  // time_t
 #include <libxml/tree.h>                // xmlNode
 #include <glib.h>                       // gboolean, guint, GList, GHashTable
@@ -31,19 +32,19 @@ extern "C" {
 //! Search options for resources (exact resource ID always matches)
 enum pe_find {
     //! Also match clone instance ID from resource history
-    pcmk_rsc_match_history          = (1 << 0),
+    pcmk_rsc_match_history          = (UINT32_C(1) << 0),
 
     //! Also match anonymous clone instances by base name
-    pcmk_rsc_match_anon_basename    = (1 << 1),
+    pcmk_rsc_match_anon_basename    = (UINT32_C(1) << 1),
 
     //! Match only clones and their instances, by either clone or instance ID
-    pcmk_rsc_match_clone_only       = (1 << 2),
+    pcmk_rsc_match_clone_only       = (UINT32_C(1) << 2),
 
     //! If matching by node, compare current node instead of assigned node
-    pcmk_rsc_match_current_node     = (1 << 3),
+    pcmk_rsc_match_current_node     = (UINT32_C(1) << 3),
 
     //! Match clone instances (even unique) by base name as well as exact ID
-    pcmk_rsc_match_basename         = (1 << 5),
+    pcmk_rsc_match_basename         = (UINT32_C(1) << 5),
 };
 
 //! \internal Do not use
