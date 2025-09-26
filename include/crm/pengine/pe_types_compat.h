@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_PENGINE_PE_TYPES_COMPAT__H
 #  define PCMK__CRM_PENGINE_PE_TYPES_COMPAT__H
 
+#include <stdint.h>                // UINT64_C
 #include <crm/common/scheduler.h>
 
 #ifdef __cplusplus
@@ -27,15 +28,15 @@ extern "C" {
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_rsc_managed                  (1ULL << 1)
+#define pe_rsc_managed                  (UINT64_C(1) << 1)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_flag_have_quorum             (1ULL << 0)
+#define pe_flag_have_quorum             (UINT64_C(1) << 0)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Do not use
-#define pe_flag_have_stonith_resource   (1ULL << 5)
+#define pe_flag_have_stonith_resource   (UINT64_C(1) << 5)
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 //! \deprecated Use pcmk_node_t instead
