@@ -155,9 +155,13 @@ typedef struct attribute_s {
     } while (0)
 
 enum attrd_value_flags {
-    attrd_value_none        = 0U,
-    attrd_value_remote      = (1U << 0),  // Value is for Pacemaker Remote node
-    attrd_value_from_peer   = (1U << 1),  // Value is from peer sync response
+    attrd_value_none        = 0,
+
+    //! Value is for Pacemaker Remote node
+    attrd_value_remote      = (UINT32_C(1) << 0),
+
+    //! Value is from peer sync response
+    attrd_value_from_peer   = (UINT32_C(1) << 1),
 };
 
 typedef struct attribute_value_s {
