@@ -34,9 +34,9 @@ enum ra_flags_e {
 };
 
 enum ra_param_flags_e {
-    ra_param_unique             = (1 << 0),
-    ra_param_private            = (1 << 1),
-    ra_param_reloadable         = (1 << 2),
+    ra_param_unique             = (UINT32_C(1) << 0),
+    ra_param_private            = (UINT32_C(1) << 1),
+    ra_param_reloadable         = (UINT32_C(1) << 2),
 };
 
 // Allowed sources of resource agent meta-data when requesting it
