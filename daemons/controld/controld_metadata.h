@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2022 the Pacemaker project contributors
+ * Copyright 2017-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,8 +29,8 @@
  * compliance and does not advertise the reload-agent action.
  */
 enum ra_flags_e {
-    ra_supports_legacy_reload   = (1 << 0),
-    ra_supports_reload_agent    = (1 << 1),
+    ra_supports_legacy_reload   = (UINT32_C(1) << 0),
+    ra_supports_reload_agent    = (UINT32_C(1) << 1),
 };
 
 enum ra_param_flags_e {
