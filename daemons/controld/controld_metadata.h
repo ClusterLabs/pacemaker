@@ -39,10 +39,13 @@ enum ra_param_flags_e {
     ra_param_reloadable         = (UINT32_C(1) << 2),
 };
 
-// Allowed sources of resource agent meta-data when requesting it
+/*!
+ * \internal
+ * \brief Allowed sources of resource agent meta-data when requesting it
+ */
 enum controld_metadata_source_e {
-    controld_metadata_from_cache    = (1 << 0),
-    controld_metadata_from_agent    = (1 << 1),
+    controld_metadata_from_cache    = (UINT32_C(1) << 0),
+    controld_metadata_from_agent    = (UINT32_C(1) << 1),
 };
 
 struct ra_param_s {
