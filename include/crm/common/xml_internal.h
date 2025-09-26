@@ -328,16 +328,16 @@ xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
  */
 enum pcmk__xa_flags {
     //! Flag has no effect
-    pcmk__xaf_none          = 0U,
+    pcmk__xaf_none          = 0,
 
     //! Don't overwrite existing values
-    pcmk__xaf_no_overwrite  = (1U << 0),
+    pcmk__xaf_no_overwrite  = (UINT32_C(1) << 0),
 
     /*!
      * Treat values as score updates where possible (see
      * \c pcmk__xe_set_score())
      */
-    pcmk__xaf_score_update  = (1U << 1),
+    pcmk__xaf_score_update  = (UINT32_C(1) << 1),
 };
 
 void pcmk__xml_sanitize_id(char *id);
