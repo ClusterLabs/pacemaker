@@ -167,12 +167,22 @@ enum pcmk__rsc_flags {
     pcmk__rsc_needs_unfencing        = (UINT64_C(1) << 30),
 };
 
-// Where to look for a resource
+/*!
+ * \internal
+ * \brief Where to look for a resource
+ */
 enum pcmk__rsc_node {
-    pcmk__rsc_node_none     = 0U,           // Nowhere
-    pcmk__rsc_node_assigned = (1U << 0),    // Where resource is assigned
-    pcmk__rsc_node_current  = (1U << 1),    // Where resource is running
-    pcmk__rsc_node_pending  = (1U << 2),    // Where resource is pending
+    //! Nowhere
+    pcmk__rsc_node_none     = 0,
+
+    //! Where resource is assigned
+    pcmk__rsc_node_assigned = (UINT32_C(1) << 0),
+
+    //! Where resource is running
+    pcmk__rsc_node_current  = (UINT32_C(1) << 1),
+
+    //! Where resource is pending
+    pcmk__rsc_node_pending  = (UINT32_C(1) << 2),
 };
 
 //! Resource assignment methods (implementation defined by libpacemaker)
