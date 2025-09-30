@@ -894,6 +894,10 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     } else if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)
                && !pcmk__is_set(scheduler->flags, pcmk__sched_have_fencing)) {
 
+        /* pcs's CI tests look for this specific error message. Confer with the
+         * pcs team before changing it. If the dependency still exists, bump the
+         * CRM_FEATURE_SET and inform the pcs maintainers.
+         */
         pcmk__config_err("Resource start-up disabled since no fencing "
                          "resources have been defined. Either configure some "
                          "or disable fencing with the "
