@@ -279,11 +279,12 @@ for ``pacemaker-fenced``.
      - :ref:`integer <integer>`
      - 1
      - The maximum number of actions that can be performed in parallel on this
-       device. A value of -1 means unlimited. Node fencing actions initiated by
-       the cluster (as opposed to an administrator running the
+       device. A value of -1 means unlimited. For node fencing actions initiated
+       by the cluster (as opposed to an administrator running the
        ``stonith_admin`` tool or the fencer running recurring device monitors
-       and ``status`` and ``list`` commands) are additionally subject to the
-       ``concurrent-fencing`` cluster property.
+       and ``status`` and ``list`` commands), this applies only if the
+       deprecated ``concurrent-fencing`` cluster property is set to true (the
+       default).
    * - .. _pcmk_host_argument:
 
        .. index::
@@ -624,15 +625,6 @@ However, this may be acceptable under certain conditions:
   allowed to run the depended-on resource.
 
 * The depended-on resource should not be disabled during production operation.
-
-* The ``concurrent-fencing`` cluster property should be set to ``true``.
-  Otherwise, if both the node running the depended-on resource and some node
-  targeted by the dependent fence device need to be fenced, the fencing of the
-  node running the depended-on resource might be ordered first, making the
-  second fencing impossible and blocking further recovery. With concurrent
-  fencing, the dependent fence device might fail at first due to the
-  depended-on resource being unavailable, but it will be retried and eventually
-  succeed once the resource is brought back up.
 
 Even under those conditions, there is one unlikely problem scenario. The DC
 always schedules fencing of itself after any other fencing needed, to avoid

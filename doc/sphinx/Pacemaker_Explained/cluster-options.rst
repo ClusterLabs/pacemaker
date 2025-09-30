@@ -440,28 +440,6 @@ values, by running the ``man pacemaker-schedulerd`` and
      - false
      - Whether all resources should be disallowed from running (can be useful
        during maintenance or troubleshooting)
-   * - .. _stop_removed_resources:
-
-       .. index::
-          pair: cluster option; stop-removed-resources
-
-       stop-removed-resources
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether resources that have been deleted from the configuration should
-       be stopped. This value takes precedence over
-       :ref:`is-managed <is_managed>` (that is, even unmanaged resources will
-       be stopped when removed if this value is ``true``).
-   * - .. _stop_removed_actions:
-
-       .. index::
-          pair: cluster option; stop-removed-actions
-
-       stop-removed-actions
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether recurring :ref:`operations <operation>` that have been deleted
-       from the configuration should be cancelled
    * - .. _start_failure_is_fatal:
 
        .. index::
@@ -474,16 +452,6 @@ values, by running the ``man pacemaker-schedulerd`` and
        further start attempts on that node. If ``false``, the cluster will
        decide whether the node is still eligible based on the resource's
        current failure count and ``migration-threshold``.
-   * - .. _enable_startup_probes:
-
-       .. index::
-          pair: cluster option; enable-startup-probes
-
-       enable-startup-probes
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether the cluster should check the pre-existing state of resources
-       when the cluster starts
    * - .. _maintenance_mode:
 
        .. index::
@@ -601,20 +569,6 @@ values, by running the ``man pacemaker-schedulerd`` and
        true for the local value or SBD is not active. When this is set to a
        negative value, ``SBD_WATCHDOG_TIMEOUT`` must be set to the same value
        on all nodes that use SBD, otherwise data corruption or loss could occur.
-
-   * - .. _concurrent-fencing:
-
-       .. index::
-          pair: cluster option; concurrent-fencing
-
-       concurrent-fencing
-     - :ref:`boolean <boolean>`
-     - false
-     - Whether the cluster is allowed to initiate multiple fence actions
-       concurrently. Fence actions initiated externally, such as via the
-       ``stonith_admin`` tool or an application such as DLM, or by the fencer
-       itself such as recurring device monitors and ``status`` and ``list``
-       commands, are not limited by this option.
    * - .. _fencing_reaction:
 
        .. index::
@@ -685,21 +639,6 @@ values, by running the ``man pacemaker-schedulerd`` and
      - How long to wait for a response from other nodes when electing a DC. The
        ideal value will depend on the speed and load of your network and
        cluster nodes.
-   * - .. _cluster_ipc_limit:
-
-       .. index::
-          pair: cluster option; cluster-ipc-limit
-
-       cluster-ipc-limit
-     - :ref:`nonnegative integer <nonnegative_integer>`
-     - 500
-     - The maximum IPC message backlog before a cluster daemon will disconnect
-       a client.  Other cluster daemons are not subject to this limit as long as
-       they are still processing messages.  This is of use in large clusters,
-       for which a good value is the number of resources in the cluster
-       multiplied by the number of nodes. The default of 500 is also the
-       minimum. Raise this if you see "Evicting client" log messages for
-       cluster process IDs.
    * - .. _pe_error_series_max:
 
        .. index::

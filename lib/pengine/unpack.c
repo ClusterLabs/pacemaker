@@ -233,10 +233,16 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     pcmk__validate_cluster_options(config_hash);
 
-    set_config_flag(scheduler, PCMK_OPT_ENABLE_STARTUP_PROBES,
+    set_config_flag(scheduler, PCMK__OPT_ENABLE_STARTUP_PROBES,
                     pcmk__sched_probe_resources);
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_probe_resources)) {
-        crm_info("Startup probes: disabled (dangerous)");
+        pcmk__warn_once(pcmk__wo_enable_startup_probes,
+                        "Support for the " PCMK__OPT_ENABLE_STARTUP_PROBES " "
+                        "cluster property is deprecated and will be removed "
+                        "(and behave as true) in a future release. Use a "
+                        "location constraint with "
+                        PCMK_XA_RESOURCE_DISCOVERY "=" PCMK_VALUE_NEVER " "
+                        "instead to disable probes where desired.");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_HAVE_WATCHDOG);
@@ -271,12 +277,15 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
         pcmk__cluster_option(config_hash, PCMK_OPT_FENCING_ACTION);
     crm_trace("Fencing will %s nodes", scheduler->priv->fence_action);
 
-    set_config_flag(scheduler, PCMK_OPT_CONCURRENT_FENCING,
+    set_config_flag(scheduler, PCMK__OPT_CONCURRENT_FENCING,
                     pcmk__sched_concurrent_fencing);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_concurrent_fencing)) {
         crm_debug("Concurrent fencing is enabled");
     } else {
-        crm_debug("Concurrent fencing is disabled");
+        pcmk__warn_once(pcmk__wo_concurrent_fencing,
+                        "Support for the " PCMK__OPT_CONCURRENT_FENCING " "
+                        "cluster property is deprecated and will be removed "
+                        "(and behave as true) in a future release.");
     }
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
@@ -355,20 +364,26 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
             break;
     }
 
-    set_config_flag(scheduler, PCMK_OPT_STOP_REMOVED_RESOURCES,
+    set_config_flag(scheduler, PCMK__OPT_STOP_REMOVED_RESOURCES,
                     pcmk__sched_stop_removed_resources);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_stop_removed_resources)) {
         crm_trace("Removed resources are stopped");
     } else {
-        crm_trace("Removed resources are ignored");
+        pcmk__warn_once(pcmk__wo_stop_removed_resources,
+                        "Support for the " PCMK__OPT_STOP_REMOVED_RESOURCES " "
+                        "cluster property is deprecated and will be removed "
+                        "(and behave as true) in a future release.");
     }
 
-    set_config_flag(scheduler, PCMK_OPT_STOP_REMOVED_ACTIONS,
+    set_config_flag(scheduler, PCMK__OPT_CANCEL_REMOVED_ACTIONS,
                     pcmk__sched_cancel_removed_actions);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_cancel_removed_actions)) {
         crm_trace("Removed resource actions are stopped");
     } else {
-        crm_trace("Removed resource actions are ignored");
+        pcmk__warn_once(pcmk__wo_cancel_removed_actions,
+                        "Support for the " PCMK__OPT_CANCEL_REMOVED_ACTIONS " "
+                        "cluster property is deprecated and will be removed "
+                        "(and behave as true) in a future release.");
     }
 
     set_config_flag(scheduler, PCMK_OPT_MAINTENANCE_MODE,
@@ -879,6 +894,10 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
     } else if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)
                && !pcmk__is_set(scheduler->flags, pcmk__sched_have_fencing)) {
 
+        /* pcs's CI tests look for this specific error message. Confer with the
+         * pcs team before changing it. If the dependency still exists, bump the
+         * CRM_FEATURE_SET and inform the pcs maintainers.
+         */
         pcmk__config_err("Resource start-up disabled since no fencing "
                          "resources have been defined. Either configure some "
                          "or disable fencing with the "
@@ -2531,7 +2550,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                            rsc->id, pcmk__node_name(node));
             } else {
                 crm_notice("Removed resource %s must be stopped manually on %s "
-                           "because " PCMK_OPT_STOP_REMOVED_RESOURCES
+                           "because " PCMK__OPT_STOP_REMOVED_RESOURCES
                            " is set to false", rsc->id, pcmk__node_name(node));
             }
         }

@@ -191,9 +191,9 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "check the resource's fail count against its migration-threshold.")
     },
     {
-        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether the cluster should check for active resources during "
             "start-up"),
         NULL,
@@ -211,8 +211,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "remote nodes regardless."),
     },
     {
-        PCMK_OPT_FENCING_ENABLED, PCMK_OPT_STONITH_ENABLED, PCMK_VALUE_BOOLEAN,
-            NULL,
+        PCMK_OPT_FENCING_ENABLED, "stonith-enabled", PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether nodes may be fenced as part of recovery"),
@@ -222,7 +221,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_FENCING_ACTION, PCMK_OPT_STONITH_ACTION, PCMK_VALUE_SELECT,
+        PCMK_OPT_FENCING_ACTION, "stonith-action", PCMK_VALUE_SELECT,
             PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
@@ -230,7 +229,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_FENCING_REACTION, PCMK_OPT_FENCE_REACTION, PCMK_VALUE_SELECT,
+        PCMK_OPT_FENCING_REACTION, "fence-reaction", PCMK_VALUE_SELECT,
             PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
         PCMK_VALUE_STOP, NULL,
         pcmk__opt_controld,
@@ -243,8 +242,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "node, falling back to stop on failure."),
     },
     {
-        PCMK_OPT_FENCING_TIMEOUT, PCMK_OPT_STONITH_TIMEOUT, PCMK_VALUE_DURATION,
-            NULL,
+        PCMK_OPT_FENCING_TIMEOUT, "stonith-timeout", PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for on, off, and reboot fence actions to complete "
@@ -274,7 +272,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
          * calculate, and use 0 as the single default for when the option either
          * is unset or fails to validate.
          */
-        PCMK_OPT_FENCING_WATCHDOG_TIMEOUT, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT,
+        PCMK_OPT_FENCING_WATCHDOG_TIMEOUT, "stonith-watchdog-timeout",
             PCMK_VALUE_TIMEOUT, NULL,
         "0", NULL,
         pcmk__opt_controld,
@@ -297,8 +295,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that use SBD, otherwise data corruption or loss could occur."),
     },
     {
-        PCMK_OPT_FENCING_MAX_ATTEMPTS, PCMK_OPT_STONITH_MAX_ATTEMPTS,
-            PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_FENCING_MAX_ATTEMPTS, "stonith-max-attempts", PCMK_VALUE_SCORE,
+            NULL,
         "10", pcmk__valid_positive_int,
         pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
@@ -306,7 +304,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
 #if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
         PCMK_VALUE_TRUE,
 #else
@@ -406,24 +404,11 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        /* @TODO This is actually ignored if not strictly positive. We should
-         * overhaul value types in Pacemaker Explained. There are lots of
-         * inaccurate ranges (assumptions of 32-bit width, "nonnegative" when
-         * positive is required, etc.).
-         *
-         * Maybe a single integer type with the allowed range specified would be
-         * better.
-         *
-         * Drop the PCMK_VALUE_NONNEGATIVE_INTEGER constant if we do this before
-         * a release.
-         */
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
-        "500", pcmk__valid_positive_int,
-        pcmk__opt_based,
-        N_("Maximum IPC message backlog before disconnecting a client"),
-        N_("Raise this if log has \"Evicting client\" messages for cluster "
-            "PIDs (a good value is the number of resources in the cluster "
-            "multiplied by the number of nodes)."),
+        "cluster-ipc-limit", NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
+        NULL, NULL,
+        pcmk__opt_based|pcmk__opt_deprecated,
+        N_("Ignored"),
+        NULL,
     },
 
     // Stopping resources and removed resources
@@ -435,19 +420,19 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_REMOVED_RESOURCES, PCMK_OPT_STOP_ORPHAN_RESOURCES,
+        PCMK__OPT_STOP_REMOVED_RESOURCES, "stop-orphan-resources",
             PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether to stop resources that were removed from the "
             "configuration"),
         NULL,
     },
     {
-        PCMK_OPT_STOP_REMOVED_ACTIONS, PCMK_OPT_STOP_ORPHAN_ACTIONS,
+        PCMK__OPT_CANCEL_REMOVED_ACTIONS, "stop-orphan-actions",
             PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether to cancel recurring actions removed from the "
             "configuration"),
         NULL,

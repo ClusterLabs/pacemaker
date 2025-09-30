@@ -79,12 +79,12 @@
 =#=#=#= End test: Validate CIB (XML) - OK (0) =#=#=#=
 * Passed: cibadmin              - Validate CIB (XML)
 =#=#=#= Begin test: Digest calculation =#=#=#=
-c330f9df7e1e54e99f9d5ae1a0d8d59a
+02e4118f17d65a512f1f540ff30dc116
 =#=#=#= End test: Digest calculation - OK (0) =#=#=#=
 * Passed: cibadmin              - Digest calculation
 =#=#=#= Begin test: Digest calculation (XML) =#=#=#=
 <pacemaker-result api-version="X" request="cibadmin --output-as=xml -5 -p">
-  <md5-sum digest="c330f9df7e1e54e99f9d5ae1a0d8d59a"/>
+  <md5-sum digest="02e4118f17d65a512f1f540ff30dc116"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Digest calculation (XML) - OK (0) =#=#=#=

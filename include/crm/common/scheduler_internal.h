@@ -77,18 +77,24 @@ enum pcmk__scheduler_flags {
     // Whether any resource provides or requires unfencing (via CIB resources)
     pcmk__sched_enable_unfencing        = (1ULL << 6),
 
-    // Whether concurrent fencing is allowed (via concurrent-fencing property)
+    /* Whether concurrent fencing is allowed (via PCMK__OPT_CONCURRENT_FENCING
+     * property).
+     *
+     * @COMPAT The PCMK__OPT_CONCURRENT_FENCING property is deprecated.
+     */
     pcmk__sched_concurrent_fencing      = (1ULL << 7),
 
-    /*
-     * Whether resources removed from the configuration should be stopped (via
-     * PCMK_OPT_STOP_REMOVED_RESOURCES property)
+    /* Whether resources removed from the configuration should be stopped (via
+     * PCMK__OPT_STOP_REMOVED_RESOURCES property)
+     *
+     * @COMPAT The PCMK__OPT_STOP_REMOVED_RESOURCES property is deprecated.
      */
     pcmk__sched_stop_removed_resources  = (1ULL << 8),
 
-    /*
-     * Whether recurring actions removed from the configuration should be
-     * cancelled (via PCMK_OPT_STOP_REMOVED_ACTIONS property)
+    /* Whether recurring actions removed from the configuration should be
+     * cancelled (via PCMK__OPT_CANCEL_REMOVED_ACTIONS property)
+     *
+     * @COMPAT The PCMK__OPT_CANCEL_REMOVED_ACTIONS property is deprecated.
      */
     pcmk__sched_cancel_removed_actions  = (1ULL << 9),
 
@@ -116,7 +122,11 @@ enum pcmk__scheduler_flags {
 
     /*
      * Whether resources' current state should be probed (when unknown) before
-     * scheduling any other actions (via the enable-startup-probes property)
+     * scheduling any other actions (via the PCMK__OPT_ENABLE_STARTUP_PROBES
+     * property).
+     *
+     * @COMPAT Drop this when the PCMK__OPT_ENABLE_STARTUP_PROBES property is
+     * dropped.
      */
     pcmk__sched_probe_resources         = (1ULL << 16),
 

@@ -21,12 +21,12 @@
     </parameter>
     <parameter name="cluster-ipc-limit">
       <longdesc lang="en">
-        Raise this if log has "Evicting client" messages for cluster PIDs (a good value is the number of resources in the cluster multiplied by the number of nodes).
+        Ignored
       </longdesc>
       <shortdesc lang="en">
-        Maximum IPC message backlog before disconnecting a client
+        *** Deprecated ***
       </shortdesc>
-      <content type="integer" default=""/>
+      <content type="integer"/>
     </parameter>
   </parameters>
 </resource-agent>
@@ -540,7 +540,7 @@
         Whether the cluster should check for active resources during start-up
       </longdesc>
       <shortdesc lang="en">
-        Whether the cluster should check for active resources during start-up
+        *** Deprecated ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
@@ -699,7 +699,7 @@
         Whether to stop resources that were removed from the configuration
       </longdesc>
       <shortdesc lang="en">
-        Whether to stop resources that were removed from the configuration
+        *** Deprecated ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
@@ -712,21 +712,21 @@
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
-    <parameter name="stop-removed-actions">
+    <parameter name="cancel-removed-actions">
       <longdesc lang="en">
         Whether to cancel recurring actions removed from the configuration
       </longdesc>
       <shortdesc lang="en">
-        Whether to cancel recurring actions removed from the configuration
+        *** Deprecated ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>
     <parameter name="stop-orphan-actions">
       <longdesc lang="en">
-        Deprecated alias for stop-removed-actions
+        Deprecated alias for cancel-removed-actions
       </longdesc>
       <shortdesc lang="en">
-        *** Deprecated *** *** Replaced with stop-removed-actions ***
+        *** Deprecated *** *** Replaced with cancel-removed-actions ***
       </shortdesc>
       <content type="boolean" default=""/>
     </parameter>

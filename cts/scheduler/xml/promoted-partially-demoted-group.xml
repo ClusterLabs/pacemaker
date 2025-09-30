@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
-        <nvpair id="cib-bootstrap-options-stop-removed-resources" name="stop-removed-resources" value="true"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="100"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="100"/>
@@ -19,7 +18,6 @@
         <nvpair name="dc-deadtime" value="20s" id="cib-bootstrap-options-dc-deadtime"/>
         <nvpair name="election-timeout" value="2m" id="cib-bootstrap-options-election-timeout"/>
         <nvpair name="enable-acl" value="false" id="cib-bootstrap-options-enable-acl"/>
-        <nvpair name="enable-startup-probes" value="true" id="cib-bootstrap-options-enable-startup-probes"/>
         <nvpair name="migration-limit" value="4" id="cib-bootstrap-options-migration-limit"/>
         <nvpair name="node-health-green" value="0" id="cib-bootstrap-options-node-health-green"/>
         <nvpair name="node-health-red" value="-INFINITY" id="cib-bootstrap-options-node-health-red"/>
@@ -31,7 +29,6 @@
         <nvpair name="startup-fencing" value="true" id="cib-bootstrap-options-startup-fencing"/>
         <nvpair name="fencing-action" value="reboot" id="cib-bootstrap-options-fencing-action"/>
         <nvpair name="fencing-timeout" value="60s" id="cib-bootstrap-options-fencing-timeout"/>
-        <nvpair name="stop-removed-actions" value="true" id="cib-bootstrap-options-stop-removed-actions"/>
         <nvpair name="symmetric-cluster" value="true" id="cib-bootstrap-options-symmetric-cluster"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1383203544"/>
       </cluster_property_set>

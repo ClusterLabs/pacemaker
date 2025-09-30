@@ -43,7 +43,7 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
 
 /*!
  * \internal
- * \brief Create any needed robes on a node for a list of resources
+ * \brief Create any needed probes on a node for a list of resources
  *
  * \param[in,out] rscs  List of resources to create probes for
  * \param[in,out] node  Node to create probes on

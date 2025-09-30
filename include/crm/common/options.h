@@ -27,15 +27,12 @@ extern     "C" {
 #define PCMK_OPT_BATCH_LIMIT                    "batch-limit"
 #define PCMK_OPT_CLUSTER_DELAY                  "cluster-delay"
 #define PCMK_OPT_CLUSTER_INFRASTRUCTURE         "cluster-infrastructure"
-#define PCMK_OPT_CLUSTER_IPC_LIMIT              "cluster-ipc-limit"
 #define PCMK_OPT_CLUSTER_NAME                   "cluster-name"
 #define PCMK_OPT_CLUSTER_RECHECK_INTERVAL       "cluster-recheck-interval"
-#define PCMK_OPT_CONCURRENT_FENCING             "concurrent-fencing"
 #define PCMK_OPT_DC_DEADTIME                    "dc-deadtime"
 #define PCMK_OPT_DC_VERSION                     "dc-version"
 #define PCMK_OPT_ELECTION_TIMEOUT               "election-timeout"
 #define PCMK_OPT_ENABLE_ACL                     "enable-acl"
-#define PCMK_OPT_ENABLE_STARTUP_PROBES          "enable-startup-probes"
 #define PCMK_OPT_FENCE_REMOTE_WITHOUT_QUORUM    "fence-remote-without-quorum"
 #define PCMK_OPT_FENCING_ACTION                 "fencing-action"
 #define PCMK_OPT_FENCING_ENABLED                "fencing-enabled"
@@ -68,34 +65,9 @@ extern     "C" {
 #define PCMK_OPT_START_FAILURE_IS_FATAL         "start-failure-is-fatal"
 #define PCMK_OPT_STARTUP_FENCING                "startup-fencing"
 #define PCMK_OPT_STOP_ALL_RESOURCES             "stop-all-resources"
-#define PCMK_OPT_STOP_REMOVED_ACTIONS           "stop-removed-actions"
-#define PCMK_OPT_STOP_REMOVED_RESOURCES         "stop-removed-resources"
 #define PCMK_OPT_SYMMETRIC_CLUSTER              "symmetric-cluster"
 #define PCMK_OPT_TRANSITION_DELAY               "transition-delay"
 
-//! \deprecated Do not use
-#define PCMK_OPT_STOP_ORPHAN_ACTIONS            "stop-orphan-actions"
-
-//! \deprecated Do not use
-#define PCMK_OPT_STOP_ORPHAN_RESOURCES          "stop-orphan-resources"
-
-//! \deprecated Do not use
-#define PCMK_OPT_STONITH_ENABLED                "stonith-enabled"
-
-//! \deprecated Do not use
-#define PCMK_OPT_STONITH_ACTION                 "stonith-action"
-
-//! \deprecated Do not use
-#define PCMK_OPT_STONITH_MAX_ATTEMPTS           "stonith-max-attempts"
-
-//! \deprecated Do not use
-#define PCMK_OPT_STONITH_TIMEOUT                "stonith-timeout"
-
-//! \deprecated Do not use
-#define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT       "stonith-watchdog-timeout"
-
-//! \deprecated Do not use
-#define PCMK_OPT_FENCE_REACTION                 "fence-reaction"
 
 /*
  * Meta-attributes
@@ -253,6 +225,10 @@ extern     "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/options_compat.h>
 #endif
 
 #endif // PCMK__CRM_COMMON_OPTIONS__H
