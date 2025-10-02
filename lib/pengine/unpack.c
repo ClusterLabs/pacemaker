@@ -897,6 +897,9 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         /* pcs's CI tests look for this specific error message. Confer with the
          * pcs team before changing it. If the dependency still exists, bump the
          * CRM_FEATURE_SET and inform the pcs maintainers.
+         *
+         * Also, ResyncCIB.errors_to_ignore() looks for this specific error
+         * message as well.
          */
         pcmk__config_err("Resource start-up disabled since no fencing "
                          "resources have been defined. Either configure some "

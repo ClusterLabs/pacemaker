@@ -64,7 +64,7 @@ class ResyncCIB(CTSTest):
         # Errors that occur as a result of the CIB being wiped
         return [
             r"error.*: v1 patchset error, patch failed to apply: Application of an update diff failed",
-            r"error.*: Resource start-up disabled since no STONITH resources have been defined",
-            r"error.*: Either configure some or disable STONITH with the stonith-enabled option",
-            r"error.*: NOTE: Clusters with shared data need STONITH to ensure data integrity"
+            r"error.*: Resource start-up disabled since no fencing resources have been defined. "
+                       "Either configure some or disable fencing with the fencing-enabled option. "
+                       "NOTE: Clusters with shared data need fencing to ensure data integrity."
         ]
