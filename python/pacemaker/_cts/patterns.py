@@ -76,7 +76,7 @@ class BasePatterns:
             "Pat:Fencing_start": r"Requesting peer fencing .* targeting %s",
             "Pat:Fencing_ok": r"pacemaker-fenced.*:\s*Operation .* targeting %s by .* for .*@.*: OK",
             "Pat:Fencing_recover": r"pacemaker-schedulerd.*: Recover\s+%s",
-            "Pat:Fencing_active": r"stonith resource .* is active on 2 nodes (attempting recovery)",
+            "Pat:Resource_active": r"resource .* might be active on \d+ nodes \(attempting recovery\)",
             "Pat:Fencing_probe": r"pacemaker-controld.* Result of probe operation for %s on .*: Error",
 
             "Pat:RscOpOK": r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?OK",
