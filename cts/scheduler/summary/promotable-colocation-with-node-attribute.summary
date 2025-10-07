@@ -1,0 +1,45 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 ]
+
+  * Full List of Resources:
+    * Clone Set: primary-clone [primary-rsc] (promotable):
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 node3 node4 ]
+    * Clone Set: dependent-clone [dependent-rsc] (promotable):
+      * Promoted: [ node3 ]
+      * Unpromoted: [ node1 node2 node4 ]
+
+Transition Summary:
+  * Promote    dependent-rsc:0     ( Unpromoted -> Promoted node1 )
+  * Promote    dependent-rsc:1     ( Unpromoted -> Promoted node2 )
+  * Demote     dependent-rsc:2     ( Promoted -> Unpromoted node3 )
+
+Executing Cluster Transition:
+  * Resource action: primary-rsc     monitor=10000 on node1
+  * Resource action: primary-rsc     monitor=11000 on node2
+  * Resource action: primary-rsc     monitor=11000 on node3
+  * Resource action: primary-rsc     monitor=11000 on node4
+  * Resource action: dependent-rsc   monitor=11000 on node4
+  * Pseudo action:   dependent-clone_demote_0
+  * Resource action: dependent-rsc   demote on node3
+  * Pseudo action:   dependent-clone_demoted_0
+  * Pseudo action:   dependent-clone_promote_0
+  * Resource action: dependent-rsc   promote on node1
+  * Resource action: dependent-rsc   promote on node2
+  * Resource action: dependent-rsc   monitor=11000 on node3
+  * Pseudo action:   dependent-clone_promoted_0
+  * Resource action: dependent-rsc   monitor=10000 on node1
+  * Resource action: dependent-rsc   monitor=10000 on node2
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 ]
+
+  * Full List of Resources:
+    * Clone Set: primary-clone [primary-rsc] (promotable):
+      * Promoted: [ node1 ]
+      * Unpromoted: [ node2 node3 node4 ]
+    * Clone Set: dependent-clone [dependent-rsc] (promotable):
+      * Promoted: [ node1 node2 ]
+      * Unpromoted: [ node3 node4 ]
