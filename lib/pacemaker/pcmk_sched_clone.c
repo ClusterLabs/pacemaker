@@ -301,7 +301,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
 
         primary_instance = pcmk__find_compatible_instance(dependent, primary,
                                                           pcmk_role_unknown,
-                                                          false);
+                                                          false, NULL);
         if (primary_instance != NULL) {
             pcmk__rsc_debug(primary, "Interleaving %s with %s",
                             dependent->id, primary_instance->id);
