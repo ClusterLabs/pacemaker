@@ -151,7 +151,7 @@ cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RO);
 }
 
-void
+int
 ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 {
     const char *session = pcmk__xe_get(xml, PCMK__XA_LRMD_IPC_SESSION);
@@ -166,12 +166,12 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
 
     if (pcmk__str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_ACK, pcmk__str_casei)) {
         handle_shutdown_ack();
-        return;
+        return rc;
     }
 
     if (pcmk__str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_NACK, pcmk__str_casei)) {
         handle_shutdown_nack();
-        return;
+        return rc;
     }
 
     ipc_client = pcmk__find_client_by_id(session);
@@ -181,7 +181,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
         pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, session);
         lrmd_server_send_notify(ipc_proxy, msg);
         pcmk__xml_free(msg);
-        return;
+        return rc;
     }
 
     /* This is an event or response from the ipc provider
@@ -223,6 +223,8 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
         crm_warn("Could not proxy IPC to client %s: %s " QB_XS " rc=%d",
                  ipc_client->id, pcmk_rc_str(rc), rc);
     }
+
+    return rc;
 }
 
 static int32_t

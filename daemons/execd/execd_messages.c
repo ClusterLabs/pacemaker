@@ -52,10 +52,21 @@ handle_ipc_fwd_request(pcmk__request_t *request)
         return NULL;
     }
 
-    ipc_proxy_forward_client(request->ipc_client, request->xml);
+    rc = ipc_proxy_forward_client(request->ipc_client, request->xml);
 #else
     rc = EPROTONOSUPPORT;
 #endif
+
+    if (rc == pcmk_rc_ok) {
+        /* Coverity gets confused by the #ifdef above and thinks this block
+         * is unreachable due to rc always being EPROTONOSUPPORT.
+         */
+        // coverity[dead_error_line]
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    } else {
+        pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
+                         pcmk_rc_str(rc));
+    }
 
     pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
@@ -196,6 +207,8 @@ handle_poke_request(pcmk__request_t *request)
 
     pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
     /* Create a generic reply since this doesn't create a more specific one */
     reply = execd_create_reply(pcmk_ok, call_id);
     return reply;
@@ -297,11 +310,13 @@ handle_rsc_info_request(pcmk__request_t *request)
 
     /* This returns ENODEV if the resource isn't in the cache which will be
      * logged as an error.  However, this isn't fatal to the client - it may
-     * querying to see if the resource exists before deciding to register it.
+     * be querying to see if the resource exists before deciding to register it.
+     * Thus, we'll ignore an ENODEV to prevent a warning message from being
+     * logged.
      */
     rc = execd_process_get_rsc_info(request->xml, call_id, &reply);
 
-    if (rc == pcmk_rc_ok) {
+    if ((rc == pcmk_rc_ok) || (rc == ENODEV)) {
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     } else {
         pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
