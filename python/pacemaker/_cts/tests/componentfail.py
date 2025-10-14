@@ -79,7 +79,7 @@ class ComponentFail(CTSTest):
             # Ignore actions for fence devices if fencer will respawn
             # (their registration will be lost, and probes will fail)
             self._okerrpatterns = [
-                self._cm.templates["Pat:Fencing_active"],
+                self._cm.templates["Pat:Resource_active"],
             ]
             (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
 

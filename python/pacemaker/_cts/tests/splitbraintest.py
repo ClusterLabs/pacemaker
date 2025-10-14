@@ -200,7 +200,8 @@ class SplitBrainTest(CTSTest):
             r"Another DC detected:",
             r"(ERROR|error).*: .*Application of an update diff failed",
             r"pacemaker-controld.*:.*not in our membership list",
-            r"CRIT:.*node.*returning after partition"
+            r"CRIT:.*node.*returning after partition",
+            self._cm.templates["Pat:Resource_active"],
         ]
 
     def is_applicable(self):

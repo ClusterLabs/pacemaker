@@ -66,6 +66,25 @@ class CibsecretTest(CTSTest):
 
         return ""
 
+    def _remove_dummy(self, node):
+        """Remove the previously created dummy resource on the given node."""
+        pats = [
+            self._cm.templates["Pat:RscOpOK"] % ("stop", self._rid)
+        ]
+
+        watch = self.create_watch(pats, 60)
+        watch.set_watch()
+        self._cm.remove_dummy_rsc(node, self._rid)
+
+        with Timer(self._logger, self.name, "removeDummy"):
+            watch.look_for_all()
+
+        if watch.unmatched:
+            self.debug("Failed to find patterns when removing dummy resource")
+            return repr(watch.unmatched)
+
+        return ""
+
     def _check_cib_value(self, node, expected):
         """Check that the secret has the expected value."""
         (rc, lines) = self._rsh(node, f"crm_resource -r {self._rid} -g {self._secret}",
@@ -224,6 +243,7 @@ class CibsecretTest(CTSTest):
             return False
 
         self._test_secrets_removed()
+        self._remove_dummy(node)
 
         return self.success()
 

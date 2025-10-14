@@ -125,7 +125,7 @@ class StonithdTest(CTSTest):
         return [
             self._cm.templates["Pat:Fencing_start"] % ".*",
             self._cm.templates["Pat:Fencing_ok"] % ".*",
-            self._cm.templates["Pat:Fencing_active"],
+            self._cm.templates["Pat:Resource_active"],
             r"error.*: Operation 'reboot' targeting .* by .* for stonith_admin.*: Timer expired"
         ]
 

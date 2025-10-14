@@ -302,19 +302,20 @@ class Scenario:
             if self._bad_news:
                 match = self._bad_news.look(0)
 
-            if match:
-                add_err = True
-
-                for ignore in ignorelist:
-                    if add_err and re.search(ignore, match):
-                        add_err = False
-
-                if add_err:
-                    self._cm.log(f"BadNews: {match}")
-                    self.incr("BadNews")
-                    errcount += 1
-            else:
+            if not match:
                 break
+
+            add_err = True
+
+            for ignore in ignorelist:
+                if add_err and re.search(ignore, match):
+                    add_err = False
+                    break
+
+            if add_err:
+                self._cm.log(f"BadNews: {match}")
+                self.incr("BadNews")
+                errcount += 1
         else:
             print("Big problems")
             if not should_continue(self._cm.env):
