@@ -366,9 +366,6 @@ fsa_action2string(long long action)
         case A_DC_JOIN_FINALIZE:
             actionAsText = "A_DC_JOIN_FINALIZE";
             break;
-        case A_MSG_PROCESS:
-            actionAsText = "A_MSG_PROCESS";
-            break;
         case A_MSG_ROUTE:
             actionAsText = "A_MSG_ROUTE";
             break;
@@ -438,12 +435,6 @@ fsa_action2string(long long action)
         case A_PE_STOP:
             actionAsText = "A_PE_STOP";
             break;
-        case A_NODE_BLOCK:
-            actionAsText = "A_NODE_BLOCK";
-            break;
-        case A_UPDATE_NODESTATUS:
-            actionAsText = "A_UPDATE_NODESTATUS";
-            break;
         case A_LOG:
             actionAsText = "A_LOG   ";
             break;
@@ -489,14 +480,8 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     if (pcmk__is_set(input_register, R_STAYDOWN)) {
         crm_trace("%s %.16" PRIx64 " (R_STAYDOWN)", text, R_STAYDOWN);
     }
-    if (pcmk__is_set(input_register, R_JOIN_OK)) {
-        crm_trace("%s %.16" PRIx64 " (R_JOIN_OK)", text, R_JOIN_OK);
-    }
     if (pcmk__is_set(input_register, R_READ_CONFIG)) {
         crm_trace("%s %.16" PRIx64 " (R_READ_CONFIG)", text, R_READ_CONFIG);
-    }
-    if (pcmk__is_set(input_register, R_INVOKE_PE)) {
-        crm_trace("%s %.16" PRIx64 " (R_INVOKE_PE)", text, R_INVOKE_PE);
     }
     if (pcmk__is_set(input_register, R_CIB_CONNECTED)) {
         crm_trace("%s %.16" PRIx64 " (R_CIB_CONNECTED)", text, R_CIB_CONNECTED);
@@ -510,29 +495,8 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     if (pcmk__is_set(input_register, R_LRM_CONNECTED)) {
         crm_trace("%s %.16" PRIx64 " (R_LRM_CONNECTED)", text, R_LRM_CONNECTED);
     }
-    if (pcmk__is_set(input_register, R_CIB_REQUIRED)) {
-        crm_trace("%s %.16" PRIx64 " (R_CIB_REQUIRED)", text, R_CIB_REQUIRED);
-    }
     if (pcmk__is_set(input_register, R_PE_REQUIRED)) {
         crm_trace("%s %.16" PRIx64 " (R_PE_REQUIRED)", text, R_PE_REQUIRED);
-    }
-    if (pcmk__is_set(input_register, R_TE_REQUIRED)) {
-        crm_trace("%s %.16" PRIx64 " (R_TE_REQUIRED)", text, R_TE_REQUIRED);
-    }
-    if (pcmk__is_set(input_register, R_REQ_PEND)) {
-        crm_trace("%s %.16" PRIx64 " (R_REQ_PEND)", text, R_REQ_PEND);
-    }
-    if (pcmk__is_set(input_register, R_PE_PEND)) {
-        crm_trace("%s %.16" PRIx64 " (R_PE_PEND)", text, R_PE_PEND);
-    }
-    if (pcmk__is_set(input_register, R_TE_PEND)) {
-        crm_trace("%s %.16" PRIx64 " (R_TE_PEND)", text, R_TE_PEND);
-    }
-    if (pcmk__is_set(input_register, R_RESP_PEND)) {
-        crm_trace("%s %.16" PRIx64 " (R_RESP_PEND)", text, R_RESP_PEND);
-    }
-    if (pcmk__is_set(input_register, R_CIB_DONE)) {
-        crm_trace("%s %.16" PRIx64 " (R_CIB_DONE)", text, R_CIB_DONE);
     }
     if (pcmk__is_set(input_register, R_HAVE_CIB)) {
         crm_trace("%s %.16" PRIx64 " (R_HAVE_CIB)", text, R_HAVE_CIB);
@@ -626,9 +590,6 @@ fsa_dump_actions(uint64_t action, const char *text)
     if (pcmk__is_set(action, A_DC_JOIN_FINALIZE)) {
         crm_trace("Action %.16" PRIx64 " (A_DC_JOIN_FINALIZE) %s", A_DC_JOIN_FINALIZE, text);
     }
-    if (pcmk__is_set(action, A_MSG_PROCESS)) {
-        crm_trace("Action %.16" PRIx64 " (A_MSG_PROCESS) %s", A_MSG_PROCESS, text);
-    }
     if (pcmk__is_set(action, A_MSG_ROUTE)) {
         crm_trace("Action %.16" PRIx64 " (A_MSG_ROUTE) %s", A_MSG_ROUTE, text);
     }
@@ -685,12 +646,6 @@ fsa_dump_actions(uint64_t action, const char *text)
     }
     if (pcmk__is_set(action, A_PE_STOP)) {
         crm_trace("Action %.16" PRIx64 " (A_PE_STOP) %s", A_PE_STOP, text);
-    }
-    if (pcmk__is_set(action, A_NODE_BLOCK)) {
-        crm_trace("Action %.16" PRIx64 " (A_NODE_BLOCK) %s", A_NODE_BLOCK, text);
-    }
-    if (pcmk__is_set(action, A_UPDATE_NODESTATUS)) {
-        crm_trace("Action %.16" PRIx64 " (A_UPDATE_NODESTATUS) %s", A_UPDATE_NODESTATUS, text);
     }
     if (pcmk__is_set(action, A_LOG)) {
         crm_trace("Action %.16" PRIx64 " (A_LOG   ) %s", A_LOG, text);

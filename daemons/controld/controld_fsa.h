@@ -246,9 +246,6 @@ enum crmd_fsa_input {
 
 /* -- Message processing -- */
 
-/* Process the queue of requests */
-#define A_MSG_PROCESS               (UINT64_C(1) << 13)
-
 /* Send the message to the correct recipient */
 #define A_MSG_ROUTE                 (UINT64_C(1) << 14)
 
@@ -342,14 +339,6 @@ enum crmd_fsa_input {
 
 /* -- Misc actions -- */
 
-/* Add a system generate "block" so that resources arent moved to or are
- * activly moved away from the affected node. This way we can return quickly
- * even if busy with other things.
- */
-#define A_NODE_BLOCK                (UINT64_C(1) << 52)
-
-/* Update our information in the local CIB */
-#define A_UPDATE_NODESTATUS         (UINT64_C(1) << 53)
 #define A_READCONFIG                (UINT64_C(1) << 55)
 
 /* -- LRM Actions -- */
@@ -398,14 +387,8 @@ enum crmd_fsa_input {
 // Should we restart?
 #define R_STAYDOWN        (UINT64_C(1) << 3)
 
-// Have we completed the join process?
-#define R_JOIN_OK         (UINT64_C(1) << 4)
-
 // Has the configuration been read?
 #define R_READ_CONFIG     (UINT64_C(1) << 6)
-
-// Should the scheduler be invoked?
-#define R_INVOKE_PE       (UINT64_C(1) << 7)
 
 // Is the CIB connected?
 #define R_CIB_CONNECTED   (UINT64_C(1) << 8)
@@ -419,20 +402,11 @@ enum crmd_fsa_input {
 // Is the executor connected?
 #define R_LRM_CONNECTED   (UINT64_C(1) << 11)
 
-// Is the CIB required?
-#define R_CIB_REQUIRED    (UINT64_C(1) << 12)
-
 // Is the scheduler required?
 #define R_PE_REQUIRED     (UINT64_C(1) << 13)
 
-// Is the Transition Engine required?
-#define R_TE_REQUIRED     (UINT64_C(1) << 14)
-
 // Is the fencer daemon required?
 #define R_ST_REQUIRED     (UINT64_C(1) << 15)
-
-// Have we calculated the CIB?
-#define R_CIB_DONE        (UINT64_C(1) << 16)
 
 // Do we have an up-to-date CIB?
 #define R_HAVE_CIB        (UINT64_C(1) << 17)
@@ -445,19 +419,6 @@ enum crmd_fsa_input {
 
 // Did we sign out of our own accord?
 #define R_HA_DISCONNECTED (UINT64_C(1) << 22)
-
-// Are there requests waiting for processing?
-#define R_REQ_PEND        (UINT64_C(1) << 24)
-
-// Are we awaiting reply from scheduler?
-#define R_PE_PEND         (UINT64_C(1) << 25)
-
-// Has the TE been invoked and we're awaiting completion?
-#define R_TE_PEND         (UINT64_C(1) << 26)
-
-// Do we have clients waiting on a response? If so perhaps we
-// shouldn't stop yet.
-#define R_RESP_PEND       (UINT64_C(1) << 27)
 
 /* Have we sent a stop action to all resources in preparation for
  * shutting down?
