@@ -44,11 +44,13 @@
  *     5       2.1.5    Peers can request confirmation of a sent message
  *     6       2.1.7    PCMK__ATTRD_CMD_PEER_REMOVE supports PCMK__XA_REAP
  *     7       3.0.0    "flush" support dropped
+ *     8       3.0.2    attrd clears transient attributes from the CIB as well
  */
-#define ATTRD_PROTOCOL_VERSION "7"
+#define ATTRD_PROTOCOL_VERSION "8"
 
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
+#define ATTRD_SUPPORTS_CLEARING_CIB(x)  ((x) >= 8)
 
 #define attrd_send_ack(client, id, flags)                       \
     pcmk__ipc_send_ack((client), (id), (flags), PCMK__XE_ACK,   \
@@ -217,7 +219,7 @@ char *attrd_nvpair_id(const attribute_t *attr, const char *node_state_id);
 bool attrd_for_cib(const attribute_t *a);
 void attrd_drop_removed_value(const char *set_type, const char *cib_id);
 void attrd_drop_removed_set(const char *set_type, const char *cib_id);
-void attrd_drop_removed_values(const char *cib_id);
+void attrd_drop_removed_values(const char *cib_id, int peer_attrd_ver);
 
 enum attrd_write_options {
     attrd_write_changed         = 0,
@@ -231,6 +233,7 @@ void attrd_write_or_elect_attribute(attribute_t *a);
 extern int minimum_protocol_version;
 void attrd_remove_peer_protocol_ver(const char *host);
 void attrd_update_minimum_protocol_ver(const char *host, const char *value);
+int attrd_get_peer_protocol_ver(const char *host);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
 

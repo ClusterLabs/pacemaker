@@ -300,27 +300,40 @@ attrd_for_cib(const attribute_t *a)
 
 /*!
  * \internal
- * \brief Drop NULL attribute values as indicated by given function
+ * \brief Drop attribute values as indicated by the given function
  *
- * Drop all NULL node attribute values that a given function indicates should
- * be, based on the XML ID of an element that was removed from the CIB.
+ * This function drops two kinds of attribute values:
  *
- * \param[in] cib_id    ID of XML element that was removed from CIB
- *                      (a name/value pair, an attribute set, or a node state)
- * \param[in] set_type  If not NULL, drop only attributes with this set type
- * \param[in] func      Call this function for every attribute/value
- *                      combination
+ * - Those that have previously been set to NULL
+ * - Those where \p peer_attrd_ver indicates an older version of the attrd
+ *   protocol that does not support clearing transient attributes
+ *
+ * The decision to drop an attribute value is made using a given function
+ * that uses the XML ID of an element that was removed from the CIB.
+ *
+ * \param[in] cib_id         ID of XML element that was removed from CIB
+ *                           (a name/value pair, an attribute set, or a node
+ *                           state)
+ * \param[in] set_type       If not NULL, drop only attributes with this set type
+ * \param[in] peer_attrd_ver Protocol version from the peer attrd that requested
+ *                           a CIB update
+ * \param[in] func           Call this function for every attribute/value
+ *                           combination
  */
 static void
-drop_removed_values(const char *cib_id, const char *set_type,
+drop_removed_values(const char *cib_id, const char *set_type, int peer_attrd_ver,
                     bool (*func)(const attribute_t *, const char *,
                                  const char *))
 {
+    bool drop_immediately = false;
     attribute_t *a = NULL;
     GHashTableIter attr_iter;
     const char *entry_type = pcmk__s(set_type, "status entry"); // for log
 
     CRM_CHECK((cib_id != NULL) && (func != NULL), return);
+
+    drop_immediately = (peer_attrd_ver != -1)
+                       && !ATTRD_SUPPORTS_CLEARING_CIB(peer_attrd_ver);
 
     // Check every attribute ...
     g_hash_table_iter_init(&attr_iter, attributes);
@@ -338,7 +351,7 @@ drop_removed_values(const char *cib_id, const char *set_type,
         while (g_hash_table_iter_next(&value_iter, NULL, (gpointer *) &v)) {
             const char *id = NULL;
 
-            if (v->current != NULL) {
+            if ((v->current != NULL) && !drop_immediately) {
                 continue;
             }
 
@@ -355,11 +368,17 @@ drop_removed_values(const char *cib_id, const char *set_type,
             }
 
             if (!func(a, id, cib_id)) {
+                crm_trace("%s != %s", id, cib_id);
                 continue;
             }
 
-            crm_debug("Dropping %s[%s] after CIB erasure of %s %s",
-                      a->id, v->nodename, entry_type, cib_id);
+            if (drop_immediately) {
+                crm_debug("Dropping %s[%s] immediately", a->id, v->nodename);
+            } else {
+                crm_debug("Dropping %s[%s] after CIB erasure of %s %s",
+                          a->id, v->nodename, entry_type, cib_id);
+            }
+
             g_hash_table_iter_remove(&value_iter);
         }
     }
@@ -394,7 +413,7 @@ nvpair_matches(const attribute_t *a, const char *xml_id, const char *cib_id)
 void
 attrd_drop_removed_value(const char *set_type, const char *cib_id)
 {
-    drop_removed_values(cib_id, set_type, nvpair_matches);
+    drop_removed_values(cib_id, set_type, -1, nvpair_matches);
 }
 
 /*!
@@ -431,7 +450,7 @@ set_id_matches(const attribute_t *a, const char *xml_id, const char *cib_id)
 void
 attrd_drop_removed_set(const char *set_type, const char *cib_id)
 {
-    drop_removed_values(cib_id, set_type, set_id_matches);
+    drop_removed_values(cib_id, set_type, -1, set_id_matches);
 }
 
 /*!
@@ -454,10 +473,12 @@ node_matches(const attribute_t *a, const char *xml_id, const char *cib_id)
  * \internal
  * \brief Drop all removed attribute values for a node
  *
- * \param[in] cib_id  ID of node state that was removed from CIB
+ * \param[in] cib_id          ID of node state that was removed from CIB
+ * \param[in] peer_attrd_ver  Protocol version from the peer attrd that
+ *                            requested a CIB update
  */
 void
-attrd_drop_removed_values(const char *cib_id)
+attrd_drop_removed_values(const char *cib_id, int peer_attrd_ver)
 {
-    drop_removed_values(cib_id, NULL, node_matches);
+    drop_removed_values(cib_id, NULL, peer_attrd_ver, node_matches);
 }

@@ -238,6 +238,23 @@ attrd_remove_peer_protocol_ver(const char *host)
     }
 }
 
+int
+attrd_get_peer_protocol_ver(const char *host)
+{
+    gpointer key = NULL;
+
+    if (peer_protocol_vers == NULL) {
+        return -1;
+    }
+
+    key = g_hash_table_lookup(peer_protocol_vers, host);
+    if (key == NULL) {
+        return -1;
+    }
+
+    return GPOINTER_TO_INT(key);
+}
+
 /*!
  * \internal
  * \brief When a peer node broadcasts a message with its protocol version, keep

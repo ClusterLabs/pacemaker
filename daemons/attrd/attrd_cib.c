@@ -50,7 +50,8 @@ attrd_cib_destroy_cb(gpointer user_data)
  * \brief Check a patchset change for deletion of node attribute values
  *
  * \param[in] xml   Patchset change element
- * \param[in] data  Ignored
+ * \param[in] data  Protocol version from the peer attrd that requested
+ *                  a CIB update
  *
  * \return pcmk_rc_ok (to always continue to next patchset change)
  */
@@ -113,7 +114,7 @@ drop_values_in_deletion(xmlNode *xml, void *data)
         attrd_drop_removed_set(set_type, set_id);
 
     } else if (!pcmk__str_empty(node_id)) {
-        attrd_drop_removed_values(node_id);
+        attrd_drop_removed_values(node_id, GPOINTER_TO_INT(data));
     }
 
 done:
@@ -149,6 +150,9 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 
     client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
+        const char *peer = pcmk__xe_get(msg, PCMK__XA_SRC);
+        int peer_attrd_ver = attrd_get_peer_protocol_ver(peer);
+
         /* This change came from a source that ensured the CIB is consistent
          * with our attributes table, so we don't need to write anything out.
          * If a removed attribute has been erased, we can forget it now.
@@ -165,7 +169,8 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
          * function signature.
          */
         pcmk__xe_foreach_child((xmlNode *) patchset, PCMK_XE_CHANGE,
-                               drop_values_in_deletion, NULL);
+                               drop_values_in_deletion,
+                               GINT_TO_POINTER(peer_attrd_ver));
         return;
     }
 
