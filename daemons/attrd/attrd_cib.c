@@ -113,7 +113,7 @@ drop_values_in_deletion(xmlNode *xml, void *data)
         attrd_drop_removed_set(set_type, set_id);
 
     } else if (!pcmk__str_empty(node_id)) {
-        attrd_drop_removed_values(node_id);
+        attrd_drop_removed_values(node_id, *(int *) data);
     }
 
 done:
@@ -149,6 +149,9 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
 
     client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
     if (!cib__client_triggers_refresh(client_name)) {
+        const char *peer = pcmk__xe_get(msg, PCMK__XA_SRC);
+        int peer_attrd_ver = attrd_get_peer_protocol_ver(peer);
+
         /* This change came from a source that ensured the CIB is consistent
          * with our attributes table, so we don't need to write anything out.
          * If a removed attribute has been erased, we can forget it now.
@@ -165,7 +168,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
          * function signature.
          */
         pcmk__xe_foreach_child((xmlNode *) patchset, PCMK_XE_CHANGE,
-                               drop_values_in_deletion, NULL);
+                               drop_values_in_deletion, &peer_attrd_ver);
         return;
     }
 
