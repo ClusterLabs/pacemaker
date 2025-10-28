@@ -12,6 +12,7 @@
 
 #include <stdio.h>                          // NULL
 #include <stdbool.h>                        // bool
+#include <stdint.h>                         // UINT32_C
 
 #include <crm/common/internal.h>            // pcmk__is_set()
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t
@@ -24,14 +25,14 @@ extern "C" {
 
 // Clone resource flags (used in variant data)
 enum pcmk__clone_flags {
-    // Whether instances should be started sequentially
-    pcmk__clone_ordered                 = (1 << 0),
+    //! Whether instances should be started sequentially
+    pcmk__clone_ordered                 = (UINT32_C(1) << 0),
 
-    // Whether promotion scores have been added
-    pcmk__clone_promotion_added         = (1 << 1),
+    //! Whether promotion scores have been added
+    pcmk__clone_promotion_added         = (UINT32_C(1) << 1),
 
-    // Whether promotion constraints have been added
-    pcmk__clone_promotion_constrained   = (1 << 2),
+    //! Whether promotion constraints have been added
+    pcmk__clone_promotion_constrained   = (UINT32_C(1) << 2),
 };
 
 /*!

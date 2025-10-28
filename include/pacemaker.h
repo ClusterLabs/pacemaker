@@ -10,8 +10,11 @@
 #ifndef PCMK__PACEMAKER__H
 #  define PCMK__PACEMAKER__H
 
+#  include <stdint.h>              // UINT32_C
+
 #  include <glib.h>
 #  include <libxml/tree.h>
+
 #  include <crm/common/scheduler.h>
 #  include <crm/cib/cib_types.h>
 
@@ -32,16 +35,15 @@ extern "C" {
  * \brief Modify operation of running a cluster simulation.
  */
 enum pcmk_sim_flags {
-    // @COMPAT Use UINT32_C(1); should not affect behavior
     pcmk_sim_none             = 0,
-    pcmk_sim_all_actions      = 1 << 0,
-    pcmk_sim_show_pending     = 1 << 1,
-    pcmk_sim_process          = 1 << 2,
-    pcmk_sim_show_scores      = 1 << 3,
-    pcmk_sim_show_utilization = 1 << 4,
-    pcmk_sim_simulate         = 1 << 5,
-    pcmk_sim_sanitized        = 1 << 6,
-    pcmk_sim_verbose          = 1 << 7,
+    pcmk_sim_all_actions      = UINT32_C(1) << 0,
+    pcmk_sim_show_pending     = UINT32_C(1) << 1,
+    pcmk_sim_process          = UINT32_C(1) << 2,
+    pcmk_sim_show_scores      = UINT32_C(1) << 3,
+    pcmk_sim_show_utilization = UINT32_C(1) << 4,
+    pcmk_sim_simulate         = UINT32_C(1) << 5,
+    pcmk_sim_sanitized        = UINT32_C(1) << 6,
+    pcmk_sim_verbose          = UINT32_C(1) << 7,
 };
 
 /*!
@@ -327,10 +329,17 @@ pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
 
 //! Bit flags to control which fields of result code info are displayed
 enum pcmk_rc_disp_flags {
-    pcmk_rc_disp_none = 0,          //!< (Does nothing)
-    pcmk_rc_disp_code = (1 << 0),   //!< Display result code number
-    pcmk_rc_disp_name = (1 << 1),   //!< Display result code name
-    pcmk_rc_disp_desc = (1 << 2),   //!< Display result code description
+    //! (Does nothing)
+    pcmk_rc_disp_none = 0,
+
+    //! Display result code number
+    pcmk_rc_disp_code = (UINT32_C(1) << 0),
+
+    //! Display result code name
+    pcmk_rc_disp_name = (UINT32_C(1) << 1),
+
+    //! Display result code description
+    pcmk_rc_disp_desc = (UINT32_C(1) << 2),
 };
 
 /*!

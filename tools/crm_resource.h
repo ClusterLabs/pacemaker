@@ -44,11 +44,11 @@ typedef struct {
 } attr_update_data_t;
 
 enum resource_check_flags {
-    rsc_remain_stopped  = (1 << 0),
-    rsc_unpromotable    = (1 << 1),
-    rsc_unmanaged       = (1 << 2),
-    rsc_locked          = (1 << 3),
-    rsc_node_health     = (1 << 4),
+    rsc_remain_stopped  = (UINT32_C(1) << 0),
+    rsc_unpromotable    = (UINT32_C(1) << 1),
+    rsc_unmanaged       = (UINT32_C(1) << 2),
+    rsc_locked          = (UINT32_C(1) << 3),
+    rsc_node_health     = (UINT32_C(1) << 4),
 };
 
 typedef struct resource_checks_s {

@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdint.h>                 // UINT32_C
 #include <stdio.h>
 #include <unistd.h>
 
@@ -62,10 +63,10 @@ enum shadow_command {
  * \note Ignored for XML output.
  */
 enum shadow_disp_flags {
-    shadow_disp_instance = (1 << 0),
-    shadow_disp_file     = (1 << 1),
-    shadow_disp_content  = (1 << 2),
-    shadow_disp_diff     = (1 << 3),
+    shadow_disp_instance = (UINT32_C(1) << 0),
+    shadow_disp_file     = (UINT32_C(1) << 1),
+    shadow_disp_content  = (UINT32_C(1) << 2),
+    shadow_disp_diff     = (UINT32_C(1) << 3),
 };
 
 static crm_exit_t exit_code = CRM_EX_OK;

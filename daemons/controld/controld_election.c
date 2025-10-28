@@ -213,7 +213,6 @@ do_dc_takeover(long long action,
     controld_execute_fencing_cleanup();
 
     election_reset(controld_globals.cluster);
-    controld_set_fsa_input_flags(R_JOIN_OK|R_INVOKE_PE);
 
     controld_globals.cib_conn->cmds->set_primary(controld_globals.cib_conn,
                                                  cib_none);

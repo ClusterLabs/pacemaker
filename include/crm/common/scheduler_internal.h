@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
 #define PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
 
+#include <inttypes.h>                          // UINT64_C
 #include <crm/common/action_relation_internal.h>
 #include <crm/common/actions_internal.h>
 #include <crm/common/attrs_internal.h>
@@ -47,78 +48,78 @@ enum pcmk__check_parameters {
 // Scheduling options and conditions
 enum pcmk__scheduler_flags {
     // No scheduler flags set (compare with equality rather than bit set)
-    pcmk__sched_none                    = 0ULL,
+    pcmk__sched_none                    = UINT64_C(0),
 
     /* These flags are dynamically determined conditions */
 
     // Whether partition has quorum (via \c PCMK_XA_HAVE_QUORUM attribute)
     //! \deprecated Call pcmk_has_quorum() to check quorum instead
-    pcmk__sched_quorate                 = (1ULL << 0),
+    pcmk__sched_quorate                 = (UINT64_C(1) << 0),
 
     // Whether cluster is symmetric (via symmetric-cluster property)
-    pcmk__sched_symmetric_cluster       = (1ULL << 1),
+    pcmk__sched_symmetric_cluster       = (UINT64_C(1) << 1),
 
     // Whether scheduling encountered a non-configuration error
-    pcmk__sched_processing_error        = (1ULL << 2),
+    pcmk__sched_processing_error        = (UINT64_C(1) << 2),
 
     // Whether cluster is in maintenance mode (via maintenance-mode property)
-    pcmk__sched_in_maintenance          = (1ULL << 3),
+    pcmk__sched_in_maintenance          = (UINT64_C(1) << 3),
 
     // Whether fencing is enabled (via \c PCMK_OPT_FENCING_ENABLED property)
-    pcmk__sched_fencing_enabled         = (1ULL << 4),
+    pcmk__sched_fencing_enabled         = (UINT64_C(1) << 4),
 
     // Whether cluster has a fencing resource (via CIB resources)
     /*! \deprecated To indicate the cluster has a fencing resource, add either a
      * fencing resource configuration or the have-watchdog cluster option to the
      * input CIB
      */
-    pcmk__sched_have_fencing            = (1ULL << 5),
+    pcmk__sched_have_fencing            = (UINT64_C(1) << 5),
 
     // Whether any resource provides or requires unfencing (via CIB resources)
-    pcmk__sched_enable_unfencing        = (1ULL << 6),
+    pcmk__sched_enable_unfencing        = (UINT64_C(1) << 6),
 
     /* Whether concurrent fencing is allowed (via PCMK__OPT_CONCURRENT_FENCING
      * property).
      *
      * @COMPAT The PCMK__OPT_CONCURRENT_FENCING property is deprecated.
      */
-    pcmk__sched_concurrent_fencing      = (1ULL << 7),
+    pcmk__sched_concurrent_fencing      = (UINT64_C(1) << 7),
 
     /* Whether resources removed from the configuration should be stopped (via
      * PCMK__OPT_STOP_REMOVED_RESOURCES property)
      *
      * @COMPAT The PCMK__OPT_STOP_REMOVED_RESOURCES property is deprecated.
      */
-    pcmk__sched_stop_removed_resources  = (1ULL << 8),
+    pcmk__sched_stop_removed_resources  = (UINT64_C(1) << 8),
 
     /* Whether recurring actions removed from the configuration should be
      * cancelled (via PCMK__OPT_CANCEL_REMOVED_ACTIONS property)
      *
      * @COMPAT The PCMK__OPT_CANCEL_REMOVED_ACTIONS property is deprecated.
      */
-    pcmk__sched_cancel_removed_actions  = (1ULL << 9),
+    pcmk__sched_cancel_removed_actions  = (UINT64_C(1) << 9),
 
     // Whether to stop all resources (via stop-all-resources property)
-    pcmk__sched_stop_all                = (1ULL << 10),
+    pcmk__sched_stop_all                = (UINT64_C(1) << 10),
 
     // Whether scheduler processing encountered a warning
-    pcmk__sched_processing_warning      = (1ULL << 11),
+    pcmk__sched_processing_warning      = (UINT64_C(1) << 11),
 
     /*
      * Whether start failure should be treated as if
      * \c PCMK_META_MIGRATION_THRESHOLD is 1 (via
      * \c PCMK_OPT_START_FAILURE_IS_FATAL property)
      */
-    pcmk__sched_start_failure_fatal     = (1ULL << 12),
+    pcmk__sched_start_failure_fatal     = (UINT64_C(1) << 12),
 
     // Whether unseen nodes should be fenced (via startup-fencing property)
-    pcmk__sched_startup_fencing         = (1ULL << 14),
+    pcmk__sched_startup_fencing         = (UINT64_C(1) << 14),
 
     /*
      * Whether resources should be left stopped when their node shuts down
      * cleanly (via shutdown-lock property)
      */
-    pcmk__sched_shutdown_lock           = (1ULL << 15),
+    pcmk__sched_shutdown_lock           = (UINT64_C(1) << 15),
 
     /*
      * Whether resources' current state should be probed (when unknown) before
@@ -128,13 +129,13 @@ enum pcmk__scheduler_flags {
      * @COMPAT Drop this when the PCMK__OPT_ENABLE_STARTUP_PROBES property is
      * dropped.
      */
-    pcmk__sched_probe_resources         = (1ULL << 16),
+    pcmk__sched_probe_resources         = (UINT64_C(1) << 16),
 
     // Whether the CIB status section has been parsed yet
-    pcmk__sched_have_status             = (1ULL << 17),
+    pcmk__sched_have_status             = (UINT64_C(1) << 17),
 
     // Whether the cluster includes any Pacemaker Remote nodes (via CIB)
-    pcmk__sched_have_remote_nodes       = (1ULL << 18),
+    pcmk__sched_have_remote_nodes       = (UINT64_C(1) << 18),
 
 
     /* The remaining flags are scheduling options that must be set explicitly */
@@ -144,31 +145,31 @@ enum pcmk__scheduler_flags {
      * sequence after applying node-specific location criteria (skipping
      * assignment, ordering, actions, etc.).
      */
-    pcmk__sched_location_only           = (1ULL << 20),
+    pcmk__sched_location_only           = (UINT64_C(1) << 20),
 
     // Whether sensitive resource attributes have been masked
-    pcmk__sched_sanitized               = (1ULL << 21),
+    pcmk__sched_sanitized               = (UINT64_C(1) << 21),
 
     // Skip counting of total, disabled, and blocked resource instances
-    pcmk__sched_no_counts               = (1ULL << 23),
+    pcmk__sched_no_counts               = (UINT64_C(1) << 23),
 
     // Whether node scores should be output instead of logged
-    pcmk__sched_output_scores           = (1ULL << 25),
+    pcmk__sched_output_scores           = (UINT64_C(1) << 25),
 
     // Whether to show node and resource utilization (in log or output)
-    pcmk__sched_show_utilization        = (1ULL << 26),
+    pcmk__sched_show_utilization        = (UINT64_C(1) << 26),
 
     /*
      * Whether to stop the scheduling sequence after unpacking the CIB,
      * calculating cluster status, and applying node health (skipping
      * applying node-specific location criteria, assignment, etc.)
      */
-    pcmk__sched_validate_only           = (1ULL << 27),
+    pcmk__sched_validate_only           = (UINT64_C(1) << 27),
 
     /* Can Pacemaker Remote nodes be fenced even from a node that doesn't
      * have quorum?
      */
-    pcmk__sched_fence_remote_no_quorum  = (1ULL << 28),
+    pcmk__sched_fence_remote_no_quorum  = (UINT64_C(1) << 28),
 };
 
 // Implementation of pcmk__scheduler_private_t

@@ -34,13 +34,13 @@ extern "C" {
 
 // Colocation flags
 enum pcmk__coloc_flags {
-    pcmk__coloc_none        = 0U,
+    pcmk__coloc_none        = 0,
 
     // Primary is affected even if already active
-    pcmk__coloc_influence   = (1U << 0),
+    pcmk__coloc_influence   = (UINT32_C(1) << 0),
 
     // Colocation was explicitly configured in CIB
-    pcmk__coloc_explicit    = (1U << 1),
+    pcmk__coloc_explicit    = (UINT32_C(1) << 1),
 };
 
 // Flags to modify the behavior of add_colocated_node_scores()
@@ -49,20 +49,20 @@ enum pcmk__coloc_select {
     pcmk__coloc_select_default      = 0,
 
     // Apply "this with" colocations instead of "with this" colocations
-    pcmk__coloc_select_this_with    = (1 << 0),
+    pcmk__coloc_select_this_with    = (UINT32_C(1) << 0),
 
     // Apply only colocations with non-negative scores
-    pcmk__coloc_select_nonnegative  = (1 << 1),
+    pcmk__coloc_select_nonnegative  = (UINT32_C(1) << 1),
 
     // Apply only colocations with at least one matching node
-    pcmk__coloc_select_active       = (1 << 2),
+    pcmk__coloc_select_active       = (UINT32_C(1) << 2),
 };
 
 // Flags the update_ordered_actions() method can return
 enum pcmk__updated {
     pcmk__updated_none      = 0,        // Nothing changed
-    pcmk__updated_first     = (1 << 0), // First action was updated
-    pcmk__updated_then      = (1 << 1), // Then action was updated
+    pcmk__updated_first     = (UINT32_C(1) << 0), // First action was updated
+    pcmk__updated_then      = (UINT32_C(1) << 1), // Then action was updated
 };
 
 #define pcmk__set_updated_flags(au_flags, action, flags_to_set) do {        \

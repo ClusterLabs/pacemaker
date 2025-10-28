@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 #define PCMK__CRM_COMMON_RESOURCES_INTERNAL__H
 
+#include <inttypes.h>                   // UINT64_C
 #include <stdbool.h>                    // bool
 #include <stdint.h>                     // uint32_t
 #include <glib.h>                       // gboolean, gpointer, guint, etc.
@@ -70,108 +71,118 @@ enum pcmk__multiply_active {
 //! Resource scheduling flags
 enum pcmk__rsc_flags {
     // No resource flags set (compare with equality rather than bit set)
-    pcmk__no_rsc_flags               = 0ULL,
+    pcmk__no_rsc_flags               = UINT64_C(0),
 
     // Whether resource has been removed from the configuration
-    pcmk__rsc_removed                = (1ULL << 0),
+    pcmk__rsc_removed                = (UINT64_C(1) << 0),
 
     /* NOTE: sbd (at least as of 1.5.2) uses pe_rsc_managed which equates to
      * this value, so the value should not be changed
      */
     // Whether resource is managed
-    pcmk__rsc_managed                = (1ULL << 1),
+    pcmk__rsc_managed                = (UINT64_C(1) << 1),
 
     // Whether resource is blocked from further action
-    pcmk__rsc_blocked                = (1ULL << 2),
+    pcmk__rsc_blocked                = (UINT64_C(1) << 2),
 
     // Whether resource has been removed but was launched
-    pcmk__rsc_removed_launched       = (1ULL << 3),
+    pcmk__rsc_removed_launched       = (UINT64_C(1) << 3),
 
     // Whether resource has clone notifications enabled
-    pcmk__rsc_notify                 = (1ULL << 4),
+    pcmk__rsc_notify                 = (UINT64_C(1) << 4),
 
     // Whether resource is not an anonymous clone instance
-    pcmk__rsc_unique                 = (1ULL << 5),
+    pcmk__rsc_unique                 = (UINT64_C(1) << 5),
 
     // Whether resource's class is "stonith"
-    pcmk__rsc_fence_device           = (1ULL << 6),
+    pcmk__rsc_fence_device           = (UINT64_C(1) << 6),
 
     // Whether resource can be promoted and demoted
-    pcmk__rsc_promotable             = (1ULL << 7),
+    pcmk__rsc_promotable             = (UINT64_C(1) << 7),
 
     // Whether resource has not yet been assigned to a node
-    pcmk__rsc_unassigned             = (1ULL << 8),
+    pcmk__rsc_unassigned             = (UINT64_C(1) << 8),
 
     // Whether resource is in the process of being assigned to a node
-    pcmk__rsc_assigning              = (1ULL << 9),
+    pcmk__rsc_assigning              = (UINT64_C(1) << 9),
 
     // Whether resource is in the process of modifying allowed node scores
-    pcmk__rsc_updating_nodes         = (1ULL << 10),
+    pcmk__rsc_updating_nodes         = (UINT64_C(1) << 10),
 
     // Whether resource is in the process of scheduling actions to restart
-    pcmk__rsc_restarting             = (1ULL << 11),
+    pcmk__rsc_restarting             = (UINT64_C(1) << 11),
 
     // Whether resource must be stopped (instead of demoted) if it is failed
-    pcmk__rsc_stop_if_failed         = (1ULL << 12),
+    pcmk__rsc_stop_if_failed         = (UINT64_C(1) << 12),
 
     // Whether a reload action has been scheduled for resource
-    pcmk__rsc_reload                 = (1ULL << 13),
+    pcmk__rsc_reload                 = (UINT64_C(1) << 13),
 
     // Whether resource is a remote connection allowed to run on a remote node
-    pcmk__rsc_remote_nesting_allowed = (1ULL << 14),
+    pcmk__rsc_remote_nesting_allowed = (UINT64_C(1) << 14),
 
     // Whether resource has \c PCMK_META_CRITICAL meta-attribute enabled
-    pcmk__rsc_critical               = (1ULL << 15),
+    pcmk__rsc_critical               = (UINT64_C(1) << 15),
 
     // Whether resource is considered failed
-    pcmk__rsc_failed                 = (1ULL << 16),
+    pcmk__rsc_failed                 = (UINT64_C(1) << 16),
 
     // Flag for non-scheduler code to use to detect recursion loops
-    pcmk__rsc_detect_loop            = (1ULL << 17),
+    pcmk__rsc_detect_loop            = (UINT64_C(1) << 17),
 
     // Whether resource is a Pacemaker Remote connection
-    pcmk__rsc_is_remote_connection   = (1ULL << 18),
+    pcmk__rsc_is_remote_connection   = (UINT64_C(1) << 18),
 
     // Whether resource has pending start action in history
-    pcmk__rsc_start_pending          = (1ULL << 19),
+    pcmk__rsc_start_pending          = (UINT64_C(1) << 19),
 
     // Whether resource is probed only on nodes marked exclusive
-    pcmk__rsc_exclusive_probes       = (1ULL << 20),
+    pcmk__rsc_exclusive_probes       = (UINT64_C(1) << 20),
 
     /*
      * Whether resource is multiply active with recovery set to
      * \c PCMK_VALUE_STOP_UNEXPECTED
      */
-    pcmk__rsc_stop_unexpected        = (1ULL << 22),
+    pcmk__rsc_stop_unexpected        = (UINT64_C(1) << 22),
 
     // Whether resource is allowed to live-migrate
-    pcmk__rsc_migratable             = (1ULL << 23),
+    pcmk__rsc_migratable             = (UINT64_C(1) << 23),
 
     // Whether resource has an ignorable failure
-    pcmk__rsc_ignore_failure         = (1ULL << 24),
+    pcmk__rsc_ignore_failure         = (UINT64_C(1) << 24),
 
     // Whether resource is an implicit container resource for a bundle replica
-    pcmk__rsc_replica_container      = (1ULL << 25),
+    pcmk__rsc_replica_container      = (UINT64_C(1) << 25),
 
     // Whether resource, its node, or entire cluster is in maintenance mode
-    pcmk__rsc_maintenance            = (1ULL << 26),
+    pcmk__rsc_maintenance            = (UINT64_C(1) << 26),
 
     // Whether resource can be started or promoted only on quorate nodes
-    pcmk__rsc_needs_quorum           = (1ULL << 28),
+    pcmk__rsc_needs_quorum           = (UINT64_C(1) << 28),
 
     // Whether resource requires fencing before recovery if on unclean node
-    pcmk__rsc_needs_fencing          = (1ULL << 29),
+    pcmk__rsc_needs_fencing          = (UINT64_C(1) << 29),
 
     // Whether resource can be started or promoted only on unfenced nodes
-    pcmk__rsc_needs_unfencing        = (1ULL << 30),
+    pcmk__rsc_needs_unfencing        = (UINT64_C(1) << 30),
 };
 
-// Where to look for a resource
+/*!
+ * \internal
+ * \brief Where to look for a resource
+ */
 enum pcmk__rsc_node {
-    pcmk__rsc_node_none     = 0U,           // Nowhere
-    pcmk__rsc_node_assigned = (1U << 0),    // Where resource is assigned
-    pcmk__rsc_node_current  = (1U << 1),    // Where resource is running
-    pcmk__rsc_node_pending  = (1U << 2),    // Where resource is pending
+    //! Nowhere
+    pcmk__rsc_node_none     = 0,
+
+    //! Where resource is assigned
+    pcmk__rsc_node_assigned = (UINT32_C(1) << 0),
+
+    //! Where resource is running
+    pcmk__rsc_node_current  = (UINT32_C(1) << 1),
+
+    //! Where resource is pending
+    pcmk__rsc_node_pending  = (UINT32_C(1) << 2),
 };
 
 //! Resource assignment methods (implementation defined by libpacemaker)

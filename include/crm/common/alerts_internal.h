@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,10 +28,10 @@ extern "C" {
 
 enum pcmk__alert_flags {
     pcmk__alert_none         = 0,
-    pcmk__alert_node         = (1 << 0),
-    pcmk__alert_fencing      = (1 << 1),
-    pcmk__alert_resource     = (1 << 2),
-    pcmk__alert_attribute    = (1 << 3),
+    pcmk__alert_node         = (UINT32_C(1) << 0),
+    pcmk__alert_fencing      = (UINT32_C(1) << 1),
+    pcmk__alert_resource     = (UINT32_C(1) << 2),
+    pcmk__alert_attribute    = (UINT32_C(1) << 3),
     pcmk__alert_default      = pcmk__alert_node|pcmk__alert_fencing|
                                pcmk__alert_resource,
 };

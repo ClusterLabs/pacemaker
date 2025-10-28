@@ -33,7 +33,7 @@ extern "C" {
 #  include <dlfcn.h>
 #  include <errno.h>
 #  include <stdbool.h>  // bool
-#  include <stdint.h>   // uint32_t
+#  include <stdint.h>   // UINT32_C, uint32_t
 #  include <time.h>     // time_t
 
 // @TODO Keep this definition but make it internal
@@ -60,12 +60,12 @@ enum stonith_call_options {
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Do not use
-    st_opt_verbose              = (1 << 0),
+    st_opt_verbose              = (UINT32_C(1) << 0),
 #endif
 
     // The fencing target is allowed to execute the request
     //! \deprecated Do not use
-    st_opt_allow_self_fencing   = (1 << 1),
+    st_opt_allow_self_fencing   = (UINT32_C(1) << 1),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Do not use
@@ -75,45 +75,45 @@ enum stonith_call_options {
     // Used internally to indicate that request is manual fence confirmation
     // \internal Do not use
     //! \deprecated Do not use
-    st_opt_manual_ack           = (1 << 3),
+    st_opt_manual_ack           = (UINT32_C(1) << 3),
 
     // Do not return any reply from server
     //! \deprecated Do not use
-    st_opt_discard_reply        = (1 << 4),
+    st_opt_discard_reply        = (UINT32_C(1) << 4),
 
     // Used internally to indicate that request requires a fencing topology
     // \internal Do not use
     //! \deprecated Do not use
-    st_opt_topology             = (1 << 6),
+    st_opt_topology             = (UINT32_C(1) << 6),
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
     //! \deprecated Do not use
-    st_opt_scope_local          = (1 << 8),
+    st_opt_scope_local          = (UINT32_C(1) << 8),
 #endif
 
     // Interpret target as node cluster layer ID instead of name
     //! \deprecated Do not use
-    st_opt_cs_nodeid            = (1 << 9),
+    st_opt_cs_nodeid            = (UINT32_C(1) << 9),
 
     // Wait for request to be completed before returning
     //! \deprecated Do not use
-    st_opt_sync_call            = (1 << 12),
+    st_opt_sync_call            = (UINT32_C(1) << 12),
 
     // Request that server send an update with optimal callback timeout
     //! \deprecated Do not use
-    st_opt_timeout_updates      = (1 << 13),
+    st_opt_timeout_updates      = (UINT32_C(1) << 13),
 
     // Invoke callback only if request succeeded
     //! \deprecated Do not use
-    st_opt_report_only_success  = (1 << 14),
+    st_opt_report_only_success  = (UINT32_C(1) << 14),
 
     // For a fence history request, request that the history be cleared
     //! \deprecated Do not use
-    st_opt_cleanup              = (1 << 19),
+    st_opt_cleanup              = (UINT32_C(1) << 19),
 
     // For a fence history request, broadcast the request to all nodes
     //! \deprecated Do not use
-    st_opt_broadcast            = (1 << 20),
+    st_opt_broadcast            = (UINT32_C(1) << 20),
 };
 
 // Order matters here, do not change values

@@ -50,15 +50,31 @@ extern "C" {
 
 // Capabilities supported by a resource agent standard
 enum pcmk_ra_caps {
-    pcmk_ra_cap_none         = 0U,
-    pcmk_ra_cap_provider     = (1U << 0), // Requires provider
-    pcmk_ra_cap_status       = (1U << 1), // Supports status instead of monitor
-    pcmk_ra_cap_params       = (1U << 2), // Supports parameters
-    pcmk_ra_cap_unique       = (1U << 3), // Supports unique clones
-    pcmk_ra_cap_promotable   = (1U << 4), // Supports promotable clones
-    pcmk_ra_cap_stdin        = (1U << 5), // Reads from standard input
-    pcmk_ra_cap_fence_params = (1U << 6), // Supports pcmk_monitor_timeout, etc.
-    pcmk_ra_cap_cli_exec     = (1U << 7), // Supports execution by crm_resource
+    pcmk_ra_cap_none         = 0,
+
+    //! Requires provider
+    pcmk_ra_cap_provider     = (UINT32_C(1) << 0),
+
+    //! Supports status instead of monitor
+    pcmk_ra_cap_status       = (UINT32_C(1) << 1),
+
+    //! Supports parameters
+    pcmk_ra_cap_params       = (UINT32_C(1) << 2),
+
+    //! Supports unique clones
+    pcmk_ra_cap_unique       = (UINT32_C(1) << 3),
+
+    //! Supports promotable clones
+    pcmk_ra_cap_promotable   = (UINT32_C(1) << 4),
+
+    //! Reads from standard input
+    pcmk_ra_cap_stdin        = (UINT32_C(1) << 5),
+
+    //! Supports pcmk_monitor_timeout, etc.
+    pcmk_ra_cap_fence_params = (UINT32_C(1) << 6),
+
+    //! Supports execution by crm_resource
+    pcmk_ra_cap_cli_exec     = (UINT32_C(1) << 7),
 };
 
 uint32_t pcmk_get_ra_caps(const char *standard);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 #  define PCMK__CRM_LRMD__H
 
 #include <stdbool.h>      // bool
+#include <stdint.h>       // UINT32_C
 #include <glib.h>         // guint, GList
 #include <crm_config.h>
 #include <crm/lrmd_events.h>
@@ -138,13 +139,13 @@ enum lrmd_call_options {
      * used with a connection to a remote executor, recurring operations will be
      * dropped once all remote connections disconnect.
      */
-    lrmd_opt_drop_recurring         = (1 << 0),
+    lrmd_opt_drop_recurring         = (UINT32_C(1) << 0),
 
     //! Notify only the client that made the request (rather than all clients)
-    lrmd_opt_notify_orig_only       = (1 << 1),
+    lrmd_opt_notify_orig_only       = (UINT32_C(1) << 1),
 
     //! Send notifications for recurring operations only when the result changes
-    lrmd_opt_notify_changes_only    = (1 << 2),
+    lrmd_opt_notify_changes_only    = (UINT32_C(1) << 2),
 };
 
 typedef struct lrmd_rsc_info_s {
