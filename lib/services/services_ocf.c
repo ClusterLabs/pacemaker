@@ -40,6 +40,9 @@ services__list_ocf_providers(void)
     GList *list = NULL;
     gchar **dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
+    // NULL dirs should be impossible if PCMK__OCF_RA_PATH is defined correctly
+    CRM_CHECK(dirs != NULL, return NULL);
+
     for (gchar **dir = dirs; *dir != NULL; dir++) {
         list = g_list_concat(list, services__list_dir(*dir, false));
     }
@@ -88,6 +91,9 @@ services__list_ocf_agents(const char *provider)
 
     dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
+    // NULL dirs should be impossible if PCMK__OCF_RA_PATH is defined correctly
+    CRM_CHECK(dirs != NULL, return NULL);
+
     for (gchar **dir = dirs; *dir != NULL; dir++) {
         char *buf = pcmk__assert_asprintf("%s/%s", *dir, provider);
 
@@ -130,6 +136,9 @@ services__ocf_agent_exists(const char *provider, const char *agent, char **path)
     }
 
     dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
+
+    // NULL dirs should be impossible if PCMK__OCF_RA_PATH is defined correctly
+    CRM_CHECK(dirs != NULL, return NULL);
 
     for (gchar **dir = dirs; !found && (*dir != NULL); dir++) {
         char *buf = pcmk__assert_asprintf("%s/%s/%s", *dir, provider, agent);
