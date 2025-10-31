@@ -767,12 +767,23 @@ cib_process_xpath(const char *op, int options, const char *section,
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
             if (match->type != XML_ELEMENT_NODE) {
-                // Create an element for a single match of a non-element
-                if (*answer == NULL) {
-                    *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
+                xmlNode *match_element = pcmk__xpath_match_element(match);
+                xmlNode *brief = NULL;
+
+                if (match_element == NULL) {
+                    continue;
                 }
 
-                pcmk__xml_copy(*answer, match);
+                // Create an element with the corresponding element name
+                brief = pcmk__xe_create(*answer,
+                                        (const char *) match_element->name);
+                pcmk__xe_set(brief, PCMK_XA_ID, pcmk__xe_id(match_element));
+                pcmk__xml_copy(brief, match);
+
+                if (*answer == NULL) {
+                    *answer = brief;
+                }
+
                 continue;
             }
 
