@@ -636,6 +636,16 @@ process_query_xpath(const char *op, int options, const char *xpath,
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
+        if (match->type != XML_ELEMENT_NODE) {
+            // Create an element for a single match of a non-element
+            if (*answer == NULL) {
+                *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
+            }
+
+            pcmk__xml_copy(*answer, match);
+            continue;
+        }
+
         if (pcmk__is_set(options, cib_no_children)) {
             xmlNode *shallow = pcmk__xe_create(*answer,
                                                (const char *) match->name);
