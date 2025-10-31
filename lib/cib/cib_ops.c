@@ -766,6 +766,15 @@ cib_process_xpath(const char *op, int options, const char *section,
             break;
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
+            if (match->type != XML_ELEMENT_NODE) {
+                // Create an element for a single match of a non-element
+                if (*answer == NULL) {
+                    *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
+                }
+
+                pcmk__xml_copy(*answer, match);
+                continue;
+            }
 
             if (options & cib_no_children) {
                 xmlNode *shallow = pcmk__xe_create(*answer,
