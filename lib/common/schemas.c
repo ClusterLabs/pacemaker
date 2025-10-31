@@ -326,9 +326,6 @@ transform_filter(const struct dirent *entry)
  * \internal
  * \brief Compare transform files based on the version strings in their names
  *
- * This is a crude version comparison that relies on the specific structure of
- * these filenames.
- *
  * \retval -1 if \p entry1 sorts before \p entry2
  * \retval  0 if \p entry1 sorts equal to \p entry2
  * \retval  1 if \p entry1 sorts after \p entry2
@@ -339,38 +336,16 @@ transform_filter(const struct dirent *entry)
 static int
 compare_transforms(const struct dirent **entry1, const struct dirent **entry2)
 {
-    unsigned char major1 = 0;
-    unsigned char major2 = 0;
-    unsigned char minor1 = 0;
-    unsigned char minor2 = 0;
-    unsigned char order1 = 0;
-    unsigned char order2 = 0;
+    // We already validated the format of each filename in transform_filter()
+    static const size_t offset = sizeof("upgrade-") - 1;
 
-    // If these made it through the filter, they should be of the right format
-    CRM_LOG_ASSERT(sscanf((*entry1)->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
-                          &major1, &minor1, &order1) == 3);
-    CRM_LOG_ASSERT(sscanf((*entry2)->d_name, "upgrade-%hhu.%hhu-%hhu.xsl",
-                          &major2, &minor2, &order2) == 3);
+    gchar *ver1 = g_strdelimit(g_strdup((*entry1)->d_name + offset), "-", '.');
+    gchar *ver2 = g_strdelimit(g_strdup((*entry2)->d_name + offset), "-", '.');
+    int rc = pcmk__compare_versions(ver1, ver2);
 
-    if (major1 < major2) {
-        return -1;
-    } else if (major1 > major2) {
-        return 1;
-    }
-
-    if (minor1 < minor2) {
-        return -1;
-    } else if (minor1 > minor2) {
-        return 1;
-    }
-
-    if (order1 < order2) {
-        return -1;
-    } else if (order1 > order2) {
-        return 1;
-    }
-
-    return 0;
+    g_free(ver1);
+    g_free(ver2);
+    return rc;
 }
 
 /*!

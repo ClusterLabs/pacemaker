@@ -1519,7 +1519,8 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
                                                 PCMK__XA_LRMD_PROTOCOL_VERSION);
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
-    if (compare_version(protocol_version, LRMD_COMPATIBLE_PROTOCOL) < 0) {
+    if (pcmk__compare_versions(protocol_version,
+                               LRMD_COMPATIBLE_PROTOCOL) < 0) {
         crm_err("Cluster API version must be greater than or equal to %s, not %s",
                 LRMD_COMPATIBLE_PROTOCOL, protocol_version);
         rc = EPROTO;
