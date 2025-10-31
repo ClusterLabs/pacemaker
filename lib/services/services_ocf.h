@@ -1,6 +1,6 @@
 /*
  * Copyright 2010-2011 Red Hat, Inc.
- * Later changes copyright 2012-2024 the Pacemaker project contributors
+ * Later changes copyright 2012-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,8 @@
 
 #ifndef PCMK__SERVICES_SERVICES_OCF__H
 #define PCMK__SERVICES_SERVICES_OCF__H
+
+#include <stdbool.h>            // bool
 
 #include <glib.h>               // G_GNUC_INTERNAL, GList, gboolean
 
@@ -21,13 +23,14 @@ extern "C" {
 #endif
 
 G_GNUC_INTERNAL
-GList *resources_os_list_ocf_providers(void);
+GList *services__list_ocf_providers(void);
 
 G_GNUC_INTERNAL
-GList *resources_os_list_ocf_agents(const char *provider);
+GList *services__list_ocf_agents(const char *provider);
 
 G_GNUC_INTERNAL
-gboolean services__ocf_agent_exists(const char *provider, const char *agent);
+bool services__ocf_agent_exists(const char *provider, const char *agent,
+                                char **path);
 
 G_GNUC_INTERNAL
 int services__ocf_prepare(svc_action_t *op);

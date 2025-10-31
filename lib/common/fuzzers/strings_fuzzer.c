@@ -28,7 +28,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     if (size < 10) {
         return -1; // Do not add input to testing corpus
     }
-    ns = pcmk__assert_alloc(1, size + 1);
+    ns = pcmk__assert_alloc(size + 1, sizeof(char));
     memcpy(ns, data, size);
     ns[size] = '\0';
 
