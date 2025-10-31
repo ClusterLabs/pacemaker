@@ -614,7 +614,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
             compatible_rsc = pcmk__find_compatible_instance(probe->rsc,
                                                             after->rsc,
                                                             pcmk_role_unknown,
-                                                            false);
+                                                            false, NULL);
         }
     }
 
