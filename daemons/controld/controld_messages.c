@@ -72,6 +72,15 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
         return;
     }
 
+    if (input == I_PE_CALC) {
+        fsa_data_t *message = g_queue_peek_tail(controld_globals.fsa_message_queue);
+
+        if ((message != NULL) && (message->fsa_input == I_PE_CALC)) {
+            crm_debug("Last item in FSA queue is I_PE_CALC, not adding another");
+            return;
+        }
+    }
+
     if (input == I_WAIT_FOR_EVENT) {
         controld_set_global_flags(controld_fsa_is_stalled);
         crm_debug("Stalling the FSA pending further input: "
