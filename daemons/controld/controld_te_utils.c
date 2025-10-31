@@ -497,6 +497,14 @@ done:
             controld_stop_transition_timer();
             controld_start_transition_timer();
         } else {
+            fsa_data_t *message = g_queue_peek_tail(controld_globals.fsa_message_queue);
+
+            if ((message != NULL) && (message->fsa_input == I_PE_CALC)) {
+                do_crm_log(level, "Last item in fsa queue is I_PE_CALC, not "
+                           "adding another");
+                return;
+            }
+
             register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
         }
         return;
