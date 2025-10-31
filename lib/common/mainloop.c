@@ -747,7 +747,8 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
 
                 pcmk__ipc_free_client_buffer(client->ipc);
 
-            } while ((rc == G_SOURCE_CONTINUE) && (read_rc > 0) && --max > 0);
+            } while ((rc == G_SOURCE_CONTINUE) && (--max > 0)
+                      && ((read_rc > 0) || (read_rc == -EAGAIN)));
 
         } else {
             crm_trace("New I/O event for %s after I/O condition %d",
