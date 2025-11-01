@@ -138,9 +138,9 @@ log_fsa_data(gpointer data, gpointer user_data)
     fsa_data_t *fsa_data = data;
     unsigned int *offset = user_data;
 
-    crm_trace("queue[%u.%d]: input %s submitted by %s (%p.%d) (cause=%s)",
+    crm_trace("queue[%u.%d]: input %s submitted by %s (%p) (cause=%s)",
               (*offset)++, fsa_data->id, fsa_input2string(fsa_data->fsa_input),
-              fsa_data->origin, fsa_data->data, fsa_data->data_type,
+              fsa_data->origin, fsa_data->data,
               fsa_cause2string(fsa_data->fsa_cause));
 }
 
@@ -182,7 +182,6 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
         fsa_data->fsa_input = I_NULL;
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __func__;
-        fsa_data->data_type = fsa_dt_none;
 
         if (controld_globals.fsa_message_queue == NULL) {
             controld_globals.fsa_message_queue = g_queue_new();

@@ -409,7 +409,6 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         fsa_data_t msg = {
             .id = 0,
             .data = &data,
-            .data_type = fsa_dt_ha_msg,
             .fsa_input = I_NULL,
             .fsa_cause = C_FSA_INTERNAL,
             .actions = A_LRM_INVOKE,

@@ -106,7 +106,6 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->fsa_cause = cause;
     fsa_data->origin = raised_from;
     fsa_data->data = NULL;
-    fsa_data->data_type = fsa_dt_none;
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
@@ -124,7 +123,6 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 crm_trace("Copying %s data from %s as cluster message data",
                           fsa_cause2string(cause), raised_from);
                 fsa_data->data = copy_ha_msg_input(data);
-                fsa_data->data_type = fsa_dt_ha_msg;
                 break;
 
             case C_TIMER_POPPED:
@@ -179,7 +177,6 @@ delete_fsa_input(fsa_data_t * fsa_data)
     crm_trace("About to free %s data", fsa_cause2string(fsa_data->fsa_cause));
 
     if (fsa_data->data != NULL) {
-        pcmk__assert(fsa_data->data_type == fsa_dt_ha_msg);
         delete_ha_msg_input(fsa_data->data);
         crm_trace("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
     }
@@ -201,7 +198,6 @@ fsa_typed_data_adv(fsa_data_t *fsa_data, const char *caller)
         return NULL;
     }
 
-    pcmk__assert(fsa_data->data_type == fsa_dt_ha_msg);
     return fsa_data->data;
 }
 
@@ -1258,7 +1254,6 @@ send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src)
         fsa_data.fsa_input = I_MESSAGE;
         fsa_data.fsa_cause = C_IPC_MESSAGE;
         fsa_data.origin = __func__;
-        fsa_data.data_type = fsa_dt_ha_msg;
 
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, controld_globals.fsa_state,
                       I_MESSAGE, &fsa_data);

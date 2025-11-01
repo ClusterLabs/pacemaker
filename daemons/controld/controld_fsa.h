@@ -454,7 +454,6 @@ struct fsa_data_s {
     uint64_t actions;
     const char *origin;
     void *data;
-    enum fsa_data_type data_type;
 };
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                 \
