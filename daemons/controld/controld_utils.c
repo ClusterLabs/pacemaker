@@ -247,9 +247,6 @@ fsa_cause2string(enum crmd_fsa_cause cause)
         case C_SHUTDOWN:
             causeAsText = "C_SHUTDOWN";
             break;
-        case C_LRM_OP_CALLBACK:
-            causeAsText = "C_LRM_OP_CALLBACK";
-            break;
         case C_CRMD_STATUS_CALLBACK:
             causeAsText = "C_CRMD_STATUS_CALLBACK";
             break;

@@ -436,7 +436,6 @@ enum crmd_fsa_cause {
     C_IPC_MESSAGE,
     C_HA_MESSAGE,
     C_CRMD_STATUS_CALLBACK,
-    C_LRM_OP_CALLBACK,
     C_TIMER_POPPED,
     C_SHUTDOWN,
     C_FSA_INTERNAL,
