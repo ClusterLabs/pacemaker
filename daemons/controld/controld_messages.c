@@ -127,13 +127,6 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 fsa_data->data_type = fsa_dt_ha_msg;
                 break;
 
-            case C_LRM_OP_CALLBACK:
-                crm_trace("Copying %s data from %s as lrmd_event_data_t",
-                          fsa_cause2string(cause), raised_from);
-                fsa_data->data = lrmd_copy_event((lrmd_event_data_t *) data);
-                fsa_data->data_type = fsa_dt_lrm;
-                break;
-
             case C_TIMER_POPPED:
             case C_SHUTDOWN:
             case C_UNKNOWN:

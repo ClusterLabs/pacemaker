@@ -134,10 +134,8 @@ log_fsa_input(fsa_data_t *stored_msg)
 {
     pcmk__assert(stored_msg != NULL);
     crm_trace("Processing queued input %d", stored_msg->id);
-    if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
-        crm_trace("FSA processing LRM callback from %s", stored_msg->origin);
 
-    } else if (stored_msg->data == NULL) {
+    if (stored_msg->data == NULL) {
         crm_trace("FSA processing input from %s", stored_msg->origin);
 
     } else {
