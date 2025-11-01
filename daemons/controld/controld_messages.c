@@ -179,19 +179,8 @@ delete_fsa_input(fsa_data_t * fsa_data)
     crm_trace("About to free %s data", fsa_cause2string(fsa_data->fsa_cause));
 
     if (fsa_data->data != NULL) {
-        switch (fsa_data->data_type) {
-            case fsa_dt_ha_msg:
-                delete_ha_msg_input(fsa_data->data);
-                break;
-
-            case fsa_dt_none:
-                if (fsa_data->data != NULL) {
-                    crm_err("Don't know how to free %s data from %s",
-                            fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
-                    crmd_exit(CRM_EX_SOFTWARE);
-                }
-                break;
-        }
+        pcmk__assert(fsa_data->data_type == fsa_dt_ha_msg);
+        delete_ha_msg_input(fsa_data->data);
         crm_trace("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
     }
 
