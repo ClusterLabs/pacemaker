@@ -74,15 +74,6 @@ do_log(long long action, enum crmd_fsa_cause cause,
         ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
 
         crm_log_xml_debug(input->msg, __func__);
-
-    } else if (msg_data->data_type == fsa_dt_lrm) {
-        lrmd_event_data_t *input = fsa_typed_data(msg_data->data_type);
-
-        do_crm_log(log_type,
-                   "Resource %s: Call ID %d returned %d (%d)."
-                   "  New status if rc=0: %s",
-                   input->rsc_id, input->call_id, input->rc,
-                   input->op_status, (char *)input->user_data);
     }
 }
 
