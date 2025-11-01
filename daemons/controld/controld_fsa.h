@@ -441,11 +441,6 @@ enum crmd_fsa_cause {
     C_FSA_INTERNAL,
 };
 
-enum fsa_data_type {
-    fsa_dt_none,
-    fsa_dt_ha_msg,
-};
-
 typedef struct fsa_data_s fsa_data_t;
 struct fsa_data_s {
     int id;
