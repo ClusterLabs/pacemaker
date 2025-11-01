@@ -174,7 +174,6 @@ void
 delete_fsa_input(fsa_data_t * fsa_data)
 {
     lrmd_event_data_t *op = NULL;
-    xmlNode *foo = NULL;
 
     if (fsa_data == NULL) {
         return;
@@ -185,11 +184,6 @@ delete_fsa_input(fsa_data_t * fsa_data)
         switch (fsa_data->data_type) {
             case fsa_dt_ha_msg:
                 delete_ha_msg_input(fsa_data->data);
-                break;
-
-            case fsa_dt_xml:
-                foo = fsa_data->data;
-                pcmk__xml_free(foo);
                 break;
 
             case fsa_dt_lrm:

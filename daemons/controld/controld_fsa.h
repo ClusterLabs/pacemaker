@@ -444,7 +444,6 @@ enum crmd_fsa_cause {
 enum fsa_data_type {
     fsa_dt_none,
     fsa_dt_ha_msg,
-    fsa_dt_xml,
     fsa_dt_lrm,
 };
 
