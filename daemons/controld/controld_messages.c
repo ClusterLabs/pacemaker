@@ -184,23 +184,6 @@ delete_fsa_input(fsa_data_t * fsa_data)
     free(fsa_data);
 }
 
-void *
-fsa_typed_data_adv(fsa_data_t *fsa_data, const char *caller)
-{
-    if (fsa_data == NULL) {
-        crm_err("%s: No FSA data available", caller);
-        return NULL;
-    }
-
-    if (fsa_data->data == NULL) {
-        crm_err("%s: No message data available. Origin: %s", caller,
-                fsa_data->origin);
-        return NULL;
-    }
-
-    return fsa_data->data;
-}
-
 /*	A_MSG_ROUTE	*/
 void
 do_msg_route(long long action,
@@ -208,9 +191,8 @@ do_msg_route(long long action,
              enum crmd_fsa_state cur_state,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    ha_msg_input_t *input = fsa_typed_data();
-
-    route_message(msg_data->fsa_cause, input->msg);
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+    route_message(msg_data->fsa_cause, msg_data->data->msg);
 }
 
 void

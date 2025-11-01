@@ -16,17 +16,7 @@
 #  include <crm/cluster/internal.h>
 #  include <controld_fsa.h>
 
-typedef struct ha_msg_input_s {
-    xmlNode *msg;
-    xmlNode *xml;
-
-} ha_msg_input_t;
-
 extern void delete_ha_msg_input(ha_msg_input_t * orig);
-
-extern void *fsa_typed_data_adv(fsa_data_t *fsa_data, const char *caller);
-
-#define fsa_typed_data() fsa_typed_data_adv(msg_data, __func__)
 
 extern void register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                                    fsa_data_t * cur_data, void *new_data, const char *raised_from);

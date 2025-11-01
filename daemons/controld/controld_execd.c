@@ -1398,11 +1398,16 @@ do_lrm_invoke(long long action,
     const char *from_sys = NULL;
     const char *from_host = NULL;
     const char *operation = NULL;
-    ha_msg_input_t *input = fsa_typed_data();
     const char *user_name = NULL;
-    const char *target_node = lrm_op_target(input->xml);
+    ha_msg_input_t *input = NULL;
+    const char *target_node = NULL;
     gboolean is_remote_node = FALSE;
     bool crm_rsc_delete = FALSE;
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+    input = msg_data->data;
+    target_node = lrm_op_target(input->xml);
 
     // Message routed to the local node is targeting a specific, non-local node
     is_remote_node = !controld_is_local_node(target_node);

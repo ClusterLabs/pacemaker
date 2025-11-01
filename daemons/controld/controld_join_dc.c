@@ -352,6 +352,8 @@ do_dc_join_offer_one(long long action,
     int count;
     const char *join_to = NULL;
 
+    pcmk__assert(msg_data != NULL);
+
     if (msg_data->data == NULL) {
         crm_info("Making join-%d offers to any unconfirmed nodes "
                  "because an unknown node joined", current_join_id);
@@ -360,12 +362,7 @@ do_dc_join_offer_one(long long action,
         return;
     }
 
-    welcome = fsa_typed_data();
-    if (welcome == NULL) {
-        // fsa_typed_data() already logged an error
-        return;
-    }
-
+    welcome = msg_data->data;
     join_to = pcmk__xe_get(welcome->msg, PCMK__XA_SRC);
     if (join_to == NULL) {
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
@@ -449,13 +446,18 @@ do_dc_join_filter_offer(long long action,
     int count = 0;
     gint value = 0;
     gboolean ack_nack_bool = TRUE;
-    ha_msg_input_t *join_ack = fsa_typed_data();
-
-    const char *join_from = pcmk__xe_get(join_ack->msg, PCMK__XA_SRC);
-    const char *ref = pcmk__xe_get(join_ack->msg, PCMK_XA_REFERENCE);
-    const char *join_version = pcmk__xe_get(join_ack->msg,
-                                            PCMK_XA_CRM_FEATURE_SET);
+    ha_msg_input_t *join_ack = NULL;
+    const char *join_from = NULL;
+    const char *ref = NULL;
+    const char *join_version = NULL;
     pcmk__node_status_t *join_node = NULL;
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+    join_ack = msg_data->data;
+    join_from = pcmk__xe_get(join_ack->msg, PCMK__XA_SRC);
+    ref = pcmk__xe_get(join_ack->msg, PCMK_XA_REFERENCE);
+    join_version = pcmk__xe_get(join_ack->msg, PCMK_XA_CRM_FEATURE_SET);
 
     if (join_from == NULL) {
         crm_err("Ignoring invalid join request without node name");
@@ -764,20 +766,27 @@ do_dc_join_ack(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     int join_id = -1;
-    ha_msg_input_t *join_ack = fsa_typed_data();
+    ha_msg_input_t *join_ack = NULL;
+    const char *op = NULL;
+    char *join_from = NULL;
 
-    const char *op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
-    char *join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);
     pcmk__node_status_t *peer = NULL;
     enum controld_join_phase phase = controld_join_none;
 
     enum controld_section_e section = controld_section_lrm;
     char *xpath = NULL;
-    xmlNode *state = join_ack->xml;
+    xmlNode *state = NULL;
     xmlNode *execd_state = NULL;
 
     cib_t *cib = controld_globals.cib_conn;
     int rc = pcmk_ok;
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+    join_ack = msg_data->data;
+    op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
+    join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);
+    state = join_ack->xml;
 
     // Sanity checks
     if (join_from == NULL) {

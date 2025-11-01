@@ -441,6 +441,11 @@ enum crmd_fsa_cause {
     C_FSA_INTERNAL,
 };
 
+typedef struct {
+    xmlNode *msg;
+    xmlNode *xml;
+} ha_msg_input_t;
+
 typedef struct fsa_data_s fsa_data_t;
 struct fsa_data_s {
     int id;
@@ -448,7 +453,7 @@ struct fsa_data_s {
     enum crmd_fsa_cause fsa_cause;
     uint64_t actions;
     const char *origin;
-    void *data;
+    ha_msg_input_t *data;
 };
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                 \

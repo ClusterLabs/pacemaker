@@ -134,7 +134,7 @@ do_election_count_vote(long long action,
                        enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     enum election_result rc = 0;
-    ha_msg_input_t *vote = fsa_typed_data();
+    ha_msg_input_t *vote = NULL;
 
     if (pcmk__peer_cache == NULL) {
         if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
@@ -142,6 +142,9 @@ do_election_count_vote(long long action,
         }
         return;
     }
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+    vote = msg_data->data;
 
     rc = election_count_vote(controld_globals.cluster, vote->msg,
                              (cur_state != S_STARTING));
