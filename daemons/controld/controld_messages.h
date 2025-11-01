@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,10 +24,9 @@ typedef struct ha_msg_input_s {
 
 extern void delete_ha_msg_input(ha_msg_input_t * orig);
 
-extern void *fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type,
-                                const char *caller);
+extern void *fsa_typed_data_adv(fsa_data_t *fsa_data, const char *caller);
 
-#  define fsa_typed_data(x) fsa_typed_data_adv(msg_data, x, __func__)
+#define fsa_typed_data() fsa_typed_data_adv(msg_data, __func__)
 
 extern void register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                                    fsa_data_t * cur_data, void *new_data, const char *raised_from);

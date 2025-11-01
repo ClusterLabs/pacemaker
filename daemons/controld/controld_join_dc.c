@@ -360,7 +360,7 @@ do_dc_join_offer_one(long long action,
         return;
     }
 
-    welcome = fsa_typed_data(fsa_dt_ha_msg);
+    welcome = fsa_typed_data();
     if (welcome == NULL) {
         // fsa_typed_data() already logged an error
         return;
@@ -449,7 +449,7 @@ do_dc_join_filter_offer(long long action,
     int count = 0;
     gint value = 0;
     gboolean ack_nack_bool = TRUE;
-    ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *join_ack = fsa_typed_data();
 
     const char *join_from = pcmk__xe_get(join_ack->msg, PCMK__XA_SRC);
     const char *ref = pcmk__xe_get(join_ack->msg, PCMK_XA_REFERENCE);
@@ -764,7 +764,7 @@ do_dc_join_ack(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     int join_id = -1;
-    ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *join_ack = fsa_typed_data();
 
     const char *op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
     char *join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);

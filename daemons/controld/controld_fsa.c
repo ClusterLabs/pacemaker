@@ -70,8 +70,8 @@ do_log(long long action, enum crmd_fsa_cause cause,
                fsa_input2string(msg_data->fsa_input),
                fsa_state2string(cur_state), msg_data->origin);
 
-    if (msg_data->data_type == fsa_dt_ha_msg) {
-        ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
+    if (msg_data->data != NULL) {
+        ha_msg_input_t *input = fsa_typed_data();
 
         crm_log_xml_debug(input->msg, __func__);
     }
@@ -125,8 +125,7 @@ log_fsa_input(fsa_data_t *stored_msg)
         crm_trace("FSA processing input from %s", stored_msg->origin);
 
     } else {
-        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg,
-                                                      __func__);
+        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, __func__);
 
         crm_trace("FSA processing XML message from %s", stored_msg->origin);
         crm_log_xml_trace(ha_input->xml, "FSA message data");

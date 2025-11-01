@@ -123,7 +123,7 @@ do_te_invoke(long long action,
         }
 
     } else if (action & A_TE_INVOKE) {
-        ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+        ha_msg_input_t *input = fsa_typed_data();
         xmlNode *graph_data = input->xml;
         const char *ref = pcmk__xe_get(input->msg, PCMK_XA_REFERENCE);
         const char *graph_input = pcmk__xe_get(input->msg,

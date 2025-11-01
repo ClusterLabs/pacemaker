@@ -1398,7 +1398,7 @@ do_lrm_invoke(long long action,
     const char *from_sys = NULL;
     const char *from_host = NULL;
     const char *operation = NULL;
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *input = fsa_typed_data();
     const char *user_name = NULL;
     const char *target_node = lrm_op_target(input->xml);
     gboolean is_remote_node = FALSE;

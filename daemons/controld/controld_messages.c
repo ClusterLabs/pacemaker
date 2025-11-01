@@ -188,25 +188,21 @@ delete_fsa_input(fsa_data_t * fsa_data)
 }
 
 void *
-fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char *caller)
+fsa_typed_data_adv(fsa_data_t *fsa_data, const char *caller)
 {
-    void *ret_val = NULL;
-
     if (fsa_data == NULL) {
         crm_err("%s: No FSA data available", caller);
-
-    } else if (fsa_data->data == NULL) {
-        crm_err("%s: No message data available. Origin: %s", caller, fsa_data->origin);
-
-    } else if (fsa_data->data_type != a_type) {
-        crm_crit("%s: Message data was the wrong type! %d vs. requested=%d.  Origin: %s",
-                 caller, fsa_data->data_type, a_type, fsa_data->origin);
-        pcmk__assert(fsa_data->data_type == a_type);
-    } else {
-        ret_val = fsa_data->data;
+        return NULL;
     }
 
-    return ret_val;
+    if (fsa_data->data == NULL) {
+        crm_err("%s: No message data available. Origin: %s", caller,
+                fsa_data->origin);
+        return NULL;
+    }
+
+    pcmk__assert(fsa_data->data_type == fsa_dt_ha_msg);
+    return fsa_data->data;
 }
 
 /*	A_MSG_ROUTE	*/
@@ -216,7 +212,7 @@ do_msg_route(long long action,
              enum crmd_fsa_state cur_state,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *input = fsa_typed_data();
 
     route_message(msg_data->fsa_cause, input->msg);
 }

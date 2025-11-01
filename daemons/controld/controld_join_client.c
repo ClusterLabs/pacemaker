@@ -108,7 +108,7 @@ do_cl_join_offer_respond(long long action,
 {
     cib_t *cib_conn = controld_globals.cib_conn;
 
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *input = fsa_typed_data();
     const char *welcome_from;
     const char *join_id;
 
@@ -261,7 +261,7 @@ do_cl_join_finalize_respond(long long action,
     xmlNode *tmp1 = NULL;
     gboolean was_nack = TRUE;
     static gboolean first_join = TRUE;
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *input = fsa_typed_data();
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
     int join_id = -1;
