@@ -37,7 +37,8 @@ static int last_data_id = 0;
 
 void
 register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                       fsa_data_t * cur_data, void *new_data, const char *raised_from)
+                       fsa_data_t * cur_data, ha_msg_input_t *new_data,
+                       const char *raised_from)
 {
     /* save the current actions if any */
     if (controld_globals.fsa_actions != A_NOTHING) {
@@ -57,7 +58,7 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
 void
 register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                       void *data, uint64_t with_actions,
+                       ha_msg_input_t *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
     fsa_data_t *fsa_data = NULL;
@@ -118,7 +119,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_CRMD_STATUS_CALLBACK:
             case C_IPC_MESSAGE:
             case C_HA_MESSAGE:
-                CRM_CHECK(((ha_msg_input_t *) data)->msg != NULL,
+                CRM_CHECK(data->msg != NULL,
                           crm_err("Bogus data from %s", raised_from));
                 crm_trace("Copying %s data from %s as cluster message data",
                           fsa_cause2string(cause), raised_from);
