@@ -32,9 +32,6 @@ static enum crmd_fsa_input handle_request(xmlNode *stored_msg,
 static enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 static void send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src);
 
-/* debug only, can wrap all it likes */
-static int last_data_id = 0;
-
 void
 register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        fsa_data_t * cur_data, ha_msg_input_t *new_data,
@@ -61,6 +58,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                        ha_msg_input_t *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
+    static unsigned long long last_data_id = 0;
+
     fsa_data_t *fsa_data = NULL;
 
     if (raised_from == NULL) {
@@ -96,7 +95,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     last_data_id++;
-    crm_trace("%s %s FSA input %d (%s) due to %s, %s data",
+    crm_trace("%s %s FSA input %llu (%s) due to %s, %s data",
               raised_from, (prepend? "prepended" : "appended"), last_data_id,
               fsa_input2string(input), fsa_cause2string(cause),
               (data? "with" : "without"));

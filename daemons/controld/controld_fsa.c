@@ -117,7 +117,7 @@ static void
 log_fsa_input(fsa_data_t *stored_msg)
 {
     pcmk__assert(stored_msg != NULL);
-    crm_trace("Processing queued input %d", stored_msg->id);
+    crm_trace("Processing queued input %llu", stored_msg->id);
 
     if (stored_msg->data == NULL) {
         crm_trace("FSA processing input from %s", stored_msg->origin);
@@ -134,7 +134,7 @@ log_fsa_data(gpointer data, gpointer user_data)
     fsa_data_t *fsa_data = data;
     unsigned int *offset = user_data;
 
-    crm_trace("queue[%u.%d]: input %s submitted by %s (%p) (cause=%s)",
+    crm_trace("queue[%u.%llu]: input %s submitted by %s (%p) (cause=%s)",
               (*offset)++, fsa_data->id, fsa_input2string(fsa_data->fsa_input),
               fsa_data->origin, fsa_data->data,
               fsa_cause2string(fsa_data->fsa_cause));

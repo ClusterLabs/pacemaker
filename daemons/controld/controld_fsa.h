@@ -446,15 +446,14 @@ typedef struct {
     xmlNode *xml;
 } ha_msg_input_t;
 
-typedef struct fsa_data_s fsa_data_t;
-struct fsa_data_s {
-    int id;
+typedef struct {
+    unsigned long long id;          // Debug only
     enum crmd_fsa_input fsa_input;
     enum crmd_fsa_cause fsa_cause;
     uint64_t actions;
     const char *origin;
     ha_msg_input_t *data;
-};
+} fsa_data_t;
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                 \
         controld_globals.fsa_input_register                             \
