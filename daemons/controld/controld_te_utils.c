@@ -51,7 +51,6 @@ te_graph_trigger(gpointer user_data)
         case S_STARTING:
         case S_PENDING:
         case S_NOT_DC:
-        case S_HALT:
         case S_STOPPING:
         case S_TERMINATE:
             return TRUE;
@@ -356,7 +355,6 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         case S_STARTING:
         case S_PENDING:
         case S_NOT_DC:
-        case S_HALT:
         case S_STOPPING:
         case S_TERMINATE:
             crm_info("Abort %s suppressed: state=%s (%scomplete)",

@@ -1051,12 +1051,6 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                                A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE,
                                __func__);
 
-        /* Sometimes we _must_ go into S_ELECTION */
-        if (controld_globals.fsa_state == S_HALT) {
-            crm_debug("Forcing an election from S_HALT");
-            return I_ELECTION;
-        }
-
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
         verify_feature_set(stored_msg);
         crm_debug("Raising I_JOIN_OFFER: join-%s",

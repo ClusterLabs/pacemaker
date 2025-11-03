@@ -61,12 +61,9 @@ enum crmd_fsa_state {
                                  * state of the cluster a reality
                                  */
 
-    S_HALT,                     /* Freeze - don't do anything
-                                 * Something bad happened that needs the admin to fix
-                                 * Wait for I_ELECTION
-                                 */
-
-    S_MAX = S_HALT,             // Max enum value; update if adding new values
+    S_MAX = S_TRANSITION_ENGINE,    /* Max enum value; update if adding new
+                                     * values
+                                     */
 };
 
 /*

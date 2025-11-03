@@ -186,9 +186,6 @@ fsa_state2string(enum crmd_fsa_state state)
         case S_STARTING:
             stateAsText = "S_STARTING";
             break;
-        case S_HALT:
-            stateAsText = "S_HALT";
-            break;
     }
 
     if (stateAsText == NULL) {
