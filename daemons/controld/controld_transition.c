@@ -17,23 +17,21 @@
 static pcmk__graph_t *
 create_blank_graph(void)
 {
-    pcmk__graph_t *a_graph = pcmk__unpack_graph(NULL, NULL);
+    pcmk__graph_t *graph = pcmk__unpack_graph(NULL, NULL);
 
-    a_graph->complete = true;
-    a_graph->abort_reason = "DC Takeover";
-    a_graph->completion_action = pcmk__graph_restart;
-    return a_graph;
+    graph->complete = true;
+    graph->abort_reason = "DC Takeover";
+    graph->completion_action = pcmk__graph_restart;
+    return graph;
 }
 
-/*	 A_TE_START, A_TE_STOP, O_TE_RESTART	*/
+// A_TE_START, A_TE_STOP, O_TE_RESTART
 void
-do_te_control(long long action,
-              enum crmd_fsa_cause cause,
-              enum crmd_fsa_state cur_state,
-              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_te_control(long long action, enum crmd_fsa_cause cause,
+              enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+              fsa_data_t *msg_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
-    gboolean init_ok = TRUE;
 
     if (pcmk__is_set(action, A_TE_STOP)) {
         pcmk__free_graph(controld_globals.transition_graph);
@@ -49,16 +47,26 @@ do_te_control(long long action,
         crm_info("Transitioner is now inactive");
     }
 
-    if ((action & A_TE_START) == 0) {
+    if (!pcmk__is_set(action, A_TE_START)) {
         return;
+    }
 
-    } else if (pcmk__is_set(controld_globals.fsa_input_register,
-                            R_TE_CONNECTED)) {
+    if (pcmk__is_set(controld_globals.fsa_input_register, R_TE_CONNECTED)) {
         crm_debug("The transitioner is already active");
         return;
+    }
 
-    } else if ((action & A_TE_START) && cur_state == S_STOPPING) {
-        crm_info("Ignoring request to start the transitioner while shutting down");
+    if (cur_state == S_STOPPING) {
+        crm_info("Ignoring request to start the transitioner while shutting "
+                 "down");
+        return;
+    }
+
+    if ((cib_conn == NULL)
+        || (cib_conn->cmds->add_notify_callback(cib_conn,
+                                                PCMK__VALUE_CIB_DIFF_NOTIFY,
+                                                te_update_diff) != pcmk_ok)) {
+        crm_err("Could not set CIB notification callback");
         return;
     }
 
@@ -67,26 +75,11 @@ do_te_control(long long action,
         crm_info("Registering TE UUID: %s", controld_globals.te_uuid);
     }
 
-    if (cib_conn == NULL) {
-        crm_err("Could not set CIB callbacks");
-        init_ok = FALSE;
-
-    } else if (cib_conn->cmds->add_notify_callback(cib_conn,
-                                                   PCMK__VALUE_CIB_DIFF_NOTIFY,
-                                                   te_update_diff) != pcmk_ok) {
-        crm_err("Could not set CIB notification callback");
-        init_ok = FALSE;
-    }
-
-    if (init_ok) {
-        controld_register_graph_functions();
-        pcmk__free_graph(controld_globals.transition_graph);
-
-        /* create a blank one */
-        crm_debug("Transitioner is now active");
-        controld_globals.transition_graph = create_blank_graph();
-        controld_set_fsa_input_flags(R_TE_CONNECTED);
-    }
+    controld_register_graph_functions();
+    pcmk__free_graph(controld_globals.transition_graph);
+    controld_globals.transition_graph = create_blank_graph();
+    controld_set_fsa_input_flags(R_TE_CONNECTED);
+    crm_debug("Transitioner is now active");
 }
 
 /*	 A_TE_INVOKE, A_TE_CANCEL	*/
