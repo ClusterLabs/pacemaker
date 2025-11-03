@@ -46,7 +46,7 @@ crmd_ha_msg_filter(xmlNode * msg)
 
                     level = LOG_WARNING;
                     new_input.msg = msg;
-                    register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, &new_input,
+                    register_fsa_error_adv(I_ELECTION, NULL, &new_input,
                                            __func__);
                 }
 

@@ -339,7 +339,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
             "%d time%s: %s", lrm_state->num_lrm_register_fails,
             pcmk__plural_s(lrm_state->num_lrm_register_fails),
             pcmk_rc_str(rc));
-    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+    register_fsa_error(I_ERROR, NULL);
 }
 
 /*	 A_LRM_CONNECT	*/
@@ -361,7 +361,7 @@ do_lrm_control(long long action,
     }
     lrm_state = controld_get_executor_state(NULL, true);
     if (lrm_state == NULL) {
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR, NULL);
         return;
     }
 
@@ -953,7 +953,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
              * remote node, which is not an FSA failure.
              */
             if (lrm_state_is_local(lrm_state) == TRUE) {
-                register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+                register_fsa_error(I_FAIL, NULL);
             }
             return rc;
         }
@@ -1573,7 +1573,7 @@ do_lrm_invoke(long long action,
     } else {
         crm_err("Invalid execution request: unknown command '%s' (bug?)",
                 crm_op);
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR, NULL);
     }
 }
 
@@ -2036,7 +2036,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
                        PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
-        register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+        register_fsa_error(I_FAIL, NULL);
 
     } else {
         crm_err("Could not initiate %s action for resource %s remotely on %s: "

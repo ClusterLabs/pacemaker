@@ -181,7 +181,7 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
 
         crm_notice("Feature update failed: %s " QB_XS " rc=%d",
                    pcmk_strerror(rc), rc);
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR, NULL);
     }
 }
 

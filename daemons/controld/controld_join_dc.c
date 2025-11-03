@@ -707,8 +707,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
         }
 
         /* restart the whole join process */
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL,
-                               __func__);
+        register_fsa_error_adv(I_ELECTION_DC, NULL, NULL, __func__);
 
     } else if (!AM_I_DC) {
         crm_debug("Sync'ed CIB for join-%d but no longer DC", current_join_id);
@@ -749,7 +748,7 @@ join_node_state_commit_callback(xmlNode *msg, int call_id, int rc,
                  "failed: %s",
                  current_join_id, call_id, node, pcmk_strerror(rc));
         crm_log_xml_debug(msg, "failed");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR, NULL);
     }
 
     crm_debug("join-%d node history update (via CIB call %d) for node %s "
@@ -897,7 +896,7 @@ done:
     if (rc != pcmk_ok) {
         crm_crit("join-%d node history update for node %s failed: %s",
                  current_join_id, join_from, pcmk_strerror(rc));
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR, NULL);
     }
     free(join_from);
     free(xpath);

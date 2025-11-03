@@ -33,9 +33,8 @@ static enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 static void send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src);
 
 void
-register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                       fsa_data_t * cur_data, ha_msg_input_t *new_data,
-                       const char *raised_from)
+register_fsa_error_adv(enum crmd_fsa_input input, fsa_data_t *cur_data,
+                       ha_msg_input_t *new_data, const char *raised_from)
 {
     /* save the current actions if any */
     if (controld_globals.fsa_actions != A_NOTHING) {
@@ -50,7 +49,8 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     controld_globals.fsa_actions = A_NOTHING;
 
     /* register the error */
-    register_fsa_input_adv(cause, input, new_data, A_NOTHING, TRUE, raised_from);
+    register_fsa_input_adv(C_FSA_INTERNAL, input, new_data, A_NOTHING, TRUE,
+                           raised_from);
 }
 
 void

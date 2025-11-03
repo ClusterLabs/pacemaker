@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -199,8 +199,7 @@ crm_timer_popped(gpointer data)
                  crmd_join_phase_count(controld_join_integrated));
         if (crmd_join_phase_count(controld_join_welcomed) == 0) {
             // If we don't even have ourselves, start again
-            register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, NULL,
-                                   __func__);
+            register_fsa_error_adv(I_ELECTION, NULL, NULL, __func__);
 
         } else {
             register_fsa_input_before(C_TIMER_POPPED, timer->fsa_input, NULL);
