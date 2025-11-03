@@ -497,11 +497,6 @@ void do_pe_invoke(long long action, enum crmd_fsa_cause cause,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input current_input, fsa_data_t *msg_data);
 
-/* A_LOG */
-void do_log(long long action, enum crmd_fsa_cause cause,
-            enum crmd_fsa_state cur_state,
-            enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
-
 /* A_STARTUP */
 void do_startup(long long action, enum crmd_fsa_cause cause,
                 enum crmd_fsa_state cur_state,
