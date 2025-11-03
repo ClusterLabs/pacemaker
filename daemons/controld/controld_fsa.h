@@ -157,9 +157,6 @@ enum crmd_fsa_input {
     I_RELEASE_FAIL,             /* We could not give up DC status for some reason
                                  */
     I_RELEASE_SUCCESS,          /* We are no longer the DC */
-    I_RESTART,                  /* The current set of actions needs to be
-                                 * restarted
-                                 */
     I_TE_SUCCESS,               /* Some non-resource, non-cluster-layer action
                                  * is required of us, e.g. ping
                                  */

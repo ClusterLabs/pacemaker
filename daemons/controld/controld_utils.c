@@ -113,9 +113,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_RELEASE_SUCCESS:
             inputAsText = "I_RELEASE_SUCCESS";
             break;
-        case I_RESTART:
-            inputAsText = "I_RESTART";
-            break;
         case I_PE_SUCCESS:
             inputAsText = "I_PE_SUCCESS";
             break;
