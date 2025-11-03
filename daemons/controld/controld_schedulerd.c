@@ -54,11 +54,9 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
                                                id);
 
         if (pcmk__xml_write_file(output, filename, true) != pcmk_rc_ok) {
-            crm_err("Could not save Cluster Information Base to %s after scheduler crash",
-                    filename);
+            crm_err("Could not save CIB to %s after scheduler crash", filename);
         } else {
-            crm_notice("Saved Cluster Information Base to %s after scheduler crash",
-                       filename);
+            crm_notice("Saved CIB to %s after scheduler crash", filename);
         }
         free(filename);
     }
@@ -79,18 +77,14 @@ handle_disconnect(void)
         char *uuid_str = pcmk__generate_uuid();
 
         crm_crit("Lost connection to the scheduler "
-                 QB_XS " CIB will be saved to " PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2",
+                 QB_XS " CIB will be saved to "
+                 PCMK_SCHEDULER_INPUT_DIR "/pe-core-%s.bz2",
                  uuid_str);
 
-        /*
-         * The scheduler died...
+        /* Save the current CIB so that we have a chance of figuring out what
+         * killed the scheduler.
          *
-         * Save the current CIB so that we have a chance of
-         * figuring out what killed it.
-         *
-         * Delay raising the I_ERROR until the query below completes or
-         * 5s is up, whichever comes first.
-         *
+         * Delay registering an I_ERROR until the query completes or times out.
          */
         rc = controld_globals.cib_conn->cmds->query(controld_globals.cib_conn,
                                                     NULL, NULL, cib_none);
@@ -99,7 +93,6 @@ handle_disconnect(void)
 
     controld_clear_fsa_input_flags(R_PE_CONNECTED);
     controld_trigger_fsa();
-    return;
 }
 
 static void
@@ -111,25 +104,28 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
         return;
     }
 
+    pcmk__assert(reply != NULL);
     msg_ref = reply->data.graph.reference;
 
     if (msg_ref == NULL) {
-        crm_err("%s - Ignoring calculation with no reference", CRM_OP_PECALC);
+        crm_err(CRM_OP_PECALC " - Ignoring calculation with no reference");
 
     } else if (pcmk__str_eq(msg_ref, controld_globals.fsa_pe_ref,
                             pcmk__str_none)) {
-        ha_msg_input_t fsa_input;
-        xmlNode *crm_data_node;
+        ha_msg_input_t fsa_input = { NULL, NULL };
+        xmlNode *crm_data_node = NULL;
 
         controld_stop_sched_timer();
 
-        /* do_te_invoke (which will eventually process the fsa_input we are constructing
-         * here) requires that fsa_input.xml be non-NULL.  That will only happen if
-         * copy_ha_msg_input (which is called by register_fsa_input_adv) sees the
-         * fsa_input.msg that it is expecting. The scheduler's IPC dispatch function
-         * gave us the values we need, we just need to put them into XML.
+        /* do_te_invoke() (which will eventually process the fsa_input we are
+         * constructing here) requires that fsa_input.xml be non-NULL. That will
+         * happen only if copy_ha_msg_input() (which is called by
+         * register_fsa_input_adv()) sees the fsa_input.msg that it is
+         * expecting. The scheduler's IPC dispatch function gave us the values
+         * we need, so we just need to put them into XML.
          *
-         * The name of the top level element here is irrelevant.  Nothing checks it.
+         * The name of the top-level element here is irrelevant. Nothing checks
+         * it.
          */
         fsa_input.msg = pcmk__xe_create(NULL, "dummy-reply");
         pcmk__xe_set(fsa_input.msg, PCMK_XA_REFERENCE, msg_ref);
@@ -151,15 +147,13 @@ static void
 scheduler_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
                          crm_exit_t status, void *event_data, void *user_data)
 {
-    pcmk_schedulerd_api_reply_t *reply = event_data;
-
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             handle_disconnect();
             break;
 
         case pcmk_ipc_event_reply:
-            handle_reply(reply);
+            handle_reply((pcmk_schedulerd_api_reply_t *) event_data);
             break;
 
         default:
@@ -170,7 +164,7 @@ scheduler_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
 static bool
 new_schedulerd_ipc_connection(void)
 {
-    int rc;
+    int rc = pcmk_rc_ok;
 
     controld_set_fsa_input_flags(R_PE_REQUIRED);
 
@@ -185,7 +179,8 @@ new_schedulerd_ipc_connection(void)
 
     pcmk_register_ipc_callback(schedulerd_api, scheduler_event_callback, NULL);
 
-    rc = pcmk__connect_ipc_retry_conrefused(schedulerd_api, pcmk_ipc_dispatch_main, 3);
+    rc = pcmk__connect_ipc_retry_conrefused(schedulerd_api,
+                                            pcmk_ipc_dispatch_main, 3);
     if (rc != pcmk_rc_ok) {
         crm_err("Error connecting to %s: %s",
                 pcmk_ipc_name(schedulerd_api, true), pcmk_rc_str(rc));
@@ -214,23 +209,24 @@ controld_shutdown_schedulerd_ipc(void)
 static void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
                                   xmlNode *output, void *user_data);
 
-/*	 A_PE_START, A_PE_STOP, O_PE_RESTART	*/
+// A_PE_START, A_PE_STOP, O_PE_RESTART
 void
-do_pe_control(long long action,
-              enum crmd_fsa_cause cause,
-              enum crmd_fsa_state cur_state,
-              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_pe_control(long long action, enum crmd_fsa_cause cause,
+              enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+              fsa_data_t *msg_data)
 {
     if (pcmk__is_set(action, A_PE_STOP)) {
         controld_clear_fsa_input_flags(R_PE_REQUIRED);
         pcmk_disconnect_ipc(schedulerd_api);
         handle_disconnect();
     }
+
     if (pcmk__is_set(action, A_PE_START)
         && !pcmk__is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
 
         if (cur_state == S_STOPPING) {
-            crm_info("Ignoring request to connect to scheduler while shutting down");
+            crm_info("Ignoring request to connect to scheduler while shutting "
+                     "down");
 
         } else if (!new_schedulerd_ipc_connection()) {
             crm_warn("Could not connect to scheduler");
