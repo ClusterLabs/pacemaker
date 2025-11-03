@@ -307,6 +307,7 @@ lrm_op_callback(lrmd_event_data_t * op)
     }
 }
 
+// action and msg_data arguments are for crmd_fsa_stall() macro
 static void
 try_local_executor_connect(long long action, fsa_data_t *msg_data,
                            lrm_state_t *lrm_state)
@@ -330,7 +331,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
                  pcmk__plural_s(lrm_state->num_lrm_register_fails),
                  MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
         controld_start_wait_timer();
-        crmd_fsa_stall(FALSE);
+        crmd_fsa_stall(false);
         return;
     }
 
@@ -342,35 +343,34 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
     register_fsa_error(I_ERROR);
 }
 
-/*	 A_LRM_CONNECT	*/
+// A_LRM_CONNECT
 void
-do_lrm_control(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state,
-               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_lrm_control(long long action, enum crmd_fsa_cause cause,
+               enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+               fsa_data_t *msg_data)
 {
     /* This only pertains to local executor connections. Remote connections are
      * handled as resources within the scheduler. Connecting and disconnecting
      * from remote executor instances is handled differently.
      */
-
     lrm_state_t *lrm_state = NULL;
 
     if (controld_globals.cluster->priv->node_name == NULL) {
         return; // Shouldn't be possible
     }
+
     lrm_state = controld_get_executor_state(NULL, true);
     if (lrm_state == NULL) {
         register_fsa_error(I_ERROR);
         return;
     }
 
-    if (action & A_LRM_DISCONNECT) {
-        if (lrm_state_verify_stopped(lrm_state, cur_state, LOG_INFO) == FALSE) {
-            if (action == A_LRM_DISCONNECT) {
-                crmd_fsa_stall(FALSE);
-                return;
-            }
+    if (pcmk__is_set(action, A_LRM_DISCONNECT)) {
+        if (!lrm_state_verify_stopped(lrm_state, cur_state, LOG_INFO)
+            && (action == A_LRM_DISCONNECT)) {
+
+            crmd_fsa_stall(false);
+            return;
         }
 
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -378,11 +378,11 @@ do_lrm_control(long long action,
         lrm_state_reset_tables(lrm_state, FALSE);
     }
 
-    if (action & A_LRM_CONNECT) {
+    if (pcmk__is_set(action, A_LRM_CONNECT)) {
         try_local_executor_connect(action, msg_data, lrm_state);
     }
 
-    if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {
+    if ((action & ~(A_LRM_CONNECT|A_LRM_DISCONNECT)) != 0) {
         crm_err("Unexpected action %s in %s", fsa_action2string(action),
                 __func__);
     }
