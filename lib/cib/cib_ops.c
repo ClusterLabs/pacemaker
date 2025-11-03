@@ -787,17 +787,7 @@ cib_process_xpath(const char *op, int options, const char *section,
                 continue;
             }
 
-            if (options & cib_no_children) {
-                xmlNode *shallow = pcmk__xe_create(*answer,
-                                                   (const char *) match->name);
-
-                pcmk__xe_copy_attrs(shallow, match, pcmk__xaf_none);
-
-                if (*answer == NULL) {
-                    *answer = shallow;
-                }
-
-            } else if (options & cib_xpath_address) {
+            if (options & cib_xpath_address) {
                 // @COMPAT cib_xpath_address is deprecated since 3.0.2
                 char *path = NULL;
                 xmlNode *parent = match;
@@ -827,6 +817,16 @@ cib_process_xpath(const char *op, int options, const char *section,
                 parent = pcmk__xe_create(*answer, PCMK__XE_XPATH_QUERY_PATH);
                 pcmk__xe_set(parent, PCMK_XA_ID, path);
                 free(path);
+
+            } else if (options & cib_no_children) {
+                xmlNode *shallow = pcmk__xe_create(*answer,
+                                                   (const char *) match->name);
+
+                pcmk__xe_copy_attrs(shallow, match, pcmk__xaf_none);
+
+                if (*answer == NULL) {
+                    *answer = shallow;
+                }
 
             } else if (*answer) {
                 pcmk__xml_copy(*answer, match);
