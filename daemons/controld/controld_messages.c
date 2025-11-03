@@ -1245,12 +1245,12 @@ send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src)
         fsa_data.id = 0;
         fsa_data.actions = 0;
         fsa_data.data = &fsa_input;
-        fsa_data.fsa_input = I_MESSAGE;
+        fsa_data.fsa_input = I_ROUTER;
         fsa_data.fsa_cause = C_IPC_MESSAGE;
         fsa_data.origin = __func__;
 
         do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, controld_globals.fsa_state,
-                      I_MESSAGE, &fsa_data);
+                      I_ROUTER, &fsa_data);
 
     } else if (crmd_is_proxy_session(sys)) {
         crmd_proxy_send(sys, msg);

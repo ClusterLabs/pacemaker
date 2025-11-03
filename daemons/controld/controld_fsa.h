@@ -195,8 +195,6 @@ enum crmd_fsa_input {
 
 #  define MAXINPUT  I_ILLEGAL
 
-#  define I_MESSAGE I_ROUTER
-
 /*======================================
  *
  * actions
