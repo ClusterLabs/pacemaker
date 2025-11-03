@@ -154,8 +154,6 @@ enum crmd_fsa_input {
                                  * the current operation or state
                                  */
     I_RECOVERED,                /* The recovery process completed successfully */
-    I_RELEASE_FAIL,             /* We could not give up DC status for some reason
-                                 */
     I_RELEASE_SUCCESS,          /* We are no longer the DC */
     I_TE_SUCCESS,               /* Some non-resource, non-cluster-layer action
                                  * is required of us, e.g. ping
