@@ -49,9 +49,6 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 #define register_fsa_input_before(cause, input, data)   \
     register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __func__)
 
-#define register_fsa_input_later(cause, input, data)    \
-    register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __func__)
-
 void delete_fsa_input(fsa_data_t * fsa_data);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);

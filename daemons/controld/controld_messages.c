@@ -223,9 +223,9 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
         case I_JOIN_RESULT:
             /* Add to the front of the queue.
              *
-             * @FIXME register_fsa_input()/register_fsa_input_later() adds the
-             * input to the tail of the queue. To add to the front (the head),
-             * we would call register_fsa_input_before(). Which one is correct?
+             * @FIXME register_fsa_input() adds the input to the tail of the
+             * queue. To add to the front (the head), we would call
+             * register_fsa_input_before(). Which one is correct?
              * - The "Add to the front" comment and the below
              *   register_fsa_input() call go back to a1606db9 in 2006.
              * - register_fsa_input() switched from "prepend" to "append" via
@@ -239,7 +239,7 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
             break;
 
         default:
-            register_fsa_input_later(cause, result, &fsa_input);
+            register_fsa_input(cause, result, &fsa_input);
             break;
     }
 }
@@ -1161,7 +1161,7 @@ handle_response(xmlNode *stored_msg)
 
             controld_stop_sched_timer();
             fsa_input.msg = stored_msg;
-            register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
+            register_fsa_input(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         } else {
             crm_info("%s calculation %s is obsolete", op, msg_ref);
