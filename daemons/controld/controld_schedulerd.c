@@ -23,26 +23,9 @@
 
 #include <pacemaker-controld.h>
 
-static void handle_disconnect(void);
-
 static pcmk_ipc_api_t *schedulerd_api = NULL;
 
 static mainloop_timer_t *controld_cib_retry_timer = NULL;
-
-/*!
- * \internal
- * \brief Close any scheduler connection and free associated memory
- */
-void
-controld_shutdown_schedulerd_ipc(void)
-{
-    controld_clear_fsa_input_flags(R_PE_REQUIRED);
-    pcmk_disconnect_ipc(schedulerd_api);
-    handle_disconnect();
-
-    pcmk_free_ipc_api(schedulerd_api);
-    schedulerd_api = NULL;
-}
 
 /*!
  * \internal
@@ -211,6 +194,21 @@ new_schedulerd_ipc_connection(void)
 
     controld_set_fsa_input_flags(R_PE_CONNECTED);
     return true;
+}
+
+/*!
+ * \internal
+ * \brief Close any scheduler connection and free associated memory
+ */
+void
+controld_shutdown_schedulerd_ipc(void)
+{
+    controld_clear_fsa_input_flags(R_PE_REQUIRED);
+    pcmk_disconnect_ipc(schedulerd_api);
+    handle_disconnect();
+
+    pcmk_free_ipc_api(schedulerd_api);
+    schedulerd_api = NULL;
 }
 
 static void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
