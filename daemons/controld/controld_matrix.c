@@ -17,7 +17,7 @@
  *	The state transition table.  The rows are inputs, and
  *	the columns are states.
  */
-static const enum crmd_fsa_state fsa_next_states[MAXINPUT][MAXSTATE] = {
+static const enum crmd_fsa_state fsa_next_states[I_MAX + 1][S_MAX + 1] = {
 /* Got an I_NULL */
     {
      /* S_IDLE               ==> */ S_IDLE,
@@ -585,7 +585,7 @@ static const enum crmd_fsa_state fsa_next_states[MAXINPUT][MAXSTATE] = {
 
 /* NOTE: In the fsa, the actions are extracted then state is updated. */
 
-static const uint64_t fsa_actions[MAXINPUT][MAXSTATE] = {
+static const uint64_t fsa_actions[I_MAX + 1][S_MAX + 1] = {
 
 /* Got an I_NULL */
     {

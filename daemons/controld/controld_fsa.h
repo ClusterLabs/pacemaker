@@ -66,12 +66,8 @@ enum crmd_fsa_state {
                                  * Wait for I_ELECTION
                                  */
 
-    /*  ----------- Last input found in table is above ---------- */
-    S_ILLEGAL                   /* This is an illegal FSA state */
-        /* (must be last) */
+    S_MAX = S_HALT,             // Max enum value; update if adding new values
 };
-
-#  define MAXSTATE S_ILLEGAL
 
 /*
       Once we start and do some basic sanity checks, we go into the
@@ -188,12 +184,8 @@ enum crmd_fsa_input {
     I_PENDING,
     I_HALT,
 
-    /*  ------------ Last input found in table is above ----------- */
-    I_ILLEGAL                   /* This is an illegal value for an FSA input */
-        /* (must be last) */
+    I_MAX = I_HALT,             // Max enum value; update if adding new values
 };
-
-#  define MAXINPUT  I_ILLEGAL
 
 /*======================================
  *

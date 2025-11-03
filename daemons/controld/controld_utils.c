@@ -149,9 +149,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_TERMINATE:
             inputAsText = "I_TERMINATE";
             break;
-        case I_ILLEGAL:
-            inputAsText = "I_ILLEGAL";
-            break;
     }
 
     if (inputAsText == NULL) {
@@ -209,9 +206,6 @@ fsa_state2string(enum crmd_fsa_state state)
             break;
         case S_HALT:
             stateAsText = "S_HALT";
-            break;
-        case S_ILLEGAL:
-            stateAsText = "S_ILLEGAL";
             break;
     }
 
