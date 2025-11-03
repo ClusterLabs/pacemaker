@@ -252,24 +252,6 @@ static const enum crmd_fsa_state fsa_next_states[I_MAX + 1][S_MAX + 1] = {
      /* S_HALT               ==> */ S_HALT,
      },
 
-/* Got an I_RECOVERED */
-    {
-     /* S_IDLE               ==> */ S_IDLE,
-     /* S_ELECTION           ==> */ S_ELECTION,
-     /* S_INTEGRATION        ==> */ S_INTEGRATION,
-     /* S_FINALIZE_JOIN      ==> */ S_INTEGRATION,
-     /* S_NOT_DC             ==> */ S_NOT_DC,
-     /* S_POLICY_ENGINE      ==> */ S_POLICY_ENGINE,
-     /* S_RECOVERY           ==> */ S_PENDING,
-     /* S_RELEASE_DC         ==> */ S_RELEASE_DC,
-     /* S_STARTING           ==> */ S_STARTING,
-     /* S_PENDING            ==> */ S_PENDING,
-     /* S_STOPPING           ==> */ S_STOPPING,
-     /* S_TERMINATE          ==> */ S_TERMINATE,
-     /* S_TRANSITION_ENGINE  ==> */ S_TRANSITION_ENGINE,
-     /* S_HALT               ==> */ S_HALT,
-     },
-
 /* Got an I_RELEASE_SUCCESS */
     {
      /* S_IDLE               ==> */ S_RECOVERY,
@@ -747,24 +729,6 @@ static const uint64_t fsa_actions[I_MAX + 1][S_MAX + 1] = {
      /* S_STOPPING           ==> */ A_WARN,
      /* S_TERMINATE          ==> */ A_WARN,
      /* S_TRANSITION_ENGINE  ==> */ A_ERROR | O_RELEASE,
-     /* S_HALT               ==> */ A_WARN,
-     },
-
-/* Got an I_RECOVERED */
-    {
-     /* S_IDLE               ==> */ A_WARN,
-     /* S_ELECTION           ==> */ A_ELECTION_VOTE,
-     /* S_INTEGRATION        ==> */ A_WARN,
-     /* S_FINALIZE_JOIN      ==> */ A_WARN,
-     /* S_NOT_DC             ==> */ A_WARN,
-     /* S_POLICY_ENGINE      ==> */ A_WARN,
-     /* S_RECOVERY           ==> */ A_LOG,
-     /* S_RELEASE_DC         ==> */ A_WARN,
-     /* S_STARTING           ==> */ A_WARN,
-     /* S_PENDING            ==> */ A_WARN,
-     /* S_STOPPING           ==> */ A_WARN,
-     /* S_TERMINATE          ==> */ A_WARN,
-     /* S_TRANSITION_ENGINE  ==> */ A_WARN,
      /* S_HALT               ==> */ A_WARN,
      },
 

@@ -104,9 +104,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_NOT_DC:
             inputAsText = "I_NOT_DC";
             break;
-        case I_RECOVERED:
-            inputAsText = "I_RECOVERED";
-            break;
         case I_RELEASE_SUCCESS:
             inputAsText = "I_RELEASE_SUCCESS";
             break;
