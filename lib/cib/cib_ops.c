@@ -636,7 +636,18 @@ process_query_xpath(const char *op, int options, const char *xpath,
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
-        if (match->type != XML_ELEMENT_NODE) {
+        if (match->type != XML_ELEMENT_NODE
+            && pcmk__is_set(options, cib_xpath_address)) {
+            /* @COMPAT cib_xpath_address is deprecated since 3.0.2
+             * For a non-element, handle cib_xpath_address with its
+             * corresponding element.
+             */
+            match = pcmk__xpath_match_element(match);
+            if (match == NULL) {
+                continue;
+            }
+
+        } else if (match->type != XML_ELEMENT_NODE) {
             // Create an element for a single match of a non-element
             if (*answer == NULL) {
                 *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
