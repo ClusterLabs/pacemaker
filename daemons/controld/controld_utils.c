@@ -59,9 +59,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_NULL:
             inputAsText = "I_NULL";
             break;
-        case I_CIB_UPDATE:
-            inputAsText = "I_CIB_UPDATE";
-            break;
         case I_DC_TIMEOUT:
             inputAsText = "I_DC_TIMEOUT";
             break;

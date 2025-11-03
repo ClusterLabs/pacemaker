@@ -131,7 +131,6 @@ enum crmd_fsa_state {
  *======================================*/
 enum crmd_fsa_input {
     I_NULL,                     /* Nothing happened */
-    I_CIB_UPDATE,               /* An update to the CIB occurred */
     I_DC_TIMEOUT,               /* We have lost communication with the DC */
     I_ELECTION,                 /* Someone started an election */
     I_PE_CALC,                  /* The scheduler needs to be invoked */
