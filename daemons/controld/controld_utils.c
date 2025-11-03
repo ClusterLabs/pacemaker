@@ -134,9 +134,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_STOP:
             inputAsText = "I_STOP";
             break;
-        case I_DC_HEARTBEAT:
-            inputAsText = "I_DC_HEARTBEAT";
-            break;
         case I_WAIT_FOR_EVENT:
             inputAsText = "I_WAIT_FOR_EVENT";
             break;

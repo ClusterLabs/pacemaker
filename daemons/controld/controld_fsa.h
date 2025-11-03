@@ -179,8 +179,6 @@ enum crmd_fsa_input {
     I_WAIT_FOR_EVENT,           /* we may be waiting for an async task to "happen"
                                  * and until it does, we can't do anything else
                                  */
-    I_DC_HEARTBEAT,             /* The DC is telling us that it is alive and well */
-
     I_PENDING,
     I_HALT,
 
