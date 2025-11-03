@@ -215,20 +215,32 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
     /* done or process later? */
     switch (result) {
         case I_NULL:
+            break;
+
         case I_ROUTER:
         case I_NODE_JOIN:
         case I_JOIN_REQUEST:
         case I_JOIN_RESULT:
+            /* Add to the front of the queue.
+             *
+             * @FIXME register_fsa_input()/register_fsa_input_later() adds the
+             * input to the tail of the queue. To add to the front (the head),
+             * we would call register_fsa_input_before(). Which one is correct?
+             * - The "Add to the front" comment and the below
+             *   register_fsa_input() call go back to a1606db9 in 2006.
+             * - register_fsa_input() switched from "prepend" to "append" via
+             *   38b02548 in 2005. So when this register_fsa_input() call was
+             *   added in 2006, its behavior was already to add the input to the
+             *   tail of the queue. (This would have made more sense as an
+             *   oversight if the register_fsa_input() behavior was changed
+             *   later rather than earlier.)
+             */
+            register_fsa_input(cause, result, &fsa_input);
             break;
-        default:
-            /* Defering local processing of message */
-            register_fsa_input_later(cause, result, &fsa_input);
-            return;
-    }
 
-    if (result != I_NULL) {
-        /* add to the front of the queue */
-        register_fsa_input(cause, result, &fsa_input);
+        default:
+            register_fsa_input_later(cause, result, &fsa_input);
+            break;
     }
 }
 
