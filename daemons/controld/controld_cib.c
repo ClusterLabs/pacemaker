@@ -195,7 +195,7 @@ do_cib_control(long long action,
         } else {
             crm_err("Could not complete CIB registration %d times... "
                     "hard error", cib_retries);
-            register_fsa_error(I_ERROR, NULL);
+            register_fsa_error(I_ERROR);
         }
     }
 }

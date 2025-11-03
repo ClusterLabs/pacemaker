@@ -236,7 +236,7 @@ do_pe_control(long long action,
 
         } else if (!new_schedulerd_ipc_connection()) {
             crm_warn("Could not connect to scheduler");
-            register_fsa_error(I_FAIL, NULL);
+            register_fsa_error(I_FAIL);
         }
     }
 }

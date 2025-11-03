@@ -104,12 +104,12 @@ crmd_node_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     } else if(call_id < pcmk_ok) {
         crm_err("Node update failed: %s (%d)", pcmk_strerror(call_id), call_id);
         crm_log_xml_debug(msg, "failed");
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
 
     } else {
         crm_err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 }
 
@@ -357,12 +357,12 @@ node_list_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, 
     if(call_id < pcmk_ok) {
         crm_err("Node list update failed: %s (%d)", pcmk_strerror(call_id), call_id);
         crm_log_xml_debug(msg, "update:failed");
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
 
     } else if(rc < pcmk_ok) {
         crm_err("Node update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "update:failed");
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 }
 
@@ -437,7 +437,7 @@ cib_quorum_update_complete(xmlNode * msg, int call_id, int rc, xmlNode * output,
     } else {
         crm_err("Quorum update %d failed: %s (%d)", call_id, pcmk_strerror(rc), rc);
         crm_log_xml_debug(msg, "failed");
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 }
 

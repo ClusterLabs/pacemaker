@@ -79,7 +79,7 @@ do_ha_control(long long action,
 
         if (!registered) {
             controld_set_fsa_input_flags(R_HA_DISCONNECTED);
-            register_fsa_error(I_ERROR, NULL);
+            register_fsa_error(I_ERROR);
             return;
         }
 
@@ -122,7 +122,7 @@ do_shutdown_req(long long action,
                             CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
     if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
     pcmk__xml_free(msg);
 }
@@ -349,7 +349,7 @@ do_startup(long long action,
 
     lrm_state_init_local();
     if (controld_init_fsa_timers() == FALSE) {
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 }
 
@@ -516,7 +516,7 @@ do_started(long long action,
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     } else {
         crm_notice("Pacemaker controller successfully started and accepting connections");
     }
@@ -555,7 +555,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         fsa_data_t *msg_data = NULL;
 
         crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
@@ -573,7 +573,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         fsa_data_t *msg_data = NULL;
 
         crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
         goto bail;
     }
 

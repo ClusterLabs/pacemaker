@@ -288,7 +288,7 @@ do_cl_join_finalize_respond(long long action,
     if (was_nack) {
         crm_err("Shutting down because cluster join with leader %s failed "
                 QB_XS " join-%d NACK'd", welcome_from, join_id);
-        register_fsa_error(I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
     }
@@ -373,6 +373,6 @@ do_cl_join_finalize_respond(long long action,
     } else {
         crm_err("Could not confirm join-%d with %s: Local operation history "
                 "failed", join_id, controld_globals.dc_name);
-        register_fsa_error(I_FAIL, NULL);
+        register_fsa_error(I_FAIL);
     }
 }
