@@ -326,8 +326,6 @@ enum crmd_fsa_input {
 /* Disconnect from the local executor */
 #define A_LRM_DISCONNECT            (UINT64_C(1) << 57)
 
-#define A_LRM_INVOKE                (UINT64_C(1) << 58)
-
 /* -- Logging actions -- */
 
 #define A_LOG                       (UINT64_C(1) << 60)
@@ -628,11 +626,6 @@ void do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
                                  enum crmd_fsa_state cur_state,
                                  enum crmd_fsa_input current_input,
                                  fsa_data_t *msg_data);
-
-/* A_LRM_INVOKE */
-void do_lrm_invoke(long long action, enum crmd_fsa_cause cause,
-                   enum crmd_fsa_state cur_state,
-                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
 /* A_TE_INVOKE, A_TE_CANCEL */
 void do_te_invoke(long long action, enum crmd_fsa_cause cause,

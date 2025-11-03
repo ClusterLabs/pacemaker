@@ -273,9 +273,6 @@ fsa_action2string(long long action)
         case A_LRM_CONNECT:
             actionAsText = "A_LRM_CONNECT";
             break;
-        case A_LRM_INVOKE:
-            actionAsText = "A_LRM_INVOKE";
-            break;
         case A_LRM_DISCONNECT:
             actionAsText = "A_LRM_DISCONNECT";
             break;
@@ -502,9 +499,6 @@ fsa_dump_actions(uint64_t action, const char *text)
     }
     if (pcmk__is_set(action, A_LRM_CONNECT)) {
         crm_trace("Action %.16" PRIx64 " (A_LRM_CONNECT) %s", A_LRM_CONNECT, text);
-    }
-    if (pcmk__is_set(action, A_LRM_INVOKE)) {
-        crm_trace("Action %.16" PRIx64 " (A_LRM_INVOKE) %s", A_LRM_INVOKE, text);
     }
     if (pcmk__is_set(action, A_LRM_DISCONNECT)) {
         crm_trace("Action %.16" PRIx64 " (A_LRM_DISCONNECT) %s", A_LRM_DISCONNECT, text);

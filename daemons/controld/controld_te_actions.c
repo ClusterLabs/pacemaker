@@ -411,12 +411,11 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             .data = &data,
             .fsa_input = I_NULL,
             .fsa_cause = C_FSA_INTERNAL,
-            .actions = A_LRM_INVOKE,
+            .actions = A_NOTHING,
             .origin = __func__,
         };
 
-        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, controld_globals.fsa_state,
-                      I_NULL, &msg);
+        controld_invoke_execd(&msg);
 
     } else {
         const pcmk__node_status_t *node =

@@ -1386,12 +1386,8 @@ metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
     free_metadata_cb_data(data);
 }
 
-/*	 A_LRM_INVOKE	*/
 void
-do_lrm_invoke(long long action,
-              enum crmd_fsa_cause cause,
-              enum crmd_fsa_state cur_state,
-              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+controld_invoke_execd(fsa_data_t *msg_data)
 {
     lrm_state_t *lrm_state = NULL;
     const char *crm_op = NULL;

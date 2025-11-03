@@ -458,8 +458,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             do_fsa_action(fsa_data, A_TE_HALT, do_te_invoke);
         } else if (pcmk__is_set(controld_globals.fsa_actions, A_TE_CANCEL)) {
             do_fsa_action(fsa_data, A_TE_CANCEL, do_te_invoke);
-        } else if (pcmk__is_set(controld_globals.fsa_actions, A_LRM_INVOKE)) {
-            do_fsa_action(fsa_data, A_LRM_INVOKE, do_lrm_invoke);
         } else if (pcmk__is_set(controld_globals.fsa_actions, A_PE_INVOKE)) {
             do_fsa_action(fsa_data, A_PE_INVOKE, do_pe_invoke);
         } else if (pcmk__is_set(controld_globals.fsa_actions, A_TE_INVOKE)) {
