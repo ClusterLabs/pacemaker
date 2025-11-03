@@ -766,7 +766,18 @@ cib_process_xpath(const char *op, int options, const char *section,
             break;
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
-            if (match->type != XML_ELEMENT_NODE) {
+            if (match->type != XML_ELEMENT_NODE
+                && pcmk__is_set(options, cib_xpath_address)) {
+               /* @COMPAT cib_xpath_address is deprecated since 3.0.2
+                * For a non-element, handle cib_xpath_address with its
+                * corresponding element.
+                */
+               match = pcmk__xpath_match_element(match);
+               if (match == NULL) {
+                   continue;
+               }
+
+            } else if (match->type != XML_ELEMENT_NODE) {
                 xmlNode *match_element = pcmk__xpath_match_element(match);
                 xmlNode *brief = NULL;
 
