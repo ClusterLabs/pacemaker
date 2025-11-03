@@ -140,9 +140,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_PENDING:
             inputAsText = "I_PENDING";
             break;
-        case I_HALT:
-            inputAsText = "I_HALT";
-            break;
         case I_TERMINATE:
             inputAsText = "I_TERMINATE";
             break;

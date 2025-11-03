@@ -180,9 +180,8 @@ enum crmd_fsa_input {
                                  * and until it does, we can't do anything else
                                  */
     I_PENDING,
-    I_HALT,
 
-    I_MAX = I_HALT,             // Max enum value; update if adding new values
+    I_MAX = I_PENDING,          // Max enum value; update if adding new values
 };
 
 /*======================================
