@@ -103,19 +103,18 @@ do_shutdown(long long action,
     controld_disconnect_fencer(FALSE);
 }
 
-/*	 A_SHUTDOWN_REQ	*/
+// A_SHUTDOWN_REQ
 void
-do_shutdown_req(long long action,
-                enum crmd_fsa_cause cause,
+do_shutdown_req(long long action, enum crmd_fsa_cause cause,
                 enum crmd_fsa_state cur_state,
-                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
     xmlNode *msg = NULL;
 
-    controld_set_fsa_input_flags(R_SHUTDOWN);
-    //controld_set_fsa_input_flags(R_STAYDOWN);
     crm_info("Sending shutdown request to all peers (DC is %s)",
              pcmk__s(controld_globals.dc_name, "not set"));
+
+    controld_set_fsa_input_flags(R_SHUTDOWN);
     msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
