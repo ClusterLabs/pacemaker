@@ -159,13 +159,16 @@ do_election_count_vote(long long action, enum crmd_fsa_cause cause,
 }
 
 static void
-feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+feature_update_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                        void *user_data)
 {
-    if (rc != pcmk_ok) {
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
         fsa_data_t *msg_data = NULL;
 
-        crm_notice("Feature update failed: %s " QB_XS " rc=%d",
-                   pcmk_strerror(rc), rc);
+        crm_notice("Feature set update failed: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
         register_fsa_error(I_ERROR);
     }
 }
@@ -184,17 +187,16 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
                              name, value, NULL, NULL);                      \
     } while (0)
 
-/*	 A_DC_TAKEOVER	*/
+// A_DC_TAKEOVER
 void
-do_dc_takeover(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state,
-               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_dc_takeover(long long action, enum crmd_fsa_cause cause,
+               enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+               fsa_data_t *msg_data)
 {
     xmlNode *cib = NULL;
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
-    pid_t watchdog = pcmk__locate_sbd();
+    const bool have_watchdog = (pcmk__locate_sbd() != 0);
 
     crm_info("Taking over DC status for this partition");
     controld_set_fsa_input_flags(R_THE_DC);
@@ -209,10 +211,10 @@ do_dc_takeover(long long action,
     pcmk__xe_set(cib, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     controld_update_cib(PCMK_XE_CIB, cib, cib_none, feature_update_callback);
 
-    dc_takeover_update_attr(PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(watchdog));
     dc_takeover_update_attr(PCMK_OPT_DC_VERSION,
                             PACEMAKER_VERSION "-" BUILD_VERSION);
     dc_takeover_update_attr(PCMK_OPT_CLUSTER_INFRASTRUCTURE, cluster_layer_s);
+    dc_takeover_update_attr(PCMK_OPT_HAVE_WATCHDOG, pcmk__btoa(have_watchdog));
 
 #if SUPPORT_COROSYNC
     if ((controld_globals.cluster_name == NULL)
