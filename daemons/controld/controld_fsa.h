@@ -219,6 +219,12 @@ enum crmd_fsa_input {
 #define A_ELECTION_COUNT            (UINT64_C(1) << 10)
 #define A_ELECTION_VOTE             (UINT64_C(1) << 11)
 
+/* @TODO The handler for A_ELECTION_START is identical to the handler for
+ * A_ELECTION_VOTE. The only difference is the priority within
+ * s_crmd_fsa_actions(). Determine whether it's safe to drop this and replace it
+ * with A_ELECTION_VOTE, or whether we rely on this difference in priority for
+ * I_ERROR and I_NOT_DC.
+ */
 #define A_ELECTION_START            (UINT64_C(1) << 12)
 
 /* -- Message processing -- */
@@ -543,7 +549,7 @@ void do_recover(long long action, enum crmd_fsa_cause cause,
                 enum crmd_fsa_state cur_state,
                 enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
-/* A_ELECTION_VOTE */
+/* A_ELECTION_VOTE, A_ELECTION_START */
 void do_election_vote(long long action, enum crmd_fsa_cause cause,
                       enum crmd_fsa_state cur_state,
                       enum crmd_fsa_input cur_input, fsa_data_t *msg_data);

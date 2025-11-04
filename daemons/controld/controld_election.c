@@ -67,7 +67,7 @@ controld_stop_current_election_timeout(void)
     election_timeout_stop(controld_globals.cluster);
 }
 
-// A_ELECTION_VOTE
+// A_ELECTION_VOTE, A_ELECTION_START
 void
 do_election_vote(long long action, enum crmd_fsa_cause cause,
                  enum crmd_fsa_state cur_state,
