@@ -10,6 +10,7 @@
 #ifndef CRMD_UTILS__H
 #define CRMD_UTILS__H
 
+#include <stdbool.h>
 #include <stdint.h>                 // UINT32_C(), uint32_t
 
 #include <glib.h>                   // gboolean
@@ -67,7 +68,8 @@ xmlNode *create_node_state_update(pcmk__node_status_t *node, uint32_t flags,
 void populate_cib_nodes(uint32_t flags, const char *source);
 void crm_update_quorum(gboolean quorum, gboolean force_update);
 void controld_close_attrd_ipc(void);
-void update_attrd(const char *host, const char *name, const char *value, const char *user_name, gboolean is_remote_node);
+void update_attrd(const char *host, const char *name, const char *value,
+                  bool is_remote_node);
 void update_attrd_list(GList *attrs, uint32_t opts);
 void update_attrd_remote_node_removed(const char *host, const char *user_name);
 void update_attrd_clear_failures(const char *host, const char *rsc,

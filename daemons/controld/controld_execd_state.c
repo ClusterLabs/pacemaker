@@ -531,7 +531,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         if (!remote_ra_is_in_maintenance(lrm_state)) {
             now_s = pcmk__ttoa(time(NULL));
             update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
-                         NULL, TRUE);
+                         true);
             free(now_s);
 
             remote_proxy_ack_shutdown(lrmd);

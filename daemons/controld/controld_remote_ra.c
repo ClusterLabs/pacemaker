@@ -261,7 +261,7 @@ remote_node_up(const char *node_name)
      * risking deletion or overwrite of an arbitrary attribute. Then work on
      * deprecating CRM_OP_PROBED.
      */
-    update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
+    update_attrd(node_name, CRM_OP_PROBED, NULL, true);
 
     /* Ensure node is in the remote peer cache with member status */
     node = pcmk__cluster_lookup_remote_node(node_name);

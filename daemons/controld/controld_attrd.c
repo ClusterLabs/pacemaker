@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <crm/crm.h>
 #include <crm/common/attrs_internal.h>
 #include <crm/common/ipc.h>
@@ -61,7 +63,7 @@ handle_attr_error(void)
 
 void
 update_attrd(const char *host, const char *name, const char *value,
-             const char *user_name, gboolean is_remote_node)
+             bool is_remote_node)
 {
     int rc = pcmk_rc_ok;
 
@@ -74,8 +76,8 @@ update_attrd(const char *host, const char *name, const char *value,
         if (is_remote_node) {
             pcmk__set_node_attr_flags(attrd_opts, pcmk__node_attr_remote);
         }
-        rc = pcmk__attrd_api_update(attrd_api, host, name, value,
-                                    NULL, NULL, user_name, attrd_opts);
+        rc = pcmk__attrd_api_update(attrd_api, host, name, value, NULL, NULL,
+                                    NULL, attrd_opts);
     }
     if (rc != pcmk_rc_ok) {
         do_crm_log(AM_I_DC? LOG_CRIT : LOG_ERR,

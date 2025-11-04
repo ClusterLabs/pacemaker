@@ -308,7 +308,7 @@ do_cl_join_finalize_respond(long long action,
 
     /* record the node's feature set as a transient attribute */
     update_attrd(controld_globals.cluster->priv->node_name,
-                 CRM_ATTR_FEATURE_SET, CRM_FEATURE_SET, NULL, FALSE);
+                 CRM_ATTR_FEATURE_SET, CRM_FEATURE_SET, false);
 
     /* send our status section to the DC */
     tmp1 = controld_query_executor_state();
