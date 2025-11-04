@@ -25,7 +25,7 @@
 #include <pacemaker-controld.h>
 
 static char *max_generation_from = NULL;
-static xmlNodePtr max_generation_xml = NULL;
+static xmlNode *max_generation_xml = NULL;
 
 /*!
  * \internal
@@ -198,26 +198,10 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
 }
 
 static void
-start_join_round(void)
+set_join_phase_none(gpointer key, gpointer value, gpointer user_data)
 {
-    GHashTableIter iter;
-    pcmk__node_status_t *peer = NULL;
-
-    crm_debug("Starting new join round join-%d", current_join_id);
-
-    g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
-        crm_update_peer_join(__func__, peer, controld_join_none);
-    }
-    if (max_generation_from != NULL) {
-        free(max_generation_from);
-        max_generation_from = NULL;
-    }
-    if (max_generation_xml != NULL) {
-        pcmk__xml_free(max_generation_xml);
-        max_generation_xml = NULL;
-    }
-    controld_clear_fsa_input_flags(R_HAVE_CIB);
+    crm_update_peer_join(__func__, (pcmk__node_status_t *) value,
+                         controld_join_none);
 }
 
 /*!
@@ -311,26 +295,32 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
     crm_update_peer_join(__func__, member, controld_join_welcomed);
 }
 
-/*	 A_DC_JOIN_OFFER_ALL	*/
+// A_DC_JOIN_OFFER_ALL
 void
-do_dc_join_offer_all(long long action,
-                     enum crmd_fsa_cause cause,
+do_dc_join_offer_all(long long action, enum crmd_fsa_cause cause,
                      enum crmd_fsa_state cur_state,
-                     enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                     enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
-    int count;
+    int count = 0;
 
-    /* Reset everyone's status back to down or in_ccm in the CIB.
-     * Any nodes that are active in the CIB but not in the cluster membership
-     * will be seen as offline by the scheduler anyway.
-     */
-    current_join_id++;
-    start_join_round();
-
-    update_dc(NULL);
-    if (cause == C_HA_MESSAGE && current_input == I_NODE_JOIN) {
+    if ((cause == C_HA_MESSAGE) && (current_input == I_NODE_JOIN)) {
         crm_info("A new node joined the cluster");
     }
+
+    current_join_id++;
+    if (current_join_id <= 0) {
+        current_join_id = 1;
+    }
+    crm_debug("Starting new join round join-%d", current_join_id);
+
+    g_hash_table_foreach(pcmk__peer_cache, set_join_phase_none, NULL);
+    free_max_generation();
+    controld_clear_fsa_input_flags(R_HAVE_CIB);
+    update_dc(NULL);
+
+    /* For each node, either send a welcome message and update join phase to
+     * welcomed, or set expected state to down if inactive and lost.
+     */
     g_hash_table_foreach(pcmk__peer_cache, join_make_offer, NULL);
 
     count = crmd_join_phase_count(controld_join_welcomed);
