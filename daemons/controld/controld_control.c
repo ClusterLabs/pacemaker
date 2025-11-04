@@ -664,12 +664,11 @@ crm_read_options(gpointer user_data)
     return TRUE;
 }
 
-/*	 A_READCONFIG	*/
+// A_READCONFIG
 void
-do_read_config(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state,
-               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_read_config(long long action, enum crmd_fsa_cause cause,
+               enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+               fsa_data_t *msg_data)
 {
     throttle_init();
     controld_trigger_config();
