@@ -1067,14 +1067,14 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
     return FALSE;
 }
 
+// A_DC_JOIN_FINAL
 void
-do_dc_join_final(long long action,
-                 enum crmd_fsa_cause cause,
+do_dc_join_final(long long action, enum crmd_fsa_cause cause,
                  enum crmd_fsa_state cur_state,
-                 enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                 enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
-    crm_debug("Ensuring DC, quorum and node attributes are up-to-date");
-    crm_update_quorum(pcmk__cluster_has_quorum(), TRUE);
+    crm_debug("Ensuring DC, quorum, and node attributes are up to date");
+    crm_update_quorum(pcmk__cluster_has_quorum(), true);
 }
 
 int crmd_join_phase_count(enum controld_join_phase phase)
