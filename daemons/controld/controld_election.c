@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 
@@ -66,47 +67,47 @@ controld_stop_current_election_timeout(void)
     election_timeout_stop(controld_globals.cluster);
 }
 
-/*	A_ELECTION_VOTE	*/
+// A_ELECTION_VOTE
 void
-do_election_vote(long long action,
-                 enum crmd_fsa_cause cause,
+do_election_vote(long long action, enum crmd_fsa_cause cause,
                  enum crmd_fsa_state cur_state,
-                 enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                 enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
-    gboolean not_voting = FALSE;
+    // Don't vote if we're starting
+    bool voting = !pcmk__is_set(controld_globals.fsa_input_register,
+                                R_STARTING);
 
-    /* don't vote if we're in one of these states or wanting to shut down */
+    // Don't vote if we're in one of certain states
     switch (cur_state) {
         case S_STARTING:
         case S_RECOVERY:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_warn("Not voting in election, we're in state %s", fsa_state2string(cur_state));
-            not_voting = TRUE;
+            crm_warn("Not voting in election, we're in state %s",
+                     fsa_state2string(cur_state));
+            voting = false;
             break;
+
         case S_ELECTION:
         case S_INTEGRATION:
         case S_RELEASE_DC:
             break;
+
         default:
-            crm_err("Broken? Voting in state %s", fsa_state2string(cur_state));
+            if (voting) {
+                crm_err("Bug: Voting in DC election in unexpected state %s",
+                        fsa_state2string(cur_state));
+            }
             break;
     }
 
-    if (not_voting == FALSE) {
-        if (pcmk__is_set(controld_globals.fsa_input_register, R_STARTING)) {
-            not_voting = TRUE;
-        }
-    }
-
-    if (not_voting) {
+    if (!voting) {
         controld_fsa_append(C_FSA_INTERNAL, (AM_I_DC? I_RELEASE_DC : I_PENDING),
                             NULL);
         return;
     }
 
     election_vote(controld_globals.cluster);
-    return;
 }
 
 void
