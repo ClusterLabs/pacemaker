@@ -245,7 +245,11 @@ enum crmd_fsa_input {
 
 /* -- Client Join protocol actions -- */
 
+/* Broadcast a join announce message, requesting a join offer from the DC if
+ * there is one in our cluster layer membership
+ */
 #define A_CL_JOIN_QUERY             (UINT64_C(1) << 20)
+
 #define A_CL_JOIN_ANNOUNCE          (UINT64_C(1) << 21)
 
 /* Send the DC a join request in response to a join offer */

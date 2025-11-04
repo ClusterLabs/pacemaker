@@ -41,19 +41,24 @@ update_dc_expected_if_leaving(const xmlNode *msg)
     }
 }
 
-/*	A_CL_JOIN_QUERY		*/
-/* is there a DC out there? */
+// A_CL_JOIN_QUERY
 void
-do_cl_join_query(long long action,
-                 enum crmd_fsa_cause cause,
+do_cl_join_query(long long action, enum crmd_fsa_cause cause,
                  enum crmd_fsa_state cur_state,
-                 enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                 enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
+    /* Broadcast a join announce message, requesting a join offer from the DC if
+     * there is one in our cluster layer membership
+     */
     xmlNode *req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                                      CRM_SYSTEM_DC, CRM_OP_JOIN_ANNOUNCE, NULL);
 
-    sleep(1);                   // Give the cluster layer time to propagate to the DC
-    update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
+    // Allow some time for the DC to join our membership
+    sleep(1);
+
+    // Unset any existing value so that any response is not discarded
+    update_dc(NULL);
+
     crm_debug("Querying for a DC");
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
     pcmk__xml_free(req);
