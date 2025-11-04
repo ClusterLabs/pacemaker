@@ -353,9 +353,6 @@ enum crmd_fsa_input {
 // Are we the DC?
 #define R_THE_DC          (UINT64_C(1) << 0)
 
-// Are we starting up?
-#define R_STARTING        (UINT64_C(1) << 1)
-
 // Are we trying to shut down?
 #define R_SHUTDOWN        (UINT64_C(1) << 2)
 

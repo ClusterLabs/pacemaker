@@ -438,9 +438,6 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     if (pcmk__is_set(input_register, R_THE_DC)) {
         crm_trace("%s %.16" PRIx64 " (R_THE_DC)", text, R_THE_DC);
     }
-    if (pcmk__is_set(input_register, R_STARTING)) {
-        crm_trace("%s %.16" PRIx64 " (R_STARTING)", text, R_STARTING);
-    }
     if (pcmk__is_set(input_register, R_SHUTDOWN)) {
         crm_trace("%s %.16" PRIx64 " (R_SHUTDOWN)", text, R_SHUTDOWN);
     }

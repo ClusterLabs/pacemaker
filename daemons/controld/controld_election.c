@@ -73,11 +73,6 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
                  enum crmd_fsa_state cur_state,
                  enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
-    // Don't vote if we're starting
-    bool voting = !pcmk__is_set(controld_globals.fsa_input_register,
-                                R_STARTING);
-
-    // Don't vote if we're in one of certain states
     switch (cur_state) {
         case S_STARTING:
         case S_RECOVERY:
@@ -85,8 +80,9 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
         case S_TERMINATE:
             crm_warn("Not voting in election, we're in state %s",
                      fsa_state2string(cur_state));
-            voting = false;
-            break;
+            controld_fsa_append(C_FSA_INTERNAL,
+                                (AM_I_DC? I_RELEASE_DC : I_PENDING), NULL);
+            return;
 
         case S_ELECTION:
         case S_INTEGRATION:
@@ -94,17 +90,9 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
             break;
 
         default:
-            if (voting) {
-                crm_err("Bug: Voting in DC election in unexpected state %s",
-                        fsa_state2string(cur_state));
-            }
+            crm_err("Bug: Voting in DC election in unexpected state %s",
+                    fsa_state2string(cur_state));
             break;
-    }
-
-    if (!voting) {
-        controld_fsa_append(C_FSA_INTERNAL, (AM_I_DC? I_RELEASE_DC : I_PENDING),
-                            NULL);
-        return;
     }
 
     election_vote(controld_globals.cluster);

@@ -70,29 +70,22 @@ do_cl_join_announce(long long action,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    /* don't announce if we're in one of these states */
+    xmlNode *req = NULL;
+
     if (cur_state != S_PENDING) {
         crm_warn("Not announcing cluster join because in state %s",
                  fsa_state2string(cur_state));
         return;
     }
 
-    if (!pcmk__is_set(controld_globals.fsa_input_register, R_STARTING)) {
-        /* send as a broadcast */
-        xmlNode *req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
-                                         NULL, CRM_SYSTEM_DC,
-                                         CRM_OP_JOIN_ANNOUNCE, NULL);
+    crm_debug("Announcing availability");
 
-        crm_debug("Announcing availability");
-        update_dc(NULL);
-        pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
-        pcmk__xml_free(req);
-
-    } else {
-        /* Delay announce until we have finished local startup */
-        crm_warn("Delaying announce of cluster join until local startup is complete");
-        return;
-    }
+    // Send as a broadcast
+    req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
+                            CRM_SYSTEM_DC, CRM_OP_JOIN_ANNOUNCE, NULL);
+    update_dc(NULL);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
+    pcmk__xml_free(req);
 }
 
 static int query_call_id = 0;
