@@ -451,66 +451,72 @@ do_stop(long long action,
     controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
-/*	 A_STARTED	*/
+// A_STARTED
 void
-do_started(long long action,
-           enum crmd_fsa_cause cause,
-           enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_started(long long action, enum crmd_fsa_cause cause,
+           enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+           fsa_data_t *msg_data)
 {
     static struct qb_ipcs_service_handlers crmd_callbacks = {
         .connection_accept = accept_controller_client,
         .connection_created = NULL,
         .msg_process = dispatch_controller_ipc,
         .connection_closed = ipc_client_disconnected,
-        .connection_destroyed = ipc_connection_destroyed
+        .connection_destroyed = ipc_connection_destroyed,
     };
 
     if (cur_state != S_STARTING) {
-        crm_err("Start cancelled... %s", fsa_state2string(cur_state));
-        return;
-
-    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
-                             R_MEMBERSHIP)) {
-        crm_info("Delaying start, no membership data (%.16" PRIx64 ")", R_MEMBERSHIP);
-
-        crmd_fsa_stall(TRUE);
-        return;
-
-    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
-                             R_LRM_CONNECTED)) {
-        crm_info("Delaying start, not connected to executor (%.16" PRIx64 ")", R_LRM_CONNECTED);
-
-        crmd_fsa_stall(TRUE);
-        return;
-
-    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
-                             R_CIB_CONNECTED)) {
-        crm_info("Delaying start, CIB not connected (%.16" PRIx64 ")", R_CIB_CONNECTED);
-
-        crmd_fsa_stall(TRUE);
-        return;
-
-    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
-                             R_READ_CONFIG)) {
-        crm_info("Delaying start, Config not read (%.16" PRIx64 ")", R_READ_CONFIG);
-
-        crmd_fsa_stall(TRUE);
-        return;
-
-    } else if (!pcmk__is_set(controld_globals.fsa_input_register,
-                             R_PEER_DATA)) {
-        crm_info("Delaying start, No peer data (%.16" PRIx64 ")", R_PEER_DATA);
-        crmd_fsa_stall(TRUE);
+        crm_err("Start cancelled: current state is %s",
+                fsa_state2string(cur_state));
         return;
     }
 
-    crm_debug("Init server comms");
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_MEMBERSHIP)) {
+        crm_info("Delaying start: no membership data (%.16" PRIx64 ")",
+                 R_MEMBERSHIP);
+        crmd_fsa_stall(true);
+        return;
+    }
+
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
+        crm_info("Delaying start: not connected to executor (%.16" PRIx64 ")",
+                 R_LRM_CONNECTED);
+        crmd_fsa_stall(true);
+        return;
+    }
+
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
+        crm_info("Delaying start: not connected to CIB manager "
+                 "(%.16" PRIx64 ")",
+                 R_CIB_CONNECTED);
+        crmd_fsa_stall(true);
+        return;
+    }
+
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_READ_CONFIG)) {
+        crm_info("Delaying start: config not read (%.16" PRIx64 ")",
+                 R_READ_CONFIG);
+        crmd_fsa_stall(true);
+        return;
+    }
+
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_PEER_DATA)) {
+        crm_info("Delaying start: no peer data (%.16" PRIx64 ")", R_PEER_DATA);
+        crmd_fsa_stall(true);
+        return;
+    }
+
+    crm_debug("Initializing IPC server");
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
+
     if (ipcs == NULL) {
-        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
+        crm_err("Failed to create IPC server: shutting down and inhibiting "
+                "respawn");
         register_fsa_error(I_ERROR);
+
     } else {
-        crm_notice("Pacemaker controller successfully started and accepting connections");
+        crm_notice("Pacemaker controller successfully started and accepting "
+                   "connections");
     }
     controld_set_fsa_input_flags(R_ST_REQUIRED);
     controld_timer_fencer_connect(GINT_TO_POINTER(TRUE));
