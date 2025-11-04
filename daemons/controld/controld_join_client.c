@@ -258,11 +258,16 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
                             enum crmd_fsa_input current_input,
                             fsa_data_t *msg_data)
 {
+    static bool first_join = true;
+
     ha_msg_input_t *input = NULL;
     const char *op = NULL;
     const char *welcome_from = NULL;
     int join_id = -1;
     xmlNode *state = NULL;
+    xmlNode *join_confirm = NULL;
+    const pcmk__node_status_t *dc_node = NULL;
+    xmlNode *remotes = NULL;
 
     pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
 
@@ -306,68 +311,59 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
 
     // Send our status section to the DC
     state = controld_query_executor_state();
-    if (state != NULL) {
-        static bool first_join = true;
-
-        xmlNode *join_confirm = NULL;
-        xmlNode *remotes = NULL;
-        const pcmk__node_status_t *dc_node =
-            pcmk__get_node(0, controld_globals.dc_name, NULL,
-                           pcmk__node_search_cluster_member);
-
-        crm_debug("Confirming join-%d: sending local operation history to %s",
-                  join_id, controld_globals.dc_name);
-
-        join_confirm = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
-                                         controld_globals.dc_name,
-                                         CRM_SYSTEM_DC, CRM_OP_JOIN_CONFIRM,
-                                         state);
-        pcmk__xe_set_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
-
-        /* If this is the node's first join since the controller started on it,
-         * set its initial state (standby or member) according to the user's
-         * preference.
-         *
-         * We do not clear the LRM history here. Even if the DC failed to do it
-         * when we last left, removing them here creates a race condition if the
-         * controller is being recovered. Instead of a list of active resources
-         * from the executor, we may end up with a blank status section. If we
-         * are _NOT_ lucky, we will probe for the "wrong" instance of anonymous
-         * clones and end up with multiple active instances on the machine.
-         */
-        if (first_join
-            && !pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-
-            const char *start_state =
-                pcmk__env_option(PCMK__ENV_NODE_START_STATE);
-
-            first_join = false;
-            if (start_state != NULL) {
-                set_join_state(start_state,
-                               controld_globals.cluster->priv->node_name,
-                               controld_globals.our_uuid, false);
-            }
-        }
-
-        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_confirm);
-
-        if (!AM_I_DC) {
-            controld_fsa_prepend(cause, I_NOT_DC, NULL);
-        }
-
-        /* Update the remote node cache with information about which node
-         * is hosting the connection
-         */
-        remotes = pcmk__xe_first_child(input->msg, PCMK_XE_NODES, NULL, NULL);
-        pcmk__xe_foreach_child(remotes, PCMK_XE_NODE, update_conn_host_cache,
-                               NULL);
-
-        pcmk__xml_free(state);
-        pcmk__xml_free(join_confirm);
+    if (state == NULL) {
+        crm_err("Could not confirm join-%d with %s: "
+                "Failed to get executor state for local node",
+                join_id, controld_globals.dc_name);
+        register_fsa_error(I_FAIL);
         return;
     }
 
-    crm_err("Could not confirm join-%d with %s: Local operation history failed",
-            join_id, controld_globals.dc_name);
-    register_fsa_error(I_FAIL);
+    crm_debug("Confirming join-%d: sending local operation history to %s",
+              join_id, controld_globals.dc_name);
+
+    join_confirm = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
+                                     controld_globals.dc_name, CRM_SYSTEM_DC,
+                                     CRM_OP_JOIN_CONFIRM, state);
+    pcmk__xe_set_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
+
+    /* If this is the node's first join since the controller started on it, set
+     * its initial state (standby or member) according to the user's preference.
+     *
+     * We do not clear the LRM history here. Even if the DC failed to do it when
+     * we last left, removing them here creates a race condition if the
+     * controller is being recovered. Instead of a list of active resources from
+     * the executor, we may end up with a blank status section. If we are _NOT_
+     * lucky, we will probe for the "wrong" instance of anonymous clones and end
+     * up with multiple active instances on the machine.
+     */
+    if (first_join
+        && !pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+
+        const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
+
+        first_join = false;
+        if (start_state != NULL) {
+            set_join_state(start_state,
+                           controld_globals.cluster->priv->node_name,
+                           controld_globals.our_uuid, false);
+        }
+    }
+
+    dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
+                             pcmk__node_search_cluster_member);
+    pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_confirm);
+
+    if (!AM_I_DC) {
+        controld_fsa_prepend(cause, I_NOT_DC, NULL);
+    }
+
+    /* Update the remote node cache with information about which node is hosting
+     * the connection
+     */
+    remotes = pcmk__xe_first_child(input->msg, PCMK_XE_NODES, NULL, NULL);
+    pcmk__xe_foreach_child(remotes, PCMK_XE_NODE, update_conn_host_cache, NULL);
+
+    pcmk__xml_free(state);
+    pcmk__xml_free(join_confirm);
 }
