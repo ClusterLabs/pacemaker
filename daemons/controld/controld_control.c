@@ -520,15 +520,14 @@ do_started(long long action,
     controld_fsa_append(msg_data->fsa_cause, I_PENDING, NULL);
 }
 
-/*	 A_RECOVER	*/
+// A_RECOVER
 void
-do_recover(long long action,
-           enum crmd_fsa_cause cause,
-           enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_recover(long long action, enum crmd_fsa_cause cause,
+           enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+           fsa_data_t *msg_data)
 {
-    controld_set_fsa_input_flags(R_IN_RECOVERY);
     crm_warn("Fast-tracking shutdown in response to errors");
-
+    controld_set_fsa_input_flags(R_IN_RECOVERY);
     controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
