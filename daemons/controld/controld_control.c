@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -32,52 +33,49 @@ extern gboolean crm_connect_corosync(pcmk_cluster_t *cluster);
 static void crm_shutdown(int nsig);
 static gboolean crm_read_options(gpointer user_data);
 
-/*	 A_HA_CONNECT	*/
+// A_HA_CONNECT
 void
-do_ha_control(long long action,
-              enum crmd_fsa_cause cause,
-              enum crmd_fsa_state cur_state,
-              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_ha_control(long long action, enum crmd_fsa_cause cause,
+              enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+              fsa_data_t *msg_data)
 {
-    gboolean registered = FALSE;
+    bool connected = false;
 
     if (controld_globals.cluster == NULL) {
         controld_globals.cluster = pcmk_cluster_new();
     }
 
-    if (action & A_HA_DISCONNECT) {
+    if (pcmk__is_set(action, A_HA_DISCONNECT)) {
         pcmk_cluster_disconnect(controld_globals.cluster);
-        crm_info("Disconnected from the cluster");
-
         controld_set_fsa_input_flags(R_HA_DISCONNECTED);
+        crm_info("Disconnected from the cluster");
     }
 
-    if (action & A_HA_CONNECT) {
+    if (pcmk__is_set(action, A_HA_CONNECT)) {
         pcmk__cluster_set_status_callback(&peer_update_callback);
         pcmk__cluster_set_autoreap(false);
 
 #if SUPPORT_COROSYNC
         if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-            registered = crm_connect_corosync(controld_globals.cluster);
+            connected = crm_connect_corosync(controld_globals.cluster);
         }
 #endif // SUPPORT_COROSYNC
 
-        if (registered) {
+        if (connected) {
             pcmk__node_status_t *node = controld_get_local_node_status();
 
             controld_election_init();
 
-            free(controld_globals.our_uuid);
-            controld_globals.our_uuid =
-                pcmk__str_copy(pcmk__cluster_get_xml_id(node));
+            pcmk__str_update(&(controld_globals.our_uuid),
+                             pcmk__cluster_get_xml_id(node));
 
             if (controld_globals.our_uuid == NULL) {
-                crm_err("Could not obtain local uuid");
-                registered = FALSE;
+                crm_err("Could not obtain local node UUID");
+                connected = false;
             }
         }
 
-        if (!registered) {
+        if (!connected) {
             controld_set_fsa_input_flags(R_HA_DISCONNECTED);
             register_fsa_error(I_ERROR);
             return;
@@ -88,7 +86,7 @@ do_ha_control(long long action,
         crm_info("Connected to the cluster");
     }
 
-    if (action & ~(A_HA_CONNECT | A_HA_DISCONNECT)) {
+    if ((action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) != 0) {
         crm_err("Unexpected action %s in %s", fsa_action2string(action),
                 __func__);
     }
