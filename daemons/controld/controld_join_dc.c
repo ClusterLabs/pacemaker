@@ -330,21 +330,21 @@ do_dc_join_offer_all(long long action, enum crmd_fsa_cause cause,
     // Don't waste time by invoking the scheduler yet
 }
 
-/*	 A_DC_JOIN_OFFER_ONE	*/
+// A_DC_JOIN_OFFER_ONE
 void
-do_dc_join_offer_one(long long action,
-                     enum crmd_fsa_cause cause,
+do_dc_join_offer_one(long long action, enum crmd_fsa_cause cause,
                      enum crmd_fsa_state cur_state,
-                     enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                     enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
     pcmk__node_status_t *member = NULL;
     ha_msg_input_t *welcome = NULL;
-    int count;
     const char *join_to = NULL;
+    int count = 0;
 
     pcmk__assert(msg_data != NULL);
 
-    if (msg_data->data == NULL) {
+    welcome = msg_data->data;
+    if (welcome == NULL) {
         crm_info("Making join-%d offers to any unconfirmed nodes "
                  "because an unknown node joined", current_join_id);
         g_hash_table_foreach(pcmk__peer_cache, join_make_offer, &member);
@@ -352,19 +352,17 @@ do_dc_join_offer_one(long long action,
         return;
     }
 
-    welcome = msg_data->data;
     join_to = pcmk__xe_get(welcome->msg, PCMK__XA_SRC);
     if (join_to == NULL) {
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
         return;
     }
-    member = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster_member);
 
     /* It is possible that a node will have been sick or starting up when the
-     * original offer was made. However, it will either re-announce itself in
+     * original offer was made. However, either it will re-announce itself in
      * due course, or we can re-store the original offer on the client.
      */
-
+    member = pcmk__get_node(0, join_to, NULL, pcmk__node_search_cluster_member);
     crm_update_peer_join(__func__, member, controld_join_none);
     join_make_offer(NULL, member, NULL);
 
