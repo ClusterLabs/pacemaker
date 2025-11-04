@@ -233,20 +233,20 @@ do_dc_takeover(long long action, enum crmd_fsa_cause cause,
     pcmk__xml_free(cib);
 }
 
-/*	 A_DC_RELEASE	*/
+// A_DC_RELEASE, A_DC_RELEASED
 void
-do_dc_release(long long action,
-              enum crmd_fsa_cause cause,
-              enum crmd_fsa_state cur_state,
-              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_dc_release(long long action, enum crmd_fsa_cause cause,
+              enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+              fsa_data_t *msg_data)
 {
-    if (action & A_DC_RELEASE) {
+    if (pcmk__is_set(action, A_DC_RELEASE)) {
         crm_debug("Releasing the role of DC");
         controld_clear_fsa_input_flags(R_THE_DC);
         controld_expect_sched_reply(NULL);
 
-    } else if (action & A_DC_RELEASED) {
+    } else if (pcmk__is_set(action, A_DC_RELEASED)) {
         crm_info("DC role released");
+
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
             pcmk__node_status_t *node = controld_get_local_node_status();
@@ -255,15 +255,19 @@ do_dc_release(long long action,
             update = create_node_state_update(node,
                                               controld_node_update_expected,
                                               NULL, __func__);
-            /* Don't need a based response because controld will stop. */
+
+            /* Don't need a response from the CIB manager because the controller
+             * will stop
+             */
             fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
             pcmk__xml_free(update);
         }
         controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 
     } else {
-        crm_err("Unknown DC action %s", fsa_action2string(action));
+        crm_err("Not releasing DC role due to unexpected action %s",
+                fsa_action2string(action));
     }
 
-    crm_trace("Am I still the DC? %s", pcmk__btoa(AM_I_DC));
+    crm_trace("Local node is%s the DC", (AM_I_DC? "" : " not"));
 }

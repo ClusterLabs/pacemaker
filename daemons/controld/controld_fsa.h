@@ -569,7 +569,7 @@ void do_dc_takeover(long long action, enum crmd_fsa_cause cause,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
-/* A_DC_RELEASE */
+/* A_DC_RELEASE, A_DC_RELEASED */
 void do_dc_release(long long action, enum crmd_fsa_cause cause,
                    enum crmd_fsa_state cur_state,
                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
