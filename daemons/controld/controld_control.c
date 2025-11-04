@@ -326,29 +326,24 @@ do_exit(long long action,
     crmd_exit(exit_code);
 }
 
-static void sigpipe_ignore(int nsig) { return; }
-
-/*	 A_STARTUP	*/
+// A_STARTUP
 void
-do_startup(long long action,
-           enum crmd_fsa_cause cause,
-           enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_startup(long long action, enum crmd_fsa_cause cause,
+           enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+           fsa_data_t *msg_data)
 {
-    crm_debug("Registering Signal Handlers");
     mainloop_add_signal(SIGTERM, crm_shutdown);
-    mainloop_add_signal(SIGPIPE, sigpipe_ignore);
+    mainloop_add_signal(SIGPIPE, NULL); // Ignore SIGPIPE
 
     config_read_trigger = mainloop_add_trigger(G_PRIORITY_HIGH,
                                                crm_read_options, NULL);
-
     controld_init_fsa_trigger();
     controld_init_transition_trigger();
 
-    crm_debug("Creating CIB manager and executor objects");
     controld_globals.cib_conn = cib_new();
 
     lrm_state_init_local();
-    if (controld_init_fsa_timers() == FALSE) {
+    if (!controld_init_fsa_timers()) {
         register_fsa_error(I_ERROR);
     }
 }
