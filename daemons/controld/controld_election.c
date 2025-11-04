@@ -98,11 +98,11 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
     election_vote(controld_globals.cluster);
 }
 
+// A_ELECTION_CHECK
 void
-do_election_check(long long action,
-                  enum crmd_fsa_cause cause,
+do_election_check(long long action, enum crmd_fsa_cause cause,
                   enum crmd_fsa_state cur_state,
-                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                  enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
     if (controld_globals.fsa_state == S_ELECTION) {
         election_check(controld_globals.cluster);
