@@ -17,8 +17,6 @@
 
 #include <pacemaker-controld.h>
 
-void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
-
 /*!
  * \internal
  * \brief Remember if DC is shutting down as we join
@@ -99,6 +97,54 @@ do_cl_join_announce(long long action,
 
 static int query_call_id = 0;
 
+static void
+join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                    void *user_data)
+{
+    char *join_id = user_data;
+    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
+
+    CRM_LOG_ASSERT(join_id != NULL);
+
+    if (query_call_id != call_id) {
+        crm_trace("Query %d superseded", call_id);
+        goto done;
+    }
+
+    query_call_id = 0;
+    if(rc != pcmk_ok || output == NULL) {
+        crm_err("Could not retrieve version details for join-%s: %s (%d)",
+                join_id, pcmk_strerror(rc), rc);
+        register_fsa_error_adv(I_ERROR, NULL, NULL, __func__);
+
+    } else if (controld_globals.dc_name == NULL) {
+        crm_debug("Membership is in flux, not continuing join-%s", join_id);
+
+    } else {
+        xmlNode *join_request = NULL;
+        const pcmk__node_status_t *dc_node =
+            pcmk__get_node(0, controld_globals.dc_name, NULL,
+                           pcmk__node_search_cluster_member);
+
+        crm_debug("Respond to join offer join-%s from %s",
+                  join_id, controld_globals.dc_name);
+        pcmk__xe_copy_attrs(generation, output, pcmk__xaf_none);
+
+        join_request = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
+                                         controld_globals.dc_name,
+                                         CRM_SYSTEM_DC, CRM_OP_JOIN_REQUEST,
+                                         generation);
+
+        pcmk__xe_set(join_request, PCMK__XA_JOIN_ID, join_id);
+        pcmk__xe_set(join_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_request);
+        pcmk__xml_free(join_request);
+    }
+
+  done:
+    pcmk__xml_free(generation);
+}
+
 /*	 A_CL_JOIN_REQUEST	*/
 /* aka. accept the welcome offer */
 void
@@ -143,53 +189,6 @@ do_cl_join_offer_respond(long long action,
 
     controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     controld_trigger_fsa();
-}
-
-void
-join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    char *join_id = user_data;
-    xmlNode *generation = pcmk__xe_create(NULL, PCMK__XE_GENERATION_TUPLE);
-
-    CRM_LOG_ASSERT(join_id != NULL);
-
-    if (query_call_id != call_id) {
-        crm_trace("Query %d superseded", call_id);
-        goto done;
-    }
-
-    query_call_id = 0;
-    if(rc != pcmk_ok || output == NULL) {
-        crm_err("Could not retrieve version details for join-%s: %s (%d)",
-                join_id, pcmk_strerror(rc), rc);
-        register_fsa_error_adv(I_ERROR, NULL, NULL, __func__);
-
-    } else if (controld_globals.dc_name == NULL) {
-        crm_debug("Membership is in flux, not continuing join-%s", join_id);
-
-    } else {
-        xmlNode *join_request = NULL;
-        const pcmk__node_status_t *dc_node =
-            pcmk__get_node(0, controld_globals.dc_name, NULL,
-                           pcmk__node_search_cluster_member);
-
-        crm_debug("Respond to join offer join-%s from %s",
-                  join_id, controld_globals.dc_name);
-        pcmk__xe_copy_attrs(generation, output, pcmk__xaf_none);
-
-        join_request = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
-                                         controld_globals.dc_name,
-                                         CRM_SYSTEM_DC, CRM_OP_JOIN_REQUEST,
-                                         generation);
-
-        pcmk__xe_set(join_request, PCMK__XA_JOIN_ID, join_id);
-        pcmk__xe_set(join_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_request);
-        pcmk__xml_free(join_request);
-    }
-
-  done:
-    pcmk__xml_free(generation);
 }
 
 void
