@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
@@ -16,8 +18,6 @@
 #include <pacemaker-controld.h>
 
 void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
-
-extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
 
 /*!
  * \internal
@@ -30,10 +30,11 @@ extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t * orig);
  * \param[in] msg  A join message from the DC
  */
 static void
-update_dc_expected(const xmlNode *msg)
+update_dc_expected_if_leaving(const xmlNode *msg)
 {
     if ((controld_globals.dc_name != NULL)
         && pcmk__xe_attr_is_true(msg, PCMK__XA_DC_LEAVING)) {
+
         pcmk__node_status_t *dc_node =
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
@@ -132,7 +133,7 @@ do_cl_join_offer_respond(long long action,
         return;
     }
 
-    update_dc_expected(input->msg);
+    update_dc_expected_if_leaving(input->msg);
 
     query_call_id = cib_conn->cmds->query(cib_conn, NULL, NULL,
                                           cib_no_children);
@@ -250,44 +251,36 @@ update_conn_host_cache(xmlNode *node, void *userdata)
     return pcmk_rc_ok;
 }
 
-/*	A_CL_JOIN_RESULT	*/
-/* aka. this is notification that we have (or have not) been accepted */
+// A_CL_JOIN_RESULT
 void
-do_cl_join_finalize_respond(long long action,
-                            enum crmd_fsa_cause cause,
+do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
                             enum crmd_fsa_state cur_state,
-                            enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                            enum crmd_fsa_input current_input,
+                            fsa_data_t *msg_data)
 {
-    xmlNode *tmp1 = NULL;
-    gboolean was_nack = TRUE;
-    static gboolean first_join = TRUE;
-    int join_id = -1;
-    const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
     ha_msg_input_t *input = NULL;
     const char *op = NULL;
     const char *welcome_from = NULL;
+    int join_id = -1;
+    xmlNode *state = NULL;
 
     pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
 
     input = msg_data->data;
     op = pcmk__xe_get(input->msg, PCMK__XA_CRM_TASK);
-    welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
 
-    if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
-        crm_trace("Ignoring op=%s message", op);
+    if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_none)) {
+        crm_trace("Ignoring op=%s message", pcmk__s(op, "(unspecified)"));
         return;
     }
 
-    /* calculate if it was an ack or a nack */
-    if (pcmk__xe_attr_is_true(input->msg, CRM_OP_JOIN_ACKNAK)) {
-        was_nack = FALSE;
-    }
-
+    welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
     pcmk__xe_get_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
 
-    if (was_nack) {
+    if (!pcmk__xe_attr_is_true(input->msg, CRM_OP_JOIN_ACKNAK)) {
         crm_err("Shutting down because cluster join with leader %s failed "
-                QB_XS " join-%d NACK'd", welcome_from, join_id);
+                QB_XS " join-%d NACK'd",
+                pcmk__s(welcome_from, "(unknown)"), join_id);
         register_fsa_error(I_ERROR);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
@@ -298,38 +291,40 @@ do_cl_join_finalize_respond(long long action,
         return;
     }
 
-    if (update_dc(input->msg) == FALSE) {
+    if (!update_dc(input->msg)) {
         crm_warn("Discarding %s from node %s (expected from %s)",
-                 op, welcome_from, controld_globals.dc_name);
+                 pcmk__s(op, "unspecified op"),
+                 pcmk__s(welcome_from, "(unknown)"), controld_globals.dc_name);
         return;
     }
 
-    update_dc_expected(input->msg);
+    update_dc_expected_if_leaving(input->msg);
 
-    /* record the node's feature set as a transient attribute */
+    // Record the node's feature set as a transient attribute
     update_attrd(controld_globals.cluster->priv->node_name,
                  CRM_ATTR_FEATURE_SET, CRM_FEATURE_SET, false);
 
-    /* send our status section to the DC */
-    tmp1 = controld_query_executor_state();
-    if (tmp1 != NULL) {
+    // Send our status section to the DC
+    state = controld_query_executor_state();
+    if (state != NULL) {
+        static bool first_join = true;
+
+        xmlNode *join_confirm = NULL;
         xmlNode *remotes = NULL;
-        xmlNode *join_confirm = pcmk__new_request(pcmk_ipc_controld,
-                                                  CRM_SYSTEM_CRMD,
-                                                  controld_globals.dc_name,
-                                                  CRM_SYSTEM_DC,
-                                                  CRM_OP_JOIN_CONFIRM, tmp1);
         const pcmk__node_status_t *dc_node =
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
-        pcmk__xe_set_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
-
         crm_debug("Confirming join-%d: sending local operation history to %s",
                   join_id, controld_globals.dc_name);
 
-        /*
-         * If this is the node's first join since the controller started on it,
+        join_confirm = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
+                                         controld_globals.dc_name,
+                                         CRM_SYSTEM_DC, CRM_OP_JOIN_CONFIRM,
+                                         state);
+        pcmk__xe_set_int(join_confirm, PCMK__XA_JOIN_ID, join_id);
+
+        /* If this is the node's first join since the controller started on it,
          * set its initial state (standby or member) according to the user's
          * preference.
          *
@@ -343,8 +338,11 @@ do_cl_join_finalize_respond(long long action,
         if (first_join
             && !pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
 
-            first_join = FALSE;
-            if (start_state) {
+            const char *start_state =
+                pcmk__env_option(PCMK__ENV_NODE_START_STATE);
+
+            first_join = false;
+            if (start_state != NULL) {
                 set_join_state(start_state,
                                controld_globals.cluster->priv->node_name,
                                controld_globals.our_uuid, false);
@@ -352,27 +350,24 @@ do_cl_join_finalize_respond(long long action,
         }
 
         pcmk__cluster_send_message(dc_node, pcmk_ipc_controld, join_confirm);
-        pcmk__xml_free(join_confirm);
 
-        if (AM_I_DC == FALSE) {
-            register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE,
-                                   __func__);
+        if (!AM_I_DC) {
+            controld_fsa_prepend(cause, I_NOT_DC, NULL);
         }
-
-        pcmk__xml_free(tmp1);
 
         /* Update the remote node cache with information about which node
-         * is hosting the connection.
+         * is hosting the connection
          */
         remotes = pcmk__xe_first_child(input->msg, PCMK_XE_NODES, NULL, NULL);
-        if (remotes != NULL) {
-            pcmk__xe_foreach_child(remotes, PCMK_XE_NODE,
-                                   update_conn_host_cache, NULL);
-        }
+        pcmk__xe_foreach_child(remotes, PCMK_XE_NODE, update_conn_host_cache,
+                               NULL);
 
-    } else {
-        crm_err("Could not confirm join-%d with %s: Local operation history "
-                "failed", join_id, controld_globals.dc_name);
-        register_fsa_error(I_FAIL);
+        pcmk__xml_free(state);
+        pcmk__xml_free(join_confirm);
+        return;
     }
+
+    crm_err("Could not confirm join-%d with %s: Local operation history failed",
+            join_id, controld_globals.dc_name);
+    register_fsa_error(I_FAIL);
 }
