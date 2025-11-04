@@ -152,13 +152,12 @@ join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     pcmk__xml_free(join_request);
 }
 
-/*	 A_CL_JOIN_REQUEST	*/
-/* aka. accept the welcome offer */
+// A_CL_JOIN_REQUEST
 void
-do_cl_join_offer_respond(long long action,
-                         enum crmd_fsa_cause cause,
+do_cl_join_offer_respond(long long action, enum crmd_fsa_cause cause,
                          enum crmd_fsa_state cur_state,
-                         enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                         enum crmd_fsa_input current_input,
+                         fsa_data_t *msg_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
     ha_msg_input_t *input = NULL;
@@ -170,29 +169,31 @@ do_cl_join_offer_respond(long long action,
     input = msg_data->data;
     welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
     join_id = pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID);
-    crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
-              welcome_from, join_id);
 
-    /* we only ever want the last one */
     if (query_call_id > 0) {
         crm_trace("Cancelling previous join query: %d", query_call_id);
-        remove_cib_op_callback(query_call_id, FALSE);
+        remove_cib_op_callback(query_call_id, false);
         query_call_id = 0;
     }
 
-    if (update_dc(input->msg) == FALSE) {
+    if (!update_dc(input->msg)) {
         crm_warn("Discarding cluster join offer from node %s (expected %s)",
                  welcome_from, controld_globals.dc_name);
         return;
     }
 
+    crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
+              welcome_from, join_id);
+
     update_dc_expected_if_leaving(input->msg);
 
+    /* Query the top-level CIB element. The callback uses the generation
+     * attributes in the output to build a join request and send it to the DC.
+     */
     query_call_id = cib_conn->cmds->query(cib_conn, NULL, NULL,
                                           cib_no_children);
     fsa_register_cib_callback(query_call_id, pcmk__str_copy(join_id),
                               join_query_callback);
-    crm_trace("Registered join query callback: %d", query_call_id);
 
     controld_set_fsa_action_flags(A_DC_TIMER_STOP);
     controld_trigger_fsa();

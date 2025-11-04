@@ -248,7 +248,7 @@ enum crmd_fsa_input {
 #define A_CL_JOIN_QUERY             (UINT64_C(1) << 20)
 #define A_CL_JOIN_ANNOUNCE          (UINT64_C(1) << 21)
 
-/* Request membership to the DC list */
+/* Send the DC a join request in response to a join offer */
 #define A_CL_JOIN_REQUEST           (UINT64_C(1) << 22)
 
 /* Did the DC accept or reject the request */
