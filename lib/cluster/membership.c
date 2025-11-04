@@ -1208,8 +1208,8 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
  * \param[in]     expected  Node's new join state
  */
 void
-pcmk__update_peer_expected(const char *function, pcmk__node_status_t *node,
-                           const char *expected)
+pcmk__update_peer_expected_as(const char *function, pcmk__node_status_t *node,
+                              const char *expected)
 {
     CRM_CHECK(node != NULL, return);
 

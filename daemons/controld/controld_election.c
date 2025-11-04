@@ -260,7 +260,7 @@ do_dc_release(long long action,
             xmlNode *update = NULL;
             pcmk__node_status_t *node = controld_get_local_node_status();
 
-            pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
+            pcmk__update_peer_expected(node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node,
                                               controld_node_update_expected,
                                               NULL, __func__);

@@ -269,7 +269,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
              *
              * I'm not happy about this either.
              */
-            pcmk__update_peer_expected(__func__, member, CRMD_JOINSTATE_DOWN);
+            pcmk__update_peer_expected(member, CRMD_JOINSTATE_DOWN);
         }
         return;
     }
@@ -591,11 +591,11 @@ do_dc_join_filter_offer(long long action,
 
     if (!ack_nack_bool) {
         crm_update_peer_join(__func__, join_node, controld_join_nack);
-        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_NACK);
+        pcmk__update_peer_expected(join_node, CRMD_JOINSTATE_NACK);
 
     } else {
         crm_update_peer_join(__func__, join_node, controld_join_integrated);
-        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
+        pcmk__update_peer_expected(join_node, CRMD_JOINSTATE_MEMBER);
     }
 
     count = crmd_join_phase_count(controld_join_integrated);
@@ -947,7 +947,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
          *
          * All other NACKs (due to versions etc) should still be processed
          */
-        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_PENDING);
+        pcmk__update_peer_expected(join_node, CRMD_JOINSTATE_PENDING);
         return;
     }
 
@@ -960,7 +960,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     if (integrated) {
         // No change needed for a nacked node
         crm_update_peer_join(__func__, join_node, controld_join_finalized);
-        pcmk__update_peer_expected(__func__, join_node, CRMD_JOINSTATE_MEMBER);
+        pcmk__update_peer_expected(join_node, CRMD_JOINSTATE_MEMBER);
 
         /* Iterate through the remote peer cache and add information on which
          * node hosts each to the ACK message.  This keeps new controllers in

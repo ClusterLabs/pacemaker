@@ -38,7 +38,7 @@ update_dc_expected(const xmlNode *msg)
             pcmk__get_node(0, controld_globals.dc_name, NULL,
                            pcmk__node_search_cluster_member);
 
-        pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_DOWN);
+        pcmk__update_peer_expected(dc_node, CRMD_JOINSTATE_DOWN);
     }
 }
 

@@ -990,7 +990,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             pcmk__search_node_caches(0, from, NULL,
                                      pcmk__node_search_cluster_member);
 
-        pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
+        pcmk__update_peer_expected(node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {
             return I_NULL; /* Done */
         }

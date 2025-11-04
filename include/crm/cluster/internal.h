@@ -230,8 +230,13 @@ pcmk__node_status_t *pcmk__update_peer_state(const char *source,
                                              const char *state,
                                              uint64_t membership);
 
-void pcmk__update_peer_expected(const char *function, pcmk__node_status_t *node,
-                                const char *expected);
+void pcmk__update_peer_expected_as(const char *function,
+                                   pcmk__node_status_t *node,
+                                   const char *expected);
+
+#define pcmk__update_peer_expected(node, expected)  \
+        pcmk__update_peer_expected_as(__func__, (node), (expected));
+
 void pcmk__reap_unseen_nodes(uint64_t ring_id);
 
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
