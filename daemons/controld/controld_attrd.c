@@ -109,7 +109,7 @@ update_attrd_list(GList *attrs, uint32_t opts)
 }
 
 void
-update_attrd_remote_node_removed(const char *host, const char *user_name)
+update_attrd_remote_node_removed(const char *host)
 {
     int rc = pcmk_rc_ok;
 
