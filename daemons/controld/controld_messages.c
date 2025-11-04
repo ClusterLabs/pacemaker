@@ -184,12 +184,11 @@ delete_fsa_input(fsa_data_t * fsa_data)
     free(fsa_data);
 }
 
-/*	A_MSG_ROUTE	*/
+// A_MSG_ROUTE
 void
-do_msg_route(long long action,
-             enum crmd_fsa_cause cause,
-             enum crmd_fsa_state cur_state,
-             enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_msg_route(long long action, enum crmd_fsa_cause cause,
+             enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+             fsa_data_t *msg_data)
 {
     pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
     route_message(msg_data->fsa_cause, msg_data->data->msg);
