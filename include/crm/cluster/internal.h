@@ -230,7 +230,7 @@ pcmk__node_status_t *pcmk__update_peer_state(const char *source,
                                              const char *state,
                                              uint64_t membership);
 
-void pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
+void pcmk__update_peer_expected(const char *function, pcmk__node_status_t *node,
                                 const char *expected);
 void pcmk__reap_unseen_nodes(uint64_t ring_id);
 
