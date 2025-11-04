@@ -111,19 +111,18 @@ do_election_check(long long action,
     }
 }
 
-/*	A_ELECTION_COUNT	*/
+// A_ELECTION_COUNT
 void
-do_election_count_vote(long long action,
-                       enum crmd_fsa_cause cause,
+do_election_count_vote(long long action, enum crmd_fsa_cause cause,
                        enum crmd_fsa_state cur_state,
-                       enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                       enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
     enum election_result rc = 0;
     ha_msg_input_t *vote = NULL;
 
     if (pcmk__peer_cache == NULL) {
         if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Internal error, no peer cache");
+            crm_err("Internal error: no peer cache");
         }
         return;
     }
@@ -133,7 +132,7 @@ do_election_count_vote(long long action,
 
     rc = election_count_vote(controld_globals.cluster, vote->msg,
                              (cur_state != S_STARTING));
-    switch(rc) {
+    switch (rc) {
         case election_start:
             election_reset(controld_globals.cluster);
             controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
@@ -142,7 +141,7 @@ do_election_count_vote(long long action,
         case election_lost:
             update_dc(NULL);
 
-            if (pcmk__is_set(controld_globals.fsa_input_register, R_THE_DC)) {
+            if (AM_I_DC) {
                 cib_t *cib_conn = controld_globals.cib_conn;
 
                 controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
@@ -155,6 +154,7 @@ do_election_count_vote(long long action,
 
         default:
             crm_trace("Election message resulted in state %d", rc);
+            break;
     }
 }
 
