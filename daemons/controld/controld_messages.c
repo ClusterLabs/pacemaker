@@ -36,19 +36,31 @@ void
 register_fsa_error_adv(enum crmd_fsa_input input, fsa_data_t *cur_data,
                        ha_msg_input_t *new_data, const char *raised_from)
 {
-    /* save the current actions if any */
+    /* Save the current actions, if any. This prepends the current action set,
+     * cause, and data object to the FSA queue to be processed next after
+     * processing the error.
+     *
+     * The state transition and action fetching for this FSA input have already
+     * been done. We pass I_NULL so that no new state transition or action
+     * fetching will occur when this input is popped off the queue.
+     */
     if (controld_globals.fsa_actions != A_NOTHING) {
-        register_fsa_input_adv(cur_data ? cur_data->fsa_cause : C_FSA_INTERNAL,
-                               I_NULL, cur_data ? cur_data->data : NULL,
+        enum crmd_fsa_cause cause = C_FSA_INTERNAL;
+        ha_msg_input_t *cur_input = NULL;
+
+        if (cur_data != NULL) {
+            cause = cur_data->fsa_cause;
+            cur_input = cur_data->data;
+        }
+        register_fsa_input_adv(cause, I_NULL, cur_input,
                                controld_globals.fsa_actions, TRUE, __func__);
     }
 
-    /* reset the action list */
     crm_info("Resetting the current action list");
     fsa_dump_actions(controld_globals.fsa_actions, "Drop");
     controld_globals.fsa_actions = A_NOTHING;
 
-    /* register the error */
+    // Register the error
     register_fsa_input_adv(C_FSA_INTERNAL, input, new_data, A_NOTHING, TRUE,
                            raised_from);
 }
