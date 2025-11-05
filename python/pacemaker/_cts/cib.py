@@ -72,7 +72,14 @@ class CIB:
 
         if ":" in ip:
             r["cidr_netmask"] = "64"
-            r["nic"] = self._cm.env["nic"]
+
+            if self._cm.env["nic"] is not None:
+                r["nic"] = self._cm.env["nic"]
+
+            elif ip.lstrip().startswith("fe80::"):
+                # "nic" parameter is mandatory for an IPv6 link local address
+                r["nic"] = "eth0"
+
         else:
             r["cidr_netmask"] = "32"
 
