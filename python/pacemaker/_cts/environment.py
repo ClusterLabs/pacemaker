@@ -258,6 +258,9 @@ class Environment:
         grp2.add_argument("--ip", "--test-ip-base",
                           metavar="IP",
                           help="Offset for generated IP address resources")
+        grp2.add_argument("--nic",
+                          default="eth0",
+                          help="Network interface used for generated IP address resources")
 
         grp3 = parser.add_argument_group("Options for release testing")
         grp3.add_argument("-r", "--populate-resources",
@@ -349,6 +352,7 @@ class Environment:
         self["notification-agent"] = args.notification_agent
         self["notification-recipient"] = args.notification_recipient
         self["unsafe-tests"] = args.unsafe_tests
+        self["nic"] = args.nic
 
         # Everything else either can't have a default set in an add_argument
         # call (likely because we don't want to always have a value set for it)
