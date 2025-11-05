@@ -592,12 +592,11 @@ do_dc_join_filter_offer(long long action, enum crmd_fsa_cause cause,
     }
 }
 
-/*	A_DC_JOIN_FINALIZE	*/
+// A_DC_JOIN_FINALIZE
 void
-do_dc_join_finalize(long long action,
-                    enum crmd_fsa_cause cause,
+do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
                     enum crmd_fsa_state cur_state,
-                    enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
     char *sync_from = NULL;
     int rc = pcmk_ok;
@@ -605,18 +604,18 @@ do_dc_join_finalize(long long action,
     int count_finalizable = crmd_join_phase_count(controld_join_integrated)
                             + crmd_join_phase_count(controld_join_nack);
 
-    /* This we can do straight away and avoid clients timing us out
-     *  while we compute the latest CIB
+    /* This we can do straight away and avoid clients timing us out while we
+     * compute the latest CIB
      */
     if (count_welcomed != 0) {
         crm_debug("Waiting on join-%d requests from %d outstanding node%s "
                   "before finalizing join", current_join_id, count_welcomed,
                   pcmk__plural_s(count_welcomed));
         crmd_join_phase_log(LOG_DEBUG);
-        /* crmd_fsa_stall(FALSE); Needed? */
         return;
+    }
 
-    } else if (count_finalizable == 0) {
+    if (count_finalizable == 0) {
         crm_debug("Finalization not needed for join-%d at the current time",
                   current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
@@ -634,7 +633,7 @@ do_dc_join_finalize(long long action,
         crm_warn("Delaying join-%d finalization while transition in progress",
                  current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
-        crmd_fsa_stall(FALSE);
+        crmd_fsa_stall(false);
         return;
     }
 
@@ -645,15 +644,21 @@ do_dc_join_finalize(long long action,
         // Ask for the agreed best CIB
         sync_from = pcmk__str_copy(max_generation_from);
     }
+
     crm_notice("Finalizing join-%d for %d node%s (sync'ing CIB %s.%s.%s "
                "with schema %s and feature set %s from %s)",
                current_join_id, count_finalizable,
                pcmk__plural_s(count_finalizable),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_ADMIN_EPOCH),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_EPOCH),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_NUM_UPDATES),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_VALIDATE_WITH),
-               pcmk__xe_get(max_generation_xml, PCMK_XA_CRM_FEATURE_SET),
+               pcmk__s(pcmk__xe_get(max_generation_xml, PCMK_XA_ADMIN_EPOCH),
+                       "0"),
+               pcmk__s(pcmk__xe_get(max_generation_xml, PCMK_XA_EPOCH), "0"),
+               pcmk__s(pcmk__xe_get(max_generation_xml, PCMK_XA_NUM_UPDATES),
+                       "0"),
+               pcmk__s(pcmk__xe_get(max_generation_xml, PCMK_XA_VALIDATE_WITH),
+                       "(none)"),
+               pcmk__s(pcmk__xe_get(max_generation_xml,
+                                    PCMK_XA_CRM_FEATURE_SET),
+                       "(none)"),
                sync_from);
     crmd_join_phase_log(LOG_DEBUG);
 
