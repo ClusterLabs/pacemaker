@@ -23,8 +23,8 @@ extern void delete_ha_msg_input(ha_msg_input_t * orig);
 void register_fsa_error_adv(enum crmd_fsa_input input, fsa_data_t *cur_data,
                             ha_msg_input_t *new_data, const char *raised_from);
 
-#define register_fsa_error(input)   \
-    register_fsa_error_adv(input, msg_data, NULL, __func__)
+#define register_fsa_error(input, cur_data) \
+    register_fsa_error_adv((input), (cur_data), NULL, __func__)
 
 void register_fsa_input_adv(enum crmd_fsa_cause cause,
                             enum crmd_fsa_input input, ha_msg_input_t *data,

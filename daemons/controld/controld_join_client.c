@@ -112,13 +112,11 @@ join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     query_call_id = 0;
 
     if ((rc != pcmk_ok) || (output == NULL)) {
-        fsa_data_t *msg_data = NULL;
-
         rc = pcmk_legacy2rc(rc);
         crm_err("Could not retrieve version details for join-%s: %s (%d)",
                 pcmk__s(join_id, "(unknown)"), pcmk_rc_str(rc), rc);
 
-        register_fsa_error(I_ERROR);
+        register_fsa_error(I_ERROR, NULL);
         return;
     }
 
@@ -289,7 +287,7 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
         crm_err("Shutting down because cluster join with leader %s failed "
                 QB_XS " join-%d NACK'd",
                 pcmk__s(welcome_from, "(unknown)"), join_id);
-        register_fsa_error(I_ERROR);
+        register_fsa_error(I_ERROR, msg_data);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
     }
@@ -318,7 +316,7 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
         crm_err("Could not confirm join-%d with %s: "
                 "Failed to get executor state for local node",
                 join_id, controld_globals.dc_name);
-        register_fsa_error(I_FAIL);
+        register_fsa_error(I_FAIL, msg_data);
         return;
     }
 

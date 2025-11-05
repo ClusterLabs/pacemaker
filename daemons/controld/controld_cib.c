@@ -193,7 +193,7 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
         } else {
             crm_err("Could not complete CIB registration %d times... "
                     "hard error", cib_retries);
-            register_fsa_error(I_ERROR);
+            register_fsa_error(I_ERROR, msg_data);
         }
     }
 }

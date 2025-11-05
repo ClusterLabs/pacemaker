@@ -165,11 +165,9 @@ feature_update_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     rc = pcmk_legacy2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        fsa_data_t *msg_data = NULL;
-
         crm_notice("Feature set update failed: %s " QB_XS " rc=%d",
                    pcmk_rc_str(rc), rc);
-        register_fsa_error(I_ERROR);
+        register_fsa_error(I_ERROR, NULL);
     }
 }
 

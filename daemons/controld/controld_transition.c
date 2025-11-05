@@ -137,7 +137,7 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
     graph_data = input->xml;
     if (graph_data == NULL) {
         crm_log_xml_err(input->msg, "Bad command");
-        register_fsa_error(I_FAIL);
+        register_fsa_error(I_FAIL, msg_data);
         return;
     }
 
