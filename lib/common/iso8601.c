@@ -1925,7 +1925,9 @@ time_to_hr(const crm_time_t *dt)
 {
     pcmk__time_hr_t *hr_dt = NULL;
 
-    pcmk__assert(dt != NULL);
+    if (dt == NULL) {
+        return NULL;
+    }
 
     hr_dt = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
     hr_dt->years = dt->years;
@@ -1957,7 +1959,12 @@ pcmk__time_hr_now(time_t *epoch)
         *epoch = tv.tv_sec;
     }
     crm_time_set_timet(&dt, &(tv.tv_sec));
+
     hr = time_to_hr(&dt);
+    if (hr == NULL) {
+        return NULL;
+    }
+
     hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
     return hr;
 }
