@@ -440,14 +440,15 @@ ipc_connection_destroyed(qb_ipcs_connection_t *c)
     ipc_client_disconnected(c);
 }
 
-/*	 A_STOP	*/
+// A_STOP
 void
-do_stop(long long action,
-        enum crmd_fsa_cause cause,
-        enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_stop(long long action, enum crmd_fsa_cause cause,
+        enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+        fsa_data_t *msg_data)
 {
-    crm_trace("Closing IPC server");
-    mainloop_del_ipc_server(ipcs); ipcs = NULL;
+    crm_trace("Stopping IPC server");
+    mainloop_del_ipc_server(ipcs);
+    ipcs = NULL;
     controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
