@@ -317,16 +317,15 @@ controld_free_sched_timer(void)
     }
 }
 
-/*	 A_PE_INVOKE	*/
+// A_PE_INVOKE
 void
-do_pe_invoke(long long action,
-             enum crmd_fsa_cause cause,
-             enum crmd_fsa_state cur_state,
-             enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_pe_invoke(long long action, enum crmd_fsa_cause cause,
+             enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+             fsa_data_t *msg_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
 
-    if (AM_I_DC == FALSE) {
+    if (!AM_I_DC) {
         crm_err("Not invoking scheduler because not DC: %s",
                 fsa_action2string(action));
         return;
@@ -339,7 +338,7 @@ do_pe_invoke(long long action,
 
         } else {
             crm_info("Waiting for the scheduler to connect");
-            crmd_fsa_stall(FALSE);
+            crmd_fsa_stall(false);
             controld_set_fsa_action_flags(A_PE_START);
             controld_trigger_fsa();
         }
@@ -351,13 +350,15 @@ do_pe_invoke(long long action,
                    fsa_state2string(cur_state));
         return;
     }
-    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
-        crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
-        /* start the join from scratch */
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+        crm_err("Attempted to invoke scheduler without consistent CIB");
+
+        // Start the join from scratch
         controld_fsa_prepend(C_FSA_INTERNAL, I_ELECTION, NULL);
         return;
     }
+
     if (controld_cib_retry_timer != NULL) {
         crm_debug("Not invoking scheduler until CIB retry timer expires");
         return;
