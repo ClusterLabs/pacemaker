@@ -92,15 +92,15 @@ do_ha_control(long long action, enum crmd_fsa_cause cause,
     }
 }
 
-/*	 A_SHUTDOWN	*/
+// A_SHUTDOWN
 void
-do_shutdown(long long action,
-            enum crmd_fsa_cause cause,
-            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_shutdown(long long action, enum crmd_fsa_cause cause,
+            enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+            fsa_data_t *msg_data)
 {
-    /* just in case */
+    // Just in case
     controld_set_fsa_input_flags(R_SHUTDOWN);
-    controld_disconnect_fencer(FALSE);
+    controld_disconnect_fencer(false);
 }
 
 // A_SHUTDOWN_REQ
