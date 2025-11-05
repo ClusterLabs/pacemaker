@@ -171,7 +171,7 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          * can process the already-pending actions. So a larger refactor would
          * be required in order to get rid of this.
          *
-         * We can't call register_fsa_input() because it currently won't add a
+         * We can't call controld_fsa_append() because it currently won't add a
          * message with I_NULL and A_NOTHING (like this one).
          */
         fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
@@ -524,7 +524,7 @@ check_join_counts(fsa_data_t *msg_data)
     } else if (count > npeers) {
         crm_err("New election needed because more nodes confirmed join "
                 "than are in membership (%d > %u)", count, npeers);
-        register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
 
     } else if (controld_globals.membership_id != controld_globals.peer_seq) {
         crm_info("New join needed because membership changed (%llu -> %llu)",

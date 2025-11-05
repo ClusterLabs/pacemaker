@@ -223,23 +223,24 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
         case I_JOIN_RESULT:
             /* Add to the front of the queue.
              *
-             * @FIXME register_fsa_input() adds the input to the tail of the
+             * @FIXME controld_fsa_append() adds the input to the tail of the
              * queue. To add to the front (the head), we would call
              * register_fsa_input_before(). Which one is correct?
              * - The "Add to the front" comment and the below
-             *   register_fsa_input() call go back to a1606db9 in 2006.
-             * - register_fsa_input() switched from "prepend" to "append" via
-             *   38b02548 in 2005. So when this register_fsa_input() call was
+             *   controld_fsa_append() call (formerly register_fsa_input()) go
+             *   back to a1606db9 in 2006.
+             * - controld_fsa_append() switched from "prepend" to "append" via
+             *   38b02548 in 2005. So when this controld_fsa_append() call was
              *   added in 2006, its behavior was already to add the input to the
              *   tail of the queue. (This would have made more sense as an
-             *   oversight if the register_fsa_input() behavior was changed
+             *   oversight if the controld_fsa_append() behavior was changed
              *   later rather than earlier.)
              */
-            register_fsa_input(cause, result, &fsa_input);
+            controld_fsa_append(cause, result, &fsa_input);
             break;
 
         default:
-            register_fsa_input(cause, result, &fsa_input);
+            controld_fsa_append(cause, result, &fsa_input);
             break;
     }
 }
@@ -1155,7 +1156,7 @@ handle_response(xmlNode *stored_msg)
 
             controld_stop_sched_timer();
             fsa_input.msg = stored_msg;
-            register_fsa_input(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
+            controld_fsa_append(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         } else {
             crm_info("%s calculation %s is obsolete", op, msg_ref);

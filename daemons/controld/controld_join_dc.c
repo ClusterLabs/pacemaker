@@ -1059,7 +1059,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         } else {
             crm_debug("join-%d: Complete " QB_XS " state=%s for=%s",
                       current_join_id, fsa_state2string(cur_state), source);
-            register_fsa_input(C_FSA_INTERNAL, I_FINALIZED, NULL);
+            controld_fsa_append(C_FSA_INTERNAL, I_FINALIZED, NULL);
             return TRUE;
         }
     }

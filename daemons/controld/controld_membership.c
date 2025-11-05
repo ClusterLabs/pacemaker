@@ -38,13 +38,13 @@ reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
     if ((node != NULL) && (node->name != NULL)) {
         if (controld_is_local_node(node->name)) {
             crm_err("We're not part of the cluster anymore");
-            register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+            controld_fsa_append(C_FSA_INTERNAL, I_ERROR, NULL);
 
         } else if (!AM_I_DC
                    && pcmk__str_eq(node->name, controld_globals.dc_name,
                                    pcmk__str_casei)) {
             crm_warn("Our DC node (%s) left the cluster", node->name);
-            register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+            controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
         }
     }
 

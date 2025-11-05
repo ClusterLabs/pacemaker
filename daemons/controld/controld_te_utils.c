@@ -493,7 +493,7 @@ done:
             controld_stop_transition_timer();
             controld_start_transition_timer();
         } else {
-            register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+            controld_fsa_append(C_FSA_INTERNAL, I_PE_CALC, NULL);
         }
         return;
     }

@@ -750,7 +750,7 @@ notify_crmd(pcmk__graph_t *graph)
     graph->completion_action = pcmk__graph_done;
 
     if (event != I_NULL) {
-        register_fsa_input(C_FSA_INTERNAL, event, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, event, NULL);
     } else {
         controld_trigger_fsa();
     }

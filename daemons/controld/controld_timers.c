@@ -157,7 +157,7 @@ do_timer_control(long long action,
         controld_start_timer(election_timer);
         if (AM_I_DC) {
             /* there can be only one */
-            register_fsa_input(cause, I_ELECTION, NULL);
+            controld_fsa_append(cause, I_ELECTION, NULL);
         }
 
     } else if (action & A_FINALIZE_TIMER_START) {
@@ -218,7 +218,7 @@ crm_timer_popped(gpointer data)
                   fsa_state2string(controld_globals.fsa_state));
 
     } else if (timer->fsa_input != I_NULL) {
-        register_fsa_input(C_TIMER_POPPED, timer->fsa_input, NULL);
+        controld_fsa_append(C_TIMER_POPPED, timer->fsa_input, NULL);
     }
 
     controld_trigger_fsa();

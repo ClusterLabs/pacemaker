@@ -228,7 +228,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             if (!appeared && controld_is_local_node(node->name)) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
-                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
+                controld_fsa_append(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
 
             } else if (pcmk__str_eq(node->name, controld_globals.dc_name,
                                     pcmk__str_casei)
@@ -244,7 +244,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 crm_notice("Our peer on the DC (%s) is dead",
                            controld_globals.dc_name);
 
-                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
+                controld_fsa_append(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
                 controld_delete_node_state(node->name, controld_section_attrs,
                                            cib_none);
 

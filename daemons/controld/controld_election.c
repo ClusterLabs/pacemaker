@@ -22,7 +22,7 @@
 static void
 election_win_cb(pcmk_cluster_t *cluster)
 {
-    register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
+    controld_fsa_append(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
 }
 
 void
@@ -100,12 +100,8 @@ do_election_vote(long long action,
     }
 
     if (not_voting) {
-        if (AM_I_DC) {
-            register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-
-        } else {
-            register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
-        }
+        controld_fsa_append(C_FSA_INTERNAL, (AM_I_DC? I_RELEASE_DC : I_PENDING),
+                            NULL);
         return;
     }
 
@@ -151,7 +147,7 @@ do_election_count_vote(long long action,
     switch(rc) {
         case election_start:
             election_reset(controld_globals.cluster);
-            register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+            controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
             break;
 
         case election_lost:
@@ -160,11 +156,11 @@ do_election_count_vote(long long action,
             if (pcmk__is_set(controld_globals.fsa_input_register, R_THE_DC)) {
                 cib_t *cib_conn = controld_globals.cib_conn;
 
-                register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
+                controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
                 cib_conn->cmds->set_secondary(cib_conn, cib_none);
 
             } else if (cur_state != S_STARTING) {
-                register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
+                controld_fsa_append(C_FSA_INTERNAL, I_PENDING, NULL);
             }
             break;
 
@@ -272,7 +268,7 @@ do_dc_release(long long action,
             fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
             pcmk__xml_free(update);
         }
-        register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 
     } else {
         crm_err("Unknown DC action %s", fsa_action2string(action));

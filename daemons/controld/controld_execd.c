@@ -51,7 +51,7 @@ lrm_connection_destroy(void)
 {
     if (pcmk__is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Lost connection to local executor");
-        register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     }
 }
@@ -1872,7 +1872,7 @@ should_nack_action(const char *action)
     if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
 
-        register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+        controld_fsa_append(C_SHUTDOWN, I_SHUTDOWN, NULL);
         return "Not attempting start due to shutdown in progress";
     }
 

@@ -456,7 +456,7 @@ do_stop(long long action,
 {
     crm_trace("Closing IPC server");
     mainloop_del_ipc_server(ipcs); ipcs = NULL;
-    register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
+    controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
 /*	 A_STARTED	*/
@@ -524,7 +524,7 @@ do_started(long long action,
     controld_timer_fencer_connect(GINT_TO_POINTER(TRUE));
 
     controld_clear_fsa_input_flags(R_STARTING);
-    register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
+    controld_fsa_append(msg_data->fsa_cause, I_PENDING, NULL);
 }
 
 /*	 A_RECOVER	*/
@@ -536,7 +536,7 @@ do_recover(long long action,
     controld_set_fsa_input_flags(R_IN_RECOVERY);
     crm_warn("Fast-tracking shutdown in response to errors");
 
-    register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
+    controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
 static void
@@ -701,7 +701,7 @@ crm_shutdown(int nsig)
     }
 
     controld_set_fsa_input_flags(R_SHUTDOWN);
-    register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+    controld_fsa_append(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
     /* If shutdown timer doesn't have a period set, use the default
      *
