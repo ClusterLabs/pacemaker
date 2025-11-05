@@ -64,16 +64,14 @@ do_cl_join_query(long long action, enum crmd_fsa_cause cause,
     pcmk__xml_free(req);
 }
 
-/*	 A_CL_JOIN_ANNOUNCE	*/
-
-/* this is kind of a workaround for the fact that we may not be around or
- * are otherwise unable to reply when the DC sends out A_DC_JOIN_OFFER_ALL
+// A_CL_JOIN_ANNOUNCE
+/* This is a workaround for the fact that we may be offline or otherwise unable
+ * to reply when the DC sends A_DC_JOIN_OFFER_ALL.
  */
 void
-do_cl_join_announce(long long action,
-                    enum crmd_fsa_cause cause,
+do_cl_join_announce(long long action, enum crmd_fsa_cause cause,
                     enum crmd_fsa_state cur_state,
-                    enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                    enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
     xmlNode *req = NULL;
 
@@ -83,12 +81,12 @@ do_cl_join_announce(long long action,
         return;
     }
 
-    crm_debug("Announcing availability");
+    update_dc(NULL);
 
     // Send as a broadcast
+    crm_debug("Announcing availability");
     req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_DC, CRM_OP_JOIN_ANNOUNCE, NULL);
-    update_dc(NULL);
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
     pcmk__xml_free(req);
 }

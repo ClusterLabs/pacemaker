@@ -256,6 +256,15 @@ enum crmd_fsa_input {
  */
 #define A_CL_JOIN_QUERY             (UINT64_C(1) << 20)
 
+/* @TODO The handler for A_CL_JOIN_ANNOUNCE is almost identical to the handler
+ * for A_CL_JOIN_QUERY. The only differences are:
+ * - the priority within s_crmd_fsa_actions()
+ * - whether we sleep(1) to wait for a DC to join our membership
+ * - whether we send an announcement from states other than S_PENDING
+ *
+ * Determine whether it's safe to drop this and replace it with A_CL_JOIN_QUERY
+ * (or vice-versa), or whether we rely on these differences somehow.
+ */
 #define A_CL_JOIN_ANNOUNCE          (UINT64_C(1) << 21)
 
 /* Send the DC a join request in response to a join offer */
