@@ -1007,7 +1007,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         if (highest_seq < controld_globals.peer_seq) {
             /* Don't spam the FSA with duplicates */
             highest_seq = controld_globals.peer_seq;
-            register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
     } else if (cur_state == S_INTEGRATION) {
@@ -1018,7 +1018,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                       QB_XS " state=%s for=%s",
                       current_join_id, count, pcmk__plural_s(count),
                       fsa_state2string(cur_state), source);
-            register_fsa_input_before(C_FSA_INTERNAL, I_INTEGRATED, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_INTEGRATED, NULL);
             return TRUE;
         }
 

@@ -225,7 +225,7 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
              *
              * @FIXME controld_fsa_append() adds the input to the tail of the
              * queue. To add to the front (the head), we would call
-             * register_fsa_input_before(). Which one is correct?
+             * controld_fsa_prepend(). Which one is correct?
              * - The "Add to the front" comment and the below
              *   controld_fsa_append() call (formerly register_fsa_input()) go
              *   back to a1606db9 in 2006.

@@ -341,7 +341,7 @@ do_pe_invoke(long long action,
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Cannot shut down gracefully without the scheduler");
-            register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
         } else {
             crm_info("Waiting for the scheduler to connect");
@@ -361,7 +361,7 @@ do_pe_invoke(long long action,
         crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
         /* start the join from scratch */
-        register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
+        controld_fsa_prepend(C_FSA_INTERNAL, I_ELECTION, NULL);
         return;
     }
     if (controld_cib_retry_timer != NULL) {

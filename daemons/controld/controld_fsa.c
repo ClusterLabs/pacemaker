@@ -529,7 +529,7 @@ check_join_counts(fsa_data_t *msg_data)
     } else if (controld_globals.membership_id != controld_globals.peer_seq) {
         crm_info("New join needed because membership changed (%llu -> %llu)",
                  controld_globals.membership_id, controld_globals.peer_seq);
-        register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+        controld_fsa_prepend(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else {
         crm_warn("Only %d of %u active cluster nodes fully joined "

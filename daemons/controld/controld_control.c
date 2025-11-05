@@ -696,7 +696,7 @@ crm_shutdown(int nsig)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         crm_err("Escalating shutdown");
-        register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
+        controld_fsa_prepend(C_SHUTDOWN, I_ERROR, NULL);
         return;
     }
 

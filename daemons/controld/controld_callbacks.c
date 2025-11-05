@@ -276,7 +276,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                   alive, appeared, (down? down->id : -1));
 
         if (appeared && (alive > 0) && !is_remote) {
-            register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
         if (down) {

@@ -202,7 +202,7 @@ crm_timer_popped(gpointer data)
             register_fsa_error_adv(I_ELECTION, NULL, NULL, __func__);
 
         } else {
-            register_fsa_input_before(C_TIMER_POPPED, timer->fsa_input, NULL);
+            controld_fsa_prepend(C_TIMER_POPPED, timer->fsa_input, NULL);
         }
 
     } else if ((timer == recheck_timer)

@@ -56,8 +56,16 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 #define controld_fsa_append(cause, input, data) \
     register_fsa_input_adv(cause, input, data, A_NOTHING, false, __func__)
 
-#define register_fsa_input_before(cause, input, data)   \
-    register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __func__)
+/*!
+ * \internal
+ * \brief Prepend an input to the FSA message queue without actions
+ *
+ * \param[in] cause  Cause of input creation (<tt>enum crmd_fsa_cause</tt>)
+ * \param[in] input  Input type (<tt>enum crmd_fsa_input</tt>)
+ * \param[in] data   Message data (\c ha_msg_input_t)
+ */
+#define controld_fsa_prepend(cause, input, data)    \
+    register_fsa_input_adv(cause, input, data, A_NOTHING, true, __func__)
 
 void delete_fsa_input(fsa_data_t * fsa_data);
 
