@@ -248,7 +248,6 @@ class Environment:
                           help="List the valid tests")
         grp1.add_argument("--nodes",
                           default="",
-                          metavar="NODES",
                           help="List of cluster nodes separated by whitespace")
 
         grp2 = parser.add_argument_group("Options that CTS will usually auto-detect correctly")
@@ -256,7 +255,6 @@ class Environment:
                           metavar="PATH",
                           help="Where to look for logs from cluster nodes (or 'journal' for systemd journal)")
         grp2.add_argument("--ip", "--test-ip-base",
-                          metavar="IP",
                           help="Offset for generated IP address resources")
 
         grp3 = parser.add_argument_group("Options for release testing")
@@ -311,11 +309,9 @@ class Environment:
                           metavar="PATH",
                           help="Location to write logs to")
         grp4.add_argument("--schema",
-                          metavar="SCHEMA",
                           default=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}",
                           help="Create a CIB conforming to the given schema")
         grp4.add_argument("--seed",
-                          metavar="SEED",
                           help="Use the given string as the random number seed")
         grp4.add_argument("--trunc",
                           action="store_true", dest="truncate",

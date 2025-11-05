@@ -95,20 +95,20 @@ def parse_cli_options():
     # Don't add standard help option, so we can format it how we want
     parser = argparse.ArgumentParser(add_help=False)
 
-    parser.add_argument("-t", metavar="SUBAGENT", dest="subagent",
-                        nargs=1, default="none", help="sub-agent")
+    parser.add_argument("-t", dest="subagent", nargs=1, default="none",
+                        help="sub-agent")
 
-    parser.add_argument("-n", metavar="NODE", dest="node",
-                        nargs=1, default="", help="name of target node")
+    parser.add_argument("-n", dest="node", nargs=1, default="",
+                        help="name of target node")
 
     # The help text here is consistent with the original version, though
     # perhaps all actions should be listed.
-    parser.add_argument("-o", metavar="ACTION", dest="action",
-                        nargs=1, choices=ACTIONS, default="reset",
+    parser.add_argument("-o", dest="action", nargs=1, choices=ACTIONS,
+                        default="reset",
                         help="action: on | off | reset (default) | stat | hostlist")
 
-    parser.add_argument("-s", metavar="COMMAND", dest="command",
-                        nargs=1, default="stonith", help="stonith command")
+    parser.add_argument("-s", dest="command", nargs=1, default="stonith",
+                        help="stonith command")
 
     parser.add_argument("-q", dest="quiet", action="store_true",
                         help="quiet mode")
