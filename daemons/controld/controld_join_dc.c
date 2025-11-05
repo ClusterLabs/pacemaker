@@ -739,47 +739,43 @@ join_node_state_commit_callback(xmlNode *msg, int call_id, int rc,
     check_join_state(controld_globals.fsa_state, __func__);
 }
 
-/*	A_DC_JOIN_PROCESS_ACK	*/
+// A_DC_JOIN_PROCESS_ACK
 void
-do_dc_join_ack(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state,
-               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_dc_join_ack(long long action, enum crmd_fsa_cause cause,
+               enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+               fsa_data_t *msg_data)
 {
-    int join_id = -1;
     ha_msg_input_t *join_ack = NULL;
-    const char *op = NULL;
     char *join_from = NULL;
+    const char *op = NULL;
+    int join_id = -1;
 
     pcmk__node_status_t *peer = NULL;
     enum controld_join_phase phase = controld_join_none;
 
+    cib_t *cib = controld_globals.cib_conn;
+    int rc = pcmk_ok;
     enum controld_section_e section = controld_section_lrm;
     char *xpath = NULL;
     xmlNode *state = NULL;
-    xmlNode *execd_state = NULL;
-
-    cib_t *cib = controld_globals.cib_conn;
-    int rc = pcmk_ok;
 
     pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
 
     join_ack = msg_data->data;
-    op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
-    join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);
-    state = join_ack->xml;
 
     // Sanity checks
+    join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);
     if (join_from == NULL) {
         crm_warn("Ignoring message received without node identification");
         goto done;
     }
+
+    op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
     if (op == NULL) {
         crm_warn("Ignoring message received from %s without task", join_from);
         goto done;
     }
-
-    if (strcmp(op, CRM_OP_JOIN_CONFIRM)) {
+    if (!pcmk__str_eq(op, CRM_OP_JOIN_CONFIRM, pcmk__str_none)) {
         crm_debug("Ignoring '%s' message from %s while waiting for '%s'",
                   op, join_from, CRM_OP_JOIN_CONFIRM);
         goto done;
@@ -838,14 +834,12 @@ do_dc_join_ack(long long action,
     if (controld_is_local_node(join_from)) {
 
         // Use the latest possible state if processing our own join ack
-        execd_state = controld_query_executor_state();
+        state = controld_query_executor_state();
 
-        if (execd_state != NULL) {
+        if (state != NULL) {
             crm_debug("Updating local node history for join-%d from query "
                       "result",
                       current_join_id);
-            state = execd_state;
-
         } else {
             crm_warn("Updating local node history from join-%d confirmation "
                      "because query failed",
@@ -857,9 +851,9 @@ do_dc_join_ack(long long action,
                   join_from, current_join_id);
     }
 
-    rc = cib->cmds->modify(cib, PCMK_XE_STATUS, state,
+    rc = cib->cmds->modify(cib, PCMK_XE_STATUS,
+                           ((state != NULL)? state : join_ack->xml),
                            cib_can_create|cib_transaction);
-    pcmk__xml_free(execd_state);
     if (rc != pcmk_ok) {
         goto done;
     }
@@ -876,12 +870,14 @@ do_dc_join_ack(long long action,
 
 done:
     if (rc != pcmk_ok) {
+        rc = pcmk_legacy2rc(rc);
         crm_crit("join-%d node history update for node %s failed: %s",
-                 current_join_id, join_from, pcmk_strerror(rc));
+                 current_join_id, join_from, pcmk_rc_str(rc));
         register_fsa_error(I_ERROR);
     }
     free(join_from);
     free(xpath);
+    pcmk__xml_free(state);
 }
 
 void
