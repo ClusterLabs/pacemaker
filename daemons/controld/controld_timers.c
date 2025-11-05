@@ -220,7 +220,7 @@ crm_timer_popped(gpointer data)
                  crmd_join_phase_count(controld_join_integrated));
         if (crmd_join_phase_count(controld_join_welcomed) == 0) {
             // If we don't even have ourselves, start again
-            register_fsa_error_adv(I_ELECTION, NULL, NULL, __func__);
+            register_fsa_error(I_ELECTION, NULL);
 
         } else {
             controld_fsa_prepend(C_TIMER_POPPED, timer->fsa_input, NULL);

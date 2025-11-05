@@ -496,7 +496,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             crm_err("Action %s not supported " QB_XS " %" PRIx64,
                     fsa_action2string(controld_globals.fsa_actions),
                     controld_globals.fsa_actions);
-            register_fsa_error_adv(I_ERROR, fsa_data, NULL, __func__);
+            register_fsa_error(I_ERROR, fsa_data);
         }
     }
 }

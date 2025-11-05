@@ -694,7 +694,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
         }
 
         /* restart the whole join process */
-        register_fsa_error_adv(I_ELECTION_DC, NULL, NULL, __func__);
+        register_fsa_error(I_ELECTION_DC, NULL);
 
     } else if (!AM_I_DC) {
         crm_debug("Sync'ed CIB for join-%d but no longer DC", current_join_id);
