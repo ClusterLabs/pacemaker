@@ -70,13 +70,13 @@ class CIB:
         r = Resource(self._factory, name, "IPaddr2", "ocf")
         r["ip"] = ip
 
+        if self._cm.env["nic"] is not None:
+            r["nic"] = self._cm.env["nic"]
+
         if ":" in ip:
             r["cidr_netmask"] = "64"
 
-            if self._cm.env["nic"] is not None:
-                r["nic"] = self._cm.env["nic"]
-
-            elif ip.lstrip().startswith("fe80::"):
+            if self._cm.env["nic"] is None and ip.lstrip().startswith("fe80::"):
                 # "nic" parameter is mandatory for an IPv6 link local address
                 r["nic"] = "eth0"
 
