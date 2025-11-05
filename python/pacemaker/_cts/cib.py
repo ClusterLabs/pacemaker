@@ -72,7 +72,7 @@ class CIB:
 
         if ":" in ip:
             r["cidr_netmask"] = "64"
-            r["nic"] = "eth0"
+            r["nic"] = self._cm.env["nic"]
         else:
             r["cidr_netmask"] = "32"
 
