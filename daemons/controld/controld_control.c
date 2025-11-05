@@ -307,11 +307,11 @@ crmd_exit(crm_exit_t exit_code)
     return exit_code;
 }
 
-/*	 A_EXIT_0, A_EXIT_1	*/
+// A_EXIT_0, A_EXIT_1
 void
-do_exit(long long action,
-        enum crmd_fsa_cause cause,
-        enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_exit(long long action, enum crmd_fsa_cause cause,
+        enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+        fsa_data_t *msg_data)
 {
     crm_exit_t exit_code = CRM_EX_OK;
 
