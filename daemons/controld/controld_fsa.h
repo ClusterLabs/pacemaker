@@ -61,17 +61,10 @@ enum crmd_fsa_state {
                                  * state of the cluster a reality
                                  */
 
-    S_HALT,                     /* Freeze - don't do anything
-                                 * Something bad happened that needs the admin to fix
-                                 * Wait for I_ELECTION
-                                 */
-
-    /*  ----------- Last input found in table is above ---------- */
-    S_ILLEGAL                   /* This is an illegal FSA state */
-        /* (must be last) */
+    S_MAX = S_TRANSITION_ENGINE,    /* Max enum value; update if adding new
+                                     * values
+                                     */
 };
-
-#  define MAXSTATE S_ILLEGAL
 
 /*
       Once we start and do some basic sanity checks, we go into the
@@ -135,7 +128,6 @@ enum crmd_fsa_state {
  *======================================*/
 enum crmd_fsa_input {
     I_NULL,                     /* Nothing happened */
-    I_CIB_UPDATE,               /* An update to the CIB occurred */
     I_DC_TIMEOUT,               /* We have lost communication with the DC */
     I_ELECTION,                 /* Someone started an election */
     I_PE_CALC,                  /* The scheduler needs to be invoked */
@@ -157,13 +149,7 @@ enum crmd_fsa_input {
     I_NOT_DC,                   /* We are not and were not the DC before or after
                                  * the current operation or state
                                  */
-    I_RECOVERED,                /* The recovery process completed successfully */
-    I_RELEASE_FAIL,             /* We could not give up DC status for some reason
-                                 */
     I_RELEASE_SUCCESS,          /* We are no longer the DC */
-    I_RESTART,                  /* The current set of actions needs to be
-                                 * restarted
-                                 */
     I_TE_SUCCESS,               /* Some non-resource, non-cluster-layer action
                                  * is required of us, e.g. ping
                                  */
@@ -183,19 +169,10 @@ enum crmd_fsa_input {
     I_WAIT_FOR_EVENT,           /* we may be waiting for an async task to "happen"
                                  * and until it does, we can't do anything else
                                  */
-    I_DC_HEARTBEAT,             /* The DC is telling us that it is alive and well */
-
     I_PENDING,
-    I_HALT,
 
-    /*  ------------ Last input found in table is above ----------- */
-    I_ILLEGAL                   /* This is an illegal value for an FSA input */
-        /* (must be last) */
+    I_MAX = I_PENDING,          // Max enum value; update if adding new values
 };
-
-#  define MAXINPUT  I_ILLEGAL
-
-#  define I_MESSAGE I_ROUTER
 
 /*======================================
  *
@@ -349,8 +326,6 @@ enum crmd_fsa_input {
 /* Disconnect from the local executor */
 #define A_LRM_DISCONNECT            (UINT64_C(1) << 57)
 
-#define A_LRM_INVOKE                (UINT64_C(1) << 58)
-
 /* -- Logging actions -- */
 
 #define A_LOG                       (UINT64_C(1) << 60)
@@ -441,23 +416,19 @@ enum crmd_fsa_cause {
     C_FSA_INTERNAL,
 };
 
-enum fsa_data_type {
-    fsa_dt_none,
-    fsa_dt_ha_msg,
-    fsa_dt_xml,
-    fsa_dt_lrm,
-};
+typedef struct {
+    xmlNode *msg;
+    xmlNode *xml;
+} ha_msg_input_t;
 
-typedef struct fsa_data_s fsa_data_t;
-struct fsa_data_s {
-    int id;
+typedef struct {
+    unsigned long long id;          // Debug only
     enum crmd_fsa_input fsa_input;
     enum crmd_fsa_cause fsa_cause;
     uint64_t actions;
     const char *origin;
-    void *data;
-    enum fsa_data_type data_type;
-};
+    ha_msg_input_t *data;
+} fsa_data_t;
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                 \
         controld_globals.fsa_input_register                             \
@@ -655,11 +626,6 @@ void do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
                                  enum crmd_fsa_state cur_state,
                                  enum crmd_fsa_input current_input,
                                  fsa_data_t *msg_data);
-
-/* A_LRM_INVOKE */
-void do_lrm_invoke(long long action, enum crmd_fsa_cause cause,
-                   enum crmd_fsa_state cur_state,
-                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
 /* A_TE_INVOKE, A_TE_CANCEL */
 void do_te_invoke(long long action, enum crmd_fsa_cause cause,

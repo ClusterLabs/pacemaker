@@ -46,7 +46,7 @@ crmd_ha_msg_filter(xmlNode * msg)
 
                     level = LOG_WARNING;
                     new_input.msg = msg;
-                    register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, &new_input,
+                    register_fsa_error_adv(I_ELECTION, NULL, &new_input,
                                            __func__);
                 }
 
@@ -228,7 +228,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
             if (!appeared && controld_is_local_node(node->name)) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
-                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
+                controld_fsa_append(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
 
             } else if (pcmk__str_eq(node->name, controld_globals.dc_name,
                                     pcmk__str_casei)
@@ -244,7 +244,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                 crm_notice("Our peer on the DC (%s) is dead",
                            controld_globals.dc_name);
 
-                register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
+                controld_fsa_append(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
                 controld_delete_node_state(node->name, controld_section_attrs,
                                            cib_none);
 
@@ -276,7 +276,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                   alive, appeared, (down? down->id : -1));
 
         if (appeared && (alive > 0) && !is_remote) {
-            register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
         if (down) {

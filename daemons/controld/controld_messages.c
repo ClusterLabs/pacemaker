@@ -32,12 +32,9 @@ static enum crmd_fsa_input handle_request(xmlNode *stored_msg,
 static enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 static void send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src);
 
-/* debug only, can wrap all it likes */
-static int last_data_id = 0;
-
 void
-register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                       fsa_data_t * cur_data, void *new_data, const char *raised_from)
+register_fsa_error_adv(enum crmd_fsa_input input, fsa_data_t *cur_data,
+                       ha_msg_input_t *new_data, const char *raised_from)
 {
     /* save the current actions if any */
     if (controld_globals.fsa_actions != A_NOTHING) {
@@ -52,14 +49,17 @@ register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     controld_globals.fsa_actions = A_NOTHING;
 
     /* register the error */
-    register_fsa_input_adv(cause, input, new_data, A_NOTHING, TRUE, raised_from);
+    register_fsa_input_adv(C_FSA_INTERNAL, input, new_data, A_NOTHING, TRUE,
+                           raised_from);
 }
 
 void
 register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                       void *data, uint64_t with_actions,
+                       ha_msg_input_t *data, uint64_t with_actions,
                        gboolean prepend, const char *raised_from)
 {
+    static unsigned long long last_data_id = 0;
+
     fsa_data_t *fsa_data = NULL;
 
     if (raised_from == NULL) {
@@ -95,7 +95,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     last_data_id++;
-    crm_trace("%s %s FSA input %d (%s) due to %s, %s data",
+    crm_trace("%s %s FSA input %llu (%s) due to %s, %s data",
               raised_from, (prepend? "prepended" : "appended"), last_data_id,
               fsa_input2string(input), fsa_cause2string(cause),
               (data? "with" : "without"));
@@ -106,7 +106,6 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     fsa_data->fsa_cause = cause;
     fsa_data->origin = raised_from;
     fsa_data->data = NULL;
-    fsa_data->data_type = fsa_dt_none;
     fsa_data->actions = with_actions;
 
     if (with_actions != A_NOTHING) {
@@ -119,12 +118,11 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
             case C_CRMD_STATUS_CALLBACK:
             case C_IPC_MESSAGE:
             case C_HA_MESSAGE:
-                CRM_CHECK(((ha_msg_input_t *) data)->msg != NULL,
+                CRM_CHECK(data->msg != NULL,
                           crm_err("Bogus data from %s", raised_from));
                 crm_trace("Copying %s data from %s as cluster message data",
                           fsa_cause2string(cause), raised_from);
                 fsa_data->data = copy_ha_msg_input(data);
-                fsa_data->data_type = fsa_dt_ha_msg;
                 break;
 
             case C_TIMER_POPPED:
@@ -173,64 +171,17 @@ copy_ha_msg_input(ha_msg_input_t * orig)
 void
 delete_fsa_input(fsa_data_t * fsa_data)
 {
-    lrmd_event_data_t *op = NULL;
-    xmlNode *foo = NULL;
-
     if (fsa_data == NULL) {
         return;
     }
     crm_trace("About to free %s data", fsa_cause2string(fsa_data->fsa_cause));
 
     if (fsa_data->data != NULL) {
-        switch (fsa_data->data_type) {
-            case fsa_dt_ha_msg:
-                delete_ha_msg_input(fsa_data->data);
-                break;
-
-            case fsa_dt_xml:
-                foo = fsa_data->data;
-                pcmk__xml_free(foo);
-                break;
-
-            case fsa_dt_lrm:
-                op = (lrmd_event_data_t *) fsa_data->data;
-                lrmd_free_event(op);
-                break;
-
-            case fsa_dt_none:
-                if (fsa_data->data != NULL) {
-                    crm_err("Don't know how to free %s data from %s",
-                            fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
-                    crmd_exit(CRM_EX_SOFTWARE);
-                }
-                break;
-        }
+        delete_ha_msg_input(fsa_data->data);
         crm_trace("%s data freed", fsa_cause2string(fsa_data->fsa_cause));
     }
 
     free(fsa_data);
-}
-
-void *
-fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type, const char *caller)
-{
-    void *ret_val = NULL;
-
-    if (fsa_data == NULL) {
-        crm_err("%s: No FSA data available", caller);
-
-    } else if (fsa_data->data == NULL) {
-        crm_err("%s: No message data available. Origin: %s", caller, fsa_data->origin);
-
-    } else if (fsa_data->data_type != a_type) {
-        crm_crit("%s: Message data was the wrong type! %d vs. requested=%d.  Origin: %s",
-                 caller, fsa_data->data_type, a_type, fsa_data->origin);
-        pcmk__assert(fsa_data->data_type == a_type);
-    } else {
-        ret_val = fsa_data->data;
-    }
-
-    return ret_val;
 }
 
 /*	A_MSG_ROUTE	*/
@@ -240,9 +191,8 @@ do_msg_route(long long action,
              enum crmd_fsa_state cur_state,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-
-    route_message(msg_data->fsa_cause, input->msg);
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+    route_message(msg_data->fsa_cause, msg_data->data->msg);
 }
 
 void
@@ -265,20 +215,33 @@ route_message(enum crmd_fsa_cause cause, xmlNode * input)
     /* done or process later? */
     switch (result) {
         case I_NULL:
+            break;
+
         case I_ROUTER:
         case I_NODE_JOIN:
         case I_JOIN_REQUEST:
         case I_JOIN_RESULT:
+            /* Add to the front of the queue.
+             *
+             * @FIXME controld_fsa_append() adds the input to the tail of the
+             * queue. To add to the front (the head), we would call
+             * controld_fsa_prepend(). Which one is correct?
+             * - The "Add to the front" comment and the below
+             *   controld_fsa_append() call (formerly register_fsa_input()) go
+             *   back to a1606db9 in 2006.
+             * - controld_fsa_append() switched from "prepend" to "append" via
+             *   38b02548 in 2005. So when this controld_fsa_append() call was
+             *   added in 2006, its behavior was already to add the input to the
+             *   tail of the queue. (This would have made more sense as an
+             *   oversight if the controld_fsa_append() behavior was changed
+             *   later rather than earlier.)
+             */
+            controld_fsa_append(cause, result, &fsa_input);
             break;
-        default:
-            /* Defering local processing of message */
-            register_fsa_input_later(cause, result, &fsa_input);
-            return;
-    }
 
-    if (result != I_NULL) {
-        /* add to the front of the queue */
-        register_fsa_input(cause, result, &fsa_input);
+        default:
+            controld_fsa_append(cause, result, &fsa_input);
+            break;
     }
 }
 
@@ -1089,12 +1052,6 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
                                A_ELECTION_COUNT | A_ELECTION_CHECK, FALSE,
                                __func__);
 
-        /* Sometimes we _must_ go into S_ELECTION */
-        if (controld_globals.fsa_state == S_HALT) {
-            crm_debug("Forcing an election from S_HALT");
-            return I_ELECTION;
-        }
-
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
         verify_feature_set(stored_msg);
         crm_debug("Raising I_JOIN_OFFER: join-%s",
@@ -1199,7 +1156,7 @@ handle_response(xmlNode *stored_msg)
 
             controld_stop_sched_timer();
             fsa_input.msg = stored_msg;
-            register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
+            controld_fsa_append(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         } else {
             crm_info("%s calculation %s is obsolete", op, msg_ref);
@@ -1281,15 +1238,13 @@ send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src)
         fsa_input.xml = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         fsa_data.id = 0;
-        fsa_data.actions = 0;
+        fsa_data.actions = A_NOTHING;
         fsa_data.data = &fsa_input;
-        fsa_data.fsa_input = I_MESSAGE;
+        fsa_data.fsa_input = I_ROUTER;
         fsa_data.fsa_cause = C_IPC_MESSAGE;
         fsa_data.origin = __func__;
-        fsa_data.data_type = fsa_dt_ha_msg;
 
-        do_lrm_invoke(A_LRM_INVOKE, C_IPC_MESSAGE, controld_globals.fsa_state,
-                      I_MESSAGE, &fsa_data);
+        controld_invoke_execd(&fsa_data);
 
     } else if (crmd_is_proxy_session(sys)) {
         crmd_proxy_send(sys, msg);

@@ -38,7 +38,7 @@ handle_cib_disconnect(gpointer user_data)
     if (pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         // @TODO This should trigger a reconnect, not a shutdown
         crm_crit("Lost connection to the CIB manager, shutting down");
-        register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
     } else { // Expected
@@ -91,7 +91,7 @@ do_cib_updated(const char *event, xmlNode * msg)
 
         populate_cib_nodes(controld_node_update_quick|controld_node_update_all,
                            __func__);
-        register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
     }
 }
 
@@ -195,7 +195,7 @@ do_cib_control(long long action,
         } else {
             crm_err("Could not complete CIB registration %d times... "
                     "hard error", cib_retries);
-            register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+            register_fsa_error(I_ERROR);
         }
     }
 }

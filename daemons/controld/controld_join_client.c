@@ -107,17 +107,17 @@ do_cl_join_offer_respond(long long action,
                          enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
+    ha_msg_input_t *input = NULL;
+    const char *welcome_from = NULL;
+    const char *join_id = NULL;
 
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-    const char *welcome_from;
-    const char *join_id;
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
 
-    CRM_CHECK(input != NULL, return);
-
+    input = msg_data->data;
     welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
     join_id = pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID);
     crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
-              welcome_from, pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID));
+              welcome_from, join_id);
 
     /* we only ever want the last one */
     if (query_call_id > 0) {
@@ -161,7 +161,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     if(rc != pcmk_ok || output == NULL) {
         crm_err("Could not retrieve version details for join-%s: %s (%d)",
                 join_id, pcmk_strerror(rc), rc);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
+        register_fsa_error_adv(I_ERROR, NULL, NULL, __func__);
 
     } else if (controld_globals.dc_name == NULL) {
         crm_debug("Membership is in flux, not continuing join-%s", join_id);
@@ -261,12 +261,17 @@ do_cl_join_finalize_respond(long long action,
     xmlNode *tmp1 = NULL;
     gboolean was_nack = TRUE;
     static gboolean first_join = TRUE;
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-    const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
-
     int join_id = -1;
-    const char *op = pcmk__xe_get(input->msg, PCMK__XA_CRM_TASK);
-    const char *welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
+    const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
+    ha_msg_input_t *input = NULL;
+    const char *op = NULL;
+    const char *welcome_from = NULL;
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+    input = msg_data->data;
+    op = pcmk__xe_get(input->msg, PCMK__XA_CRM_TASK);
+    welcome_from = pcmk__xe_get(input->msg, PCMK__XA_SRC);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_casei)) {
         crm_trace("Ignoring op=%s message", op);
@@ -283,7 +288,7 @@ do_cl_join_finalize_respond(long long action,
     if (was_nack) {
         crm_err("Shutting down because cluster join with leader %s failed "
                 QB_XS " join-%d NACK'd", welcome_from, join_id);
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
     }
@@ -368,6 +373,6 @@ do_cl_join_finalize_respond(long long action,
     } else {
         crm_err("Could not confirm join-%d with %s: Local operation history "
                 "failed", join_id, controld_globals.dc_name);
-        register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+        register_fsa_error(I_FAIL);
     }
 }

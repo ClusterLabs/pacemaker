@@ -79,7 +79,7 @@ do_ha_control(long long action,
 
         if (!registered) {
             controld_set_fsa_input_flags(R_HA_DISCONNECTED);
-            register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+            register_fsa_error(I_ERROR);
             return;
         }
 
@@ -122,7 +122,7 @@ do_shutdown_req(long long action,
                             CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
     if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
     pcmk__xml_free(msg);
 }
@@ -349,7 +349,7 @@ do_startup(long long action,
 
     lrm_state_init_local();
     if (controld_init_fsa_timers() == FALSE) {
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 }
 
@@ -456,7 +456,7 @@ do_stop(long long action,
 {
     crm_trace("Closing IPC server");
     mainloop_del_ipc_server(ipcs); ipcs = NULL;
-    register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
+    controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
 /*	 A_STARTED	*/
@@ -516,7 +516,7 @@ do_started(long long action,
     ipcs = pcmk__serve_controld_ipc(&crmd_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     } else {
         crm_notice("Pacemaker controller successfully started and accepting connections");
     }
@@ -524,7 +524,7 @@ do_started(long long action,
     controld_timer_fencer_connect(GINT_TO_POINTER(TRUE));
 
     controld_clear_fsa_input_flags(R_STARTING);
-    register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
+    controld_fsa_append(msg_data->fsa_cause, I_PENDING, NULL);
 }
 
 /*	 A_RECOVER	*/
@@ -536,7 +536,7 @@ do_recover(long long action,
     controld_set_fsa_input_flags(R_IN_RECOVERY);
     crm_warn("Fast-tracking shutdown in response to errors");
 
-    register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
+    controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
 static void
@@ -555,7 +555,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         fsa_data_t *msg_data = NULL;
 
         crm_err("Local CIB query resulted in an error: %s", pcmk_strerror(rc));
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
             crm_err("The cluster is mis-configured - shutting down and staying down");
@@ -573,7 +573,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         fsa_data_t *msg_data = NULL;
 
         crm_err("Local CIB query for " PCMK_XE_CRM_CONFIG " section failed");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
         goto bail;
     }
 
@@ -696,12 +696,12 @@ crm_shutdown(int nsig)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         crm_err("Escalating shutdown");
-        register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);
+        controld_fsa_prepend(C_SHUTDOWN, I_ERROR, NULL);
         return;
     }
 
     controld_set_fsa_input_flags(R_SHUTDOWN);
-    register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+    controld_fsa_append(C_SHUTDOWN, I_SHUTDOWN, NULL);
 
     /* If shutdown timer doesn't have a period set, use the default
      *

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,33 +10,24 @@
 #ifndef XML_CRM_MESSAGES__H
 #  define XML_CRM_MESSAGES__H
 
+#include <stdbool.h>
+
 #  include <crm/crm.h>
 #  include <crm/common/ipc_internal.h>
 #  include <crm/common/xml.h>
 #  include <crm/cluster/internal.h>
 #  include <controld_fsa.h>
 
-typedef struct ha_msg_input_s {
-    xmlNode *msg;
-    xmlNode *xml;
-
-} ha_msg_input_t;
-
 extern void delete_ha_msg_input(ha_msg_input_t * orig);
 
-extern void *fsa_typed_data_adv(fsa_data_t * fsa_data, enum fsa_data_type a_type,
-                                const char *caller);
+void register_fsa_error_adv(enum crmd_fsa_input input, fsa_data_t *cur_data,
+                            ha_msg_input_t *new_data, const char *raised_from);
 
-#  define fsa_typed_data(x) fsa_typed_data_adv(msg_data, x, __func__)
-
-extern void register_fsa_error_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
-                                   fsa_data_t * cur_data, void *new_data, const char *raised_from);
-
-#define register_fsa_error(cause, input, new_data)  \
-    register_fsa_error_adv(cause, input, msg_data, new_data, __func__)
+#define register_fsa_error(input)   \
+    register_fsa_error_adv(input, msg_data, NULL, __func__)
 
 void register_fsa_input_adv(enum crmd_fsa_cause cause,
-                            enum crmd_fsa_input input, void *data,
+                            enum crmd_fsa_input input, ha_msg_input_t *data,
                             uint64_t with_actions, gboolean prepend,
                             const char *raised_from);
 
@@ -54,14 +45,27 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
     }                                                                   \
     } while(0)
 
-#define register_fsa_input(cause, input, data)          \
-    register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __func__)
+/*!
+ * \internal
+ * \brief Append an input to the FSA message queue without actions
+ *
+ * \param[in] cause  Cause of input creation (<tt>enum crmd_fsa_cause</tt>)
+ * \param[in] input  Input type (<tt>enum crmd_fsa_input</tt>)
+ * \param[in] data   Message data (\c ha_msg_input_t)
+ */
+#define controld_fsa_append(cause, input, data) \
+    register_fsa_input_adv(cause, input, data, A_NOTHING, false, __func__)
 
-#define register_fsa_input_before(cause, input, data)   \
-    register_fsa_input_adv(cause, input, data, A_NOTHING, TRUE, __func__)
-
-#define register_fsa_input_later(cause, input, data)    \
-    register_fsa_input_adv(cause, input, data, A_NOTHING, FALSE, __func__)
+/*!
+ * \internal
+ * \brief Prepend an input to the FSA message queue without actions
+ *
+ * \param[in] cause  Cause of input creation (<tt>enum crmd_fsa_cause</tt>)
+ * \param[in] input  Input type (<tt>enum crmd_fsa_input</tt>)
+ * \param[in] data   Message data (\c ha_msg_input_t)
+ */
+#define controld_fsa_prepend(cause, input, data)    \
+    register_fsa_input_adv(cause, input, data, A_NOTHING, true, __func__)
 
 void delete_fsa_input(fsa_data_t * fsa_data);
 

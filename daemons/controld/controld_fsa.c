@@ -70,24 +70,8 @@ do_log(long long action, enum crmd_fsa_cause cause,
                fsa_input2string(msg_data->fsa_input),
                fsa_state2string(cur_state), msg_data->origin);
 
-    if (msg_data->data_type == fsa_dt_ha_msg) {
-        ha_msg_input_t *input = fsa_typed_data(msg_data->data_type);
-
-        crm_log_xml_debug(input->msg, __func__);
-
-    } else if (msg_data->data_type == fsa_dt_xml) {
-        xmlNode *input = fsa_typed_data(msg_data->data_type);
-
-        crm_log_xml_debug(input, __func__);
-
-    } else if (msg_data->data_type == fsa_dt_lrm) {
-        lrmd_event_data_t *input = fsa_typed_data(msg_data->data_type);
-
-        do_crm_log(log_type,
-                   "Resource %s: Call ID %d returned %d (%d)."
-                   "  New status if rc=0: %s",
-                   input->rsc_id, input->call_id, input->rc,
-                   input->op_status, (char *)input->user_data);
+    if (msg_data->data != NULL) {
+        crm_log_xml_debug(msg_data->data->msg, __func__);
     }
 }
 
@@ -133,17 +117,14 @@ static void
 log_fsa_input(fsa_data_t *stored_msg)
 {
     pcmk__assert(stored_msg != NULL);
-    crm_trace("Processing queued input %d", stored_msg->id);
+    crm_trace("Processing queued input %llu", stored_msg->id);
 
     if (stored_msg->data == NULL) {
         crm_trace("FSA processing input from %s", stored_msg->origin);
 
     } else {
-        ha_msg_input_t *ha_input = fsa_typed_data_adv(stored_msg, fsa_dt_ha_msg,
-                                                      __func__);
-
         crm_trace("FSA processing XML message from %s", stored_msg->origin);
-        crm_log_xml_trace(ha_input->xml, "FSA message data");
+        crm_log_xml_trace(stored_msg->data->xml, "FSA message data");
     }
 }
 
@@ -153,9 +134,9 @@ log_fsa_data(gpointer data, gpointer user_data)
     fsa_data_t *fsa_data = data;
     unsigned int *offset = user_data;
 
-    crm_trace("queue[%u.%d]: input %s submitted by %s (%p.%d) (cause=%s)",
+    crm_trace("queue[%u.%llu]: input %s submitted by %s (%p) (cause=%s)",
               (*offset)++, fsa_data->id, fsa_input2string(fsa_data->fsa_input),
-              fsa_data->origin, fsa_data->data, fsa_data->data_type,
+              fsa_data->origin, fsa_data->data,
               fsa_cause2string(fsa_data->fsa_cause));
 }
 
@@ -190,14 +171,13 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
          * can process the already-pending actions. So a larger refactor would
          * be required in order to get rid of this.
          *
-         * We can't call register_fsa_input() because it currently won't add a
+         * We can't call controld_fsa_append() because it currently won't add a
          * message with I_NULL and A_NOTHING (like this one).
          */
         fsa_data = pcmk__assert_alloc(1, sizeof(fsa_data_t));
         fsa_data->fsa_input = I_NULL;
         fsa_data->fsa_cause = C_FSA_INTERNAL;
         fsa_data->origin = __func__;
-        fsa_data->data_type = fsa_dt_none;
 
         if (controld_globals.fsa_message_queue == NULL) {
             controld_globals.fsa_message_queue = g_queue_new();
@@ -478,8 +458,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             do_fsa_action(fsa_data, A_TE_HALT, do_te_invoke);
         } else if (pcmk__is_set(controld_globals.fsa_actions, A_TE_CANCEL)) {
             do_fsa_action(fsa_data, A_TE_CANCEL, do_te_invoke);
-        } else if (pcmk__is_set(controld_globals.fsa_actions, A_LRM_INVOKE)) {
-            do_fsa_action(fsa_data, A_LRM_INVOKE, do_lrm_invoke);
         } else if (pcmk__is_set(controld_globals.fsa_actions, A_PE_INVOKE)) {
             do_fsa_action(fsa_data, A_PE_INVOKE, do_pe_invoke);
         } else if (pcmk__is_set(controld_globals.fsa_actions, A_TE_INVOKE)) {
@@ -515,8 +493,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             crm_err("Action %s not supported " QB_XS " %" PRIx64,
                     fsa_action2string(controld_globals.fsa_actions),
                     controld_globals.fsa_actions);
-            register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, fsa_data, NULL,
-                                   __func__);
+            register_fsa_error_adv(I_ERROR, fsa_data, NULL, __func__);
         }
     }
 }
@@ -547,12 +524,12 @@ check_join_counts(fsa_data_t *msg_data)
     } else if (count > npeers) {
         crm_err("New election needed because more nodes confirmed join "
                 "than are in membership (%d > %u)", count, npeers);
-        register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
 
     } else if (controld_globals.membership_id != controld_globals.peer_seq) {
         crm_info("New join needed because membership changed (%llu -> %llu)",
                  controld_globals.membership_id, controld_globals.peer_seq);
-        register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+        controld_fsa_prepend(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
 
     } else {
         crm_warn("Only %d of %u active cluster nodes fully joined "

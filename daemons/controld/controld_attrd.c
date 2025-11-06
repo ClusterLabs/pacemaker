@@ -55,7 +55,7 @@ handle_attr_error(void)
 
     } else if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         // Fast-track shutdown since unable to request via attribute
-        register_fsa_input(C_FSA_INTERNAL, I_FAIL, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_FAIL, NULL);
     }
 }
 

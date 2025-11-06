@@ -352,6 +352,8 @@ do_dc_join_offer_one(long long action,
     int count;
     const char *join_to = NULL;
 
+    pcmk__assert(msg_data != NULL);
+
     if (msg_data->data == NULL) {
         crm_info("Making join-%d offers to any unconfirmed nodes "
                  "because an unknown node joined", current_join_id);
@@ -360,12 +362,7 @@ do_dc_join_offer_one(long long action,
         return;
     }
 
-    welcome = fsa_typed_data(fsa_dt_ha_msg);
-    if (welcome == NULL) {
-        // fsa_typed_data() already logged an error
-        return;
-    }
-
+    welcome = msg_data->data;
     join_to = pcmk__xe_get(welcome->msg, PCMK__XA_SRC);
     if (join_to == NULL) {
         crm_err("Can't make join-%d offer to unknown node", current_join_id);
@@ -449,13 +446,18 @@ do_dc_join_filter_offer(long long action,
     int count = 0;
     gint value = 0;
     gboolean ack_nack_bool = TRUE;
-    ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
-
-    const char *join_from = pcmk__xe_get(join_ack->msg, PCMK__XA_SRC);
-    const char *ref = pcmk__xe_get(join_ack->msg, PCMK_XA_REFERENCE);
-    const char *join_version = pcmk__xe_get(join_ack->msg,
-                                            PCMK_XA_CRM_FEATURE_SET);
+    ha_msg_input_t *join_ack = NULL;
+    const char *join_from = NULL;
+    const char *ref = NULL;
+    const char *join_version = NULL;
     pcmk__node_status_t *join_node = NULL;
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+    join_ack = msg_data->data;
+    join_from = pcmk__xe_get(join_ack->msg, PCMK__XA_SRC);
+    ref = pcmk__xe_get(join_ack->msg, PCMK_XA_REFERENCE);
+    join_version = pcmk__xe_get(join_ack->msg, PCMK_XA_CRM_FEATURE_SET);
 
     if (join_from == NULL) {
         crm_err("Ignoring invalid join request without node name");
@@ -705,8 +707,7 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
         }
 
         /* restart the whole join process */
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL,
-                               __func__);
+        register_fsa_error_adv(I_ELECTION_DC, NULL, NULL, __func__);
 
     } else if (!AM_I_DC) {
         crm_debug("Sync'ed CIB for join-%d but no longer DC", current_join_id);
@@ -747,7 +748,7 @@ join_node_state_commit_callback(xmlNode *msg, int call_id, int rc,
                  "failed: %s",
                  current_join_id, call_id, node, pcmk_strerror(rc));
         crm_log_xml_debug(msg, "failed");
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 
     crm_debug("join-%d node history update (via CIB call %d) for node %s "
@@ -764,20 +765,27 @@ do_dc_join_ack(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     int join_id = -1;
-    ha_msg_input_t *join_ack = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *join_ack = NULL;
+    const char *op = NULL;
+    char *join_from = NULL;
 
-    const char *op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
-    char *join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);
     pcmk__node_status_t *peer = NULL;
     enum controld_join_phase phase = controld_join_none;
 
     enum controld_section_e section = controld_section_lrm;
     char *xpath = NULL;
-    xmlNode *state = join_ack->xml;
+    xmlNode *state = NULL;
     xmlNode *execd_state = NULL;
 
     cib_t *cib = controld_globals.cib_conn;
     int rc = pcmk_ok;
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+    join_ack = msg_data->data;
+    op = pcmk__xe_get(join_ack->msg, PCMK__XA_CRM_TASK);
+    join_from = pcmk__xe_get_copy(join_ack->msg, PCMK__XA_SRC);
+    state = join_ack->xml;
 
     // Sanity checks
     if (join_from == NULL) {
@@ -888,7 +896,7 @@ done:
     if (rc != pcmk_ok) {
         crm_crit("join-%d node history update for node %s failed: %s",
                  current_join_id, join_from, pcmk_strerror(rc));
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
     free(join_from);
     free(xpath);
@@ -999,7 +1007,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         if (highest_seq < controld_globals.peer_seq) {
             /* Don't spam the FSA with duplicates */
             highest_seq = controld_globals.peer_seq;
-            register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_NODE_JOIN, NULL);
         }
 
     } else if (cur_state == S_INTEGRATION) {
@@ -1010,7 +1018,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
                       QB_XS " state=%s for=%s",
                       current_join_id, count, pcmk__plural_s(count),
                       fsa_state2string(cur_state), source);
-            register_fsa_input_before(C_FSA_INTERNAL, I_INTEGRATED, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_INTEGRATED, NULL);
             return TRUE;
         }
 
@@ -1051,7 +1059,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
         } else {
             crm_debug("join-%d: Complete " QB_XS " state=%s for=%s",
                       current_join_id, fsa_state2string(cur_state), source);
-            register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
+            controld_fsa_append(C_FSA_INTERNAL, I_FINALIZED, NULL);
             return TRUE;
         }
     }

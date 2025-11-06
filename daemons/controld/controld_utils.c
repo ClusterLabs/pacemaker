@@ -59,9 +59,6 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_NULL:
             inputAsText = "I_NULL";
             break;
-        case I_CIB_UPDATE:
-            inputAsText = "I_CIB_UPDATE";
-            break;
         case I_DC_TIMEOUT:
             inputAsText = "I_DC_TIMEOUT";
             break;
@@ -104,17 +101,8 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_NOT_DC:
             inputAsText = "I_NOT_DC";
             break;
-        case I_RECOVERED:
-            inputAsText = "I_RECOVERED";
-            break;
-        case I_RELEASE_FAIL:
-            inputAsText = "I_RELEASE_FAIL";
-            break;
         case I_RELEASE_SUCCESS:
             inputAsText = "I_RELEASE_SUCCESS";
-            break;
-        case I_RESTART:
-            inputAsText = "I_RESTART";
             break;
         case I_PE_SUCCESS:
             inputAsText = "I_PE_SUCCESS";
@@ -134,23 +122,14 @@ fsa_input2string(enum crmd_fsa_input input)
         case I_STOP:
             inputAsText = "I_STOP";
             break;
-        case I_DC_HEARTBEAT:
-            inputAsText = "I_DC_HEARTBEAT";
-            break;
         case I_WAIT_FOR_EVENT:
             inputAsText = "I_WAIT_FOR_EVENT";
             break;
         case I_PENDING:
             inputAsText = "I_PENDING";
             break;
-        case I_HALT:
-            inputAsText = "I_HALT";
-            break;
         case I_TERMINATE:
             inputAsText = "I_TERMINATE";
-            break;
-        case I_ILLEGAL:
-            inputAsText = "I_ILLEGAL";
             break;
     }
 
@@ -206,12 +185,6 @@ fsa_state2string(enum crmd_fsa_state state)
             break;
         case S_STARTING:
             stateAsText = "S_STARTING";
-            break;
-        case S_HALT:
-            stateAsText = "S_HALT";
-            break;
-        case S_ILLEGAL:
-            stateAsText = "S_ILLEGAL";
             break;
     }
 
@@ -299,9 +272,6 @@ fsa_action2string(long long action)
             break;
         case A_LRM_CONNECT:
             actionAsText = "A_LRM_CONNECT";
-            break;
-        case A_LRM_INVOKE:
-            actionAsText = "A_LRM_INVOKE";
             break;
         case A_LRM_DISCONNECT:
             actionAsText = "A_LRM_DISCONNECT";
@@ -529,9 +499,6 @@ fsa_dump_actions(uint64_t action, const char *text)
     }
     if (pcmk__is_set(action, A_LRM_CONNECT)) {
         crm_trace("Action %.16" PRIx64 " (A_LRM_CONNECT) %s", A_LRM_CONNECT, text);
-    }
-    if (pcmk__is_set(action, A_LRM_INVOKE)) {
-        crm_trace("Action %.16" PRIx64 " (A_LRM_INVOKE) %s", A_LRM_INVOKE, text);
     }
     if (pcmk__is_set(action, A_LRM_DISCONNECT)) {
         crm_trace("Action %.16" PRIx64 " (A_LRM_DISCONNECT) %s", A_LRM_DISCONNECT, text);

@@ -22,7 +22,7 @@
 static void
 election_win_cb(pcmk_cluster_t *cluster)
 {
-    register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
+    controld_fsa_append(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
 }
 
 void
@@ -100,12 +100,8 @@ do_election_vote(long long action,
     }
 
     if (not_voting) {
-        if (AM_I_DC) {
-            register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
-
-        } else {
-            register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
-        }
+        controld_fsa_append(C_FSA_INTERNAL, (AM_I_DC? I_RELEASE_DC : I_PENDING),
+                            NULL);
         return;
     }
 
@@ -134,7 +130,7 @@ do_election_count_vote(long long action,
                        enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     enum election_result rc = 0;
-    ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
+    ha_msg_input_t *vote = NULL;
 
     if (pcmk__peer_cache == NULL) {
         if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
@@ -143,12 +139,15 @@ do_election_count_vote(long long action,
         return;
     }
 
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+    vote = msg_data->data;
+
     rc = election_count_vote(controld_globals.cluster, vote->msg,
                              (cur_state != S_STARTING));
     switch(rc) {
         case election_start:
             election_reset(controld_globals.cluster);
-            register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
+            controld_fsa_append(C_FSA_INTERNAL, I_ELECTION, NULL);
             break;
 
         case election_lost:
@@ -157,11 +156,11 @@ do_election_count_vote(long long action,
             if (pcmk__is_set(controld_globals.fsa_input_register, R_THE_DC)) {
                 cib_t *cib_conn = controld_globals.cib_conn;
 
-                register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
+                controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
                 cib_conn->cmds->set_secondary(cib_conn, cib_none);
 
             } else if (cur_state != S_STARTING) {
-                register_fsa_input(C_FSA_INTERNAL, I_PENDING, NULL);
+                controld_fsa_append(C_FSA_INTERNAL, I_PENDING, NULL);
             }
             break;
 
@@ -178,7 +177,7 @@ feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, vo
 
         crm_notice("Feature update failed: %s " QB_XS " rc=%d",
                    pcmk_strerror(rc), rc);
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 }
 
@@ -269,7 +268,7 @@ do_dc_release(long long action,
             fsa_cib_anon_update_discard_reply(PCMK_XE_STATUS, update);
             pcmk__xml_free(update);
         }
-        register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 
     } else {
         crm_err("Unknown DC action %s", fsa_action2string(action));

@@ -62,7 +62,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
 {
     const char *id = user_data;
 
-    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
+    register_fsa_error_adv(I_ERROR, NULL, NULL, __func__);
     CRM_CHECK(id != NULL, return);
 
     if (rc == pcmk_ok) {
@@ -155,7 +155,7 @@ handle_reply(pcmk_schedulerd_api_reply_t *reply)
 
         crm_data_node = pcmk__xe_create(fsa_input.msg, PCMK__XE_CRM_XML);
         pcmk__xml_copy(crm_data_node, reply->data.graph.tgraph);
-        register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
+        controld_fsa_append(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);
 
         pcmk__xml_free(fsa_input.msg);
 
@@ -236,7 +236,7 @@ do_pe_control(long long action,
 
         } else if (!new_schedulerd_ipc_connection()) {
             crm_warn("Could not connect to scheduler");
-            register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+            register_fsa_error(I_FAIL);
         }
     }
 }
@@ -341,7 +341,7 @@ do_pe_invoke(long long action,
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_PE_CONNECTED)) {
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             crm_err("Cannot shut down gracefully without the scheduler");
-            register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
+            controld_fsa_prepend(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
         } else {
             crm_info("Waiting for the scheduler to connect");
@@ -361,7 +361,7 @@ do_pe_invoke(long long action,
         crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
         /* start the join from scratch */
-        register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
+        controld_fsa_prepend(C_FSA_INTERNAL, I_ELECTION, NULL);
         return;
     }
     if (controld_cib_retry_timer != NULL) {
@@ -472,7 +472,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     if (rc != pcmk_ok) {
         crm_err("Could not retrieve the Cluster Information Base: %s "
                 QB_XS " rc=%d call=%d", pcmk_strerror(rc), rc, call_id);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
+        register_fsa_error_adv(I_ERROR, NULL, NULL, __func__);
         return;
 
     } else if (call_id != fsa_pe_query) {
@@ -524,7 +524,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         free(ref);
         crm_err("Could not contact the scheduler: %s " QB_XS " rc=%d",
                 pcmk_rc_str(rc), rc);
-        register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __func__);
+        register_fsa_error_adv(I_ERROR, NULL, NULL, __func__);
     } else {
         pcmk__assert(ref != NULL);
         controld_expect_sched_reply(ref);

@@ -123,15 +123,21 @@ do_te_invoke(long long action,
         }
 
     } else if (action & A_TE_INVOKE) {
-        ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-        xmlNode *graph_data = input->xml;
-        const char *ref = pcmk__xe_get(input->msg, PCMK_XA_REFERENCE);
-        const char *graph_input = pcmk__xe_get(input->msg,
-                                               PCMK__XA_CRM_TGRAPH_IN);
+        ha_msg_input_t *input = NULL;
+        xmlNode *graph_data = NULL;
+        const char *ref = NULL;
+        const char *graph_input = NULL;
+
+        pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+        input = msg_data->data;
+        graph_data = input->xml;
+        ref = pcmk__xe_get(input->msg, PCMK_XA_REFERENCE);
+        graph_input = pcmk__xe_get(input->msg, PCMK__XA_CRM_TGRAPH_IN);
 
         if (graph_data == NULL) {
             crm_log_xml_err(input->msg, "Bad command");
-            register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+            register_fsa_error(I_FAIL);
             return;
         }
 

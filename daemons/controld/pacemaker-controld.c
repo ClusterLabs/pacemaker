@@ -187,7 +187,7 @@ done:
     }
 
     // Initialize FSA
-    register_fsa_input(C_STARTUP, I_STARTUP, NULL);
+    controld_fsa_append(C_STARTUP, I_STARTUP, NULL);
     pcmk__cluster_init_node_caches();
     state = s_crmd_fsa(C_STARTUP);
     if ((state != S_PENDING) && (state != S_STARTING)) {

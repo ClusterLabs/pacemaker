@@ -51,7 +51,7 @@ lrm_connection_destroy(void)
 {
     if (pcmk__is_set(controld_globals.fsa_input_register, R_LRM_CONNECTED)) {
         crm_crit("Lost connection to local executor");
-        register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     }
 }
@@ -339,7 +339,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
             "%d time%s: %s", lrm_state->num_lrm_register_fails,
             pcmk__plural_s(lrm_state->num_lrm_register_fails),
             pcmk_rc_str(rc));
-    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+    register_fsa_error(I_ERROR);
 }
 
 /*	 A_LRM_CONNECT	*/
@@ -361,7 +361,7 @@ do_lrm_control(long long action,
     }
     lrm_state = controld_get_executor_state(NULL, true);
     if (lrm_state == NULL) {
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
         return;
     }
 
@@ -953,7 +953,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
              * remote node, which is not an FSA failure.
              */
             if (lrm_state_is_local(lrm_state) == TRUE) {
-                register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+                register_fsa_error(I_FAIL);
             }
             return rc;
         }
@@ -1386,23 +1386,24 @@ metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
     free_metadata_cb_data(data);
 }
 
-/*	 A_LRM_INVOKE	*/
 void
-do_lrm_invoke(long long action,
-              enum crmd_fsa_cause cause,
-              enum crmd_fsa_state cur_state,
-              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+controld_invoke_execd(fsa_data_t *msg_data)
 {
     lrm_state_t *lrm_state = NULL;
     const char *crm_op = NULL;
     const char *from_sys = NULL;
     const char *from_host = NULL;
     const char *operation = NULL;
-    ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
     const char *user_name = NULL;
-    const char *target_node = lrm_op_target(input->xml);
+    ha_msg_input_t *input = NULL;
+    const char *target_node = NULL;
     gboolean is_remote_node = FALSE;
     bool crm_rsc_delete = FALSE;
+
+    pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
+
+    input = msg_data->data;
+    target_node = lrm_op_target(input->xml);
 
     // Message routed to the local node is targeting a specific, non-local node
     is_remote_node = !controld_is_local_node(target_node);
@@ -1568,7 +1569,7 @@ do_lrm_invoke(long long action,
     } else {
         crm_err("Invalid execution request: unknown command '%s' (bug?)",
                 crm_op);
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+        register_fsa_error(I_ERROR);
     }
 }
 
@@ -1871,7 +1872,7 @@ should_nack_action(const char *action)
     if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)
         && pcmk__str_eq(action, PCMK_ACTION_START, pcmk__str_none)) {
 
-        register_fsa_input(C_SHUTDOWN, I_SHUTDOWN, NULL);
+        controld_fsa_append(C_SHUTDOWN, I_SHUTDOWN, NULL);
         return "Not attempting start due to shutdown in progress";
     }
 
@@ -2031,7 +2032,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
                        PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
-        register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+        register_fsa_error(I_FAIL);
 
     } else {
         crm_err("Could not initiate %s action for resource %s remotely on %s: "

@@ -409,15 +409,13 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         fsa_data_t msg = {
             .id = 0,
             .data = &data,
-            .data_type = fsa_dt_ha_msg,
             .fsa_input = I_NULL,
             .fsa_cause = C_FSA_INTERNAL,
-            .actions = A_LRM_INVOKE,
+            .actions = A_NOTHING,
             .origin = __func__,
         };
 
-        do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, controld_globals.fsa_state,
-                      I_NULL, &msg);
+        controld_invoke_execd(&msg);
 
     } else {
         const pcmk__node_status_t *node =
@@ -752,7 +750,7 @@ notify_crmd(pcmk__graph_t *graph)
     graph->completion_action = pcmk__graph_done;
 
     if (event != I_NULL) {
-        register_fsa_input(C_FSA_INTERNAL, event, NULL);
+        controld_fsa_append(C_FSA_INTERNAL, event, NULL);
     } else {
         controld_trigger_fsa();
     }
