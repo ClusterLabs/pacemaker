@@ -3230,7 +3230,7 @@ def build_options():
                                      description="Command line tool regression tests",
                                      epilog=f"Default tests: {' '.join(default_tests)}\n"
                                      "Other tests: agents (must be run in an installed environment)")
-    parser.add_argument("-j", "--jobs", metavar="JOBS", default=cpu_count() - 1, type=int,
+    parser.add_argument("-j", "--jobs", default=cpu_count() - 1, type=int,
                         help="The number of tests to run simultaneously")
     parser.add_argument("-p", "--path", metavar="DIR", action="append",
                         help="Look for executables in DIR (may be specified multiple times)")
