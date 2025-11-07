@@ -1,4 +1,8 @@
 #!@PYTHON@
+"""Helper that presents a Pacemaker-style interface for Linux-HA stonith plugins"""
+
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
 
 __copyright__ = "Copyright 2018-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
@@ -14,6 +18,7 @@ import subprocess
 if os.path.exists("@abs_top_srcdir@/python"):
     sys.path.insert(0, "@abs_top_srcdir@/python")
 
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
@@ -140,8 +145,7 @@ def parse_stdin_options(options):
             if name == "":
                 raise ValueError
         except ValueError:
-            print("parse error: illegal name in option %d" % nlines,
-                  file=sys.stderr)
+            print(f"parse error: illegal name in option {nlines}", file=sys.stderr)
             sys.exit(ExitStatus.INVALID_PARAM)
         value = value.lstrip()
 
@@ -231,7 +235,7 @@ def handle_result(options, status):
         message = "failed"
         exitcode = ExitStatus.ERROR
     if not options.quiet:
-        print("%s: %s %d" % (message, options.node, status))
+        print(f"{message}: {options.node} {status}")
     sys.exit(exitcode)
 
 
