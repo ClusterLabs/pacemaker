@@ -14,16 +14,17 @@
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/unittest_internal.h>
 
-#define DATE_S "2024-06-02"
+#define YEAR_S "2024"
+#define MONTH_S "06"
+#define DAY_S "02"
+#define DATE_S YEAR_S "-" MONTH_S "-" DAY_S
 
 #define HOUR_S "03"
 #define MINUTE_S "04"
 #define SECOND_S "05"
 #define TIME_S HOUR_S ":" MINUTE_S ":" SECOND_S
 
-#define OFFSET_S "+00:00"
-
-#define TEST_TIME pcmk__time_hr_new(DATE_S " " TIME_S " " OFFSET_S)
+#define DATE_TIME_S DATE_S " " TIME_S
 
 /*!
  * \internal
@@ -42,12 +43,21 @@ static void
 assert_hr_format(const char *format, const char *expected,
                  const char *alternate, int usec)
 {
-    pcmk__time_hr_t *hr = TEST_TIME;
+    crm_time_t *dt = crm_time_new(DATE_TIME_S);
+    pcmk__time_hr_t hr_dt = { 0, };
     char *result = NULL;
 
-    hr->useconds = usec;
-    result = pcmk__time_format_hr(format, hr);
-    pcmk__time_hr_free(hr);
+    assert_non_null(dt);
+
+    hr_dt.years = dt->years;
+    hr_dt.months = dt->months;
+    hr_dt.days = dt->days;
+    hr_dt.seconds = dt->seconds;
+    hr_dt.offset = dt->offset;
+    hr_dt.duration = dt->duration;
+    hr_dt.useconds = usec;
+
+    result = pcmk__time_format_hr(format, &hr_dt);
 
     if (expected == NULL) {
         assert_null(result);

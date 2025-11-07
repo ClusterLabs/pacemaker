@@ -69,16 +69,6 @@
         ((QB_ABS(usec) < QB_TIME_US_IN_SEC)     \
          && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
 
-// A date/time or duration
-struct crm_time_s {
-    int years;      // Calendar year (date/time) or number of years (duration)
-    int months;     // Number of months (duration only)
-    int days;       // Ordinal day of year (date/time) or number of days (duration)
-    int seconds;    // Seconds of day (date/time) or number of seconds (duration)
-    int offset;     // Seconds offset from UTC (date/time only)
-    bool duration;  // True if duration
-};
-
 static crm_time_t *parse_date(const char *date_str);
 
 static crm_time_t *
@@ -1960,22 +1950,6 @@ pcmk__time_hr_now(time_t *epoch)
     hr = time_to_hr(&dt);
     hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
     return hr;
-}
-
-pcmk__time_hr_t *
-pcmk__time_hr_new(const char *date_time)
-{
-    pcmk__time_hr_t *hr_dt = NULL;
-
-    if (date_time == NULL) {
-        hr_dt = pcmk__time_hr_now(NULL);
-    } else {
-        crm_time_t *dt = parse_date(date_time);
-
-        hr_dt = time_to_hr(dt);
-        crm_time_free(dt);
-    }
-    return hr_dt;
 }
 
 void
