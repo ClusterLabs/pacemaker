@@ -1,4 +1,8 @@
 #!@PYTHON@
+"""Helper that presents a Pacemaker-style interface for Linux-HA stonith plugins"""
+
+# pacemaker imports need to come after we modify sys.path, which pylint will complain about.
+# pylint: disable=wrong-import-position
 
 __copyright__ = "Copyright 2018-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
@@ -14,6 +18,7 @@ import subprocess
 if os.path.exists("@abs_top_srcdir@/python"):
     sys.path.insert(0, "@abs_top_srcdir@/python")
 
+# pylint: disable=comparison-of-constants,comparison-with-itself,condition-evals-to-constant
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
@@ -91,23 +96,19 @@ ACTIONS = [
 def parse_cli_options():
     """ Return parsed command-line options (as argparse namespace) """
 
-
     # Don't add standard help option, so we can format it how we want
     parser = argparse.ArgumentParser(add_help=False)
 
-    parser.add_argument("-t", dest="subagent", nargs=1, default="none",
-                        help="sub-agent")
+    parser.add_argument("-t", dest="subagent", default="none", help="sub-agent")
 
-    parser.add_argument("-n", dest="node", nargs=1, default="",
-                        help="name of target node")
+    parser.add_argument("-n", dest="node", default="", help="name of target node")
 
     # The help text here is consistent with the original version, though
     # perhaps all actions should be listed.
-    parser.add_argument("-o", dest="action", nargs=1, choices=ACTIONS,
-                        default="reset",
+    parser.add_argument("-o", dest="action", choices=ACTIONS, default="reset",
                         help="action: on | off | reset (default) | stat | hostlist")
 
-    parser.add_argument("-s", dest="command", nargs=1, default="stonith",
+    parser.add_argument("-s", dest="command", default="stonith",
                         help="stonith command")
 
     parser.add_argument("-q", dest="quiet", action="store_true",
@@ -134,7 +135,7 @@ def parse_stdin_options(options):
         if line == "" or line[0] == "#":
             continue
 
-        nlines = nlines + 1
+        nlines += 1
 
         # Parse option name and value (allow whitespace around equals sign)
         try:
@@ -143,15 +144,15 @@ def parse_stdin_options(options):
             if name == "":
                 raise ValueError
         except ValueError:
-            print("parse error: illegal name in option %d" % nlines,
-                  file=sys.stderr)
+            print(f"parse error: illegal name in option {nlines}", file=sys.stderr)
             sys.exit(ExitStatus.INVALID_PARAM)
+
         value = value.lstrip()
 
         if name == "plugin":
             options.subagent = value
 
-        elif name in [ "option", "action" ]:
+        elif name in ["option", "action"]:
             options.action = value
 
         elif name == "nodename":
@@ -161,43 +162,29 @@ def parse_stdin_options(options):
         elif name == "stonith":
             options.command = value
 
-        elif name != "agent": # agent is used by fenced
+        elif name != "agent":  # agent is used by fenced
             os.environ[name] = value
-
-
-def normalize_options(options):
-    """ Use string rather than list of one string """
-
-    if not hasattr(options.subagent, "strip"):
-        options.subagent = options.subagent[0]
-
-    if not hasattr(options.node, "strip"):
-        options.node = options.node[0]
-
-    if not hasattr(options.action, "strip"):
-        options.action = options.action[0]
-
-    if not hasattr(options.command, "strip"):
-        options.command = options.command[0]
 
 
 def build_command(options):
     """ Return command to execute (as list of arguments) """
 
-    if options.action in [ "hostlist", "list" ]:
-        extra_args = [ "-l" ]
+    if options.action in ["hostlist", "list"]:
+        extra_args = ["-l"]
 
-    elif options.action in [ "monitor", "stat", "status" ]:
-        extra_args = [ "-S" ]
+    elif options.action in ["monitor", "stat", "status"]:
+        extra_args = ["-S"]
 
     else:
         if options.node == "":
             if not options.quiet:
                 print("failed: no plug number")
-            sys.exit(ExitStatus.ERROR)
-        extra_args = [ "-T", options.action, options.node ]
 
-    return [ options.command, "-t", options.subagent, "-E" ] + extra_args
+            sys.exit(ExitStatus.ERROR)
+
+        extra_args = ["-T", options.action, options.node]
+
+    return [options.command, "-t", options.subagent, "-E"] + extra_args
 
 
 def handle_local_options(options):
@@ -217,7 +204,7 @@ def remap_action(options):
         print(META_DATA)
         sys.exit(ExitStatus.OK)
 
-    elif options.action in [ "hostlist", "list" ]:
+    elif options.action in ["hostlist", "list"]:
         options.quiet = True
 
     # Remap accepted aliases to their actual commands
@@ -237,6 +224,7 @@ def execute_command(options, cmd):
 
     if not options.quiet:
         print("Performing: " + " ".join(cmd))
+
     return subprocess.call(cmd)
 
 
@@ -249,8 +237,10 @@ def handle_result(options, status):
     else:
         message = "failed"
         exitcode = ExitStatus.ERROR
+
     if not options.quiet:
-        print("%s: %s %d" % (message, options.node, status))
+        print(f"{message}: {options.node} {status}")
+
     sys.exit(exitcode)
 
 
@@ -259,7 +249,6 @@ def main():
 
     options = parse_cli_options()
     handle_local_options(options)
-    normalize_options(options)
     parse_stdin_options(options)
     remap_action(options)
     cmd = build_command(options)
