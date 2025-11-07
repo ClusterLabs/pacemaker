@@ -96,7 +96,6 @@ ACTIONS = [
 def parse_cli_options():
     """ Return parsed command-line options (as argparse namespace) """
 
-
     # Don't add standard help option, so we can format it how we want
     parser = argparse.ArgumentParser(add_help=False)
 
@@ -152,7 +151,7 @@ def parse_stdin_options(options):
         if name == "plugin":
             options.subagent = value
 
-        elif name in [ "option", "action" ]:
+        elif name in ["option", "action"]:
             options.action = value
 
         elif name == "nodename":
@@ -162,27 +161,27 @@ def parse_stdin_options(options):
         elif name == "stonith":
             options.command = value
 
-        elif name != "agent": # agent is used by fenced
+        elif name != "agent":  # agent is used by fenced
             os.environ[name] = value
 
 
 def build_command(options):
     """ Return command to execute (as list of arguments) """
 
-    if options.action in [ "hostlist", "list" ]:
-        extra_args = [ "-l" ]
+    if options.action in ["hostlist", "list"]:
+        extra_args = ["-l"]
 
-    elif options.action in [ "monitor", "stat", "status" ]:
-        extra_args = [ "-S" ]
+    elif options.action in ["monitor", "stat", "status"]:
+        extra_args = ["-S"]
 
     else:
         if options.node == "":
             if not options.quiet:
                 print("failed: no plug number")
             sys.exit(ExitStatus.ERROR)
-        extra_args = [ "-T", options.action, options.node ]
+        extra_args = ["-T", options.action, options.node]
 
-    return [ options.command, "-t", options.subagent, "-E" ] + extra_args
+    return [options.command, "-t", options.subagent, "-E"] + extra_args
 
 
 def handle_local_options(options):
@@ -202,7 +201,7 @@ def remap_action(options):
         print(META_DATA)
         sys.exit(ExitStatus.OK)
 
-    elif options.action in [ "hostlist", "list" ]:
+    elif options.action in ["hostlist", "list"]:
         options.quiet = True
 
     # Remap accepted aliases to their actual commands
