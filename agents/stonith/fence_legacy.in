@@ -135,7 +135,7 @@ def parse_stdin_options(options):
         if line == "" or line[0] == "#":
             continue
 
-        nlines = nlines + 1
+        nlines += 1
 
         # Parse option name and value (allow whitespace around equals sign)
         try:
@@ -146,6 +146,7 @@ def parse_stdin_options(options):
         except ValueError:
             print(f"parse error: illegal name in option {nlines}", file=sys.stderr)
             sys.exit(ExitStatus.INVALID_PARAM)
+
         value = value.lstrip()
 
         if name == "plugin":
@@ -178,7 +179,9 @@ def build_command(options):
         if options.node == "":
             if not options.quiet:
                 print("failed: no plug number")
+
             sys.exit(ExitStatus.ERROR)
+
         extra_args = ["-T", options.action, options.node]
 
     return [options.command, "-t", options.subagent, "-E"] + extra_args
@@ -221,6 +224,7 @@ def execute_command(options, cmd):
 
     if not options.quiet:
         print("Performing: " + " ".join(cmd))
+
     return subprocess.call(cmd)
 
 
@@ -233,8 +237,10 @@ def handle_result(options, status):
     else:
         message = "failed"
         exitcode = ExitStatus.ERROR
+
     if not options.quiet:
         print(f"{message}: {options.node} {status}")
+
     sys.exit(exitcode)
 
 
