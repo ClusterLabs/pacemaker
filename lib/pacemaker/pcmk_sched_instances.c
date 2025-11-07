@@ -1079,18 +1079,22 @@ free_instance_list(const pcmk_resource_t *rsc, GList *list)
  * \internal
  * \brief Check whether an instance is compatible with a role and node
  *
- * \param[in] instance  Clone instance or bundle replica container
- * \param[in] node      Instance must match this node
- * \param[in] role      If not pcmk_role_unknown, instance must match this role
- * \param[in] current   If true, compare instance's original node and role,
- *                      otherwise compare assigned next node and role
+ * \param[in] instance       Clone instance or bundle replica container
+ * \param[in] node           Instance must match this node
+ * \param[in] role           If not pcmk_role_unknown, instance must match this role
+ * \param[in] current        If true, compare instance's original node and role,
+ *                           otherwise compare assigned next node and role
+ * \param[in] node_attribute If not NULL, instance's node must have the same value
+ *                           for this attribute as \p node (instead of requiring
+ *                           the exact same node)
  *
  * \return true if \p instance is compatible with \p node and \p role,
  *         otherwise false
  */
 bool
 pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
-                       enum rsc_role_e role, bool current)
+                       enum rsc_role_e role, bool current,
+                       const char *node_attribute)
 {
     pcmk_node_t *instance_node = NULL;
 
@@ -1123,7 +1127,25 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (!pcmk__same_node(instance_node, node)) {
+    if (node_attribute != NULL) {
+        // Compare by node attribute value instead of node identity
+        const char *instance_value = pcmk__colocation_node_attr(instance_node,
+                                                                node_attribute,
+                                                                instance);
+        const char *target_value = pcmk__colocation_node_attr(node,
+                                                              node_attribute,
+                                                              instance);
+
+        if (!pcmk__str_eq(instance_value, target_value, pcmk__str_casei)) {
+            pcmk__rsc_trace(instance,
+                            "%s is not a compatible instance "
+                            "(instance has %s=%s, target node has %s=%s)",
+                            instance->id, node_attribute,
+                            pcmk__s(instance_value, "<none>"),
+                            node_attribute, pcmk__s(target_value, "<none>"));
+            return false;
+        }
+    } else if (!pcmk__same_node(instance_node, node)) {
         pcmk__rsc_trace(instance,
                         "%s is not a compatible instance "
                         "(assigned to %s not %s)",
@@ -1142,12 +1164,14 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
  * \internal
  * \brief Find an instance that matches a given resource by node and role
  *
- * \param[in] match_rsc  Resource that instance must match (for logging only)
- * \param[in] rsc        Clone or bundle resource to check for matching instance
- * \param[in] node       Instance must match this node
- * \param[in] role       If not pcmk_role_unknown, instance must match this role
- * \param[in] current    If true, compare instance's original node and role,
- *                       otherwise compare assigned next node and role
+ * \param[in] match_rsc      Resource that instance must match (for logging only)
+ * \param[in] rsc            Clone or bundle resource to check for matching instance
+ * \param[in] node           Instance must match this node
+ * \param[in] role           If not pcmk_role_unknown, instance must match this role
+ * \param[in] current        If true, compare instance's original node and role,
+ *                           otherwise compare assigned next node and role
+ * \param[in] node_attribute If not NULL, match instances by this node attribute
+ *                           instead of by node identity
  *
  * \return \p rsc instance matching \p node and \p role if any, otherwise NULL
  */
@@ -1155,7 +1179,7 @@ static pcmk_resource_t *
 find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
                                  const pcmk_resource_t *rsc,
                                  const pcmk_node_t *node, enum rsc_role_e role,
-                                 bool current)
+                                 bool current, const char *node_attribute)
 {
     GList *instances = NULL;
 
@@ -1163,7 +1187,8 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
     for (GList *iter = instances; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        if (pcmk__instance_matches(instance, node, role, current)) {
+        if (pcmk__instance_matches(instance, node, role, current,
+                                   node_attribute)) {
             pcmk__rsc_trace(match_rsc,
                             "Found %s %s instance %s compatible with %s on %s",
                             display_role(role), rsc->id, instance->id,
@@ -1185,11 +1210,13 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
  * \internal
  * \brief Find a clone instance or bundle container compatible with a resource
  *
- * \param[in] match_rsc  Resource that instance must match
- * \param[in] rsc        Clone or bundle resource to check for matching instance
- * \param[in] role       If not pcmk_role_unknown, instance must match this role
- * \param[in] current    If true, compare instance's original node and role,
- *                       otherwise compare assigned next node and role
+ * \param[in] match_rsc      Resource that instance must match
+ * \param[in] rsc            Clone or bundle resource to check for matching instance
+ * \param[in] role           If not pcmk_role_unknown, instance must match this role
+ * \param[in] current        If true, compare instance's original node and role,
+ *                           otherwise compare assigned next node and role
+ * \param[in] node_attribute If not NULL, match instances by this node attribute
+ *                           instead of by node identity
  *
  * \return Compatible (by \p role and \p match_rsc location) instance of \p rsc
  *         if any, otherwise NULL
@@ -1197,7 +1224,7 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
 pcmk_resource_t *
 pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
                                const pcmk_resource_t *rsc, enum rsc_role_e role,
-                               bool current)
+                               bool current, const char *node_attribute)
 {
     pcmk_resource_t *instance = NULL;
     GList *nodes = NULL;
@@ -1213,7 +1240,7 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     node = match_rsc->priv->fns->location(match_rsc, NULL, target);
     if (node != NULL) {
         return find_compatible_instance_on_node(match_rsc, rsc, node, role,
-                                                current);
+                                                current, node_attribute);
     }
 
     // Otherwise check for an instance matching any of match_rsc's allowed nodes
@@ -1222,7 +1249,8 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
          iter = iter->next) {
         instance = find_compatible_instance_on_node(match_rsc, rsc,
                                                     (pcmk_node_t *) iter->data,
-                                                    role, current);
+                                                    role, current,
+                                                    node_attribute);
     }
 
     if (instance == NULL) {
@@ -1436,7 +1464,7 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
         first_instance = pcmk__find_compatible_instance(then_instance,
                                                         first->rsc,
                                                         pcmk_role_unknown,
-                                                        current);
+                                                        current, NULL);
 
         if (first_instance == NULL) { // No instance can be interleaved
             if (unassign_if_mandatory(first, then, then_instance, type,

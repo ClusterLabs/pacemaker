@@ -1333,7 +1333,8 @@ pcmk__update_promotable_dependent_priority(const pcmk_resource_t *primary,
     // Look for a primary instance where dependent will be
     primary_instance = pcmk__find_compatible_instance(dependent, primary,
                                                       colocation->primary_role,
-                                                      false);
+                                                      false,
+                                                      colocation->node_attribute);
 
     if (primary_instance != NULL) {
         // Add primary instance's priority to dependent's

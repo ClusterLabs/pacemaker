@@ -941,13 +941,14 @@ void pcmk__create_instance_actions(pcmk_resource_t *rsc, GList *instances);
 G_GNUC_INTERNAL
 bool pcmk__instance_matches(const pcmk_resource_t *instance,
                             const pcmk_node_t *node, enum rsc_role_e role,
-                            bool current);
+                            bool current, const char *node_attribute);
 
 G_GNUC_INTERNAL
 pcmk_resource_t *pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
                                                 const pcmk_resource_t *rsc,
                                                 enum rsc_role_e role,
-                                                bool current);
+                                                bool current,
+                                                const char *node_attribute);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__instance_update_ordered_actions(pcmk_action_t *first,
