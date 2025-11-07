@@ -95,19 +95,16 @@ def parse_cli_options():
     # Don't add standard help option, so we can format it how we want
     parser = argparse.ArgumentParser(add_help=False)
 
-    parser.add_argument("-t", dest="subagent", nargs=1, default="none",
-                        help="sub-agent")
+    parser.add_argument("-t", dest="subagent", default="none", help="sub-agent")
 
-    parser.add_argument("-n", dest="node", nargs=1, default="",
-                        help="name of target node")
+    parser.add_argument("-n", dest="node", default="", help="name of target node")
 
     # The help text here is consistent with the original version, though
     # perhaps all actions should be listed.
-    parser.add_argument("-o", dest="action", nargs=1, choices=ACTIONS,
-                        default="reset",
+    parser.add_argument("-o", dest="action", choices=ACTIONS, default="reset",
                         help="action: on | off | reset (default) | stat | hostlist")
 
-    parser.add_argument("-s", dest="command", nargs=1, default="stonith",
+    parser.add_argument("-s", dest="command", default="stonith",
                         help="stonith command")
 
     parser.add_argument("-q", dest="quiet", action="store_true",
@@ -163,22 +160,6 @@ def parse_stdin_options(options):
 
         elif name != "agent": # agent is used by fenced
             os.environ[name] = value
-
-
-def normalize_options(options):
-    """ Use string rather than list of one string """
-
-    if not hasattr(options.subagent, "strip"):
-        options.subagent = options.subagent[0]
-
-    if not hasattr(options.node, "strip"):
-        options.node = options.node[0]
-
-    if not hasattr(options.action, "strip"):
-        options.action = options.action[0]
-
-    if not hasattr(options.command, "strip"):
-        options.command = options.command[0]
 
 
 def build_command(options):
@@ -259,7 +240,6 @@ def main():
 
     options = parse_cli_options()
     handle_local_options(options)
-    normalize_options(options)
     parse_stdin_options(options)
     remap_action(options)
     cmd = build_command(options)
