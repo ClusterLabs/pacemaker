@@ -1910,42 +1910,6 @@ crm_time_add_years(crm_time_t * a_time, int extra)
  *       crm_time_t, pcmk__time_hr_t, and struct timespec (in lrmd_cmd_t).
  */
 
-/*!
- * \internal
- * \brief Return the current time as a high-resolution time
- *
- * \param[out] epoch  If not NULL, this will be set to seconds since epoch
- *
- * \return Newly allocated high-resolution time set to the current time
- *
- * \note The return value is guaranteed not to be \c NULL.
- * \note The caller is responsible for freeing the return value using \c free().
- */
-pcmk__time_hr_t *
-pcmk__time_hr_now(time_t *epoch)
-{
-    struct timespec tv = { 0, };
-    crm_time_t dt = { 0, };
-    pcmk__time_hr_t *hr = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
-
-    qb_util_timespec_from_epoch_get(&tv);
-
-    if (epoch != NULL) {
-        *epoch = tv.tv_sec;
-    }
-
-    crm_time_set_timet(&dt, &(tv.tv_sec));
-
-    hr->years = dt.years;
-    hr->months = dt.months;
-    hr->days = dt.days;
-    hr->seconds = dt.seconds;
-    hr->offset = dt.offset;
-    hr->duration = dt.duration;
-    hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
-    return hr;
-}
-
 static void
 ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
