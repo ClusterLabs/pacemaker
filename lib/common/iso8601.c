@@ -151,12 +151,7 @@ crm_time_free(crm_time_t * dt)
 static int
 year_days(int year)
 {
-    int d = 365;
-
-    if (crm_time_leapyear(year)) {
-        d++;
-    }
-    return d;
+    return crm_time_leapyear(year)? 366 : 365;
 }
 
 /* From http://myweb.ecu.edu/mccartyr/ISOwdALG.txt :
@@ -1788,8 +1783,6 @@ crm_time_add_seconds(crm_time_t *a_time, int extra)
     crm_time_add_days(a_time, days);
 }
 
-#define ydays(t) (crm_time_leapyear((t)->years)? 366 : 365)
-
 /*!
  * \brief Add days to a date/time
  *
@@ -1804,12 +1797,13 @@ crm_time_add_days(crm_time_t *a_time, int extra)
     crm_trace("Adding %d days to %.4d-%.3d", extra, a_time->years, a_time->days);
 
     if (extra > 0) {
-        while ((a_time->days + (long long) extra) > ydays(a_time)) {
+        while ((a_time->days + (long long) extra) > year_days(a_time->years)) {
             if ((a_time->years + 1LL) > INT_MAX) {
-                a_time->days = ydays(a_time); // Clip to latest we can handle
+                // Clip to latest we can handle
+                a_time->days = year_days(a_time->years);
                 return;
             }
-            extra -= ydays(a_time);
+            extra -= year_days(a_time->years);
             a_time->years++;
         }
     } else if (extra < 0) {
@@ -1821,7 +1815,7 @@ crm_time_add_days(crm_time_t *a_time, int extra)
                 return;
             }
             a_time->years--;
-            extra += ydays(a_time);
+            extra += year_days(a_time->years);
         }
     }
     a_time->days += extra;
