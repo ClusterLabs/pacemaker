@@ -1947,7 +1947,7 @@ pcmk__time_hr_now(time_t *epoch)
 }
 
 static void
-ha_get_tm_time(struct tm *target, const pcmk__time_hr_t *source)
+ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
     *target = (struct tm) {
         .tm_year = source->years - 1900,
@@ -2036,7 +2036,8 @@ get_g_date_time(const struct tm *tm, int offset)
  * \param[in] format  Date/time format string compatible with
  *                    \c g_date_time_format(), with additional support for
  *                    \c "%N" for fractional seconds
- * \param[in] hr_dt   Time value to format
+ * \param[in] dt      Time value to format (at seconds resolution)
+ * \param[in] usec    Microseconds to add to \p dt when formatting
  *
  * \return Newly allocated string with formatted string, or \c NULL on error
  *
@@ -2045,7 +2046,7 @@ get_g_date_time(const struct tm *tm, int offset)
  *       in a future release.
  */
 char *
-pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
+pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec)
 {
     int scanned_pos = 0; // How many characters of format have been parsed
     int printed_pos = 0; // How many characters of format have been processed
@@ -2061,8 +2062,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 
     buf = g_string_sized_new(128);
 
-    ha_get_tm_time(&tm, hr_dt);
-    gdt = get_g_date_time(&tm, hr_dt->offset);
+    ha_get_tm_time(&tm, dt);
+    gdt = get_g_date_time(&tm, dt->offset);
     if (gdt == NULL) {
         goto done;
     }
@@ -2187,7 +2188,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
              * our microseconds value by 10^0 == 1, which is powers[6 - 1].
              */
             g_string_append_printf(buf, "%0*d", frac_digits,
-                                   hr_dt->useconds / powers[frac_digits - 1]);
+                                   usec / powers[frac_digits - 1]);
         }
     }
 

@@ -126,8 +126,14 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
     bool any_success = false;
     bool any_failure = false;
     const char *kind_s = pcmk__alert_flag2text(kind);
-    pcmk__time_hr_t *now = NULL;
-    time_t epoch = 0;
+
+    struct timespec now_tv = { 0, };
+    crm_time_t now_dt = { 0, };
+    int now_usec = 0;
+
+    qb_util_timespec_from_epoch_get(&now_tv);
+    crm_time_set_timet(&now_dt, &(now_tv.tv_sec));
+    now_usec = now_tv.tv_nsec / QB_TIME_NS_IN_USEC;
 
     params = alert_key2param(params, PCMK__alert_key_kind, kind_s);
     params = alert_key2param(params, PCMK__alert_key_version,
@@ -153,9 +159,6 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
             continue;
         }
 
-        if (now == NULL) {
-            now = pcmk__time_hr_now(&epoch);
-        }
         crm_info("Sending %s alert via %s to %s",
                  kind_s, entry->id, entry->recipient);
 
@@ -170,19 +173,19 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         copy_params = alert_key2param(copy_params, PCMK__alert_key_recipient,
                                       entry->recipient);
 
-        str = pcmk__time_format_hr(entry->tstamp_format, now);
+        str = pcmk__time_format_hr(entry->tstamp_format, &now_dt, now_usec);
         if (str != NULL) {
             copy_params = alert_key2param(copy_params,
                                           PCMK__alert_key_timestamp, str);
             free(str);
         }
 
-        str = pcmk__assert_asprintf("%lld", (long long) epoch);
+        str = pcmk__assert_asprintf("%lld", (long long) now_tv.tv_sec);
         copy_params = alert_key2param(copy_params,
                                       PCMK__alert_key_timestamp_epoch, str);
         free(str);
 
-        str = pcmk__assert_asprintf("%06d", now->useconds);
+        str = pcmk__assert_asprintf("%06d", now_usec);
         copy_params = alert_key2param(copy_params,
                                       PCMK__alert_key_timestamp_usec, str);
         free(str);
@@ -199,8 +202,6 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
             any_success = true;
         }
     }
-
-    free(now);
 
     if (any_failure) {
         return (any_success? -1 : -2);
