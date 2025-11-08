@@ -1910,23 +1910,6 @@ crm_time_add_years(crm_time_t * a_time, int extra)
  *       crm_time_t, pcmk__time_hr_t, and struct timespec (in lrmd_cmd_t).
  */
 
-static pcmk__time_hr_t *
-time_to_hr(const crm_time_t *dt)
-{
-    pcmk__time_hr_t *hr_dt = NULL;
-
-    pcmk__assert(dt != NULL);
-
-    hr_dt = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
-    hr_dt->years = dt->years;
-    hr_dt->months = dt->months;
-    hr_dt->days = dt->days;
-    hr_dt->seconds = dt->seconds;
-    hr_dt->offset = dt->offset;
-    hr_dt->duration = dt->duration;
-    return hr_dt;
-}
-
 /*!
  * \internal
  * \brief Return the current time as a high-resolution time
@@ -1938,16 +1921,24 @@ time_to_hr(const crm_time_t *dt)
 pcmk__time_hr_t *
 pcmk__time_hr_now(time_t *epoch)
 {
-    struct timespec tv;
-    crm_time_t dt;
-    pcmk__time_hr_t *hr;
+    struct timespec tv = { 0, };
+    crm_time_t dt = { 0, };
+    pcmk__time_hr_t *hr = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
 
     qb_util_timespec_from_epoch_get(&tv);
+
     if (epoch != NULL) {
         *epoch = tv.tv_sec;
     }
+
     crm_time_set_timet(&dt, &(tv.tv_sec));
-    hr = time_to_hr(&dt);
+
+    hr->years = dt.years;
+    hr->months = dt.months;
+    hr->days = dt.days;
+    hr->seconds = dt.seconds;
+    hr->offset = dt.offset;
+    hr->duration = dt.duration;
     hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
     return hr;
 }
