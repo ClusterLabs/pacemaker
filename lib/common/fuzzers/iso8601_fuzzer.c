@@ -35,7 +35,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     now = pcmk__time_hr_now(&epoch);
     result = pcmk__time_format_hr(ns, now);
-    pcmk__time_hr_free(now);
+    free(now);
     free(result);
 
     free(ns);

@@ -1917,6 +1917,8 @@ crm_time_add_years(crm_time_t * a_time, int extra)
  * \param[out] epoch  If not NULL, this will be set to seconds since epoch
  *
  * \return Newly allocated high-resolution time set to the current time
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
  */
 pcmk__time_hr_t *
 pcmk__time_hr_now(time_t *epoch)
@@ -1941,12 +1943,6 @@ pcmk__time_hr_now(time_t *epoch)
     hr->duration = dt.duration;
     hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
     return hr;
-}
-
-void
-pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
-{
-    free(hr_dt);
 }
 
 static void
