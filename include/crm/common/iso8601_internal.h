@@ -20,7 +20,15 @@
 extern "C" {
 #endif
 
-typedef struct pcmk__time_us pcmk__time_hr_t;
+typedef struct {
+    int years;
+    int months;     // Only for durations
+    int days;
+    int seconds;
+    int offset;     // In seconds
+    bool duration;
+    int useconds;
+} pcmk__time_hr_t;
 
 pcmk__time_hr_t *pcmk__time_hr_now(time_t *epoch);
 void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
@@ -49,16 +57,6 @@ struct crm_time_s {
 
     // True if duration
     bool duration;
-};
-
-struct pcmk__time_us {
-    int years;
-    int months;                 /* Only for durations */
-    int days;
-    int seconds;
-    int offset;                 /* Seconds */
-    bool duration;
-    int useconds;
 };
 
 #ifdef __cplusplus
