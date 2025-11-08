@@ -123,7 +123,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
                 enum pcmk__alert_flags kind, const char *attr_name,
                 lrmd_key_value_t *params)
 {
-    bool any_success = FALSE, any_failure = FALSE;
+    bool any_success = false;
+    bool any_failure = false;
     const char *kind_s = pcmk__alert_flag2text(kind);
     pcmk__time_hr_t *now = NULL;
     time_t epoch = 0;
@@ -132,12 +133,11 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
     params = alert_key2param(params, PCMK__alert_key_version,
                              PACEMAKER_VERSION);
 
-    for (const GList *iter = alert_list;
-         iter != NULL; iter = g_list_next(iter)) {
-        const pcmk__alert_t *entry = (pcmk__alert_t *) (iter->data);
+    for (const GList *iter = alert_list; iter != NULL; iter = iter->next) {
+        const pcmk__alert_t *entry = iter->data;
         lrmd_key_value_t *copy_params = NULL;
-        lrmd_key_value_t *head = NULL;
-        int rc;
+        char *str = NULL;
+        int rc = pcmk_ok;
 
         if (!pcmk__is_set(entry->flags, kind)) {
             crm_trace("Filtering unwanted %s alert to %s via %s",
@@ -160,35 +160,32 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
                  kind_s, entry->id, entry->recipient);
 
         /* Make a copy of the parameters, because each alert will be unique */
-        for (head = params; head != NULL; head = head->next) {
-            copy_params = lrmd_key_value_add(copy_params, head->key, head->value);
+        for (const lrmd_key_value_t *param = params; param != NULL;
+             param = param->next) {
+
+            copy_params = lrmd_key_value_add(copy_params, param->key,
+                                             param->value);
         }
 
         copy_params = alert_key2param(copy_params, PCMK__alert_key_recipient,
                                       entry->recipient);
 
-        if (now) {
-            char *timestamp = pcmk__time_format_hr(entry->tstamp_format, now);
-            char *timestamp_epoch = pcmk__assert_asprintf("%lld",
-                                                          (long long) epoch);
-            char *timestamp_usec = pcmk__assert_asprintf("%06d", now->useconds);
-
-            if (timestamp) {
-                copy_params = alert_key2param(copy_params,
-                                              PCMK__alert_key_timestamp,
-                                              timestamp);
-                free(timestamp);
-            }
-
+        str = pcmk__time_format_hr(entry->tstamp_format, now);
+        if (str != NULL) {
             copy_params = alert_key2param(copy_params,
-                                          PCMK__alert_key_timestamp_epoch,
-                                          timestamp_epoch);
-            copy_params = alert_key2param(copy_params,
-                                          PCMK__alert_key_timestamp_usec,
-                                          timestamp_usec);
-            free(timestamp_epoch);
-            free(timestamp_usec);
+                                          PCMK__alert_key_timestamp, str);
+            free(str);
         }
+
+        str = pcmk__assert_asprintf("%lld", (long long) epoch);
+        copy_params = alert_key2param(copy_params,
+                                      PCMK__alert_key_timestamp_epoch, str);
+        free(str);
+
+        str = pcmk__assert_asprintf("%06d", now->useconds);
+        copy_params = alert_key2param(copy_params,
+                                      PCMK__alert_key_timestamp_usec, str);
+        free(str);
 
         copy_params = alert_envvar2params(copy_params, entry);
 
@@ -197,15 +194,13 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         if (rc < 0) {
             crm_err("Could not execute alert %s: %s " QB_XS " rc=%d",
                     entry->id, pcmk_strerror(rc), rc);
-            any_failure = TRUE;
+            any_failure = true;
         } else {
-            any_success = TRUE;
+            any_success = true;
         }
     }
 
-    if (now) {
-        free(now);
-    }
+    free(now);
 
     if (any_failure) {
         return (any_success? -1 : -2);

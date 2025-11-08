@@ -1918,6 +1918,7 @@ crm_time_add_years(crm_time_t * a_time, int extra)
  *
  * \return Newly allocated high-resolution time set to the current time
  *
+ * \note The return value is guaranteed not to be \c NULL.
  * \note The caller is responsible for freeing the return value using \c free().
  */
 pcmk__time_hr_t *
