@@ -1902,14 +1902,6 @@ crm_time_add_years(crm_time_t * a_time, int extra)
     }
 }
 
-/* The high-resolution variant of time object was added to meet an immediate
- * need, and is kept internal API.
- *
- * @TODO The long-term goal is to come up with a clean, unified design for a
- *       time type (or types) that meets all the various needs, to replace
- *       crm_time_t, pcmk__time_hr_t, and struct timespec (in lrmd_cmd_t).
- */
-
 static void
 ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
