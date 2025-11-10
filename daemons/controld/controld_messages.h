@@ -33,18 +33,6 @@ void register_fsa_input_adv(enum crmd_fsa_cause cause,
 
 extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 
-#define controld_fsa_stall(cur_data, action) do {                           \
-        enum crmd_fsa_cause cause = C_FSA_INTERNAL;                         \
-        ha_msg_input_t *data = NULL;                                        \
-                                                                            \
-        if (cur_data != NULL) {                                             \
-            cause = cur_data->fsa_cause;                                    \
-            data = cur_data->data;                                          \
-        }                                                                   \
-        register_fsa_input_adv(cause, I_WAIT_FOR_EVENT, data, action, true, \
-                               __func__);                                   \
-    } while (0);
-
 /*!
  * \internal
  * \brief Append an input to the FSA message queue without actions
@@ -66,6 +54,12 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
  */
 #define controld_fsa_prepend(cause, input, data)    \
     register_fsa_input_adv(cause, input, data, A_NOTHING, true, __func__)
+
+void controld_fsa_stall_as(const char *function, fsa_data_t *cur_data,
+                           uint64_t with_actions);
+
+#define controld_fsa_stall(cur_data, with_actions)  \
+    controld_fsa_stall_as(__func__, (cur_data), (with_actions));
 
 void delete_fsa_input(fsa_data_t * fsa_data);
 

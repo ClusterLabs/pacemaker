@@ -166,6 +166,21 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 }
 
+void
+controld_fsa_stall_as(const char *function, fsa_data_t *cur_data,
+                      uint64_t with_actions)
+{
+    enum crmd_fsa_cause cause = C_FSA_INTERNAL;
+    ha_msg_input_t *data = NULL;
+
+    if (cur_data != NULL) {
+        cause = cur_data->fsa_cause;
+        data = cur_data->data;
+    }
+    register_fsa_input_adv(cause, I_WAIT_FOR_EVENT, data, with_actions, true,
+                           function);
+}
+
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t * orig)
 {
