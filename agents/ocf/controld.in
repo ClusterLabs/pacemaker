@@ -94,16 +94,9 @@ This option is advanced use only.
 </parameter>
 
 <parameter name="allow_stonith_disabled">
-<longdesc lang="en">
-Allow DLM start-up even if STONITH/fencing is disabled in the cluster.
-
-Setting this option to true will cause cluster malfunction and hangs on
-fail-over for DLM clients that require fencing (such as GFS2, OCFS2, and
-cLVM2).
-
-This option is advanced use only.
-</longdesc>
-<shortdesc lang="en">Allow start-up even without STONITH/fencing</shortdesc>
+<deprecated><replaced-with name="allow_fencing_disabled"/></deprecated>
+<longdesc lang="en">Deprecated</longdesc>
+<shortdesc lang="en">Deprecated</shortdesc>
 <content type="string" default="false" />
 </parameter>
 
