@@ -113,7 +113,7 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Peer cancelled", NULL);
         if (!controld_globals.transition_graph->complete) {
-            controld_fsa_stall(false, action);
+            controld_fsa_stall(msg_data, action);
         }
         return;
     }
@@ -122,7 +122,7 @@ do_te_invoke(long long action, enum crmd_fsa_cause cause,
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_wait, "Peer halt",
                          NULL);
         if (!controld_globals.transition_graph->complete) {
-            controld_fsa_stall(false, action);
+            controld_fsa_stall(msg_data, action);
         }
         return;
     }

@@ -330,7 +330,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
                  pcmk__plural_s(lrm_state->num_lrm_register_fails),
                  MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
         controld_start_wait_timer();
-        controld_fsa_stall(false, action);
+        controld_fsa_stall(msg_data, action);
         return;
     }
 
@@ -368,7 +368,7 @@ do_lrm_control(long long action, enum crmd_fsa_cause cause,
         if (!lrm_state_verify_stopped(lrm_state, cur_state, LOG_INFO)
             && (action == A_LRM_DISCONNECT)) {
 
-            controld_fsa_stall(false, action);
+            controld_fsa_stall(msg_data, action);
             return;
         }
 

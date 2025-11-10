@@ -33,13 +33,13 @@ void register_fsa_input_adv(enum crmd_fsa_cause cause,
 
 extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 
-#define controld_fsa_stall(suppress, action) do {                           \
+#define controld_fsa_stall(cur_data, action) do {                           \
         enum crmd_fsa_cause cause = C_FSA_INTERNAL;                         \
         ha_msg_input_t *data = NULL;                                        \
                                                                             \
-        if (!suppress && (msg_data != NULL)) {                              \
-            cause = msg_data->fsa_cause;                                    \
-            data = msg_data->data;                                          \
+        if (cur_data != NULL) {                                             \
+            cause = cur_data->fsa_cause;                                    \
+            data = cur_data->data;                                          \
         }                                                                   \
         register_fsa_input_adv(cause, I_WAIT_FOR_EVENT, data, action, true, \
                                __func__);                                   \

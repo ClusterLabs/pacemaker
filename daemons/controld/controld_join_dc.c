@@ -633,7 +633,7 @@ do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
         crm_warn("Delaying join-%d finalization while transition in progress",
                  current_join_id);
         crmd_join_phase_log(LOG_DEBUG);
-        controld_fsa_stall(false, action);
+        controld_fsa_stall(msg_data, action);
         return;
     }
 

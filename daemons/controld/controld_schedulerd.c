@@ -338,7 +338,7 @@ do_pe_invoke(long long action, enum crmd_fsa_cause cause,
 
         } else {
             crm_info("Waiting for the scheduler to connect");
-            controld_fsa_stall(false, action);
+            controld_fsa_stall(msg_data, action);
             controld_set_fsa_action_flags(A_PE_START);
             controld_trigger_fsa();
         }
