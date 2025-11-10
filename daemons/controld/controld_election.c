@@ -163,12 +163,13 @@ feature_update_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
                         void *user_data)
 {
     rc = pcmk_legacy2rc(rc);
-
-    if (rc != pcmk_rc_ok) {
-        crm_notice("Feature set update failed: %s " QB_XS " rc=%d",
-                   pcmk_rc_str(rc), rc);
-        register_fsa_error(I_ERROR, NULL);
+    if (rc == pcmk_rc_ok) {
+        return;
     }
+
+    crm_notice("Feature set update failed: %s " QB_XS " rc=%d", pcmk_rc_str(rc),
+               rc);
+    register_fsa_error(I_ERROR, NULL);
 }
 
 /*!
