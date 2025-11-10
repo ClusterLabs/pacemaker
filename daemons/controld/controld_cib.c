@@ -139,7 +139,7 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
 
             crm_info("Waiting for resource update %d to complete",
                      pending_rsc_update);
-            crmd_fsa_stall(false);
+            controld_fsa_stall(false, action);
             return;
         }
         controld_disconnect_cib_manager();
@@ -188,7 +188,7 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
             crm_warn("Couldn't complete CIB registration %d times... "
                      "pause and retry", cib_retries);
             controld_start_wait_timer();
-            crmd_fsa_stall(false);
+            controld_fsa_stall(false, action);
 
         } else {
             crm_err("Could not complete CIB registration %d times... "

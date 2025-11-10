@@ -307,7 +307,6 @@ lrm_op_callback(lrmd_event_data_t * op)
     }
 }
 
-// action argument is for crmd_fsa_stall() macro
 static void
 try_local_executor_connect(long long action, fsa_data_t *msg_data,
                            lrm_state_t *lrm_state)
@@ -331,7 +330,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
                  pcmk__plural_s(lrm_state->num_lrm_register_fails),
                  MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
         controld_start_wait_timer();
-        crmd_fsa_stall(false);
+        controld_fsa_stall(false, action);
         return;
     }
 
@@ -369,7 +368,7 @@ do_lrm_control(long long action, enum crmd_fsa_cause cause,
         if (!lrm_state_verify_stopped(lrm_state, cur_state, LOG_INFO)
             && (action == A_LRM_DISCONNECT)) {
 
-            crmd_fsa_stall(false);
+            controld_fsa_stall(false, action);
             return;
         }
 
