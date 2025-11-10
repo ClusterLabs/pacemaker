@@ -22,8 +22,11 @@
 
 # Explicitly list all environment variables used, to make static analysis happy
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
-: ${OCF_RESKEY_allow_stonith_disabled:="false"}
-: ${OCF_RESKEY_sctp:="false"}
+
+# @COMPAT Drop first line when we drop allow_stonith_disabled support
+: ${OCF_RESKEY_allow_fencing_disabled:=$OCF_RESKEY_allow_stonith_disabled}
+: ${OCF_RESKEY_allow_fencing_disabled:="false"}
+
 : ${OCF_RESOURCE_INSTANCE:=""}
 
 case "$OCF_RESOURCE_INSTANCE" in
@@ -74,6 +77,20 @@ The daemon to start - supports dlm_controld
 </longdesc>
 <shortdesc lang="en">The daemon to start</shortdesc>
 <content type="string" default="dlm_controld" />
+</parameter>
+
+<parameter name="allow_fencing_disabled">
+<longdesc lang="en">
+Allow DLM start-up even if fencing is disabled in the cluster.
+
+Setting this option to true will cause cluster malfunction and hangs on
+fail-over for DLM clients that require fencing (such as GFS2, OCFS2, and
+cLVM2).
+
+This option is advanced use only.
+</longdesc>
+<shortdesc lang="en">Allow start-up even without fencing</shortdesc>
+<content type="string" default="false" />
 </parameter>
 
 <parameter name="allow_stonith_disabled">
@@ -173,7 +190,7 @@ controld_start() {
                         | xmllint --xpath 'string(/*/@no-quorum-policy)' -)"
 
     if ! ocf_is_true "$fencing_enabled" \
-        && ! ocf_is_true "$OCF_RESKEY_allow_stonith_disabled"; then
+        && ! ocf_is_true "$OCF_RESKEY_allow_fencing_disabled"; then
 
         ocf_log err "The cluster property fencing-enabled may not be deactivated to use the DLM"
         return $OCF_ERR_CONFIGURED
