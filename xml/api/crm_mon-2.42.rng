@@ -110,6 +110,7 @@
             <optional>
                 <element name="cluster_options">
                     <attribute name="fencing-enabled"> <data type="boolean" /> </attribute>
+                    <attribute name="fencing-timeout-ms"> <data type="integer" /> </attribute>
                     <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
                     <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
                     <attribute name="no-quorum-policy"> <text /> </attribute>
