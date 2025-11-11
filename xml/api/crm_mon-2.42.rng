@@ -111,13 +111,15 @@
                 <element name="cluster_options">
                     <attribute name="fencing-enabled"> <data type="boolean" /> </attribute>
                     <attribute name="fencing-timeout-ms"> <data type="integer" /> </attribute>
-                    <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
                     <attribute name="symmetric-cluster"> <data type="boolean" /> </attribute>
                     <attribute name="no-quorum-policy"> <text /> </attribute>
                     <attribute name="maintenance-mode"> <data type="boolean" /> </attribute>
                     <attribute name="stop-all-resources"> <data type="boolean" /> </attribute>
                     <attribute name="stonith-timeout-ms"> <data type="integer" /> </attribute>
                     <attribute name="priority-fencing-delay-ms"> <data type="integer" /> </attribute>
+
+                    <!-- @COMPAT Deprecated since 3.0.2 -->
+                    <attribute name="stonith-enabled"> <data type="boolean" /> </attribute>
                 </element>
             </optional>
         </element>
