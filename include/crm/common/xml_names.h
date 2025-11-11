@@ -413,7 +413,6 @@ extern "C" {
 #define PCMK_XA_START                       "start"
 #define PCMK_XA_STATE                       "state"
 #define PCMK_XA_STATUS                      "status"
-#define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
 #define PCMK_XA_STONITH_TIMEOUT_MS          "stonith-timeout-ms"
 #define PCMK_XA_STOP_ALL_RESOURCES          "stop-all-resources"
 #define PCMK_XA_SYMMETRIC_CLUSTER           "symmetric-cluster"
@@ -465,6 +464,11 @@ extern "C" {
 
 //! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
 #define PCMK_XA_ORPHANED                    "orphaned"
+
+/*! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_FENCING_ENABLED
+ *              instead
+ */
+#define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
 
 #ifdef __cplusplus
 }
