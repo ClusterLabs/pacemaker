@@ -288,6 +288,7 @@ extern "C" {
 #define PCMK_XA_FAILURE_IGNORED             "failure_ignored"
 #define PCMK_XA_FEATURE_SET                 "feature_set"
 #define PCMK_XA_FEATURES                    "features"
+#define PCMK_XA_FENCING_ENABLED             "fencing-enabled"
 #define PCMK_XA_FILE                        "file"
 #define PCMK_XA_FIRST                       "first"
 #define PCMK_XA_FIRST_ACTION                "first-action"
