@@ -1234,7 +1234,9 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
     char *priority_fencing_delay_ms_s =
         pcmk__assert_asprintf("%u", scheduler->priv->priority_fencing_ms);
 
-    // @COMPAT PCMK_XA_STONITH_ENABLED is deprecated since 3.0.2
+    /* @COMPAT PCMK_XA_STONITH_ENABLED and PCMK_XA_STONITH_TIMEOUT_MS are
+     * deprecated since 3.0.2
+     */
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_XA_FENCING_ENABLED, fencing_enabled,
                                  PCMK_XA_FENCING_TIMEOUT_MS,
