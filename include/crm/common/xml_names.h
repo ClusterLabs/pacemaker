@@ -413,7 +413,6 @@ extern "C" {
 #define PCMK_XA_START                       "start"
 #define PCMK_XA_STATE                       "state"
 #define PCMK_XA_STATUS                      "status"
-#define PCMK_XA_STONITH_TIMEOUT_MS          "stonith-timeout-ms"
 #define PCMK_XA_STOP_ALL_RESOURCES          "stop-all-resources"
 #define PCMK_XA_SYMMETRIC_CLUSTER           "symmetric-cluster"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
@@ -469,6 +468,11 @@ extern "C" {
  *              instead
  */
 #define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
+
+/*! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_FENCING_TIMEOUT_MS
+ *              instead
+ */
+#define PCMK_XA_STONITH_TIMEOUT_MS          "stonith-timeout-ms"
 
 #ifdef __cplusplus
 }
