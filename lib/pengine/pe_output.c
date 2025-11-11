@@ -1228,7 +1228,7 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                                    pcmk__sched_in_maintenance);
     const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
                                                      pcmk__sched_stop_all);
-    char *stonith_timeout_ms_s =
+    char *fencing_timeout_ms_s =
         pcmk__assert_asprintf("%u", scheduler->priv->fence_timeout_ms);
 
     char *priority_fencing_delay_ms_s =
@@ -1236,17 +1236,19 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
 
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
                                  PCMK_XA_FENCING_ENABLED, fencing_enabled,
+                                 PCMK_XA_FENCING_TIMEOUT_MS,
+                                     fencing_timeout_ms_s,
                                  PCMK_XA_SYMMETRIC_CLUSTER, symmetric_cluster,
                                  PCMK_XA_NO_QUORUM_POLICY, no_quorum_policy,
                                  PCMK_XA_MAINTENANCE_MODE, maintenance_mode,
                                  PCMK_XA_STOP_ALL_RESOURCES, stop_all_resources,
-                                 PCMK_XA_STONITH_TIMEOUT_MS,
-                                     stonith_timeout_ms_s,
                                  PCMK_XA_PRIORITY_FENCING_DELAY_MS,
                                      priority_fencing_delay_ms_s,
                                  PCMK_XA_STONITH_ENABLED, fencing_enabled,
+                                 PCMK_XA_STONITH_TIMEOUT_MS,
+                                     fencing_timeout_ms_s,
                                  NULL);
-    free(stonith_timeout_ms_s);
+    free(fencing_timeout_ms_s);
     free(priority_fencing_delay_ms_s);
 
     return pcmk_rc_ok;
