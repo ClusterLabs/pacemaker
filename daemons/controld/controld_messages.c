@@ -73,10 +73,17 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 
     if (input == I_PE_CALC) {
-        fsa_data_t *message = g_queue_peek_tail(controld_globals.fsa_message_queue);
+        fsa_data_t *message = NULL;
+
+        if (prepend) {
+            message = g_queue_peek_head(controld_globals.fsa_message_queue);
+        } else {
+            message = g_queue_peek_tail(controld_globals.fsa_message_queue);
+        }
 
         if ((message != NULL) && (message->fsa_input == I_PE_CALC)) {
-            crm_debug("Last item in FSA queue is I_PE_CALC, not adding another");
+            crm_debug("%s item in FSA queue is I_PE_CALC, not adding another",
+                      (prepend ? "First" : "Last"));
             return;
         }
     }
