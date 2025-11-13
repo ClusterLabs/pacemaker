@@ -45,6 +45,8 @@ assert_hr_format(const char *format, const char *expected,
     pcmk__time_hr_t *hr = TEST_TIME;
     char *result = NULL;
 
+    assert_non_null(hr);
+
     hr->useconds = usec;
     result = pcmk__time_format_hr(format, hr);
     pcmk__time_hr_free(hr);
