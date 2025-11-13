@@ -786,7 +786,7 @@ pcmk__cmp_by_type(const char *value1, const char *value2, enum pcmk__type type)
             break;
 
         case pcmk__type_version:
-            return compare_version(value1, value2);
+            return pcmk__compare_versions(value1, value2);
 
         default: // Invalid type
             return 0;
