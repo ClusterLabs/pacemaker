@@ -257,7 +257,6 @@ class Environment:
         grp2.add_argument("--ip", "--test-ip-base",
                           help="Offset for generated IP address resources")
         grp2.add_argument("--nic",
-                          default="eth0",
                           help="Network interface used for generated IP address resources")
 
         grp3 = parser.add_argument_group("Options for release testing")
