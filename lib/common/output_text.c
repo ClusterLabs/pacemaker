@@ -481,7 +481,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
 #if HAVE_SSCANF_M
         rc = scanf("%ms", dest);
 #else
-        *dest = pcmk__assert_alloc(1, 1024);
+        *dest = pcmk__assert_alloc(1024, sizeof(char));
         rc = scanf("%1023s", *dest);
 #endif
         fprintf(stderr, "\n");

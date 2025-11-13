@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                // bool, true, false
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -1032,12 +1033,6 @@ services_action_sync(svc_action_t * op)
 }
 
 GList *
-get_directory_list(const char *root, gboolean files, gboolean executable)
-{
-    return services_os_get_directory_list(root, files, executable);
-}
-
-GList *
 resources_list_standards(void)
 {
     GList *standards = NULL;
@@ -1071,7 +1066,7 @@ GList *
 resources_list_providers(const char *standard)
 {
     if (pcmk__is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
-        return resources_os_list_ocf_providers();
+        return services__list_ocf_providers();
     }
 
     return NULL;
@@ -1092,7 +1087,7 @@ resources_list_agents(const char *standard, const char *provider)
 
         if (standard == NULL) {
             tmp1 = result;
-            tmp2 = resources_os_list_ocf_agents(NULL);
+            tmp2 = services__list_ocf_agents(NULL);
             if (tmp2) {
                 result = g_list_concat(tmp1, tmp2);
             }
@@ -1113,7 +1108,7 @@ resources_list_agents(const char *standard, const char *provider)
         return result;
 
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        return resources_os_list_ocf_agents(provider);
+        return services__list_ocf_agents(provider);
 #if PCMK__ENABLE_LSB
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         return services__list_lsb_agents();
@@ -1188,7 +1183,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 #endif
 
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
-        rc = services__ocf_agent_exists(provider, agent);
+        rc = services__ocf_agent_exists(provider, agent, NULL);
 
 #if PCMK__ENABLE_LSB
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
@@ -1381,3 +1376,85 @@ services__grab_stderr(svc_action_t *action)
     action->stderr_data = NULL;
     return output;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/services_compat.h>
+
+static GList *
+gdl_helper(const char *dir, bool files, bool executable)
+{
+    GList *list = NULL;
+    struct dirent **namelist = NULL;
+    int entries = scandir(dir, &namelist, NULL, alphasort);
+
+    if (entries < 0) {
+        return NULL;
+    }
+
+    for (int i = 0; i < entries; i++) {
+        char *buffer = NULL;
+        struct stat sb;
+        int rc = 0;
+
+        if ('.' == namelist[i]->d_name[0]) {
+            continue;
+        }
+
+        buffer = pcmk__assert_asprintf("%s/%s", dir, namelist[i]->d_name);
+        rc = stat(buffer, &sb);
+        free(buffer);
+
+        if (rc != 0) {
+            continue;
+        }
+
+        if (S_ISDIR(sb.st_mode)) {
+            if (files) {
+                continue;
+            }
+
+        } else if (S_ISREG(sb.st_mode)) {
+            if (!files) {
+                continue;
+            }
+
+            if (executable
+                && !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
+                continue;
+            }
+        }
+
+        list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
+    }
+
+    for (int i = 0; i < entries; i++) {
+        free(namelist[i]);
+    }
+    free(namelist);
+    return list;
+}
+
+GList *
+get_directory_list(const char *root, gboolean files, gboolean executable)
+{
+    gchar **dir_paths = NULL;
+    GList *list = NULL;
+
+    if (pcmk__str_empty(root)) {
+        return NULL;
+    }
+
+    dir_paths = g_strsplit(root, ":", 0);
+
+    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
+        list = g_list_concat(list, gdl_helper(*dir, files, executable));
+    }
+
+    g_strfreev(dir_paths);
+    return list;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
