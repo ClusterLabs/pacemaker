@@ -162,7 +162,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
-        pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
+        pcmk__update_peer_expected(peer, CRMD_JOINSTATE_DOWN);
     }
 
     cmd = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_TENGINE, router_node,

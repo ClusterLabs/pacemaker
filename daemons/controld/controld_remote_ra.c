@@ -228,7 +228,7 @@ purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
 
     /* Purge node from attrd's memory */
     if (purge) {
-        update_attrd_remote_node_removed(node->name, NULL);
+        update_attrd_remote_node_removed(node->name);
     }
 
     controld_delete_node_state(node->name, section, call_opt);
@@ -261,7 +261,7 @@ remote_node_up(const char *node_name)
      * risking deletion or overwrite of an arbitrary attribute. Then work on
      * deprecating CRM_OP_PROBED.
      */
-    update_attrd(node_name, CRM_OP_PROBED, NULL, NULL, TRUE);
+    update_attrd(node_name, CRM_OP_PROBED, NULL, true);
 
     /* Ensure node is in the remote peer cache with member status */
     node = pcmk__cluster_lookup_remote_node(node_name);
@@ -333,7 +333,7 @@ remote_node_down(const char *node_name, const enum down_opts opts)
     pcmk__node_status_t *node = NULL;
 
     /* Purge node from attrd's memory */
-    update_attrd_remote_node_removed(node_name, NULL);
+    update_attrd_remote_node_removed(node_name);
 
     /* Normally, only node attributes should be erased, and the resource history
      * should be kept until the node comes back up. However, after a successful

@@ -438,9 +438,6 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
     if (pcmk__is_set(input_register, R_THE_DC)) {
         crm_trace("%s %.16" PRIx64 " (R_THE_DC)", text, R_THE_DC);
     }
-    if (pcmk__is_set(input_register, R_STARTING)) {
-        crm_trace("%s %.16" PRIx64 " (R_STARTING)", text, R_STARTING);
-    }
     if (pcmk__is_set(input_register, R_SHUTDOWN)) {
         crm_trace("%s %.16" PRIx64 " (R_SHUTDOWN)", text, R_SHUTDOWN);
     }
@@ -677,7 +674,7 @@ update_dc(xmlNode * msg)
         crm_info("Set DC to %s (%s)",
                  controld_globals.dc_name,
                  pcmk__s(controld_globals.dc_version, "unknown version"));
-        pcmk__update_peer_expected(__func__, dc_node, CRMD_JOINSTATE_MEMBER);
+        pcmk__update_peer_expected(dc_node, CRMD_JOINSTATE_MEMBER);
 
     } else if (last_dc != NULL) {
         crm_info("Unset DC (was %s)", last_dc);
@@ -694,7 +691,7 @@ void crmd_peer_down(pcmk__node_status_t *peer, bool full)
         crm_update_peer_proc(__func__, peer, crm_proc_none, NULL);
     }
     crm_update_peer_join(__func__, peer, controld_join_none);
-    pcmk__update_peer_expected(__func__, peer, CRMD_JOINSTATE_DOWN);
+    pcmk__update_peer_expected(peer, CRMD_JOINSTATE_DOWN);
 }
 
 /*!

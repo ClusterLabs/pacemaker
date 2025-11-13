@@ -36,19 +36,31 @@ void
 register_fsa_error_adv(enum crmd_fsa_input input, fsa_data_t *cur_data,
                        ha_msg_input_t *new_data, const char *raised_from)
 {
-    /* save the current actions if any */
+    /* Save the current actions, if any. This prepends the current action set,
+     * cause, and data object to the FSA queue to be processed next after
+     * processing the error.
+     *
+     * The state transition and action fetching for this FSA input have already
+     * been done. We pass I_NULL so that no new state transition or action
+     * fetching will occur when this input is popped off the queue.
+     */
     if (controld_globals.fsa_actions != A_NOTHING) {
-        register_fsa_input_adv(cur_data ? cur_data->fsa_cause : C_FSA_INTERNAL,
-                               I_NULL, cur_data ? cur_data->data : NULL,
+        enum crmd_fsa_cause cause = C_FSA_INTERNAL;
+        ha_msg_input_t *cur_input = NULL;
+
+        if (cur_data != NULL) {
+            cause = cur_data->fsa_cause;
+            cur_input = cur_data->data;
+        }
+        register_fsa_input_adv(cause, I_NULL, cur_input,
                                controld_globals.fsa_actions, TRUE, __func__);
     }
 
-    /* reset the action list */
     crm_info("Resetting the current action list");
     fsa_dump_actions(controld_globals.fsa_actions, "Drop");
     controld_globals.fsa_actions = A_NOTHING;
 
-    /* register the error */
+    // Register the error
     register_fsa_input_adv(C_FSA_INTERNAL, input, new_data, A_NOTHING, TRUE,
                            raised_from);
 }
@@ -170,6 +182,21 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     }
 }
 
+void
+controld_fsa_stall_as(const char *function, fsa_data_t *cur_data,
+                      uint64_t with_actions)
+{
+    enum crmd_fsa_cause cause = C_FSA_INTERNAL;
+    ha_msg_input_t *data = NULL;
+
+    if (cur_data != NULL) {
+        cause = cur_data->fsa_cause;
+        data = cur_data->data;
+    }
+    register_fsa_input_adv(cause, I_WAIT_FOR_EVENT, data, with_actions, true,
+                           function);
+}
+
 ha_msg_input_t *
 copy_ha_msg_input(ha_msg_input_t * orig)
 {
@@ -200,12 +227,11 @@ delete_fsa_input(fsa_data_t * fsa_data)
     free(fsa_data);
 }
 
-/*	A_MSG_ROUTE	*/
+// A_MSG_ROUTE
 void
-do_msg_route(long long action,
-             enum crmd_fsa_cause cause,
-             enum crmd_fsa_state cur_state,
-             enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_msg_route(long long action, enum crmd_fsa_cause cause,
+             enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+             fsa_data_t *msg_data)
 {
     pcmk__assert((msg_data != NULL) && (msg_data->data != NULL));
     route_message(msg_data->fsa_cause, msg_data->data->msg);
@@ -1007,7 +1033,7 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
             pcmk__search_node_caches(0, from, NULL,
                                      pcmk__node_search_cluster_member);
 
-        pcmk__update_peer_expected(__func__, node, CRMD_JOINSTATE_DOWN);
+        pcmk__update_peer_expected(node, CRMD_JOINSTATE_DOWN);
         if(AM_I_DC == FALSE) {
             return I_NULL; /* Done */
         }
@@ -1212,7 +1238,7 @@ handle_shutdown_request(xmlNode * stored_msg)
     crm_log_xml_trace(stored_msg, "message");
 
     now_s = pcmk__ttoa(time(NULL));
-    update_attrd(host_from, PCMK__NODE_ATTR_SHUTDOWN, now_s, NULL, FALSE);
+    update_attrd(host_from, PCMK__NODE_ATTR_SHUTDOWN, now_s, false);
     free(now_s);
 
     /* will be picked up by the TE as long as its running */

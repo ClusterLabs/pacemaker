@@ -219,6 +219,12 @@ enum crmd_fsa_input {
 #define A_ELECTION_COUNT            (UINT64_C(1) << 10)
 #define A_ELECTION_VOTE             (UINT64_C(1) << 11)
 
+/* @TODO The handler for A_ELECTION_START is identical to the handler for
+ * A_ELECTION_VOTE. The only difference is the priority within
+ * s_crmd_fsa_actions(). Determine whether it's safe to drop this and replace it
+ * with A_ELECTION_VOTE, or whether we rely on this difference in priority for
+ * I_ERROR and I_NOT_DC.
+ */
 #define A_ELECTION_START            (UINT64_C(1) << 12)
 
 /* -- Message processing -- */
@@ -245,10 +251,23 @@ enum crmd_fsa_input {
 
 /* -- Client Join protocol actions -- */
 
+/* Broadcast a join announce message, requesting a join offer from the DC if
+ * there is one in our cluster layer membership
+ */
 #define A_CL_JOIN_QUERY             (UINT64_C(1) << 20)
+
+/* @TODO The handler for A_CL_JOIN_ANNOUNCE is almost identical to the handler
+ * for A_CL_JOIN_QUERY. The only differences are:
+ * - the priority within s_crmd_fsa_actions()
+ * - whether we sleep(1) to wait for a DC to join our membership
+ * - whether we send an announcement from states other than S_PENDING
+ *
+ * Determine whether it's safe to drop this and replace it with A_CL_JOIN_QUERY
+ * (or vice-versa), or whether we rely on these differences somehow.
+ */
 #define A_CL_JOIN_ANNOUNCE          (UINT64_C(1) << 21)
 
-/* Request membership to the DC list */
+/* Send the DC a join request in response to a join offer */
 #define A_CL_JOIN_REQUEST           (UINT64_C(1) << 22)
 
 /* Did the DC accept or reject the request */
@@ -352,9 +371,6 @@ enum crmd_fsa_input {
 
 // Are we the DC?
 #define R_THE_DC          (UINT64_C(1) << 0)
-
-// Are we starting up?
-#define R_STARTING        (UINT64_C(1) << 1)
 
 // Are we trying to shut down?
 #define R_SHUTDOWN        (UINT64_C(1) << 2)
@@ -497,11 +513,6 @@ void do_pe_invoke(long long action, enum crmd_fsa_cause cause,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input current_input, fsa_data_t *msg_data);
 
-/* A_LOG */
-void do_log(long long action, enum crmd_fsa_cause cause,
-            enum crmd_fsa_state cur_state,
-            enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
-
 /* A_STARTUP */
 void do_startup(long long action, enum crmd_fsa_cause cause,
                 enum crmd_fsa_state cur_state,
@@ -547,7 +558,7 @@ void do_recover(long long action, enum crmd_fsa_cause cause,
                 enum crmd_fsa_state cur_state,
                 enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
-/* A_ELECTION_VOTE */
+/* A_ELECTION_VOTE, A_ELECTION_START */
 void do_election_vote(long long action, enum crmd_fsa_cause cause,
                       enum crmd_fsa_state cur_state,
                       enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
@@ -573,7 +584,7 @@ void do_dc_takeover(long long action, enum crmd_fsa_cause cause,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
-/* A_DC_RELEASE */
+/* A_DC_RELEASE, A_DC_RELEASED */
 void do_dc_release(long long action, enum crmd_fsa_cause cause,
                    enum crmd_fsa_state cur_state,
                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);

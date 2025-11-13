@@ -12,7 +12,7 @@
 #include <inttypes.h>               // PRIx64
 #include <sys/param.h>
 #include <stdio.h>
-#include <stdint.h>                 // uint64_t
+#include <stdint.h>                 // uint8_t, uint64_t
 #include <string.h>
 #include <time.h>
 
@@ -51,18 +51,21 @@ static const uint64_t startup_actions =
     A_STARTED | A_CL_JOIN_QUERY;
 
 // A_LOG, A_WARN, A_ERROR
-void
+static void
 do_log(long long action, enum crmd_fsa_cause cause,
        enum crmd_fsa_state cur_state,
        enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
-    unsigned log_type = LOG_TRACE;
+    uint8_t log_type = LOG_TRACE;
 
-    if (action & A_LOG) {
+    pcmk__assert(msg_data != NULL);
+
+    // @TODO Should the order of precedence be reversed?
+    if (pcmk__is_set(action, A_LOG)) {
         log_type = LOG_INFO;
-    } else if (action & A_WARN) {
+    } else if (pcmk__is_set(action, A_WARN)) {
         log_type = LOG_WARNING;
-    } else if (action & A_ERROR) {
+    } else if (pcmk__is_set(action, A_ERROR)) {
         log_type = LOG_ERR;
     }
 
@@ -493,7 +496,7 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             crm_err("Action %s not supported " QB_XS " %" PRIx64,
                     fsa_action2string(controld_globals.fsa_actions),
                     controld_globals.fsa_actions);
-            register_fsa_error_adv(I_ERROR, fsa_data, NULL, __func__);
+            register_fsa_error(I_ERROR, fsa_data);
         }
     }
 }

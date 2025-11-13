@@ -330,7 +330,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
                  pcmk__plural_s(lrm_state->num_lrm_register_fails),
                  MAX_LRM_REG_FAILS, pcmk_rc_str(rc));
         controld_start_wait_timer();
-        crmd_fsa_stall(FALSE);
+        controld_fsa_stall(msg_data, action);
         return;
     }
 
@@ -339,38 +339,37 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
             "%d time%s: %s", lrm_state->num_lrm_register_fails,
             pcmk__plural_s(lrm_state->num_lrm_register_fails),
             pcmk_rc_str(rc));
-    register_fsa_error(I_ERROR);
+    register_fsa_error(I_ERROR, msg_data);
 }
 
-/*	 A_LRM_CONNECT	*/
+// A_LRM_CONNECT
 void
-do_lrm_control(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state,
-               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_lrm_control(long long action, enum crmd_fsa_cause cause,
+               enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+               fsa_data_t *msg_data)
 {
     /* This only pertains to local executor connections. Remote connections are
      * handled as resources within the scheduler. Connecting and disconnecting
      * from remote executor instances is handled differently.
      */
-
     lrm_state_t *lrm_state = NULL;
 
     if (controld_globals.cluster->priv->node_name == NULL) {
         return; // Shouldn't be possible
     }
+
     lrm_state = controld_get_executor_state(NULL, true);
     if (lrm_state == NULL) {
-        register_fsa_error(I_ERROR);
+        register_fsa_error(I_ERROR, msg_data);
         return;
     }
 
-    if (action & A_LRM_DISCONNECT) {
-        if (lrm_state_verify_stopped(lrm_state, cur_state, LOG_INFO) == FALSE) {
-            if (action == A_LRM_DISCONNECT) {
-                crmd_fsa_stall(FALSE);
-                return;
-            }
+    if (pcmk__is_set(action, A_LRM_DISCONNECT)) {
+        if (!lrm_state_verify_stopped(lrm_state, cur_state, LOG_INFO)
+            && (action == A_LRM_DISCONNECT)) {
+
+            controld_fsa_stall(msg_data, action);
+            return;
         }
 
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
@@ -378,11 +377,11 @@ do_lrm_control(long long action,
         lrm_state_reset_tables(lrm_state, FALSE);
     }
 
-    if (action & A_LRM_CONNECT) {
+    if (pcmk__is_set(action, A_LRM_CONNECT)) {
         try_local_executor_connect(action, msg_data, lrm_state);
     }
 
-    if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {
+    if ((action & ~(A_LRM_CONNECT|A_LRM_DISCONNECT)) != 0) {
         crm_err("Unexpected action %s in %s", fsa_action2string(action),
                 __func__);
     }
@@ -942,8 +941,6 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
         rc = lrm_state_register_rsc(lrm_state, id, class, provider, type,
                                     lrmd_opt_drop_recurring);
         if (rc != pcmk_ok) {
-            fsa_data_t *msg_data = NULL;
-
             crm_err("Could not register resource %s with the executor on %s: %s "
                     QB_XS " rc=%d",
                     id, lrm_state->node_name, pcmk_strerror(rc), rc);
@@ -953,7 +950,7 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
              * remote node, which is not an FSA failure.
              */
             if (lrm_state_is_local(lrm_state) == TRUE) {
-                register_fsa_error(I_FAIL);
+                register_fsa_error(I_FAIL, NULL);
             }
             return rc;
         }
@@ -1569,7 +1566,7 @@ controld_invoke_execd(fsa_data_t *msg_data)
     } else {
         crm_err("Invalid execution request: unknown command '%s' (bug?)",
                 crm_op);
-        register_fsa_error(I_ERROR);
+        register_fsa_error(I_ERROR, msg_data);
     }
 }
 
@@ -1898,7 +1895,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     int call_id = 0;
     char *op_id = NULL;
     lrmd_event_data_t *op = NULL;
-    fsa_data_t *msg_data = NULL;
     const char *transition = NULL;
     const char *operation = NULL;
     const char *nack_reason = NULL;
@@ -2032,7 +2028,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         fake_op_status(lrm_state, op, PCMK_EXEC_NOT_CONNECTED,
                        PCMK_OCF_UNKNOWN_ERROR, pcmk_rc_str(rc));
         process_lrm_event(lrm_state, op, NULL, NULL);
-        register_fsa_error(I_FAIL);
+        register_fsa_error(I_FAIL, NULL);
 
     } else {
         crm_err("Could not initiate %s action for resource %s remotely on %s: "

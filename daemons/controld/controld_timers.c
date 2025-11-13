@@ -98,14 +98,13 @@ controld_stop_timer(fsa_timer_t *timer)
                   timer->period_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
-
-    } else {
-        crm_trace("%s already stopped (would inject %s if popped after %ums)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms);
-        return false;
+        return true;
     }
-    return true;
+
+    crm_trace("%s already stopped (would inject %s if popped after %ums)",
+              get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+              timer->period_ms);
+    return false;
 }
 
 /*!
@@ -130,40 +129,62 @@ controld_start_timer(fsa_timer_t *timer)
     }
 }
 
-/*	A_DC_TIMER_STOP, A_DC_TIMER_START,
- *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
- *	A_INTEGRATE_TIMER_STOP, A_INTEGRATE_TIMER_START
+/* A_DC_TIMER_STOP, A_DC_TIMER_START,
+ * A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START
+ * A_INTEGRATE_TIMER_STOP, A_INTEGRATE_TIMER_START
  */
 void
-do_timer_control(long long action,
-                 enum crmd_fsa_cause cause,
+do_timer_control(long long action, enum crmd_fsa_cause cause,
                  enum crmd_fsa_state cur_state,
-                 enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+                 enum crmd_fsa_input current_input, fsa_data_t *msg_data)
 {
-    gboolean timer_op_ok = TRUE;
+    /* @FIXME It doesn't appear to make sense that we set timer_op_ok based on
+     * stopping the finalization and integration timers. We check it only if
+     * A_DC_TIMER_START is set.
+     *
+     * This behavior goes back to 7637ade9 in 2004 and looks like a bug. We
+     * probably should do one of the following:
+     * - Check timer_op_ok for finalization and integration timer starts.
+     * - Don't set timer_op_ok for finalization and integration timer stops.
+     *   This would prevent those results from affecting whether we start the DC
+     *   timer.
+     *
+     * Related to the above, there should probably be some sort of check to
+     * ensure that this function is not stopping one timer and starting a
+     * different timer, unless that is expected behavior. Or we could have
+     * separate handler functions for each timer. Otherwise, we could encounter
+     * a situation where:
+     * - We want to stop Timer A and start Timer B.
+     * - Timer A is not running, so timer_op_ok gets set to false.
+     * - We skip starting Timer B because Timer A was not running.
+     *
+     * This situation doesn't seem right. (Currently, "Timer B" could only be
+     * the DC timer, since the other timer starts don't check timer_op_ok.)
+     */
+    bool timer_op_ok = true;
 
-    if (action & A_DC_TIMER_STOP) {
+    if (pcmk__is_set(action, A_DC_TIMER_STOP)) {
         timer_op_ok = controld_stop_timer(election_timer);
 
-    } else if (action & A_FINALIZE_TIMER_STOP) {
+    } else if (pcmk__is_set(action, A_FINALIZE_TIMER_STOP)) {
         timer_op_ok = controld_stop_timer(finalization_timer);
 
-    } else if (action & A_INTEGRATE_TIMER_STOP) {
+    } else if (pcmk__is_set(action, A_INTEGRATE_TIMER_STOP)) {
         timer_op_ok = controld_stop_timer(integration_timer);
     }
 
-    /* don't start a timer that wasn't already running */
-    if (action & A_DC_TIMER_START && timer_op_ok) {
+    // Don't start a timer that wasn't already running
+    if (pcmk__is_set(action, A_DC_TIMER_START) && timer_op_ok) {
         controld_start_timer(election_timer);
         if (AM_I_DC) {
-            /* there can be only one */
+            // Trigger an election to ensure there is only one DC
             controld_fsa_append(cause, I_ELECTION, NULL);
         }
 
-    } else if (action & A_FINALIZE_TIMER_START) {
+    } else if (pcmk__is_set(action, A_FINALIZE_TIMER_START)) {
         controld_start_timer(finalization_timer);
 
-    } else if (action & A_INTEGRATE_TIMER_START) {
+    } else if (pcmk__is_set(action, A_INTEGRATE_TIMER_START)) {
         controld_start_timer(integration_timer);
     }
 }
@@ -199,7 +220,7 @@ crm_timer_popped(gpointer data)
                  crmd_join_phase_count(controld_join_integrated));
         if (crmd_join_phase_count(controld_join_welcomed) == 0) {
             // If we don't even have ourselves, start again
-            register_fsa_error_adv(I_ELECTION, NULL, NULL, __func__);
+            register_fsa_error(I_ELECTION, NULL);
 
         } else {
             controld_fsa_prepend(C_TIMER_POPPED, timer->fsa_input, NULL);

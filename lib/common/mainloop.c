@@ -343,7 +343,7 @@ mainloop_destroy_signal_entry(int sig)
  * \brief Add a signal handler to a mainloop
  *
  * \param[in] sig       Signal number to handle
- * \param[in] dispatch  Signal handler function
+ * \param[in] dispatch  Signal handler function (\c NULL to ignore the signal)
  *
  * \note The true signal handler merely sets a mainloop trigger to call this
  *       dispatch function via the mainloop. Therefore, the dispatch function

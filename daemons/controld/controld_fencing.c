@@ -827,7 +827,7 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
             if (pcmk__str_eq(PCMK_ACTION_ON, op, pcmk__str_casei)) {
                 const char *value = NULL;
                 char *now = pcmk__ttoa(time(NULL));
-                gboolean is_remote_node = FALSE;
+                bool is_remote_node = false;
 
                 /* This check is not 100% reliable, since this node is not
                  * guaranteed to have the remote node cached. However, it
@@ -838,20 +838,19 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
                  */
                 if (g_hash_table_lookup(pcmk__remote_peer_cache,
                                         uuid) != NULL) {
-                    is_remote_node = TRUE;
+                    is_remote_node = true;
                 }
 
-                update_attrd(target, CRM_ATTR_UNFENCED, now, NULL,
-                             is_remote_node);
+                update_attrd(target, CRM_ATTR_UNFENCED, now, is_remote_node);
                 free(now);
 
                 value = crm_meta_value(action->params, PCMK__META_DIGESTS_ALL);
-                update_attrd(target, CRM_ATTR_DIGESTS_ALL, value, NULL,
+                update_attrd(target, CRM_ATTR_DIGESTS_ALL, value,
                              is_remote_node);
 
                 value = crm_meta_value(action->params,
                                        PCMK__META_DIGESTS_SECURE);
-                update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL,
+                update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value,
                              is_remote_node);
 
             } else if (!pcmk__is_set(action->flags,

@@ -116,19 +116,18 @@ controld_disconnect_cib_manager(void)
     }
 }
 
-/* A_CIB_STOP, A_CIB_START, O_CIB_RESTART */
+// A_CIB_STOP, A_CIB_START, O_CIB_RESTART
 void
-do_cib_control(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state,
-               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
+do_cib_control(long long action, enum crmd_fsa_cause cause,
+               enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input,
+               fsa_data_t *msg_data)
 {
     static int cib_retries = 0;
 
     cib_t *cib_conn = controld_globals.cib_conn;
 
-    void (*dnotify_fn) (gpointer user_data) = handle_cib_disconnect;
-    void (*update_cb) (const char *event, xmlNodePtr msg) = do_cib_updated;
+    void (*dnotify_fn)(gpointer user_data) = handle_cib_disconnect;
+    void (*update_cb)(const char *event, xmlNodePtr msg) = do_cib_updated;
 
     int rc = pcmk_ok;
 
@@ -140,7 +139,7 @@ do_cib_control(long long action,
 
             crm_info("Waiting for resource update %d to complete",
                      pending_rsc_update);
-            crmd_fsa_stall(FALSE);
+            controld_fsa_stall(msg_data, action);
             return;
         }
         controld_disconnect_cib_manager();
@@ -158,7 +157,6 @@ do_cib_control(long long action,
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name,
                                 cib_command_nonblocking);
-
     if (rc != pcmk_ok) {
         // A short wait that usually avoids stalling the FSA
         sleep(1);
@@ -190,12 +188,12 @@ do_cib_control(long long action,
             crm_warn("Couldn't complete CIB registration %d times... "
                      "pause and retry", cib_retries);
             controld_start_wait_timer();
-            crmd_fsa_stall(FALSE);
+            controld_fsa_stall(msg_data, action);
 
         } else {
             crm_err("Could not complete CIB registration %d times... "
                     "hard error", cib_retries);
-            register_fsa_error(I_ERROR);
+            register_fsa_error(I_ERROR, msg_data);
         }
     }
 }

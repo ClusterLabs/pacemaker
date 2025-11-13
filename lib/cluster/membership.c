@@ -1203,39 +1203,35 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
  * \internal
  * \brief Update a cluster node cache entry's expected join state
  *
- * \param[in]     source    Caller's function name (for logging)
+ * \param[in]     function  Caller's function name (for logging)
  * \param[in,out] node      Node to update
  * \param[in]     expected  Node's new join state
  */
 void
-pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
-                           const char *expected)
+pcmk__update_peer_expected_as(const char *function, pcmk__node_status_t *node,
+                              const char *expected)
 {
-    char *last = NULL;
-    gboolean changed = FALSE;
+    CRM_CHECK(node != NULL, return);
 
-    CRM_CHECK(node != NULL, crm_err("%s: Could not set 'expected' to %s", source, expected);
-              return);
-
-    /* Remote nodes don't participate in joins */
+    // Remote nodes don't participate in joins
     if (pcmk__is_set(node->flags, pcmk__node_status_remote)) {
         return;
     }
 
-    last = node->expected;
-    if (expected != NULL && !pcmk__str_eq(node->expected, expected, pcmk__str_casei)) {
-        node->expected = strdup(expected);
-        changed = TRUE;
+    if ((expected != NULL)
+        && !pcmk__str_eq(node->expected, expected, pcmk__str_casei)) {
+
+        char *last = node->expected;
+
+        node->expected = pcmk__str_copy(expected);
+        crm_info("%s: Node %s[%" PRIu32 "] - expected state is now %s (was %s)",
+                 function, node->name, node->cluster_layer_id, expected, last);
+        free(last);
+        return;
     }
 
-    if (changed) {
-        crm_info("%s: Node %s[%" PRIu32 "] - expected state is now %s (was %s)",
-                 source, node->name, node->cluster_layer_id, expected, last);
-        free(last);
-    } else {
-        crm_trace("%s: Node %s[%" PRIu32 "] - expected state is unchanged (%s)",
-                  source, node->name, node->cluster_layer_id, expected);
-    }
+    crm_trace("%s: Node %s[%" PRIu32 "] - expected state is unchanged (%s)",
+              function, node->name, node->cluster_layer_id, expected);
 }
 
 /*!
