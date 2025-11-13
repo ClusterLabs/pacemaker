@@ -260,7 +260,7 @@ class CIB:
             stl.commit()
 
         o = Option(self._factory)
-        o["stonith-enabled"] = self._cm.env["fencing_enabled"]
+        o["fencing-enabled"] = self._cm.env["fencing_enabled"]
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
         o["shutdown-escalation"] = "5min"
