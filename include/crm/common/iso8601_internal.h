@@ -20,25 +20,31 @@
 extern "C" {
 #endif
 
-typedef struct pcmk__time_us pcmk__time_hr_t;
-
-pcmk__time_hr_t *pcmk__time_hr_now(time_t *epoch);
-pcmk__time_hr_t *pcmk__time_hr_new(const char *date_time);
-void pcmk__time_hr_free(pcmk__time_hr_t *hr_dt);
-char *pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt);
+char *pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec);
 char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
 crm_time_t *pcmk__copy_timet(time_t source);
 
-struct pcmk__time_us {
+// A date/time or duration
+struct crm_time_s {
+    // Calendar year (date/time) or number of years (duration)
     int years;
-    int months;                 /* Only for durations */
+
+    // Number of months (duration only)
+    int months;
+
+    // Ordinal day of year (date/time) or number of days (duration)
     int days;
+
+    // Seconds of day (date/time) or number of seconds (duration)
     int seconds;
-    int offset;                 /* Seconds */
+
+    // Seconds offset from UTC (date/time only)
+    int offset;
+
+    // True if duration
     bool duration;
-    int useconds;
 };
 
 #ifdef __cplusplus
