@@ -24,6 +24,8 @@ attrd_election_cb(pcmk_cluster_t *cluster)
     /* Update the peers after an election */
     attrd_peer_sync(NULL);
 
+    attrd_erase_removed_peer_attributes();
+
     /* After winning an election, update the CIB with the values of all
      * attributes as the winner knows them.
      */
@@ -41,7 +43,7 @@ attrd_start_election_if_needed(void)
 {
     if ((peer_writer == NULL)
         && (election_state(attrd_cluster) != election_in_progress)
-        && !attrd_shutting_down(false)) {
+        && !attrd_shutting_down()) {
 
         crm_info("Starting an election to determine the writer");
         election_vote(attrd_cluster);
@@ -63,7 +65,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
     pcmk__xe_set(xml, PCMK__XA_SRC, peer->name);
 
     // Don't become writer if we're shutting down
-    rc = election_count_vote(attrd_cluster, xml, !attrd_shutting_down(false));
+    rc = election_count_vote(attrd_cluster, xml, !attrd_shutting_down());
 
     switch(rc) {
         case election_start:

@@ -201,6 +201,7 @@ main(int argc, char **argv)
             attrd_cib_disconnect();
         }
 
+        attrd_free_removed_peers();
         attrd_free_waitlist();
         pcmk_cluster_disconnect(attrd_cluster);
         pcmk_cluster_free(attrd_cluster);

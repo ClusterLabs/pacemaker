@@ -202,36 +202,18 @@ should_purge_attributes(pcmk__node_status_t *node)
     return true;
 }
 
-static enum controld_section_e
-section_to_delete(bool purge)
-{
-    if (pcmk__is_set(controld_globals.flags, controld_shutdown_lock_enabled)) {
-        if (purge) {
-            return controld_section_all_unlocked;
-        } else {
-            return controld_section_lrm_unlocked;
-        }
-    } else {
-        if (purge) {
-            return controld_section_all;
-        } else {
-            return controld_section_lrm;
-        }
-    }
-}
-
 static void
 purge_remote_node_attrs(int call_opt, pcmk__node_status_t *node)
 {
-    bool purge = should_purge_attributes(node);
-    enum controld_section_e section = section_to_delete(purge);
+    const bool unlocked_only = pcmk__is_set(controld_globals.flags,
+                                            controld_shutdown_lock_enabled);
 
-    /* Purge node from attrd's memory */
-    if (purge) {
-        update_attrd_remote_node_removed(node->name);
+    // Purge node's transient attributes (from attribute manager and CIB)
+    if (should_purge_attributes(node)) {
+        controld_purge_node_attrs(node->name, true);
     }
 
-    controld_delete_node_state(node->name, section, call_opt);
+    controld_delete_node_history(node->name, unlocked_only, call_opt);
 }
 
 /*!
@@ -313,37 +295,29 @@ remote_node_up(const char *node_name)
     pcmk__xml_free(update);
 }
 
-enum down_opts {
-    DOWN_KEEP_LRM,
-    DOWN_ERASE_LRM
-};
-
 /*!
  * \internal
  * \brief Handle cluster communication related to pacemaker_remote node leaving
  *
  * \param[in] node_name  Name of lost node
- * \param[in] opts       Whether to keep or erase LRM history
+ * \param[in] erase_lrm  If \c true, erase the LRM history
  */
 static void
-remote_node_down(const char *node_name, const enum down_opts opts)
+remote_node_down(const char *node_name, bool erase_lrm)
 {
     xmlNode *update;
     int call_opt = crmd_cib_smart_opt();
     pcmk__node_status_t *node = NULL;
 
-    /* Purge node from attrd's memory */
-    update_attrd_remote_node_removed(node_name);
+    // Purge node's transient attributes (from attribute manager and CIB)
+    controld_purge_node_attrs(node_name, true);
 
-    /* Normally, only node attributes should be erased, and the resource history
-     * should be kept until the node comes back up. However, after a successful
-     * fence, we want to clear the history as well, so we don't think resources
-     * are still running on the node.
+    /* Normally, the resource history should be kept until the node comes back
+     * up. However, after a successful fence, clear the history so we don't
+     * think resources are still running on the node.
      */
-    if (opts == DOWN_ERASE_LRM) {
-        controld_delete_node_state(node_name, controld_section_all, call_opt);
-    } else {
-        controld_delete_node_state(node_name, controld_section_attrs, call_opt);
+    if (erase_lrm) {
+        controld_delete_node_history(node_name, false, call_opt);
     }
 
     /* Ensure node is in the remote peer cache with lost state */
@@ -402,7 +376,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         if (ra_data) {
             if (!pcmk__is_set(ra_data->status, takeover_complete)) {
                 /* Stop means down if we didn't successfully migrate elsewhere */
-                remote_node_down(cmd->rsc_id, DOWN_KEEP_LRM);
+                remote_node_down(cmd->rsc_id, false);
             } else if (AM_I_DC == FALSE) {
                 /* Only the connection host and DC track node state,
                  * so if the connection migrated elsewhere and we aren't DC,
@@ -680,7 +654,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                        lrm_state->node_name);
             /* Do roughly what a 'stop' on the remote-resource would do */
             handle_remote_ra_stop(lrm_state, NULL);
-            remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);
+            remote_node_down(lrm_state->node_name, false);
             /* now fake the reply of a successful 'stop' */
             synthesize_lrmd_success(NULL, lrm_state->node_name,
                                     PCMK_ACTION_STOP);
@@ -1355,11 +1329,11 @@ remote_ra_process_pseudo(xmlNode *xml)
          * peer cache state will be incorrect unless and until the guest is
          * recovered.
          */
-        if (result) {
+        if (result != NULL) {
             const char *remote = pcmk__xe_id(result);
 
-            if (remote) {
-                remote_node_down(remote, DOWN_ERASE_LRM);
+            if (remote != NULL) {
+                remote_node_down(remote, true);
             }
         }
     }

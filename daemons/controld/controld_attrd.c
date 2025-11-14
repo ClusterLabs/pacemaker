@@ -108,8 +108,15 @@ update_attrd_list(GList *attrs, uint32_t opts)
     }
 }
 
+/*!
+ * \internal
+ * \brief Ask attribute manager to purge a node and its transient attributes
+ *
+ * \param[in] node_name   Node to purge
+ * \param[in] from_cache  If true, purge from node caches as well
+ */
 void
-update_attrd_remote_node_removed(const char *host)
+controld_purge_node_attrs(const char *node_name, bool from_cache)
 {
     int rc = pcmk_rc_ok;
 
@@ -117,14 +124,15 @@ update_attrd_remote_node_removed(const char *host)
         rc = pcmk_new_ipc_api(&attrd_api, pcmk_ipc_attrd);
     }
     if (rc == pcmk_rc_ok) {
-        crm_trace("Asking attribute manager to purge Pacemaker Remote node %s",
-                  host);
-        rc = pcmk__attrd_api_purge(attrd_api, host, true);
+        crm_debug("Asking %s to purge transient attributes%s for %s",
+                  pcmk_ipc_name(attrd_api, true),
+                  (from_cache? " and node cache" : ""), node_name);
+        rc = pcmk__attrd_api_purge(attrd_api, node_name, from_cache);
     }
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not purge Pacemaker Remote node %s "
-                "in attribute manager%s: %s " QB_XS " rc=%d",
-                host, when(), pcmk_rc_str(rc), rc);
+        crm_err("Could not purge node %s from %s%s: %s "
+                QB_XS " rc=%d", node_name, pcmk_ipc_name(attrd_api, true),
+                when(), pcmk_rc_str(rc), rc);
     }
 }
 
