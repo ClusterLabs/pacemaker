@@ -85,7 +85,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
     return reply;
 }
 
-xmlNode *
+void
 attrd_client_clear_failure(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
@@ -97,7 +97,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
          */
         attrd_send_message(NULL, xml, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
+        return;
     }
 
     rsc = pcmk__xe_get(xml, PCMK__XA_ATTR_RESOURCE);
@@ -135,7 +135,6 @@ attrd_client_clear_failure(pcmk__request_t *request)
     pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
 
     attrd_client_update(request);
-    return NULL;
 }
 
 xmlNode *
