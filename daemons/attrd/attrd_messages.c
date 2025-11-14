@@ -147,10 +147,12 @@ handle_remove_request(pcmk__request_t *request)
         }
         attrd_peer_remove(host, reap, request->peer);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
+
     } else {
-        return attrd_client_peer_remove(request);
+        attrd_client_peer_remove(request);
     }
+
+    return NULL;
 }
 
 static xmlNode *

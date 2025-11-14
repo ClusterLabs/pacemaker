@@ -137,7 +137,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
     attrd_client_update(request);
 }
 
-xmlNode *
+void
 attrd_client_peer_remove(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
@@ -181,7 +181,6 @@ attrd_client_peer_remove(pcmk__request_t *request)
     }
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-    return NULL;
 }
 
 xmlNode *
