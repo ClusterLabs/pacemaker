@@ -134,7 +134,8 @@ attrd_client_clear_failure(pcmk__request_t *request)
     pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_NAME);
     pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
 
-    return attrd_client_update(request);
+    attrd_client_update(request);
+    return NULL;
 }
 
 xmlNode *
@@ -388,13 +389,13 @@ send_child_update(xmlNode *child, void *data)
     return pcmk_rc_ok;
 }
 
-xmlNode *
+void
 attrd_client_update(pcmk__request_t *request)
 {
     xmlNode *xml = NULL;
     const char *attr, *value, *regex;
 
-    CRM_CHECK((request != NULL) && (request->xml != NULL), return NULL);
+    CRM_CHECK((request != NULL) && (request->xml != NULL), return);
 
     xml = request->xml;
 
@@ -421,7 +422,7 @@ attrd_client_update(pcmk__request_t *request)
                 if (handle_value_expansion(&value, child, request->op, attr) == EINVAL) {
                     pcmk__format_result(&request->result, CRM_EX_NOSUCH, PCMK_EXEC_ERROR,
                                         "Attribute %s does not exist", attr);
-                    return NULL;
+                    return;
                 }
             }
 
@@ -442,7 +443,7 @@ attrd_client_update(pcmk__request_t *request)
             request->xml = orig_xml;
         }
 
-        return NULL;
+        return;
     }
 
     attr = pcmk__xe_get(xml, PCMK__XA_ATTR_NAME);
@@ -451,13 +452,16 @@ attrd_client_update(pcmk__request_t *request)
 
     if (handle_regexes(request) != pcmk_rc_ok) {
         /* Error handling was already dealt with in handle_regexes, so just return. */
-        return NULL;
-    } else if (regex) {
+        return;
+    }
+
+    if (regex != NULL) {
         /* Recursively call attrd_client_update on the new message with regexes
          * expanded.  If supported by the attribute daemon, this means that all
          * matches can also be handled atomically.
          */
-        return attrd_client_update(request);
+        attrd_client_update(request);
+        return;
     }
 
     handle_missing_host(xml);
@@ -465,7 +469,7 @@ attrd_client_update(pcmk__request_t *request)
     if (handle_value_expansion(&value, xml, request->op, attr) == EINVAL) {
         pcmk__format_result(&request->result, CRM_EX_NOSUCH, PCMK_EXEC_ERROR,
                             "Attribute %s does not exist", attr);
-        return NULL;
+        return;
     }
 
     crm_debug("Broadcasting %s[%s]=%s%s",
@@ -474,7 +478,6 @@ attrd_client_update(pcmk__request_t *request)
 
     send_update_msg_to_cluster(request, xml);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-    return NULL;
 }
 
 /*!

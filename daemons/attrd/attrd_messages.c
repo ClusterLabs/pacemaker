@@ -197,35 +197,35 @@ handle_update_request(pcmk__request_t *request)
         attrd_peer_update(peer, request->xml, host, false);
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
         return NULL;
+    }
+
+    remove_unsupported_sync_points(request);
+
+    if (attrd_request_has_sync_point(request->xml)) {
+        /* If this client supplied a sync point it wants to wait for, add it to
+         * the wait list. Clients on this list will not receive an ACK until
+         * their sync point is hit which will result in the client stalled there
+         * until it receives a response.
+         *
+         * All other clients will receive the expected response as normal.
+         */
+        attrd_add_client_to_waitlist(request);
 
     } else {
-        remove_unsupported_sync_points(request);
-
-        if (attrd_request_has_sync_point(request->xml)) {
-            /* If this client supplied a sync point it wants to wait for, add it to
-             * the wait list.  Clients on this list will not receive an ACK until
-             * their sync point is hit which will result in the client stalled there
-             * until it receives a response.
-             *
-             * All other clients will receive the expected response as normal.
-             */
-            attrd_add_client_to_waitlist(request);
-
-        } else {
-            /* If the client doesn't want to wait for a sync point, go ahead and send
-             * the ACK immediately.  Otherwise, we'll send the ACK when the appropriate
-             * sync point is reached.
-             *
-             * In the normal case, attrd_client_update can be called recursively which
-             * makes where to send the ACK tricky.  Doing it here ensures the client
-             * only ever receives one.
-             */
-            attrd_send_ack(request->ipc_client, request->ipc_id,
-                           request->flags|crm_ipc_client_response);
-        }
-
-        return attrd_client_update(request);
+        /* If the client doesn't want to wait for a sync point, go ahead and
+         * send the ACK immediately. Otherwise, we'll send the ACK when the
+         * appropriate sync point is reached.
+         *
+         * In the normal case, attrd_client_update() can be called recursively,
+         * which makes where to send the ACK tricky. Doing it here ensures that
+         * the client only ever receives one.
+         */
+        attrd_send_ack(request->ipc_client, request->ipc_id,
+                       request->flags|crm_ipc_client_response);
     }
+
+    attrd_client_update(request);
+    return NULL;
 }
 
 static void
