@@ -158,9 +158,9 @@ handle_refresh_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
         return handle_unknown_request(request);
-    } else {
-        return attrd_client_refresh(request);
     }
+    attrd_client_refresh(request);
+    return NULL;
 }
 
 static xmlNode *

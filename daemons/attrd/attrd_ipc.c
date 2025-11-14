@@ -217,7 +217,7 @@ attrd_client_query(pcmk__request_t *request)
     return reply;
 }
 
-xmlNode *
+void
 attrd_client_refresh(pcmk__request_t *request)
 {
     crm_info("Updating all attributes");
@@ -226,7 +226,6 @@ attrd_client_refresh(pcmk__request_t *request)
     attrd_write_attributes(attrd_write_all|attrd_write_no_delay);
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-    return NULL;
 }
 
 static void
