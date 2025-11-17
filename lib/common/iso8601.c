@@ -69,16 +69,6 @@
         ((QB_ABS(usec) < QB_TIME_US_IN_SEC)     \
          && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
 
-// A date/time or duration
-struct crm_time_s {
-    int years;      // Calendar year (date/time) or number of years (duration)
-    int months;     // Number of months (duration only)
-    int days;       // Ordinal day of year (date/time) or number of days (duration)
-    int seconds;    // Seconds of day (date/time) or number of seconds (duration)
-    int offset;     // Seconds offset from UTC (date/time only)
-    bool duration;  // True if duration
-};
-
 static crm_time_t *parse_date(const char *date_str);
 
 static crm_time_t *
@@ -161,12 +151,7 @@ crm_time_free(crm_time_t * dt)
 static int
 year_days(int year)
 {
-    int d = 365;
-
-    if (crm_time_leapyear(year)) {
-        d++;
-    }
-    return d;
+    return crm_time_leapyear(year)? 366 : 365;
 }
 
 /* From http://myweb.ecu.edu/mccartyr/ISOwdALG.txt :
@@ -1798,8 +1783,6 @@ crm_time_add_seconds(crm_time_t *a_time, int extra)
     crm_time_add_days(a_time, days);
 }
 
-#define ydays(t) (crm_time_leapyear((t)->years)? 366 : 365)
-
 /*!
  * \brief Add days to a date/time
  *
@@ -1814,12 +1797,13 @@ crm_time_add_days(crm_time_t *a_time, int extra)
     crm_trace("Adding %d days to %.4d-%.3d", extra, a_time->years, a_time->days);
 
     if (extra > 0) {
-        while ((a_time->days + (long long) extra) > ydays(a_time)) {
+        while ((a_time->days + (long long) extra) > year_days(a_time->years)) {
             if ((a_time->years + 1LL) > INT_MAX) {
-                a_time->days = ydays(a_time); // Clip to latest we can handle
+                // Clip to latest we can handle
+                a_time->days = year_days(a_time->years);
                 return;
             }
-            extra -= ydays(a_time);
+            extra -= year_days(a_time->years);
             a_time->years++;
         }
     } else if (extra < 0) {
@@ -1831,7 +1815,7 @@ crm_time_add_days(crm_time_t *a_time, int extra)
                 return;
             }
             a_time->years--;
-            extra += ydays(a_time);
+            extra += year_days(a_time->years);
         }
     }
     a_time->days += extra;
@@ -1912,80 +1896,8 @@ crm_time_add_years(crm_time_t * a_time, int extra)
     }
 }
 
-/* The high-resolution variant of time object was added to meet an immediate
- * need, and is kept internal API.
- *
- * @TODO The long-term goal is to come up with a clean, unified design for a
- *       time type (or types) that meets all the various needs, to replace
- *       crm_time_t, pcmk__time_hr_t, and struct timespec (in lrmd_cmd_t).
- */
-
-static pcmk__time_hr_t *
-time_to_hr(const crm_time_t *dt)
-{
-    pcmk__time_hr_t *hr_dt = NULL;
-
-    pcmk__assert(dt != NULL);
-
-    hr_dt = pcmk__assert_alloc(1, sizeof(pcmk__time_hr_t));
-    hr_dt->years = dt->years;
-    hr_dt->months = dt->months;
-    hr_dt->days = dt->days;
-    hr_dt->seconds = dt->seconds;
-    hr_dt->offset = dt->offset;
-    hr_dt->duration = dt->duration;
-    return hr_dt;
-}
-
-/*!
- * \internal
- * \brief Return the current time as a high-resolution time
- *
- * \param[out] epoch  If not NULL, this will be set to seconds since epoch
- *
- * \return Newly allocated high-resolution time set to the current time
- */
-pcmk__time_hr_t *
-pcmk__time_hr_now(time_t *epoch)
-{
-    struct timespec tv;
-    crm_time_t dt;
-    pcmk__time_hr_t *hr;
-
-    qb_util_timespec_from_epoch_get(&tv);
-    if (epoch != NULL) {
-        *epoch = tv.tv_sec;
-    }
-    crm_time_set_timet(&dt, &(tv.tv_sec));
-    hr = time_to_hr(&dt);
-    hr->useconds = tv.tv_nsec / QB_TIME_NS_IN_USEC;
-    return hr;
-}
-
-pcmk__time_hr_t *
-pcmk__time_hr_new(const char *date_time)
-{
-    pcmk__time_hr_t *hr_dt = NULL;
-
-    if (date_time == NULL) {
-        hr_dt = pcmk__time_hr_now(NULL);
-    } else {
-        crm_time_t *dt = parse_date(date_time);
-
-        hr_dt = time_to_hr(dt);
-        crm_time_free(dt);
-    }
-    return hr_dt;
-}
-
-void
-pcmk__time_hr_free(pcmk__time_hr_t * hr_dt)
-{
-    free(hr_dt);
-}
-
 static void
-ha_get_tm_time(struct tm *target, const pcmk__time_hr_t *source)
+ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
     *target = (struct tm) {
         .tm_year = source->years - 1900,
@@ -2074,7 +1986,8 @@ get_g_date_time(const struct tm *tm, int offset)
  * \param[in] format  Date/time format string compatible with
  *                    \c g_date_time_format(), with additional support for
  *                    \c "%N" for fractional seconds
- * \param[in] hr_dt   Time value to format
+ * \param[in] dt      Time value to format (at seconds resolution)
+ * \param[in] usec    Microseconds to add to \p dt when formatting
  *
  * \return Newly allocated string with formatted string, or \c NULL on error
  *
@@ -2083,7 +1996,7 @@ get_g_date_time(const struct tm *tm, int offset)
  *       in a future release.
  */
 char *
-pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
+pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec)
 {
     int scanned_pos = 0; // How many characters of format have been parsed
     int printed_pos = 0; // How many characters of format have been processed
@@ -2099,8 +2012,8 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
 
     buf = g_string_sized_new(128);
 
-    ha_get_tm_time(&tm, hr_dt);
-    gdt = get_g_date_time(&tm, hr_dt->offset);
+    ha_get_tm_time(&tm, dt);
+    gdt = get_g_date_time(&tm, dt->offset);
     if (gdt == NULL) {
         goto done;
     }
@@ -2225,7 +2138,7 @@ pcmk__time_format_hr(const char *format, const pcmk__time_hr_t *hr_dt)
              * our microseconds value by 10^0 == 1, which is powers[6 - 1].
              */
             g_string_append_printf(buf, "%0*d", frac_digits,
-                                   hr_dt->useconds / powers[frac_digits - 1]);
+                                   usec / powers[frac_digits - 1]);
         }
     }
 
