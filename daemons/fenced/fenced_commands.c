@@ -248,15 +248,21 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
         /* Either target is NULL or we didn't find a mapping for it. Try to
          * parse the entire stripped value as an interval spec. Take ownership
          * so that we don't free stripped twice.
+         *
+         * We can't tell based on which characters are present whether stripped
+         * was a list of mappings or an interval spec. An ISO 8601 interval may
+         * contain a colon, and a Pacemaker time-and-units string may contain
+         * whitespace.
          */
         delay_base_s = value;
         value = NULL;
     }
 
-    if (strchr(delay_base_s, ':') == NULL) {
-        pcmk_parse_interval_spec(delay_base_s, &delay_base);
-        delay_base /= 1000;
-    }
+    /* @COMPAT Should we accept only a simple time-and-units string, rather than
+     * an interval spec?
+     */
+    pcmk_parse_interval_spec(delay_base_s, &delay_base);
+    delay_base /= 1000;
 
     free(delay_base_s);
     free(value);
