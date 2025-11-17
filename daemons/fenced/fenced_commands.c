@@ -284,6 +284,10 @@ get_value_for_target(const char *target, const char *values)
     return value;
 }
 
+/* @TODO Consolidate some of this with build_port_aliases(). But keep in
+ * mind that build_port_aliases()/pcmk__host_map supports either '=' or ':'
+ * as a mapping separator, while pcmk_delay_base supports only ':'.
+ */
 static int
 get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
