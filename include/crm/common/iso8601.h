@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -99,7 +99,7 @@ long long crm_time_get_seconds(const crm_time_t *dt);
 long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
 
 void crm_time_set(crm_time_t *target, const crm_time_t *source);
-void crm_time_set_timet(crm_time_t *target, const time_t *source);
+void crm_time_set_timet(crm_time_t *target, const time_t *source_sec);
 
 /* Returns a new time object */
 crm_time_t *pcmk_copy_time(const crm_time_t *source);
