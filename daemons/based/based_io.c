@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -293,7 +294,7 @@ uninitializeCib(void)
  * on failure.
  */
 int
-activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
+activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
 {
     if (new_cib) {
         xmlNode *saved_cib = the_cib;

@@ -414,7 +414,7 @@ startCib(const char *filename)
     gboolean active = FALSE;
     xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
 
-    if (activateCibXml(cib, TRUE, "start") == 0) {
+    if (activateCibXml(cib, true, "start") == 0) {
         int port = 0;
 
         active = TRUE;
