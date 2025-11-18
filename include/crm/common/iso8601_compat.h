@@ -57,6 +57,10 @@ void crm_time_set_timet(crm_time_t *target, const time_t *source_sec);
 int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
                          uint32_t *d);
 
+//! \deprecated Do not use
+#define crm_time_log(level, prefix, dt, flags)  \
+    crm_time_log_alias(level, __FILE__, __func__, __LINE__, prefix, dt, flags)
+
 #ifdef __cplusplus
 }
 #endif
