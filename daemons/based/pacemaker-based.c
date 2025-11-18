@@ -40,7 +40,7 @@ pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
-static gboolean preserve_status = FALSE;
+static bool preserve_status = false;
 
 gboolean cib_writes_enabled = TRUE;
 gboolean stand_alone = FALSE;
@@ -79,7 +79,7 @@ setup_stand_alone(GError **error)
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
 
-    preserve_status = TRUE;
+    preserve_status = true;
     cib_writes_enabled = FALSE;
 
     rc = pcmk__daemon_user(&uid, &gid);

@@ -152,7 +152,7 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
 }
 
 xmlNode *
-readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
+readCibXmlFile(const char *dir, const char *file, bool discard_status)
 {
     struct dirent **namelist = NULL;
 
