@@ -120,7 +120,7 @@ int cib_process_schemas(const char *op, int options, const char *section,
                         xmlNode **result_cib, xmlNode **answer);
 
 void send_sync_request(const char *host);
-int sync_our_cib(xmlNode *request, gboolean all);
+int sync_our_cib(xmlNode *request, bool all);
 
 cib__op_fn_t based_get_op_function(const cib__operation_t *operation);
 void cib_diff_notify(const char *op, int result, const char *call_id,

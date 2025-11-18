@@ -187,7 +187,7 @@ int
 cib_process_sync(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
-    return sync_our_cib(req, TRUE);
+    return sync_our_cib(req, true);
 }
 
 int
@@ -288,7 +288,7 @@ cib_process_sync_one(const char *op, int options, const char *section, xmlNode *
                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                      xmlNode ** answer)
 {
-    return sync_our_cib(req, FALSE);
+    return sync_our_cib(req, false);
 }
 
 int
@@ -404,7 +404,7 @@ cib_msg_copy(xmlNode *msg)
 }
 
 int
-sync_our_cib(xmlNode * request, gboolean all)
+sync_our_cib(xmlNode *request, bool all)
 {
     int result = pcmk_ok;
     char *digest = NULL;

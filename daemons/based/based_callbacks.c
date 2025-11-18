@@ -496,7 +496,7 @@ process_ping_reply(xmlNode *reply)
             }
 
             pcmk__xml_free(remote_cib);
-            sync_our_cib(reply, FALSE);
+            sync_our_cib(reply, false);
         }
     }
 }
@@ -1174,7 +1174,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             && compare_version(pcmk__xe_get(the_cib, PCMK_XA_CRM_FEATURE_SET),
                                "3.19.0") < 0) {
 
-            sync_our_cib(request, TRUE);
+            sync_our_cib(request, true);
         }
 
         mainloop_timer_stop(digest_timer);
