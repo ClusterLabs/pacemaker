@@ -43,6 +43,9 @@ int crm_time_weeks_in_year(int year);
 //! \deprecated Do not use
 int crm_time_january1_weekday(int year);
 
+//! \deprecated Do not use
+void crm_time_set(crm_time_t *target, const crm_time_t *source);
+
 #ifdef __cplusplus
 }
 #endif

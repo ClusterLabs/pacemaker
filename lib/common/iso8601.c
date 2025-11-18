@@ -1354,25 +1354,6 @@ crm_time_free_period(crm_time_period_t *period)
 }
 
 void
-crm_time_set(crm_time_t *target, const crm_time_t *source)
-{
-    crm_trace("target=%p, source=%p", target, source);
-
-    CRM_CHECK(target != NULL && source != NULL, return);
-
-    target->years = source->years;
-    target->days = source->days;
-    target->months = source->months;    /* Only for durations */
-    target->seconds = source->seconds;
-    target->offset = source->offset;
-
-    crm_time_log(LOG_TRACE, "source", source,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_TRACE, "target", target,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-}
-
-void
 crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
 {
     const struct tm *source = localtime(source_sec);
@@ -2280,6 +2261,25 @@ int
 crm_time_january1_weekday(int year)
 {
     return jan1_day_of_week(year);
+}
+
+void
+crm_time_set(crm_time_t *target, const crm_time_t *source)
+{
+    crm_trace("target=%p, source=%p", target, source);
+
+    CRM_CHECK(target != NULL && source != NULL, return);
+
+    target->years = source->years;
+    target->days = source->days;
+    target->months = source->months;    /* Only for durations */
+    target->seconds = source->seconds;
+    target->offset = source->offset;
+
+    crm_time_log(LOG_TRACE, "source", source,
+                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    crm_time_log(LOG_TRACE, "target", target,
+                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 }
 
 // LCOV_EXCL_STOP

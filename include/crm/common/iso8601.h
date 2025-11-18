@@ -97,7 +97,6 @@ long long crm_time_get_seconds(const crm_time_t *dt);
 /* Time in seconds since 1970-01-01 00:00:00Z */
 long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
 
-void crm_time_set(crm_time_t *target, const crm_time_t *source);
 void crm_time_set_timet(crm_time_t *target, const time_t *source_sec);
 
 /* Returns a new time object */
