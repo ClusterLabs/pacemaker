@@ -1370,20 +1370,6 @@ crm_time_free_period(crm_time_period_t *period)
     }
 }
 
-void
-crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
-{
-    crm_time_t *source = NULL;
-
-    if (source_sec == NULL) {
-        return;
-    }
-
-    source = pcmk__copy_timet(*source_sec);
-    *target = *source;
-    crm_time_free(source);
-}
-
 /*!
  * \internal
  * \brief Set one time object to another if the other is earlier
@@ -2302,6 +2288,20 @@ bool
 crm_time_check(const crm_time_t *dt)
 {
     return valid_time(dt);
+}
+
+void
+crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
+{
+    crm_time_t *source = NULL;
+
+    if (source_sec == NULL) {
+        return;
+    }
+
+    source = pcmk__copy_timet(*source_sec);
+    *target = *source;
+    crm_time_free(source);
 }
 
 // LCOV_EXCL_STOP

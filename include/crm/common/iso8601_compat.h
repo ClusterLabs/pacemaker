@@ -12,6 +12,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>             // uint32_t
+#include <time.h>               // time_t
 
 #include <crm/common/iso8601.h> // crm_time_t
 
@@ -48,6 +49,9 @@ void crm_time_set(crm_time_t *target, const crm_time_t *source);
 
 //! \deprecated Do not use
 bool crm_time_check(const crm_time_t *dt);
+
+//! \deprecated Do not use
+void crm_time_set_timet(crm_time_t *target, const time_t *source_sec);
 
 #ifdef __cplusplus
 }
