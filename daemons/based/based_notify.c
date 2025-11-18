@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -41,7 +42,7 @@ static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
-    gboolean do_send = FALSE;
+    bool do_send = false;
     int rc = pcmk_rc_ok;
 
     pcmk__client_t *client = value;
@@ -58,52 +59,56 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     if (pcmk__is_set(client->flags, cib_notify_diff)
         && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
-        do_send = TRUE;
+        do_send = true;
 
     } else if (pcmk__is_set(client->flags, cib_notify_confirm)
                && pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
                                pcmk__str_none)) {
-        do_send = TRUE;
+        do_send = true;
 
     } else if (pcmk__is_set(client->flags, cib_notify_pre)
                && pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
                                pcmk__str_none)) {
-        do_send = TRUE;
+        do_send = true;
 
     } else if (pcmk__is_set(client->flags, cib_notify_post)
                && pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY,
                                pcmk__str_none)) {
-        do_send = TRUE;
+        do_send = true;
     }
 
-    if (do_send) {
-        switch (PCMK__CLIENT_TYPE(client)) {
-            case pcmk__client_ipc:
-                rc = pcmk__ipc_send_iov(client, update->iov,
-                                        crm_ipc_server_event);
+    if (!do_send) {
+        return;
+    }
 
-                /* EAGAIN isn't an error for server events.  Sending did fail
-                 * with EAGAIN, but the iov was added to the send queue and we
-                 * will attempt to send it again the next time pcmk__ipc_send_iov
-                 * is called, or when crm_ipcs_flush_events_cb happens.
-                 */
-                if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
-                    crm_warn("Could not notify client %s: %s " QB_XS " id=%s",
-                             pcmk__client_name(client), pcmk_rc_str(rc),
-                             client->id);
-                }
-                break;
-            case pcmk__client_tls:
-            case pcmk__client_tcp:
-                crm_debug("Sent %s notification to client %s (id %s)",
-                          type, pcmk__client_name(client), client->id);
-                pcmk__remote_send_xml(client->remote, update->msg);
-                break;
-            default:
-                crm_err("Unknown transport for client %s "
-                        QB_XS " flags=%#016" PRIx64,
-                        pcmk__client_name(client), client->flags);
-        }
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_ipc:
+            rc = pcmk__ipc_send_iov(client, update->iov,
+                                    crm_ipc_server_event);
+
+            /* EAGAIN isn't an error for server events.  Sending did fail
+             * with EAGAIN, but the iov was added to the send queue and we
+             * will attempt to send it again the next time pcmk__ipc_send_iov
+             * is called, or when crm_ipcs_flush_events_cb happens.
+             */
+            if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
+                crm_warn("Could not notify client %s: %s " QB_XS " id=%s",
+                         pcmk__client_name(client), pcmk_rc_str(rc),
+                         client->id);
+            }
+            break;
+
+        case pcmk__client_tls:
+        case pcmk__client_tcp:
+            crm_debug("Sent %s notification to client %s (id %s)",
+                      type, pcmk__client_name(client), client->id);
+            pcmk__remote_send_xml(client->remote, update->msg);
+            break;
+
+        default:
+            crm_err("Unknown transport for client %s "
+                    QB_XS " flags=%#016" PRIx64,
+                    pcmk__client_name(client), client->flags);
     }
 }
 
