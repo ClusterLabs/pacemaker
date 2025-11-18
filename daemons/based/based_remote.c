@@ -270,7 +270,7 @@ cib_remote_listen(gpointer data)
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (csock == -1) {
         crm_warn("Could not accept remote connection: %s", pcmk_rc_str(errno));
-        return TRUE;
+        return 0;
     }
 
     pcmk__sockaddr2str(&addr, ipstr);
@@ -281,7 +281,7 @@ cib_remote_listen(gpointer data)
                  "it could not be set to non-blocking: %s",
                  ipstr, pcmk_rc_str(rc));
         close(csock);
-        return TRUE;
+        return 0;
     }
 
     num_clients++;
@@ -296,7 +296,7 @@ cib_remote_listen(gpointer data)
         new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
         if (new_client->remote->tls_session == NULL) {
             close(csock);
-            return TRUE;
+            return 0;
         }
     } else {
         pcmk__set_client_flags(new_client, pcmk__client_tcp);
@@ -315,7 +315,7 @@ cib_remote_listen(gpointer data)
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
                         &remote_client_fd_callbacks);
 
-    return TRUE;
+    return 0;
 }
 
 void
