@@ -53,6 +53,10 @@ bool crm_time_check(const crm_time_t *dt);
 //! \deprecated Do not use
 void crm_time_set_timet(crm_time_t *target, const time_t *source_sec);
 
+//! \deprecated Do not use
+int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                         uint32_t *d);
+
 #ifdef __cplusplus
 }
 #endif
