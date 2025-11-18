@@ -24,7 +24,7 @@ char *pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec);
 char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
-crm_time_t *pcmk__copy_timet(time_t source);
+crm_time_t *pcmk__copy_timet(time_t source_sec);
 
 // A date/time or duration
 struct crm_time_s {
