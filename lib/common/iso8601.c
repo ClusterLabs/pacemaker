@@ -275,15 +275,6 @@ pcmk__time_log_as(const char *file, const char *function, int line,
     free(date_s);
 }
 
-void
-crm_time_log_alias(int log_level, const char *file, const char *function,
-                   int line, const char *prefix, const crm_time_t *date_time,
-                   int flags)
-{
-    pcmk__time_log_as(file, function, line, pcmk__clip_log_level(log_level),
-                      prefix, date_time, flags);
-}
-
 static void
 seconds_to_hms(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 {
@@ -2329,6 +2320,15 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     CRM_CHECK(dt->days > 0, return FALSE);
     pcmk__time_get_ywd(dt, y, w, d);
     return TRUE;
+}
+
+void
+crm_time_log_alias(int log_level, const char *file, const char *function,
+                   int line, const char *prefix, const crm_time_t *date_time,
+                   int flags)
+{
+    pcmk__time_log_as(file, function, line, pcmk__clip_log_level(log_level),
+                      prefix, date_time, flags);
 }
 
 // LCOV_EXCL_STOP

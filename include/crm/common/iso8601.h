@@ -57,10 +57,6 @@ void crm_time_free(crm_time_t * dt);
 bool crm_time_is_defined(const crm_time_t *t);
 char *crm_time_as_string(const crm_time_t *dt, int flags);
 
-void crm_time_log_alias(int log_level, const char *file, const char *function,
-                        int line, const char *prefix,
-                        const crm_time_t *date_time, int flags);
-
 #define crm_time_log_date          0x001
 #define crm_time_log_timeofday     0x002
 #define crm_time_log_with_timezone 0x004
