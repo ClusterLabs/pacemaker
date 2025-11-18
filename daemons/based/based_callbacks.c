@@ -46,7 +46,7 @@ static int cib_process_command(xmlNode *request,
                                xmlNode **cib_diff, bool privileged);
 
 static int32_t cib_common_callback(qb_ipcs_connection_t *c, void *data,
-                                   size_t size, gboolean privileged);
+                                   size_t size, bool privileged);
 
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
@@ -69,7 +69,7 @@ cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
     pcmk__client_t *client = pcmk__find_client(c);
 
     crm_trace("%p message from %s", c, client->id);
-    return cib_common_callback(c, data, size, TRUE);
+    return cib_common_callback(c, data, size, true);
 }
 
 static int32_t
@@ -78,7 +78,7 @@ cib_ipc_dispatch_ro(qb_ipcs_connection_t * c, void *data, size_t size)
     pcmk__client_t *client = pcmk__find_client(c);
 
     crm_trace("%p message from %s", c, client->id);
-    return cib_common_callback(c, data, size, FALSE);
+    return cib_common_callback(c, data, size, false);
 }
 
 /* Error code means? */
@@ -221,7 +221,7 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
 
 void
 cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
-                           pcmk__client_t *cib_client, gboolean privileged)
+                           pcmk__client_t *cib_client, bool privileged)
 {
     const char *op = pcmk__xe_get(op_request, PCMK__XA_CIB_OP);
     uint32_t call_options = cib_none;
@@ -299,7 +299,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
 }
 
 int32_t
-cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size, gboolean privileged)
+cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privileged)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
@@ -766,7 +766,7 @@ send_peer_reply(xmlNode *msg, const char *originator)
  * \return Legacy Pacemaker return code
  */
 int
-cib_process_request(xmlNode *request, gboolean privileged,
+cib_process_request(xmlNode *request, bool privileged,
                     const pcmk__client_t *cib_client)
 {
     // @TODO: Break into multiple smaller functions
@@ -1237,7 +1237,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     }
 
     /* crm_log_xml_trace(msg, "Peer[inbound]"); */
-    cib_process_request(msg, TRUE, NULL);
+    cib_process_request(msg, true, NULL);
     return;
 
   bail:

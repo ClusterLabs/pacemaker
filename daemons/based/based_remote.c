@@ -405,7 +405,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     crm_log_xml_trace(command, "Remote command: ");
-    cib_common_callback_worker(0, 0, command, client, TRUE);
+    cib_common_callback_worker(0, 0, command, client, true);
 }
 
 static int

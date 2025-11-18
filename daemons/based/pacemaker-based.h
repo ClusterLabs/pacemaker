@@ -69,8 +69,8 @@ int init_remote_listener(int port, bool encrypted);
 void cib_peer_callback(xmlNode *msg, void *private_data);
 void cib_common_callback_worker(uint32_t id, uint32_t flags,
                                 xmlNode *op_request, pcmk__client_t *cib_client,
-                                gboolean privileged);
-int cib_process_request(xmlNode *request, gboolean privileged,
+                                bool privileged);
+int cib_process_request(xmlNode *request, bool privileged,
                         const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
 void terminate_cib(int exit_status);
