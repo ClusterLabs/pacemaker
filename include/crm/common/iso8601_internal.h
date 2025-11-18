@@ -10,10 +10,12 @@
 #ifndef PCMK__CRM_COMMON_ISO8601_INTERNAL__H
 #define PCMK__CRM_COMMON_ISO8601_INTERNAL__H
 
-#include <glib.h>
-#include <time.h>
-#include <sys/time.h>
 #include <ctype.h>
+#include <stdint.h>             // uint8_t, uint32_t
+#include <sys/time.h>
+#include <time.h>
+
+#include <glib.h>
 #include <crm/common/iso8601.h>
 
 #ifdef __cplusplus
@@ -27,6 +29,13 @@ char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
 crm_time_t *pcmk__copy_timet(time_t source_sec);
+
+void pcmk__time_log_as(const char *file, const char *function, int line,
+                       uint8_t level, const char *prefix, const crm_time_t *dt,
+                       uint32_t flags);
+
+#define pcmk__time_log(level, prefix, dt, flags)    \
+    pcmk__time_log_as(__FILE__, __func__, __LINE__, level, prefix, dt, flags);
 
 // A date/time or duration
 struct crm_time_s {
