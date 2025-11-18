@@ -45,8 +45,8 @@ static int cib_process_command(xmlNode *request,
                                cib__op_fn_t op_function, xmlNode **reply,
                                xmlNode **cib_diff, bool privileged);
 
-static gboolean cib_common_callback(qb_ipcs_connection_t *c, void *data,
-                                    size_t size, gboolean privileged);
+static int32_t cib_common_callback(qb_ipcs_connection_t *c, void *data,
+                                   size_t size, gboolean privileged);
 
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
