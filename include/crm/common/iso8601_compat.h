@@ -11,6 +11,9 @@
 #define PCMK__CRM_COMMON_ISO8601_COMPAT__H
 
 #include <stdbool.h>
+#include <stdint.h>             // uint32_t
+
+#include <crm/common/iso8601.h> // crm_time_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +33,9 @@ bool crm_time_leapyear(int year);
 
 //! \deprecated Do not use
 int crm_time_days_in_month(int month, int year);
+
+//! \deprecated Do not use
+int crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m);
 
 #ifdef __cplusplus
 }

@@ -298,15 +298,6 @@ crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
     return TRUE;
 }
 
-int
-crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
-{
-    uint32_t s;
-
-    seconds_to_hms(dt->seconds, h, m, &s);
-    return TRUE;
-}
-
 long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
@@ -2266,6 +2257,15 @@ int
 crm_time_days_in_month(int month, int year)
 {
     return days_in_month_year(month, year);
+}
+
+int
+crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
+{
+    uint32_t s;
+
+    seconds_to_hms(dt->seconds, h, m, &s);
+    return TRUE;
 }
 
 // LCOV_EXCL_STOP

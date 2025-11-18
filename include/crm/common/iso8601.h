@@ -85,7 +85,6 @@ int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
 int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                            uint32_t *s);
-int crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m);
 int crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
                            uint32_t *d);
 int crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d);
