@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -53,7 +54,7 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
         return pcmk_ok;
     }
 
-    if (cib_shutdown_flag == FALSE) {
+    if (!cib_shutdown_flag) {
         crm_err("Peer %s mistakenly thinks we wanted to shut down", host);
         return -EINVAL;
     }

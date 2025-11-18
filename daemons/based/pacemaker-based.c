@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pwd.h>
@@ -32,7 +33,7 @@
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
 extern int init_remote_listener(int port, gboolean encrypted);
-gboolean cib_shutdown_flag = FALSE;
+bool cib_shutdown_flag = false;
 int cib_status = pcmk_ok;
 
 pcmk_cluster_t *crm_cluster = NULL;

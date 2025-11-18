@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #ifndef PACEMAKER_BASED__H
 #  define PACEMAKER_BASED__H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -53,7 +54,7 @@ extern gboolean cib_writes_enabled;
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
 extern gboolean stand_alone;
-extern gboolean cib_shutdown_flag;
+extern bool cib_shutdown_flag;
 extern gchar *cib_root;
 extern int cib_status;
 

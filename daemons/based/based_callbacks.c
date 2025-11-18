@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>     // uint32_t, uint64_t, UINT64_C()
 #include <errno.h>
@@ -1297,11 +1298,11 @@ cib_shutdown(int nsig)
 {
     struct qb_ipcs_stats srv_stats;
 
-    if (cib_shutdown_flag == FALSE) {
+    if (!cib_shutdown_flag) {
         int disconnects = 0;
         qb_ipcs_connection_t *c = NULL;
 
-        cib_shutdown_flag = TRUE;
+        cib_shutdown_flag = true;
 
         c = qb_ipcs_connection_first_get(ipcs_rw);
         while (c != NULL) {
