@@ -270,7 +270,7 @@ crm_time_log_alias(int log_level, const char *file, const char *function,
 }
 
 static void
-crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
+seconds_to_hms(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 {
     uint32_t hours, minutes, seconds;
 
@@ -294,7 +294,7 @@ int
 crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                        uint32_t *s)
 {
-    crm_time_get_sec(dt->seconds, h, m, s);
+    seconds_to_hms(dt->seconds, h, m, s);
     return TRUE;
 }
 
@@ -303,7 +303,7 @@ crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
 {
     uint32_t s;
 
-    crm_time_get_sec(dt->seconds, h, m, &s);
+    seconds_to_hms(dt->seconds, h, m, &s);
     return TRUE;
 }
 
@@ -521,7 +521,7 @@ duration_as_string(const crm_time_t *dt, int usec, bool show_usec, GString *buf)
         uint32_t u = QB_ABS(usec);
         bool print_sec_component = false;
 
-        crm_time_get_sec(dt->seconds, &h, &m, &s);
+        seconds_to_hms(dt->seconds, &h, &m, &s);
         print_sec_component = ((s != 0) || (show_usec && (u != 0)));
 
         g_string_append(buf, " (");
@@ -671,7 +671,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
         if (pcmk__is_set(flags, crm_time_log_with_timezone)
             && (dt->offset != 0)) {
-            crm_time_get_sec(dt->offset, &h, &m, &s);
+
+            seconds_to_hms(dt->offset, &h, &m, &s);
             g_string_append_printf(buf, " %c%.2" PRIu32 ":%.2" PRIu32,
                                    ((dt->offset < 0)? '-' : '+'), h, m);
 
@@ -853,7 +854,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
     if (!crm_time_parse_offset(offset_s, &(a_time->offset))) {
         return false;
     }
-    crm_time_get_sec(a_time->offset, &h, &m, &s);
+
+    seconds_to_hms(a_time->offset, &h, &m, &s);
     crm_trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
               (a_time->offset < 0)? '-' : '+', h, m);
 
@@ -1924,7 +1926,7 @@ get_g_date_time(const struct tm *tm, int offset)
         uint32_t seconds = 0;
         int rc = 0;
 
-        crm_time_get_sec(offset, &hours, &minutes, &seconds);
+        seconds_to_hms(offset, &hours, &minutes, &seconds);
 
         rc = snprintf(buf, sizeof(buf), "%c%02" PRIu32 ":%02" PRIu32,
                       ((offset >= 0)? '+' : '-'), hours, minutes);
