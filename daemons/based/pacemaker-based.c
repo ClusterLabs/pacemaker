@@ -386,7 +386,7 @@ cib_init(void)
 
     config_hash = pcmk__strkey_table(free, free);
 
-    if (startCib("cib.xml") == FALSE) {
+    if (!startCib("cib.xml")) {
         crm_crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
@@ -411,25 +411,24 @@ cib_init(void)
 static bool
 startCib(const char *filename)
 {
-    gboolean active = FALSE;
     xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
+    int port = 0;
 
-    if (activateCibXml(cib, true, "start") == 0) {
-        int port = 0;
-
-        active = TRUE;
-
-        cib_read_config(config_hash, cib);
-
-        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
-        if (port >= 0) {
-            remote_tls_fd = init_remote_listener(port, TRUE);
-        }
-
-        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
-        if (port >= 0) {
-            remote_fd = init_remote_listener(port, FALSE);
-        }
+    if (activateCibXml(cib, true, "start") != 0) {
+        return false;
     }
-    return active;
+
+    cib_read_config(config_hash, cib);
+
+    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
+    if (port >= 0) {
+        remote_tls_fd = init_remote_listener(port, TRUE);
+    }
+
+    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
+    if (port >= 0) {
+        remote_fd = init_remote_listener(port, FALSE);
+    }
+
+    return true;
 }
