@@ -882,7 +882,7 @@ parse_date(const char *date_str)
     if ((date_str[0] == 'T')
         || ((strlen(date_str) > 2) && (date_str[2] == ':'))) {
         /* Just a time supplied - Infer current date */
-        dt = crm_time_new(NULL);
+        dt = pcmk__copy_timet(time(NULL));
         if (date_str[0] == 'T') {
             time_s = date_str + 1;
         } else {
@@ -1302,7 +1302,7 @@ crm_time_parse_period(const char *period_str)
 
     } else if (period->diff != NULL) {
         // Only duration given, assume start is now
-        period->start = crm_time_new(NULL);
+        period->start = pcmk__copy_timet(time(NULL));
 
     } else {
         // Only start given
