@@ -71,15 +71,13 @@
 
 static crm_time_t *parse_date(const char *date_str);
 
+// Return value is guaranteed not to be NULL
 static crm_time_t *
-crm_get_utc_time(const crm_time_t *dt)
+utc_from_crm_time(const crm_time_t *dt)
 {
     crm_time_t *utc = NULL;
 
-    if (dt == NULL) {
-        errno = EINVAL;
-        return NULL;
-    }
+    pcmk__assert(dt != NULL);
 
     utc = crm_time_new_undefined();
     utc->years = dt->years;
@@ -328,7 +326,7 @@ crm_time_get_seconds(const crm_time_t *dt)
     }
 
     // @TODO This is inefficient if dt is already in UTC
-    utc = crm_get_utc_time(dt);
+    utc = utc_from_crm_time(dt);
     if (utc == NULL) {
         return 0;
     }
@@ -622,8 +620,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
     // Convert to UTC if local timezone was not requested
     if ((dt->offset != 0) && !pcmk__is_set(flags, crm_time_log_with_timezone)) {
-        crm_trace("UTC conversion");
-        utc = crm_get_utc_time(dt);
+        utc = utc_from_crm_time(dt);
         dt = utc;
     }
 
@@ -1498,12 +1495,7 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
     }
 
     answer = pcmk_copy_time(dt);
-
-    utc = crm_get_utc_time(value);
-    if (utc == NULL) {
-        crm_time_free(answer);
-        return NULL;
-    }
+    utc = utc_from_crm_time(value);
 
     crm_time_add_years(answer, utc->years);
     crm_time_add_months(answer, utc->months);
@@ -1645,16 +1637,8 @@ crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    utc = crm_get_utc_time(value);
-    if (utc == NULL) {
-        return NULL;
-    }
-
-    answer = crm_get_utc_time(dt);
-    if (answer == NULL) {
-        crm_time_free(utc);
-        return NULL;
-    }
+    utc = utc_from_crm_time(value);
+    answer = utc_from_crm_time(dt);
     answer->duration = TRUE;
 
     crm_time_add_years(answer, -utc->years);
@@ -1679,12 +1663,9 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    utc = crm_get_utc_time(value);
-    if (utc == NULL) {
-        return NULL;
-    }
-
+    utc = utc_from_crm_time(value);
     answer = pcmk_copy_time(dt);
+
     crm_time_add_years(answer, -utc->years);
     if(utc->months != 0) {
         crm_time_add_months(answer, -utc->months);
@@ -1741,8 +1722,8 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
         return 1;
     }
 
-    t1 = crm_get_utc_time(a);
-    t2 = crm_get_utc_time(b);
+    t1 = utc_from_crm_time(a);
+    t2 = utc_from_crm_time(b);
 
     do_cmp_field(t1, t2, years);
     do_cmp_field(t1, t2, days);
