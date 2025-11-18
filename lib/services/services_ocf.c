@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                // true, false
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -20,95 +21,142 @@
 #include "services_private.h"
 #include "services_ocf.h"
 
+/*!
+ * \internal
+ * \brief List the OCF providers from \c PCMK__OCF_RA_PATH
+ *
+ * For each directory along \c PCMK__OCF_RA_PATH (a colon-delimited list), this
+ * function adds all top-level subdirectories to the list, excluding those
+ * beginning with \c '.'.
+ *
+ * \return Newly allocated list of OCF providers as newly allocated strings
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       <tt>g_list_free_full(list, free)</tt>.
+ */
 GList *
-resources_os_list_ocf_providers(void)
+services__list_ocf_providers(void)
 {
-    return get_directory_list(PCMK__OCF_RA_PATH, FALSE, TRUE);
-}
+    GList *list = NULL;
+    gchar **dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
-static GList *
-services_os_get_directory_list_provider(const char *root, const char *provider,
-                                        gboolean files, gboolean executable)
-{
-    GList *result = NULL;
-    char *dirs = strdup(root);
-    char *dir = NULL;
-    char buffer[PATH_MAX];
+    // NULL dirs should be impossible if PCMK__OCF_RA_PATH is defined correctly
+    CRM_CHECK(dirs != NULL, return NULL);
 
-    if (pcmk__str_empty(dirs)) {
-        free(dirs);
-        return result;
+    for (gchar **dir = dirs; *dir != NULL; dir++) {
+        list = g_list_concat(list, services__list_dir(*dir, false));
     }
 
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        GList *tmp = NULL;
-
-        sprintf(buffer, "%s/%s", dir, provider);
-        tmp = services_os_get_single_directory_list(buffer, files, executable);
-
-        if (tmp) {
-            result = g_list_concat(result, tmp);
-        }
-    }
-
-    free(dirs);
-
-    return result;
+    g_strfreev(dirs);
+    return list;
 }
 
+/*!
+ * \internal
+ * \brief List the agents from the given OCF provider or from all OCF providers
+ *
+ * If \p provider is not \c NULL, for each directory along \c PCMK__OCF_RA_PATH
+ * (a colon-delimited list), this function looks for a subdirectory called
+ * \p provider. It then finds the top-level executable files inside that
+ * subdirectory, excluding those beginning with \c '.', and adds them to the
+ * list.
+ *
+ * If \p provider is \c NULL, this function does the above for each provider and
+ * concatenates the results.
+ *
+ * \param[in] provider  OCF provider (\c NULL to list agents from all providers)
+ *
+ * \return Newly allocated list of OCF agents as newly allocated strings
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       <tt>g_list_free_full(list, free)</tt>.
+ */
 GList *
-resources_os_list_ocf_agents(const char *provider)
+services__list_ocf_agents(const char *provider)
 {
-    GList *gIter = NULL;
-    GList *result = NULL;
-    GList *providers = NULL;
+    GList *list = NULL;
+    gchar **dirs = NULL;
 
-    if (provider) {
-        return services_os_get_directory_list_provider(PCMK__OCF_RA_PATH, provider,
-                                                       TRUE, TRUE);
-    }
+    if (provider == NULL) {
+        // Make a recursive call for each provider and concatenate the results
+        GList *providers = services__list_ocf_providers();
 
-    providers = resources_os_list_ocf_providers();
-    for (gIter = providers; gIter != NULL; gIter = gIter->next) {
-        GList *tmp1 = result;
-        GList *tmp2 = resources_os_list_ocf_agents(gIter->data);
-
-        if (tmp2) {
-            result = g_list_concat(tmp1, tmp2);
+        for (const GList *iter = providers; iter != NULL; iter = iter->next) {
+            provider = (const char *) iter->data;
+            list = g_list_concat(list, services__list_ocf_agents(provider));
         }
-    }
-    g_list_free_full(providers, free);
-    return result;
-}
-
-gboolean
-services__ocf_agent_exists(const char *provider, const char *agent)
-{
-    gboolean rc = FALSE;
-    struct stat st;
-    char *dirs = strdup(PCMK__OCF_RA_PATH);
-    char *dir = NULL;
-    char *buf = NULL;
-
-    if (provider == NULL || agent == NULL || pcmk__str_empty(dirs)) {
-        free(dirs);
-        return rc;
+        g_list_free_full(providers, free);
+        return list;
     }
 
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        buf = pcmk__assert_asprintf("%s/%s/%s", dir, provider, agent);
-        if (stat(buf, &st) == 0) {
-            free(buf);
-            rc = TRUE;
-            break;
-        }
+    dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
 
+    // NULL dirs should be impossible if PCMK__OCF_RA_PATH is defined correctly
+    CRM_CHECK(dirs != NULL, return NULL);
+
+    for (gchar **dir = dirs; *dir != NULL; dir++) {
+        char *buf = pcmk__assert_asprintf("%s/%s", *dir, provider);
+
+        list = g_list_concat(list, services__list_dir(buf, true));
         free(buf);
     }
 
-    free(dirs);
+    g_strfreev(dirs);
+    return list;
+}
 
-    return rc;
+/*!
+ * \internal
+ * \brief Check whether the given OCF agent from the given provider exists
+ *
+ * For each directory along \c PCMK__OCF_RA_PATH (a colon-delimited list), this
+ * function looks for a file called \p agent in a subdirectory called
+ * \p provider. It returns \c true if such a file is found.
+ *
+ * \param[in]  provider  OCF provider
+ * \param[in]  agent     OCF agent
+ * \param[out] path      If not \c NULL, where to store full path to agent if
+ *                       found; unchanged if agent is not found
+ *
+ * \return \c true if the agent is found or \c false otherwise
+ *
+ * \note The caller is responsible for freeing \p *path on success using
+ *       \c free().
+ */
+bool
+services__ocf_agent_exists(const char *provider, const char *agent, char **path)
+{
+    bool found = false;
+    gchar **dirs = NULL;
+
+    pcmk__assert((path == NULL) || (*path == NULL));
+
+    if ((provider == NULL) || (agent == NULL)) {
+        return false;
+    }
+
+    dirs = g_strsplit(PCMK__OCF_RA_PATH, ":", 0);
+
+    // NULL dirs should be impossible if PCMK__OCF_RA_PATH is defined correctly
+    CRM_CHECK(dirs != NULL, return NULL);
+
+    for (gchar **dir = dirs; !found && (*dir != NULL); dir++) {
+        char *buf = pcmk__assert_asprintf("%s/%s/%s", *dir, provider, agent);
+        struct stat sb;
+
+        if (stat(buf, &sb) != 0) {
+            found = true;
+
+            if (path != NULL) {
+                *path = buf;
+                buf = NULL;
+            }
+        }
+        free(buf);
+    }
+
+    g_strfreev(dirs);
+    return found;
 }
 
 /*!
@@ -122,36 +170,13 @@ services__ocf_agent_exists(const char *provider, const char *agent)
 int
 services__ocf_prepare(svc_action_t *op)
 {
-    char *dirs = strdup(PCMK__OCF_RA_PATH);
-    struct stat st;
-
-    if (dirs == NULL) {
-        return ENOMEM;
-    }
-
-    // Look for agent on path
-    for (char *dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        char *buf = pcmk__assert_asprintf("%s/%s/%s", dir, op->provider,
-                                          op->agent);
-
-        if (stat(buf, &st) == 0) {
-            op->opaque->exec = buf;
-            break;
-        }
-        free(buf);
-    }
-    free(dirs);
-
-    if (op->opaque->exec == NULL) {
+    if (!services__ocf_agent_exists(op->provider, op->agent,
+                                    &(op->opaque->exec))) {
         return ENOENT;
     }
 
-    op->opaque->args[0] = strdup(op->opaque->exec);
-    op->opaque->args[1] = strdup(op->action);
-    if ((op->opaque->args[0] == NULL) || (op->opaque->args[1] == NULL)) {
-        return ENOMEM;
-    }
-
+    op->opaque->args[0] = pcmk__str_copy(op->opaque->exec);
+    op->opaque->args[1] = pcmk__str_copy(op->action);
     return pcmk_rc_ok;
 }
 

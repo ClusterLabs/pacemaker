@@ -466,7 +466,7 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
     if (msg->is_compressed && (msg->size > 0)) {
         int rc = BZ_OK;
         unsigned int new_size = msg->size + 1;
-        char *uncompressed = pcmk__assert_alloc(1, new_size);
+        char *uncompressed = pcmk__assert_alloc(new_size, sizeof(char));
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data,
                                         msg->compressed_size, 1, 0);

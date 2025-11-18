@@ -201,49 +201,139 @@ get_action_delay_max(const fenced_device_t *device, const char *action)
     return (int) delay_max;
 }
 
+/*!
+ * \internal
+ * \brief If a mapping matches the given target, return its port value
+ *
+ * \param[in] target   Fencing target node
+ * \param[in] mapping  Target-to-port mapping (delimited by a colon)
+ *
+ * \return The port from \p mapping if it matches \p target, or \c NULL
+ *         if \p mapping is malformed or is not a match.
+ */
+static gchar *
+get_value_if_matching(const char *target, const char *mapping)
+{
+    gchar **nvpair = NULL;
+    gchar *value = NULL;
+
+    if (pcmk__str_empty(mapping)) {
+        goto done;
+    }
+
+    nvpair = g_strsplit(mapping, ":", 2);
+
+    if ((g_strv_length(nvpair) != 2)
+        || pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+
+        crm_err(PCMK_FENCING_DELAY_BASE ": Malformed mapping '%s'", mapping);
+        goto done;
+    }
+
+    if (!pcmk__str_eq(target, nvpair[0], pcmk__str_casei)) {
+        goto done;
+    }
+
+    // Take ownership so that we don't free nvpair[1] with nvpair
+    value = nvpair[1];
+    nvpair[1] = NULL;
+
+    crm_debug(PCMK_FENCING_DELAY_BASE " mapped to %s for %s", value, target);
+
+done:
+    g_strfreev(nvpair);
+    return value;
+}
+
+/*!
+ * \internal
+ * \brief If a mapping exists from the target node to a port, return the port
+ *
+ * \param[in] target  Fencing target node
+ * \param[in] values  List of target-to-port mappings (delimited by semicolon,
+ *                    space, or tab characters), or a single interval spec
+ *
+ * \return Port to which \p target is mapped, or \c NULL if no such mapping
+ *         exists
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
+ */
+static gchar *
+get_value_for_target(const char *target, const char *values)
+{
+    gchar *value = NULL;
+    gchar **mappings = NULL;
+
+    /* If there are no colons, don't try to parse as a list of mappings.
+     * The caller will try to parse the values string as an interval spec.
+     */
+    if (strchr(values, ':') == NULL) {
+        return NULL;
+    }
+
+    mappings = g_strsplit_set(values, "; \t", 0);
+
+    for (gchar **mapping = mappings; (*mapping != NULL) && (value == NULL);
+         mapping++) {
+
+        value = get_value_if_matching(target, *mapping);
+    }
+
+    g_strfreev(mappings);
+    return value;
+}
+
+/* @TODO Consolidate some of this with build_port_aliases(). But keep in
+ * mind that build_port_aliases()/pcmk__host_map supports either '=' or ':'
+ * as a mapping separator, while pcmk_delay_base supports only ':'.
+ */
 static int
 get_action_delay_base(const fenced_device_t *device, const char *action,
                       const char *target)
 {
-    char *hash_value = NULL;
+    const char *param = NULL;
+    gchar *stripped = NULL;
+    gchar *delay_base_s = NULL;
     guint delay_base = 0U;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
     }
 
-    hash_value = g_hash_table_lookup(device->params, PCMK_FENCING_DELAY_BASE);
-
-    if (hash_value) {
-        char *value = pcmk__str_copy(hash_value);
-        char *valptr = value;
-
-        if (target != NULL) {
-            for (char *val = strtok(value, "; \t"); val != NULL; val = strtok(NULL, "; \t")) {
-                char *mapval = strchr(val, ':');
-
-                if (mapval == NULL || mapval[1] == 0) {
-                    crm_err("pcmk_delay_base: empty value in mapping", val);
-                    continue;
-                }
-
-                if (mapval != val && strncasecmp(target, val, (size_t)(mapval - val)) == 0) {
-                    value = mapval + 1;
-                    crm_debug("pcmk_delay_base mapped to %s for %s",
-                              value, target);
-                    break;
-                }
-            }
-        }
-
-        if (strchr(value, ':') == 0) {
-            pcmk_parse_interval_spec(value, &delay_base);
-            delay_base /= 1000;
-        }
-
-        free(valptr);
+    param = g_hash_table_lookup(device->params, PCMK_FENCING_DELAY_BASE);
+    if (param == NULL) {
+        return 0;
     }
 
+    stripped = g_strstrip(g_strdup(param));
+
+    if (target != NULL) {
+        delay_base_s = get_value_for_target(target, stripped);
+    }
+
+    if (delay_base_s == NULL) {
+        /* Either target is NULL or we didn't find a mapping for it. Try to
+         * parse the entire stripped value as an interval spec. Take ownership
+         * so that we don't free stripped twice.
+         *
+         * We can't tell based on which characters are present whether stripped
+         * was a list of mappings or an interval spec. An ISO 8601 interval may
+         * contain a colon, and a Pacemaker time-and-units string may contain
+         * whitespace.
+         */
+        delay_base_s = stripped;
+        stripped = NULL;
+    }
+
+    /* @COMPAT Should we accept only a simple time-and-units string, rather than
+     * an interval spec?
+     */
+    pcmk_parse_interval_spec(delay_base_s, &delay_base);
+    delay_base /= 1000;
+
+    g_free(stripped);
+    g_free(delay_base_s);
     return (int) delay_base;
 }
 
@@ -839,82 +929,43 @@ fenced_free_device_table(void)
 }
 
 static GHashTable *
-build_port_aliases(const char *hostmap, GList ** targets)
+build_port_aliases(const char *hostmap, GList **targets)
 {
-    char *name = NULL;
-    int last = 0, lpc = 0, max = 0, added = 0;
     GHashTable *aliases = pcmk__strikey_table(free, free);
+    gchar *stripped = NULL;
+    gchar **mappings = NULL;
 
-    if (hostmap == NULL) {
-        return aliases;
+    if (pcmk__str_empty(hostmap)) {
+        goto done;
     }
 
-    max = strlen(hostmap);
-    for (; lpc <= max; lpc++) {
-        switch (hostmap[lpc]) {
-                /* Skip escaped chars */
-            case '\\':
-                lpc++;
-                break;
+    stripped = g_strstrip(g_strdup(hostmap));
+    mappings = g_strsplit_set(stripped, "; \t", 0);
 
-                /* Assignment chars */
-            case '=':
-            case ':':
-                if (lpc > last) {
-                    free(name);
-                    name = pcmk__assert_alloc(1, 1 + lpc - last);
-                    memcpy(name, hostmap + last, lpc - last);
-                }
-                last = lpc + 1;
-                break;
+    for (gchar **mapping = mappings; *mapping != NULL; mapping++) {
+        gchar **nvpair = NULL;
 
-                /* Delimeter chars */
-                /* case ',': Potentially used to specify multiple ports */
-            case 0:
-            case ';':
-            case ' ':
-            case '\t':
-                if (name) {
-                    char *value = NULL;
-                    int k = 0;
-
-                    value = pcmk__assert_alloc(1, 1 + lpc - last);
-                    memcpy(value, hostmap + last, lpc - last);
-
-                    for (int i = 0; value[i] != '\0'; i++) {
-                        if (value[i] != '\\') {
-                            value[k++] = value[i];
-                        }
-                    }
-                    value[k] = '\0';
-
-                    crm_debug("Adding alias '%s'='%s'", name, value);
-                    g_hash_table_replace(aliases, name, value);
-                    if (targets) {
-                        *targets = g_list_append(*targets, pcmk__str_copy(value));
-                    }
-                    value = NULL;
-                    name = NULL;
-                    added++;
-
-                } else if (lpc > last) {
-                    crm_debug("Parse error at offset %d near '%s'", lpc - last, hostmap + last);
-                }
-
-                last = lpc + 1;
-                break;
+        if (pcmk__str_empty(*mapping)) {
+            continue;
         }
 
-        if (hostmap[lpc] == 0) {
-            break;
+        // @COMPAT Drop support for '=' as delimiter
+        nvpair = g_strsplit_set(*mapping, ":=", 2);
+
+        if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+            crm_err(PCMK_FENCING_HOST_MAP ": Malformed mapping '%s'", *mapping);
+
+        } else {
+            crm_debug("Adding alias '%s'='%s'", nvpair[0], nvpair[1]);
+            pcmk__insert_dup(aliases, nvpair[0], nvpair[1]);
+            *targets = g_list_append(*targets, pcmk__str_copy(nvpair[1]));
         }
+        g_strfreev(nvpair);
     }
 
-    if (added == 0) {
-        crm_info("No host mappings detected in '%s'", hostmap);
-    }
-
-    free(name);
+done:
+    g_free(stripped);
+    g_strfreev(mappings);
     return aliases;
 }
 

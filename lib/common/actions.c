@@ -403,7 +403,7 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
 #else
     // magic must have >=4 other characters
-    key = pcmk__assert_alloc(1, strlen(magic) - 3);
+    key = pcmk__assert_alloc(strlen(magic) - 3, sizeof(char));
     res = sscanf(magic, "%d:%d;%s", &local_op_status, &local_op_rc, key);
 #endif
     if (res == EOF) {

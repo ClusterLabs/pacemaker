@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                    // bool, true, false
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -26,6 +27,8 @@
 #include "crm/services_internal.h"
 
 #include "services_private.h"
+
+static const char *filter_dir = NULL;
 
 static void close_pipe(int fildes[]);
 
@@ -1428,85 +1431,105 @@ done:
     }
 }
 
+/*!
+ * \internal
+ * \brief \c scandir() filter for non-hidden executable regular files
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if the entry is an executable regular file and its name does not
+ *           begin with \c "."
+ * \retval 0 otherwise
+ */
+static int
+exec_file_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (entry->d_name[0] == '.') {
+        return rc;
+    }
+
+    buf = pcmk__assert_asprintf("%s/%s", filter_dir, entry->d_name);
+
+    if ((stat(buf, &sb) == 0) && S_ISREG(sb.st_mode)
+        && pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
+
+        rc = 1;
+    }
+
+    free(buf);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief \c scandir() filter for non-hidden directories
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if the entry is a directory and its name does not begin with \c "."
+ * \retval 0 otherwise
+ */
+static int
+directory_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (entry->d_name[0] == '.') {
+        return rc;
+    }
+
+    buf = pcmk__assert_asprintf("%s/%s", filter_dir, entry->d_name);
+
+    if ((stat(buf, &sb) == 0) && S_ISDIR(sb.st_mode)) {
+        rc = 1;
+    }
+
+    free(buf);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief List directory's top-level contents of the given type
+ *
+ * Hidden files (those beginning with \c '.') are skipped.
+ *
+ * \param[in] dir         Full path of directory to list
+ * \param[in] exec_files  If \c true, list only executable files within \p dir.
+ *                        If \c false, list only directories within \p dir.
+ *
+ * \return Newly allocated list of newly allocated names of directory entries
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       <tt>g_list_free_full(list, free)</tt>.
+ */
 GList *
-services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
+services__list_dir(const char *dir, bool exec_files)
 {
     GList *list = NULL;
     struct dirent **namelist = NULL;
-    int entries = 0, lpc = 0;
+    int entries = 0;
 
-    entries = scandir(root, &namelist, NULL, alphasort);
-    if (entries <= 0) {
-        return list;
+    filter_dir = dir;
+    entries = scandir(dir, &namelist,
+                      (exec_files? exec_file_filter : directory_filter),
+                      alphasort);
+    filter_dir = NULL;
+
+    if (entries < 0) {
+        return NULL;
     }
 
-    for (lpc = 0; lpc < entries; lpc++) {
-        char *buffer = NULL;
-        struct stat sb;
-        int rc = 0;
-
-        if ('.' == namelist[lpc]->d_name[0]) {
-            free(namelist[lpc]);
-            continue;
-        }
-
-        buffer = pcmk__assert_asprintf("%s/%s", root, namelist[lpc]->d_name);
-        rc = stat(buffer, &sb);
-        free(buffer);
-
-        if (rc != 0) {
-            continue;
-        }
-
-        if (S_ISDIR(sb.st_mode)) {
-            if (files) {
-                free(namelist[lpc]);
-                continue;
-            }
-
-        } else if (S_ISREG(sb.st_mode)) {
-            if (files == FALSE) {
-                free(namelist[lpc]);
-                continue;
-
-            } else if (executable
-                       && (sb.st_mode & S_IXUSR) == 0
-                       && (sb.st_mode & S_IXGRP) == 0 && (sb.st_mode & S_IXOTH) == 0) {
-                free(namelist[lpc]);
-                continue;
-            }
-        }
-
-        list = g_list_append(list, strdup(namelist[lpc]->d_name));
-
-        free(namelist[lpc]);
+    for (int i = 0; i < entries; i++) {
+        list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
+        free(namelist[i]);
     }
-
     free(namelist);
     return list;
-}
-
-GList *
-services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
-{
-    GList *result = NULL;
-    char *dirs = strdup(root);
-    char *dir = NULL;
-
-    if (pcmk__str_empty(dirs)) {
-        free(dirs);
-        return result;
-    }
-
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        GList *tmp = services_os_get_single_directory_list(dir, files, executable);
-
-        if (tmp) {
-            result = g_list_concat(result, tmp);
-        }
-    }
-
-    free(dirs);
-
-    return result;
 }

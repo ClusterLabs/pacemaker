@@ -34,26 +34,27 @@ add_possible_values_default(pcmk__output_t *out,
     }
 
     if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
-        const char *delim = ", ";
+        // If there is no default value, don't look for one
         bool found_default = (option->default_value == NULL);
-        char *str = pcmk__str_copy(option->values);
 
-        for (const char *value = strtok(str, delim); value != NULL;
-             value = strtok(NULL, delim)) {
+        gchar **values = g_strsplit(option->values, ", ", 0);
 
+        for (gchar **value = values; *value != NULL; value++) {
             if (buf->len > 0) {
-                g_string_append(buf, delim);
+                g_string_append(buf, ", ");
             }
             g_string_append_c(buf, '"');
-            g_string_append(buf, value);
+            g_string_append(buf, *value);
             g_string_append_c(buf, '"');
 
-            if (!found_default && (strcmp(value, option->default_value) == 0)) {
+            if (!found_default
+                && pcmk__str_eq(*value, option->default_value,
+                                pcmk__str_none)) {
                 found_default = true;
                 g_string_append(buf, _(" (default)"));
             }
         }
-        free(str);
+        g_strfreev(values);
 
     } else if (option->default_value != NULL) {
         pcmk__g_strcat(buf,
@@ -260,18 +261,14 @@ add_desc_xml(pcmk__output_t *out, bool for_long, const char *desc)
     pcmk__xe_set(node, PCMK_XA_LANG, PCMK__VALUE_EN);
 
 #ifdef ENABLE_NLS
-    {
-        static const char *locale = NULL;
+    if (!pcmk__str_eq(desc, _(desc), pcmk__str_none)) {
+        // The locale should have been set already by crm_log_preinit()
+        gchar **parts = g_strsplit(setlocale(LC_ALL, NULL), "_", 2);
 
-        if (strcmp(desc, _(desc)) == 0) {
-            return;
-        }
-
-        if (locale == NULL) {
-            locale = strtok(setlocale(LC_ALL, NULL), "_");
-        }
         node = pcmk__output_create_xml_text_node(out, tag, _(desc));
-        pcmk__xe_set(node, PCMK_XA_LANG, locale);
+        pcmk__xe_set(node, PCMK_XA_LANG, parts[0]);
+
+        g_strfreev(parts);
     }
 #endif
 }
@@ -289,19 +286,22 @@ static void
 add_possible_values_xml(pcmk__output_t *out,
                         const pcmk__cluster_option_t *option)
 {
-    if ((option->values != NULL) && (strcmp(option->type, "select") == 0)) {
-        const char *delim = ", ";
-        char *str = pcmk__str_copy(option->values);
-        const char *ptr = strtok(str, delim);
+    gchar **values = NULL;
 
-        while (ptr != NULL) {
-            pcmk__output_create_xml_node(out, PCMK_XE_OPTION,
-                                         PCMK_XA_VALUE, ptr,
-                                         NULL);
-            ptr = strtok(NULL, delim);
-        }
-        free(str);
+    if ((option->values == NULL)
+        || !pcmk__str_eq(option->type, "select", pcmk__str_none)) {
+        return;
     }
+
+    values = g_strsplit(option->values, ", ", 0);
+
+    for (gchar **value = values; *value != NULL; value++) {
+        pcmk__output_create_xml_node(out, PCMK_XE_OPTION,
+                                     PCMK_XA_VALUE, *value,
+                                     NULL);
+    }
+
+    g_strfreev(values);
 }
 
 /*!

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -158,20 +158,6 @@ typedef struct svc_action_s {
     //! This field should be treated as internal to Pacemaker
     svc_action_private_t *opaque;
 } svc_action_t;
-
-/*!
- * \brief Get a list of files or directories in a given path
- *
- * \param[in] root       Full path to a directory to read
- * \param[in] files      Return list of files if TRUE or directories if FALSE
- * \param[in] executable If TRUE and files is TRUE, only return executable files
- *
- * \return List of what was found as char * items.
- * \note The caller is responsibile for freeing the result with
- *       g_list_free_full(list, free).
- */
-GList *get_directory_list(const char *root, gboolean files,
-                          gboolean executable);
 
 /*!
  * \brief Get a list of providers

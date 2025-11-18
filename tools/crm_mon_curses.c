@@ -316,7 +316,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
             free(*dest);
         }
 
-        *dest = pcmk__assert_alloc(1, 1024);
+        *dest = pcmk__assert_alloc(1024, sizeof(char));
         /* On older systems, scanw is defined as taking a char * for its first argument,
          * while newer systems rightly want a const char *.  Accomodate both here due
          * to building with -Werror.
