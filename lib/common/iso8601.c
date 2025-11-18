@@ -1428,11 +1428,21 @@ crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
 void
 pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 {
-    if ((target != NULL) && (source != NULL)
-        && (!crm_time_is_defined(target)
-            || (crm_time_compare(source, target) < 0))) {
-        crm_time_set(target, source);
+    const int flags = crm_time_log_date
+                      |crm_time_log_timeofday
+                      |crm_time_log_with_timezone;
+
+    if ((target == NULL)
+        || (source == NULL)
+        || (crm_time_is_defined(target)
+            && (crm_time_compare(source, target) >= 0))) {
+
+        return;
     }
+
+    *target = *source;
+    crm_time_log(LOG_TRACE, "source", source, flags);
+    crm_time_log(LOG_TRACE, "target", target, flags);
 }
 
 crm_time_t *
@@ -1440,7 +1450,7 @@ pcmk_copy_time(const crm_time_t *source)
 {
     crm_time_t *target = crm_time_new_undefined();
 
-    crm_time_set(target, source);
+    *target = *source;
     return target;
 }
 
