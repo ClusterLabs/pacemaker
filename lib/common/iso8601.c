@@ -147,10 +147,17 @@ crm_time_free(crm_time_t * dt)
     free(dt);
 }
 
+static bool
+is_leap_year(int year)
+{
+    return ((year % 4) == 0)
+           && (((year % 100) != 0) || (year % 400 == 0));
+}
+
 static int
 year_days(int year)
 {
-    return crm_time_leapyear(year)? 366 : 365;
+    return is_leap_year(year)? 366 : 365;
 }
 
 /* From http://myweb.ecu.edu/mccartyr/ISOwdALG.txt :
@@ -213,24 +220,10 @@ crm_time_days_in_month(int month, int year)
     if ((month < 1) || (month > 12) || (year < 1)) {
         return 0;
     }
-    if ((month == 2) && crm_time_leapyear(year)) {
+    if ((month == 2) && is_leap_year(year)) {
         month = 13;
     }
     return month_days[month - 1];
-}
-
-bool
-crm_time_leapyear(int year)
-{
-    bool is_leap = false;
-
-    if (year % 4 == 0) {
-        is_leap = true;
-    }
-    if (year % 100 == 0 && year % 400 != 0) {
-        is_leap = false;
-    }
-    return is_leap;
 }
 
 /*!
@@ -2255,3 +2248,17 @@ pcmk__readable_interval(guint interval_ms)
     g_string_free(buf, TRUE);
     return str;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/iso8601_compat.h>
+
+bool
+crm_time_leapyear(int year)
+{
+    return is_leap_year(year);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
