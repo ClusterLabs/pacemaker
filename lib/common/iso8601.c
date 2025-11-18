@@ -804,11 +804,11 @@ parse_offset(const char *offset_str, int *offset)
  * \param[in]     time_str  Time portion of specification (after any 'T')
  * \param[in,out] a_time    Time object to parse into
  *
- * \return \c true if valid time was parsed, \c false (and set errno) otherwise
+ * \return \c true if valid time was parsed, \c false otherwise
  * \note This may add a day to a_time (if the time is 24:00:00).
  */
 static bool
-crm_time_parse(const char *time_str, crm_time_t *a_time)
+parse_time(const char *time_str, crm_time_t *a_time)
 {
     uint32_t h, m, s;
     const char *offset_s = NULL;
@@ -817,7 +817,6 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
 
     if (time_str != NULL) {
         if (!parse_hms(time_str, &(a_time->seconds))) {
-            errno = EINVAL;
             return false;
         }
 
@@ -838,7 +837,6 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
     }
 
     if (!parse_offset(offset_s, &(a_time->offset))) {
-        errno = EINVAL;
         return false;
     }
 
@@ -890,7 +888,7 @@ parse_date(const char *date_str)
         } else {
             time_s = date_str;
         }
-        goto parse_time;
+        goto parse_time_segment;
     }
 
     dt = crm_time_new_undefined();
@@ -936,7 +934,7 @@ parse_date(const char *date_str)
             crm_trace("Parsed Gregorian date '%.4" PRIu32 "-%.3d' "
                       "from date string '%s'", year, dt->days, date_str);
         }
-        goto parse_time;
+        goto parse_time_segment;
     }
 
     /* YYYY-DDD */
@@ -958,7 +956,7 @@ parse_date(const char *date_str)
                   year, day, date_str);
         dt->days = day;
         dt->years = year;
-        goto parse_time;
+        goto parse_time_segment;
     }
 
     /* YYYY-Www-D */
@@ -1005,14 +1003,13 @@ parse_date(const char *date_str)
 
             crm_time_add_days(dt, day);
         }
-        goto parse_time;
+        goto parse_time_segment;
     }
 
     crm_err("'%s' is not a valid ISO 8601 date/time specification", date_str);
     goto invalid;
 
-  parse_time:
-
+parse_time_segment:
     if (time_s == NULL) {
         time_s = date_str + strspn(date_str, "0123456789-W");
         if ((time_s[0] == ' ') || (time_s[0] == 'T')) {
@@ -1021,7 +1018,7 @@ parse_date(const char *date_str)
             time_s = NULL;
         }
     }
-    if ((time_s != NULL) && !crm_time_parse(time_s, dt)) {
+    if ((time_s != NULL) && !parse_time(time_s, dt)) {
         goto invalid;
     }
 
