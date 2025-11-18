@@ -1270,12 +1270,12 @@ crm_time_parse_period(const char *period_str)
     if (period_str[0] == 'P') {
         period->diff = crm_time_parse_duration(period_str);
         if (period->diff == NULL) {
-            goto error;
+            goto invalid;
         }
     } else {
         period->start = parse_date(period_str);
         if (period->start == NULL) {
-            goto error;
+            goto invalid;
         }
     }
 
@@ -1291,12 +1291,12 @@ crm_time_parse_period(const char *period_str)
             }
             period->diff = crm_time_parse_duration(period_str);
             if (period->diff == NULL) {
-                goto error;
+                goto invalid;
             }
         } else {
             period->end = parse_date(period_str);
             if (period->end == NULL) {
-                goto error;
+                goto invalid;
             }
         }
 
@@ -1333,7 +1333,6 @@ crm_time_parse_period(const char *period_str)
 
 invalid:
     errno = EINVAL;
-error:
     crm_time_free_period(period);
     return NULL;
 }
