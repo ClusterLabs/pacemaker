@@ -444,8 +444,6 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     return TRUE;
 }
 
-#define DATE_MAX 128
-
 /*!
  * \internal
  * \brief Print "<seconds>.<microseconds>" to a buffer
@@ -700,12 +698,12 @@ crm_time_as_string(const crm_time_t *dt, int flags)
  * \param[in]  time_str  Time specification string
  * \param[out] result    Number of seconds equivalent to time_str
  *
- * \return \c true if specification was valid, \c false (and set errno) otherwise
+ * \return \c true if specification was valid, or \c false otherwise
  * \note This may return the number of seconds in a day (which is out of bounds
  *       for a time object) if given 24:00:00.
  */
 static bool
-crm_time_parse_sec(const char *time_str, int *result)
+parse_hms(const char *time_str, int *result)
 {
     int rc;
     uint32_t hour = 0;
@@ -723,7 +721,6 @@ crm_time_parse_sec(const char *time_str, int *result)
     }
     if (rc == 0) {
         crm_err("%s is not a valid ISO 8601 time specification", time_str);
-        errno = EINVAL;
         return false;
     }
 
@@ -735,19 +732,16 @@ crm_time_parse_sec(const char *time_str, int *result)
     } else if (hour >= 24) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid hour", time_str, hour);
-        errno = EINVAL;
         return false;
     }
     if (minute >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid minute", time_str, minute);
-        errno = EINVAL;
         return false;
     }
     if (second >= 60) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid second", time_str, second);
-        errno = EINVAL;
         return false;
     }
 
@@ -793,7 +787,8 @@ crm_time_parse_offset(const char *offset_str, int *offset)
             negate = true;
             offset_str++;
         }
-        if (!crm_time_parse_sec(offset_str, offset)) {
+        if (!parse_hms(offset_str, offset)) {
+            errno = EINVAL;
             return false;
         }
         if (negate) {
@@ -822,7 +817,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
     tzset();
 
     if (time_str != NULL) {
-        if (!crm_time_parse_sec(time_str, &(a_time->seconds))) {
+        if (!parse_hms(time_str, &(a_time->seconds))) {
+            errno = EINVAL;
             return false;
         }
 
