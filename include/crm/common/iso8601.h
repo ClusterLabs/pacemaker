@@ -114,9 +114,6 @@ void crm_time_add_weeks(crm_time_t * dt, int value);
 void crm_time_add_months(crm_time_t * dt, int value);
 void crm_time_add_years(crm_time_t * dt, int value);
 
-/* Useful helper functions */
-int crm_time_january1_weekday(int year);
-
 bool crm_time_check(const crm_time_t *dt);
 
 #ifdef __cplusplus
