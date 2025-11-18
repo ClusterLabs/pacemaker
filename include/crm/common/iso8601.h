@@ -116,7 +116,6 @@ void crm_time_add_years(crm_time_t * dt, int value);
 
 /* Useful helper functions */
 int crm_time_january1_weekday(int year);
-int crm_time_weeks_in_year(int year);
 
 bool crm_time_check(const crm_time_t *dt);
 

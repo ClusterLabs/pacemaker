@@ -37,6 +37,9 @@ int crm_time_days_in_month(int month, int year);
 //! \deprecated Do not use
 int crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m);
 
+//! \deprecated Do not use
+int crm_time_weeks_in_year(int year);
+
 #ifdef __cplusplus
 }
 #endif

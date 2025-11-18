@@ -181,8 +181,8 @@ crm_time_january1_weekday(int year)
     return jan1;
 }
 
-int
-crm_time_weeks_in_year(int year)
+static int
+weeks_in_year(int year)
 {
     int weeks = 52;
     int jan1 = crm_time_january1_weekday(year);
@@ -410,7 +410,7 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     if (dt->days <= (8 - jan1) && jan1 > 4) {
         crm_trace("year--, jan1=%d", jan1);
         year_num = dt->years - 1;
-        *w = crm_time_weeks_in_year(year_num);
+        *w = weeks_in_year(year_num);
 
     } else {
         year_num = dt->years;
@@ -963,11 +963,11 @@ parse_date(const char *date_str)
     rc = sscanf(date_str, "%" SCNu32 "-W%" SCNu32 "-%" SCNu32,
                 &year, &week, &day);
     if (rc == 3) {
-        if ((week < 1U) || (week > crm_time_weeks_in_year(year))) {
+        if ((week < 1U) || (week > weeks_in_year(year))) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
                     "because '%" PRIu32 "' is not a valid week of year %"
                     PRIu32 " (1-%d)",
-                    date_str, week, year, crm_time_weeks_in_year(year));
+                    date_str, week, year, weeks_in_year(year));
             goto invalid;
         } else if ((day < 1U) || (day > 7U)) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
@@ -2258,6 +2258,12 @@ crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
 
     seconds_to_hms(dt->seconds, h, m, &s);
     return TRUE;
+}
+
+int
+crm_time_weeks_in_year(int year)
+{
+    return weeks_in_year(year);
 }
 
 // LCOV_EXCL_STOP
