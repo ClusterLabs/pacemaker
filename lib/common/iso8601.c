@@ -75,6 +75,9 @@ static crm_time_t *parse_date(const char *date_str);
 static crm_time_t *
 utc_from_crm_time(const crm_time_t *dt)
 {
+    const uint32_t flags = crm_time_log_date
+                           |crm_time_log_timeofday
+                           |crm_time_log_with_timezone;
     crm_time_t *utc = NULL;
 
     pcmk__assert(dt != NULL);
@@ -92,10 +95,8 @@ utc_from_crm_time(const crm_time_t *dt)
         utc->months = dt->months;
     }
 
-    crm_time_log(LOG_TRACE, "utc-source", dt,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_TRACE, "utc-target", utc,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    pcmk__time_log(LOG_TRACE, "utc-source", dt, flags);
+    pcmk__time_log(LOG_TRACE, "utc-target", utc, flags);
     return utc;
 }
 
@@ -253,20 +254,34 @@ get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
 }
 
 void
+pcmk__time_log_as(const char *file, const char *function, int line,
+                  uint8_t level, const char *prefix, const crm_time_t *dt,
+                  uint32_t flags)
+{
+    char *date_s = crm_time_as_string(dt, flags);
+
+    if (prefix != NULL) {
+        char *old = date_s;
+
+        date_s = pcmk__assert_asprintf("%s: %s", prefix, date_s);
+        free(old);
+    }
+
+    if (level == LOG_STDOUT) {
+        printf("%s\n", date_s);
+    } else {
+        do_crm_log_alias(level, file, function, line, "%s", date_s);
+    }
+    free(date_s);
+}
+
+void
 crm_time_log_alias(int log_level, const char *file, const char *function,
                    int line, const char *prefix, const crm_time_t *date_time,
                    int flags)
 {
-    char *date_s = crm_time_as_string(date_time, flags);
-
-    if (log_level == LOG_STDOUT) {
-        printf("%s%s%s\n",
-               (prefix? prefix : ""), (prefix? ": " : ""), date_s);
-    } else {
-        do_crm_log_alias(log_level, file, function, line, "%s%s%s",
-                         (prefix? prefix : ""), (prefix? ": " : ""), date_s);
-    }
-    free(date_s);
+    pcmk__time_log_as(file, function, line, pcmk__clip_log_level(log_level),
+                      prefix, date_time, flags);
 }
 
 static void
@@ -879,6 +894,7 @@ valid_time(const crm_time_t *dt)
 static crm_time_t *
 parse_date(const char *date_str)
 {
+    const uint32_t flags = crm_time_log_date|crm_time_log_timeofday;
     const char *time_s = NULL;
     crm_time_t *dt = NULL;
 
@@ -912,9 +928,10 @@ parse_date(const char *date_str)
         && ((date_str[5] == '\0')
             || (date_str[5] == '/')
             || isspace(date_str[5]))) {
+
         dt->days = 1;
         dt->years = 1970;
-        crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
+        pcmk__time_log(LOG_TRACE, "Unpacked", dt, flags);
         return dt;
     }
 
@@ -1037,7 +1054,8 @@ parse_time_segment:
         goto invalid;
     }
 
-    crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
+    pcmk__time_log(LOG_TRACE, "Unpacked", dt, flags);
+
     if (!valid_time(dt)) {
         crm_err("'%s' is not a valid ISO 8601 date/time specification",
                 date_str);
@@ -1391,8 +1409,8 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
     }
 
     *target = *source;
-    crm_time_log(LOG_TRACE, "source", source, flags);
-    crm_time_log(LOG_TRACE, "target", target, flags);
+    pcmk__time_log(LOG_TRACE, "source", source, flags);
+    pcmk__time_log(LOG_TRACE, "target", target, flags);
 }
 
 crm_time_t *
@@ -2266,6 +2284,10 @@ crm_time_january1_weekday(int year)
 void
 crm_time_set(crm_time_t *target, const crm_time_t *source)
 {
+    const uint32_t flags = crm_time_log_date
+                           |crm_time_log_timeofday
+                           |crm_time_log_with_timezone;
+
     crm_trace("target=%p, source=%p", target, source);
 
     CRM_CHECK(target != NULL && source != NULL, return);
@@ -2276,10 +2298,8 @@ crm_time_set(crm_time_t *target, const crm_time_t *source)
     target->seconds = source->seconds;
     target->offset = source->offset;
 
-    crm_time_log(LOG_TRACE, "source", source,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_TRACE, "target", target,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    pcmk__time_log(LOG_TRACE, "source", source, flags);
+    pcmk__time_log(LOG_TRACE, "target", target, flags);
 }
 
 bool

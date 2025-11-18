@@ -507,8 +507,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
     if (use_date) {
         scheduler->priv->now = crm_time_new(use_date);
         out->info(out, "Setting effective cluster time: %s", use_date);
-        crm_time_log(LOG_NOTICE, "Pretending 'now' is", scheduler->priv->now,
-                     crm_time_log_date | crm_time_log_timeofday);
+        pcmk__time_log(LOG_NOTICE, "Pretending 'now' is", scheduler->priv->now,
+                       crm_time_log_date|crm_time_log_timeofday);
 
     } else if (original_date != 0) {
         scheduler->priv->now = pcmk__copy_timet(original_date);
