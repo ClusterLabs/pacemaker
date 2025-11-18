@@ -560,7 +560,7 @@ parse_local_options(const pcmk__client_t *cib_client,
     }
 }
 
-static gboolean
+static bool
 parse_peer_options(const cib__operation_t *operation, xmlNode *request,
                    bool *local_notify, bool *needs_reply, bool *process)
 {
@@ -596,7 +596,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
     } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
         process_ping_reply(request);
-        return FALSE;
+        return false;
 
     } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
@@ -631,18 +631,18 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
         } else {
             // Ignore broadcast client requests when we're not primary
-            return FALSE;
+            return false;
         }
 
     } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         crm_info("Detected legacy %s global update from %s", op, originator);
         send_sync_request(NULL);
-        return FALSE;
+        return false;
 
     } else if (is_reply
                && pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         crm_trace("Ignoring legacy %s reply sent from %s to local clients", op, originator);
-        return FALSE;
+        return false;
 
     } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         *local_notify = false;
@@ -661,7 +661,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         *process = false;
         *needs_reply = false;
         *local_notify = true;
-        return TRUE;
+        return true;
     }
 
   skip_is_reply:
@@ -674,12 +674,12 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         crm_trace("Processing %s request sent to us from %s", op, originator);
         *needs_reply = true;
-        return TRUE;
+        return true;
 
     } else if (host != NULL) {
         crm_trace("Ignoring %s request intended for CIB manager on %s",
                   op, host);
-        return FALSE;
+        return false;
 
     } else if(is_reply == FALSE && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
         *needs_reply = true;
@@ -690,7 +690,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
               pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME), "client"),
               pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CALLID), "without ID"),
               originator, (*local_notify? "" : "not"));
-    return TRUE;
+    return true;
 }
 
 /*!
