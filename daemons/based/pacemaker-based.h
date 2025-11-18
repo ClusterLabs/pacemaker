@@ -73,7 +73,7 @@ int cib_process_request(xmlNode *request, gboolean privileged,
 void cib_shutdown(int nsig);
 void terminate_cib(int exit_status);
 
-gboolean uninitializeCib(void);
+void uninitializeCib(void);
 xmlNode *readCibXmlFile(const char *dir, const char *file, bool discard_status);
 int activateCibXml(xmlNode *doc, bool to_disk, const char *op);
 

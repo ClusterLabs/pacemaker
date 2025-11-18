@@ -276,17 +276,17 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     return root;
 }
 
-gboolean
+void
 uninitializeCib(void)
 {
     xmlNode *tmp_cib = the_cib;
 
     if (tmp_cib == NULL) {
-        return FALSE;
+        return;
     }
+
     the_cib = NULL;
     pcmk__xml_free(tmp_cib);
-    return TRUE;
 }
 
 /*
