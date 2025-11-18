@@ -168,8 +168,8 @@ year_days(int year)
  *  G = YY + YY/4
  *  Jan1Weekday = 1 + (((((C / 100) % 4) x 5) + G) % 7)
  */
-int
-crm_time_january1_weekday(int year)
+static int
+jan1_day_of_week(int year)
 {
     int YY = (year - 1) % 100;
     int C = (year - 1) - YY;
@@ -185,13 +185,13 @@ static int
 weeks_in_year(int year)
 {
     int weeks = 52;
-    int jan1 = crm_time_january1_weekday(year);
+    int jan1 = jan1_day_of_week(year);
 
     /* if jan1 == thursday */
     if (jan1 == 4) {
         weeks++;
     } else {
-        jan1 = crm_time_january1_weekday(year + 1);
+        jan1 = jan1_day_of_week(year + 1);
         /* if dec31 == thursday aka. jan1 of next year is a friday */
         if (jan1 == 5) {
             weeks++;
@@ -397,7 +397,7 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
      * Sunday 3 January 2010 is written "2009-W53-7"
      */
     int year_num = 0;
-    int jan1 = crm_time_january1_weekday(dt->years);
+    int jan1 = jan1_day_of_week(dt->years);
     int h = -1;
 
     CRM_CHECK(dt->days > 0, return FALSE);
@@ -986,7 +986,7 @@ parse_date(const char *date_str)
              * is in week 1. If 1 January is on a Friday, Saturday or Sunday,
              * it is in week 52 or 53 of the previous year.
              */
-            int jan1 = crm_time_january1_weekday(year);
+            int jan1 = jan1_day_of_week(year);
 
             crm_trace("Parsed year %" PRIu32 " (Jan 1 = %d), week %" PRIu32
                       ", and day %" PRIu32 " from date string '%s'",
@@ -2264,6 +2264,12 @@ int
 crm_time_weeks_in_year(int year)
 {
     return weeks_in_year(year);
+}
+
+int
+crm_time_january1_weekday(int year)
+{
+    return jan1_day_of_week(year);
 }
 
 // LCOV_EXCL_STOP
