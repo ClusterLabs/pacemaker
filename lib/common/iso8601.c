@@ -441,15 +441,6 @@ pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w, uint32_t *d)
               dt->years, dt->days, *y, *w, *d);
 }
 
-int
-crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
-                     uint32_t *d)
-{
-    CRM_CHECK(dt->days > 0, return FALSE);
-    pcmk__time_get_ywd(dt, y, w, d);
-    return TRUE;
-}
-
 /*!
  * \internal
  * \brief Print "<seconds>.<microseconds>" to a buffer
@@ -2309,6 +2300,15 @@ crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
     source = pcmk__copy_timet(*source_sec);
     *target = *source;
     crm_time_free(source);
+}
+
+int
+crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                     uint32_t *d)
+{
+    CRM_CHECK(dt->days > 0, return FALSE);
+    pcmk__time_get_ywd(dt, y, w, d);
+    return TRUE;
 }
 
 // LCOV_EXCL_STOP
