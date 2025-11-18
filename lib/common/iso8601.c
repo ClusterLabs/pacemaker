@@ -388,19 +388,17 @@ crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
     return TRUE;
 }
 
-int
-crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
-                     uint32_t *d)
+void
+pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w, uint32_t *d)
 {
-    /*
-     * Monday 29 December 2008 is written "2009-W01-1"
-     * Sunday 3 January 2010 is written "2009-W53-7"
-     */
+    // Based on ISO week date: https://en.wikipedia.org/wiki/ISO_week_date
     int year_num = 0;
     int jan1 = jan1_day_of_week(dt->years);
     int h = -1;
 
-    CRM_CHECK(dt->days > 0, return FALSE);
+    if (dt->days <= 0) {
+        return;
+    }
 
 /* 6. Find the Weekday for Y M D */
     h = dt->days + jan1 - 1;
@@ -441,6 +439,14 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     *y = year_num;
     crm_trace("Converted %.4d-%.3d to %.4" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
               dt->years, dt->days, *y, *w, *d);
+}
+
+int
+crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                     uint32_t *d)
+{
+    CRM_CHECK(dt->days > 0, return FALSE);
+    pcmk__time_get_ywd(dt, y, w, d);
     return TRUE;
 }
 
@@ -610,11 +616,12 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
     if (pcmk__is_set(flags, crm_time_log_date)) {
         if (pcmk__is_set(flags, crm_time_weeks)) { // YYYY-WW-D
-            uint32_t y = 0;
-            uint32_t w = 0;
-            uint32_t d = 0;
+            if (dt->days > 0) {
+                uint32_t y = 0;
+                uint32_t w = 0;
+                uint32_t d = 0;
 
-            if (crm_time_get_isoweek(dt, &y, &w, &d)) {
+                pcmk__time_get_ywd(dt, &y, &w, &d);
                 g_string_append_printf(buf,
                                        "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
                                        y, w, d);
