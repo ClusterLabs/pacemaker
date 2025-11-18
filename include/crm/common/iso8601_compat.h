@@ -61,6 +61,11 @@ int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
 #define crm_time_log(level, prefix, dt, flags)  \
     crm_time_log_alias(level, __FILE__, __func__, __LINE__, prefix, dt, flags)
 
+//! \deprecated Do not use
+void crm_time_log_alias(int log_level, const char *file, const char *function,
+                        int line, const char *prefix,
+                        const crm_time_t *date_time, int flags);
+
 #ifdef __cplusplus
 }
 #endif
