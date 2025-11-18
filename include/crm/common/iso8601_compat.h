@@ -28,6 +28,9 @@ extern "C" {
 //! \deprecated Do not use
 bool crm_time_leapyear(int year);
 
+//! \deprecated Do not use
+int crm_time_days_in_month(int month, int year);
+
 #ifdef __cplusplus
 }
 #endif

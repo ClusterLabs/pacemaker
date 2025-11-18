@@ -214,8 +214,8 @@ static int month_days[13] = {
  *
  * \return Number of days in given month (0 if given month or year is invalid)
  */
-int
-crm_time_days_in_month(int month, int year)
+static int
+days_in_month_year(int month, int year)
 {
     if ((month < 1) || (month > 12) || (year < 1)) {
         return 0;
@@ -247,7 +247,7 @@ get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
 
     result = d;
     for (int lpc = 1; lpc < m; lpc++) {
-        result += crm_time_days_in_month(lpc, y);
+        result += days_in_month_year(lpc, y);
     }
     return result;
 }
@@ -365,7 +365,7 @@ crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
 
     if(dt->years != 0) {
         for (months = 1; months <= 12 && days > 0; months++) {
-            int mdays = crm_time_days_in_month(months, dt->years);
+            int mdays = days_in_month_year(months, dt->years);
 
             if (mdays >= days) {
                 break;
@@ -936,7 +936,7 @@ parse_date(const char *date_str)
                     date_str, year);
             goto invalid;
         } else if ((day < 1) || (day > INT_MAX)
-                   || (day > crm_time_days_in_month(month, year))) {
+                   || (day > days_in_month_year(month, year))) {
             crm_err("'%s' is not a valid ISO 8601 date/time specification "
                     "because '%" PRIu32 "' is not a valid day of the month",
                     date_str, day);
@@ -1824,7 +1824,7 @@ crm_time_add_months(crm_time_t * a_time, int extra)
         }
     }
 
-    dmax = crm_time_days_in_month(m, y);
+    dmax = days_in_month_year(m, y);
     if (dmax < d) {
         /* Preserve day-of-month unless the month doesn't have enough days */
         d = dmax;
@@ -2258,6 +2258,12 @@ bool
 crm_time_leapyear(int year)
 {
     return is_leap_year(year);
+}
+
+int
+crm_time_days_in_month(int month, int year)
+{
+    return days_in_month_year(month, year);
 }
 
 // LCOV_EXCL_STOP
