@@ -852,6 +852,23 @@ parse_time(const char *time_str, crm_time_t *a_time)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a time object represents a sensible date/time
+ *
+ * \param[in] dt  Date/time object to check
+ *
+ * \return \c true if days and seconds are valid given the year, or \c false
+ *         otherwise
+ */
+static bool
+valid_time(const crm_time_t *dt)
+{
+    return (dt != NULL)
+           && (dt->days > 0) && (dt->days <= year_days(dt->years))
+           && (dt->seconds >= 0) && (dt->seconds < DAY_SECONDS);
+}
+
 /*
  * \internal
  * \brief Parse a time object from an ISO 8601 date/time specification
@@ -1023,7 +1040,7 @@ parse_time_segment:
     }
 
     crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
-    if (!crm_time_check(dt)) {
+    if (!valid_time(dt)) {
         crm_err("'%s' is not a valid ISO 8601 date/time specification",
                 date_str);
         goto invalid;
@@ -1319,12 +1336,12 @@ crm_time_parse_period(const char *period_str)
         period->end = crm_time_add(period->start, period->diff);
     }
 
-    if (!crm_time_check(period->start)) {
+    if (!valid_time(period->start)) {
         crm_err("'%s' is not a valid ISO 8601 time period "
                 "because the start is invalid", period_str);
         goto invalid;
     }
-    if (!crm_time_check(period->end)) {
+    if (!valid_time(period->end)) {
         crm_err("'%s' is not a valid ISO 8601 time period "
                 "because the end is invalid", period_str);
         goto invalid;
@@ -1644,21 +1661,6 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
     crm_time_free(utc);
 
     return answer;
-}
-
-/*!
- * \brief Check whether a time object represents a sensible date/time
- *
- * \param[in] dt  Date/time object to check
- *
- * \return \c true if years, days, and seconds are sensible, \c false otherwise
- */
-bool
-crm_time_check(const crm_time_t *dt)
-{
-    return (dt != NULL)
-           && (dt->days > 0) && (dt->days <= year_days(dt->years))
-           && (dt->seconds >= 0) && (dt->seconds < DAY_SECONDS);
 }
 
 #define do_cmp_field(l, r, field)					\
@@ -2280,6 +2282,12 @@ crm_time_set(crm_time_t *target, const crm_time_t *source)
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     crm_time_log(LOG_TRACE, "target", target,
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+}
+
+bool
+crm_time_check(const crm_time_t *dt)
+{
+    return valid_time(dt);
 }
 
 // LCOV_EXCL_STOP
