@@ -114,14 +114,15 @@ crm_time_new(const char *date_time)
 /*!
  * \brief Allocate memory for an uninitialized time object
  *
- * \return Newly allocated time object
+ * \return Newly allocated time object (guaranteed not to be \c NULL)
+ *
  * \note The caller is responsible for freeing the return value using
- *       crm_time_free().
+ *       \c crm_time_free().
  */
 crm_time_t *
 crm_time_new_undefined(void)
 {
-    return (crm_time_t *) pcmk__assert_alloc(1, sizeof(crm_time_t));
+    return pcmk__assert_alloc(1, sizeof(crm_time_t));
 }
 
 /*!
