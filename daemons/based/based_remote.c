@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 
 #include <sys/param.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -189,7 +190,7 @@ is_daemon_group_member(const char *usr)
     return false;
 }
 
-static gboolean
+static bool
 cib_remote_auth(xmlNode * login)
 {
     const char *user = NULL;
@@ -197,14 +198,14 @@ cib_remote_auth(xmlNode * login)
     const char *tmp = NULL;
 
     if (login == NULL) {
-        return FALSE;
+        return false;
     }
 
     if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
         crm_warn("Rejecting remote client: Unrecognizable message "
                  "(element '%s' not '" PCMK__XE_CIB_COMMAND "')", login->name);
         crm_log_xml_debug(login, "bad");
-        return FALSE;
+        return false;
     }
 
     tmp = pcmk__xe_get(login, PCMK_XA_OP);
@@ -212,7 +213,7 @@ cib_remote_auth(xmlNode * login)
         crm_warn("Rejecting remote client: Unrecognizable message "
                  "(operation '%s' not 'authenticate')", tmp);
         crm_log_xml_debug(login, "bad");
-        return FALSE;
+        return false;
     }
 
     user = pcmk__xe_get(login, PCMK_XA_USER);
@@ -221,7 +222,7 @@ cib_remote_auth(xmlNode * login)
         crm_warn("Rejecting remote client: No %s given",
                  ((user == NULL)? "username" : "password"));
         crm_log_xml_debug(login, "bad");
-        return FALSE;
+        return false;
     }
 
     crm_log_xml_debug(login, "auth");
@@ -473,7 +474,7 @@ cib_remote_msg(gpointer data)
         const char *user = NULL;
 
         command = pcmk__remote_message_xml(client->remote);
-        if (cib_remote_auth(command) == FALSE) {
+        if (!cib_remote_auth(command)) {
             pcmk__xml_free(command);
             return -1;
         }
