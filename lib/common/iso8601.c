@@ -750,7 +750,7 @@ parse_hms(const char *time_str, int *result)
 }
 
 static bool
-crm_time_parse_offset(const char *offset_str, int *offset)
+parse_offset(const char *offset_str, int *offset)
 {
     tzset();
 
@@ -788,7 +788,6 @@ crm_time_parse_offset(const char *offset_str, int *offset)
             offset_str++;
         }
         if (!parse_hms(offset_str, offset)) {
-            errno = EINVAL;
             return false;
         }
         if (negate) {
@@ -838,7 +837,8 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
         }
     }
 
-    if (!crm_time_parse_offset(offset_s, &(a_time->offset))) {
+    if (!parse_offset(offset_s, &(a_time->offset))) {
+        errno = EINVAL;
         return false;
     }
 
