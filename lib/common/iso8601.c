@@ -1396,9 +1396,10 @@ crm_time_set(crm_time_t *target, const crm_time_t *source)
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
 }
 
-static void
-ha_set_tm_time(crm_time_t *target, const struct tm *source)
+void
+crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
 {
+    const struct tm *source = localtime(source_sec);
     int h_offset = 0;
     int m_offset = 0;
 
@@ -1439,12 +1440,6 @@ ha_set_tm_time(crm_time_t *target, const struct tm *source)
 
     target->offset += HOUR_SECONDS * h_offset;
     target->offset += 60 * m_offset;
-}
-
-void
-crm_time_set_timet(crm_time_t *target, const time_t *source)
-{
-    ha_set_tm_time(target, localtime(source));
 }
 
 /*!
