@@ -24,7 +24,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     crm_time_period_t *period = NULL;
 
     struct timespec tv = { 0, };
-    crm_time_t now = { 0, };
+    crm_time_t *now = NULL;
     char *result = NULL;
 
     // Ensure we have enough data.
@@ -38,9 +38,10 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     crm_time_free_period(period);
 
     qb_util_timespec_from_epoch_get(&tv);
-    crm_time_set_timet(&now, &(tv.tv_sec));
-    result = pcmk__time_format_hr(ns, &now,
+    now = pcmk__copy_timet(tv.tv_sec);
+    result = pcmk__time_format_hr(ns, now,
                                   (int) (tv.tv_nsec / QB_TIME_NS_IN_USEC));
+    crm_time_free(now);
     free(result);
 
     free(ns);

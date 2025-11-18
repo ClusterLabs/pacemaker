@@ -1373,47 +1373,15 @@ crm_time_free_period(crm_time_period_t *period)
 void
 crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
 {
-    const struct tm *source = localtime(source_sec);
-    int h_offset = 0;
-    int m_offset = 0;
+    crm_time_t *source = NULL;
 
-    /* Ensure target is fully initialized */
-    target->years = 0;
-    target->months = 0;
-    target->days = 0;
-    target->seconds = 0;
-    target->offset = 0;
-    target->duration = FALSE;
-
-    if (source->tm_year > 0) {
-        /* years since 1900 */
-        target->years = 1900;
-        crm_time_add_years(target, source->tm_year);
+    if (source_sec == NULL) {
+        return;
     }
 
-    if (source->tm_yday >= 0) {
-        /* days since January 1 [0-365] */
-        target->days = 1 + source->tm_yday;
-    }
-
-    if (source->tm_hour >= 0) {
-        target->seconds += HOUR_SECONDS * source->tm_hour;
-    }
-    if (source->tm_min >= 0) {
-        target->seconds += 60 * source->tm_min;
-    }
-    if (source->tm_sec >= 0) {
-        target->seconds += source->tm_sec;
-    }
-
-    /* tm_gmtoff == offset from UTC in seconds */
-    h_offset = GMTOFF(source) / HOUR_SECONDS;
-    m_offset = (GMTOFF(source) - (HOUR_SECONDS * h_offset)) / 60;
-    crm_trace("Time offset is %lds (%.2d:%.2d)",
-              GMTOFF(source), h_offset, m_offset);
-
-    target->offset += HOUR_SECONDS * h_offset;
-    target->offset += 60 * m_offset;
+    source = pcmk__copy_timet(*source_sec);
+    *target = *source;
+    crm_time_free(source);
 }
 
 /*!
@@ -1454,18 +1422,56 @@ pcmk_copy_time(const crm_time_t *source)
 
 /*!
  * \internal
- * \brief Convert a \p time_t time to a \p crm_time_t time
+ * \brief Convert a \c time_t time to a \c crm_time_t time
  *
- * \param[in] source  Time to convert
+ * \param[in] source_sec  Time to convert (as seconds since epoch)
  *
- * \return A \p crm_time_t object representing \p source
+ * \return Newly allocated \c crm_time_t object representing \p source_sec
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c crm_time_free().
  */
 crm_time_t *
-pcmk__copy_timet(time_t source)
+pcmk__copy_timet(time_t source_sec)
 {
+    const struct tm *source = localtime(&source_sec);
     crm_time_t *target = crm_time_new_undefined();
 
-    crm_time_set_timet(target, &source);
+    int h_offset = 0;
+    int m_offset = 0;
+
+    if (source->tm_year > 0) {
+        // Years since 1900
+        target->years = 1900;
+        crm_time_add_years(target, source->tm_year);
+    }
+
+    if (source->tm_yday >= 0) {
+        // Days since January 1 (0-365)
+        target->days = 1 + source->tm_yday;
+    }
+
+    if (source->tm_hour >= 0) {
+        target->seconds += HOUR_SECONDS * source->tm_hour;
+    }
+
+    if (source->tm_min >= 0) {
+        target->seconds += 60 * source->tm_min;
+    }
+
+    if (source->tm_sec >= 0) {
+        target->seconds += source->tm_sec;
+    }
+
+    // GMTOFF(source) == offset from UTC in seconds
+    h_offset = GMTOFF(source) / HOUR_SECONDS;
+    m_offset = (GMTOFF(source) - (HOUR_SECONDS * h_offset)) / 60;
+    crm_trace("Time offset is %lds (%.2d:%.2d)", GMTOFF(source), h_offset,
+              m_offset);
+
+    target->offset += HOUR_SECONDS * h_offset;
+    target->offset += 60 * m_offset;
+
     return target;
 }
 
@@ -2124,15 +2130,18 @@ char *
 pcmk__epoch2str(const time_t *source, uint32_t flags)
 {
     time_t epoch_time = (source == NULL)? time(NULL) : *source;
+    crm_time_t *dt = NULL;
+    char *result = NULL;
 
     if (flags == 0) {
         return pcmk__str_copy(g_strchomp(ctime(&epoch_time)));
-    } else {
-        crm_time_t dt;
-
-        crm_time_set_timet(&dt, &epoch_time);
-        return crm_time_as_string(&dt, flags);
     }
+
+    dt = pcmk__copy_timet(epoch_time);
+    result = crm_time_as_string(dt, flags);
+
+    crm_time_free(dt);
+    return result;
 }
 
 /*!
@@ -2156,14 +2165,19 @@ char *
 pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
 {
     struct timespec tmp_ts;
-    crm_time_t dt;
+    crm_time_t *dt = NULL;
+    char *result = NULL;
 
     if (ts == NULL) {
         qb_util_timespec_from_epoch_get(&tmp_ts);
         ts = &tmp_ts;
     }
-    crm_time_set_timet(&dt, &ts->tv_sec);
-    return time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags);
+
+    dt = pcmk__copy_timet(ts->tv_sec);
+    result = time_as_string_common(dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags);
+
+    crm_time_free(dt);
+    return result;
 }
 
 /*!
