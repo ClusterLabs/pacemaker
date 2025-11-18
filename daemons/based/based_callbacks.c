@@ -577,7 +577,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
     const char *reply_to = pcmk__xe_get(request, PCMK__XA_CIB_ISREPLYTO);
 
-    gboolean is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
+    bool is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
     if (originator == NULL) { // Shouldn't be possible
         originator = "peer";
@@ -681,7 +681,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
                   op, host);
         return false;
 
-    } else if(is_reply == FALSE && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
+    } else if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
         *needs_reply = true;
     }
 
