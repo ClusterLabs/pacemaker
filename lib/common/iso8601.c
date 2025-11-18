@@ -1728,20 +1728,25 @@ int
 crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 {
     int rc = 0;
-    crm_time_t *t1 = crm_get_utc_time(a);
-    crm_time_t *t2 = crm_get_utc_time(b);
+    crm_time_t *t1 = NULL;
+    crm_time_t *t2 = NULL;
 
-    if ((t1 == NULL) && (t2 == NULL)) {
-        rc = 0;
-    } else if (t1 == NULL) {
-        rc = -1;
-    } else if (t2 == NULL) {
-        rc = 1;
-    } else {
-        do_cmp_field(t1, t2, years);
-        do_cmp_field(t1, t2, days);
-        do_cmp_field(t1, t2, seconds);
+    if ((a == NULL) && (b == NULL)) {
+        return 0;
     }
+    if (a == NULL) {
+        return -1;
+    }
+    if (b == NULL) {
+        return 1;
+    }
+
+    t1 = crm_get_utc_time(a);
+    t2 = crm_get_utc_time(b);
+
+    do_cmp_field(t1, t2, years);
+    do_cmp_field(t1, t2, days);
+    do_cmp_field(t1, t2, seconds);
 
     crm_time_free(t1);
     crm_time_free(t2);
