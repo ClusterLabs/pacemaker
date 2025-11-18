@@ -32,7 +32,6 @@
 
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
-extern int init_remote_listener(int port, gboolean encrypted);
 bool cib_shutdown_flag = false;
 int cib_status = pcmk_ok;
 
@@ -422,12 +421,12 @@ startCib(const char *filename)
 
     pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
     if (port >= 0) {
-        remote_tls_fd = init_remote_listener(port, TRUE);
+        remote_tls_fd = init_remote_listener(port, true);
     }
 
     pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
     if (port >= 0) {
-        remote_fd = init_remote_listener(port, FALSE);
+        remote_fd = init_remote_listener(port, false);
     }
 
     return true;

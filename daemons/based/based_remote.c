@@ -52,7 +52,6 @@ static pcmk__tls_t *tls = NULL;
 
 extern int remote_tls_fd;
 
-int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
 
 // @TODO This is rather short for someone to type their password
@@ -71,7 +70,7 @@ remote_connection_destroy(gpointer user_data)
 }
 
 int
-init_remote_listener(int port, gboolean encrypted)
+init_remote_listener(int port, bool encrypted)
 {
     int rc;
     int *ssock = NULL;
