@@ -389,7 +389,7 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privi
 
 static uint64_t ping_seq = 0;
 static char *ping_digest = NULL;
-static bool ping_modified_since = FALSE;
+static bool ping_modified_since = false;
 
 static gboolean
 cib_digester_cb(gpointer data)
@@ -401,7 +401,7 @@ cib_digester_cb(gpointer data)
         ping_seq++;
         free(ping_digest);
         ping_digest = NULL;
-        ping_modified_since = FALSE;
+        ping_modified_since = false;
         pcmk__assert(snprintf(buffer, 32, "%" PRIu64, ping_seq) >= 0);
 
         crm_trace("Requesting peer digests (%s)", buffer);
@@ -1119,7 +1119,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                                         NULL));
     }
 
-    ping_modified_since = TRUE;
+    ping_modified_since = true;
 
     // result_cib must not be modified after cib_perform_op() returns
     rc = cib_perform_op(NULL, op, call_options, op_function, false, section,
