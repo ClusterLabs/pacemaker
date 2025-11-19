@@ -51,7 +51,8 @@
 #endif
 
 #define SECONDS_IN_MINUTE   60
-#define SECONDS_IN_HOUR     (SECONDS_IN_MINUTE * 60)
+#define MINUTES_IN_HOUR     60
+#define SECONDS_IN_HOUR     (SECONDS_IN_MINUTE * MINUTES_IN_HOUR)
 #define SECONDS_IN_DAY      (SECONDS_IN_HOUR * 24)
 
 /*!
@@ -232,7 +233,7 @@ parse_hms(const char *time_str, int *result)
                 "because %" PRIu32 " is not a valid hour", time_str, hour);
         return false;
     }
-    if (minute >= 60) {
+    if (minute >= MINUTES_IN_HOUR) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid minute", time_str, minute);
         return false;
@@ -2190,7 +2191,7 @@ pcmk__readable_interval(guint interval_ms)
 {
 #define MS_IN_S (1000)
 #define MS_IN_M (MS_IN_S * SECONDS_IN_MINUTE)
-#define MS_IN_H (MS_IN_M * 60)
+#define MS_IN_H (MS_IN_M * MINUTES_IN_HOUR)
 #define MS_IN_D (MS_IN_H * 24)
 #define MAXSTR sizeof("..d..h..m..s...ms")
     static char str[MAXSTR];
