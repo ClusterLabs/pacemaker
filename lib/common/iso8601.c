@@ -51,7 +51,7 @@
 #endif
 
 #define SECONDS_IN_HOUR (60 * 60)
-#define DAY_SECONDS     (SECONDS_IN_HOUR * 24)
+#define SECONDS_IN_DAY  (SECONDS_IN_HOUR * 24)
 
 /*!
  * \internal
@@ -362,7 +362,7 @@ parse_time(const char *time_str, crm_time_t *a_time)
     crm_trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
               (a_time->offset < 0)? '-' : '+', h, m);
 
-    if (a_time->seconds == DAY_SECONDS) {
+    if (a_time->seconds == SECONDS_IN_DAY) {
         // 24:00:00 == 00:00:00 of next day
         a_time->seconds = 0;
         crm_time_add_days(a_time, 1);
@@ -384,7 +384,7 @@ valid_time(const crm_time_t *dt)
 {
     return (dt != NULL)
            && (dt->days > 0) && (dt->days <= year_days(dt->years))
-           && (dt->seconds >= 0) && (dt->seconds < DAY_SECONDS);
+           && (dt->seconds >= 0) && (dt->seconds < SECONDS_IN_DAY);
 }
 
 /*
@@ -688,7 +688,7 @@ crm_time_get_seconds(const crm_time_t *dt)
     for (lpc = 1; lpc < utc->years; lpc++) {
         long long dmax = year_days(lpc);
 
-        in_seconds += DAY_SECONDS * dmax;
+        in_seconds += SECONDS_IN_DAY * dmax;
     }
 
     /* utc->months can be set only for durations. By definition, the value
@@ -697,11 +697,11 @@ crm_time_get_seconds(const crm_time_t *dt)
      * in this case.
      */
     if (utc->months > 0) {
-        in_seconds += DAY_SECONDS * 30 * (long long) (utc->months);
+        in_seconds += SECONDS_IN_DAY * 30 * (long long) (utc->months);
     }
 
     if (utc->days > 0) {
-        in_seconds += DAY_SECONDS * (long long) (utc->days - 1);
+        in_seconds += SECONDS_IN_DAY * (long long) (utc->days - 1);
     }
     in_seconds += utc->seconds;
 
@@ -1711,23 +1711,23 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 void
 crm_time_add_seconds(crm_time_t *a_time, int extra)
 {
-    int days = extra / DAY_SECONDS;
+    int days = extra / SECONDS_IN_DAY;
 
     pcmk__assert(a_time != NULL);
 
     crm_trace("Adding %d seconds (including %d whole day%s) to %d",
               extra, days, pcmk__plural_s(days), a_time->seconds);
 
-    a_time->seconds += extra % DAY_SECONDS;
+    a_time->seconds += extra % SECONDS_IN_DAY;
 
     // Check whether the addition crossed a day boundary
-    if (a_time->seconds > DAY_SECONDS) {
+    if (a_time->seconds > SECONDS_IN_DAY) {
         ++days;
-        a_time->seconds -= DAY_SECONDS;
+        a_time->seconds -= SECONDS_IN_DAY;
 
     } else if (a_time->seconds < 0) {
         --days;
-        a_time->seconds += DAY_SECONDS;
+        a_time->seconds += SECONDS_IN_DAY;
     }
 
     crm_time_add_days(a_time, days);
@@ -1893,7 +1893,7 @@ get_g_date_time(const struct tm *tm, int offset)
     GTimeZone *tz = NULL;
     GDateTime *dt = NULL;
 
-    if (QB_ABS(offset) <= DAY_SECONDS) {
+    if (QB_ABS(offset) <= SECONDS_IN_DAY) {
         uint32_t hours = 0;
         uint32_t minutes = 0;
         uint32_t seconds = 0;
@@ -1908,7 +1908,7 @@ get_g_date_time(const struct tm *tm, int offset)
 
     } else {
         // offset out of range; use NULL as offset_s
-        CRM_LOG_ASSERT(QB_ABS(offset) <= DAY_SECONDS);
+        CRM_LOG_ASSERT(QB_ABS(offset) <= SECONDS_IN_DAY);
     }
 
     /* @FIXME @COMPAT As of glib 2.68, g_time_zone_new() is deprecated in favor
