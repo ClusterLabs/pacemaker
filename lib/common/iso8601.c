@@ -53,7 +53,8 @@
 #define SECONDS_IN_MINUTE   60
 #define MINUTES_IN_HOUR     60
 #define SECONDS_IN_HOUR     (SECONDS_IN_MINUTE * MINUTES_IN_HOUR)
-#define SECONDS_IN_DAY      (SECONDS_IN_HOUR * 24)
+#define HOURS_IN_DAY        24
+#define SECONDS_IN_DAY      (SECONDS_IN_HOUR * HOURS_IN_DAY)
 
 /*!
  * \internal
@@ -226,9 +227,9 @@ parse_hms(const char *time_str, int *result)
     crm_trace("Got valid time: %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
               hour, minute, second);
 
-    if ((hour == 24) && (minute == 0) && (second == 0)) {
+    if ((hour == HOURS_IN_DAY) && (minute == 0) && (second == 0)) {
         // Equivalent to 00:00:00 of next day, return number of seconds in day
-    } else if (hour >= 24) {
+    } else if (hour >= HOURS_IN_DAY) {
         crm_err("%s is not a valid ISO 8601 time specification "
                 "because %" PRIu32 " is not a valid hour", time_str, hour);
         return false;
@@ -2192,7 +2193,7 @@ pcmk__readable_interval(guint interval_ms)
 #define MS_IN_S (1000)
 #define MS_IN_M (MS_IN_S * SECONDS_IN_MINUTE)
 #define MS_IN_H (MS_IN_M * MINUTES_IN_HOUR)
-#define MS_IN_D (MS_IN_H * 24)
+#define MS_IN_D (MS_IN_H * HOURS_IN_DAY)
 #define MAXSTR sizeof("..d..h..m..s...ms")
     static char str[MAXSTR];
     GString *buf = NULL;
