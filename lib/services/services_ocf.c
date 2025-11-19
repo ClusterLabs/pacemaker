@@ -144,7 +144,7 @@ services__ocf_agent_exists(const char *provider, const char *agent, char **path)
         char *buf = pcmk__assert_asprintf("%s/%s/%s", *dir, provider, agent);
         struct stat sb;
 
-        if (stat(buf, &sb) != 0) {
+        if (stat(buf, &sb) == 0) {
             found = true;
 
             if (path != NULL) {
