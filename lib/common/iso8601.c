@@ -299,24 +299,20 @@ parse_offset(const char *offset_str, int *offset)
 }
 
 static void
-seconds_to_hms(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
+seconds_to_hms(int seconds, uint32_t *h, uint32_t *m, uint32_t *s)
 {
-    uint32_t hours, minutes, seconds;
-
-    seconds = QB_ABS(sec);
+    int hours = 0;
+    int minutes = 0;
 
     hours = seconds / SECONDS_IN_HOUR;
-    seconds -= SECONDS_IN_HOUR * hours;
+    seconds %= SECONDS_IN_HOUR;
 
     minutes = seconds / SECONDS_IN_MINUTE;
-    seconds -= SECONDS_IN_MINUTE * minutes;
+    seconds %= SECONDS_IN_MINUTE;
 
-    crm_trace("%d == %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
-              sec, hours, minutes, seconds);
-
-    *h = hours;
-    *m = minutes;
-    *s = seconds;
+    *h = (uint32_t) QB_ABS(hours);
+    *m = (uint32_t) QB_ABS(minutes);
+    *s = (uint32_t) QB_ABS(seconds);
 }
 
 /*!
