@@ -50,8 +50,8 @@
 #  define GMTOFF(tm) (-timezone+daylight)
 #endif
 
-#define HOUR_SECONDS    (60 * 60)
-#define DAY_SECONDS     (HOUR_SECONDS * 24)
+#define SECONDS_IN_HOUR (60 * 60)
+#define DAY_SECONDS     (SECONDS_IN_HOUR * 24)
 
 /*!
  * \internal
@@ -242,7 +242,7 @@ parse_hms(const char *time_str, int *result)
         return false;
     }
 
-    *result = (hour * HOUR_SECONDS) + (minute * 60) + second;
+    *result = (hour * SECONDS_IN_HOUR) + (minute * 60) + second;
     return true;
 }
 
@@ -257,13 +257,13 @@ parse_offset(const char *offset_str, int *offset)
         time_t now = time(NULL);
         struct tm *now_tm = localtime(&now);
 #endif
-        int h_offset = GMTOFF(now_tm) / HOUR_SECONDS;
-        int m_offset = (GMTOFF(now_tm) - (HOUR_SECONDS * h_offset)) / 60;
+        int h_offset = GMTOFF(now_tm) / SECONDS_IN_HOUR;
+        int m_offset = (GMTOFF(now_tm) - (SECONDS_IN_HOUR * h_offset)) / 60;
 
         if (h_offset < 0 && m_offset < 0) {
             m_offset = 0 - m_offset;
         }
-        *offset = (HOUR_SECONDS * h_offset) + (60 * m_offset);
+        *offset = (SECONDS_IN_HOUR * h_offset) + (60 * m_offset);
         return true;
     }
 
@@ -301,8 +301,8 @@ seconds_to_hms(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
 
     seconds = QB_ABS(sec);
 
-    hours = seconds / HOUR_SECONDS;
-    seconds -= HOUR_SECONDS * hours;
+    hours = seconds / SECONDS_IN_HOUR;
+    seconds -= SECONDS_IN_HOUR * hours;
 
     minutes = seconds / 60;
     seconds -= 60 * minutes;
@@ -1212,7 +1212,7 @@ crm_time_parse_duration(const char *period_s)
                 break;
 
             case 'H':
-                result = diff->seconds + (long long) an_int * HOUR_SECONDS;
+                result = diff->seconds + ((long long) an_int * SECONDS_IN_HOUR);
                 if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
                             "because integer at '%s' is too %s",
@@ -1443,7 +1443,7 @@ pcmk__copy_timet(time_t source_sec)
     }
 
     if (source->tm_hour >= 0) {
-        target->seconds += HOUR_SECONDS * source->tm_hour;
+        target->seconds += SECONDS_IN_HOUR * source->tm_hour;
     }
 
     if (source->tm_min >= 0) {
@@ -1455,12 +1455,12 @@ pcmk__copy_timet(time_t source_sec)
     }
 
     // GMTOFF(source) == offset from UTC in seconds
-    h_offset = GMTOFF(source) / HOUR_SECONDS;
-    m_offset = (GMTOFF(source) - (HOUR_SECONDS * h_offset)) / 60;
+    h_offset = GMTOFF(source) / SECONDS_IN_HOUR;
+    m_offset = (GMTOFF(source) - (SECONDS_IN_HOUR * h_offset)) / 60;
     crm_trace("Time offset is %lds (%.2d:%.2d)", GMTOFF(source), h_offset,
               m_offset);
 
-    target->offset += HOUR_SECONDS * h_offset;
+    target->offset += SECONDS_IN_HOUR * h_offset;
     target->offset += 60 * m_offset;
 
     return target;
@@ -1823,7 +1823,7 @@ crm_time_add_minutes(crm_time_t * a_time, int extra)
 void
 crm_time_add_hours(crm_time_t * a_time, int extra)
 {
-    crm_time_add_seconds(a_time, extra * HOUR_SECONDS);
+    crm_time_add_seconds(a_time, extra * SECONDS_IN_HOUR);
 }
 
 void
