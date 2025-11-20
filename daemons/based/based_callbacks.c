@@ -869,8 +869,8 @@ cib_process_request(xmlNode *request, bool privileged,
         return rc;
     }
 
-    if (cib_status != pcmk_ok) {
-        rc = cib_status;
+    if (cib_status != pcmk_rc_ok) {
+        rc = pcmk_rc2legacy(cib_status);
         crm_err("Ignoring request because cluster configuration is invalid "
                 "(please repair and restart): %s", pcmk_strerror(rc));
         op_reply = create_cib_reply(op, call_id, client_id, call_options, rc,
@@ -1066,7 +1066,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     static mainloop_timer_t *digest_timer = NULL;
 
-    pcmk__assert(cib_status == pcmk_ok);
+    pcmk__assert(cib_status == pcmk_rc_ok);
 
     if(digest_timer == NULL) {
         digest_timer = mainloop_timer_add("digester", 5000, FALSE, cib_digester_cb, NULL);
