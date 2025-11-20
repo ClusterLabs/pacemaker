@@ -886,7 +886,6 @@ cib_process_request(xmlNode *request, bool privileged,
 
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  &result_diff, privileged);
-        rc = pcmk_legacy2rc(rc);
 
         if (!is_update) {
             level = LOG_TRACE;
@@ -1057,7 +1056,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
 
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     bool config_changed = false;
     bool manage_counters = true;
@@ -1083,8 +1082,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     if (!privileged
         && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
-        rc = -EACCES;
-        crm_trace("Failed due to lack of privileges: %s", pcmk_strerror(rc));
+        rc = EACCES;
+        crm_trace("Failed due to lack of privileges: %s", pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1094,6 +1093,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         rc = cib_perform_op(NULL, op, call_options, op_function, true, section,
                             request, input, false, &config_changed, &the_cib,
                             &result_cib, NULL, &output);
+        rc = pcmk_legacy2rc(rc);
 
         CRM_CHECK(result_cib == NULL, pcmk__xml_free(result_cib));
         goto done;
@@ -1123,17 +1123,18 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     rc = cib_perform_op(NULL, op, call_options, op_function, false, section,
                         request, input, manage_counters, &config_changed,
                         &the_cib, &result_cib, cib_diff, &output);
+    rc = pcmk_legacy2rc(rc);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
      */
-    if ((rc == pcmk_ok)
+    if ((rc == pcmk_rc_ok)
         && pcmk__is_set(operation->flags, cib__op_attr_writes_through)) {
 
         config_changed = true;
     }
 
-    if ((rc == pcmk_ok)
+    if ((rc == pcmk_rc_ok)
         && !pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
 
         if (result_cib != the_cib) {
@@ -1147,12 +1148,13 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                       (config_changed? " changed" : ""));
 
             rc = activateCibXml(result_cib, config_changed, op);
-            if (rc != pcmk_ok) {
-                crm_err("Failed to activate new CIB: %s", pcmk_strerror(rc));
+            rc = pcmk_legacy2rc(rc);
+            if (rc != pcmk_rc_ok) {
+                crm_err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
             }
         }
 
-        if ((rc == pcmk_ok) && contains_config_change(*cib_diff)) {
+        if ((rc == pcmk_rc_ok) && contains_config_change(*cib_diff)) {
             cib_read_config(config_hash, result_cib);
         }
 
@@ -1177,7 +1179,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         mainloop_timer_stop(digest_timer);
         mainloop_timer_start(digest_timer);
 
-    } else if (rc == -pcmk_err_schema_validation) {
+    } else if (rc == pcmk_rc_schema_validation) {
         pcmk__assert(result_cib != the_cib);
 
         if (output != NULL) {
@@ -1201,16 +1203,16 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                              cib_dryrun|cib_inhibit_notify|cib_transaction)) {
         crm_trace("Sending notifications %d",
                   pcmk__is_set(call_options, cib_dryrun));
-        cib_diff_notify(op, rc, call_id, client_id, client_name, originator,
-                        input, *cib_diff);
+        cib_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id, client_name,
+                        originator, input, *cib_diff);
     }
 
     pcmk__log_xml_patchset(LOG_TRACE, *cib_diff);
 
   done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
-        *reply = create_cib_reply(op, call_id, client_id, call_options, rc,
-                                  output);
+        *reply = create_cib_reply(op, call_id, client_id, call_options,
+                                  pcmk_rc2legacy(rc), output);
     }
 
     if (output != the_cib) {
