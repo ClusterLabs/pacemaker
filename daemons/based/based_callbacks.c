@@ -172,6 +172,9 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
 
     CRM_CHECK((notify_src != NULL) && (client_id != NULL), return);
 
+    crm_trace("Performing local %ssync notification for %s",
+              sync_reply ? "" : "a", client_id);
+
     pcmk__xe_get_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
 
     client_obj = pcmk__find_client_by_id(client_id);
@@ -946,18 +949,9 @@ cib_process_request(xmlNode *request, bool privileged,
     }
 
     if (local_notify && client_id) {
-        crm_trace("Performing local %ssync notification for %s",
-                  (pcmk__is_set(call_options, cib_sync_call)? "" : "a"),
-                  client_id);
-        if (!process) {
-            do_local_notify(request, client_id,
-                            pcmk__is_set(call_options, cib_sync_call),
-                            (cib_client == NULL));
-        } else {
-            do_local_notify(op_reply, client_id,
-                            pcmk__is_set(call_options, cib_sync_call),
-                            (cib_client == NULL));
-        }
+        do_local_notify(process ? op_reply : request, client_id,
+                        pcmk__is_set(call_options, cib_sync_call),
+                        (cib_client == NULL));
     }
 
     pcmk__xml_free(op_reply);
