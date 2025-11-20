@@ -789,7 +789,8 @@ cib_process_request(xmlNode *request, bool privileged,
     const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
-    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *client_name = pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME),
+                                      "client");
     const char *reply_to = pcmk__xe_get(request, PCMK__XA_CIB_ISREPLYTO);
 
     const cib__operation_t *operation = NULL;
@@ -807,13 +808,12 @@ cib_process_request(xmlNode *request, bool privileged,
 
     if (cib_client == NULL) {
         crm_trace("Processing peer %s operation from %s/%s on %s intended for %s (reply=%s)",
-                  op, pcmk__s(client_name, "client"), call_id, originator,
-                  pcmk__s(host, "all"), reply_to);
+                  op, client_name, call_id, originator, pcmk__s(host, "all"),
+                  reply_to);
     } else {
         pcmk__xe_set(request, PCMK__XA_SRC, OUR_NODENAME);
         crm_trace("Processing local %s operation from %s/%s intended for %s",
-                  op, pcmk__s(client_name, "client"), call_id,
-                  pcmk__s(host, "all"));
+                  op, client_name, call_id, pcmk__s(host, "all"));
     }
 
     rc = cib__get_operation(op, &operation);
@@ -919,8 +919,8 @@ cib_process_request(xmlNode *request, bool privileged,
         do_crm_log(level,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
                    op, pcmk__s(section, "'all'"), pcmk_rc_str(rc), rc,
-                   pcmk__s(originator, "local"), pcmk__s(client_name, "client"),
-                   call_id, pcmk__s(admin_epoch_s, "0"), pcmk__s(epoch_s, "0"),
+                   pcmk__s(originator, "local"), client_name, call_id,
+                   pcmk__s(admin_epoch_s, "0"), pcmk__s(epoch_s, "0"),
                    pcmk__s(num_updates_s, "0"));
 
         finished = time(NULL);
@@ -940,7 +940,7 @@ cib_process_request(xmlNode *request, bool privileged,
     if (is_update) {
         crm_trace("Completed pre-sync update from %s/%s/%s%s",
                   originator ? originator : "local",
-                  pcmk__s(client_name, "client"), call_id,
+                  client_name, call_id,
                   local_notify?" with local notification":"");
 
     } else if (needs_reply && !stand_alone && (cib_client == NULL)
