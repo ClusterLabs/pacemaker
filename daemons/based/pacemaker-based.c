@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pwd.h>
@@ -31,15 +32,14 @@
 
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
-extern int init_remote_listener(int port, gboolean encrypted);
-gboolean cib_shutdown_flag = FALSE;
+bool cib_shutdown_flag = false;
 int cib_status = pcmk_ok;
 
 pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
-static gboolean preserve_status = FALSE;
+static bool preserve_status = false;
 
 gboolean cib_writes_enabled = TRUE;
 gboolean stand_alone = FALSE;
@@ -78,7 +78,7 @@ setup_stand_alone(GError **error)
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
 
-    preserve_status = TRUE;
+    preserve_status = true;
     cib_writes_enabled = FALSE;
 
     rc = pcmk__daemon_user(&uid, &gid);
@@ -385,7 +385,7 @@ cib_init(void)
 
     config_hash = pcmk__strkey_table(free, free);
 
-    if (startCib("cib.xml") == FALSE) {
+    if (!startCib("cib.xml")) {
         crm_crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
@@ -410,25 +410,24 @@ cib_init(void)
 static bool
 startCib(const char *filename)
 {
-    gboolean active = FALSE;
     xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
+    int port = 0;
 
-    if (activateCibXml(cib, TRUE, "start") == 0) {
-        int port = 0;
-
-        active = TRUE;
-
-        cib_read_config(config_hash, cib);
-
-        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
-        if (port >= 0) {
-            remote_tls_fd = init_remote_listener(port, TRUE);
-        }
-
-        pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
-        if (port >= 0) {
-            remote_fd = init_remote_listener(port, FALSE);
-        }
+    if (activateCibXml(cib, true, "start") != 0) {
+        return false;
     }
-    return active;
+
+    cib_read_config(config_hash, cib);
+
+    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
+    if (port >= 0) {
+        remote_tls_fd = init_remote_listener(port, true);
+    }
+
+    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
+    if (port >= 0) {
+        remote_fd = init_remote_listener(port, false);
+    }
+
+    return true;
 }

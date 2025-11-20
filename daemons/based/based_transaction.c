@@ -75,7 +75,7 @@ process_transaction_requests(xmlNodePtr transaction,
                 /* Commit-transaction is a privileged operation. If we reached
                  * this point, the request came from a privileged connection.
                  */
-                rc = cib_process_request(request, TRUE, client);
+                rc = cib_process_request(request, true, client);
                 rc = pcmk_legacy2rc(rc);
             }
         }

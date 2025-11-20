@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 
 #include <sys/param.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -51,9 +52,7 @@
 static pcmk__tls_t *tls = NULL;
 
 extern int remote_tls_fd;
-extern gboolean cib_shutdown_flag;
 
-int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
 
 // @TODO This is rather short for someone to type their password
@@ -72,7 +71,7 @@ remote_connection_destroy(gpointer user_data)
 }
 
 int
-init_remote_listener(int port, gboolean encrypted)
+init_remote_listener(int port, bool encrypted)
 {
     int rc;
     int *ssock = NULL;
@@ -191,7 +190,7 @@ is_daemon_group_member(const char *usr)
     return false;
 }
 
-static gboolean
+static bool
 cib_remote_auth(xmlNode * login)
 {
     const char *user = NULL;
@@ -199,14 +198,14 @@ cib_remote_auth(xmlNode * login)
     const char *tmp = NULL;
 
     if (login == NULL) {
-        return FALSE;
+        return false;
     }
 
     if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
         crm_warn("Rejecting remote client: Unrecognizable message "
                  "(element '%s' not '" PCMK__XE_CIB_COMMAND "')", login->name);
         crm_log_xml_debug(login, "bad");
-        return FALSE;
+        return false;
     }
 
     tmp = pcmk__xe_get(login, PCMK_XA_OP);
@@ -214,7 +213,7 @@ cib_remote_auth(xmlNode * login)
         crm_warn("Rejecting remote client: Unrecognizable message "
                  "(operation '%s' not 'authenticate')", tmp);
         crm_log_xml_debug(login, "bad");
-        return FALSE;
+        return false;
     }
 
     user = pcmk__xe_get(login, PCMK_XA_USER);
@@ -223,7 +222,7 @@ cib_remote_auth(xmlNode * login)
         crm_warn("Rejecting remote client: No %s given",
                  ((user == NULL)? "username" : "password"));
         crm_log_xml_debug(login, "bad");
-        return FALSE;
+        return false;
     }
 
     crm_log_xml_debug(login, "auth");
@@ -271,7 +270,7 @@ cib_remote_listen(gpointer data)
     csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (csock == -1) {
         crm_warn("Could not accept remote connection: %s", pcmk_rc_str(errno));
-        return TRUE;
+        return 0;
     }
 
     pcmk__sockaddr2str(&addr, ipstr);
@@ -282,7 +281,7 @@ cib_remote_listen(gpointer data)
                  "it could not be set to non-blocking: %s",
                  ipstr, pcmk_rc_str(rc));
         close(csock);
-        return TRUE;
+        return 0;
     }
 
     num_clients++;
@@ -297,7 +296,7 @@ cib_remote_listen(gpointer data)
         new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
         if (new_client->remote->tls_session == NULL) {
             close(csock);
-            return TRUE;
+            return 0;
         }
     } else {
         pcmk__set_client_flags(new_client, pcmk__client_tcp);
@@ -316,7 +315,7 @@ cib_remote_listen(gpointer data)
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
                         &remote_client_fd_callbacks);
 
-    return TRUE;
+    return 0;
 }
 
 void
@@ -406,7 +405,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     crm_log_xml_trace(command, "Remote command: ");
-    cib_common_callback_worker(0, 0, command, client, TRUE);
+    cib_common_callback_worker(0, 0, command, client, true);
 }
 
 static int
@@ -475,7 +474,7 @@ cib_remote_msg(gpointer data)
         const char *user = NULL;
 
         command = pcmk__remote_message_xml(client->remote);
-        if (cib_remote_auth(command) == FALSE) {
+        if (!cib_remote_auth(command)) {
             pcmk__xml_free(command);
             return -1;
         }

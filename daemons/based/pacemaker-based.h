@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #ifndef PACEMAKER_BASED__H
 #  define PACEMAKER_BASED__H
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -53,7 +54,7 @@ extern gboolean cib_writes_enabled;
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
 extern gboolean stand_alone;
-extern gboolean cib_shutdown_flag;
+extern bool cib_shutdown_flag;
 extern gchar *cib_root;
 extern int cib_status;
 
@@ -63,19 +64,20 @@ extern qb_ipcs_service_t *ipcs_ro;
 extern qb_ipcs_service_t *ipcs_rw;
 extern qb_ipcs_service_t *ipcs_shm;
 
+int init_remote_listener(int port, bool encrypted);
+
 void cib_peer_callback(xmlNode *msg, void *private_data);
 void cib_common_callback_worker(uint32_t id, uint32_t flags,
                                 xmlNode *op_request, pcmk__client_t *cib_client,
-                                gboolean privileged);
-int cib_process_request(xmlNode *request, gboolean privileged,
+                                bool privileged);
+int cib_process_request(xmlNode *request, bool privileged,
                         const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
 void terminate_cib(int exit_status);
 
-gboolean uninitializeCib(void);
-xmlNode *readCibXmlFile(const char *dir, const char *file,
-                        gboolean discard_status);
-int activateCibXml(xmlNode *doc, gboolean to_disk, const char *op);
+void uninitializeCib(void);
+xmlNode *readCibXmlFile(const char *dir, const char *file, bool discard_status);
+int activateCibXml(xmlNode *doc, bool to_disk, const char *op);
 
 int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
@@ -119,7 +121,7 @@ int cib_process_schemas(const char *op, int options, const char *section,
                         xmlNode **result_cib, xmlNode **answer);
 
 void send_sync_request(const char *host);
-int sync_our_cib(xmlNode *request, gboolean all);
+int sync_our_cib(xmlNode *request, bool all);
 
 cib__op_fn_t based_get_op_function(const cib__operation_t *operation);
 void cib_diff_notify(const char *op, int result, const char *call_id,

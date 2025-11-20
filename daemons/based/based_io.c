@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -152,7 +153,7 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
 }
 
 xmlNode *
-readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
+readCibXmlFile(const char *dir, const char *file, bool discard_status)
 {
     struct dirent **namelist = NULL;
 
@@ -275,17 +276,17 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     return root;
 }
 
-gboolean
+void
 uninitializeCib(void)
 {
     xmlNode *tmp_cib = the_cib;
 
     if (tmp_cib == NULL) {
-        return FALSE;
+        return;
     }
+
     the_cib = NULL;
     pcmk__xml_free(tmp_cib);
-    return TRUE;
 }
 
 /*
@@ -293,7 +294,7 @@ uninitializeCib(void)
  * on failure.
  */
 int
-activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
+activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
 {
     if (new_cib) {
         xmlNode *saved_cib = the_cib;
