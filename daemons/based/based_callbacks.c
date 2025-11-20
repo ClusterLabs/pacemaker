@@ -43,7 +43,7 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 static int cib_process_command(xmlNode *request,
                                const cib__operation_t *operation,
                                cib__op_fn_t op_function, xmlNode **reply,
-                               xmlNode **cib_diff, bool privileged);
+                               bool privileged);
 
 static int32_t cib_common_callback(qb_ipcs_connection_t *c, void *data,
                                    size_t size, bool privileged);
@@ -885,7 +885,7 @@ cib_process_request(xmlNode *request, bool privileged,
         const char *num_updates_s = NULL;
 
         rc = cib_process_command(request, operation, op_function, &op_reply,
-                                 &result_diff, privileged);
+                                 privileged);
 
         if (!is_update) {
             level = LOG_TRACE;
@@ -1040,9 +1040,9 @@ contains_config_change(xmlNode *diff)
 
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
-                    cib__op_fn_t op_function, xmlNode **reply,
-                    xmlNode **cib_diff, bool privileged)
+                    cib__op_fn_t op_function, xmlNode **reply, bool privileged)
 {
+    xmlNode *cib_diff = NULL;
     xmlNode *input = NULL;
     xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
@@ -1070,7 +1070,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     }
 
     *reply = NULL;
-    *cib_diff = NULL;
 
     /* Start processing the request... */
     op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
@@ -1122,7 +1121,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     // result_cib must not be modified after cib_perform_op() returns
     rc = cib_perform_op(NULL, op, call_options, op_function, false, section,
                         request, input, manage_counters, &config_changed,
-                        &the_cib, &result_cib, cib_diff, &output);
+                        &the_cib, &result_cib, &cib_diff, &output);
     rc = pcmk_legacy2rc(rc);
 
     /* Always write to disk for successful ops with the flag set. This also
@@ -1154,7 +1153,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             }
         }
 
-        if ((rc == pcmk_rc_ok) && contains_config_change(*cib_diff)) {
+        if ((rc == pcmk_rc_ok) && contains_config_change(cib_diff)) {
             cib_read_config(config_hash, result_cib);
         }
 
@@ -1204,10 +1203,10 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         crm_trace("Sending notifications %d",
                   pcmk__is_set(call_options, cib_dryrun));
         cib_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id, client_name,
-                        originator, input, *cib_diff);
+                        originator, input, cib_diff);
     }
 
-    pcmk__log_xml_patchset(LOG_TRACE, *cib_diff);
+    pcmk__log_xml_patchset(LOG_TRACE, cib_diff);
 
   done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
@@ -1218,7 +1217,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     if (output != the_cib) {
         pcmk__xml_free(output);
     }
+
     crm_trace("done");
+    pcmk__xml_free(cib_diff);
     return rc;
 }
 
