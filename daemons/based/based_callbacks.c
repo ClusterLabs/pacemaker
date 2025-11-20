@@ -932,8 +932,7 @@ cib_process_request(xmlNode *request, bool privileged,
         if (op_reply == NULL && (needs_reply || local_notify)) {
             crm_err("Unexpected NULL reply to message");
             crm_log_xml_err(request, "null reply");
-            needs_reply = false;
-            local_notify = false;
+            goto done;
         }
     }
 
@@ -954,6 +953,7 @@ cib_process_request(xmlNode *request, bool privileged,
                         (cib_client == NULL));
     }
 
+done:
     pcmk__xml_free(op_reply);
     return rc;
 }
