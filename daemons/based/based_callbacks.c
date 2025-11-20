@@ -779,7 +779,6 @@ cib_process_request(xmlNode *request, bool privileged,
     bool needs_forward = false; // Whether to forward request somewhere else
 
     xmlNode *op_reply = NULL;
-    xmlNode *result_diff = NULL;
 
     int rc = pcmk_rc_ok;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
@@ -941,23 +940,8 @@ cib_process_request(xmlNode *request, bool privileged,
                   pcmk__s(client_name, "client"), call_id,
                   local_notify?" with local notification":"");
 
-    } else if (!needs_reply || stand_alone) {
-        // This was a non-originating secondary update
-        crm_trace("Completed update as secondary");
-
-    } else if ((cib_client == NULL)
+    } else if (needs_reply && !stand_alone && (cib_client == NULL)
                && !pcmk__is_set(call_options, cib_discard_reply)) {
-
-        if (!is_update || (result_diff == NULL)) {
-            crm_trace("Request not broadcast: R/O call");
-
-        } else if (rc != pcmk_rc_ok) {
-            crm_trace("Request not broadcast: call failed: %s", pcmk_rc_str(rc));
-
-        } else {
-            crm_trace("Directing reply to %s", originator);
-        }
-
         send_peer_reply(op_reply, originator);
     }
 
@@ -977,8 +961,6 @@ cib_process_request(xmlNode *request, bool privileged,
     }
 
     pcmk__xml_free(op_reply);
-    pcmk__xml_free(result_diff);
-
     return rc;
 }
 
