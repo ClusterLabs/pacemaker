@@ -763,7 +763,7 @@ send_peer_reply(xmlNode *msg, const char *originator)
  *                               (see cib_server_ops[] definition)
  * \param[in] cib_client         IPC client that sent request (or NULL if CPG)
  *
- * \return Legacy Pacemaker return code
+ * \return Standard Pacemaker return code
  */
 int
 cib_process_request(xmlNode *request, bool privileged,
@@ -781,7 +781,7 @@ cib_process_request(xmlNode *request, bool privileged,
     xmlNode *op_reply = NULL;
     xmlNode *result_diff = NULL;
 
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
     const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
@@ -815,17 +815,16 @@ cib_process_request(xmlNode *request, bool privileged,
     }
 
     rc = cib__get_operation(op, &operation);
-    rc = pcmk_rc2legacy(rc);
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         /* TODO: construct error reply? */
-        crm_err("Pre-processing of command failed: %s", pcmk_strerror(rc));
+        crm_err("Pre-processing of command failed: %s", pcmk_rc_str(rc));
         return rc;
     }
 
     op_function = based_get_op_function(operation);
     if (op_function == NULL) {
         crm_err("Operation %s not supported by CIB manager", op);
-        return -EOPNOTSUPP;
+        return EOPNOTSUPP;
     }
 
     if (cib_client != NULL) {
@@ -835,7 +834,7 @@ cib_process_request(xmlNode *request, bool privileged,
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
-        return rc;
+        return pcmk_rc_ok;
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
@@ -866,15 +865,15 @@ cib_process_request(xmlNode *request, bool privileged,
 
     if (needs_forward) {
         forward_request(request);
-        return rc;
+        return pcmk_rc_ok;
     }
 
     if (cib_status != pcmk_rc_ok) {
-        rc = pcmk_rc2legacy(cib_status);
+        rc = cib_status;
         crm_err("Ignoring request because cluster configuration is invalid "
-                "(please repair and restart): %s", pcmk_strerror(rc));
-        op_reply = create_cib_reply(op, call_id, client_id, call_options, rc,
-                                    the_cib);
+                "(please repair and restart): %s", pcmk_rc_str(rc));
+        op_reply = create_cib_reply(op, call_id, client_id, call_options,
+                                    pcmk_rc2legacy(rc), the_cib);
 
     } else if (process) {
         time_t finished = 0;
@@ -887,25 +886,26 @@ cib_process_request(xmlNode *request, bool privileged,
 
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  &result_diff, privileged);
+        rc = pcmk_legacy2rc(rc);
 
         if (!is_update) {
             level = LOG_TRACE;
 
         } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
             switch (rc) {
-                case pcmk_ok:
+                case pcmk_rc_ok:
                     level = LOG_INFO;
                     break;
-                case -pcmk_err_old_data:
-                case -pcmk_err_diff_resync:
-                case -pcmk_err_diff_failed:
+                case pcmk_rc_old_data:
+                case pcmk_rc_diff_resync:
+                case pcmk_rc_diff_failed:
                     level = LOG_TRACE;
                     break;
                 default:
                     level = LOG_ERR;
             }
 
-        } else if (rc != pcmk_ok) {
+        } else if (rc != pcmk_rc_ok) {
             level = LOG_WARNING;
         }
 
@@ -917,11 +917,9 @@ cib_process_request(xmlNode *request, bool privileged,
 
         do_crm_log(level,
                    "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
-                   op, section ? section : "'all'", pcmk_strerror(rc), rc,
-                   originator ? originator : "local",
-                   pcmk__s(client_name, "client"), call_id,
-                   pcmk__s(admin_epoch_s, "0"),
-                   pcmk__s(epoch_s, "0"),
+                   op, pcmk__s(section, "'all'"), pcmk_rc_str(rc), rc,
+                   pcmk__s(originator, "local"), pcmk__s(client_name, "client"),
+                   call_id, pcmk__s(admin_epoch_s, "0"), pcmk__s(epoch_s, "0"),
                    pcmk__s(num_updates_s, "0"));
 
         finished = time(NULL);
@@ -954,8 +952,8 @@ cib_process_request(xmlNode *request, bool privileged,
         if (!is_update || (result_diff == NULL)) {
             crm_trace("Request not broadcast: R/O call");
 
-        } else if (rc != pcmk_ok) {
-            crm_trace("Request not broadcast: call failed: %s", pcmk_strerror(rc));
+        } else if (rc != pcmk_rc_ok) {
+            crm_trace("Request not broadcast: call failed: %s", pcmk_rc_str(rc));
 
         } else {
             crm_trace("Directing reply to %s", originator);

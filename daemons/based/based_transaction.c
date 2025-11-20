@@ -76,7 +76,6 @@ process_transaction_requests(xmlNodePtr transaction,
                  * this point, the request came from a privileged connection.
                  */
                 rc = cib_process_request(request, true, client);
-                rc = pcmk_legacy2rc(rc);
             }
         }
 
