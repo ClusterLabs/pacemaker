@@ -559,7 +559,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     xmlNode *xml = NULL;
 
     // Sanity-check, and parse XML from IPC data
-    CRM_CHECK((c != NULL) && (client != NULL), return 0);
+    CRM_CHECK(client != NULL, return 0);
     if (data == NULL) {
         crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
@@ -617,7 +617,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         CRM_CHECK(request.op != NULL, return 0);
 
         attrd_handle_request(&request);
-        pcmk__reset_request(&request);
     }
 
     pcmk__xml_free(xml);

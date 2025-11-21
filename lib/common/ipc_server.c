@@ -1160,13 +1160,21 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
  * \internal
  * \brief Add an IPC server to the main loop for the scheduler API
  *
+ * \param[out] ipcs  Where to store newly created IPC server
  * \param[in] cb  IPC callbacks
  *
  * \return Newly created IPC server
  * \note This function exits fatally if unable to create the servers.
  */
-qb_ipcs_service_t *
-pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb)
+void
+pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
+                           struct qb_ipcs_service_handlers *cb)
 {
-    return mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        crm_crit("Exiting fatally because unable to serve "
+                 PCMK__SERVER_SCHEDULERD " IPC");
+        crm_exit(CRM_EX_FATAL);
+    }
 }
