@@ -93,8 +93,6 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
             attrd_send_message(peer, reply, false);
             pcmk__xml_free(reply);
         }
-
-        pcmk__reset_request(&request);
     }
 }
 

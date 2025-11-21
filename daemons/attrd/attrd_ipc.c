@@ -617,7 +617,6 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         CRM_CHECK(request.op != NULL, return 0);
 
         attrd_handle_request(&request);
-        pcmk__reset_request(&request);
     }
 
     pcmk__xml_free(xml);
