@@ -776,7 +776,6 @@ cib_process_request(xmlNode *request, bool privileged,
     uint32_t call_options = cib_none;
 
     bool process = true;        // Whether to process request locally now
-    bool is_update = true;      // Whether request would modify CIB
     bool needs_reply = true;    // Whether to build a reply
     bool local_notify = false;  // Whether to notify (local) requester
     bool needs_forward = false; // Whether to forward request somewhere else
@@ -853,8 +852,6 @@ cib_process_request(xmlNode *request, bool privileged,
         needs_forward = false;
     }
 
-    is_update = pcmk__is_set(operation->flags, cib__op_attr_modifies);
-
     if (pcmk__is_set(call_options, cib_discard_reply)) {
         /* If the request will modify the CIB, and we are in legacy mode, we
          * need to build a reply so we can broadcast a diff, even if the
@@ -889,7 +886,7 @@ cib_process_request(xmlNode *request, bool privileged,
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  privileged);
 
-        if (!is_update) {
+        if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
             level = LOG_TRACE;
 
         } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
@@ -936,7 +933,7 @@ cib_process_request(xmlNode *request, bool privileged,
         }
     }
 
-    if (is_update) {
+    if (pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         crm_trace("Completed pre-sync update from %s/%s/%s%s",
                   originator ? originator : "local",
                   client_name, call_id,
