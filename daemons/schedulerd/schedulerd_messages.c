@@ -210,6 +210,15 @@ schedulerd_register_handlers(void)
 }
 
 void
+schedulerd_unregister_handlers(void)
+{
+    if (schedulerd_handlers != NULL) {
+        g_hash_table_destroy(schedulerd_handlers);
+        schedulerd_handlers = NULL;
+    }
+}
+
+void
 schedulerd_handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
