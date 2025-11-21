@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,9 +11,11 @@
 #define PCMK__PACEMAKER_SCHEDULERD__H
 
 #include <crm_internal.h>
-#include <crm/common/scheduler.h>
 
 extern pcmk__output_t *logger_out;
 extern struct qb_ipcs_service_handlers ipc_callbacks;
+extern GHashTable *schedulerd_handlers;
+
+void schedulerd_register_handlers(void);
 
 #endif

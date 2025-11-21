@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -32,6 +32,7 @@ pacemaker_schedulerd_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 
 # libcib for get_object_root()
 pacemaker_schedulerd_SOURCES	= pacemaker-schedulerd.c
+pacemaker_schedulerd_SOURCES	+= schedulerd_ipc.c
 pacemaker_schedulerd_SOURCES	+= schedulerd_messages.c
 
 .PHONY: install-exec-local
