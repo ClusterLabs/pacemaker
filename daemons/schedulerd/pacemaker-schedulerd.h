@@ -14,8 +14,6 @@
 
 extern pcmk__output_t *logger_out;
 extern struct qb_ipcs_service_handlers ipc_callbacks;
-extern GHashTable *schedulerd_handlers;
-
-void schedulerd_register_handlers(void);
+void schedulerd_handle_request(pcmk__request_t *request);
 
 #endif

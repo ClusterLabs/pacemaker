@@ -64,10 +64,6 @@ schedulerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     CRM_CHECK(client != NULL, return 0);
 
-    if (schedulerd_handlers == NULL) {
-        schedulerd_register_handlers();
-    }
-
     rc = pcmk__ipc_msg_append(&client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {
@@ -116,11 +112,6 @@ schedulerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
                  CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
 
     } else {
-        char *log_msg = NULL;
-        const char *exec_status_s = NULL;
-        const char *reason = NULL;
-        xmlNode *reply = NULL;
-
         pcmk__request_t request = {
             .ipc_client     = client,
             .ipc_id         = id,
@@ -134,34 +125,7 @@ schedulerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CRM_TASK);
         CRM_CHECK(request.op != NULL, return 0);
 
-        reply = pcmk__process_request(&request, schedulerd_handlers);
-
-        if (reply != NULL) {
-            pcmk__ipc_send_xml(client, id, reply, crm_ipc_server_event);
-            pcmk__xml_free(reply);
-        }
-
-        exec_status_s = pcmk_exec_status_str(request.result.execution_status);
-        reason = request.result.exit_reason;
-
-        log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
-                                        "%s%s%s%s",
-                                        request.op,
-                                        pcmk__request_origin_type(&request),
-                                        pcmk__request_origin(&request),
-                                        exec_status_s,
-                                        (reason == NULL)? "" : " (",
-                                        pcmk__s(reason, ""),
-                                        (reason == NULL)? "" : ")");
-
-        if (!pcmk__result_ok(&request.result)) {
-            crm_warn("%s", log_msg);
-        } else {
-            crm_debug("%s", log_msg);
-        }
-
-        free(log_msg);
-        pcmk__reset_request(&request);
+        schedulerd_handle_request(&request);
     }
 
     pcmk__xml_free(msg);

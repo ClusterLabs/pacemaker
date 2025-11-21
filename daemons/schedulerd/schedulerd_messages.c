@@ -20,7 +20,7 @@
 
 #include "pacemaker-schedulerd.h"
 
-GHashTable *schedulerd_handlers = NULL;
+static GHashTable *schedulerd_handlers = NULL;
 
 static pcmk_scheduler_t *
 init_scheduler(void)
@@ -197,7 +197,7 @@ handle_hello_request(pcmk__request_t *request)
     return NULL;
 }
 
-void
+static void
 schedulerd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
@@ -207,4 +207,48 @@ schedulerd_register_handlers(void)
     };
 
     schedulerd_handlers = pcmk__register_handlers(handlers);
+}
+
+void
+schedulerd_handle_request(pcmk__request_t *request)
+{
+    xmlNode *reply = NULL;
+    char *log_msg = NULL;
+    const char *exec_status_s = NULL;
+    const char *reason = NULL;
+
+    if (schedulerd_handlers == NULL) {
+        schedulerd_register_handlers();
+    }
+
+    reply = pcmk__process_request(request, schedulerd_handlers);
+
+    if (reply != NULL) {
+        crm_log_xml_trace(reply, "Reply");
+
+        pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
+                           crm_ipc_server_event);
+        pcmk__xml_free(reply);
+    }
+
+    exec_status_s = pcmk_exec_status_str(request->result.execution_status);
+    reason = request->result.exit_reason;
+
+    log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: %s%s%s%s",
+                                    request->op,
+                                    pcmk__request_origin_type(request),
+                                    pcmk__request_origin(request),
+                                    exec_status_s,
+                                    (reason == NULL)? "" : " (",
+                                    pcmk__s(reason, ""),
+                                    (reason == NULL)? "" : ")");
+
+    if (!pcmk__result_ok(&request->result)) {
+        crm_warn("%s", log_msg);
+    } else {
+        crm_debug("%s", log_msg);
+    }
+
+    free(log_msg);
+    pcmk__reset_request(request);
 }
