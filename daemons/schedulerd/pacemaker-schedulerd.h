@@ -14,6 +14,7 @@
 
 extern pcmk__output_t *logger_out;
 extern struct qb_ipcs_service_handlers ipc_callbacks;
+void schedulerd_unregister_handlers(void);
 void schedulerd_handle_request(pcmk__request_t *request);
 
 #endif
