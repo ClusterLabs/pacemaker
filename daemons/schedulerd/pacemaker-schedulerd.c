@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,7 +35,6 @@ pcmk__output_t *logger_out = NULL;
 
 static pcmk__output_t *out = NULL;
 static GMainLoop *mainloop = NULL;
-static qb_ipcs_service_t *ipcs = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 pcmk__supported_format_t formats[] = {
@@ -147,14 +146,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    ipcs = pcmk__serve_schedulerd_ipc(&ipc_callbacks);
-    if (ipcs == NULL) {
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Exiting fatally because unable to serve "
-                    "scheduler server IPC");
-        exit_code = CRM_EX_FATAL;
-        goto done;
-    }
+    schedulerd_ipc_init();
 
     if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
@@ -181,11 +173,7 @@ done:
 void
 pengine_shutdown(int nsig)
 {
-    if (ipcs != NULL) {
-        crm_trace("Closing IPC server");
-        mainloop_del_ipc_server(ipcs);
-        ipcs = NULL;
-    }
+    schedulerd_ipc_cleanup();
 
     if (logger_out != NULL) {
         logger_out->finish(logger_out, exit_code, true, NULL);

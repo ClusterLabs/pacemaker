@@ -20,6 +20,8 @@
 
 #include "pacemaker-schedulerd.h"
 
+static qb_ipcs_service_t *ipcs = NULL;
+
 /*!
  * \internal
  * \brief Accept a new client IPC connection
@@ -171,10 +173,37 @@ schedulerd_ipc_destroy(qb_ipcs_connection_t *c)
     schedulerd_ipc_closed(c);
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks = {
+static struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = schedulerd_ipc_accept,
     .connection_created = NULL,
     .msg_process = schedulerd_ipc_dispatch,
     .connection_closed = schedulerd_ipc_closed,
     .connection_destroyed = schedulerd_ipc_destroy
 };
+
+/*!
+ * \internal
+ * \brief Clean up schedulerd IPC communication
+ */
+void
+schedulerd_ipc_cleanup(void)
+{
+    if (ipcs != NULL) {
+        pcmk__drop_all_clients(ipcs);
+        qb_ipcs_destroy(ipcs);
+        ipcs = NULL;
+    }
+
+    schedulerd_unregister_handlers();
+    pcmk__client_cleanup();
+}
+
+/*!
+ * \internal
+ * \brief Set up schedulerd IPC communication
+ */
+void
+schedulerd_ipc_init(void)
+{
+    pcmk__serve_schedulerd_ipc(&ipcs, &ipc_callbacks);
+}
