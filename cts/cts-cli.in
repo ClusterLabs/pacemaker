@@ -1267,7 +1267,7 @@ class CibadminRegressionTest(RegressionTest):
         # Add some stuff to the empty CIB so we know that erasing it did something.
         basic_tests_setup = [
             """cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'""",
-            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
+            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/></cluster_property_set>'""",
             """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
         ]
 
@@ -1833,7 +1833,7 @@ class CrmTicketRegressionTest(RegressionTest):
         ]
 
         basic_tests_setup = [
-            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
+            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/></cluster_property_set>'""",
             """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
         ]
 
@@ -2698,7 +2698,7 @@ class AclsRegressionTest(RegressionTest):
   </acl_role>
   <acl_role id="observer">
     <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-    <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+    <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
     <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
   </acl_role>
   <acl_role id="admin">
@@ -2749,8 +2749,8 @@ class AclsRegressionTest(RegressionTest):
             Test("unknownguy: Set enable-acl",
                  "crm_attribute -n enable-acl -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
-            Test("unknownguy: Set stonith-enabled",
-                 "crm_attribute -n stonith-enabled -v false",
+            Test("unknownguy: Set fencing-enabled",
+                 "crm_attribute -n fencing-enabled -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
             Test("unknownguy: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
@@ -2764,8 +2764,8 @@ class AclsRegressionTest(RegressionTest):
             Test("l33t-haxor: Set enable-acl",
                  "crm_attribute -n enable-acl -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
-            Test("l33t-haxor: Set stonith-enabled",
-                 "crm_attribute -n stonith-enabled -v false",
+            Test("l33t-haxor: Set fencing-enabled",
+                 "crm_attribute -n fencing-enabled -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
             Test("l33t-haxor: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
@@ -2777,15 +2777,15 @@ class AclsRegressionTest(RegressionTest):
             Test("niceguy: Set enable-acl",
                  "crm_attribute -n enable-acl -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
-            Test("niceguy: Set stonith-enabled",
-                 "crm_attribute -n stonith-enabled -v false",
+            Test("niceguy: Set fencing-enabled",
+                 "crm_attribute -n fencing-enabled -v false",
                  update_cib=True),
             Test("niceguy: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
             Test("root: Query configuration", "cibadmin -Q",
                  env={"CIB_user": "root"}),
-            Test("root: Set stonith-enabled", "crm_attribute -n stonith-enabled -v true",
+            Test("root: Set fencing-enabled", "crm_attribute -n fencing-enabled -v true",
                  update_cib=True, env={"CIB_user": "root"}),
             Test("root: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
@@ -3034,7 +3034,7 @@ class UpgradeRegressionTest(RegressionTest):
 """
 
         basic_tests = [
-            Test("Set stonith-enabled=false", "crm_attribute -n stonith-enabled -v false",
+            Test("Set fencing-enabled=false", "crm_attribute -n fencing-enabled -v false",
                  update_cib=True),
             Test("Configure the initial resource", "cibadmin -M -o resources -p",
                  update_cib=True, stdin=resource_cib),
@@ -3069,7 +3069,7 @@ class RulesRegressionTest(RegressionTest):
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
