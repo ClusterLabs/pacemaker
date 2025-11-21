@@ -42,8 +42,6 @@ char *pcmk_promotion_score_name(const char *rsc_id);
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
 
-int compare_version(const char *version1, const char *version2);
-
 void pcmk_common_cleanup(void);
 
 #ifdef __cplusplus

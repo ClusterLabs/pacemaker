@@ -184,7 +184,8 @@ pcmk_find_cib_element(xmlNode *cib, const char *element_name)
 int
 pcmk__check_feature_set(const char *cib_version)
 {
-    if (cib_version && compare_version(cib_version, CRM_FEATURE_SET) > 0) {
+    if ((cib_version != NULL)
+        && (pcmk__compare_versions(cib_version, CRM_FEATURE_SET) > 0)) {
         return EPROTONOSUPPORT;
     }
 
