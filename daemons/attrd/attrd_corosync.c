@@ -23,6 +23,43 @@
 
 #include "pacemaker-attrd.h"
 
+/*!
+ * \internal
+ * \brief Nodes removed by \c attrd_peer_remove()
+ *
+ * This table is to be used as a set. It contains nodes that have been removed
+ * by \c attrd_peer_remove() and whose transient attributes should be erased
+ * from the CIB.
+ *
+ * Setting an attribute value for a node via \c update_attr_on_host() removes
+ * the node from the table. At that point, we have transient attributes in
+ * memory for the node, so it should no longer be erased from the CIB.
+ *
+ * If another node erases a removed node's transient attributes from the CIB,
+ * the removed node remains in this table until an attribute value is set for
+ * it. This is for convenience: it avoids the need to monitor for CIB updates
+ * that erase a node's \c node_state or \c transient attributes element, just to
+ * remove the node from the table.
+ *
+ * Leaving a removed node in the table after erasure should be harmless. If a
+ * node is in this table, then we have no transient attributes for it in memory.
+ * If for some reason we erase its transient attributes from the CIB twice, its
+ * state in the CIB will still be correct.
+ */
+static GHashTable *removed_peers = NULL;
+
+/*!
+ * \internal
+ * \brief Free the removed nodes table
+ */
+void
+attrd_free_removed_peers(void)
+{
+    if (removed_peers != NULL) {
+        g_hash_table_destroy(removed_peers);
+    }
+}
+
 static xmlNode *
 attrd_confirmation(int callid)
 {
@@ -46,7 +83,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
         return;
     }
 
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down()) {
         /* If we're shutting down, we want to continue responding to election
          * ops as long as we're a cluster member (because our vote may be
          * needed). Ignore all other messages.
@@ -129,7 +166,7 @@ attrd_cpg_dispatch(cpg_handle_t handle,
 static void
 attrd_cpg_destroy(gpointer unused)
 {
-    if (attrd_shutting_down(false)) {
+    if (attrd_shutting_down()) {
         crm_info("Disconnected from Corosync process group");
 
     } else {
@@ -236,6 +273,10 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
     const char *prev_xml_id = NULL;
     const char *node_xml_id = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST_ID);
 
+    if (removed_peers != NULL) {
+        g_hash_table_remove(removed_peers, host);
+    }
+
     // Create entry for value if not already existing
     v = g_hash_table_lookup(a->values, host);
     if (v == NULL) {
@@ -286,17 +327,6 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
                    pcmk__s(node_xml_id, "unknown"));
         pcmk__str_update(&v->current, value);
         attrd_set_attr_flags(a, attrd_attr_changed);
-
-        if (pcmk__str_eq(host, attrd_cluster->priv->node_name, pcmk__str_casei)
-            && pcmk__str_eq(attr, PCMK__NODE_ATTR_SHUTDOWN, pcmk__str_none)) {
-
-            if (!pcmk__str_eq(value, "0", pcmk__str_null_matches)) {
-                attrd_set_requesting_shutdown();
-
-            } else {
-                attrd_clear_requesting_shutdown();
-            }
-        }
 
         // Write out new value or start dampening timer
         if (a->timeout_ms && a->timer) {
@@ -531,6 +561,29 @@ attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
 
 /*!
  * \internal
+ * \brief Erase all removed nodes' transient attributes from the CIB
+ *
+ * This should be called by a newly elected writer upon winning the election.
+ */
+void
+attrd_erase_removed_peer_attributes(void)
+{
+    const char *host = NULL;
+    GHashTableIter iter;
+
+    if (!attrd_election_won() || (removed_peers == NULL)) {
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, removed_peers);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &host, NULL)) {
+        attrd_cib_erase_transient_attrs(host);
+        g_hash_table_iter_remove(&iter);
+    }
+}
+
+/*!
+ * \internal
  * \brief Remove all attributes and optionally peer cache entries for a node
  *
  * \param[in] host     Name of node to purge
@@ -553,6 +606,35 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
         if(g_hash_table_remove(a->values, host)) {
             crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
         }
+    }
+
+    if (attrd_election_won()) {
+        // We are the writer. Wipe node's transient attributes from CIB now.
+        attrd_cib_erase_transient_attrs(host);
+
+    } else {
+        /* Make sure the attributes get erased from the CIB eventually.
+         * - If there's already a writer, it will call this function and enter
+         *   the "if" block above, requesting the erasure (unless it leaves
+         *   before sending the request -- see below).
+         *   attrd_start_election_if_needed() will do nothing here.
+         * - Otherwise, we ensure an election is happening (unless we're
+         *   shutting down). The winner will erase transient attributes from the
+         *   CIB for all removed nodes in attrd_election_cb().
+         *
+         * We add the node to the removed_peers table in case we win an election
+         * and need to request CIB erasures based on the table contents. This
+         * could happen for either of two reasons:
+         * - There is no current writer and we're not shutting down. An election
+         *   either is already in progress or will be triggered here.
+         * - The current writer leaves before sending the CIB update request. A
+         *   new election will be triggered.
+         */
+        if (removed_peers == NULL) {
+            removed_peers = pcmk__strikey_table(free, NULL);
+        }
+        g_hash_table_add(removed_peers, pcmk__str_copy(host));
+        attrd_start_election_if_needed();
     }
 
     if (uncache) {

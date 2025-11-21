@@ -57,10 +57,8 @@
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
-void attrd_set_requesting_shutdown(void);
-void attrd_clear_requesting_shutdown(void);
 void attrd_free_waitlist(void);
-bool attrd_shutting_down(bool if_requested);
+bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(void);
 void attrd_ipc_fini(void);
@@ -188,6 +186,9 @@ extern GHashTable *attributes;
 extern GHashTable *peer_protocol_vers;
 
 #define CIB_OP_TIMEOUT_S 120
+
+void attrd_free_removed_peers(void);
+void attrd_erase_removed_peer_attributes(void);
 
 int attrd_cluster_connect(void);
 void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);

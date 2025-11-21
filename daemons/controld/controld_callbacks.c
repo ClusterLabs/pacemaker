@@ -234,20 +234,11 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                                     pcmk__str_casei)
                        && !pcmk__cluster_is_node_active(node)) {
 
-                /* The DC has left, so delete its transient attributes and
-                 * trigger a new election.
-                 *
-                 * A DC sends its shutdown request to all peers, who update the
-                 * DC's expected state to down. This avoids fencing upon
-                 * deletion of its transient attributes.
-                 */
+                // The DC has left, so trigger a new election
                 crm_notice("Our peer on the DC (%s) is dead",
                            controld_globals.dc_name);
 
                 controld_fsa_append(C_CRMD_STATUS_CALLBACK, I_ELECTION, NULL);
-                controld_delete_node_state(node->name, controld_section_attrs,
-                                           cib_none);
-
             } else if (AM_I_DC
                        || pcmk__is_set(controld_globals.flags, controld_dc_left)
                        || (controld_globals.dc_name == NULL)) {
@@ -257,10 +248,6 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
                  */
                 if (appeared) {
                     controld_trigger_fencing_history_sync(false);
-                } else {
-                    controld_delete_node_state(node->name,
-                                               controld_section_attrs,
-                                               cib_none);
                 }
             }
             break;
