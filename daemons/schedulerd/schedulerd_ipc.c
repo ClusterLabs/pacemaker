@@ -21,7 +21,7 @@
 #include "pacemaker-schedulerd.h"
 
 static int32_t
-pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+schedulerd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     crm_trace("Connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
@@ -31,7 +31,7 @@ pe_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 }
 
 static int32_t
-pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
+schedulerd_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
@@ -148,7 +148,7 @@ pe_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
 /* Error code means? */
 static int32_t
-pe_ipc_closed(qb_ipcs_connection_t * c)
+schedulerd_ipc_closed(qb_ipcs_connection_t * c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
 
@@ -161,16 +161,16 @@ pe_ipc_closed(qb_ipcs_connection_t * c)
 }
 
 static void
-pe_ipc_destroy(qb_ipcs_connection_t * c)
+schedulerd_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p", c);
-    pe_ipc_closed(c);
+    schedulerd_ipc_closed(c);
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = pe_ipc_accept,
+    .connection_accept = schedulerd_ipc_accept,
     .connection_created = NULL,
-    .msg_process = pe_ipc_dispatch,
-    .connection_closed = pe_ipc_closed,
-    .connection_destroyed = pe_ipc_destroy
+    .msg_process = schedulerd_ipc_dispatch,
+    .connection_closed = schedulerd_ipc_closed,
+    .connection_destroyed = schedulerd_ipc_destroy
 };
