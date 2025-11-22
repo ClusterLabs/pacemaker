@@ -29,6 +29,12 @@ extern "C" {
  * See https://en.wikipedia.org/wiki/ISO_8601
  */
 
+/*!
+ * \brief An opaque date and time object
+ *
+ * \note Negative years are treated inconsistently and should not be relied
+ *       upon.
+ */
 typedef struct crm_time_s crm_time_t;
 
 typedef struct crm_time_period_s {
