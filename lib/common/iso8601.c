@@ -1749,7 +1749,7 @@ crm_time_add_days(crm_time_t *a_time, int extra)
 
     if (extra > 0) {
         while ((a_time->days + (long long) extra) > year_days(a_time->years)) {
-            if ((a_time->years + 1LL) > INT_MAX) {
+            if (a_time->years == INT_MAX) {
                 // Clip to latest we can handle
                 a_time->days = year_days(a_time->years);
                 return;
@@ -1761,7 +1761,7 @@ crm_time_add_days(crm_time_t *a_time, int extra)
         const int min_days = a_time->duration? 0 : 1;
 
         while ((a_time->days + (long long) extra) < min_days) {
-            if ((a_time->years - 1) < 1) {
+            if (a_time->years <= 1) {
                 a_time->days = 1; // Clip to earliest we can handle (no BCE)
                 return;
             }
