@@ -1365,7 +1365,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
     g_hash_table_iter_init(&gIter, first);
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
 
-        if(strstr(key, "CRM_meta") == key) {
+        if (g_str_has_prefix(key, CRM_META "_")) {
             continue;
         } else if (strcmp(key, PCMK_XA_CRM_FEATURE_SET) == 0) {
             continue;
