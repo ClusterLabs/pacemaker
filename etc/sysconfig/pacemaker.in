@@ -92,6 +92,8 @@
 # when starting Pacemaker manually. However, it can be set directly as an
 # environment variable on the command line.
 #
+# This accepts the same values as PCMK_debug.
+#
 # Default: PCMK_stderr="no"
 
 # PCMK_trace_functions (Advanced Use Only)

@@ -120,57 +120,55 @@ disabled_inexact_match(void **state)
      * exactly match any piece of the comma-separated list.
      *
      * Perform each test case using a single-item list and a multi-item list.
-     *
-     * @FIXME Currently we return true in this case.
      */
     pcmk__mock_getenv = true;
 
     // Leading space
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, " " PCMK__SERVER_EXECD);
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, " " PCMK__SERVER_EXECD "," PCMK__SERVER_FENCED);
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     // Trailing space
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, PCMK__SERVER_EXECD " ");
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, PCMK__SERVER_EXECD " ," PCMK__SERVER_FENCED);
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     // Leading garbage
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, "asdf" PCMK__SERVER_EXECD);
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv,
                 "asdf" PCMK__SERVER_EXECD "," PCMK__SERVER_FENCED);
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     // Trailing garbage
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, PCMK__SERVER_EXECD "1234");
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, PCMK__SERVER_EXECD "1234," PCMK__SERVER_FENCED);
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     // Leading and trailing garbage
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, "asdf" PCMK__SERVER_EXECD "1234");
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv,
                 "asdf" PCMK__SERVER_EXECD "1234," PCMK__SERVER_FENCED);
-    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     pcmk__mock_getenv = false;
 }
