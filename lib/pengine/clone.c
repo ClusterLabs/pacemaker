@@ -549,8 +549,11 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                         pcmk__str_star_matches)
+                       || ((strchr(rsc->id, ':') != NULL)
+                           && pcmk__str_in_list(rsc->id, only_rsc,
+                                                pcmk__str_star_matches));
 
     all = g_list_prepend(all, (gpointer) "*");
 
@@ -645,8 +648,11 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                         pcmk__str_star_matches)
+                       || ((strchr(rsc->id, ':') != NULL)
+                           && pcmk__str_in_list(rsc->id, only_rsc,
+                                                pcmk__str_star_matches));
 
     for (gIter = rsc->priv->children; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
