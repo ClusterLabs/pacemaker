@@ -152,8 +152,8 @@ group_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 }
 
 static bool
-skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
-               gboolean parent_passes, GList *only_rsc, uint32_t show_opts)
+skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child, bool parent_passes,
+               GList *only_rsc, uint32_t show_opts)
 {
     const bool star_list = pcmk__list_of_1(only_rsc)
                            && pcmk__str_eq("*", g_list_first(only_rsc)->data,
@@ -271,8 +271,11 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
     int rc = pcmk_rc_no_output;
 
-    gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    bool parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                           pcmk__str_star_matches)
+                         || ((strchr(rsc->id, ':') != NULL)
+                             && pcmk__str_in_list(rsc->id, only_rsc,
+                                                  pcmk__str_star_matches));
 
     desc = pe__resource_description(rsc, show_opts);
 
@@ -333,8 +336,11 @@ pe__group_default(pcmk__output_t *out, va_list args)
     const char *desc = NULL;
     int rc = pcmk_rc_no_output;
 
-    gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    bool parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                           pcmk__str_star_matches)
+                         || ((strchr(rsc->id, ':') != NULL)
+                             && pcmk__str_in_list(rsc->id, only_rsc,
+                                                  pcmk__str_star_matches));
 
     const bool active = rsc->priv->fns->active(rsc, true);
     const bool partially_active = rsc->priv->fns->active(rsc, false);
@@ -438,10 +444,15 @@ pe__group_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
                                                                      false)),
                              only_rsc, pcmk__str_star_matches)) {
         passes = true;
+
     } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
         passes = true;
-    } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
+
+    } else if ((strchr(rsc->id, ':') != NULL)
+               && pcmk__str_in_list(rsc->id, only_rsc,
+                                    pcmk__str_star_matches)) {
         passes = true;
+
     } else {
         for (const GList *iter = rsc->priv->children;
              iter != NULL; iter = iter->next) {
