@@ -1165,9 +1165,13 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
         return false;
     }
 
-    if (pcmk__is_true(value)) {
-        return true;
+    if (pcmk__parse_bool(value, &enabled) == pcmk_rc_ok) {
+        return enabled;
     }
+
+    /* Value did not parse to a boolean, so try to parse it as a daemon list if
+     * we have a daemon name to look for
+     */
 
     if (daemon == NULL) {
         return false;
