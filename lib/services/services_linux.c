@@ -669,8 +669,8 @@ log_op_output(svc_action_t *op)
 static void
 parse_exit_reason_from_stderr(svc_action_t *op)
 {
-    const char *reason_start = NULL;
-    const char *reason_end = NULL;
+    const char *reason = NULL;
+    size_t len = 0;
 
     if ((op->stderr_data == NULL) ||
         // Only OCF agents have exit reasons in stderr
@@ -679,31 +679,26 @@ parse_exit_reason_from_stderr(svc_action_t *op)
     }
 
     // Find the last occurrence of the magic string indicating an exit reason
-    reason_start = g_strrstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
+    reason = g_strrstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
 
-    if (reason_start != NULL) {
+    if (reason != NULL) {
         // Skip over the magic string itself
-        reason_start += sizeof(PCMK_OCF_REASON_PREFIX) - 1;
+        reason += sizeof(PCMK_OCF_REASON_PREFIX) - 1;
     }
 
-    if (pcmk__str_empty(reason_start) || (reason_start[0] == '\n')) {
+    if (pcmk__str_empty(reason) || (reason[0] == '\n')) {
         // No exit reason or empty exit reason
         return;
     }
 
     // Exit reason goes to end of line (or end of output)
-    reason_end = strchr(reason_start, '\n');
-    if (reason_end == NULL) {
-        reason_end = reason_start + strlen(reason_start);
-    }
+    len = strcspn(reason, "\n");
 
     // Limit size of exit reason to something reasonable
-    if (reason_end > (reason_start + EXIT_REASON_MAX_LEN)) {
-        reason_end = reason_start + EXIT_REASON_MAX_LEN;
-    }
+    len = QB_MIN(len, EXIT_REASON_MAX_LEN);
 
     free(op->opaque->exit_reason);
-    op->opaque->exit_reason = strndup(reason_start, reason_end - reason_start);
+    op->opaque->exit_reason = strndup(reason, len);
 }
 
 /*!
