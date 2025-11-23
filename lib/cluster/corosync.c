@@ -77,7 +77,7 @@ node_name_is_valid(const char *key, const char *name)
         crm_trace("%s contains an IPv4 address (%s), ignoring", key, name);
         return false;
 
-    } else if (strstr(name, ":") != NULL) {
+    } else if (strchr(name, ':') != NULL) {
         crm_trace("%s contains an IPv6 address (%s), ignoring", key, name);
         return false;
     }
