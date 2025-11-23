@@ -110,26 +110,27 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             xml_node_private_t *nodepriv = attr->_private;
             const char *p_name = (const char *) attr->name;
             const char *p_value = pcmk__xml_attr_value(attr);
-            gchar *p_copy = NULL;
+            gchar *p_value_disp = NULL;
 
             if ((nodepriv == NULL)
                 || pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 continue;
             }
 
-            if ((hidden != NULL) && (p_name[0] != '\0')
-                && (strstr(hidden, p_name) != NULL)) {
+            if ((hidden != NULL) && !pcmk__str_empty(p_name)) {
+                gchar **hidden_names = g_strsplit(hidden, ",", 0);
 
-                p_value = "*****";
-
-            } else {
-                p_copy = pcmk__xml_escape(p_value, pcmk__xml_escape_attr);
-                p_value = p_copy;
+                if (pcmk__g_strv_contains(hidden_names, p_name)) {
+                    p_value = "*****";
+                }
+                g_strfreev(hidden_names);
             }
 
+            p_value_disp = pcmk__xml_escape(p_value, pcmk__xml_escape_attr);
+
             pcmk__g_strcat(buffer, " ", p_name, "=\"",
-                           pcmk__s(p_value, "<null>"), "\"", NULL);
-            g_free(p_copy);
+                           pcmk__s(p_value_disp, "<null>"), "\"", NULL);
+            g_free(p_value_disp);
         }
 
         if ((data->children != NULL)
