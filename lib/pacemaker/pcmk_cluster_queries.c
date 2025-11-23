@@ -823,9 +823,23 @@ remote_node_print_helper(xmlNode *result, void *user_data)
     data->found++;
 }
 
-// \return Standard Pacemaker return code
+/*!
+ * \internal
+ * \brief Output list of nodes from the CIB
+ *
+ * \param[in,out] out          Output object
+ * \param[in]     types        Comma-separated list of node types to return.
+ *                             Valid types: \c "all", \c "cluster", \c "guest",
+ *                             \c "remote". A value of \c NULL is equivalent to
+ *                             \c "all".
+ * \param[in]     bash_export  If \c true, output a list of shell commands of
+ *                             the form <tt>export NODE_NAME=UUID</tt>, if the
+ *                             output format supports this
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
+pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
 {
     xmlNode *xml_node = NULL;
     int rc;
@@ -845,11 +859,11 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
          */
         out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
-        if (!pcmk__str_empty(node_types) && strstr(node_types, "all")) {
-            node_types = NULL;
+        if (!pcmk__str_empty(types) && strstr(types, "all")) {
+            types = NULL;
         }
 
-        if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
+        if (pcmk__str_empty(types) || strstr(types, "cluster")) {
             data.field = PCMK_XA_ID;
             data.type = "cluster";
             pcmk__xpath_foreach_result(xml_node->doc,
@@ -857,7 +871,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
                                        remote_node_print_helper, &data);
         }
 
-        if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
+        if (pcmk__str_empty(types) || strstr(types, "guest")) {
             data.field = PCMK_XA_VALUE;
             data.type = "guest";
             pcmk__xpath_foreach_result(xml_node->doc,
@@ -865,8 +879,8 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
                                        remote_node_print_helper, &data);
         }
 
-        if (pcmk__str_empty(node_types)
-            || pcmk__str_eq(node_types, ",|^remote", pcmk__str_regex)) {
+        if (pcmk__str_empty(types)
+            || pcmk__str_eq(types, ",|^remote", pcmk__str_regex)) {
             data.field = PCMK_XA_ID;
             data.type = "remote";
             pcmk__xpath_foreach_result(xml_node->doc,
@@ -887,7 +901,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
 }
 
 int
-pcmk_list_nodes(xmlNodePtr *xml, const char *node_types)
+pcmk_list_nodes(xmlNode **xml, const char *types)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -899,7 +913,7 @@ pcmk_list_nodes(xmlNodePtr *xml, const char *node_types)
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__list_nodes(out, node_types, FALSE);
+    rc = pcmk__list_nodes(out, types, false);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }
