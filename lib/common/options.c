@@ -1158,10 +1158,27 @@ bool
 pcmk__env_option_enabled(const char *daemon, const char *option)
 {
     const char *value = pcmk__env_option(option);
+    gchar **subsystems = NULL;
+    bool enabled = false;
 
-    return (value != NULL)
-            && (pcmk__is_true(value)
-                || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
+    if (value == NULL) {
+        return false;
+    }
+
+    if (pcmk__is_true(value)) {
+        return true;
+    }
+
+    if (daemon == NULL) {
+        return false;
+    }
+
+    subsystems = g_strsplit(value, ",", 0);
+
+    enabled = pcmk__g_strv_contains(subsystems, daemon);
+
+    g_strfreev(subsystems);
+    return enabled;
 }
 
 
