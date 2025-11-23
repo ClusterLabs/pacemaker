@@ -841,63 +841,60 @@ remote_node_print_helper(xmlNode *result, void *user_data)
 int
 pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
 {
+    struct node_data data = {
+        .out = out,
+        .found = 0,
+        .bash_export = bash_export
+    };
+
     xmlNode *xml_node = NULL;
-    int rc;
+    int rc = cib__signon_query(out, NULL, &xml_node);
 
-    rc = cib__signon_query(out, NULL, &xml_node);
-
-    if (rc == pcmk_rc_ok) {
-        struct node_data data = {
-            .out = out,
-            .found = 0,
-            .bash_export = bash_export
-        };
-
-        /* PCMK_XE_NODES acts as the list's element name for CLI tools that
-         * use pcmk__output_enable_list_element.  Otherwise PCMK_XE_NODES is
-         * the value of the list's PCMK_XA_NAME attribute.
-         */
-        out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
-
-        if (!pcmk__str_empty(types) && strstr(types, "all")) {
-            types = NULL;
-        }
-
-        if (pcmk__str_empty(types) || strstr(types, "cluster")) {
-            data.field = PCMK_XA_ID;
-            data.type = "cluster";
-            pcmk__xpath_foreach_result(xml_node->doc,
-                                       PCMK__XP_MEMBER_NODE_CONFIG,
-                                       remote_node_print_helper, &data);
-        }
-
-        if (pcmk__str_empty(types) || strstr(types, "guest")) {
-            data.field = PCMK_XA_VALUE;
-            data.type = "guest";
-            pcmk__xpath_foreach_result(xml_node->doc,
-                                       PCMK__XP_GUEST_NODE_CONFIG,
-                                       remote_node_print_helper, &data);
-        }
-
-        if (pcmk__str_empty(types)
-            || pcmk__str_eq(types, ",|^remote", pcmk__str_regex)) {
-            data.field = PCMK_XA_ID;
-            data.type = "remote";
-            pcmk__xpath_foreach_result(xml_node->doc,
-                                       PCMK__XP_REMOTE_NODE_CONFIG,
-                                       remote_node_print_helper, &data);
-        }
-
-        out->end_list(out);
-
-        if (data.found == 0) {
-            out->info(out, "No nodes configured");
-        }
-
-        pcmk__xml_free(xml_node);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
-    return rc;
+    /* PCMK_XE_NODES acts as the list's element name for CLI tools that use
+     * pcmk__output_enable_list_element(). Otherwise, PCMK_XE_NODES is the value
+     * of the list's PCMK_XA_NAME attribute.
+     */
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
+
+    if (!pcmk__str_empty(types) && strstr(types, "all")) {
+        types = NULL;
+    }
+
+    if (pcmk__str_empty(types) || strstr(types, "cluster")) {
+        data.field = PCMK_XA_ID;
+        data.type = "cluster";
+        pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
+                                   remote_node_print_helper, &data);
+    }
+
+    if (pcmk__str_empty(types) || strstr(types, "guest")) {
+        data.field = PCMK_XA_VALUE;
+        data.type = "guest";
+        pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_GUEST_NODE_CONFIG,
+                                   remote_node_print_helper, &data);
+    }
+
+    if (pcmk__str_empty(types)
+        || pcmk__str_eq(types, ",|^remote", pcmk__str_regex)) {
+
+        data.field = PCMK_XA_ID;
+        data.type = "remote";
+        pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_REMOTE_NODE_CONFIG,
+                                   remote_node_print_helper, &data);
+    }
+
+    out->end_list(out);
+
+    if (data.found == 0) {
+        out->info(out, "No nodes configured");
+    }
+
+    pcmk__xml_free(xml_node);
+    return pcmk_rc_ok;
 }
 
 int
