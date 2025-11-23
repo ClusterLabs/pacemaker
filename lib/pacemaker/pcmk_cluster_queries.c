@@ -847,6 +847,8 @@ pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
         .bash_export = bash_export
     };
 
+    gchar **node_types = NULL;
+    bool all = false;
     xmlNode *xml_node = NULL;
     int rc = cib__signon_query(out, NULL, &xml_node);
 
@@ -860,27 +862,27 @@ pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
      */
     out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
 
-    if (!pcmk__str_empty(types) && strstr(types, "all")) {
-        types = NULL;
+    all = pcmk__str_empty(types);
+    if (!all) {
+        node_types = g_strsplit(types, ",", 0);
+        all = pcmk__g_strv_contains(node_types, "all");
     }
 
-    if (pcmk__str_empty(types) || strstr(types, "cluster")) {
+    if (all || pcmk__g_strv_contains(node_types, "cluster")) {
         data.field = PCMK_XA_ID;
         data.type = "cluster";
         pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
                                    remote_node_print_helper, &data);
     }
 
-    if (pcmk__str_empty(types) || strstr(types, "guest")) {
+    if (all || pcmk__g_strv_contains(node_types, "guest")) {
         data.field = PCMK_XA_VALUE;
         data.type = "guest";
         pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_GUEST_NODE_CONFIG,
                                    remote_node_print_helper, &data);
     }
 
-    if (pcmk__str_empty(types)
-        || pcmk__str_eq(types, ",|^remote", pcmk__str_regex)) {
-
+    if (all || pcmk__g_strv_contains(node_types, "remote")) {
         data.field = PCMK_XA_ID;
         data.type = "remote";
         pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_REMOTE_NODE_CONFIG,
@@ -893,6 +895,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
         out->info(out, "No nodes configured");
     }
 
+    g_strfreev(node_types);
     pcmk__xml_free(xml_node);
     return pcmk_rc_ok;
 }
