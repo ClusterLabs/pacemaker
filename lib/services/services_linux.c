@@ -671,7 +671,6 @@ parse_exit_reason_from_stderr(svc_action_t *op)
 {
     const char *reason_start = NULL;
     const char *reason_end = NULL;
-    const int prefix_len = strlen(PCMK_OCF_REASON_PREFIX);
 
     if ((op->stderr_data == NULL) ||
         // Only OCF agents have exit reasons in stderr
@@ -680,16 +679,16 @@ parse_exit_reason_from_stderr(svc_action_t *op)
     }
 
     // Find the last occurrence of the magic string indicating an exit reason
-    for (const char *cur = strstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
-         cur != NULL; cur = strstr(cur, PCMK_OCF_REASON_PREFIX)) {
+    reason_start = g_strrstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
 
-        cur += prefix_len; // Skip over magic string
-        reason_start = cur;
+    if (reason_start != NULL) {
+        // Skip over the magic string itself
+        reason_start += sizeof(PCMK_OCF_REASON_PREFIX) - 1;
     }
 
-    if ((reason_start == NULL) || (reason_start[0] == '\n')
-        || (reason_start[0] == '\0')) {
-        return; // No or empty exit reason
+    if (pcmk__str_empty(reason_start) || (reason_start[0] == '\n')) {
+        // No exit reason or empty exit reason
+        return;
     }
 
     // Exit reason goes to end of line (or end of output)
