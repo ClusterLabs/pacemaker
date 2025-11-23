@@ -65,7 +65,7 @@ make_stop_id(const char *rsc, int call_id)
 static void
 copy_instance_keys(gpointer key, gpointer value, gpointer user_data)
 {
-    if (strstr(key, CRM_META "_") == NULL) {
+    if (!g_str_has_prefix(key, CRM_META "_")) {
         pcmk__insert_dup(user_data, (const char *) key, (const char *) value);
     }
 }
@@ -73,7 +73,7 @@ copy_instance_keys(gpointer key, gpointer value, gpointer user_data)
 static void
 copy_meta_keys(gpointer key, gpointer value, gpointer user_data)
 {
-    if (strstr(key, CRM_META "_") != NULL) {
+    if (g_str_has_prefix(key, CRM_META "_")) {
         pcmk__insert_dup(user_data, (const char *) key, (const char *) value);
     }
 }

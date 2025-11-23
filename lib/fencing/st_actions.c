@@ -98,7 +98,7 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
      */
     if (!pcmk__str_eq(key, STONITH_ATTR_ACTION_OP, pcmk__str_casei)
         && !pcmk_stonith_param(key)
-        && (strstr(key, CRM_META) == NULL)
+        && !g_str_has_prefix(key, CRM_META "_")
         && !pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_none)) {
 
         crm_trace("Passing %s=%s with fence action",
