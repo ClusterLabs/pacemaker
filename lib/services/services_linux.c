@@ -663,14 +663,10 @@ log_op_output(svc_action_t *op)
     free(prefix);
 }
 
-// Truncate exit reasons at this many characters
-#define EXIT_REASON_MAX_LEN 128
-
 static void
 parse_exit_reason_from_stderr(svc_action_t *op)
 {
     const char *reason = NULL;
-    size_t len = 0;
 
     if ((op->stderr_data == NULL) ||
         // Only OCF agents have exit reasons in stderr
@@ -692,13 +688,8 @@ parse_exit_reason_from_stderr(svc_action_t *op)
     }
 
     // Exit reason goes to end of line (or end of output)
-    len = strcspn(reason, "\n");
-
-    // Limit size of exit reason to something reasonable
-    len = QB_MIN(len, EXIT_REASON_MAX_LEN);
-
     free(op->opaque->exit_reason);
-    op->opaque->exit_reason = strndup(reason, len);
+    op->opaque->exit_reason = strndup(reason, strcspn(reason, "\n"));
 }
 
 /*!
