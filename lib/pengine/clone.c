@@ -1006,32 +1006,31 @@ bool
 pe__clone_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
                       bool check_parent)
 {
-    bool passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
 
-    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-    } else {
-        get_clone_variant_data(clone_data, rsc);
-        passes = pcmk__str_in_list(pcmk__xe_id(clone_data->xml_obj_child),
-                                   only_rsc, pcmk__str_star_matches);
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                          pcmk__str_star_matches)) {
+        return false;
+    }
 
-        if (!passes) {
-            for (const GList *iter = rsc->priv->children;
-                 iter != NULL; iter = iter->next) {
+    get_clone_variant_data(clone_data, rsc);
 
-                const pcmk_resource_t *child_rsc = NULL;
+    if (pcmk__str_in_list(pcmk__xe_id(clone_data->xml_obj_child), only_rsc,
+                          pcmk__str_star_matches)) {
+        return false;
+    }
 
-                child_rsc = (const pcmk_resource_t *) iter->data;
-                if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                       false)) {
-                    passes = true;
-                    break;
-                }
-            }
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_resource_t *child_rsc = iter->data;
+
+        if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc, false)) {
+            return false;
         }
     }
-    return !passes;
+
+    return true;
 }
 
 const char *
