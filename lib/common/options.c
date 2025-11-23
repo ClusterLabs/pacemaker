@@ -1155,8 +1155,8 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
         return false;
     }
 
-    if (pcmk__is_true(value)) {
-        return true;
+    if (pcmk__parse_bool(value, &enabled) == pcmk_rc_ok) {
+        return enabled;
     }
 
     if (daemon == NULL) {
