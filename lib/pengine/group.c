@@ -437,37 +437,36 @@ bool
 pe__group_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
                       bool check_parent)
 {
-    bool passes = false;
+    if (check_parent) {
+        const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
-    if (check_parent
-        && pcmk__str_in_list(rsc_printable_id(pe__const_top_resource(rsc,
-                                                                     false)),
-                             only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-
-    } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-
-    } else if ((strchr(rsc->id, ':') != NULL)
-               && pcmk__str_in_list(rsc->id, only_rsc,
-                                    pcmk__str_star_matches)) {
-        passes = true;
-
-    } else {
-        for (const GList *iter = rsc->priv->children;
-             iter != NULL; iter = iter->next) {
-
-            const pcmk_resource_t *child_rsc = iter->data;
-
-            if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                   false)) {
-                passes = true;
-                break;
-            }
+        if (pcmk__str_in_list(rsc_printable_id(parent), only_rsc,
+                              pcmk__str_star_matches)) {
+            return false;
         }
     }
 
-    return !passes;
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                          pcmk__str_star_matches)) {
+        return false;
+    }
+
+    if ((strchr(rsc->id, ':') != NULL)
+        && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
+        return false;
+    }
+
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_resource_t *child_rsc = iter->data;
+
+        if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc, false)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /*!
