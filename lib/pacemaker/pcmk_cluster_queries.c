@@ -803,7 +803,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
 /* user data for looping through remote node xpath searches */
 struct node_data {
     pcmk__output_t *out;
-    int found;
+    bool found;
     const char *field;  /* XML attribute to check for node name */
     const char *type;
     bool bash_export;
@@ -820,7 +820,7 @@ remote_node_print_helper(xmlNode *result, void *user_data)
     // node name and node id are the same for remote/guest nodes
     out->message(out, "crmadmin-node", data->type,
                  pcmk__s(name, id), id, data->bash_export);
-    data->found++;
+    data->found = true;
 }
 
 /*!
@@ -843,7 +843,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
 {
     struct node_data data = {
         .out = out,
-        .found = 0,
+        .found = false,
         .bash_export = bash_export
     };
 
@@ -889,7 +889,7 @@ pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
 
     out->end_list(out);
 
-    if (data.found == 0) {
+    if (!data.found) {
         out->info(out, "No nodes configured");
     }
 
