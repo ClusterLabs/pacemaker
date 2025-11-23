@@ -103,7 +103,7 @@ static int cib_archive_filter(const struct dirent * a)
         crm_trace("%s - wrong type (%#o)",
                   a->d_name, (unsigned int) (s.st_mode & S_IFMT));
 
-    } else if(strstr(a->d_name, "cib-") != a->d_name) {
+    } else if (!g_str_has_prefix(a->d_name, "cib-")) {
         crm_trace("%s - wrong prefix", a->d_name);
 
     } else if (g_str_has_suffix(a->d_name, ".sig")) {
