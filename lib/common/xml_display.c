@@ -123,7 +123,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                 p_value = "*****";
 
             } else {
-                p_copy = pcmk__xml_escape(p_value, true);
+                p_copy = pcmk__xml_escape(p_value, pcmk__xml_escape_attr);
                 p_value = p_copy;
             }
 
