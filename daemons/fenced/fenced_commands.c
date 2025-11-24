@@ -2150,7 +2150,7 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
 static bool
 localhost_is_eligible_with_remap(const fenced_device_t *device,
                                  const char *action, const char *target,
-                                 gboolean allow_self)
+                                 bool allow_self)
 {
     // Check exact action
     if (localhost_is_eligible(device, action, target, allow_self)) {
@@ -2431,7 +2431,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
  */
 static void
 add_disallowed(xmlNode *xml, const char *action, const fenced_device_t *device,
-               const char *target, gboolean allow_self)
+               const char *target, bool allow_self)
 {
     if (localhost_is_eligible(device, action, target, allow_self)) {
         return;
@@ -2455,7 +2455,7 @@ add_disallowed(xmlNode *xml, const char *action, const fenced_device_t *device,
 static void
 add_action_reply(xmlNode *xml, const char *action,
                  const fenced_device_t *device, const char *target,
-                 gboolean allow_self)
+                 bool allow_self)
 {
     xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
@@ -2569,7 +2569,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
             add_action_reply(dev, PCMK_ACTION_OFF, device, query->target,
                              pcmk__is_set(query->call_options,
                                           st_opt_allow_self_fencing));
-            add_action_reply(dev, PCMK_ACTION_ON, device, query->target, FALSE);
+            add_action_reply(dev, PCMK_ACTION_ON, device, query->target, false);
         }
 
         /* A query without a target wants device parameters */
