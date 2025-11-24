@@ -133,7 +133,7 @@ typedef struct {
     char *namespace;
 
     /*! list of actions that must execute on the target node. Used for unfencing */
-    GString *on_target_actions;
+    gchar **on_target_actions;
     GList *targets;
     time_t targets_age;
 
