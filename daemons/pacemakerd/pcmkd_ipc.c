@@ -14,60 +14,99 @@
 
 #include "pacemakerd.h"
 
+/*!
+ * \internal
+ * \brief Accept a new client IPC connection
+ *
+ * \param[in,out] c    New connection
+ * \param[in]     uid  Client user id
+ * \param[in]     gid  Client group id
+ *
+ * \return 0 on success, -errno otherwise
+ */
 static int32_t
-pacemakerd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+pacemakerd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("Connection %p", c);
+    crm_trace("New client connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
     return 0;
 }
 
-/* Error code means? */
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ *
+ * \return 0 (i.e. do not re-run this callback)
+ */
 static int32_t
-pacemakerd_ipc_closed(qb_ipcs_connection_t * c)
+pacemakerd_ipc_closed(qb_ipcs_connection_t *c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        return 0;
-    }
-    crm_trace("Connection %p", c);
-    if (shutdown_complete_state_reported_to == client->pid) {
-        shutdown_complete_state_reported_client_closed = TRUE;
-        if (shutdown_trigger) {
+        crm_trace("Ignoring request to clean up unknown connection %p", c);
+    } else {
+        crm_trace("Cleaning up closed client connection %p", c);
+
+        if (shutdown_complete_state_reported_to == client->pid) {
+            shutdown_complete_state_reported_client_closed = true;
             mainloop_set_trigger(shutdown_trigger);
         }
+
+        pcmk__free_client(client);
     }
-    pcmk__free_client(client);
+
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ *
+ * \note We handle a destroyed connection the same as a closed one,
+ *       but we need a separate handler because the return type is different.
+ */
 static void
-pacemakerd_ipc_destroy(qb_ipcs_connection_t * c)
+pacemakerd_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Connection %p", c);
+    crm_trace("Destroying client connection %p", c);
     pacemakerd_ipc_closed(c);
 }
 
-/* Exit code means? */
+/*!
+ * \internal
+ * \brief Handle a message from an IPC connection
+ *
+ * \param[in,out] c     Established IPC connection
+ * \param[in]     data  The message data read from the connection - this can be
+ *                      a complete IPC message or just a part of one if it's
+ *                      very large
+ * \param[size]   size  Unused
+ *
+ * \return 0 in all cases
+ */
 static int32_t
-pacemakerd_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
+pacemakerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     xmlNode *msg = NULL;
-    pcmk__client_t *c = pcmk__find_client(qbc);
+    pcmk__client_t *client = pcmk__find_client(c);
 
-    CRM_CHECK(c != NULL, return 0);
+    CRM_CHECK(client != NULL, return 0);
 
     if (pcmkd_handlers == NULL) {
         pcmkd_register_handlers();
     }
 
-    rc = pcmk__ipc_msg_append(&c->buffer, data);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {
         /* We haven't read the complete message yet, so just return. */
@@ -77,9 +116,9 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        msg = pcmk__client_data2xml(c, &id, &flags);
-        g_byte_array_free(c->buffer, TRUE);
-        c->buffer = NULL;
+        msg = pcmk__client_data2xml(client, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
 
     } else {
         /* Some sort of error occurred reassembling the message.  All we can
@@ -87,16 +126,16 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
          */
         crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
-        if (c->buffer != NULL) {
-            g_byte_array_free(c->buffer, TRUE);
-            c->buffer = NULL;
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
         }
 
         return 0;
     }
 
     if (msg == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
         return 0;
 
     } else {
@@ -106,7 +145,7 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         xmlNode *reply = NULL;
 
         pcmk__request_t request = {
-            .ipc_client     = c,
+            .ipc_client     = client,
             .ipc_id         = id,
             .ipc_flags      = flags,
             .peer           = NULL,
@@ -121,7 +160,7 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         reply = pcmk__process_request(&request, pcmkd_handlers);
 
         if (reply != NULL) {
-            pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
+            pcmk__ipc_send_xml(client, id, reply, crm_ipc_server_event);
             pcmk__xml_free(reply);
         }
 
