@@ -2102,19 +2102,20 @@ search_devices_record_result(struct device_search_s *search, const char *device,
  * \internal
  * \brief Check whether the local host is allowed to execute a fencing action
  *
- * \param[in] device         Fence device to check
- * \param[in] action         Fence action to check
- * \param[in] target         Hostname of fence target
- * \param[in] allow_self     Whether self-fencing is allowed for this operation
+ * \param[in] device      Fence device to check
+ * \param[in] action      Fence action to check
+ * \param[in] target      Hostname of fence target
+ * \param[in] allow_self  Whether self-fencing is allowed for this operation
  *
- * \return TRUE if local host is allowed to execute action, FALSE otherwise
+ * \return \c true if local host is allowed to execute action, or \c false
+ *         otherwise
  */
-static gboolean
+static bool
 localhost_is_eligible(const fenced_device_t *device, const char *action,
-                      const char *target, gboolean allow_self)
+                      const char *target, bool allow_self)
 {
-    gboolean localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
-                                                pcmk__str_casei);
+    bool localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
+                                            pcmk__str_casei);
 
     if ((device != NULL) && (action != NULL)
         && (device->on_target_actions != NULL)
@@ -2124,14 +2125,14 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
         if (!localhost_is_target) {
             crm_trace("Operation '%s' using %s can only be executed for local "
                       "host, not %s", action, device->id, target);
-            return FALSE;
+            return false;
         }
 
     } else if (localhost_is_target && !allow_self) {
         crm_trace("'%s' operation does not support self-fencing", action);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 /*!
