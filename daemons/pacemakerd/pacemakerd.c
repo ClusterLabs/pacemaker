@@ -263,6 +263,74 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static int
+handle_old_instance(gboolean shutdown)
+{
+    pcmk_ipc_api_t *old_instance = NULL;
+    bool old_instance_connected = false;
+
+    int rc = pcmk_rc_ok;
+
+    crm_debug("Checking for existing Pacemaker instance");
+
+    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
+    if (old_instance == NULL) {
+        out->err(out, "Could not check for existing pacemakerd: %s", pcmk_rc_str(rc));
+        return rc;
+    }
+
+    pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
+    rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
+    if (rc != pcmk_rc_ok) {
+        crm_debug("No existing %s instance found: %s",
+                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
+        rc = pcmk_rc_ok;
+    }
+
+    old_instance_connected = pcmk_ipc_is_connected(old_instance);
+
+    if (shutdown) {
+        if (old_instance_connected) {
+            rc = pcmk_pacemakerd_api_shutdown(old_instance, crm_system_name);
+            pcmk_dispatch_ipc(old_instance);
+
+            if (rc != pcmk_rc_ok) {
+                goto done;
+            }
+
+            /* We get the ACK immediately, and the response right after that,
+             * but it might take a while for pacemakerd to get around to
+             * shutting down.  Wait for that to happen (with 30-minute timeout).
+             */
+            for (int i = 0; i < 900; i++) {
+                if (!pcmk_ipc_is_connected(old_instance)) {
+                    rc = pcmk_rc_ok;
+                    goto done;
+                }
+
+                sleep(2);
+            }
+
+            rc = ETIMEDOUT;
+            goto done;
+
+        } else {
+            out->err(out, "Could not request shutdown "
+                     "of existing Pacemaker instance: %s", pcmk_rc_str(rc));
+            rc = ECONNREFUSED;
+            goto done;
+        }
+
+    } else if (old_instance_connected) {
+        crm_err("Aborting start-up because active Pacemaker instance found");
+        rc = pcmk_rc_already;
+    }
+
+done:
+    pcmk_free_ipc_api(old_instance);
+    return rc;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -275,10 +343,6 @@ main(int argc, char **argv)
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "p");
     GOptionContext *context = build_arg_context(args, &output_group);
-
-    bool old_instance_connected = false;
-
-    pcmk_ipc_api_t *old_instance = NULL;
 
     subdaemon_check_progress = time(NULL);
 
@@ -321,69 +385,16 @@ main(int argc, char **argv)
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     }
 
-    crm_debug("Checking for existing Pacemaker instance");
-
-    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
-    if (old_instance == NULL) {
-        out->err(out, "Could not check for existing pacemakerd: %s", pcmk_rc_str(rc));
+    rc = handle_old_instance(options.shutdown);
+    if ((rc == pcmk_rc_ok) && options.shutdown) {
+        goto done;
+    } else if (rc == pcmk_rc_already) {
+        exit_code = CRM_EX_FATAL;
+        goto done;
+    } else if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
-
-    pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
-    rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
-    if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s instance found: %s",
-                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
-    }
-    old_instance_connected = pcmk_ipc_is_connected(old_instance);
-
-    if (options.shutdown) {
-        if (old_instance_connected) {
-            rc = pcmk_pacemakerd_api_shutdown(old_instance, crm_system_name);
-            pcmk_dispatch_ipc(old_instance);
-
-            exit_code = pcmk_rc2exitc(rc);
-
-            if (exit_code != CRM_EX_OK) {
-                pcmk_free_ipc_api(old_instance);
-                goto done;
-            }
-
-            /* We get the ACK immediately, and the response right after that,
-             * but it might take a while for pacemakerd to get around to
-             * shutting down.  Wait for that to happen (with 30-minute timeout).
-             */
-            for (int i = 0; i < 900; i++) {
-                if (!pcmk_ipc_is_connected(old_instance)) {
-                    exit_code = CRM_EX_OK;
-                    pcmk_free_ipc_api(old_instance);
-                    goto done;
-                }
-
-                sleep(2);
-            }
-
-            exit_code = CRM_EX_TIMEOUT;
-            pcmk_free_ipc_api(old_instance);
-            goto done;
-
-        } else {
-            out->err(out, "Could not request shutdown "
-                     "of existing Pacemaker instance: %s", pcmk_rc_str(rc));
-            pcmk_free_ipc_api(old_instance);
-            exit_code = CRM_EX_DISCONNECT;
-            goto done;
-        }
-
-    } else if (old_instance_connected) {
-        pcmk_free_ipc_api(old_instance);
-        crm_err("Aborting start-up because active Pacemaker instance found");
-        exit_code = CRM_EX_FATAL;
-        goto done;
-    }
-
-    pcmk_free_ipc_api(old_instance);
 
     /* Don't allow any accidental output after this point. */
     if (out != NULL) {
