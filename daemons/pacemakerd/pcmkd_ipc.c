@@ -14,6 +14,8 @@
 
 #include "pacemakerd.h"
 
+static qb_ipcs_service_t *ipcs = NULL;
+
 /*!
  * \internal
  * \brief Accept a new client IPC connection
@@ -155,10 +157,33 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     return 0;
 }
 
-struct qb_ipcs_service_handlers pacemakerd_ipc_callbacks = {
+static struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = pacemakerd_ipc_accept,
     .connection_created = NULL,
     .msg_process = pacemakerd_ipc_dispatch,
     .connection_closed = pacemakerd_ipc_closed,
     .connection_destroyed = pacemakerd_ipc_destroy
 };
+
+void
+pacemakerd_ipc_cleanup(void)
+{
+    if (ipcs != NULL) {
+        pcmk__drop_all_clients(ipcs);
+        qb_ipcs_destroy(ipcs);
+        ipcs = NULL;
+    }
+
+    pacemakerd_unregister_handlers();
+    pcmk__client_cleanup();
+}
+
+/*!
+ * \internal
+ * \brief Set up pacemakerd IPC communication
+ */
+void
+pacemakerd_ipc_init(void)
+{
+    pcmk__serve_pacemakerd_ipc(&ipcs, &ipc_callbacks);
+}

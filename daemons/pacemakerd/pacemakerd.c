@@ -279,7 +279,6 @@ main(int argc, char **argv)
     bool old_instance_connected = false;
 
     pcmk_ipc_api_t *old_instance = NULL;
-    qb_ipcs_service_t *ipcs = NULL;
 
     subdaemon_check_progress = time(NULL);
 
@@ -415,7 +414,7 @@ main(int argc, char **argv)
 
     remove_core_file_limit();
     create_pcmk_dirs();
-    pcmk__serve_pacemakerd_ipc(&ipcs, &pacemakerd_ipc_callbacks);
+    pacemakerd_ipc_init();
 
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
@@ -459,12 +458,7 @@ main(int argc, char **argv)
 
     crm_notice("Pacemaker daemon successfully started and accepting connections");
     g_main_loop_run(mainloop);
-
-    if (ipcs) {
-        crm_trace("Closing IPC server");
-        mainloop_del_ipc_server(ipcs);
-        ipcs = NULL;
-    }
+    pacemakerd_ipc_cleanup();
 
     g_main_loop_unref(mainloop);
 #if SUPPORT_COROSYNC
