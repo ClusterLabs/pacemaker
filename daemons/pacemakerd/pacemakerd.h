@@ -20,10 +20,9 @@ extern unsigned int shutdown_complete_state_reported_to;
 extern crm_trigger_t *shutdown_trigger;
 extern crm_trigger_t *startup_trigger;
 extern time_t subdaemon_check_progress;
-extern GHashTable *pcmkd_handlers;
 
 int find_and_track_existing_processes(void);
 gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);
 void restart_cluster_subdaemons(void);
-void pcmkd_register_handlers(void);
+void pacemakerd_handle_request(pcmk__request_t *request);
