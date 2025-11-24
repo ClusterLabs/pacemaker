@@ -912,9 +912,7 @@ free_device(gpointer data)
 
     pcmk__xml_free(device->agent_metadata);
     free(device->namespace);
-    if (device->on_target_actions != NULL) {
-        g_string_free(device->on_target_actions, TRUE);
-    }
+    g_strfreev(device->on_target_actions);
     free(device->agent);
     free(device->id);
     free(device);
@@ -1065,6 +1063,9 @@ read_action_metadata(fenced_device_t *device)
     xmlXPathObject *xpath = NULL;
     int max = 0;
 
+    // @TODO Use GStrvBuilder when we require glib 2.68
+    GPtrArray *on_target_actions = NULL;
+
     if (device->agent_metadata == NULL) {
         return;
     }
@@ -1114,10 +1115,18 @@ read_action_metadata(fenced_device_t *device)
         if ((action != NULL)
             && pcmk__xe_attr_is_true(match, PCMK_XA_ON_TARGET)) {
 
-            pcmk__add_word(&(device->on_target_actions), 64, action);
+            if (on_target_actions == NULL) {
+                on_target_actions = g_ptr_array_new();
+            }
+            g_ptr_array_add(on_target_actions, g_strdup(action));
         }
     }
 
+    if (on_target_actions != NULL) {
+        g_ptr_array_add(on_target_actions, NULL);
+        device->on_target_actions =
+            (gchar **) g_ptr_array_free(on_target_actions, FALSE);
+    }
     xmlXPathFreeObject(xpath);
 }
 
@@ -1213,9 +1222,11 @@ build_device_from_xml(const xmlNode *dev)
     }
 
     if (device->on_target_actions != NULL) {
+        gchar *on_target_actions = g_strjoinv(" ", device->on_target_actions);
+
         crm_info("Fencing device '%s' requires actions (%s) to be executed "
-                 "on target", device->id,
-                 (const char *) device->on_target_actions->str);
+                 "on target", device->id, on_target_actions);
+        g_free(on_target_actions);
     }
 
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
@@ -2120,8 +2131,7 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
     CRM_CHECK(action != NULL, return true);
 
     if ((device != NULL) && (device->on_target_actions != NULL)
-        && (strstr((const char*) device->on_target_actions->str,
-                   action) != NULL)) {
+        && pcmk__g_strv_contains(device->on_target_actions, action)) {
 
         if (!localhost_is_target) {
             crm_trace("Operation '%s' using %s can only be executed for local "
