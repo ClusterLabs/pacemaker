@@ -168,6 +168,15 @@ pacemakerd_register_handlers(void)
 }
 
 void
+pacemakerd_unregister_handlers(void)
+{
+    if (pacemakerd_handlers != NULL) {
+        g_hash_table_destroy(pacemakerd_handlers);
+        pacemakerd_handlers = NULL;
+    }
+}
+
+void
 pacemakerd_handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
