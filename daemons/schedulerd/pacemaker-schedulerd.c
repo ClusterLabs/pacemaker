@@ -9,18 +9,18 @@
 
 #include <crm_internal.h>
 
-#include <crm/crm.h>
-#include <stdio.h>
-#include <stdbool.h>
+#include <signal.h>                     // SIGTERM
+#include <stdbool.h>                    // true
+#include <stddef.h>                     // NULL
 
-#include <stdlib.h>
-#include <errno.h>
+#include <glib.h>                       // g_set_error, FALSE, G_OPTION_*
+#include <qb/qblog.h>                   // LOG_INFO, LOG_TRACE
 
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/pengine/internal.h>
-#include <pacemaker-internal.h>
+#include <crm_config.h>                 // PCMK_SCHEDULER_INPUT_DIR
+#include <crm/common/mainloop.h>        // mainloop_add_signal
+#include <crm/common/results.h>         // crm_exit_e, pcmk_rc_*
+#include <crm/pengine/internal.h>       // pe__register_messages
+#include <pacemaker-internal.h>         // pcmk__register_lib_messages
 
 #include "pacemaker-schedulerd.h"
 

@@ -9,16 +9,26 @@
 
 #include <crm_internal.h>
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <pacemaker-internal.h>
+#include <stdbool.h>                    // true, false, bool
+#include <stdlib.h>                     // NULL, free
+#include <sys/types.h>                  // time_t
+#include <time.h>                       // time
+#include <unistd.h>                     // unlink
 
-#include <stdbool.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <glib.h>                       // g_hash_table_destroy
+#include <libxml/tree.h>                // xmlNode
 
-#include "pacemaker-schedulerd.h"
+#include <crm_config.h>                 // PCMK_SCHEDULER_INPUT_DIR
+#include <crm/crm.h>                    // CRM_OP_HELLO, CRM_OP_PECALC
+#include <crm/common/ipc.h>             // crm_ipc_flags
+#include <crm/common/options.h>         // PCMK_OPT_CLUSTER_DELAY
+#include <crm/common/results.h>         // crm_exit_e, pcmk_exec_status_str, pcmk_rc_*
+#include <crm/common/scheduler.h>       // pcmk__scheduler, pcmk_free_scheduler
+#include <crm/common/scheduler_types.h> // pcmk_scheduler_t
+#include <crm/common/xml_names.h>       // PCMK_XA_EXECUTION_DATE
+#include <pacemaker-internal.h>         // pcmk__schedule_actions
+
+#include "pacemaker-schedulerd.h"       // logger_out, schedulerd_*
 
 static GHashTable *schedulerd_handlers = NULL;
 

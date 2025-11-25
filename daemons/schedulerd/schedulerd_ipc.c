@@ -9,16 +9,19 @@
 
 #include <crm_internal.h>
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <pacemaker-internal.h>
+#include <errno.h>                      // ENOMEM
+#include <stddef.h>                     // NULL, size_t
+#include <stdint.h>                     // int32_t, uint32_t
+#include <sys/types.h>                  // gid_t, uid_t
 
-#include <stdbool.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <glib.h>                       // g_byte_array_free, TRUE
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qbipcs.h>                  // qb_ipcs_connection_t
 
-#include "pacemaker-schedulerd.h"
+#include <crm/crm.h>                    // CRM_SYSTEM_PENGINE
+#include <crm/common/results.h>         // crm_exit_e, pcmk_rc_*
+
+#include "pacemaker-schedulerd.h"       // schedulerd_handle_request
 
 static qb_ipcs_service_t *ipcs = NULL;
 
