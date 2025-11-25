@@ -632,7 +632,7 @@ static struct qb_ipcs_service_handlers ipc_callbacks = {
 };
 
 void
-attrd_ipc_fini(void)
+attrd_ipc_cleanup(void)
 {
     if (ipcs != NULL) {
         pcmk__drop_all_clients(ipcs);
@@ -649,7 +649,7 @@ attrd_ipc_fini(void)
  * \brief Set up attrd IPC communication
  */
 void
-attrd_init_ipc(void)
+attrd_ipc_init(void)
 {
     pcmk__serve_attrd_ipc(&ipcs, &ipc_callbacks);
 }

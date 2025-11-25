@@ -186,7 +186,7 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    attrd_init_ipc();
+    attrd_ipc_init();
     crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
     attrd_run_mainloop();
 
@@ -194,7 +194,7 @@ main(int argc, char **argv)
     if (initialized) {
         crm_info("Shutting down attribute manager");
 
-        attrd_ipc_fini();
+        attrd_ipc_cleanup();
         attrd_lrmd_disconnect();
 
         if (!stand_alone) {
