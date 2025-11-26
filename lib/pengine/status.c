@@ -17,7 +17,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/cib_internal.h>
 
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>

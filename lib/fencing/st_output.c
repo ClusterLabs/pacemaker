@@ -17,8 +17,6 @@
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/xml_internal.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
 

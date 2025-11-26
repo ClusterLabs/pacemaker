@@ -20,12 +20,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/ipc_attrd_internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/xml_internal.h>
-
-#include <crm/common/attrs_internal.h>
 
 #include <pacemaker-internal.h>
 

@@ -18,8 +18,6 @@
 #include <crm/services.h>
 #include <crm/services_internal.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/alerts_internal.h>
 #include <crm/common/xml.h>
 
 #include "pacemaker-execd.h"

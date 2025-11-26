@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_COMMON_INTERNAL__H
 #define PCMK__CRM_COMMON_INTERNAL__H
 
+#define PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+
 #include <crm/common/action_relation_internal.h>
 #include <crm/common/acl_internal.h>
 #include <crm/common/actions_internal.h>
@@ -65,6 +67,8 @@
 // xml_io_internal.h intentionally left out
 // xml_names_internal.h intentionally left out
 // xpath_internal.h intentionally left out
+
+#undef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {

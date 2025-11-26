@@ -23,15 +23,11 @@
 #include <inttypes.h>  // PRIu32, PRIx32
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/output_internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 #include <crm/common/mainloop.h>
 

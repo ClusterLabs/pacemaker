@@ -25,7 +25,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/cmdline_internal.h>
 
 #include <crm/cib.h>
 #include <crm/cib/internal.h>

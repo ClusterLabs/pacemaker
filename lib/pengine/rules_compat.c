@@ -19,7 +19,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/rules.h>           // pcmk_rule_input_t, etc.
-#include <crm/common/nvpair_internal.h> // pcmk__nvpair_unpack_t, etc.
 
 CRM_TRACE_INIT_DATA(pe_rules);
 

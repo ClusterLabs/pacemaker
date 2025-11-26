@@ -14,7 +14,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>
 #include <crm/services.h>

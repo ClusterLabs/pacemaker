@@ -16,7 +16,6 @@
 #include <crm/cluster.h>
 #include <crm/common/xml.h>
 #include <crm/crm.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_schedulerd.h>
 

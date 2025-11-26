@@ -16,8 +16,6 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
-#include <crm/common/remote_internal.h>
-#include <crm/common/tls_internal.h>
 #include <crm/lrmd_internal.h>
 
 #include <netdb.h>

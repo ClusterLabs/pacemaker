@@ -30,7 +30,6 @@
 
 #include <crm/cluster/internal.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>    // PCMK__SPECIAL_PID
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 

@@ -20,10 +20,8 @@
 #include <libxml/tree.h>                    // xmlNode
 #include <libxml/xmlstring.h>               // xmlChar
 
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>    // pcmk__xml2fd
 
 typedef struct subst_s {
     const char *from;

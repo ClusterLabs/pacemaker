@@ -19,9 +19,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>

@@ -21,9 +21,7 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>

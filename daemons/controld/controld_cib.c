@@ -12,7 +12,6 @@
 #include <stdbool.h>
 #include <unistd.h>  /* sleep */
 
-#include <crm/common/alerts_internal.h>
 #include <crm/common/xml.h>
 #include <crm/crm.h>
 #include <crm/lrmd_internal.h>

@@ -19,7 +19,6 @@
 #include <crm/cib.h>
 #include <crm/common/scheduler.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>

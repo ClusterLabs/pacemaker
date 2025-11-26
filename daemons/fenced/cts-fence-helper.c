@@ -27,7 +27,6 @@
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/agents.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 
 #include <crm/common/mainloop.h>

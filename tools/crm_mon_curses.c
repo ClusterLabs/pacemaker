@@ -16,7 +16,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/output.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>   // stonith__history_description()
 #include <crm/pengine/internal.h>

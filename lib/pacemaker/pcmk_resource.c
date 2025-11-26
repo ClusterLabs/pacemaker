@@ -18,7 +18,6 @@
 #include <crm/cib/internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/results.h>
-#include <crm/common/output_internal.h>
 #include <crm/pengine/internal.h>
 
 #include <pacemaker.h>

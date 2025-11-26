@@ -13,7 +13,6 @@
 #include <stdbool.h>    // bool, false
 
 #include <crm/common/scheduler.h>
-#include <crm/common/scheduler_internal.h>
 
 /*!
  * \internal

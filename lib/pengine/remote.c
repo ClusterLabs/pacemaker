@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/internal.h>
 #include <glib.h>
 

@@ -13,7 +13,6 @@
 #include <stdio.h>                          // NULL
 
 #include <crm/common/scheduler.h>           // pcmk_scheduler_t
-#include <crm/common/scheduler_internal.h>  // pcmk_scheduler_t private data
 
 /*!
  * \internal

@@ -12,18 +12,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <crm/crm.h>
-
-#include <crm/services.h>
+#include <crm/cib.h>
+#include <crm/common/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/scheduler_internal.h>
-
-#include <crm/cib.h>
-#include <crm/common/attrs_internal.h>
+#include <crm/crm.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
+#include <crm/services.h>
 #include <pacemaker-internal.h>
 
 #define ATTR_SET_ELEMENT "attr_set_element"

@@ -14,10 +14,7 @@
 #include <stdint.h>                      // UINT32_C
 
 #include <crm/cib.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/servers_internal.h>
-#include <crm/common/strings_internal.h>
+#include <crm/common/internal.h>
 
 #ifdef __cplusplus
 extern "C" {

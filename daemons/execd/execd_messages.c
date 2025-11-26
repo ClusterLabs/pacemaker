@@ -24,9 +24,7 @@
 #include <crm/crm.h>                        // CRM_SYSTEM_LRMD
 #include <crm/common/internal.h>            // pcmk__process_request, pcmk__xml_free
 #include <crm/common/ipc.h>                 // crm_ipc_flags
-#include <crm/common/ipc_internal.h>        // pcmk__client_s, pcmk__find_client
 #include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
-#include <crm/common/xml_internal.h>        // PCMK__XA_LRMD_*, pcmk__xe_is
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
 

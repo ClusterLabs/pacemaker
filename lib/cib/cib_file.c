@@ -27,7 +27,6 @@
 #include <crm/cib/internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 #define CIB_SERIES "cib"
 #define CIB_SERIES_MAX 100

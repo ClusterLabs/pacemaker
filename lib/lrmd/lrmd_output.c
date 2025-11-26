@@ -12,7 +12,6 @@
 
 #include <crm/lrmd_internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/output_internal.h>
 
 static int
 default_list(pcmk__output_t *out, lrmd_list_t *list, const char *title) {

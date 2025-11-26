@@ -17,7 +17,7 @@
 #include <glib.h>                 // G_GNUC_INTERNAL, GSList, GList, etc.
 #include <libxml/tree.h>          // xmlNode
 
-#include <crm/common/digest_internal.h>     // pcmk__op_digest_t
+#include <crm/common/internal.h>            // pcmk__op_digest_t
 #include <crm/common/scheduler_types.h>     // pcmk_action_t, etc.
 
 #ifdef __cplusplus

@@ -14,7 +14,6 @@
 #include <glib.h>
 #include <libxml/tree.h>
 
-#include <crm/common/alerts_internal.h>
 #include <crm/fencing/internal.h>
 #include <crm/lrmd.h>
 #include <crm/lrmd_internal.h>

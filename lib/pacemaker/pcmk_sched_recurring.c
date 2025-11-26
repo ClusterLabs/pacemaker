@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/scheduler_internal.h>
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"

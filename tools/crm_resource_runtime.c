@@ -17,9 +17,7 @@
 #include <libxml/tree.h>                    // xmlNode
 #include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
-#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
-#include <crm/common/lists_internal.h>
 #include <crm/services_internal.h>
 
 #include <crm_resource.h>
