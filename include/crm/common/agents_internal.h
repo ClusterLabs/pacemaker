@@ -16,6 +16,8 @@ extern "C" {
 
 #define PCMK__FENCING_STONITH_TIMEOUT "stonith-timeout"
 
+int pcmk__effective_rc(int rc);
+
 #ifdef __cplusplus
 }
 #endif

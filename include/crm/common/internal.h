@@ -21,6 +21,7 @@
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 
+#include <crm/common/agents_internal.h>
 #include <crm/common/acl_internal.h>
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
@@ -391,9 +392,6 @@ pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
     return pcmk__fail_attr_name(PCMK__LAST_FAILURE_PREFIX, rsc_id, op,
                                 interval_ms);
 }
-
-// internal resource agent functions (from agents.c)
-int pcmk__effective_rc(int rc);
 
 #ifdef __cplusplus
 }
