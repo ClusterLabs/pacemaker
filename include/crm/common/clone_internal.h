@@ -14,7 +14,7 @@
 #include <stdbool.h>                        // bool
 #include <stdint.h>                         // UINT32_C
 
-#include <crm/common/internal.h>            // pcmk__is_set()
+#include <crm/common/flags_internal.h>      // pcmk__is_set()
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t
 #include <crm/common/resources.h>           // pcmk_rsc_unique,
 #include <crm/common/resources_internal.h>  // pcmk__rsc_variant_clone etc.
