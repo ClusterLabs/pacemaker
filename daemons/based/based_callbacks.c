@@ -1169,8 +1169,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
          */
         if ((operation->type == cib__op_commit_transact)
             && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
-            && compare_version(pcmk__xe_get(the_cib, PCMK_XA_CRM_FEATURE_SET),
-                               "3.19.0") < 0) {
+            && (pcmk__compare_versions(pcmk__xe_get(the_cib,
+                                                    PCMK_XA_CRM_FEATURE_SET),
+                                       "3.19.0") < 0)) {
 
             sync_our_cib(request, true);
         }

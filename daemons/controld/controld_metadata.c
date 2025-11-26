@@ -97,12 +97,12 @@ log_ra_ocf_version(const char *ra_key, const char *ra_ocf_version)
     if (pcmk__str_empty(ra_ocf_version)) {
         crm_warn("%s does not advertise OCF version supported", ra_key);
 
-    } else if (compare_version(ra_ocf_version, "2") >= 0) {
+    } else if (pcmk__compare_versions(ra_ocf_version, "2") >= 0) {
         crm_warn("%s supports OCF version %s (this Pacemaker version supports "
                  PCMK_OCF_VERSION " and might not work properly with agent)",
                  ra_key, ra_ocf_version);
 
-    } else if (compare_version(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
+    } else if (pcmk__compare_versions(ra_ocf_version, PCMK_OCF_VERSION) > 0) {
         crm_info("%s supports OCF version %s (this Pacemaker version supports "
                  PCMK_OCF_VERSION " and might not use all agent features)",
                  ra_key, ra_ocf_version);
@@ -151,7 +151,8 @@ controld_cache_metadata(GHashTable *mdc, const lrmd_rsc_info_t *rsc,
         }
         log_ra_ocf_version(key, (const char *) content);
         if (content != NULL) {
-            ocf1_1 = (compare_version((const char *) content, "1.1") >= 0);
+            ocf1_1 = (pcmk__compare_versions((const char *) content,
+                                             "1.1") >= 0);
             xmlFree(content);
         }
     }

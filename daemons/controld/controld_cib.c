@@ -445,8 +445,9 @@ build_parameter_list(const lrmd_event_data_t *op,
     /* Consider all parameters only except private ones to be consistent with
      * what scheduler does with calculate_secure_digest().
      */
-    if (param_type == ra_param_private
-        && compare_version(controld_globals.dc_version, "3.16.0") >= 0) {
+    if ((param_type == ra_param_private)
+        && (pcmk__compare_versions(controld_globals.dc_version,
+                                   "3.16.0") >= 0)) {
         g_hash_table_foreach(op->params, hash2field, *result);
         pcmk__filter_op_for_digest(*result);
     }

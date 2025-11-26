@@ -175,110 +175,110 @@ pcmk__daemon_user(uid_t *uid, gid_t *gid)
 
 /*!
  * \internal
- * \brief Return the integer equivalent of a portion of a string
+ * \brief Compare two version strings to determine which one is higher
  *
- * \param[in]  text      Pointer to beginning of string portion
- * \param[out] end_text  This will point to next character after integer
- */
-static int
-version_helper(const char *text, const char **end_text)
-{
-    int atoi_result = -1;
-
-    pcmk__assert(end_text != NULL);
-
-    errno = 0;
-
-    if (text != NULL && text[0] != 0) {
-        /* seemingly sacrificing const-correctness -- because while strtol
-           doesn't modify the input, it doesn't want to artificially taint the
-           "end_text" pointer-to-pointer-to-first-char-in-string with constness
-           in case the input wasn't actually constant -- by semantic definition
-           not a single character will get modified so it shall be perfectly
-           safe to make compiler happy with dropping "const" qualifier here */
-        atoi_result = (int) strtol(text, (char **) end_text, 10);
-
-        if (errno == EINVAL) {
-            crm_err("Conversion of '%s' %c failed", text, text[0]);
-            atoi_result = -1;
-        }
-    }
-    return atoi_result;
-}
-
-/*
- * version1 < version2 : -1
- * version1 = version2 :  0
- * version1 > version2 :  1
+ * A valid version string is of the form specified by the regex
+ * <tt>[0-9]+(\.[0-9]+)*</tt>.
+ *
+ * Leading whitespace and trailing garbage are allowed and ignored. Anything
+ * that doesn't match the regex above is considered garbage.
+ *
+ * For each string, we get all segments until the first invalid character. A
+ * segment is a series of digits, and segments are delimited by a single dot.
+ * The two strings are compared segment by segment, until either we find a
+ * difference or we've processed all segments in both strings.
+ *
+ * If one string runs out of segments to compare before the other string does,
+ * we treat it as if it has enough padding \c "0" segments to finish the
+ * comparisons.
+ *
+ * Segments are compared by calling \c strtoll() to parse them to long long
+ * integers and then performing standard integer comparison.
+ *
+ * \param[in] version1  First version to compare
+ * \param[in] version2  Second version to compare
+ *
+ * \retval -1  if \p version1 evaluates to a lower version than \p version2
+ * \retval  1  if \p version1 evaluates to a higher version than \p version2
+ * \retval  0  if \p version1 and \p version2 evaluate to an equal version
+ *
+ * \note Each version segment's parsed value must fit into a <tt>long long</tt>.
  */
 int
-compare_version(const char *version1, const char *version2)
+pcmk__compare_versions(const char *version1, const char *version2)
 {
     int rc = 0;
-    int lpc = 0;
-    const char *ver1_iter, *ver2_iter;
+    gchar *match1 = NULL;
+    gchar *match2 = NULL;
+    gchar **segments1 = NULL;
+    gchar **segments2 = NULL;
+    GRegex *regex = NULL;
 
-    if (version1 == NULL && version2 == NULL) {
-        return 0;
-    } else if (version1 == NULL) {
-        return -1;
-    } else if (version2 == NULL) {
-        return 1;
+    if (pcmk__str_eq(version1, version2, pcmk__str_none)) {
+        goto done;
     }
 
-    ver1_iter = version1;
-    ver2_iter = version2;
+    // Ignore leading whitespace and trailing garbage
+    regex = g_regex_new("^\\s*(\\d+(?:\\.\\d+)*)", 0, 0, NULL);
 
-    while (1) {
-        int digit1 = 0;
-        int digit2 = 0;
+    if (!pcmk__str_empty(version1)) {
+        GMatchInfo *match_info = NULL;
 
-        lpc++;
+        if (g_regex_match(regex, version1, 0, &match_info)) {
+            match1 = g_match_info_fetch(match_info, 1);
+        }
+        g_match_info_unref(match_info);
+    }
+    if (!pcmk__str_empty(version2)) {
+        GMatchInfo *match_info = NULL;
 
-        if (ver1_iter == ver2_iter) {
-            break;
+        if (g_regex_match(regex, version2, 0, &match_info)) {
+            match2 = g_match_info_fetch(match_info, 1);
+        }
+        g_match_info_unref(match_info);
+    }
+
+    segments1 = g_strsplit(pcmk__s(match1, ""), ".", 0);
+    segments2 = g_strsplit(pcmk__s(match2, ""), ".", 0);
+
+    for (gchar **segment1 = segments1, **segment2 = segments2;
+         (*segment1 != NULL) || (*segment2 != NULL); ) {
+
+        long long value1 = 0;
+        long long value2 = 0;
+
+        if (*segment1 != NULL) {
+            // Make Coverity happy by casting to void
+            (void) pcmk__scan_ll(*segment1, &value1, 0);
+            segment1++;
+        }
+        if (*segment2 != NULL) {
+            (void) pcmk__scan_ll(*segment2, &value2, 0);
+            segment2++;
         }
 
-        if (ver1_iter != NULL) {
-            digit1 = version_helper(ver1_iter, &ver1_iter);
-        }
-
-        if (ver2_iter != NULL) {
-            digit2 = version_helper(ver2_iter, &ver2_iter);
-        }
-
-        if (digit1 < digit2) {
+        if (value1 < value2) {
+            crm_trace("%s < %s", version1, version2);
             rc = -1;
-            break;
-
-        } else if (digit1 > digit2) {
+            goto done;
+        }
+        if (value1 > value2) {
+            crm_trace("%s > %s", version1, version2);
             rc = 1;
-            break;
-        }
-
-        if (ver1_iter != NULL && *ver1_iter == '.') {
-            ver1_iter++;
-        }
-        if (ver1_iter != NULL && *ver1_iter == '\0') {
-            ver1_iter = NULL;
-        }
-
-        if (ver2_iter != NULL && *ver2_iter == '.') {
-            ver2_iter++;
-        }
-        if (ver2_iter != NULL && *ver2_iter == 0) {
-            ver2_iter = NULL;
+            goto done;
         }
     }
 
-    if (rc == 0) {
-        crm_trace("%s == %s (%d)", version1, version2, lpc);
-    } else if (rc < 0) {
-        crm_trace("%s < %s (%d)", version1, version2, lpc);
-    } else if (rc > 0) {
-        crm_trace("%s > %s (%d)", version1, version2, lpc);
-    }
+    crm_trace("%s == %s", version1, version2);
 
+done:
+    g_free(match1);
+    g_free(match2);
+    g_strfreev(segments1);
+    g_strfreev(segments2);
+    if (regex != NULL) {
+        g_regex_unref(regex);
+    }
     return rc;
 }
 
@@ -535,6 +535,103 @@ pcmk_daemon_user(uid_t *uid, gid_t *gid)
             *gid = daemon_gid;
         }
     }
+    return rc;
+}
+
+static int
+version_helper(const char *text, const char **end_text)
+{
+    int atoi_result = -1;
+
+    pcmk__assert(end_text != NULL);
+
+    errno = 0;
+
+    if (text != NULL && text[0] != 0) {
+        /* seemingly sacrificing const-correctness -- because while strtol
+           doesn't modify the input, it doesn't want to artificially taint the
+           "end_text" pointer-to-pointer-to-first-char-in-string with constness
+           in case the input wasn't actually constant -- by semantic definition
+           not a single character will get modified so it shall be perfectly
+           safe to make compiler happy with dropping "const" qualifier here */
+        atoi_result = (int) strtol(text, (char **) end_text, 10);
+
+        if (errno == EINVAL) {
+            crm_err("Conversion of '%s' %c failed", text, text[0]);
+            atoi_result = -1;
+        }
+    }
+    return atoi_result;
+}
+
+int
+compare_version(const char *version1, const char *version2)
+{
+    int rc = 0;
+    int lpc = 0;
+    const char *ver1_iter, *ver2_iter;
+
+    if (version1 == NULL && version2 == NULL) {
+        return 0;
+    } else if (version1 == NULL) {
+        return -1;
+    } else if (version2 == NULL) {
+        return 1;
+    }
+
+    ver1_iter = version1;
+    ver2_iter = version2;
+
+    while (1) {
+        int digit1 = 0;
+        int digit2 = 0;
+
+        lpc++;
+
+        if (ver1_iter == ver2_iter) {
+            break;
+        }
+
+        if (ver1_iter != NULL) {
+            digit1 = version_helper(ver1_iter, &ver1_iter);
+        }
+
+        if (ver2_iter != NULL) {
+            digit2 = version_helper(ver2_iter, &ver2_iter);
+        }
+
+        if (digit1 < digit2) {
+            rc = -1;
+            break;
+
+        } else if (digit1 > digit2) {
+            rc = 1;
+            break;
+        }
+
+        if (ver1_iter != NULL && *ver1_iter == '.') {
+            ver1_iter++;
+        }
+        if (ver1_iter != NULL && *ver1_iter == '\0') {
+            ver1_iter = NULL;
+        }
+
+        if (ver2_iter != NULL && *ver2_iter == '.') {
+            ver2_iter++;
+        }
+        if (ver2_iter != NULL && *ver2_iter == 0) {
+            ver2_iter = NULL;
+        }
+    }
+
+    if (rc == 0) {
+        crm_trace("%s == %s (%d)", version1, version2, lpc);
+    } else if (rc < 0) {
+        crm_trace("%s < %s (%d)", version1, version2, lpc);
+    } else if (rc > 0) {
+        crm_trace("%s > %s (%d)", version1, version2, lpc);
+    }
+
     return rc;
 }
 

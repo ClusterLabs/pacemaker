@@ -26,7 +26,7 @@ extern "C" {
  * \ingroup cib
  */
 
-// Use compare_version() for doing comparisons
+// Use pcmk__compare_versions() for doing comparisons
 #  define CIB_FEATURE_SET "2.0"
 
 /* Core functions */

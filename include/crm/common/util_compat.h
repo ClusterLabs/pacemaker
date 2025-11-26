@@ -72,6 +72,9 @@ int pcmk_daemon_user(uid_t *uid, gid_t *gid);
 //! \deprecated Do not use
 int crm_user_lookup(const char *name, uid_t *uid, gid_t *gid);
 
+//! \deprecated Do not use
+int compare_version(const char *version1, const char *version2);
+
 #ifdef __cplusplus
 }
 #endif
