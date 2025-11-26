@@ -685,53 +685,55 @@ strchrnul(const char *s, int c)
 static void
 crm_log_filter(struct qb_log_callsite *cs)
 {
-    static bool need_init = true;
-
-    if (need_init) {
-        const char *blackbox = pcmk__env_option(PCMK__ENV_TRACE_BLACKBOX);
-        const char *files = pcmk__env_option(PCMK__ENV_TRACE_FILES);
-        const char *formats = pcmk__env_option(PCMK__ENV_TRACE_FORMATS);
-        const char *functions = pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS);
-        const char *tags = pcmk__env_option(PCMK__ENV_TRACE_TAGS);
-
-        need_init = false;
-
-        if (blackbox != NULL) {
-            trace_blackbox = g_strsplit(blackbox, ",", 0);
-        }
-
-        if (files != NULL) {
-            trace_files = g_strsplit(files, ",", 0);
-        }
-
-        if (formats != NULL) {
-            trace_formats = g_strsplit(formats, ",", 0);
-        }
-
-        if (functions != NULL) {
-            trace_functions = g_strsplit(functions, ",", 0);
-        }
-
-        if (tags != NULL) {
-            gchar **trace_tags = g_strsplit(tags, ",", 0);
-
-            for (gchar **tag = trace_tags; *tag != NULL; tag++) {
-                if (pcmk__str_empty(*tag)) {
-                    continue;
-                }
-
-                crm_info("Created GQuark %lld from token '%s' in '%s'",
-                         (long long) g_quark_from_string(*tag), *tag, tags);
-            }
-
-            // We have the GQuarks, so we don't need the array anymore
-            g_strfreev(trace_tags);
-        }
-    }
-
     cs->targets = 0;            /* Reset then find targets to enable */
     for (int i = QB_LOG_SYSLOG; i < QB_LOG_TARGET_MAX; i++) {
         crm_log_filter_source(i, cs);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Parse environment variables specifying which objects to trace
+ */
+static void
+init_tracing(void)
+{
+    const char *blackbox = pcmk__env_option(PCMK__ENV_TRACE_BLACKBOX);
+    const char *files = pcmk__env_option(PCMK__ENV_TRACE_FILES);
+    const char *formats = pcmk__env_option(PCMK__ENV_TRACE_FORMATS);
+    const char *functions = pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS);
+    const char *tags = pcmk__env_option(PCMK__ENV_TRACE_TAGS);
+
+    if (blackbox != NULL) {
+        trace_blackbox = g_strsplit(blackbox, ",", 0);
+    }
+
+    if (files != NULL) {
+        trace_files = g_strsplit(files, ",", 0);
+    }
+
+    if (formats != NULL) {
+        trace_formats = g_strsplit(formats, ",", 0);
+    }
+
+    if (functions != NULL) {
+        trace_functions = g_strsplit(functions, ",", 0);
+    }
+
+    if (tags != NULL) {
+        gchar **trace_tags = g_strsplit(tags, ",", 0);
+
+        for (gchar **tag = trace_tags; *tag != NULL; tag++) {
+            if (pcmk__str_empty(*tag)) {
+                continue;
+            }
+
+            crm_info("Created GQuark %lld from token '%s' in '%s'",
+                     (long long) g_quark_from_string(*tag), *tag, tags);
+        }
+
+        // We have the GQuarks, so we don't need the array anymore
+        g_strfreev(trace_tags);
     }
 }
 
@@ -902,6 +904,8 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     }
 
     have_logging = true;
+
+    init_tracing();
 
     /* @TODO Try to create a more obvious "global Pacemaker initializer"
      * function than crm_log_preinit(), and call pcmk__schema_init() there.
