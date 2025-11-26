@@ -33,23 +33,6 @@ _Noreturn void pcmk__abort_as(const char *file, const char *function, int line,
         }                                                           \
     } while(0)
 
-/*!
- * \internal
- * \brief Abort without dumping core if a pointer is \c NULL
- *
- * This is intended to check for memory allocation failure, rather than for null
- * pointers in general.
- *
- * \param[in] ptr  Pointer to check
- */
-#define pcmk__mem_assert(ptr) do {                                          \
-        if ((ptr) == NULL) {                                                \
-            crm_abort(__FILE__, __func__, __LINE__, "Out of memory", FALSE, \
-                      TRUE);                                                \
-            crm_exit(CRM_EX_OSERR);                                         \
-        }                                                                   \
-    } while (0)
-
 /* Error domains for use with g_set_error */
 
 GQuark pcmk__rc_error_quark(void);
