@@ -65,12 +65,6 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
 guint pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 
-/* internal name/value utilities (from nvpair.c) */
-
-int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
-char *pcmk__format_nvpair(const char *name, const char *value,
-                          const char *units);
-
 /* internal procfs utilities (from procfs.c) */
 
 pid_t pcmk__procfs_pid_of(const char *name);
