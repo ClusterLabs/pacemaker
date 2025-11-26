@@ -2196,17 +2196,20 @@ can_fence_host_with_device(fenced_device_t *dev,
                            struct device_search_s *search)
 {
     gboolean can = FALSE;
-    const char *check_type = "Internal bug";
-    const char *target = NULL;
-    const char *alias = NULL;
     const char *dev_id = "Unspecified device";
-    const char *action = (search == NULL)? NULL : search->action;
+    const char *action = NULL;
+    const char *target = NULL;
+    const char *check_type = "Internal bug";
+    const char *alias = NULL;
 
-    CRM_CHECK((dev != NULL) && (action != NULL), goto search_report_results);
+    CRM_CHECK((dev != NULL) && (search != NULL) && (search->action != NULL),
+              goto search_report_results);
 
     if (dev->id != NULL) {
         dev_id = dev->id;
     }
+
+    action = search->action;
 
     target = search->host;
     if (target == NULL) {
