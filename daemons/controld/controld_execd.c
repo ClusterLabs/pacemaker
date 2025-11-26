@@ -2042,31 +2042,6 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     lrmd_free_event(op);
 }
 
-static char *
-unescape_newlines(const char *string)
-{
-    char *pch = NULL;
-    char *ret = NULL;
-    static const char *escaped_newline = "\\n";
-
-    if (!string) {
-        return NULL;
-    }
-
-    ret = pcmk__str_copy(string);
-    pch = strstr(ret, escaped_newline);
-    while (pch != NULL) {
-        /* Replace newline escape pattern with actual newline (and a space so we
-         * don't have to shuffle the rest of the buffer)
-         */
-        pch[0] = '\n';
-        pch[1] = ' ';
-        pch = strstr(pch, escaped_newline);
-    }
-
-    return ret;
-}
-
 static bool
 did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
                     const char * op_type, guint interval_ms)
@@ -2373,10 +2348,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
                           pcmk__str_casei)) {
             crmd_alert_resource_op(lrm_state->node_name, op);
         } else if (rsc && (op->rc == PCMK_OCF_OK)) {
-            char *metadata = unescape_newlines(op->output);
-
-            controld_cache_metadata(lrm_state->metadata_cache, rsc, metadata);
-            free(metadata);
+            controld_cache_metadata(lrm_state->metadata_cache, rsc, op->output);
         }
     }
 
