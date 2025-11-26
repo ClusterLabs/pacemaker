@@ -10,12 +10,11 @@
 #ifndef PCMK__CRM_COMMON_INTERNAL__H
 #define PCMK__CRM_COMMON_INTERNAL__H
 
-#include <stdbool.h>            // bool
 #include <stdint.h>             // uint8_t, uint64_t
 #include <sys/types.h>          // pid_t, uid_t, gid_t
 #include <unistd.h>             // getpid()
 
-#include <glib.h>               // guint, GList, GHashTable
+#include <glib.h>               // guint, GHashTable
 
 #include <crm/common/agents_internal.h>
 #include <crm/common/acl_internal.h>
@@ -25,6 +24,7 @@
 #include <crm/common/health_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
+#include <crm/common/lists_internal.h>
 #include <crm/common/mainloop_internal.h>
 #include <crm/common/memory_internal.h>
 #include <crm/common/messages_internal.h>
@@ -94,20 +94,6 @@ static inline char *
 pcmk__getpid_s(void)
 {
     return pcmk__assert_asprintf("%lu", (unsigned long) getpid());
-}
-
-// More efficient than g_list_length(list) == 1
-static inline bool
-pcmk__list_of_1(GList *list)
-{
-    return list && (list->next == NULL);
-}
-
-// More efficient than g_list_length(list) > 1
-static inline bool
-pcmk__list_of_multiple(GList *list)
-{
-    return list && (list->next != NULL);
 }
 
 /* convenience functions for failure-related node attributes */
