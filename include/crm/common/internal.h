@@ -10,9 +10,6 @@
 #ifndef PCMK__CRM_COMMON_INTERNAL__H
 #define PCMK__CRM_COMMON_INTERNAL__H
 
-#include <sys/types.h>          // pid_t, uid_t
-#include <unistd.h>             // getpid()
-
 #include <glib.h>               // guint, GHashTable
 
 #include <crm/common/agents_internal.h>
@@ -28,10 +25,11 @@
 #include <crm/common/memory_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
+#include <crm/common/pid_internal.h>
 #include <crm/common/procfs_internal.h>
 #include <crm/common/results_internal.h>
 #include <crm/common/scores_internal.h>
-#include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
+#include <crm/common/strings_internal.h>
 #include <crm/common/utils_internal.h>
 
 #ifdef __cplusplus
@@ -56,32 +54,6 @@ extern bool pcmk__is_daemon;
 int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 #endif
 
-
-/* internal functions related to process IDs (from pid.c) */
-
-/*!
- * \internal
- * \brief Check whether process exists (by PID and optionally executable path)
- *
- * \param[in] pid     PID of process to check
- * \param[in] daemon  If not NULL, path component to match with procfs entry
- *
- * \return Standard Pacemaker return code
- * \note Particular return codes of interest include pcmk_rc_ok for alive,
- *       ESRCH for process is not alive (verified by kill and/or executable path
- *       match), EACCES for caller unable or not allowed to check. A result of
- *       "alive" is less reliable when \p daemon is not provided or procfs is
- *       not available, since there is no guarantee that the PID has not been
- *       recycled for another process.
- * \note This function cannot be used to verify \e authenticity of the process.
- */
-int pcmk__pid_active(pid_t pid, const char *daemon);
-
-static inline char *
-pcmk__getpid_s(void)
-{
-    return pcmk__assert_asprintf("%lu", (unsigned long) getpid());
-}
 
 /* convenience functions for failure-related node attributes */
 
