@@ -33,6 +33,7 @@ do
     PROTECT="PCMK__$(echo "$NAME" | tr '[:lower:]/\-\.' '[:upper:]___' | sed 's/_H$/__H/')"
 
     cat >"$TESTFILE" <<EOF
+#define PCMK__DIRECT_INCLUDE
 #include <$NAME>
 #ifndef $PROTECT
 #error no $PROTECT header protector in file $i
