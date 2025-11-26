@@ -146,21 +146,8 @@ pcmk__clip_log_level(int level)
  * \param[in] fmt    printf-style format string literal for message
  * \param[in] args   Any arguments needed by format string
  */
-#define do_crm_log(level, fmt, args...) do {                                \
-        uint8_t _level = pcmk__clip_log_level(level);                       \
-                                                                            \
-        switch (_level) {                                                   \
-            case LOG_STDOUT:                                                \
-                printf(fmt "\n" , ##args);                                  \
-                break;                                                      \
-            case LOG_NEVER:                                                 \
-                break;                                                      \
-            default:                                                        \
-                qb_log_from_external_source(__func__, __FILE__, fmt,        \
-                                            _level, __LINE__, 0 , ##args);  \
-                break;                                                      \
-        }                                                                   \
-    } while (0)
+#define do_crm_log(level, fmt, args...) \
+        do_crm_log_alias(level, __FILE__, __func__, __LINE__, fmt, ##args)
 
 /*!
  * \brief Log a message that is likely to be filtered out
