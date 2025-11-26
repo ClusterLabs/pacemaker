@@ -11,9 +11,6 @@
 
 #include <crm_resource.h>
 #include <crm/lrmd_internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/ipc_attrd_internal.h>
-#include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
 #include <crm/fencing/internal.h>           // stonith__agent_exists()
 #include <pacemaker-internal.h>

@@ -26,7 +26,6 @@
 #include <crm/cib.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
-#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 

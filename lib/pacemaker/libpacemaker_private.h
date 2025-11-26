@@ -20,8 +20,8 @@
 #include <glib.h>                   // guint, gpointer, GList, GHashTable
 #include <libxml/tree.h>            // xmlNode
 
+#include <crm/common/internal.h>    // pcmk__location_t, etc.
 #include <crm/common/scheduler.h>   // pcmk_action_t, pcmk_node_t, etc.
-#include <crm/common/scheduler_internal.h>  // pcmk__location_t, etc.
 #include <crm/cib.h>                // cib_t
 #include <crm/lrmd_events.h>        // lrmd_event_data_t
 #include <crm/pengine/internal.h>   // pe__const_top_resource(), etc.

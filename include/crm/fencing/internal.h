@@ -13,10 +13,9 @@
 #include <stdbool.h>                        // bool
 
 #include <glib.h>
+#include <crm/common/internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/results_internal.h>
 #include <crm/stonith-ng.h>
 
 #ifdef __cplusplus
