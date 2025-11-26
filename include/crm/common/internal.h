@@ -90,10 +90,6 @@ void pcmk__sleep_ms(unsigned int ms);
 guint pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data);
 guint pcmk__timeout_ms2s(guint timeout_ms);
 
-extern int pcmk__score_red;
-extern int pcmk__score_green;
-extern int pcmk__score_yellow;
-
 static inline char *
 pcmk__getpid_s(void)
 {
