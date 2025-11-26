@@ -13,7 +13,6 @@
 #include <glib.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/rules_internal.h>
 #include <crm/common/unittest_internal.h>
 #include "crmcommon_private.h"
 
