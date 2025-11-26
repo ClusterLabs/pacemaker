@@ -2117,8 +2117,9 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
     bool localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
                                             pcmk__str_casei);
 
-    if ((device != NULL) && (action != NULL)
-        && (device->on_target_actions != NULL)
+    CRM_CHECK(action != NULL, return true);
+
+    if ((device != NULL) && (device->on_target_actions != NULL)
         && (strstr((const char*) device->on_target_actions->str,
                    action) != NULL)) {
 
