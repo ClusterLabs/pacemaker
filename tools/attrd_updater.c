@@ -27,7 +27,7 @@
 
 #include <crm/common/attrs_internal.h>
 
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #define SUMMARY "query and update Pacemaker node attributes"
 
