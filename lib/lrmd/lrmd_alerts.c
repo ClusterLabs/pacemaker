@@ -89,10 +89,6 @@ should_filter_alert(char **list, const char *value)
 
     CRM_CHECK(value != NULL, return TRUE);
 
-    if (list == NULL) {
-        return FALSE;
-    }
-
     target_list_num = g_strv_length(list);
 
     for (int cnt = 0; cnt < target_list_num; cnt++) {
@@ -152,6 +148,7 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         }
 
         if ((kind == pcmk__alert_attribute)
+            && (entry->select_attribute_name != NULL)
             && should_filter_alert(entry->select_attribute_name, attr_name)) {
 
             crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
