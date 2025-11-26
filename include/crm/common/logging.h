@@ -16,6 +16,8 @@
 #include <qb/qblog.h>           // LOG_TRACE, qb_*, QB_*
 #include <libxml/tree.h>
 
+#include <crm/common/results.h>     // crm_abort
+
 #ifdef __cplusplus
 extern "C" {
 #endif
