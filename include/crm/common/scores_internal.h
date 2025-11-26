@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern int pcmk__score_red;
+extern int pcmk__score_green;
+extern int pcmk__score_yellow;
 
 int pcmk__add_scores(int score1, int score2);
 
