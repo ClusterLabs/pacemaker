@@ -10,11 +10,10 @@
 #ifndef PCMK__CRM_COMMON_INTERNAL__H
 #define PCMK__CRM_COMMON_INTERNAL__H
 
-#include <glib.h>               // GHashTable
-
 #include <crm/common/agents_internal.h>
 #include <crm/common/acl_internal.h>
 #include <crm/common/actions_internal.h>
+#include <crm/common/cib_secrets_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/failcounts_internal.h>
 #include <crm/common/flags_internal.h>
@@ -48,12 +47,6 @@ extern bool pcmk__is_daemon;
 
 // Number of elements in a statically defined array
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
-
-#if PCMK__ENABLE_CIBSECRETS
-/* internal CIB utilities (from cib_secrets.c) */
-
-int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
-#endif
 
 #ifdef __cplusplus
 }
