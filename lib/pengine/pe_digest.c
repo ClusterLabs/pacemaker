@@ -45,36 +45,21 @@ pe__free_digests(gpointer ptr)
     }
 }
 
-// Return true if XML attribute name is not substring of a given string
+// Return true if XML attribute name is an element of a given gchar ** array
 static bool
-attr_not_in_string(xmlAttrPtr a, void *user_data)
+attr_in_strv(xmlAttrPtr a, void *user_data)
 {
-    bool filter = false;
-    char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
+    const char *name = (const char *) a->name;
+    gchar **strv = user_data;
 
-    if (strstr((const char *) user_data, name) == NULL) {
-        crm_trace("Filtering %s (not found in '%s')",
-                  (const char *) a->name, (const char *) user_data);
-        filter = true;
-    }
-    free(name);
-    return filter;
+    return pcmk__g_strv_contains(strv, name);
 }
 
-// Return true if XML attribute name is substring of a given string
+// Return true if XML attribute name is not an element of a given gchar ** array
 static bool
-attr_in_string(xmlAttrPtr a, void *user_data)
+attr_not_in_strv(xmlAttrPtr a, void *user_data)
 {
-    bool filter = false;
-    char *name = pcmk__assert_asprintf(" %s ", (const char *) a->name);
-
-    if (strstr((const char *) user_data, name) != NULL) {
-        crm_trace("Filtering %s (found in '%s')",
-                  (const char *) a->name, (const char *) user_data);
-        filter = true;
-    }
-    free(name);
-    return filter;
+    return !attr_in_strv(a, user_data);
 }
 
 /*!
@@ -213,9 +198,13 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     }
 
     if (secure_list != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_secure, false,
-                                       attr_in_string, (void *) secure_list);
+        gchar **secure_params = g_strsplit(secure_list, " ", 0);
+
+        pcmk__xe_remove_matching_attrs(data->params_secure, false, attr_in_strv,
+                                       secure_params);
+        g_strfreev(secure_params);
     }
+
     if (old_version
         && pcmk__is_set(pcmk_get_ra_caps(class),
                         pcmk_ra_cap_fence_params)) {
@@ -276,8 +265,11 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     // Then filter out reloadable parameters, if any
     value = pcmk__xe_get(xml_op, PCMK__XA_OP_FORCE_RESTART);
     if (value != NULL) {
+        gchar **restart_params = g_strsplit(value, " ", 0);
+
         pcmk__xe_remove_matching_attrs(data->params_restart, false,
-                                       attr_not_in_string, (void *) value);
+                                       attr_not_in_strv, restart_params);
+        g_strfreev(restart_params);
     }
 
     data->digest_restart_calc = pcmk__digest_op_params(data->params_restart);
