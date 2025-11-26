@@ -668,20 +668,6 @@ crm_log_filter_source(int source, struct qb_log_callsite *cs)
     }
 }
 
-#ifndef HAVE_STRCHRNUL
-/* strchrnul() is a GNU extension. If not present, use our own definition.
- * The GNU version returns char*, but we only need it to be const char*.
- */
-static const char *
-strchrnul(const char *s, int c)
-{
-    while ((*s != c) && (*s != '\0')) {
-        ++s;
-    }
-    return s;
-}
-#endif
-
 static void
 crm_log_filter(struct qb_log_callsite *cs)
 {
@@ -1205,8 +1191,7 @@ void
 crm_log_output_fn(const char *file, const char *function, int line, int level, const char *prefix,
                   const char *output)
 {
-    const char *next = NULL;
-    const char *offset = NULL;
+    gchar **out_lines = NULL;
 
     if (level == LOG_NEVER) {
         return;
@@ -1219,17 +1204,14 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
         output = "-- empty --";
     }
 
-    next = output;
-    do {
-        offset = next;
-        next = strchrnul(offset, '\n');
-        do_crm_log_alias(level, file, function, line, "%s [ %.*s ]", prefix,
-                         (int)(next - offset), offset);
-        if (next[0] != 0) {
-            next++;
-        }
+    out_lines = g_strsplit(output, "\n", 0);
 
-    } while (next != NULL && next[0] != 0);
+    for (gchar **out_line = out_lines; *out_line != NULL; out_line++) {
+        do_crm_log_alias(level, file, function, line, "%s [ %s ]",
+                         prefix, *out_line);
+    }
+
+    g_strfreev(out_lines);
 }
 
 void
