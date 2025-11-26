@@ -19,7 +19,6 @@
 #include <glib.h>               // guint, GList, GHashTable
 
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
-#include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 
 #include <crm/common/agents_internal.h>
 #include <crm/common/acl_internal.h>
@@ -28,6 +27,7 @@
 #include <crm/common/health_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
+#include <crm/common/mainloop_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
 #include <crm/common/results_internal.h>
@@ -55,14 +55,6 @@ extern bool pcmk__is_daemon;
 
 int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
 #endif
-
-
-/* internal main loop utilities (from mainloop.c) */
-
-int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
-                           const struct ipc_client_callbacks *callbacks,
-                           mainloop_io_t **source);
-guint pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 
 /* internal procfs utilities (from procfs.c) */
