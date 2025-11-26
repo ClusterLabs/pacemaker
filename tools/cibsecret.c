@@ -393,18 +393,11 @@ get_live_peers(pcmk__output_t *out)
 
     /* Warn the user about any that didn't respond to pings */
     for (const GList *iter = nd.all_nodes; iter != NULL; iter = iter->next) {
-        bool found = false;
+        const char *node_name = iter->data;
 
-        for (gchar **host = reachable; *host != NULL; host++) {
-            if (pcmk__str_eq(iter->data, *host, pcmk__str_none)) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
+        if (!pcmk__g_strv_contains(reachable, node_name)) {
             out->info(out, "Node %s is down - you'll need to update it "
-                      "with `cibsecret sync` later", (char *) iter->data);
+                      "with `cibsecret sync` later", node_name);
         }
     }
 
