@@ -60,8 +60,8 @@ void attrd_run_mainloop(void);
 void attrd_free_waitlist(void);
 bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
-void attrd_init_ipc(void);
-void attrd_ipc_fini(void);
+void attrd_ipc_init(void);
+void attrd_ipc_cleanup(void);
 
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
