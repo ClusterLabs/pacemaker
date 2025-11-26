@@ -8,26 +8,34 @@
  */
 
 #include <crm_internal.h>
-#include "pacemakerd.h"
 
+#include <errno.h>                      // errno, EAGAIN, EINVAL, EACCES
+#include <grp.h>                        // initgroups
+#include <signal.h>                     // SIGTERM, SIGKILL, kill, size_t
+#include <stdbool.h>                    // true, bool, false
+#include <stdint.h>                     // UINT32_C, uint32_t
+#include <stdio.h>                      // NULL
+#include <stdlib.h>                     // free
+#include <string.h>                     // strerror, strsignal, strstr
+#include <sys/types.h>                  // pid_t, gid_t, uid_t, time_t
+#include <syslog.h>                     // LOG_ERR, LOG_WARNING
+#include <time.h>                       // time, time_t
+#include <unistd.h>                     // execlp, fork, setgid, setsid
+
+#include <glib.h>                       // gboolean, G_SOURCE_CONTINUE
+#include <qb/qblog.h>                   // QB_XS
+
+#include <crm_config.h>                 // SUPPORT_COROSYNC, CRM_DAEMON_*
+#include <crm/cluster.h>                // pcmk_get_cluster_layer, pcmk_cluster_layer
+#include <crm/common/ipc.h>             // pcmk_ipc_server
+#include <crm/common/mainloop.h>        // mainloop_set_trigger, crm_trigger_t
+#include <crm/common/options.h>         // PCMK_VALUE_TRUE
+#include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc_str, crm_exit*
+
+#include "pacemakerd.h"                 // MAX_RESPAWN
 #if SUPPORT_COROSYNC
-#include "pcmkd_corosync.h"
+#include "pcmkd_corosync.h"             // pcmkd_corosync_connected
 #endif
-
-#include <errno.h>
-#include <grp.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-
-#include <crm/cluster.h>
-#include <crm/common/xml.h>
 
 enum child_daemon_flags {
     child_none                  = 0,

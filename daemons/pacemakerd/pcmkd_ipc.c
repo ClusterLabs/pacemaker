@@ -9,10 +9,20 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <sys/types.h>
+#include <errno.h>                      // ENOMEM
+#include <stdbool.h>                    // true
+#include <stddef.h>                     // NULL, size_t
+#include <stdint.h>                     // int32_t, uint32_t
+#include <sys/types.h>                  // gid_t, uid_t
 
-#include "pacemakerd.h"
+#include <glib.h>                       // g_byte_array_free, TRUE
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qbipcs.h>                  // qb_ipcs_connection_t
+
+#include <crm/common/mainloop.h>        // mainloop_set_trigger
+#include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc_str
+
+#include "pacemakerd.h"                 // pacemakerd_handle_request
 
 static qb_ipcs_service_t *ipcs = NULL;
 

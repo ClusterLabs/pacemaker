@@ -8,17 +8,21 @@
  */
 
 #include <crm_internal.h>
-#include "pacemakerd.h"
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
+#include <glib.h>                       // g_hash_table_destroy
+#include <stdbool.h>                    // bool
+#include <stdlib.h>                     // free
+#include <string.h>                     // NULL, strstr
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-#include <time.h>
-#include <sys/types.h>
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/crm.h>                    // CRM_OP_PING, CRM_OP_QUIT
+#include <crm/common/ipc.h>             // crm_ipc_flags
+#include <crm/common/mainloop.h>        // mainloop_set_trigger
+#include <crm/common/results.h>         // crm_exit_e, pcmk_exec_status_str
+#include <crm/common/xml.h>             // PCMK_XA_*
+
+#include "pacemakerd.h"                 // pacemakerd_*
 
 static GHashTable *pacemakerd_handlers = NULL;
 

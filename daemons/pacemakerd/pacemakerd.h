@@ -9,6 +9,11 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+#include <time.h>                       // time_t
+
+#include <crm/common/mainloop.h>        // crm_trigger_t
+
 #define MAX_RESPAWN		100
 
 extern GMainLoop *mainloop;

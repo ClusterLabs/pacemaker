@@ -8,30 +8,34 @@
  */
 
 #include <crm_internal.h>
+
+#include <errno.h>                      // errno, ECONNREFUSED, EEXIST
+#include <signal.h>                     // SIGHUP, SIGINT, SIGQUIT
+#include <stdarg.h>                     // va_list
+#include <stdbool.h>                    // true, false, bool
+#include <stdlib.h>                     // setenv
+#include <string.h>                     // strerror, strsignal
+#include <sys/resource.h>               // rlimit, RLIMIT_*
+#include <sys/stat.h>                   // mkdir
+#include <sys/types.h>                  // gid_t, uid_t
+#include <syslog.h>                     // LOG_INFO
+#include <unistd.h>                     // chown, geteuid, sleep
+
+#include <qb/qblog.h>                   // QB_XS
+
+#include <crm_config.h>                 // SUPPORT_COROSYNC, BUILD_VERSION
+#include <crm/common/ipc.h>             // pcmk_ipc_is_connected
+#include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_api_shutdown
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/options.h>         // PCMK_VALUE_*
+#include <crm/common/results.h>         // crm_exit_e, crm_exit_e, pcmk_rc_*
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*
+#include <crm/crm.h>                    // CRM_FEATURE_SET, crm_system_name
+
 #include "pacemakerd.h"
-
 #if SUPPORT_COROSYNC
-#include "pcmkd_corosync.h"
+#include "pcmkd_corosync.h"                 // cluster_{dis,}connect_cfg
 #endif
-
-#include <pwd.h>
-#include <errno.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#include <crm/crm.h>  /* indirectly: CRM_EX_* */
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/ipc_pacemakerd.h>
-#include <crm/common/output_internal.h>
-#include <crm/cluster/internal.h>
-#include <crm/cluster.h>
 
 #define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
 
