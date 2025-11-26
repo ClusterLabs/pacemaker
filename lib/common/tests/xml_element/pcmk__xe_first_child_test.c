@@ -11,7 +11,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 
 const char *str1 =
     "<xml>\n"

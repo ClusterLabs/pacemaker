@@ -11,7 +11,6 @@
 
 #include <regex.h>  // regmatch_t
 
-#include <crm/common/rules_internal.h>
 #include <crm/common/unittest_internal.h>
 
 // An example matched string with submatches

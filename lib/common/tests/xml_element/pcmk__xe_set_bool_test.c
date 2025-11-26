@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/xml.h>
 
 static void

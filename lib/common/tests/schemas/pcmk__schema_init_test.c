@@ -14,7 +14,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
 static char *remote_schema_dir = NULL;

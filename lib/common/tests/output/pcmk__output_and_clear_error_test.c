@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/output_internal.h>
 
 #include <glib.h>
 

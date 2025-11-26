@@ -15,7 +15,6 @@
 #include <libxml/xmlstring.h>               // xmlGetUTF8Char()
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 
 #include "crmcommon_private.h"              // pcmk__xml_is_name_start_char()
 
