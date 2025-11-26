@@ -10,29 +10,28 @@
 #ifndef PCMK__CRM_COMMON_INTERNAL__H
 #define PCMK__CRM_COMMON_INTERNAL__H
 
-#include <pwd.h>                // struct passwd
-#include <unistd.h>             // getpid()
+#include <inttypes.h>           // PRIx64
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint8_t, uint64_t
 #include <sys/types.h>          // pid_t, uid_t, gid_t
-#include <inttypes.h>           // PRIu64
+#include <unistd.h>             // getpid()
 
 #include <glib.h>               // guint, GList, GHashTable
-#include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+
+#include <crm/common/acl_internal.h>
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
-#include <crm/common/results_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
+#include <crm/common/results_internal.h>
 #include <crm/common/scores_internal.h>
 #include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
-#include <crm/common/acl_internal.h>
 
 #ifdef __cplusplus
 extern "C" {
