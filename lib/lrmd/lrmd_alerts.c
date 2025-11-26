@@ -77,29 +77,6 @@ alert_envvar2params(lrmd_key_value_t *head, const pcmk__alert_t *entry)
     return head;
 }
 
-/*
- * We could use g_strv_contains() instead of this function,
- * but that has only been available since glib 2.43.2.
- */
-static gboolean
-should_filter_alert(char **list, const char *value)
-{
-    int target_list_num = 0;
-    gboolean rc = TRUE;
-
-    CRM_CHECK(value != NULL, return TRUE);
-
-    target_list_num = g_strv_length(list);
-
-    for (int cnt = 0; cnt < target_list_num; cnt++) {
-        if (strcmp(list[cnt], value) == 0) {
-            rc = FALSE;
-            break;
-        }
-    }
-    return rc;
-}
-
 /*!
  * \internal
  * \brief Execute alert agents for an event
@@ -147,14 +124,20 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
             continue;
         }
 
-        if ((kind == pcmk__alert_attribute)
-            && (entry->select_attribute_name != NULL)
-            && should_filter_alert(entry->select_attribute_name, attr_name)) {
+        if (kind == pcmk__alert_attribute) {
+            if (attr_name == NULL) {
+                CRM_LOG_ASSERT(attr_name != NULL);
+                continue;
+            }
 
-            crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
-                      pcmk__s(attr_name, "(unset)"), entry->recipient,
-                      entry->id);
-            continue;
+            if ((entry->select_attribute_name != NULL)
+                && !pcmk__g_strv_contains(entry->select_attribute_name,
+                                          attr_name)) {
+
+                crm_trace("Filtering unwanted attribute '%s' alert to %s via "
+                          "%s", attr_name, entry->recipient, entry->id);
+                continue;
+            }
         }
 
         crm_info("Sending %s alert via %s to %s",
