@@ -10,8 +10,7 @@
 #ifndef PCMK__CRM_COMMON_INTERNAL__H
 #define PCMK__CRM_COMMON_INTERNAL__H
 
-#include <stdint.h>             // uint8_t, uint64_t
-#include <sys/types.h>          // pid_t, uid_t, gid_t
+#include <sys/types.h>          // pid_t, uid_t
 #include <unistd.h>             // getpid()
 
 #include <glib.h>               // guint, GHashTable
@@ -33,6 +32,7 @@
 #include <crm/common/results_internal.h>
 #include <crm/common/scores_internal.h>
 #include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
+#include <crm/common/utils_internal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,19 +76,6 @@ int pcmk__substitute_secrets(const char *rsc_id, GHashTable *params);
  * \note This function cannot be used to verify \e authenticity of the process.
  */
 int pcmk__pid_active(pid_t pid, const char *daemon);
-
-
-// miscellaneous utilities (from utils.c)
-
-int pcmk__compare_versions(const char *version1, const char *version2);
-int pcmk__daemon_user(uid_t *uid, gid_t *gid);
-char *pcmk__generate_uuid(void);
-int pcmk__lookup_user(const char *name, uid_t *uid, gid_t *gid);
-void pcmk__panic(const char *reason);
-pid_t pcmk__locate_sbd(void);
-void pcmk__sleep_ms(unsigned int ms);
-guint pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data);
-guint pcmk__timeout_ms2s(guint timeout_ms);
 
 static inline char *
 pcmk__getpid_s(void)
