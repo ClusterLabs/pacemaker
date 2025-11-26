@@ -917,28 +917,25 @@ pcmk__parse_ms(const char *input, long long *result)
  * \internal
  * \brief Find a string in a list of strings
  *
- * \note This function takes the same flags and has the same behavior as
- *       pcmk__str_eq().
+ * \param[in] str    String to search for
+ * \param[in] list   List to search
+ * \param[in] flags  Group of <tt>enum pcmk__str_flags</tt> to pass to
+ *                   \c pcmk__str_eq()
  *
- * \note No matter what input string or flags are provided, an empty
- *       list will always return FALSE.
- *
- * \param[in] s      String to search for
- * \param[in] lst    List to search
- * \param[in] flags  A bitfield of pcmk__str_flags to modify operation
- *
- * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
+ * \return \c true if \p str is in \p list, or \c false otherwise
  */
-gboolean
-pcmk__str_in_list(const gchar *s, const GList *lst, uint32_t flags)
+bool
+pcmk__str_in_list(const char *str, const GList *list, uint32_t flags)
 {
-    for (const GList *ele = lst; ele != NULL; ele = ele->next) {
-        if (pcmk__str_eq(s, ele->data, flags)) {
-            return TRUE;
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
+        const char *element = iter->data;
+
+        if (pcmk__str_eq(element, str, flags)) {
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 static bool
