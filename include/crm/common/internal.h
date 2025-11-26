@@ -26,6 +26,7 @@
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop_internal.h>
+#include <crm/common/memory_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
 #include <crm/common/results_internal.h>
@@ -102,77 +103,6 @@ guint pcmk__timeout_ms2s(guint timeout_ms);
 extern int pcmk__score_red;
 extern int pcmk__score_green;
 extern int pcmk__score_yellow;
-
-/*!
- * \internal
- * \brief Allocate new zero-initialized memory, asserting on failure
- *
- * \param[in] file      File where \p function is located
- * \param[in] function  Calling function
- * \param[in] line      Line within \p file
- * \param[in] nmemb     Number of elements to allocate memory for
- * \param[in] size      Size of each element
- *
- * \return Newly allocated memory of of size <tt>nmemb * size</tt> (guaranteed
- *         not to be \c NULL)
- *
- * \note The caller is responsible for freeing the return value using \c free().
- */
-static inline void *
-pcmk__assert_alloc_as(const char *file, const char *function, uint32_t line,
-                      size_t nmemb, size_t size)
-{
-    void *ptr = calloc(nmemb, size);
-
-    if (ptr == NULL) {
-        crm_abort(file, function, line, "Out of memory", FALSE, TRUE);
-        crm_exit(CRM_EX_OSERR);
-    }
-    return ptr;
-}
-
-/*!
- * \internal
- * \brief Allocate new zero-initialized memory, asserting on failure
- *
- * \param[in] nmemb  Number of elements to allocate memory for
- * \param[in] size   Size of each element
- *
- * \return Newly allocated memory of of size <tt>nmemb * size</tt> (guaranteed
- *         not to be \c NULL)
- *
- * \note The caller is responsible for freeing the return value using \c free().
- */
-#define pcmk__assert_alloc(nmemb, size) \
-    pcmk__assert_alloc_as(__FILE__, __func__, __LINE__, nmemb, size)
-
-/*!
- * \internal
- * \brief Resize a dynamically allocated memory block
- *
- * \param[in] ptr   Memory block to resize (or NULL to allocate new memory)
- * \param[in] size  New size of memory block in bytes (must be > 0)
- *
- * \return Pointer to resized memory block
- *
- * \note This asserts on error, so the result is guaranteed to be non-NULL
- *       (which is the main advantage of this over directly using realloc()).
- */
-static inline void *
-pcmk__realloc(void *ptr, size_t size)
-{
-    void *new_ptr;
-
-    // realloc(p, 0) can replace free(p) but this wrapper can't
-    pcmk__assert(size > 0);
-
-    new_ptr = realloc(ptr, size);
-    if (new_ptr == NULL) {
-        free(ptr);
-        abort();
-    }
-    return new_ptr;
-}
 
 static inline char *
 pcmk__getpid_s(void)
