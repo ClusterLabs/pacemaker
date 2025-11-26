@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@
 
 #include <crm/common/attrs_internal.h>
 
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #define SUMMARY "query and update Pacemaker node attributes"
 
