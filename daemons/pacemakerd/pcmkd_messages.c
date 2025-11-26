@@ -8,19 +8,23 @@
  */
 
 #include <crm_internal.h>
-#include "pacemakerd.h"
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
+#include <glib.h>                       // g_hash_table_destroy
+#include <stdbool.h>                    // bool
+#include <stdlib.h>                     // free
+#include <string.h>                     // NULL, strstr
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-#include <time.h>
-#include <sys/types.h>
+#include <libxml/tree.h>                // xmlNode
 
-static GHashTable *pcmkd_handlers = NULL;
+#include <crm/crm.h>                    // CRM_OP_PING, CRM_OP_QUIT
+#include <crm/common/ipc.h>             // crm_ipc_flags
+#include <crm/common/mainloop.h>        // mainloop_set_trigger
+#include <crm/common/results.h>         // crm_exit_e, pcmk_exec_status_str
+#include <crm/common/xml.h>             // PCMK_XA_*
+
+#include "pacemakerd.h"                 // pacemakerd_*
+
+static GHashTable *pacemakerd_handlers = NULL;
 
 static xmlNode *
 handle_node_cache_request(pcmk__request_t *request)
@@ -155,7 +159,7 @@ handle_unknown_request(pcmk__request_t *request)
 }
 
 static void
-pcmkd_register_handlers(void)
+pacemakerd_register_handlers(void)
 {
     pcmk__server_command_t handlers[] = {
         { CRM_OP_RM_NODE_CACHE, handle_node_cache_request },
@@ -164,151 +168,58 @@ pcmkd_register_handlers(void)
         { NULL, handle_unknown_request },
     };
 
-    pcmkd_handlers = pcmk__register_handlers(handlers);
+    pacemakerd_handlers = pcmk__register_handlers(handlers);
 }
 
-static int32_t
-pcmk_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+void
+pacemakerd_unregister_handlers(void)
 {
-    crm_trace("Connection %p", c);
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -ENOMEM;
+    if (pacemakerd_handlers != NULL) {
+        g_hash_table_destroy(pacemakerd_handlers);
+        pacemakerd_handlers = NULL;
     }
-    return 0;
 }
 
-/* Error code means? */
-static int32_t
-pcmk_ipc_closed(qb_ipcs_connection_t * c)
+void
+pacemakerd_handle_request(pcmk__request_t *request)
 {
-    pcmk__client_t *client = pcmk__find_client(c);
+    xmlNode *reply = NULL;
+    char *log_msg = NULL;
+    const char *exec_status_s = NULL;
+    const char *reason = NULL;
 
-    if (client == NULL) {
-        return 0;
-    }
-    crm_trace("Connection %p", c);
-    if (shutdown_complete_state_reported_to == client->pid) {
-        shutdown_complete_state_reported_client_closed = TRUE;
-        if (shutdown_trigger) {
-            mainloop_set_trigger(shutdown_trigger);
-        }
-    }
-    pcmk__free_client(client);
-    return 0;
-}
-
-static void
-pcmk_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    crm_trace("Connection %p", c);
-    pcmk_ipc_closed(c);
-}
-
-/* Exit code means? */
-static int32_t
-pcmk_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
-{
-    int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    xmlNode *msg = NULL;
-    pcmk__client_t *c = pcmk__find_client(qbc);
-
-    CRM_CHECK(c != NULL, return 0);
-
-    if (pcmkd_handlers == NULL) {
-        pcmkd_register_handlers();
+    if (pacemakerd_handlers == NULL) {
+        pacemakerd_register_handlers();
     }
 
-    rc = pcmk__ipc_msg_append(&c->buffer, data);
+    reply = pcmk__process_request(request, pacemakerd_handlers);
 
-    if (rc == pcmk_rc_ipc_more) {
-        /* We haven't read the complete message yet, so just return. */
-        return 0;
+    if (reply != NULL) {
+        crm_log_xml_trace(reply, "Reply");
 
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        msg = pcmk__client_data2xml(c, &id, &flags);
-        g_byte_array_free(c->buffer, TRUE);
-        c->buffer = NULL;
+        pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
+                           crm_ipc_server_event);
+        pcmk__xml_free(reply);
+    }
 
+    exec_status_s = pcmk_exec_status_str(request->result.execution_status);
+    reason = request->result.exit_reason;
+
+    log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: %s%s%s%s",
+                                    request->op,
+                                    pcmk__request_origin_type(request),
+                                    pcmk__request_origin(request),
+                                    exec_status_s,
+                                    (reason == NULL)? "" : " (",
+                                    pcmk__s(reason, ""),
+                                    (reason == NULL)? "" : ")");
+
+    if (!pcmk__result_ok(&request->result)) {
+        crm_warn("%s", log_msg);
     } else {
-        /* Some sort of error occurred reassembling the message.  All we can
-         * do is clean up, log an error and return.
-         */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
-
-        if (c->buffer != NULL) {
-            g_byte_array_free(c->buffer, TRUE);
-            c->buffer = NULL;
-        }
-
-        return 0;
+        crm_debug("%s", log_msg);
     }
 
-    if (msg == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_ACK, NULL, CRM_EX_PROTOCOL);
-        return 0;
-
-    } else {
-        char *log_msg = NULL;
-        const char *exec_status_s = NULL;
-        const char *reason = NULL;
-        xmlNode *reply = NULL;
-
-        pcmk__request_t request = {
-            .ipc_client     = c,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = NULL,
-            .xml            = msg,
-            .call_options   = 0,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
-
-        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CRM_TASK);
-        CRM_CHECK(request.op != NULL, return 0);
-
-        reply = pcmk__process_request(&request, pcmkd_handlers);
-
-        if (reply != NULL) {
-            pcmk__ipc_send_xml(c, id, reply, crm_ipc_server_event);
-            pcmk__xml_free(reply);
-        }
-
-        exec_status_s = pcmk_exec_status_str(request.result.execution_status);
-        reason = request.result.exit_reason;
-
-        log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
-                                        "%s%s%s%s",
-                                        request.op,
-                                        pcmk__request_origin_type(&request),
-                                        pcmk__request_origin(&request),
-                                        exec_status_s,
-                                        (reason == NULL)? "" : " (",
-                                        pcmk__s(reason, ""),
-                                        (reason == NULL)? "" : ")");
-
-        if (!pcmk__result_ok(&request.result)) {
-            crm_warn("%s", log_msg);
-        } else {
-            crm_debug("%s", log_msg);
-        }
-
-        free(log_msg);
-        pcmk__reset_request(&request);
-    }
-
-    pcmk__xml_free(msg);
-    return 0;
+    free(log_msg);
+    pcmk__reset_request(request);
 }
-
-struct qb_ipcs_service_handlers pacemakerd_ipc_callbacks = {
-    .connection_accept = pcmk_ipc_accept,
-    .connection_created = NULL,
-    .msg_process = pcmk_ipc_dispatch,
-    .connection_closed = pcmk_ipc_closed,
-    .connection_destroyed = pcmk_ipc_destroy
-};

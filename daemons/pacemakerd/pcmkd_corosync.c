@@ -8,26 +8,29 @@
  */
 
 #include <crm_internal.h>
-#include "pacemakerd.h"
+
+#include <stdint.h>                     // uint64_t, uint32_t
+#include <stdlib.h>                     // NULL, free
+#include <string.h>                     // strerror
+#include <sys/types.h>                  // gid_t, uid_t, pid_t
+#include <syslog.h>                     // LOG_DEBUG
+#include <unistd.h>                     // sleep
+
+#include <corosync/cfg.h>               // corosync_cfg_*
+#include <corosync/cmap.h>              // cmap_finalize, cmap_fd_get
+#include <corosync/corotypes.h>         // CS_OK, CS_ERR_QUEUE_FULL
+#include <corosync/cpg.h>               // CPG_MODEL_V1, cpg_fd_get
+#include <qb/qblog.h>                   // QB_XS
+
+#include <crm/common/ipc.h>             // crm_ipc_is_authentic_process
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/cluster.h>                // pcmk_cluster_layer*
+#include <crm/common/options.h>         // PCMK_VALUE_*
+#include <crm/common/results.h>         // pcmk_rc_str, pcmk_rc_*
+#include <crm_config.h>                 // CRM_DAEMON_USER
+
+#include "pacemakerd.h"                 // restart_cluster_subdaemons
 #include "pcmkd_corosync.h"
-
-#include <sys/utsname.h>
-#include <sys/stat.h>           /* for calls to stat() */
-#include <libgen.h>             /* For basename() and dirname() */
-
-#include <sys/types.h>
-#include <pwd.h>                /* For getpwname() */
-
-#include <corosync/hdb.h>
-#include <corosync/cfg.h>
-#include <corosync/cpg.h>
-#include <corosync/cmap.h>
-
-#include <crm/cluster/internal.h>
-#include <crm/common/ipc.h>     /* for crm_ipc_is_authentic_process */
-#include <crm/common/mainloop.h>
-
-#include <crm/common/ipc_internal.h>  /* PCMK__SPECIAL_PID* */
 
 static corosync_cfg_handle_t cfg_handle = 0;
 static mainloop_timer_t *reconnect_timer = NULL;
