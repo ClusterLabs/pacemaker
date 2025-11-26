@@ -13,9 +13,9 @@
 #include <stdio.h>                  // NULL
 #include <libxml/tree.h>            // xmlNode
 
-#include <crm/common/internal.h>    // pcmk__str_empty()
+#include <crm/common/strings_internal.h>        // pcmk__str_empty()
 #include <crm/common/xml_element_internal.h>    // pcmk__xe_id()
-#include <crm/common/xml_names_internal.h>  // PCMK__XA_OPERATION_KEY
+#include <crm/common/xml_names_internal.h>      // PCMK__XA_OPERATION_KEY
 
 #ifdef __cplusplus
 extern "C" {
