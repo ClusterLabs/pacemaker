@@ -915,6 +915,36 @@ pcmk__parse_ms(const char *input, long long *result)
 
 /*!
  * \internal
+ * \brief Data for \c cmp_str_in_list()
+ */
+struct str_in_list_data {
+    const char *str;
+    uint32_t flags;
+};
+
+/*!
+ * \internal
+ * \brief Call \c pcmk__strcmp() against an element of a \c GList
+ *
+ * \param[in] a  List element (a string)
+ * \param[in] b  String to compare against \p and the flags for comparison (a
+ *               (<tt>struct str_in_list_data</tt>)
+ *
+ * \return A negative integer if \p a comes before \p b->str, a positive integer
+ *         if \p a comes after \p b->str, or 0 if \p a is equal to \p b->str
+ *         (according to \p b->flags)
+ */
+static gint
+cmp_str_in_list(gconstpointer a, gconstpointer b)
+{
+    const char *element = a;
+    const struct str_in_list_data *data = b;
+
+    return pcmk__strcmp(element, data->str, data->flags);
+}
+
+/*!
+ * \internal
  * \brief Find a string in a list of strings
  *
  * \param[in] str    String to search for
@@ -927,15 +957,12 @@ pcmk__parse_ms(const char *input, long long *result)
 bool
 pcmk__str_in_list(const char *str, const GList *list, uint32_t flags)
 {
-    for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const char *element = iter->data;
+    const struct str_in_list_data data = {
+        .str = str,
+        .flags = flags,
+    };
 
-        if (pcmk__str_eq(element, str, flags)) {
-            return true;
-        }
-    }
-
-    return false;
+    return (g_list_find_custom((GList *) list, &data, cmp_str_in_list) != NULL);
 }
 
 static bool
