@@ -82,22 +82,22 @@ alert_envvar2params(lrmd_key_value_t *head, const pcmk__alert_t *entry)
  * but that has only been available since glib 2.43.2.
  */
 static gboolean
-is_target_alert(char **list, const char *value)
+should_filter_alert(char **list, const char *value)
 {
     int target_list_num = 0;
-    gboolean rc = FALSE;
+    gboolean rc = TRUE;
 
-    CRM_CHECK(value != NULL, return FALSE);
+    CRM_CHECK(value != NULL, return TRUE);
 
     if (list == NULL) {
-        return TRUE;
+        return FALSE;
     }
 
     target_list_num = g_strv_length(list);
 
     for (int cnt = 0; cnt < target_list_num; cnt++) {
         if (strcmp(list[cnt], value) == 0) {
-            rc = TRUE;
+            rc = FALSE;
             break;
         }
     }
@@ -152,10 +152,11 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         }
 
         if ((kind == pcmk__alert_attribute)
-            && !is_target_alert(entry->select_attribute_name, attr_name)) {
+            && should_filter_alert(entry->select_attribute_name, attr_name)) {
 
             crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
-                      attr_name, entry->recipient, entry->id);
+                      pcmk__s(attr_name, "(unset)"), entry->recipient,
+                      entry->id);
             continue;
         }
 
