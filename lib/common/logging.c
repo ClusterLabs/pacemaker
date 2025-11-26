@@ -15,6 +15,8 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#include <inttypes.h>               // PRIu32
+#include <stdint.h>                 // uint32_t
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -651,8 +653,7 @@ strchrnul(const char *s, int c)
 static void
 crm_log_filter(struct qb_log_callsite *cs)
 {
-    int lpc = 0;
-    static int need_init = 1;
+    static bool need_init = true;
     static const char *trace_fns = NULL;
     static const char *trace_tags = NULL;
     static const char *trace_fmts = NULL;
@@ -660,7 +661,7 @@ crm_log_filter(struct qb_log_callsite *cs)
     static const char *trace_blackbox = NULL;
 
     if (need_init) {
-        need_init = 0;
+        need_init = false;
         trace_fns = pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS);
         trace_fmts = pcmk__env_option(PCMK__ENV_TRACE_FORMATS);
         trace_tags = pcmk__env_option(PCMK__ENV_TRACE_TAGS);
@@ -668,36 +669,25 @@ crm_log_filter(struct qb_log_callsite *cs)
         trace_blackbox = pcmk__env_option(PCMK__ENV_TRACE_BLACKBOX);
 
         if (trace_tags != NULL) {
-            uint32_t tag;
-            const char *offset = NULL;
-            const char *next = trace_tags;
+            gchar **tags = g_strsplit(trace_tags, ",", 0);
 
-            // @TODO Use g_strsplit() to simplify
-            do {
-                char *token = NULL;
-
-                offset = next;
-                next = strchrnul(offset, ',');
-
-                token = pcmk__assert_asprintf("%.*s", (int) (next - offset),
-                                              offset);
-                tag = g_quark_from_string(token);
-                crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);
-
-                free(token);
-
-                if (next[0] != 0) {
-                    next++;
+            for (gchar **tag = tags; *tag != NULL; tag++) {
+                if (pcmk__str_empty(*tag)) {
+                    continue;
                 }
 
-            } while (next != NULL && next[0] != 0);
+                crm_info("Created GQuark %lld from token '%s' in '%s'",
+                         (long long) g_quark_from_string(*tag), *tag,
+                         trace_tags);
+            }
+            g_strfreev(tags);
         }
     }
 
     cs->targets = 0;            /* Reset then find targets to enable */
-    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        crm_log_filter_source(lpc, trace_files, trace_fns, trace_fmts, trace_tags, trace_blackbox,
-                              cs);
+    for (int i = QB_LOG_SYSLOG; i < QB_LOG_TARGET_MAX; i++) {
+        crm_log_filter_source(i, trace_files, trace_fns, trace_fmts, trace_tags,
+                              trace_blackbox, cs);
     }
 }
 
