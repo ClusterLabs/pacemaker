@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,6 +43,10 @@ gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
                              gpointer user_data);
 
 void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
+
+int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
+char *pcmk__format_nvpair(const char *name, const char *value,
+                          const char *units);
 
 /*!
  * \internal
