@@ -1218,8 +1218,6 @@ REQUIRE_FUNC([unsetenv])
 REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
 
-AC_CHECK_FUNCS([strchrnul])
-
 AC_CHECK_FUNCS([fopen64])
 AM_CONDITIONAL([WRAPPABLE_FOPEN64], [test x"$ac_cv_func_fopen64" = x"yes"])
 
