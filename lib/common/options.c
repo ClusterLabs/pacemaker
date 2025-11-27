@@ -413,6 +413,16 @@ static const pcmk__cluster_option_t cluster_options[] = {
 
     // Stopping resources and removed resources
     {
+        /* This option complicates display and precedence a bit. The same effect
+         * can be achieved by placing all nodes in standby, or by creating a
+         * constraint rule that sets all resources' target roles to stopped.
+         *
+         * We decided to keep it based on user feedback that it's useful in its
+         * simplicity. Also, it is analogous to the situation with
+         * PCMK_OPT_MAINTENANCE_MODE (cluster-level),
+         * PCMK_NODE_ATTR_MAINTENANCE (node-level), and PCMK_META_MAINTENANCE
+         * (resource-level).
+         */
         PCMK_OPT_STOP_ALL_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
