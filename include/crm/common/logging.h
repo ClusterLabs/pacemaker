@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdint.h>             // uint8_t, uint32_t
 #include <glib.h>
-#include <qb/qblog.h>
+#include <qb/qblog.h>           // LOG_TRACE, qb_*, QB_*
 #include <libxml/tree.h>
 
 #ifdef __cplusplus
@@ -32,11 +32,6 @@ extern "C" {
  * syslog(3) uses int for priorities, but libqb's struct qb_log_callsite uses
  * uint8_t, so make sure they fit in the latter.
  */
-
-// Define something even less desired than debug
-#ifndef LOG_TRACE
-#define LOG_TRACE   (LOG_DEBUG+1)
-#endif
 
 // Print message to stdout instead of logging it
 #ifndef LOG_STDOUT
