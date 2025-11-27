@@ -1958,45 +1958,46 @@ bool
 pe__bundle_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
                        bool check_parent)
 {
-    bool passes = false;
     pe__bundle_variant_data_t *bundle_data = NULL;
 
-    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-    } else {
-        get_bundle_variant_data(bundle_data, rsc);
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                          pcmk__str_star_matches)) {
+        return false;
+    }
 
-        for (GList *gIter = bundle_data->replicas; gIter != NULL; gIter = gIter->next) {
-            pcmk__bundle_replica_t *replica = gIter->data;
-            pcmk_resource_t *ip = replica->ip;
-            pcmk_resource_t *child = replica->child;
-            pcmk_resource_t *container = replica->container;
-            pcmk_resource_t *remote = replica->remote;
+    get_bundle_variant_data(bundle_data, rsc);
 
-            if ((ip != NULL)
-                && !ip->priv->fns->is_filtered(ip, only_rsc, false)) {
-                passes = true;
-                break;
-            }
-            if ((child != NULL)
-                && !child->priv->fns->is_filtered(child, only_rsc, false)) {
-                passes = true;
-                break;
-            }
-            if (!container->priv->fns->is_filtered(container, only_rsc,
-                                                   false)) {
-                passes = true;
-                break;
-            }
-            if ((remote != NULL)
-                && !remote->priv->fns->is_filtered(remote, only_rsc, false)) {
-                passes = true;
-                break;
-            }
+    for (const GList *iter = bundle_data->replicas; iter != NULL;
+         iter = iter->next) {
+        const pcmk__bundle_replica_t *replica = iter->data;
+
+        const pcmk_resource_t *ip = replica->ip;
+        const pcmk_resource_t *child = replica->child;
+        const pcmk_resource_t *container = replica->container;
+        const pcmk_resource_t *remote = replica->remote;
+
+        if ((ip != NULL) && !ip->priv->fns->is_filtered(ip, only_rsc, false)) {
+            return false;
+        }
+
+        if ((child != NULL)
+            && !child->priv->fns->is_filtered(child, only_rsc, false)) {
+
+            return false;
+        }
+
+        if (!container->priv->fns->is_filtered(container, only_rsc, false)) {
+            return false;
+        }
+
+        if ((remote != NULL)
+            && !remote->priv->fns->is_filtered(remote, only_rsc, false)) {
+
+            return false;
         }
     }
 
-    return !passes;
+    return true;
 }
 
 /*!

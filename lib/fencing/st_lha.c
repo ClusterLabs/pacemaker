@@ -169,7 +169,7 @@ stonith_plugin(int priority, const char *format, ...)
     va_end(ap);
     pcmk__assert(len > 0);
 
-    do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", string);
+    do_crm_log(priority, "%s", string);
 
     free(string);
     errno = err;

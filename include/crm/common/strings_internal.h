@@ -159,7 +159,8 @@ pcmk__intkey_table_remove(GHashTable *hash_table, int key)
     return g_hash_table_remove(hash_table, GINT_TO_POINTER(key));
 }
 
-gboolean pcmk__str_in_list(const gchar *s, const GList *lst, uint32_t flags);
+bool pcmk__str_in_list(const char *str, const GList *list, uint32_t flags);
+bool pcmk__g_strv_contains(gchar **strv, const gchar *str);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
