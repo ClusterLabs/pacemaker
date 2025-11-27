@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,12 @@ extern "C" {
  * See https://en.wikipedia.org/wiki/ISO_8601
  */
 
+/*!
+ * \brief An opaque date and time object
+ *
+ * \note Negative years are treated inconsistently and should not be relied
+ *       upon.
+ */
 typedef struct crm_time_s crm_time_t;
 
 typedef struct crm_time_period_s {
@@ -57,13 +63,6 @@ void crm_time_free(crm_time_t * dt);
 bool crm_time_is_defined(const crm_time_t *t);
 char *crm_time_as_string(const crm_time_t *dt, int flags);
 
-#define crm_time_log(level, prefix, dt, flags)  \
-    crm_time_log_alias(level, __FILE__, __func__, __LINE__, prefix, dt, flags)
-
-void crm_time_log_alias(int log_level, const char *file, const char *function,
-                        int line, const char *prefix,
-                        const crm_time_t *date_time, int flags);
-
 #define crm_time_log_date          0x001
 #define crm_time_log_timeofday     0x002
 #define crm_time_log_with_timezone 0x004
@@ -85,21 +84,15 @@ int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
 int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                            uint32_t *s);
-int crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m);
 int crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
                            uint32_t *d);
 int crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d);
-int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
-                         uint32_t * d);
 
 /* Time in seconds since 0000-01-01 00:00:00Z */
 long long crm_time_get_seconds(const crm_time_t *dt);
 
 /* Time in seconds since 1970-01-01 00:00:00Z */
 long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
-
-void crm_time_set(crm_time_t *target, const crm_time_t *source);
-void crm_time_set_timet(crm_time_t *target, const time_t *source);
 
 /* Returns a new time object */
 crm_time_t *pcmk_copy_time(const crm_time_t *source);
@@ -115,16 +108,12 @@ void crm_time_add_weeks(crm_time_t * dt, int value);
 void crm_time_add_months(crm_time_t * dt, int value);
 void crm_time_add_years(crm_time_t * dt, int value);
 
-/* Useful helper functions */
-int crm_time_january1_weekday(int year);
-int crm_time_weeks_in_year(int year);
-int crm_time_days_in_month(int month, int year);
-
-bool crm_time_leapyear(int year);
-bool crm_time_check(const crm_time_t *dt);
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/iso8601_compat.h>
 #endif
 
 #endif

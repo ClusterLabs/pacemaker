@@ -199,8 +199,8 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     crm_time_get_ordinal(now, &(ranges[0].value), &(ranges[6].value));
 
     // Week year, week of week year, day of week
-    crm_time_get_isoweek(now, &(ranges[7].value), &(ranges[8].value),
-                         &(ranges[9].value));
+    pcmk__time_get_ywd(now, &(ranges[7].value), &(ranges[8].value),
+                       &(ranges[9].value));
 
     for (int i = 0; i < PCMK__NELEM(ranges); ++i) {
         int rc = check_range(date_spec, parent_id, ranges[i].attr,
