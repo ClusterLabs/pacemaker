@@ -20,7 +20,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
 /*

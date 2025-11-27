@@ -15,7 +15,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/cib.h>
-#include <crm/common/cib_internal.h>
 
 /*
  * Functions to help find particular sections of the CIB

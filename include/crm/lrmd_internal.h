@@ -13,11 +13,9 @@
 #include <stdint.h>                     // uint32_t
 #include <glib.h>                       // GList, GHashTable, gpointer
 #include <libxml/tree.h>                // xmlNode
+#include <crm/common/internal.h>        // pcmk__output_t, pcmk__remote_t, pcmk__action_result_t
 #include <crm/common/ipc.h>             // crm_ipc_t
 #include <crm/common/mainloop.h>        // mainloop_io_t, ipc_client_callbacks
-#include <crm/common/output_internal.h> // pcmk__output_t
-#include <crm/common/remote_internal.h> // pcmk__remote_t
-#include <crm/common/results_internal.h> // pcmk__action_result_t
 #include <crm/lrmd.h>           // lrmd_t, lrmd_event_data_t, lrmd_rsc_info_t
 
 #ifdef __cplusplus
