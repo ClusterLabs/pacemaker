@@ -62,7 +62,7 @@ remoted__read_handshake_data(pcmk__client_t *client)
     client->remote->auth_timeout = 0;
 
     pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
-    crm_notice("Remote client connection accepted");
+    pcmk__notice("Remote client connection accepted");
 
     /* Now that the handshake is done, see if any client TLS certificate is
      * close to its expiration date and log if so.  If a TLS certificate is not
@@ -104,7 +104,7 @@ lrmd_remote_client_msg(gpointer data)
 
         default:
             /* Error */
-            crm_info("Error polling remote client: %s", pcmk_rc_str(rc));
+            pcmk__info("Error polling remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
@@ -119,7 +119,7 @@ lrmd_remote_client_msg(gpointer data)
 
         default:
             /* Error */
-            crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+            pcmk__info("Error reading from remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
@@ -129,7 +129,7 @@ lrmd_remote_client_msg(gpointer data)
     }
 
     pcmk__xe_get_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
-    crm_trace("Processing remote client request %d", id);
+    pcmk__trace("Processing remote client request %d", id);
 
     execd_process_message(client, id, client->flags, request);
     pcmk__xml_free(request);
@@ -146,8 +146,8 @@ lrmd_remote_client_destroy(gpointer user_data)
         return;
     }
 
-    crm_notice("Cleaning up after remote client %s disconnected",
-               pcmk__client_name(client));
+    pcmk__notice("Cleaning up after remote client %s disconnected",
+                 pcmk__client_name(client));
 
     ipc_proxy_remove_provider(client);
 
@@ -183,7 +183,7 @@ lrmd_auth_timeout_cb(gpointer data)
 
     mainloop_del_fd(client->remote->source);
     client->remote->source = NULL;
-    crm_err("Remote client authentication timed out");
+    pcmk__err("Remote client authentication timed out");
 
     return FALSE;
 }
@@ -223,8 +223,8 @@ lrmd_remote_listen(gpointer data)
     new_client->remote->auth_timeout = pcmk__create_timer(LRMD_REMOTE_AUTH_TIMEOUT,
                                                           lrmd_auth_timeout_cb,
                                                           new_client);
-    crm_info("Remote client pending authentication "
-             QB_XS " %p id: %s", new_client, new_client->id);
+    pcmk__info("Remote client pending authentication " QB_XS " %p id: %s",
+               new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("pacemaker-remote-client", G_PRIORITY_DEFAULT, csock,
@@ -235,7 +235,7 @@ lrmd_remote_listen(gpointer data)
 static void
 tls_server_dropped(gpointer user_data)
 {
-    crm_notice("TLS server session ended");
+    pcmk__notice("TLS server session ended");
     return;
 }
 
@@ -255,12 +255,12 @@ bind_and_listen(struct addrinfo *addr)
     char buffer[INET6_ADDRSTRLEN] = { 0, };
 
     pcmk__sockaddr2str(addr->ai_addr, buffer);
-    crm_trace("Attempting to bind to address %s", buffer);
+    pcmk__trace("Attempting to bind to address %s", buffer);
 
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (fd < 0) {
         rc = errno;
-        crm_err("Listener socket creation failed: %", pcmk_rc_str(rc));
+        pcmk__err("Listener socket creation failed: %", pcmk_rc_str(rc));
         return -rc;
     }
 
@@ -269,7 +269,8 @@ bind_and_listen(struct addrinfo *addr)
     rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
         rc = errno;
-        crm_err("Local address reuse not allowed on %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Local address reuse not allowed on %s: %s", buffer,
+                  pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
@@ -279,7 +280,8 @@ bind_and_listen(struct addrinfo *addr)
         rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval));
         if (rc < 0) {
             rc = errno;
-            crm_err("Couldn't disable IPV6-only on %s: %s", buffer, pcmk_rc_str(rc));
+            pcmk__err("Couldn't disable IPV6-only on %s: %s", buffer,
+                      pcmk_rc_str(rc));
             close(fd);
             return -rc;
         }
@@ -287,14 +289,14 @@ bind_and_listen(struct addrinfo *addr)
 
     if (bind(fd, addr->ai_addr, addr->ai_addrlen) != 0) {
         rc = errno;
-        crm_err("Cannot bind to %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Cannot bind to %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
 
     if (listen(fd, 10) == -1) {
         rc = errno;
-        crm_err("Cannot listen on %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Cannot listen on %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
@@ -318,8 +320,8 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
     rc = pcmk__gaierror2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Unable to get IP address(es) for %s: %s",
-                (bind_name? bind_name : "local node"), pcmk_rc_str(rc));
+        pcmk__err("Unable to get IP address(es) for %s: %s",
+                  pcmk__s(bind_name, "local node"), pcmk_rc_str(rc));
     }
 
     free(port_s);
@@ -343,8 +345,8 @@ lrmd_init_remote_tls_server(void)
 
     CRM_CHECK(ssock == -1, return ssock);
 
-    crm_debug("Starting TLS listener on %s port %d",
-              (bind_name? bind_name : "all addresses on"), port);
+    pcmk__debug("Starting TLS listener on %s port %d",
+                pcmk__s(bind_name, "all addresses on"), port);
 
     rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
     if (rc != pcmk_rc_ok) {
@@ -362,7 +364,8 @@ lrmd_init_remote_tls_server(void)
          * going to be added later.
          */
         if (lrmd__init_remote_key(&psk_key) != pcmk_rc_ok) {
-            crm_warn("A cluster connection will not be possible until the key is available");
+            pcmk__warn("A cluster connection will not be possible until the "
+                       "key is available");
         }
 
         gnutls_free(psk_key.data);
@@ -402,8 +405,8 @@ lrmd_init_remote_tls_server(void)
     if (ssock >= 0) {
         mainloop_add_fd("pacemaker-remote-server", G_PRIORITY_DEFAULT, ssock,
                         NULL, &remote_listen_fd_callbacks);
-        crm_debug("Started TLS listener on %s port %d",
-                  (bind_name? bind_name : "all addresses on"), port);
+        pcmk__debug("Started TLS listener on %s port %d",
+                    pcmk__s(bind_name, "all addresses on"), port);
     }
     freeaddrinfo(res);
     return ssock;

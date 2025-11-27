@@ -99,12 +99,12 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
             }
         }
 
-        crm_notice("We can fence %s without quorum because they're in our membership",
-                   pcmk__node_name(node));
+        pcmk__notice("We can fence %s without quorum because they're in our "
+                     "membership", pcmk__node_name(node));
         return true;
     }
 
-    crm_trace("Cannot fence %s", pcmk__node_name(node));
+    pcmk__trace("Cannot fence %s", pcmk__node_name(node));
     return false;
 }
 
@@ -423,8 +423,8 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         && (rsc->priv->assigned_node != NULL)) {
 
         // @TODO Should this be more like pcmk__unassign_resource()?
-        crm_info("Unassigning %s from %s",
-                 rsc->id, pcmk__node_name(rsc->priv->assigned_node));
+        pcmk__info("Unassigning %s from %s", rsc->id,
+                   pcmk__node_name(rsc->priv->assigned_node));
         pcmk__free_node_copy(rsc->priv->assigned_node);
         rsc->priv->assigned_node = NULL;
     }
@@ -493,8 +493,8 @@ order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
         return FALSE;
     }
 
-    crm_trace("Creating action wrappers for ordering: %s then %s",
-              first->uuid, then->uuid);
+    pcmk__trace("Creating action wrappers for ordering: %s then %s",
+                first->uuid, then->uuid);
 
     /* Ensure we never create a dependency on ourselves... it's happened */
     pcmk__assert(first != then);
@@ -563,7 +563,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
             return NULL;
         }
 
-        crm_trace("Creating ticket entry for %s", ticket_id);
+        pcmk__trace("Creating ticket entry for %s", ticket_id);
 
         ticket->id = strdup(ticket_id);
         ticket->last_granted = -1;

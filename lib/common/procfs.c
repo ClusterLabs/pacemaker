@@ -139,7 +139,8 @@ pcmk__procfs_pid_of(const char *name)
 
     dp = opendir("/proc");
     if (dp == NULL) {
-        crm_notice("Can not read /proc directory to track existing components");
+        pcmk__notice("Can not read /proc directory to track existing "
+                     "components");
         return 0;
     }
 
@@ -148,7 +149,8 @@ pcmk__procfs_pid_of(const char *name)
             && pcmk__str_eq(entry_name, name, pcmk__str_casei)
             && (pcmk__pid_active(pid, NULL) == pcmk_rc_ok)) {
 
-            crm_info("Found %s active as process %lld", name, (long long) pid);
+            pcmk__info("Found %s active as process %lld", name,
+                       (long long) pid);
             break;
         }
         pid = 0;
@@ -176,7 +178,8 @@ pcmk__procfs_num_cores(void)
     /* Parse /proc/stat instead of /proc/cpuinfo because it's smaller */
     stream = fopen("/proc/stat", "r");
     if (stream == NULL) {
-        crm_info("Could not open /proc/stat: %s", strerror(errno));
+        pcmk__info("Could not open /proc/stat: %s", strerror(errno));
+
     } else {
         char buffer[2048];
 
@@ -302,7 +305,7 @@ pcmk__sysrq_trigger(char t)
     FILE *procf = fopen("/proc/sysrq-trigger", "a");
 
     if (procf == NULL) {
-        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
+        pcmk__warn("Could not open sysrq-trigger: %s", strerror(errno));
     } else {
         fprintf(procf, "%c\n", t);
         fclose(procf);
@@ -379,19 +382,19 @@ pcmk__throttle_cib_load(const char *server, float *load)
 
         loadfile = find_cib_loadfile(server);
         if (loadfile == NULL) {
-            crm_warn("Couldn't find CIB load file");
+            pcmk__warn("Couldn't find CIB load file");
             return false;
         }
 
         ticks_per_s = sysconf(_SC_CLK_TCK);
-        crm_trace("Found %s", loadfile);
+        pcmk__trace("Found %s", loadfile);
     }
 
     stream = fopen(loadfile, "r");
     if (stream == NULL) {
         int rc = errno;
 
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        pcmk__warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         free(loadfile);
         loadfile = NULL;
         return false;
@@ -409,7 +412,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
         free(comm);
 
         if (rc != 15) {
-            crm_err("Only %d of 15 fields found in %s", rc, loadfile);
+            pcmk__err("Only %d of 15 fields found in %s", rc, loadfile);
             fclose(stream);
             return false;
 
@@ -422,12 +425,12 @@ pcmk__throttle_cib_load(const char *server, float *load)
             *load = delta_utime + delta_stime; /* Cast to a float before division */
             *load /= ticks_per_s;
             *load /= elapsed;
-            crm_debug("cib load: %f (%lu ticks in %lds)", *load,
-                      delta_utime + delta_stime, (long) elapsed);
+            pcmk__debug("cib load: %f (%lu ticks in %llds)", *load,
+                        (delta_utime + delta_stime), (long long) elapsed);
 
         } else {
-            crm_debug("Init %lu + %lu ticks at %ld (%lu tps)", utime, stime,
-                      (long) now, ticks_per_s);
+            pcmk__debug("Init %lu + %lu ticks at %lld (%lu tps)", utime, stime,
+                        (long long) now, ticks_per_s);
         }
 
         last_call = now;
@@ -458,7 +461,7 @@ pcmk__throttle_load_avg(float *load)
     stream = fopen(loadfile, "r");
     if (stream == NULL) {
         int rc = errno;
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        pcmk__warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         return false;
     }
 

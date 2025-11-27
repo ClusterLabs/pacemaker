@@ -90,8 +90,8 @@ pcmk__health_score(const char *option, const pcmk_scheduler_t *scheduler)
     value = pcmk__cluster_option(scheduler->priv->options, option);
     rc = pcmk_parse_score(value, &score, 0);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Using 0 for %s because '%s' is invalid: %s",
-                 option, value, pcmk_rc_str(rc));
+        pcmk__warn("Using 0 for %s because '%s' is invalid: %s",
+                   option, value, pcmk_rc_str(rc));
     }
     return score;
 }

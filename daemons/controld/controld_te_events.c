@@ -139,23 +139,24 @@ fail_incompletable_actions(pcmk__graph_t *graph, const char *down_node)
                 pcmk__update_graph(graph, action);
 
                 if (pcmk__is_set(synapse->flags, pcmk__synapse_executed)) {
-                    crm_notice("Action %d (%s) was pending on %s (offline)",
-                               action->id,
-                               pcmk__xe_get(action->xml,
-                                            PCMK__XA_OPERATION_KEY),
-                               down_node);
+                    pcmk__notice("Action %d (%s) was pending on %s (offline)",
+                                 action->id,
+                                 pcmk__xe_get(action->xml,
+                                              PCMK__XA_OPERATION_KEY),
+                                 down_node);
                 } else {
-                    crm_info("Action %d (%s) is scheduled for %s (offline)",
-                             action->id,
-                             pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY),
-                             down_node);
+                    pcmk__info("Action %d (%s) is scheduled for %s (offline)",
+                               action->id,
+                               pcmk__xe_get(action->xml, PCMK__XA_OPERATION_KEY),
+                               down_node);
                 }
             }
         }
     }
 
     if (last_action != NULL) {
-        crm_info("Node %s shutdown resulted in un-runnable actions", down_node);
+        pcmk__info("Node %s shutdown resulted in un-runnable actions",
+                   down_node);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Node failure", last_action);
         return TRUE;
@@ -195,15 +196,16 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
     if (rc == target_rc) {
         return FALSE;
     } else if (pcmk__str_eq(origin, "build_active_RAs", pcmk__str_casei)) {
-        crm_debug("No update for %s (rc=%d) on %s: Old failure from lrm status refresh",
-                  id, rc, on_uname);
+        pcmk__debug("No update for %s (rc=%d) on %s: Old failure from lrm "
+                    "status refresh",
+                    id, rc, on_uname);
         return FALSE;
     }
 
     /* Sanity check */
     CRM_CHECK(on_uname != NULL, return TRUE);
     CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval_ms),
-              crm_err("Couldn't parse: %s", pcmk__xe_id(event)); goto bail);
+              pcmk__err("Couldn't parse: %s", pcmk__xe_id(event)); goto bail);
 
     /* Decide whether update is necessary and what value to use */
     if ((interval_ms > 0)
@@ -242,9 +244,10 @@ update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
             opts |= pcmk__node_attr_remote;
         }
 
-        crm_info("Updating %s for %s on %s after failed %s: rc=%d (update=%s, time=%s)",
-                 (ignore_failures? "last failure" : "failcount"),
-                 rsc_id, on_uname, task, rc, value, now);
+        pcmk__info("Updating %s for %s on %s after failed %s: rc=%d "
+                   "(update=%s, time=%s)",
+                   (ignore_failures? "last failure" : "failcount"),
+                   rsc_id, on_uname, task, rc, value, now);
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
@@ -334,11 +337,11 @@ get_cancel_action(const char *id, const char *node)
 
             target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE_UUID);
             if (node && !pcmk__str_eq(target, node, pcmk__str_casei)) {
-                crm_trace("Wrong node %s for %s on %s", target, id, node);
+                pcmk__trace("Wrong node %s for %s on %s", target, id, node);
                 continue;
             }
 
-            crm_trace("Found %s on %s", id, node);
+            pcmk__trace("Found %s on %s", id, node);
             return action;
         }
     }
@@ -362,8 +365,8 @@ confirm_cancel_action(const char *id, const char *node_id)
     stop_te_timer(cancel);
     te_action_confirmed(cancel, controld_globals.transition_graph);
 
-    crm_info("Cancellation of %s on %s confirmed (action %d)",
-             op_key, node_name, cancel->id);
+    pcmk__info("Cancellation of %s on %s confirmed (action %d)", op_key,
+               node_name, cancel->id);
     return TRUE;
 }
 
@@ -412,10 +415,10 @@ match_down_event(const char *target)
     free(xpath);
 
     if (match != NULL) {
-        crm_debug("Shutdown action %d (%s) found for node %s", match->id,
-                  pcmk__xe_get(match->xml, PCMK__XA_OPERATION_KEY), target);
+        pcmk__debug("Shutdown action %d (%s) found for node %s", match->id,
+                    pcmk__xe_get(match->xml, PCMK__XA_OPERATION_KEY), target);
     } else {
-        crm_debug("No reason to expect node %s to be down", target);
+        pcmk__debug("No reason to expect node %s to be down", target);
     }
     return match;
 }
@@ -462,8 +465,9 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (decode_transition_key(magic, &update_te_uuid, &transition_num,
                               &action_num, &target_rc) == FALSE) {
         // decode_transition_key() already logged the bad key
-        crm_err("Can't process action %s result: Incompatible versions? "
-                QB_XS " call-id=%d", id, callid);
+        pcmk__err("Can't process action %s result: Incompatible versions? "
+                  QB_XS " call-id=%d",
+                  id, callid);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "Bad event", event);
         return;
@@ -472,8 +476,9 @@ process_graph_event(xmlNode *event, const char *event_node)
     if (transition_num == -1) {
         // E.g. crm_resource --fail
         if (record_outside_event(action_num) != pcmk_rc_ok) {
-            crm_debug("Outside event with transition key '%s' has already been "
-                      "processed", magic);
+            pcmk__debug("Outside event with transition key '%s' has already "
+                        "been processed",
+                        magic);
             goto bail;
         }
         desc = "initiated outside of the cluster";
@@ -536,7 +541,7 @@ process_graph_event(xmlNode *event, const char *event_node)
              * history record, which would otherwise result in incorrectly
              * bumping the fail count twice.
              */
-            crm_log_xml_debug(event, "Event already confirmed:");
+            pcmk__log_xml_debug(event, "Event already confirmed:");
             goto bail;
 
         } else {
@@ -572,38 +577,38 @@ process_graph_event(xmlNode *event, const char *event_node)
 
     if (status == PCMK_EXEC_INVALID) {
         // We couldn't attempt the action
-        crm_info("Transition %d action %d (%s on %s): %s",
-                 transition_num, action_num, id, uname,
-                 pcmk_exec_status_str(status));
+        pcmk__info("Transition %d action %d (%s on %s): %s", transition_num,
+                   action_num, id, uname, pcmk_exec_status_str(status));
 
     } else if (desc && update_failcount(event, event_node, rc, target_rc,
                                         (transition_num == -1), FALSE)) {
-        crm_notice("Transition %d action %d (%s on %s): expected '%s' but got '%s' "
-                   QB_XS " target-rc=%d rc=%d call-id=%d event='%s'",
-                   transition_num, action_num, id, uname,
-                   crm_exit_str(target_rc), crm_exit_str(rc),
-                   target_rc, rc, callid, desc);
+        pcmk__notice("Transition %d action %d (%s on %s): expected '%s' but "
+                     "got '%s' "
+                     QB_XS " target-rc=%d rc=%d call-id=%d event='%s'",
+                     transition_num, action_num, id, uname,
+                     crm_exit_str(target_rc), crm_exit_str(rc),
+                     target_rc, rc, callid, desc);
 
     } else if (desc) {
-        crm_info("Transition %d action %d (%s on %s): %s "
-                 QB_XS " rc=%d target-rc=%d call-id=%d",
-                 transition_num, action_num, id, uname,
-                 desc, rc, target_rc, callid);
+        pcmk__info("Transition %d action %d (%s on %s): %s "
+                   QB_XS " rc=%d target-rc=%d call-id=%d",
+                   transition_num, action_num, id, uname,
+                   desc, rc, target_rc, callid);
 
     } else if (rc == target_rc) {
-        crm_info("Transition %d action %d (%s on %s) confirmed: %s "
-                 QB_XS " rc=%d call-id=%d",
-                 transition_num, action_num, id, uname,
-                 crm_exit_str(rc), rc, callid);
+        pcmk__info("Transition %d action %d (%s on %s) confirmed: %s "
+                   QB_XS " rc=%d call-id=%d",
+                   transition_num, action_num, id, uname, crm_exit_str(rc),
+                   rc, callid);
 
     } else {
         update_failcount(event, event_node, rc, target_rc,
                          (transition_num == -1), ignore_failures);
-        crm_notice("Transition %d action %d (%s on %s): expected '%s' but got '%s' "
-                   QB_XS " target-rc=%d rc=%d call-id=%d",
-                   transition_num, action_num, id, uname,
-                   crm_exit_str(target_rc), crm_exit_str(rc),
-                   target_rc, rc, callid);
+        pcmk__notice("Transition %d action %d (%s on %s): expected '%s' but "
+                     "got '%s' " QB_XS " target-rc=%d rc=%d call-id=%d",
+                     transition_num, action_num, id, uname,
+                     crm_exit_str(target_rc), crm_exit_str(rc),
+                     target_rc, rc, callid);
     }
 
   bail:

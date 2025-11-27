@@ -67,14 +67,14 @@ find_library_function(void **handle, const char *lib, const char *fn)
     if (*handle == NULL) {
         *handle = dlopen(lib, RTLD_LAZY);
         if ((*handle) == NULL) {
-            crm_err("Could not open %s: %s", lib, dlerror());
+            pcmk__err("Could not open %s: %s", lib, dlerror());
             return NULL;
         }
     }
 
     a_function = dlsym(*handle, fn);
     if (a_function == NULL) {
-        crm_err("Could not find %s in %s: %s", fn, lib, dlerror());
+        pcmk__err("Could not find %s in %s: %s", fn, lib, dlerror());
     }
 
     return a_function;
@@ -141,7 +141,7 @@ stonith__list_lha_agents(stonith_key_value_t **devices)
     }
 
     for (entry = type_list; entry != NULL && *entry; ++entry) {
-        crm_trace("Added: %s", *entry);
+        pcmk__trace("Added: %s", *entry);
         *devices = stonith__key_value_add(*devices, NULL, *entry);
         count++;
     }
@@ -221,21 +221,21 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
             meta_longdesc = pcmk__str_copy(st_info_fn(stonith_obj,
                                                       ST_DEVICEDESCR));
             if (meta_longdesc == NULL) {
-                crm_warn("no long description in %s's metadata.", agent);
+                pcmk__warn("No long description in %s's metadata", agent);
                 meta_longdesc = pcmk__str_copy(no_parameter_info);
             }
 
             meta_shortdesc = pcmk__str_copy(st_info_fn(stonith_obj,
                                                        ST_DEVICEID));
             if (meta_shortdesc == NULL) {
-                crm_warn("no short description in %s's metadata.", agent);
+                pcmk__warn("No short description in %s's metadata", agent);
                 meta_shortdesc = pcmk__str_copy(no_parameter_info);
             }
 
             meta_param = pcmk__str_copy(st_info_fn(stonith_obj,
                                                    ST_CONF_XML));
             if (meta_param == NULL) {
-                crm_warn("no list of parameters in %s's metadata.", agent);
+                pcmk__warn("No list of parameters in %s's metadata", agent);
                 meta_param = pcmk__str_copy(no_parameter_info);
             }
 
@@ -243,7 +243,7 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
 
         } else {
             errno = EINVAL;
-            crm_err("Agent %s not found", agent);
+            pcmk__err("Agent %s not found", agent);
             return -EINVAL;
         }
 
@@ -304,6 +304,6 @@ stonith__lha_validate(stonith_t *st, int call_options, const char *target,
                       char **output, char **error_output)
 {
     errno = EOPNOTSUPP;
-    crm_err("Cannot validate Linux-HA fence agents");
+    pcmk__err("Cannot validate Linux-HA fence agents");
     return -EOPNOTSUPP;
 }

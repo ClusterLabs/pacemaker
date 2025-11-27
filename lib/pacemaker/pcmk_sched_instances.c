@@ -50,8 +50,8 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 
     allowed_node = pcmk__top_allowed_node(instance, node);
     if (allowed_node == NULL) {
-        crm_warn("%s cannot run on %s: node not allowed",
-                 instance->id, pcmk__node_name(node));
+        pcmk__warn("%s cannot run on %s: node not allowed", instance->id,
+                   pcmk__node_name(node));
         return false;
     }
 
@@ -225,15 +225,17 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
 
     // Compare nodes by updated scores
     if (node1->assign->score < node2->assign->score) {
-        crm_trace("Assign %s (%d on %s) after %s (%d on %s)",
-                  instance1->id, node1->assign->score, pcmk__node_name(node1),
-                  instance2->id, node2->assign->score, pcmk__node_name(node2));
+        pcmk__trace("Assign %s (%d on %s) after %s (%d on %s)",
+                    instance1->id, node1->assign->score, pcmk__node_name(node1),
+                    instance2->id, node2->assign->score,
+                    pcmk__node_name(node2));
         rc = 1;
 
     } else if (node1->assign->score > node2->assign->score) {
-        crm_trace("Assign %s (%d on %s) before %s (%d on %s)",
-                  instance1->id, node1->assign->score, pcmk__node_name(node1),
-                  instance2->id, node2->assign->score, pcmk__node_name(node2));
+        pcmk__trace("Assign %s (%d on %s) before %s (%d on %s)",
+                    instance1->id, node1->assign->score, pcmk__node_name(node1),
+                    instance2->id, node2->assign->score,
+                    pcmk__node_name(node2));
         rc = -1;
     }
 
@@ -378,15 +380,15 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
      */
     if ((nnodes1 > 0) && (nnodes2 > 0)) {
         if (nnodes1 < nnodes2) {
-            crm_trace("Assign %s (active on %d) before %s (active on %d): "
-                      "less multiply active",
-                      instance1->id, nnodes1, instance2->id, nnodes2);
+            pcmk__trace("Assign %s (active on %d) before %s (active on %d): "
+                        "less multiply active",
+                        instance1->id, nnodes1, instance2->id, nnodes2);
             return -1;
 
         } else if (nnodes1 > nnodes2) {
-            crm_trace("Assign %s (active on %d) after %s (active on %d): "
-                      "more multiply active",
-                      instance1->id, nnodes1, instance2->id, nnodes2);
+            pcmk__trace("Assign %s (active on %d) after %s (active on %d): "
+                        "more multiply active",
+                        instance1->id, nnodes1, instance2->id, nnodes2);
             return 1;
         }
     }
@@ -397,42 +399,43 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     can1 = node_is_allowed(instance1, &node1);
     can2 = node_is_allowed(instance2, &node2);
     if (can1 && !can2) {
-        crm_trace("Assign %s before %s: not active on a disallowed node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: not active on a disallowed node",
+                    instance1->id, instance2->id);
         return -1;
 
     } else if (!can1 && can2) {
-        crm_trace("Assign %s after %s: active on a disallowed node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: active on a disallowed node",
+                    instance1->id, instance2->id);
         return 1;
     }
 
     // Prefer instance with higher configured priority
     if (instance1->priv->priority > instance2->priv->priority) {
-        crm_trace("Assign %s before %s: priority (%d > %d)",
-                  instance1->id, instance2->id,
-                  instance1->priv->priority, instance2->priv->priority);
+        pcmk__trace("Assign %s before %s: priority (%d > %d)",
+                    instance1->id, instance2->id,
+                    instance1->priv->priority, instance2->priv->priority);
         return -1;
 
     } else if (instance1->priv->priority < instance2->priv->priority) {
-        crm_trace("Assign %s after %s: priority (%d < %d)",
-                  instance1->id, instance2->id,
-                  instance1->priv->priority, instance2->priv->priority);
+        pcmk__trace("Assign %s after %s: priority (%d < %d)",
+                    instance1->id, instance2->id,
+                    instance1->priv->priority, instance2->priv->priority);
         return 1;
     }
 
     // Prefer active instance
     if ((node1 == NULL) && (node2 == NULL)) {
-        crm_trace("No assignment preference for %s vs. %s: inactive",
-                  instance1->id, instance2->id);
+        pcmk__trace("No assignment preference for %s vs. %s: inactive",
+                    instance1->id, instance2->id);
         return 0;
 
     } else if (node1 == NULL) {
-        crm_trace("Assign %s after %s: active", instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: active", instance1->id, instance2->id);
         return 1;
 
     } else if (node2 == NULL) {
-        crm_trace("Assign %s before %s: active", instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: active", instance1->id,
+                    instance2->id);
         return -1;
     }
 
@@ -440,13 +443,13 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     can1 = pcmk__node_available(node1, false, false);
     can2 = pcmk__node_available(node2, false, false);
     if (can1 && !can2) {
-        crm_trace("Assign %s before %s: current node can run resources",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: current node can run resources",
+                    instance1->id, instance2->id);
         return -1;
 
     } else if (!can1 && can2) {
-        crm_trace("Assign %s after %s: current node can't run resources",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: current node can't run resources",
+                    instance1->id, instance2->id);
         return 1;
     }
 
@@ -454,31 +457,32 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     node1 = pcmk__top_allowed_node(instance1, node1);
     node2 = pcmk__top_allowed_node(instance2, node2);
     if ((node1 == NULL) && (node2 == NULL)) {
-        crm_trace("No assignment preference for %s vs. %s: "
-                  "parent not allowed on either instance's current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("No assignment preference for %s vs. %s: "
+                    "parent not allowed on either instance's current node",
+                    instance1->id, instance2->id);
         return 0;
 
     } else if (node1 == NULL) {
-        crm_trace("Assign %s after %s: parent not allowed on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: parent not allowed on current node",
+                    instance1->id, instance2->id);
         return 1;
 
     } else if (node2 == NULL) {
-        crm_trace("Assign %s before %s: parent allowed on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: parent allowed on current node",
+                    instance1->id, instance2->id);
         return -1;
     }
 
     // Prefer instance whose current node is running fewer other instances
     if (node1->assign->count < node2->assign->count) {
-        crm_trace("Assign %s before %s: fewer active instances on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: fewer active instances on current "
+                    "node",
+                    instance1->id, instance2->id);
         return -1;
 
     } else if (node1->assign->count > node2->assign->count) {
-        crm_trace("Assign %s after %s: more active instances on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: more active instances on current node",
+                    instance1->id, instance2->id);
         return 1;
     }
 
@@ -486,12 +490,12 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     can1 = did_fail(instance1);
     can2 = did_fail(instance2);
     if (!can1 && can2) {
-        crm_trace("Assign %s before %s: not failed",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: not failed",
+                    instance1->id, instance2->id);
         return -1;
     } else if (can1 && !can2) {
-        crm_trace("Assign %s after %s: failed",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: failed",
+                    instance1->id, instance2->id);
         return 1;
     }
 
@@ -504,14 +508,14 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     // Prefer instance with lower instance number
     rc = pcmk__cmp_instance_number(instance1, instance2);
     if (rc < 0) {
-        crm_trace("Assign %s before %s: instance number",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: instance number",
+                    instance1->id, instance2->id);
     } else if (rc > 0) {
-        crm_trace("Assign %s after %s: instance number",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: instance number",
+                    instance1->id, instance2->id);
     } else {
-        crm_trace("No assignment preference for %s vs. %s",
-                  instance1->id, instance2->id);
+        pcmk__trace("No assignment preference for %s vs. %s",
+                    instance1->id, instance2->id);
     }
     return rc;
 }
@@ -852,8 +856,8 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
                 if (!pcmk__is_set(instance->flags, pcmk__rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
-                crm_notice("%s%s is running on %s which is no longer allowed",
-                           unmanaged, instance->id, pcmk__node_name(current));
+                pcmk__notice("%s%s is running on %s which is no longer allowed",
+                             unmanaged, instance->id, pcmk__node_name(current));
             }
         }
 
@@ -1365,14 +1369,14 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
 
         const bool removed = pcmk__is_set(instance->flags, pcmk__rsc_removed);
 
-        crm_trace("No %s action found for %s%s", action_name,
-                  (removed? "removed " : ""), instance->id);
+        pcmk__trace("No %s action found for %s%s", action_name,
+                    (removed? "removed " : ""), instance->id);
 
     } else if (pcmk__is_down_action(action_name)) {
-        crm_trace("No %s action found for %s", action_name, instance->id);
+        pcmk__trace("No %s action found for %s", action_name, instance->id);
     } else {
-        crm_err("No %s action found for %s to interleave (bug?)",
-                action_name, instance->id);
+        pcmk__err("No %s action found for %s to interleave (bug?)",
+                  action_name, instance->id);
     }
     return NULL;
 }
@@ -1516,21 +1520,21 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
     pcmk_resource_t *rsc = NULL;
 
     if ((first->rsc == NULL) || (then->rsc == NULL)) {
-        crm_trace("Not interleaving %s with %s: not resource actions",
-                  first->uuid, then->uuid);
+        pcmk__trace("Not interleaving %s with %s: not resource actions",
+                    first->uuid, then->uuid);
         return false;
     }
 
     if (first->rsc == then->rsc) {
-        crm_trace("Not interleaving %s with %s: same resource",
-                  first->uuid, then->uuid);
+        pcmk__trace("Not interleaving %s with %s: same resource",
+                    first->uuid, then->uuid);
         return false;
     }
 
     if ((first->rsc->priv->variant < pcmk__rsc_variant_clone)
         || (then->rsc->priv->variant < pcmk__rsc_variant_clone)) {
-        crm_trace("Not interleaving %s with %s: not clones or bundles",
-                  first->uuid, then->uuid);
+        pcmk__trace("Not interleaving %s with %s: not clones or bundles",
+                    first->uuid, then->uuid);
         return false;
     }
 

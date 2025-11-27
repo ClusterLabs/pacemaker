@@ -59,7 +59,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         /* Allow caller to use "localhost" to refer to local node */
         if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
             host = attrd_cluster->priv->node_name;
-            crm_trace("Mapped localhost to %s", host);
+            pcmk__trace("Mapped localhost to %s", host);
         }
 
         /* If a specific node was requested, add its value */
@@ -171,13 +171,14 @@ attrd_client_peer_remove(pcmk__request_t *request)
     }
 
     if (host) {
-        crm_info("Client %s is requesting all values for %s be removed",
-                 pcmk__client_name(request->ipc_client), host);
+        pcmk__info("Client %s is requesting all values for %s be removed",
+                   pcmk__client_name(request->ipc_client), host);
         attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
         free(host_alloc);
     } else {
-        crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
-                 pcmk__client_name(request->ipc_client));
+        pcmk__info("Ignoring request by client %s to remove all peer values "
+                   "without specifying peer",
+                   pcmk__client_name(request->ipc_client));
     }
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -190,7 +191,8 @@ attrd_client_query(pcmk__request_t *request)
     xmlNode *reply = NULL;
     const char *attr = NULL;
 
-    crm_debug("Query arrived from %s", pcmk__client_name(request->ipc_client));
+    pcmk__debug("Query arrived from %s",
+                pcmk__client_name(request->ipc_client));
 
     /* Request must specify attribute name to query */
     attr = pcmk__xe_get(query, PCMK__XA_ATTR_NAME);
@@ -219,7 +221,7 @@ attrd_client_query(pcmk__request_t *request)
 void
 attrd_client_refresh(pcmk__request_t *request)
 {
-    crm_info("Updating all attributes");
+    pcmk__info("Updating all attributes");
 
     attrd_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags);
     attrd_write_attributes(attrd_write_all|attrd_write_no_delay);
@@ -231,9 +233,9 @@ static void
 handle_missing_host(xmlNode *xml)
 {
     if (pcmk__xe_get(xml, PCMK__XA_ATTR_HOST) == NULL) {
-        crm_trace("Inferring local node %s with XML ID %s",
-                  attrd_cluster->priv->node_name,
-                  attrd_cluster->priv->node_xml_id);
+        pcmk__trace("Inferring local node %s with XML ID %s",
+                    attrd_cluster->priv->node_name,
+                    attrd_cluster->priv->node_xml_id);
         pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
         pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID,
                      attrd_cluster->priv->node_xml_id);
@@ -251,7 +253,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
         GHashTableIter aIter;
         regex_t r_patt;
 
-        crm_debug("Setting %s to %s", regex, value);
+        pcmk__debug("Setting %s to %s", regex, value);
         if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
             return EINVAL;
         }
@@ -263,7 +265,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
             if (status == 0) {
                 xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
 
-                crm_trace("Matched %s with %s", attr, regex);
+                pcmk__trace("Matched %s with %s", attr, regex);
                 matched = true;
 
                 /* Copy all the non-conflicting attributes from the parent over,
@@ -311,7 +313,8 @@ handle_regexes(pcmk__request_t *request)
                             pcmk__client_name(request->ipc_client));
 
     } else if (rc == pcmk_rc_bad_nvpair) {
-        crm_err("Update request did not specify attribute or regular expression");
+        pcmk__err("Update request did not specify attribute or regular "
+                  "expression");
         pcmk__format_result(&request->result, CRM_EX_ERROR, PCMK_EXEC_ERROR,
                             "Client %s update request did not specify attribute or regular expression",
                             pcmk__client_name(request->ipc_client));
@@ -341,7 +344,7 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
 
         int_value = attrd_expand_value(*value, (v? v->current : NULL));
 
-        crm_info("Expanded %s=%s to %d", attr, *value, int_value);
+        pcmk__info("Expanded %s=%s to %d", attr, *value, int_value);
         pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
 
         /* Replacing the value frees the previous memory, so re-query it */
@@ -469,9 +472,9 @@ attrd_client_update(pcmk__request_t *request)
         return;
     }
 
-    crm_debug("Broadcasting %s[%s]=%s%s",
-              attr, pcmk__xe_get(xml, PCMK__XA_ATTR_HOST),
-              value, (attrd_election_won()? " (writer)" : ""));
+    pcmk__debug("Broadcasting %s[%s]=%s%s", attr,
+                pcmk__xe_get(xml, PCMK__XA_ATTR_HOST), value,
+                (attrd_election_won()? " (writer)" : ""));
 
     send_update_msg_to_cluster(request, xml);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -490,10 +493,10 @@ attrd_client_update(pcmk__request_t *request)
 static int32_t
 attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("New client connection %p", c);
+    pcmk__trace("New client connection %p", c);
     if (attrd_shutting_down()) {
-        crm_info("Ignoring new connection from pid %d during shutdown",
-                 pcmk__client_pid(c));
+        pcmk__info("Ignoring new connection from pid %d during shutdown",
+                   pcmk__client_pid(c));
         return -ECONNREFUSED;
     }
 
@@ -517,9 +520,9 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        crm_trace("Ignoring request to clean up unknown connection %p", c);
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
     } else {
-        crm_trace("Cleaning up closed client connection %p", c);
+        pcmk__trace("Cleaning up closed client connection %p", c);
 
         /* Remove the client from the sync point waitlist if it's present. */
         attrd_remove_client_from_waitlist(client);
@@ -545,7 +548,7 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
 static void
 attrd_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Destroying client connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     attrd_ipc_closed(c);
 }
 
@@ -561,7 +564,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
     if (data == NULL) {
-        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
@@ -583,7 +586,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (client->buffer != NULL) {
             g_byte_array_free(client->buffer, TRUE);
@@ -594,7 +597,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     if (xml == NULL) {
-        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_PROTOCOL);
         return 0;

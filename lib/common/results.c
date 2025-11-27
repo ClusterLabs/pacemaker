@@ -130,8 +130,8 @@ log_assertion_as(const char *file, const char *function, int line,
     if (!pcmk__is_daemon) {
         crm_enable_stderr(TRUE); // Make sure command-line user sees message
     }
-    crm_err("%s: Triggered fatal assertion at %s:%d : %s",
-            function, file, line, assert_condition);
+    pcmk__err("%s: Triggered fatal assertion at %s:%d : %s", function, file,
+              line, assert_condition);
 }
 
 /* coverity[+kill] */
@@ -181,8 +181,8 @@ fail_assert_as(const char *file, const char *function, int line,
     pid = fork();
     switch (pid) {
         case -1: // Fork failed
-            crm_warn("%s: Cannot dump core for non-fatal assertion at %s:%d "
-                     ": %s", function, file, line, assert_condition);
+            pcmk__warn("%s: Cannot dump core for non-fatal assertion at %s:%d "
+                       ": %s", function, file, line, assert_condition);
             break;
 
         case 0: // Child process: just abort to dump core
@@ -190,8 +190,9 @@ fail_assert_as(const char *file, const char *function, int line,
             break;
 
         default: // Parent process: wait for child
-            crm_err("%s: Forked child [%d] to record non-fatal assertion at "
-                    "%s:%d : %s", function, pid, file, line, assert_condition);
+            pcmk__err("%s: Forked child [%d] to record non-fatal assertion at "
+                      "%s:%d : %s",
+                      function, pid, file, line, assert_condition);
             crm_write_blackbox(SIGTRAP, NULL);
             do {
                 if (waitpid(pid, &status, 0) == pid) {
@@ -200,11 +201,12 @@ fail_assert_as(const char *file, const char *function, int line,
             } while (errno == EINTR);
             if (errno == ECHILD) {
                 // crm_mon ignores SIGCHLD
-                crm_trace("Cannot wait on forked child [%d] "
-                          "(SIGCHLD is probably ignored)", pid);
+                pcmk__trace("Cannot wait on forked child [%lld] (SIGCHLD is "
+                            "probably ignored)",
+                            (long long) pid);
             } else {
-                crm_err("Cannot wait on forked child [%d]: %s",
-                        pid, pcmk_rc_str(errno));
+                pcmk__err("Cannot wait on forked child [%lld]: %s",
+                          (long long) pid, pcmk_rc_str(errno));
             }
             break;
     }
@@ -1177,9 +1179,9 @@ crm_exit(crm_exit_t exit_status)
         exit_status = CRM_EX_ERROR;
     }
 
-    crm_info("Exiting %s " QB_XS " with status %d (%s: %s)",
-             pcmk__s(crm_system_name, "process"), exit_status,
-             crm_exit_name(exit_status), crm_exit_str(exit_status));
+    pcmk__info("Exiting %s " QB_XS " with status %d (%s: %s)",
+               pcmk__s(crm_system_name, "process"), exit_status,
+               crm_exit_name(exit_status), crm_exit_str(exit_status));
     pcmk_common_cleanup();
     exit(exit_status);
 }

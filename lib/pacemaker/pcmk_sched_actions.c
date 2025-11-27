@@ -136,7 +136,7 @@ action_uuid_for_ordering(const char *first_uuid,
         case pcmk__action_fence:
             break;
         default:
-            crm_err("Unknown action '%s' in ordering", first_task_str);
+            pcmk__err("Unknown action '%s' in ordering", first_task_str);
             break;
     }
 
@@ -194,8 +194,9 @@ action_for_ordering(pcmk_action_t *action)
 
         result = find_first_action(rsc->priv->actions, uuid, NULL, NULL);
         if (result == NULL) {
-            crm_warn("Not remapping %s to %s because %s does not have "
-                     "remapped action", action->uuid, uuid, rsc->id);
+            pcmk__warn("Not remapping %s to %s because %s does not have "
+                       "remapped action",
+                       action->uuid, uuid, rsc->id);
             result = action;
         }
         free(uuid);
@@ -652,8 +653,9 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
 
 
         if (pcmk__is_set(changed, pcmk__updated_first)) {
-            crm_trace("Re-processing %s and its 'after' actions "
-                      "because it changed", first->uuid);
+            pcmk__trace("Re-processing %s and its 'after' actions "
+                        "because it changed",
+                        first->uuid);
             for (GList *lpc2 = first->actions_after; lpc2 != NULL;
                  lpc2 = lpc2->next) {
                 pcmk__related_action_t *other = lpc2->data;
@@ -673,8 +675,9 @@ pcmk__update_action_for_orderings(pcmk_action_t *then,
     }
 
     if (pcmk__is_set(changed, pcmk__updated_then)) {
-        crm_trace("Re-processing %s and its 'after' actions because it changed",
-                  then->uuid);
+        pcmk__trace("Re-processing %s and its 'after' actions because it "
+                    "changed",
+                    then->uuid);
         if (pcmk__is_set(last_flags, pcmk__action_runnable)
             && !pcmk__is_set(then->flags, pcmk__action_runnable)) {
             pcmk__block_colocation_dependents(then);
@@ -1006,13 +1009,14 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
             } else {
                desc = "(Provisional) ";
             }
-            crm_trace("%s%s%sAction %d: %s%s%s%s%s%s",
-                      ((pre_text == NULL)? "" : pre_text),
-                      ((pre_text == NULL)? "" : ": "),
-                      desc, action->id, action->uuid,
-                      (node_uname? "\ton " : ""), (node_uname? node_uname : ""),
-                      (node_uuid? "\t\t(" : ""), (node_uuid? node_uuid : ""),
-                      (node_uuid? ")" : ""));
+            pcmk__trace("%s%s%sAction %d: %s%s%s%s%s%s",
+                        pcmk__s(pre_text, ""), ((pre_text != NULL)? ": " : ""),
+                        desc, action->id, action->uuid,
+                        ((node_uname != NULL)? "\ton " : ""),
+                        pcmk__s(node_uname, ""),
+                        ((node_uuid != NULL)? "\t\t(" : ""),
+                        pcmk__s(node_uuid, ""),
+                        ((node_uuid != NULL)? ")" : ""));
             break;
         default:
             if (pcmk__is_set(action->flags, pcmk__action_optional)) {
@@ -1024,14 +1028,15 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
             } else {
                desc = "(Provisional) ";
             }
-            crm_trace("%s%s%sAction %d: %s %s%s%s%s%s%s",
-                      ((pre_text == NULL)? "" : pre_text),
-                      ((pre_text == NULL)? "" : ": "),
-                      desc, action->id, action->uuid,
-                      (action->rsc? action->rsc->id : "<none>"),
-                      (node_uname? "\ton " : ""), (node_uname? node_uname : ""),
-                      (node_uuid? "\t\t(" : ""), (node_uuid? node_uuid : ""),
-                      (node_uuid? ")" : ""));
+            pcmk__trace("%s%s%sAction %d: %s %s%s%s%s%s%s",
+                        pcmk__s(pre_text, ""), ((pre_text != NULL)? ": " : ""),
+                        desc, action->id, action->uuid,
+                        ((action->rsc != NULL)? action->rsc->id : "<none>"),
+                        ((node_uname != NULL)? "\ton " : ""),
+                        pcmk__s(node_uname, ""),
+                        ((node_uuid != NULL)? "\t\t(" : ""),
+                        pcmk__s(node_uuid, ""),
+                        ((node_uuid != NULL)? ")" : ""));
             break;
     }
 
@@ -1039,22 +1044,22 @@ pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
         const GList *iter = NULL;
         const pcmk__related_action_t *other = NULL;
 
-        crm_trace("\t\t====== Preceding Actions");
+        pcmk__trace("\t\t====== Preceding Actions");
         for (iter = action->actions_before; iter != NULL; iter = iter->next) {
             other = (const pcmk__related_action_t *) iter->data;
             pcmk__log_action("\t\t", other->action, false);
         }
-        crm_trace("\t\t====== Subsequent Actions");
+        pcmk__trace("\t\t====== Subsequent Actions");
         for (iter = action->actions_after; iter != NULL; iter = iter->next) {
             other = (const pcmk__related_action_t *) iter->data;
             pcmk__log_action("\t\t", other->action, false);
         }
-        crm_trace("\t\t====== End");
+        pcmk__trace("\t\t====== End");
 
     } else {
-        crm_trace("\t\t(before=%d, after=%d)",
-                  g_list_length(action->actions_before),
-                  g_list_length(action->actions_after));
+        pcmk__trace("\t\t(before=%u, after=%u)",
+                    g_list_length(action->actions_before),
+                    g_list_length(action->actions_after));
     }
 }
 
@@ -1145,10 +1150,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     const char *task = NULL;
 
     CRM_CHECK(op != NULL, return NULL);
-    crm_trace("Creating history XML for %s-interval %s action for %s on %s "
-              "(DC version: %s, origin: %s)",
-              pcmk__readable_interval(op->interval_ms), op->op_type, op->rsc_id,
-              ((node == NULL)? "no node" : node), caller_version, origin);
+    pcmk__trace("Creating history XML for %s-interval %s action for %s on %s "
+                "(DC version: %s, origin: %s)",
+                pcmk__readable_interval(op->interval_ms), op->op_type,
+                op->rsc_id, pcmk__s(node, "no node"), caller_version, origin);
 
     task = op->op_type;
 
@@ -1225,9 +1230,10 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     }
 
     if (op->user_data == NULL) {
-        crm_debug("Generating fake transition key for: " PCMK__OP_FMT
-                  " %d from %s", op->rsc_id, op->op_type, op->interval_ms,
-                  op->call_id, origin);
+        pcmk__debug("Generating fake transition key for: " PCMK__OP_FMT
+                    " %d from %s",
+                    op->rsc_id, op->op_type, op->interval_ms, op->call_id,
+                    origin);
         local_user_data = pcmk__transition_key(-1, op->call_id, target_rc,
                                                FAKE_TE_ID);
         op->user_data = local_user_data;
@@ -1256,11 +1262,11 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     if ((op->t_run > 0) || (op->t_rcchange > 0) || (op->exec_time > 0)
         || (op->queue_time > 0)) {
 
-        crm_trace("Timing data (" PCMK__OP_FMT "): "
-                  "last=%lld change=%lld exec=%u queue=%u",
-                  op->rsc_id, op->op_type, op->interval_ms,
-                  (long long) op->t_run, (long long) op->t_rcchange,
-                  op->exec_time, op->queue_time);
+        pcmk__trace("Timing data (" PCMK__OP_FMT "): "
+                    "last=%lld change=%lld exec=%u queue=%u",
+                    op->rsc_id, op->op_type, op->interval_ms,
+                    (long long) op->t_run, (long long) op->t_rcchange,
+                    op->exec_time, op->queue_time);
 
         if ((op->interval_ms > 0) && (op->t_rcchange > 0)) {
             // Recurring ops may have changed rc after initial run
@@ -1382,9 +1388,9 @@ pcmk__deduplicate_action_inputs(pcmk_action_t *action)
         next = item->next;
         if ((last_input != NULL)
             && (input->action->id == last_input->action->id)) {
-            crm_trace("Input %s (%d) duplicate skipped for action %s (%d)",
-                      input->action->uuid, input->action->id,
-                      action->uuid, action->id);
+            pcmk__trace("Input %s (%d) duplicate skipped for action %s (%d)",
+                        input->action->uuid, input->action->id,
+                        action->uuid, action->id);
 
             /* For the purposes of scheduling, the ordering flags no longer
              * matter, but crm_simulate looks at certain ones when creating a
@@ -1666,9 +1672,10 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
         }
     }
 
-    crm_trace("Checking %s-interval %s for %s on %s for configuration changes",
-              pcmk__readable_interval(interval_ms), task, rsc->id,
-              pcmk__node_name(node));
+    pcmk__trace("Checking %s-interval %s for %s on %s for configuration "
+                "changes",
+                pcmk__readable_interval(interval_ms), task, rsc->id,
+                pcmk__node_name(node));
     task = task_for_digest(task, interval_ms);
     digest_data = rsc_action_digest_cmp(rsc, xml_op, node,
                                         rsc->priv->scheduler);
@@ -1689,7 +1696,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     switch (digest_data->rc) {
         case pcmk__digest_restart:
-            crm_log_xml_debug(digest_data->params_restart, "params:restart");
+            pcmk__log_xml_debug(digest_data->params_restart, "params:restart");
             force_restart(rsc, task, interval_ms, node);
             return true;
 
@@ -1702,7 +1709,8 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                  * re-scheduled so the next run uses the new parameters.
                  * The old instance will be cancelled automatically.
                  */
-                crm_log_xml_debug(digest_data->params_all, "params:reschedule");
+                pcmk__log_xml_debug(digest_data->params_all,
+                                    "params:reschedule");
                 pcmk__reschedule_recurring(rsc, task, interval_ms, node);
 
             } else if (pcmk__xe_get(xml_op,
@@ -1711,7 +1719,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                 trigger_unfencing(rsc, node,
                                   "Device parameters changed (reload)", NULL,
                                   rsc->priv->scheduler);
-                crm_log_xml_debug(digest_data->params_all, "params:reload");
+                pcmk__log_xml_debug(digest_data->params_all, "params:reload");
                 schedule_reload((gpointer) rsc, (gpointer) node);
 
             } else {
@@ -1719,8 +1727,8 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                 "Restarting %s "
                                 "because agent doesn't support reload",
                                 rsc->id);
-                crm_log_xml_debug(digest_data->params_restart,
-                                  "params:restart");
+                pcmk__log_xml_debug(digest_data->params_restart,
+                                    "params:restart");
                 force_restart(rsc, task, interval_ms, node);
             }
             return true;
@@ -1886,7 +1894,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 static void
 process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 {
-    crm_trace("Processing node history for %s", pcmk__node_name(node));
+    pcmk__trace("Processing node history for %s", pcmk__node_name(node));
     for (const xmlNode *rsc_entry = pcmk__xe_first_child(lrm_rscs,
                                                          PCMK__XE_LRM_RESOURCE,
                                                          NULL, NULL);
@@ -1930,7 +1938,7 @@ process_node_history(pcmk_node_t *node, const xmlNode *lrm_rscs)
 void
 pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
 {
-    crm_trace("Check resource and action configuration for changes");
+    pcmk__trace("Check resource and action configuration for changes");
 
     /* Rather than iterate through the status section, iterate through the nodes
      * and search for the appropriate status subsection for each. This skips
@@ -1951,7 +1959,7 @@ pcmk__handle_rsc_config_changes(pcmk_scheduler_t *scheduler)
 
             xpath = pcmk__assert_asprintf(XPATH_NODE_HISTORY, node->priv->name);
             history = pcmk__xpath_find_one(scheduler->input->doc, xpath,
-                                           LOG_NEVER);
+                                           PCMK__LOG_NEVER);
             free(xpath);
 
             process_node_history(node, history);

@@ -44,7 +44,7 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Could not parse message content: %.100s", data);
+        pcmk__err("Could not parse message content: %.100s", data);
         free(data);
         return;
     }
@@ -56,9 +56,9 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
         /* If we can still talk to our peer process on that node, then it must
          * be part of the corosync membership
          */
-        crm_warn("Receiving messages from a node we think is dead: "
-                 "%s[%" PRIu32 "]",
-                 peer->name, peer->cluster_layer_id);
+        pcmk__warn("Receiving messages from a node we think is dead: "
+                   "%s[%" PRIu32 "]",
+                   peer->name, peer->cluster_layer_id);
         crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
     }
 
@@ -79,7 +79,7 @@ static void
 crmd_cs_destroy(gpointer user_data)
 {
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
-        crm_crit("Lost connection to cluster layer, shutting down");
+        pcmk__crit("Lost connection to cluster layer, shutting down");
         crmd_exit(CRM_EX_DISCONNECT);
     }
 }

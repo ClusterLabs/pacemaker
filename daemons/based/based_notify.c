@@ -49,7 +49,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     struct cib_notification_s *update = user_data;
 
     if (client->ipcs == NULL && client->remote == NULL) {
-        crm_warn("Skipping client with NULL channel");
+        pcmk__warn("Skipping client with NULL channel");
         return;
     }
 
@@ -92,23 +92,23 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
              * is called, or when crm_ipcs_flush_events_cb happens.
              */
             if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
-                crm_warn("Could not notify client %s: %s " QB_XS " id=%s",
-                         pcmk__client_name(client), pcmk_rc_str(rc),
-                         client->id);
+                pcmk__warn("Could not notify client %s: %s " QB_XS " id=%s",
+                           pcmk__client_name(client), pcmk_rc_str(rc),
+                           client->id);
             }
             break;
 
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            crm_debug("Sent %s notification to client %s (id %s)",
-                      type, pcmk__client_name(client), client->id);
+            pcmk__debug("Sent %s notification to client %s (id %s)", type,
+                        pcmk__client_name(client), client->id);
             pcmk__remote_send_xml(client->remote, update->msg);
             break;
 
         default:
-            crm_err("Unknown transport for client %s "
-                    QB_XS " flags=%#016" PRIx64,
-                    pcmk__client_name(client), client->flags);
+            pcmk__err("Unknown transport for client %s "
+                      QB_XS " flags=%#016" PRIx64,
+                      pcmk__client_name(client), client->flags);
     }
 }
 
@@ -129,8 +129,8 @@ cib_notify_send(const xmlNode *xml)
         rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-            crm_notice("Could not notify clients: %s " QB_XS " rc=%d",
-                       pcmk_rc_str(rc), rc);
+            pcmk__notice("Could not notify clients: %s " QB_XS " rc=%d",
+                         pcmk_rc_str(rc), rc);
             break;
         }
 
@@ -219,7 +219,7 @@ cib_diff_notify(const char *op, int result, const char *call_id,
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);
 
-    crm_log_xml_trace(update_msg, "diff-notify");
+    pcmk__log_xml_trace(update_msg, "diff-notify");
     cib_notify_send(update_msg);
     pcmk__xml_free(update_msg);
 }

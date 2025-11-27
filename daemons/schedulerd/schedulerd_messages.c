@@ -134,8 +134,8 @@ handle_pecalc_request(pcmk__request_t *request)
         // @TODO maybe handle errors better ...
         seq = 0U;
     }
-    crm_trace("Series %s: wrap=%d, seq=%u, pref=%s",
-              series[series_id].name, series_wrap, seq, value);
+    pcmk__trace("Series %s: wrap=%d, seq=%u, pref=%s", series[series_id].name,
+                series_wrap, seq, value);
 
     reply = pcmk__new_reply(msg, scheduler->priv->graph);
 
@@ -161,10 +161,10 @@ handle_pecalc_request(pcmk__request_t *request)
     pcmk__log_transition_summary(scheduler, filename);
 
     if (series_wrap == 0) {
-        crm_debug("Not saving input to disk (disabled by configuration)");
+        pcmk__debug("Not saving input to disk (disabled by configuration)");
 
     } else if (is_repoke) {
-        crm_info("Input has not changed since last time, not saving to disk");
+        pcmk__info("Input has not changed since last time, not saving to disk");
 
     } else {
         unlink(filename);
@@ -201,7 +201,8 @@ handle_hello_request(pcmk__request_t *request)
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
 
-    crm_trace("Received IPC hello from %s", pcmk__client_name(request->ipc_client));
+    pcmk__trace("Received IPC hello from %s",
+                pcmk__client_name(request->ipc_client));
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
@@ -243,7 +244,7 @@ schedulerd_handle_request(pcmk__request_t *request)
     reply = pcmk__process_request(request, schedulerd_handlers);
 
     if (reply != NULL) {
-        crm_log_xml_trace(reply, "Reply");
+        pcmk__log_xml_trace(reply, "Reply");
 
         pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
                            crm_ipc_server_event);
@@ -263,9 +264,9 @@ schedulerd_handle_request(pcmk__request_t *request)
                                     (reason == NULL)? "" : ")");
 
     if (!pcmk__result_ok(&request->result)) {
-        crm_warn("%s", log_msg);
+        pcmk__warn("%s", log_msg);
     } else {
-        crm_debug("%s", log_msg);
+        pcmk__debug("%s", log_msg);
     }
 
     free(log_msg);

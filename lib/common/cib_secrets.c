@@ -45,13 +45,13 @@ read_file_trimmed(const char *filename)
     int rc = pcmk__file_contents(filename, &buf);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Failed to read %s: %s", filename, pcmk_rc_str(rc));
+        pcmk__err("Failed to read %s: %s", filename, pcmk_rc_str(rc));
         free(buf);
         return NULL;
     }
 
     if (buf == NULL) {
-        crm_err("File %s is empty", filename);
+        pcmk__err("File %s is empty", filename);
         return NULL;
     }
 
@@ -83,9 +83,9 @@ validate_hash(const char *filename, const char *secret_value,
 
     stored = read_file_trimmed(filename);
     if (stored == NULL) {
-        crm_err("Could not read md5 sum for resource %s parameter '%s' from "
-                "file '%s'",
-                rsc_id, param, filename);
+        pcmk__err("Could not read md5 sum for resource %s parameter '%s' from "
+                  "file '%s'",
+                  rsc_id, param, filename);
         rc = ENOENT;
         goto done;
     }
@@ -97,12 +97,12 @@ validate_hash(const char *filename, const char *secret_value,
         goto done;
     }
 
-    crm_trace("Stored hash: %s, calculated hash: %s", stored, calculated);
+    pcmk__trace("Stored hash: %s, calculated hash: %s", stored, calculated);
 
     if (!pcmk__str_eq(stored, calculated, pcmk__str_casei)) {
-        crm_err("Calculated md5 sum for resource %s parameter '%s' does not "
-                "match stored md5 sum",
-                rsc_id, param);
+        pcmk__err("Calculated md5 sum for resource %s parameter '%s' does not "
+                  "match stored md5 sum",
+                  rsc_id, param);
         rc = pcmk_rc_cib_corrupt;
     }
 
@@ -153,7 +153,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
         if (filename == NULL) {
             // First secret parameter. Fill in directory path for use with all.
-            crm_debug("Replacing secret parameters for resource %s", rsc_id);
+            pcmk__debug("Replacing secret parameters for resource %s", rsc_id);
 
             filename = g_string_sized_new(128);
             pcmk__g_strcat(filename, PCMK__CIB_SECRETS_DIR "/", rsc_id, "/",
@@ -169,9 +169,9 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
         g_string_append(filename, param);
         secret_value = read_file_trimmed(filename->str);
         if (secret_value == NULL) {
-            crm_err("Secret value for resource %s parameter '%s' not found in "
-                    PCMK__CIB_SECRETS_DIR,
-                    rsc_id, param);
+            pcmk__err("Secret value for resource %s parameter '%s' not found "
+                      "in " PCMK__CIB_SECRETS_DIR,
+                      rsc_id, param);
             rc = ENOENT;
             continue;
         }

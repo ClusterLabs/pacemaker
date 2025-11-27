@@ -29,9 +29,9 @@ static GHashTable *pacemakerd_handlers = NULL;
 static xmlNode *
 handle_node_cache_request(pcmk__request_t *request)
 {
-    crm_trace("Ignoring request from client %s to purge node "
-              "because peer cache is not used",
-              pcmk__client_name(request->ipc_client));
+    pcmk__trace("Ignoring request from client %s to purge node because peer "
+                "cache is not used",
+                pcmk__client_name(request->ipc_client));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_OK);
@@ -49,10 +49,10 @@ handle_ping_request(pcmk__request_t *request)
     const char *from = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_FROM);
 
     /* Pinged for status */
-    crm_trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
-              PCMK_XA_ORIGIN "='%s'",
-              pcmk__s(from, ""),
-              pcmk__s(pcmk__xe_get(msg, PCMK_XA_ORIGIN), ""));
+    pcmk__trace("Pinged from " PCMK__XA_CRM_SYS_FROM "='%s' "
+                PCMK_XA_ORIGIN "='%s'",
+                pcmk__s(from, ""),
+                pcmk__s(pcmk__xe_get(msg, PCMK_XA_ORIGIN), ""));
 
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
                        PCMK__XE_ACK, NULL, CRM_EX_INDETERMINATE);
@@ -80,14 +80,14 @@ handle_ping_request(pcmk__request_t *request)
         if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_SHUTDOWN_COMPLETE,
                          pcmk__str_none)) {
             if (pcmk__get_sbd_sync_resource_startup()) {
-                crm_notice("Shutdown-complete-state passed to SBD.");
+                pcmk__notice("Shutdown-complete-state passed to SBD");
             }
 
             shutdown_complete_state_reported_to = request->ipc_client->pid;
 
         } else if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_WAIT_FOR_PING,
                                 pcmk__str_none)) {
-            crm_notice("Received startup-trigger from SBD.");
+            pcmk__notice("Received startup-trigger from SBD");
             pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
             mainloop_set_trigger(startup_trigger);
         }
@@ -117,13 +117,13 @@ handle_shutdown_request(pcmk__request_t *request)
     shutdown = pcmk__xe_create(NULL, PCMK__XE_SHUTDOWN);
 
     if (allowed) {
-        crm_notice("Shutting down in response to IPC request %s from %s",
-                   pcmk__xe_get(msg, PCMK_XA_REFERENCE),
-                   pcmk__xe_get(msg, PCMK_XA_ORIGIN));
+        pcmk__notice("Shutting down in response to IPC request %s from %s",
+                     pcmk__xe_get(msg, PCMK_XA_REFERENCE),
+                     pcmk__xe_get(msg, PCMK_XA_ORIGIN));
         pcmk__xe_set_int(shutdown, PCMK__XA_OP_STATUS, CRM_EX_OK);
     } else {
-        crm_warn("Ignoring shutdown request from unprivileged client %s",
-                 pcmk__client_name(request->ipc_client));
+        pcmk__warn("Ignoring shutdown request from unprivileged client %s",
+                   pcmk__client_name(request->ipc_client));
         pcmk__xe_set_int(shutdown, PCMK__XA_OP_STATUS,
                          CRM_EX_INSUFFICIENT_PRIV);
     }
@@ -195,7 +195,7 @@ pacemakerd_handle_request(pcmk__request_t *request)
     reply = pcmk__process_request(request, pacemakerd_handlers);
 
     if (reply != NULL) {
-        crm_log_xml_trace(reply, "Reply");
+        pcmk__log_xml_trace(reply, "Reply");
 
         pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
                            crm_ipc_server_event);
@@ -215,9 +215,9 @@ pacemakerd_handle_request(pcmk__request_t *request)
                                     (reason == NULL)? "" : ")");
 
     if (!pcmk__result_ok(&request->result)) {
-        crm_warn("%s", log_msg);
+        pcmk__warn("%s", log_msg);
     } else {
-        crm_debug("%s", log_msg);
+        pcmk__debug("%s", log_msg);
     }
 
     free(log_msg);

@@ -40,9 +40,21 @@ static mainloop_timer_t *reconnect_timer = NULL;
 static void
 cfg_shutdown_callback(corosync_cfg_handle_t h, corosync_cfg_shutdown_flags_t flags)
 {
-    crm_info("Corosync wants to shut down: %s",
-             (flags == COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE) ? "immediate" :
-             (flags == COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS) ? "forced" : "optional");
+    const char *shutdown_s = NULL;
+
+    switch (flags) {
+        case COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE:
+            shutdown_s = "immediate";
+            break;
+        case COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS:
+            shutdown_s = "forced";
+            break;
+        default:
+            shutdown_s = "optional";
+            break;
+    }
+
+    pcmk__info("Corosync wants to shut down: %s", shutdown_s);
 
     /* Never allow corosync to shut down while we're running */
     corosync_cfg_replyto_shutdown(h, COROSYNC_CFG_SHUTDOWN_FLAG_NO);
@@ -85,13 +97,13 @@ cluster_reconnect_cb(gpointer data)
     if (cluster_connect_cfg()) {
         mainloop_timer_del(reconnect_timer);
         reconnect_timer = NULL;
-        crm_notice("Cluster reconnect succeeded");
+        pcmk__notice("Cluster reconnect succeeded");
         pacemakerd_read_config();
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
     } else {
-        crm_info("Cluster reconnect failed "
-                 "(connection will be reattempted once per second)");
+        pcmk__info("Cluster reconnect failed (connection will be reattempted "
+                   "once per second)");
     }
     /*
      * In theory this will continue forever. In practice the CIB connection from
@@ -104,8 +116,8 @@ cluster_reconnect_cb(gpointer data)
 static void
 cfg_connection_destroy(gpointer user_data)
 {
-    crm_warn("Lost connection to cluster layer "
-             "(connection will be reattempted once per second)");
+    pcmk__warn("Lost connection to cluster layer (connection will be "
+               "reattempted once per second)");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
     reconnect_timer = mainloop_timer_add("corosync reconnect", 1000, TRUE, cluster_reconnect_cb, NULL);
@@ -129,7 +141,7 @@ cluster_disconnect_cfg(void)
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN || rc == CS_ERR_QUEUE_FULL) {  \
 	    counter++;					\
-	    crm_debug("Retrying Corosync operation after %ds", counter);    \
+	    pcmk__debug("Retrying Corosync operation after %ds", counter);  \
 	    sleep(counter);				\
 	} else {                                        \
             break;                                      \
@@ -154,47 +166,48 @@ cluster_connect_cfg(void)
     cs_repeat(retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
 
     if (rc != CS_OK) {
-        crm_crit("Could not connect to Corosync CFG: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__crit("Could not connect to Corosync CFG: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         return FALSE;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
     if (rc != CS_OK) {
-        crm_crit("Could not get Corosync CFG descriptor: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__crit("Could not get Corosync CFG descriptor: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 
     /* CFG provider run as root (in given user namespace, anyway)? */
     if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
-        crm_crit("Rejecting Corosync CFG provider because process %lld "
-                 "is running as uid %lld gid %lld, not root",
-                  (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                 (long long) found_uid, (long long) found_gid);
+        pcmk__crit("Rejecting Corosync CFG provider because process %lld "
+                   "is running as uid %lld gid %lld, not root",
+                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                   (long long) found_uid, (long long) found_gid);
         goto bail;
     } else if (rv < 0) {
-        crm_crit("Could not authenticate Corosync CFG provider: %s "
-                 QB_XS " rc=%d", strerror(-rv), -rv);
+        pcmk__crit("Could not authenticate Corosync CFG provider: %s "
+                   QB_XS " rc=%d", strerror(-rv), -rv);
         goto bail;
     }
 
     retries = 0;
     cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, &nodeid));
     if (rc != CS_OK) {
-        crm_crit("Could not get local node ID from Corosync: %s "
-                 QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__crit("Could not get local node ID from Corosync: %s "
+                   QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
-    crm_debug("Corosync reports local node ID is %lu", (unsigned long) nodeid);
+    pcmk__debug("Corosync reports local node ID is %" PRIu32, nodeid);
 
 #ifdef HAVE_COROSYNC_CFG_TRACKSTART
     retries = 0;
     cs_repeat(retries, 30, rc = corosync_cfg_trackstart(cfg_handle, 0));
     if (rc != CS_OK) {
-        crm_crit("Could not enable Corosync CFG shutdown tracker: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__crit("Could not enable Corosync CFG shutdown tracker: %s "
+                   QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         goto bail;
     }
 #endif
@@ -213,17 +226,17 @@ pcmkd_shutdown_corosync(void)
     cs_error_t rc;
 
     if (cfg_handle == 0) {
-        crm_warn("Unable to shut down Corosync: No connection");
+        pcmk__warn("Unable to shut down Corosync: No connection");
         return;
     }
-    crm_info("Asking Corosync to shut down");
+    pcmk__info("Asking Corosync to shut down");
     rc = corosync_cfg_try_shutdown(cfg_handle,
                                     COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
     if (rc == CS_OK) {
         close_cfg();
     } else {
-        crm_warn("Corosync shutdown failed: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__warn("Corosync shutdown failed: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
     }
 }
 
@@ -256,10 +269,11 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
 
     cs_repeat(retries, 5, rc = cmap_get_string(object_handle, key, value));
     if (rc != CS_OK) {
-        crm_trace("Search for %s failed %d, defaulting to %s", key, rc, fallback);
+        pcmk__trace("Search for %s failed %d, defaulting to %s", key, rc,
+                    fallback);
         pcmk__str_update(value, fallback);
     }
-    crm_trace("%s: %s", key, *value);
+    pcmk__trace("%s: %s", key, *value);
     return rc;
 }
 
@@ -283,9 +297,9 @@ pacemakerd_read_config(void)
         rc = pcmk__init_cmap(&local_handle);
         if (rc != CS_OK) {
             retries++;
-            crm_info("Could not connect to Corosync CMAP: %s (retrying in %ds) "
-                     QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)),
-                     retries, rc);
+            pcmk__info("Could not connect to Corosync CMAP: %s "
+                       "(retrying in %ds) " QB_XS " rc=%d",
+                       pcmk_rc_str(pcmk__corosync2rc(rc)), retries, rc);
             sleep(retries);
 
         } else {
@@ -295,15 +309,15 @@ pacemakerd_read_config(void)
     } while (retries < 5);
 
     if (rc != CS_OK) {
-        crm_crit("Could not connect to Corosync CMAP: %s "
-                 QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__crit("Could not connect to Corosync CMAP: %s "
+                   QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         return FALSE;
     }
 
     rc = cmap_fd_get(local_handle, &fd);
     if (rc != CS_OK) {
-        crm_crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+        pcmk__crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         cmap_finalize(local_handle);
         return FALSE;
     }
@@ -311,15 +325,15 @@ pacemakerd_read_config(void)
     /* CMAP provider run as root (in given user namespace, anyway)? */
     if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
                                             &found_uid, &found_gid))) {
-        crm_crit("Rejecting Corosync CMAP provider because process %lld "
-                 "is running as uid %lld gid %lld, not root",
-                 (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
-                 (long long) found_uid, (long long) found_gid);
+        pcmk__crit("Rejecting Corosync CMAP provider because process %lld "
+                   "is running as uid %lld gid %lld, not root",
+                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
+                   (long long) found_uid, (long long) found_gid);
         cmap_finalize(local_handle);
         return FALSE;
     } else if (rv < 0) {
-        crm_crit("Could not authenticate Corosync CMAP provider: %s "
-                 QB_XS " rc=%d", strerror(-rv), -rv);
+        pcmk__crit("Could not authenticate Corosync CMAP provider: %s "
+                   QB_XS " rc=%d", strerror(-rv), -rv);
         cmap_finalize(local_handle);
         return FALSE;
     }
@@ -328,13 +342,13 @@ pacemakerd_read_config(void)
     cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {
-        crm_crit("Expected Corosync cluster layer but detected %s "
-                 QB_XS " cluster_layer=%d",
-                 cluster_layer_s, cluster_layer);
+        pcmk__crit("Expected Corosync cluster layer but detected %s "
+                   QB_XS " cluster_layer=%d",
+                   cluster_layer_s, cluster_layer);
         return FALSE;
     }
 
-    crm_info("Reading configuration for %s cluster layer", cluster_layer_s);
+    pcmk__info("Reading configuration for %s cluster layer", cluster_layer_s);
     pcmk__set_env_option(PCMK__ENV_CLUSTER_TYPE, PCMK_VALUE_COROSYNC, true);
 
     // If debug logging is not configured, check whether corosync has it
@@ -360,8 +374,8 @@ pacemakerd_read_config(void)
     if(local_handle){
         gid_t gid = 0;
         if (pcmk__daemon_user(NULL, &gid) != pcmk_rc_ok) {
-            crm_warn("Could not authorize group with Corosync " QB_XS
-                     " No group found for user %s", CRM_DAEMON_USER);
+            pcmk__warn("Could not authorize group with Corosync "
+                       QB_XS " No group found for user " CRM_DAEMON_USER);
 
         } else {
             char *key = pcmk__assert_asprintf("uidgid.gid.%lld",
@@ -371,9 +385,9 @@ pacemakerd_read_config(void)
             free(key);
 
             if (rc != CS_OK) {
-                crm_warn("Could not authorize group with Corosync: %s " QB_XS
-                         " group=%u rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)),
-                         gid, rc);
+                pcmk__warn("Could not authorize group with Corosync: %s "
+                           QB_XS " group=%u rc=%d",
+                           pcmk_rc_str(pcmk__corosync2rc(rc)), gid, rc);
             }
         }
     }

@@ -64,8 +64,8 @@ pcmk__cluster_get_xml_id(pcmk__node_status_t *node)
 #endif  // SUPPORT_COROSYNC
 
         default:
-            crm_err("Unsupported cluster layer %s",
-                    pcmk_cluster_layer_text(cluster_layer));
+            pcmk__err("Unsupported cluster layer %s",
+                      pcmk_cluster_layer_text(cluster_layer));
             return NULL;
     }
 }
@@ -89,7 +89,7 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
     }
 
     // cts-lab looks for this message
-    crm_notice("Connecting to %s cluster layer", cluster_layer_s);
+    pcmk__notice("Connecting to %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
@@ -101,8 +101,8 @@ pcmk_cluster_connect(pcmk_cluster_t *cluster)
             break;
     }
 
-    crm_err("Failed to connect to unsupported cluster layer %s",
-            cluster_layer_s);
+    pcmk__err("Failed to connect to unsupported cluster layer %s",
+              cluster_layer_s);
     return EPROTONOSUPPORT;
 }
 
@@ -119,7 +119,7 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
-    crm_info("Disconnecting from %s cluster layer", cluster_layer_s);
+    pcmk__info("Disconnecting from %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
@@ -133,8 +133,8 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
             break;
     }
 
-    crm_err("Failed to disconnect from unsupported cluster layer %s",
-            cluster_layer_s);
+    pcmk__err("Failed to disconnect from unsupported cluster layer %s",
+              cluster_layer_s);
     return EPROTONOSUPPORT;
 }
 
@@ -252,28 +252,28 @@ pcmk__cluster_node_name(uint32_t nodeid)
 #endif // SUPPORT_COROSYNC
 
         default:
-            crm_err("Unsupported cluster layer: %s", cluster_layer_s);
+            pcmk__err("Unsupported cluster layer: %s", cluster_layer_s);
             break;
     }
 
     if (nodeid == 0) {
         struct utsname hostinfo;
 
-        crm_notice("Could not get local node name from %s cluster layer, "
-                   "defaulting to local hostname",
-                   cluster_layer_s);
+        pcmk__notice("Could not get local node name from %s cluster layer, "
+                     "defaulting to local hostname",
+                     cluster_layer_s);
 
         if (uname(&hostinfo) < 0) {
             // @TODO Maybe let the caller decide what to do
-            crm_err("Failed to get the local hostname");
+            pcmk__err("Failed to get the local hostname");
             crm_exit(CRM_EX_FATAL);
         }
         return pcmk__str_copy(hostinfo.nodename);
     }
 
-    crm_notice("Could not obtain a node name for node with "
-               PCMK_XA_ID "=%" PRIu32,
-               nodeid);
+    pcmk__notice("Could not obtain a node name for node with "
+                 PCMK_XA_ID "=%" PRIu32,
+                 nodeid);
     return NULL;
 }
 
@@ -365,7 +365,7 @@ pcmk_cluster_layer_text(enum pcmk_cluster_layer layer)
         case pcmk_cluster_layer_invalid:
             return "invalid";
         default:
-            crm_err("Invalid cluster layer: %d", layer);
+            pcmk__err("Invalid cluster layer: %d", layer);
             return "invalid";
     }
 }
@@ -395,7 +395,7 @@ pcmk_get_cluster_layer(void)
     cluster = pcmk__env_option(PCMK__ENV_CLUSTER_TYPE);
 
     if (cluster != NULL) {
-        crm_info("Verifying configured cluster layer '%s'", cluster);
+        pcmk__info("Verifying configured cluster layer '%s'", cluster);
         cluster_layer = pcmk_cluster_layer_invalid;
 
 #if SUPPORT_COROSYNC
@@ -405,27 +405,27 @@ pcmk_get_cluster_layer(void)
 #endif  // SUPPORT_COROSYNC
 
         if (cluster_layer == pcmk_cluster_layer_invalid) {
-            crm_notice("This installation does not support the '%s' cluster "
-                       "infrastructure: terminating",
-                       cluster);
+            pcmk__notice("This installation does not support the '%s' cluster "
+                         "infrastructure: terminating",
+                         cluster);
             crm_exit(CRM_EX_FATAL);
         }
-        crm_info("Assuming an active '%s' cluster", cluster);
+        pcmk__info("Assuming an active '%s' cluster", cluster);
 
     } else {
         // Nothing configured, so test supported cluster layers
 #if SUPPORT_COROSYNC
-        crm_debug("Testing with Corosync");
+        pcmk__debug("Testing with Corosync");
         if (pcmk__corosync_is_active()) {
             cluster_layer = pcmk_cluster_layer_corosync;
         }
 #endif  // SUPPORT_COROSYNC
 
         if (cluster_layer == pcmk_cluster_layer_unknown) {
-            crm_notice("Could not determine the current cluster layer");
+            pcmk__notice("Could not determine the current cluster layer");
         } else {
-            crm_info("Detected an active '%s' cluster",
-                     pcmk_cluster_layer_text(cluster_layer));
+            pcmk__info("Detected an active '%s' cluster",
+                       pcmk_cluster_layer_text(cluster_layer));
         }
     }
 
@@ -463,7 +463,7 @@ name_for_cluster_type(enum cluster_type_e type)
         case pcmk_cluster_invalid:
             return "invalid";
     }
-    crm_err("Invalid cluster type: %d", type);
+    pcmk__err("Invalid cluster type: %d", type);
     return "invalid";
 }
 
