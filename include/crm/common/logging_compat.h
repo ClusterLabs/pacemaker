@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_COMMON_LOGGING_COMPAT__H
 #define PCMK__CRM_COMMON_LOGGING_COMPAT__H
 
-#include <qb/qblog.h>   // qb_log_ctl(), QB_LOG_CONF_EXTENDED
+#include <qb/qblog.h>   // qb_log_ctl(), QB_*
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,6 +101,15 @@ extern "C" {
 
 //! \deprecated Do not use
 #define crm_log_xml_trace(xml, text) do_crm_log_xml(LOG_TRACE, text, xml)
+
+#if defined(__clang__)
+//! \deprecated Do not use
+#define CRM_TRACE_INIT_DATA(name)
+#else
+#include <assert.h> // required by QB_LOG_INIT_DATA() macro
+//! \deprecated Do not use
+#define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
+#endif  // defined(__clang__)
 
 #ifdef __cplusplus
 }
