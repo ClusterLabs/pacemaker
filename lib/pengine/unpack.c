@@ -26,8 +26,6 @@
 #include <crm/pengine/internal.h>
 #include <pe_status_private.h>
 
-CRM_TRACE_INIT_DATA(pe_status);
-
 // A (parsed) resource action history entry
 struct action_history {
     pcmk_resource_t *rsc;       // Resource that history is for

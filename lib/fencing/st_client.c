@@ -30,8 +30,6 @@
 
 #include "fencing_private.h"
 
-CRM_TRACE_INIT_DATA(stonith);
-
 // Used as stonith_t:st_private
 typedef struct {
     char *token;

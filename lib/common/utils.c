@@ -39,8 +39,6 @@
 
 #include "crmcommon_private.h"
 
-CRM_TRACE_INIT_DATA(common);
-
 bool pcmk__config_has_error = false;
 bool pcmk__config_has_warning = false;
 char *crm_system_name = NULL;

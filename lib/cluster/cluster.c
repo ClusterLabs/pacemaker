@@ -30,8 +30,6 @@
 #include <crm/cluster/internal.h>
 #include "crmcluster_private.h"
 
-CRM_TRACE_INIT_DATA(cluster);
-
 /*!
  * \internal
  * \brief Get a node's XML ID in the CIB, setting it if not already set
