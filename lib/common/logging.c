@@ -511,46 +511,57 @@ blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
 void
 crm_enable_blackbox(int nsig)
 {
-    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024); /* Any size change drops existing entries */
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
-
-        /* Enable synchronous logging */
-        for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
-            qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
-        }
-
-        pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
-
-        /* Save to disk on abnormal termination */
-        crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
-        crm_signal_handler(SIGABRT, crm_trigger_blackbox);
-        crm_signal_handler(SIGILL,  crm_trigger_blackbox);
-        crm_signal_handler(SIGBUS,  crm_trigger_blackbox);
-        crm_signal_handler(SIGFPE,  crm_trigger_blackbox);
-
-        crm_update_callsites();
-
-        blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
-        qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
-        pcmk__trace("Trigger: %d is %d %d", blackbox_trigger,
-                    qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0),
-                    QB_LOG_STATE_ENABLED);
-
-        crm_update_callsites();
+    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET,
+                   0) == QB_LOG_STATE_ENABLED) {
+        return;
     }
+
+    // Any size change drops existing entries
+    qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024);
+
+    // Setting the size seems to disable the log target
+    qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
+
+    /* Enable synchronous logging for each target except QB_LOG_SYSLOG and
+     * QB_LOG_STDERR
+     */
+    for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
+        qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
+    }
+
+    pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
+
+    // Save to disk on abnormal termination
+    crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
+    crm_signal_handler(SIGABRT, crm_trigger_blackbox);
+    crm_signal_handler(SIGILL, crm_trigger_blackbox);
+    crm_signal_handler(SIGBUS, crm_trigger_blackbox);
+    crm_signal_handler(SIGFPE, crm_trigger_blackbox);
+
+    crm_update_callsites();
+
+    blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
+    qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
+    pcmk__trace("Trigger: %d is %d %d", blackbox_trigger,
+                qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0),
+                QB_LOG_STATE_ENABLED);
+
+    crm_update_callsites();
 }
 
 void
 crm_disable_blackbox(int nsig)
 {
-    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
+    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET,
+                   0) != QB_LOG_STATE_ENABLED) {
+        return;
+    }
 
-        /* Disable synchronous logging again when the blackbox is disabled */
-        for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
-            qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
-        }
+    qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
+
+    // Disable synchronous logging again when the blackbox is disabled
+    for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
+        qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
     }
 }
 
