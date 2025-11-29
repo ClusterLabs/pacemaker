@@ -50,6 +50,9 @@ unsigned int crm_log_level = LOG_INFO;
 unsigned int crm_trace_nonlog = 0;
 bool pcmk__is_daemon = false;
 
+static int blackbox_trigger = 0;
+static char *blackbox_file_prefix = NULL;
+
 static gchar **trace_blackbox = NULL;
 static gchar **trace_files = NULL;
 static gchar **trace_formats = NULL;
@@ -495,9 +498,6 @@ pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out)
     }
 }
 
-static int blackbox_trigger = 0;
-static volatile char *blackbox_file_prefix = NULL;
-
 static void
 blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
                 const char *msg)
@@ -513,14 +513,6 @@ static void
 crm_control_blackbox(int nsig, bool enable)
 {
     int lpc = 0;
-
-    if (blackbox_file_prefix == NULL) {
-        pid_t pid = getpid();
-
-        blackbox_file_prefix = pcmk__assert_asprintf(CRM_BLACKBOX_DIR "/%s-%lu",
-                                                     crm_system_name,
-                                                     (unsigned long) pid);
-    }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024); /* Any size change drops existing entries */
@@ -1145,6 +1137,10 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
             pcmk__info("Changed active directory to " CRM_CORE_DIR);
         }
 
+        blackbox_file_prefix = pcmk__assert_asprintf(CRM_BLACKBOX_DIR
+                                                     "/%s-%lld",
+                                                     crm_system_name,
+                                                     (long long) getpid());
         /* Original meanings from signal(7)
          *
          * Signal       Value     Action   Comment
@@ -1182,6 +1178,7 @@ crm_log_deinit(void)
         g_clear_pointer(&logger_out, pcmk__output_free);
     }
 
+    g_clear_pointer(&blackbox_file_prefix, free);
     g_clear_pointer(&crm_system_name, free);
 }
 
