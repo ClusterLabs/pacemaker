@@ -16,6 +16,8 @@
 
 #include <libxml/parser.h>                  // xmlCleanupParser()
 
+#include "crmcommon_private.h"              // pcmk__add_logfile()
+
 // LCOV_EXCL_START
 
 static bool fake_text_init_succeeds = true;

@@ -37,6 +37,8 @@
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 
+#include "crmcommon_private.h"      // pcmk__add_logfile()
+
 // Use high-resolution (millisecond) timestamps if libqb supports them
 #ifdef QB_FEATURE_LOG_HIRES_TIMESTAMPS
 #define TIMESTAMP_FORMAT_SPEC "%%T"
@@ -379,6 +381,7 @@ setenv_logfile(const char *filename)
 }
 
 /*!
+ * \internal
  * \brief Add a file to be used as a Pacemaker detail log
  *
  * \param[in] filename  Name of log file to use
