@@ -206,24 +206,6 @@ remove_glib_log_handlers(void)
 
 /*!
  * \internal
- * \brief Write out a blackbox (enabling blackboxes if needed)
- *
- * \param[in] nsig  Signal number that was received
- *
- * \note This is a true signal handler, and so must be async-safe.
- */
-static void
-crm_trigger_blackbox(int nsig)
-{
-    if(nsig == SIGTRAP) {
-        /* Turn it on if it wasn't already */
-        crm_enable_blackbox(nsig);
-    }
-    crm_write_blackbox(nsig, NULL);
-}
-
-/*!
- * \internal
  * \brief Set the log format string based on the passed-in method
  *
  * \param[in] method        The detail level of the log output
@@ -497,6 +479,24 @@ pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out)
     }
 }
 
+/*!
+ * \internal
+ * \brief Write out a blackbox (enabling blackboxes if the signal is \c SIGTRAP)
+ *
+ * \param[in] nsig  Signal number that was received
+ *
+ * \note This is a true signal handler, and so must be async-safe.
+ */
+static void
+enable_and_write_blackbox(int nsig)
+{
+    if (nsig == SIGTRAP) {
+        crm_enable_blackbox(nsig);
+    }
+
+    crm_write_blackbox(nsig, NULL);
+}
+
 static void
 blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
                 const char *msg)
@@ -532,11 +532,11 @@ crm_enable_blackbox(int nsig)
     pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
 
     // Save to disk on abnormal termination
-    crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
-    crm_signal_handler(SIGABRT, crm_trigger_blackbox);
-    crm_signal_handler(SIGILL, crm_trigger_blackbox);
-    crm_signal_handler(SIGBUS, crm_trigger_blackbox);
-    crm_signal_handler(SIGFPE, crm_trigger_blackbox);
+    crm_signal_handler(SIGSEGV, enable_and_write_blackbox);
+    crm_signal_handler(SIGABRT, enable_and_write_blackbox);
+    crm_signal_handler(SIGILL, enable_and_write_blackbox);
+    crm_signal_handler(SIGBUS, enable_and_write_blackbox);
+    crm_signal_handler(SIGFPE, enable_and_write_blackbox);
 
     crm_update_callsites();
 
@@ -1151,7 +1151,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
          */
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
         mainloop_add_signal(SIGUSR2, crm_disable_blackbox);
-        mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
+        mainloop_add_signal(SIGTRAP, enable_and_write_blackbox);
 
         free(user);
 
