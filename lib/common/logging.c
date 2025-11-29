@@ -933,12 +933,10 @@ void
 crm_log_preinit(const char *entity, int argc, char *const *argv)
 {
     /* Configure libqb logging with nothing turned on */
-
-    struct utsname res;
-    int32_t qb_facility = 0;
-    pid_t pid = getpid();
-    const char *nodename = "localhost";
     static bool have_logging = false;
+    struct utsname res = { 0, };
+    const pid_t pid = getpid();
+    const char *nodename = "localhost";
 
     if (have_logging) {
         return;
@@ -974,8 +972,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
      */
     set_identity(entity, argc, argv);
 
-    qb_facility = qb_log_facility2int("local0");
-    qb_log_init(crm_system_name, qb_facility, LOG_ERR);
+    qb_log_init(crm_system_name, qb_log_facility2int("local0"), LOG_ERR);
     crm_log_level = LOG_CRIT;
 
     /* Nuke any syslog activity until it's asked for */
@@ -984,7 +981,8 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     // Shorter than default, generous for what we *should* send to syslog
     qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
 #endif
-    if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
+
+    if ((uname(&res) == 0) && !pcmk__str_empty(res.nodename)) {
         nodename = res.nodename;
     }
 
