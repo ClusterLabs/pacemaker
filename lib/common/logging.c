@@ -508,10 +508,10 @@ blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
     }
 }
 
-static void
-crm_control_blackbox(int nsig, bool enable)
+void
+crm_enable_blackbox(int nsig)
 {
-    if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
+    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024); /* Any size change drops existing entries */
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
 
@@ -538,8 +538,13 @@ crm_control_blackbox(int nsig, bool enable)
                     QB_LOG_STATE_ENABLED);
 
         crm_update_callsites();
+    }
+}
 
-    } else if (!enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
+void
+crm_disable_blackbox(int nsig)
+{
+    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
 
         /* Disable synchronous logging again when the blackbox is disabled */
@@ -547,18 +552,6 @@ crm_control_blackbox(int nsig, bool enable)
             qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
         }
     }
-}
-
-void
-crm_enable_blackbox(int nsig)
-{
-    crm_control_blackbox(nsig, TRUE);
-}
-
-void
-crm_disable_blackbox(int nsig)
-{
-    crm_control_blackbox(nsig, FALSE);
 }
 
 /*!
