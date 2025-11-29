@@ -219,37 +219,37 @@ static void
 set_format_string(int method, const char *daemon, pid_t use_pid,
                   const char *use_nodename)
 {
+    GString *fmt = NULL;
+
     if (method == QB_LOG_SYSLOG) {
         // The system log gets a simplified, user-friendly format
         qb_log_ctl(method, QB_LOG_CONF_EXTENDED, QB_FALSE);
         qb_log_format_set(method, "%g %p: %b");
-
-    } else {
-        // Everything else gets more detail, for advanced troubleshooting
-        GString *fmt = g_string_sized_new(256);
-
-        if (method > QB_LOG_STDERR) {
-            // If logging to file, prefix with timestamp, node name, daemon ID
-            g_string_append_printf(fmt,
-                                   TIMESTAMP_FORMAT_SPEC " %s %-20s[%lld] ",
-                                   use_nodename, daemon, (long long) use_pid);
-        }
-
-        // Add function name (in parentheses)
-        g_string_append(fmt, "(%n");
-        if (crm_tracing_enabled()) {
-            // When tracing, add file and line number
-            g_string_append(fmt, "@%f:%l");
-        }
-        g_string_append_c(fmt, ')');
-
-        // Add tag (if any), severity, and actual message
-        g_string_append(fmt, " %g\t%p: %b");
-
-        CRM_LOG_ASSERT(fmt->len > 0);
-        qb_log_format_set(method, fmt->str);
-        g_string_free(fmt, TRUE);
+        return;
     }
+
+    // Everything else gets more detail, for advanced troubleshooting
+    fmt = g_string_sized_new(256);
+
+    if (method > QB_LOG_STDERR) {
+        // If logging to file, prefix with timestamp, node name, daemon ID
+        g_string_append_printf(fmt, TIMESTAMP_FORMAT_SPEC " %s %-20s[%lld] ",
+                               use_nodename, daemon, (long long) use_pid);
+    }
+
+    // Add function name (in parentheses)
+    g_string_append(fmt, "(%n");
+    if (crm_tracing_enabled()) {
+        // When tracing, add file and line number
+        g_string_append(fmt, "@%f:%l");
+    }
+    g_string_append_c(fmt, ')');
+
+    // Add tag (if any), priority, and actual message
+    g_string_append(fmt, " %g\t%p: %b");
+
+    qb_log_format_set(method, fmt->str);
+    g_string_free(fmt, TRUE);
 }
 
 #define DEFAULT_LOG_FILE CRM_LOG_DIR "/pacemaker.log"
