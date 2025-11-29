@@ -56,11 +56,6 @@ static gchar **trace_formats = NULL;
 static gchar **trace_functions = NULL;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
-static guint pcmk__log_id = 0;
-static guint pcmk__glib_log_id = 0;
-static guint pcmk__gio_log_id = 0;
-static guint pcmk__gmodule_log_id = 0;
-static guint pcmk__gthread_log_id = 0;
 static pcmk__output_t *logger_out = NULL;
 
 pcmk__config_error_func pcmk__config_error_handler = NULL;
@@ -69,6 +64,31 @@ void *pcmk__config_error_context = NULL;
 void *pcmk__config_warning_context = NULL;
 
 static gboolean crm_tracing_enabled(void);
+
+/*!
+ * \internal
+ * \brief Mapping of a GLib log domain string to its log handler ID
+ */
+struct log_handler_id {
+    //! Log domain
+    const char *log_domain;
+
+    /*!
+     * Log handler function ID. GLib does not specify the meaning of 0, but
+     * based on the implementation, a valid ID is always positive unless we set
+     * UINT_MAX handlers.
+     */
+    guint handler_id;
+};
+
+// Log domains that we care about, and their handler function IDs once set
+static struct log_handler_id log_handler_ids[] = {
+    { G_LOG_DOMAIN, 0 },
+    { "GLib", 0 },
+    { "GLib-GIO", 0 },
+    { "GModule", 0 },
+    { "GThread", 0 },
+};
 
 /*!
  * \internal
@@ -143,6 +163,46 @@ handle_glib_message(const gchar *log_domain, GLogLevelFlags log_level,
 
 /*!
  * \internal
+ * \brief Set \c handle_glib_message() as the handler for each GLib log domain
+ *
+ * The handler will be set for all log levels, including fatal and recursive
+ * messages, for each GLib log domain that we care about.
+ */
+static void
+set_glib_log_handlers(void)
+{
+    for (int i = 0; i < PCMK__NELEM(log_handler_ids); i++) {
+        struct log_handler_id *entry = &log_handler_ids[i];
+
+        entry->handler_id = g_log_set_handler(entry->log_domain,
+                                              G_LOG_LEVEL_MASK
+                                              |G_LOG_FLAG_FATAL
+                                              |G_LOG_FLAG_RECURSION,
+                                              handle_glib_message, NULL);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Remove the handler for each GLib log domain that we care about
+ */
+static void
+remove_glib_log_handlers(void)
+{
+    for (int i = 0; i < PCMK__NELEM(log_handler_ids); i++) {
+        struct log_handler_id *entry = &log_handler_ids[i];
+
+        if (entry->handler_id == 0) {
+            continue;
+        }
+
+        g_log_remove_handler(entry->log_domain, entry->handler_id);
+        entry->handler_id = 0;
+    }
+}
+
+/*!
+ * \internal
  * \brief Write out a blackbox (enabling blackboxes if needed)
  *
  * \param[in] nsig  Signal number that was received
@@ -162,20 +222,7 @@ crm_trigger_blackbox(int nsig)
 void
 crm_log_deinit(void)
 {
-    if (pcmk__log_id == 0) {
-        return;
-    }
-
-    g_log_remove_handler(G_LOG_DOMAIN, pcmk__log_id);
-    pcmk__log_id = 0;
-    g_log_remove_handler("GLib", pcmk__glib_log_id);
-    pcmk__glib_log_id = 0;
-    g_log_remove_handler("GLib-GIO", pcmk__gio_log_id);
-    pcmk__gio_log_id = 0;
-    g_log_remove_handler("GModule", pcmk__gmodule_log_id);
-    pcmk__gmodule_log_id = 0;
-    g_log_remove_handler("GThread", pcmk__gthread_log_id);
-    pcmk__gthread_log_id = 0;
+    remove_glib_log_handlers();
 }
 
 /*!
@@ -914,9 +961,6 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     pid_t pid = getpid();
     const char *nodename = "localhost";
     static bool have_logging = false;
-    const GLogLevelFlags log_levels = G_LOG_LEVEL_MASK
-                                      |G_LOG_FLAG_FATAL
-                                      |G_LOG_FLAG_RECURSION;
 
     if (have_logging) {
         return;
@@ -938,19 +982,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
 
-    /* Add a log handler for messages from our log domain at any log level. */
-    pcmk__log_id = g_log_set_handler(G_LOG_DOMAIN, log_levels,
-                                     handle_glib_message, NULL);
-
-    /* Add a log handler for messages from the GLib domains at any log level. */
-    pcmk__glib_log_id = g_log_set_handler("GLib", log_levels,
-                                          handle_glib_message, NULL);
-    pcmk__gio_log_id = g_log_set_handler("GLib-GIO", log_levels,
-                                         handle_glib_message, NULL);
-    pcmk__gmodule_log_id = g_log_set_handler("GModule", log_levels,
-                                             handle_glib_message, NULL);
-    pcmk__gthread_log_id = g_log_set_handler("GThread", log_levels,
-                                             handle_glib_message, NULL);
+    set_glib_log_handlers();
 
     /* glib should not abort for any messages from the Pacemaker domain, but
      * other domains are still free to specify their own behavior.  However,
