@@ -42,8 +42,10 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
 {
     const char *node = NULL;
     const char *pattern = NULL;
-    const char *name = NULL;
-    char *value = NULL;
+
+    gchar **name_value = NULL;
+    const gchar *name = NULL;
+    const gchar *value = NULL;
     int rc = pcmk_rc_ok;
 
     if (target == NULL) {
@@ -52,12 +54,15 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
     }
 
     /* Determine if targeting by attribute, node name pattern or node name */
-    value = strchr(target, '=');
-    if (value != NULL)  {
-        name = target;
-        *value++ = '\0';
+    name_value = g_strsplit(target, "=", 2);
+
+    if (g_strv_length(name_value) == 2) {
+        name = name_value[0];
+        value = name_value[1];
+
     } else if (*target == '@') {
         pattern = target + 1;
+
     } else {
         node = target;
     }
@@ -78,6 +83,7 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
                                          name, value, fence_level);
     }
 
+    g_strfreev(name_value);
     return pcmk_legacy2rc(rc);
 }
 

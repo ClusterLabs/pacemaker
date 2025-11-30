@@ -834,7 +834,7 @@ static bool
 crm_time_parse(const char *time_str, crm_time_t *a_time)
 {
     uint32_t h, m, s;
-    char *offset_s = NULL;
+    const char *offset_s = NULL;
 
     tzset();
 

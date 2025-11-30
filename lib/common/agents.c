@@ -119,7 +119,7 @@ int
 crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                      char **type)
 {
-    char *colon;
+    const char *colon = NULL;
 
     CRM_CHECK(spec && standard && provider && type, return -EINVAL);
     *standard = NULL;
