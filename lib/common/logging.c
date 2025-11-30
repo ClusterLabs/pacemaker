@@ -263,13 +263,6 @@ set_format_string(int target, pid_t pid, const char *node_name)
 
 #define DEFAULT_LOG_FILE CRM_LOG_DIR "/pacemaker.log"
 
-static bool
-logfile_disabled(const char *filename)
-{
-    return pcmk__str_eq(filename, PCMK_VALUE_NONE, pcmk__str_casei)
-           || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
-}
-
 /*!
  * \internal
  * \brief Fix log file ownership if group is wrong or doesn't have access
@@ -384,18 +377,17 @@ setenv_logfile(const char *filename)
  * \internal
  * \brief Add a file to be used as a Pacemaker detail log
  *
- * \param[in] filename  Name of log file to use
+ * \param[in] filename  Name of log file to use. \c NULL adds the default log
+ *                      file if no log file is enabled yet. \c PCMK_VALUE_NONE
+ *                      or \c "/dev/null" causes this function to do nothing.
  *
  * \return Standard Pacemaker return code
+ *
+ * \note Messages from this function won't be logged to the new log file.
  */
 int
 pcmk__add_logfile(const char *filename)
 {
-    /* No log messages from this function will be logged to the new log!
-     * If another target such as syslog has already been added, the messages
-     * should show up there.
-     */
-
     int fd = 0;
     int rc = pcmk_rc_ok;
     FILE *logfile = NULL;
@@ -404,17 +396,19 @@ pcmk__add_logfile(const char *filename)
     static int default_fd = -1;
     static bool have_logfile = false;
 
+    // No logging to do if the file is "/dev/null" or special value "none"
+    if (pcmk__str_eq(filename, "/dev/null", pcmk__str_none)
+        || pcmk__str_eq(filename, PCMK_VALUE_NONE, pcmk__str_casei)) {
+
+        return pcmk_rc_ok;
+    }
+
     // Use default if caller didn't specify (and we don't already have one)
     if (filename == NULL) {
         if (have_logfile) {
             return pcmk_rc_ok;
         }
         filename = DEFAULT_LOG_FILE;
-    }
-
-    // If the user doesn't want logging, we're done
-    if (logfile_disabled(filename)) {
-        return pcmk_rc_ok;
     }
 
     // If the caller wants the default and we already have it, we're done
@@ -1092,8 +1086,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     {
         const char *logfile = pcmk__env_option(PCMK__ENV_LOGFILE);
 
-        if (!pcmk__str_eq(PCMK_VALUE_NONE, logfile, pcmk__str_casei)
-            && (pcmk__is_daemon || (logfile != NULL))) {
+        if (pcmk__is_daemon || (logfile != NULL)) {
             // Daemons always get a log file, unless explicitly set to "none"
             pcmk__add_logfile(logfile);
         }
