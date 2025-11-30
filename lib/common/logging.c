@@ -328,14 +328,25 @@ chmod_logfile(const char *filename, int logfd)
     const char *modestr = pcmk__env_option(PCMK__ENV_LOGFILE_MODE);
     mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
+    errno = 0;
     if (modestr != NULL) {
-        long filemode_l = strtol(modestr, NULL, 8);
+        char *end = NULL;
+        const long filemode_l = strtol(modestr, &end, 8);
+        const mode_t mask = S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO;
 
-        if ((filemode_l != LONG_MIN) && (filemode_l != LONG_MAX)) {
+        if ((errno != 0) || (end == modestr) || !pcmk__str_empty(end)
+            || (((mode_t) filemode_l & ~mask) != 0)) {
+
+            pcmk__warn("Setting '%s' mode to %04o because "
+                       "PCMK_" PCMK__ENV_LOGFILE_MODE " '%s' is invalid",
+                       filename, filemode, modestr);
+
+        } else {
             filemode = (mode_t) filemode_l;
         }
     }
-    if ((filemode != 0) && (fchmod(logfd, filemode) < 0)) {
+
+    if (fchmod(logfd, filemode) < 0) {
         pcmk__warn("Couldn't change '%s' mode to %04o: %s", filename, filemode,
                    strerror(errno));
     }
