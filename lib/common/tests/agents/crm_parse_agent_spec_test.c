@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,78 +12,116 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/agents.h>
 
+/*!
+ * \internal
+ * \brief Perform one test of \c crm_parse_agent_spec()
+ *
+ * \param[in] spec           Agent specification to parse
+ * \param[in] expected_std   Expected value of parsed agent standard
+ * \param[in] expected_prov  Expected value of parsed agent provider
+ * \param[in] expected_type  Expected value of parsed agent type
+ * \param[in] expected_rc    Expected return value of \c crm_parse_agent_spec()
+ * \param[in] check_spt      If \c false, don't check parsed standard, provider,
+ *                           and type against their expected values
+ *
+ * \note This macro aborts if any value does not match its expected value.
+ */
+#define assert_parse_agent_spec(spec, expected_std, expected_prov,          \
+                                expected_type, expected_rc, check_spt)      \
+    do {                                                                    \
+        char *std = NULL;                                                   \
+        char *prov = NULL;                                                  \
+        char *type = NULL;                                                  \
+        int rc = crm_parse_agent_spec(spec, &std, &prov, &type);            \
+                                                                            \
+        assert_int_equal(rc, expected_rc);                                  \
+                                                                            \
+        if (!check_spt) {                                                   \
+            /* This is a temporary hack to work around an issue that will   \
+             * be fixed in an upcoming commit                               \
+             */                                                             \
+            return;                                                         \
+        }                                                                   \
+                                                                            \
+        if (expected_std == NULL) {                                         \
+            assert_null(std);                                               \
+        } else {                                                            \
+            assert_string_equal(std, expected_std);                         \
+        }                                                                   \
+                                                                            \
+        if (expected_prov == NULL) {                                        \
+            assert_null(prov);                                              \
+        } else {                                                            \
+            assert_string_equal(prov, expected_prov);                       \
+        }                                                                   \
+                                                                            \
+        if (expected_type == NULL) {                                        \
+            assert_null(type);                                              \
+        } else {                                                            \
+            assert_string_equal(type, expected_type);                       \
+        }                                                                   \
+                                                                            \
+        free(std);                                                          \
+        free(prov);                                                         \
+        free(type);                                                         \
+    } while (0)
+
 static void
-all_params_null(void **state) {
-    assert_int_equal(crm_parse_agent_spec(NULL, NULL, NULL, NULL), -EINVAL);
-    assert_int_equal(crm_parse_agent_spec("", NULL, NULL, NULL), -EINVAL);
-    assert_int_equal(crm_parse_agent_spec(":", NULL, NULL, NULL), -EINVAL);
-    assert_int_equal(crm_parse_agent_spec("::", NULL, NULL, NULL), -EINVAL);
+all_params_null(void **state)
+{
+    int rc = pcmk_ok;
+
+    rc = crm_parse_agent_spec(NULL, NULL, NULL, NULL);
+    assert_int_equal(rc, -EINVAL);
+
+    rc = crm_parse_agent_spec("", NULL, NULL, NULL);
+    assert_int_equal(rc, -EINVAL);
+
+    rc = crm_parse_agent_spec(":", NULL, NULL, NULL);
+    assert_int_equal(rc, -EINVAL);
+
+    rc = crm_parse_agent_spec("::", NULL, NULL, NULL);
+    assert_int_equal(rc, -EINVAL);
 }
 
 static void
-no_prov_or_type(void **state) {
-    char *std = NULL;
-    char *prov = NULL;
-    char *ty = NULL;
+no_prov_or_type(void **state)
+{
+    assert_parse_agent_spec("ocf", NULL, NULL, NULL, -EINVAL, true);
 
-    assert_int_equal(crm_parse_agent_spec("ocf", &std, &prov, &ty), -EINVAL);
-    assert_int_equal(crm_parse_agent_spec("ocf:", &std, &prov, &ty), -EINVAL);
-    assert_int_equal(crm_parse_agent_spec("ocf::", &std, &prov, &ty), -EINVAL);
+    // @FIXME std is freed on error, so set it to NULL or don't check its value
+    assert_parse_agent_spec("ocf:",  NULL, NULL, NULL, -EINVAL, false);
+    assert_parse_agent_spec("ocf::", NULL, NULL, NULL, -EINVAL, false);
 }
 
 static void
-no_type(void **state) {
-    char *std = NULL;
-    char *prov = NULL;
-    char *ty = NULL;
-
-    assert_int_equal(crm_parse_agent_spec("ocf:pacemaker:", &std, &prov, &ty), -EINVAL);
+no_type(void **state)
+{
+    /* @FIXME std and prov are freed on error, so set them to NULL or don't
+     * check their values
+     */
+    assert_parse_agent_spec("ocf:pacemaker:", NULL, NULL, NULL, -EINVAL, false);
 }
 
 static void
-get_std_and_ty(void **state) {
-    char *std = NULL;
-    char *prov = NULL;
-    char *ty = NULL;
-
-    assert_int_equal(crm_parse_agent_spec("stonith:fence_xvm", &std, &prov, &ty), pcmk_ok);
-    assert_string_equal(std, "stonith");
-    assert_null(prov);
-    assert_string_equal(ty, "fence_xvm");
-
-    free(std);
-    free(ty);
+get_std_and_ty(void **state)
+{
+    assert_parse_agent_spec("stonith:fence_xvm", "stonith", NULL, "fence_xvm",
+                            pcmk_ok, true);
 }
 
 static void
-get_all_values(void **state) {
-    char *std = NULL;
-    char *prov = NULL;
-    char *ty = NULL;
-
-    assert_int_equal(crm_parse_agent_spec("ocf:pacemaker:ping", &std, &prov, &ty), pcmk_ok);
-    assert_string_equal(std, "ocf");
-    assert_string_equal(prov, "pacemaker");
-    assert_string_equal(ty, "ping");
-
-    free(std);
-    free(prov);
-    free(ty);
+get_all_values(void **state)
+{
+    assert_parse_agent_spec("ocf:pacemaker:ping", "ocf", "pacemaker", "ping",
+                            pcmk_ok, true);
 }
 
 static void
-get_systemd_values(void **state) {
-    char *std = NULL;
-    char *prov = NULL;
-    char *ty = NULL;
-
-    assert_int_equal(crm_parse_agent_spec("systemd:UNIT@A:B", &std, &prov, &ty), pcmk_ok);
-    assert_string_equal(std, "systemd");
-    assert_null(prov);
-    assert_string_equal(ty, "UNIT@A:B");
-
-    free(std);
-    free(ty);
+get_systemd_values(void **state)
+{
+    assert_parse_agent_spec("systemd:UNIT@A:B", "systemd", NULL, "UNIT@A:B",
+                            pcmk_ok, true);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
