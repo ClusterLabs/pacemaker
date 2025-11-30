@@ -265,12 +265,23 @@ set_format_string(int target, pid_t pid, const char *node_name)
 
 /*!
  * \internal
- * \brief Fix log file ownership if group is wrong or doesn't have access
+ * \brief Ensure the daemon group owns the log file or has read/write access
+ *
+ * If the daemon group (\c haclient by default) doesn't own the log file or
+ * can't read and write it, change the log file's ownership to the daemon user
+ * and group.
  *
  * \param[in] filename  Log file name (for logging only)
  * \param[in] logfd     Log file descriptor
  *
  * \return Standard Pacemaker return code
+ *
+ * \todo Should we be less aggressive in changing ownership? The daemon group
+ *       may have read/write permissions via file ACLs, or the daemon user may
+ *       have permissions via user ownership, secondary group membership, or
+ *       file ACLs. Also, even after changing group ownership, the daemon group
+ *       may not have read/write permissions. Even if it does, we may unset them
+ *       when applying PCMK__ENV_LOGFILE_MODE in \c chmod_logfile().
  */
 static int
 chown_logfile(const char *filename, int logfd)
@@ -294,14 +305,19 @@ chown_logfile(const char *filename, int logfd)
                    filename, pcmk_rc_str(rc));
         return pcmk_rc_ok;
     }
+
     if ((st.st_gid == pcmk_gid)
         && ((st.st_mode & S_IRWXG) == (S_IRGRP|S_IWGRP))) {
+
+        // Daemon group already owns the log file and has read/write permissions
         return pcmk_rc_ok;
     }
+
     if (fchown(logfd, pcmk_uid, pcmk_gid) < 0) {
         pcmk__warn("Couldn't change '%s' ownership to user %s gid %d: %s",
                    filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
     }
+
     return pcmk_rc_ok;
 }
 
