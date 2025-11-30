@@ -324,7 +324,19 @@ chown_logfile(const char *filename, int logfd)
     return pcmk_rc_ok;
 }
 
-// Reset log file permissions (using environment variable if set)
+/*!
+ * \internal
+ * \brief Set log file permissions using environment variable or default value
+ *
+ * If the \c PCMK__ENV_LOGFILE_MODE environment variable is set to a valid
+ * value, this function sets the log file mode to that value. Otherwise, it sets
+ * the log file mode to 0660.
+ *
+ * An error causes a warning to be logged but is otherwise ignored.
+ *
+ * \param[in] filename  Log file name (for logging only)
+ * \param[in] logfd     Log file descriptor
+ */
 static void
 chmod_logfile(const char *filename, int logfd)
 {
