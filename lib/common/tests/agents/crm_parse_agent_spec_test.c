@@ -21,13 +21,11 @@
  * \param[in] expected_prov  Expected value of parsed agent provider
  * \param[in] expected_type  Expected value of parsed agent type
  * \param[in] expected_rc    Expected return value of \c crm_parse_agent_spec()
- * \param[in] check_spt      If \c false, don't check parsed standard, provider,
- *                           and type against their expected values
  *
  * \note This macro aborts if any value does not match its expected value.
  */
 #define assert_parse_agent_spec(spec, expected_std, expected_prov,          \
-                                expected_type, expected_rc, check_spt)      \
+                                expected_type, expected_rc)                 \
     do {                                                                    \
         char *std = NULL;                                                   \
         char *prov = NULL;                                                  \
@@ -35,13 +33,6 @@
         int rc = crm_parse_agent_spec(spec, &std, &prov, &type);            \
                                                                             \
         assert_int_equal(rc, expected_rc);                                  \
-                                                                            \
-        if (!check_spt) {                                                   \
-            /* This is a temporary hack to work around an issue that will   \
-             * be fixed in an upcoming commit                               \
-             */                                                             \
-            return;                                                         \
-        }                                                                   \
                                                                             \
         if (expected_std == NULL) {                                         \
             assert_null(std);                                               \
@@ -127,11 +118,9 @@ null_params(void **state)
 static void
 no_prov_or_type(void **state)
 {
-    assert_parse_agent_spec("ocf", NULL, NULL, NULL, -EINVAL, true);
-
-    // @FIXME std is freed on error, so set it to NULL or don't check its value
-    assert_parse_agent_spec("ocf:",  NULL, NULL, NULL, -EINVAL, false);
-    assert_parse_agent_spec("ocf::", NULL, NULL, NULL, -EINVAL, false);
+    assert_parse_agent_spec("ocf", NULL, NULL, NULL, -EINVAL);
+    assert_parse_agent_spec("ocf:",  NULL, NULL, NULL, -EINVAL);
+    assert_parse_agent_spec("ocf::", NULL, NULL, NULL, -EINVAL);
 }
 
 static void
@@ -140,39 +129,39 @@ no_type(void **state)
     /* @FIXME std and prov are freed on error, so set them to NULL or don't
      * check their values
      */
-    assert_parse_agent_spec("ocf:pacemaker:", NULL, NULL, NULL, -EINVAL, false);
+    assert_parse_agent_spec("ocf:pacemaker:", NULL, NULL, NULL, -EINVAL);
 }
 
 static void
 get_std_and_ty(void **state)
 {
     assert_parse_agent_spec("stonith:fence_xvm", "stonith", NULL, "fence_xvm",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 static void
 get_all_values(void **state)
 {
     assert_parse_agent_spec("ocf:pacemaker:ping", "ocf", "pacemaker", "ping",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 static void
 get_systemd_values(void **state)
 {
     assert_parse_agent_spec("systemd:UNIT@A:B", "systemd", NULL, "UNIT@A:B",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 static void
 type_ends_with_colon(void **state)
 {
     /* It's not clear that this would ever be allowed in practice. However, for
-     * standards that support a provider, everything after the first colon
+     * standards that don't support a provider, everything after the first colon
      * should be considered the type. This includes a trailing colon.
      */
     assert_parse_agent_spec("stonith:fence_xvm:", "stonith", NULL, "fence_xvm:",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
