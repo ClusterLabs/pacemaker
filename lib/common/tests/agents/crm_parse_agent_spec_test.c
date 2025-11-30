@@ -12,10 +12,21 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/agents.h>
 
+/*!
+ * \internal
+ * \brief Parse an agent spec and compare against expected values
+ *
+ * \param[in] line           Line number of caller (for error output)
+ * \param[in] spec           Agent spec
+ * \param[in] expected_std   Expected standard
+ * \param[in] expected_prov  Expected provider
+ * \param[in] expected_type  Expected type
+ * \param[in] expected_rc    Expected return code of \c crm_parse_agent_spec()
+ */
 static void
 assert_parse_agent_spec_as(int line, const char *spec, const char *expected_std,
                            const char *expected_prov, const char *expected_type,
-                           int expected_rc, bool check_spt)
+                           int expected_rc)
 {
     char *std = NULL;
     char *prov = NULL;
@@ -43,15 +54,9 @@ assert_parse_agent_spec_as(int line, const char *spec, const char *expected_std,
                       cast_ptr_to_largest_integral_type(NULL), \
                       __FILE__, (line))
 
-    if (!check_spt) {
-        /* This is a temporary hack to work around an issue that will be fixed
-         * in an upcoming commit
-         */
-        return;
-    }
-
     if (expected_std == NULL) {
         pcmk__assert_null(std);
+
     } else {
         _assert_string_equal(std, expected_std, __FILE__, line);
         free(std);
@@ -59,6 +64,7 @@ assert_parse_agent_spec_as(int line, const char *spec, const char *expected_std,
 
     if (expected_prov == NULL) {
         pcmk__assert_null(prov);
+
     } else {
         _assert_string_equal(prov, expected_prov, __FILE__, line);
         free(prov);
@@ -66,17 +72,28 @@ assert_parse_agent_spec_as(int line, const char *spec, const char *expected_std,
 
     if (expected_type == NULL) {
         pcmk__assert_null(type);
+
     } else {
         _assert_string_equal(type, expected_type, __FILE__, line);
         free(type);
     }
 }
 
-#define assert_parse_agent_spec(spec, expected_std, expected_prov,      \
-                                expected_type, expected_rc, check_spt)  \
-    assert_parse_agent_spec_as(__LINE__, (spec), (expected_std),        \
-                               (expected_prov), (expected_type),        \
-                               (expected_rc), (check_spt))
+/*!
+ * \internal
+ * \brief Parse an agent spec and compare against expected values
+ *
+ * \param[in] spec           Agent spec
+ * \param[in] expected_std   Expected standard
+ * \param[in] expected_prov  Expected provider
+ * \param[in] expected_type  Expected type
+ * \param[in] expected_rc    Expected return code of \c crm_parse_agent_spec()
+ */
+#define assert_parse_agent_spec(spec, expected_std, expected_prov,  \
+                                expected_type, expected_rc)         \
+    assert_parse_agent_spec_as(__LINE__, (spec), (expected_std),    \
+                               (expected_prov), (expected_type),    \
+                               (expected_rc))
 
 static void
 null_params(void **state)
@@ -139,11 +156,9 @@ null_params(void **state)
 static void
 no_prov_or_type(void **state)
 {
-    assert_parse_agent_spec("ocf", NULL, NULL, NULL, -EINVAL, true);
-
-    // @FIXME std is freed on error, so set it to NULL or don't check its value
-    assert_parse_agent_spec("ocf:",  NULL, NULL, NULL, -EINVAL, false);
-    assert_parse_agent_spec("ocf::", NULL, NULL, NULL, -EINVAL, false);
+    assert_parse_agent_spec("ocf", NULL, NULL, NULL, -EINVAL);
+    assert_parse_agent_spec("ocf:",  NULL, NULL, NULL, -EINVAL);
+    assert_parse_agent_spec("ocf::", NULL, NULL, NULL, -EINVAL);
 }
 
 static void
@@ -152,28 +167,28 @@ no_type(void **state)
     /* @FIXME std and prov are freed on error, so set them to NULL or don't
      * check their values
      */
-    assert_parse_agent_spec("ocf:pacemaker:", NULL, NULL, NULL, -EINVAL, false);
+    assert_parse_agent_spec("ocf:pacemaker:", NULL, NULL, NULL, -EINVAL);
 }
 
 static void
 get_std_and_ty(void **state)
 {
     assert_parse_agent_spec("stonith:fence_xvm", "stonith", NULL, "fence_xvm",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 static void
 get_all_values(void **state)
 {
     assert_parse_agent_spec("ocf:pacemaker:ping", "ocf", "pacemaker", "ping",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 static void
 get_systemd_values(void **state)
 {
     assert_parse_agent_spec("systemd:UNIT@A:B", "systemd", NULL, "UNIT@A:B",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 static void
@@ -184,7 +199,7 @@ type_ends_with_colon(void **state)
      * should be considered the type. This includes a trailing colon.
      */
     assert_parse_agent_spec("stonith:fence_xvm:", "stonith", NULL, "fence_xvm:",
-                            pcmk_ok, true);
+                            pcmk_ok);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
