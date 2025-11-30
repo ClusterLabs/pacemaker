@@ -475,8 +475,10 @@ pcmk__add_logfile(const char *filename)
     logfile = fopen(filename, "a");
     if (logfile == NULL) {
         rc = errno;
-        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " uid=%u gid=%u",
-                   filename, strerror(rc), geteuid(), getegid());
+        pcmk__warn("Logging to '%s' is disabled because couldn't open for "
+                   "append: %s " QB_XS " uid=%lld gid=%lld",
+                   filename, strerror(rc), (long long) geteuid(),
+                   (long long) getegid());
         return rc;
     }
 
