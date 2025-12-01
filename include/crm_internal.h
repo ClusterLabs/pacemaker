@@ -38,18 +38,6 @@
 
 #include <crm/lrmd.h>
 #include <crm/cluster/internal.h>
-#include <crm/common/agents_internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/digest_internal.h>
-#include <crm/common/logging.h>
-#include <crm/common/logging_internal.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/options_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/scheduler_internal.h>
-#include <crm/common/schemas_internal.h>
-#include <crm/common/servers_internal.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/internal.h>
 #include <locale.h>
 #include <gettext.h>

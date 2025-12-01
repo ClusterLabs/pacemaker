@@ -6,6 +6,9 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+#ifndef PCMK__DIRECT_INCLUDE
+#error "Include <pacemaker-internal.h> instead of <pcmki/pcmki_ticket.h> directly"
+#endif
 
 #ifndef PCMK__PCMKI_PCMKI_TICKET__H
 #define PCMK__PCMKI_PCMKI_TICKET__H

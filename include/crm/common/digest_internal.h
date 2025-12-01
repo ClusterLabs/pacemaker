@@ -7,6 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__DIRECT_INCLUDE
+#error "Include <crm/common/internal.h> instead of <digest_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_DIGEST_INTERNAL__H
 #define PCMK__CRM_COMMON_DIGEST_INTERNAL__H
 

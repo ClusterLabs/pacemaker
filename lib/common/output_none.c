@@ -13,7 +13,6 @@
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
 
 static void
 none_free_priv(pcmk__output_t *out) {

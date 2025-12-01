@@ -16,7 +16,6 @@
 
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
-#include <crm/common/nvpair_internal.h>
 
 #define REFERENCE_ISO8601 "2024-001"
 #define ATTR_PRESENT "start"

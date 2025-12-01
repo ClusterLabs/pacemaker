@@ -24,7 +24,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
 /*!

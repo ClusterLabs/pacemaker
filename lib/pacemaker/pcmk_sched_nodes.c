@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 #include "libpacemaker_private.h"

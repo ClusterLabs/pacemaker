@@ -7,15 +7,19 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__DIRECT_INCLUDE
+#error "Include <crm/common/internal.h> instead of <history_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_HISTORY_INTERNAL__H
 #define PCMK__CRM_COMMON_HISTORY_INTERNAL__H
 
 #include <stdio.h>                  // NULL
 #include <libxml/tree.h>            // xmlNode
 
-#include <crm/common/internal.h>    // pcmk__str_empty()
+#include <crm/common/strings_internal.h>        // pcmk__str_empty()
 #include <crm/common/xml_element_internal.h>    // pcmk__xe_id()
-#include <crm/common/xml_names_internal.h>  // PCMK__XA_OPERATION_KEY
+#include <crm/common/xml_names_internal.h>      // PCMK__XA_OPERATION_KEY
 
 #ifdef __cplusplus
 extern "C" {

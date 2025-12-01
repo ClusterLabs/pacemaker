@@ -13,7 +13,7 @@
 #include <stdbool.h>
 
 #  include <crm/crm.h>
-#  include <crm/common/ipc_internal.h>
+#  include <crm/common/internal.h>
 #  include <crm/common/xml.h>
 #  include <crm/cluster/internal.h>
 #  include <controld_fsa.h>

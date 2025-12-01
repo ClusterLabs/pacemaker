@@ -20,7 +20,6 @@
 #include <glib.h>
 
 #include <crm/common/ipc.h>
-#include <crm/common/xml_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/xml.h>
 #include "crmcluster_private.h"

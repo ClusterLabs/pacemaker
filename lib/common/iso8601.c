@@ -25,7 +25,6 @@
 #include <glib.h>                           // g_strchomp()
 
 #include <crm/common/iso8601.h>
-#include <crm/common/iso8601_internal.h>
 #include "crmcommon_private.h"
 
 /*
