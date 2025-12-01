@@ -1617,7 +1617,6 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     char *standard = NULL;
     char *provider = NULL;
     char *type = NULL;
-    char *metadata = NULL;
     lrmd_t *lrmd_conn = NULL;
 
     rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
@@ -1632,6 +1631,8 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
+        char *metadata = NULL;
+
         rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard,
                                            provider, type,
                                            &metadata, 0);
@@ -1640,6 +1641,7 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
         if (metadata != NULL) {
             out->output_xml(out, PCMK_XE_METADATA, metadata);
             free(metadata);
+
         } else {
             /* We were given a validly formatted spec, but it doesn't necessarily
              * match up with anything that exists.  Use ENXIO as the return code
@@ -1658,7 +1660,11 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
                     options.agent_spec);
     }
 
+    free(standard);
+    free(provider);
+    free(type);
     lrmd_api_delete(lrmd_conn);
+
     return pcmk_rc2exitc(rc);
 }
 
