@@ -843,7 +843,7 @@ crm_time_parse(const char *time_str, crm_time_t *a_time)
             return false;
         }
 
-        offset_s = strstr(time_str, "Z");
+        offset_s = strchr(time_str, 'Z');
 
         /* @COMPAT: Spaces between the time and the offset are not supported
          * by the standard according to section 3.4.1 and 4.2.5.2.
@@ -1302,7 +1302,7 @@ crm_time_parse_period(const char *period_str)
         }
     }
 
-    period_str = strstr(original, "/");
+    period_str = strchr(original, '/');
     if (period_str) {
         ++period_str;
         if (period_str[0] == 'P') {

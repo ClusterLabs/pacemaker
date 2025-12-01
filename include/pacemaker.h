@@ -275,14 +275,16 @@ int pcmk_simulate(xmlNodePtr *xml, pcmk_scheduler_t *scheduler,
 int pcmk_verify(xmlNodePtr *xml, const char *cib_source);
 
 /*!
- * \brief Get nodes list
+ * \brief Output list of nodes from the CIB
  *
- * \param[in,out] xml         The destination for the result, as an XML tree
- * \param[in]     node_types  Node type(s) to return (default: all)
+ * \param[in,out] xml    The destination for the result, as an XML tree
+ * \param[in]     types  Comma-separated list of node types to return. Valid
+ *                       types: \c "all", \c "cluster", \c "guest", \c "remote".
+ *                       A value of \c NULL is equivalent to \c "all".
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_list_nodes(xmlNodePtr *xml, const char *node_types);
+int pcmk_list_nodes(xmlNode **xml, const char *types);
 
 /*!
  * \brief Output cluster status formatted like `crm_mon --output-as=xml`

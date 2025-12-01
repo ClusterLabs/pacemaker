@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,8 +23,7 @@ extern "C" {
 #endif
 
 // CIB queries
-int pcmk__list_nodes(pcmk__output_t *out, const char *node_types,
-                     bool bash_export);
+int pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export);
 
 // Controller queries
 int pcmk__controller_status(pcmk__output_t *out, const char *node_name,

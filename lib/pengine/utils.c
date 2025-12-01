@@ -857,7 +857,7 @@ pe__build_rsc_list(pcmk_scheduler_t *scheduler, const char *s)
              * into the filter list.  Otherwise, use the printable ID of whatever
              * resource was found that matches what was asked for.
              */
-            if (strstr(s, ":") != NULL) {
+            if (strchr(s, ':') != NULL) {
                 resources = g_list_prepend(resources, strdup(rsc->id));
             } else {
                 resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));

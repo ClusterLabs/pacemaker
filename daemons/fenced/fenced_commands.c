@@ -895,9 +895,7 @@ free_device(gpointer data)
 
     pcmk__xml_free(device->agent_metadata);
     free(device->namespace);
-    if (device->on_target_actions != NULL) {
-        g_string_free(device->on_target_actions, TRUE);
-    }
+    g_strfreev(device->on_target_actions);
     free(device->agent);
     free(device->id);
     free(device);
@@ -1030,6 +1028,9 @@ read_action_metadata(fenced_device_t *device)
     int max = 0;
     int lpc = 0;
 
+    // @TODO Use GStrvBuilder when we require glib 2.68
+    GPtrArray *on_target_actions = NULL;
+
     if (device->agent_metadata == NULL) {
         return;
     }
@@ -1079,10 +1080,18 @@ read_action_metadata(fenced_device_t *device)
         if ((action != NULL)
             && pcmk__xe_attr_is_true(match, PCMK_XA_ON_TARGET)) {
 
-            pcmk__add_word(&(device->on_target_actions), 64, action);
+            if (on_target_actions == NULL) {
+                on_target_actions = g_ptr_array_new();
+            }
+            g_ptr_array_add(on_target_actions, g_strdup(action));
         }
     }
 
+    if (on_target_actions != NULL) {
+        g_ptr_array_add(on_target_actions, NULL);
+        device->on_target_actions =
+            (gchar **) g_ptr_array_free(on_target_actions, FALSE);
+    }
     xmlXPathFreeObject(xpath);
 }
 
@@ -1176,9 +1185,11 @@ build_device_from_xml(const xmlNode *dev)
     }
 
     if (device->on_target_actions != NULL) {
+        gchar *on_target_actions = g_strjoinv(" ", device->on_target_actions);
+
         crm_info("Fencing device '%s' requires actions (%s) to be executed "
-                 "on target", device->id,
-                 (const char *) device->on_target_actions->str);
+                 "on target", device->id, on_target_actions);
+        g_free(on_target_actions);
     }
 
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
@@ -1365,7 +1376,7 @@ device_params_diff(GHashTable *first, GHashTable *second) {
     g_hash_table_iter_init(&gIter, first);
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
 
-        if(strstr(key, "CRM_meta") == key) {
+        if (g_str_has_prefix(key, CRM_META "_")) {
             continue;
         } else if (strcmp(key, PCMK_XA_CRM_FEATURE_SET) == 0) {
             continue;
@@ -2061,36 +2072,37 @@ search_devices_record_result(struct device_search_s *search, const char *device,
  * \internal
  * \brief Check whether the local host is allowed to execute a fencing action
  *
- * \param[in] device         Fence device to check
- * \param[in] action         Fence action to check
- * \param[in] target         Hostname of fence target
- * \param[in] allow_self     Whether self-fencing is allowed for this operation
+ * \param[in] device      Fence device to check
+ * \param[in] action      Fence action to check
+ * \param[in] target      Hostname of fence target
+ * \param[in] allow_self  Whether self-fencing is allowed for this operation
  *
- * \return TRUE if local host is allowed to execute action, FALSE otherwise
+ * \return \c true if local host is allowed to execute action, or \c false
+ *         otherwise
  */
-static gboolean
+static bool
 localhost_is_eligible(const fenced_device_t *device, const char *action,
-                      const char *target, gboolean allow_self)
+                      const char *target, bool allow_self)
 {
-    gboolean localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
-                                                pcmk__str_casei);
+    bool localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
+                                            pcmk__str_casei);
 
-    if ((device != NULL) && (action != NULL)
-        && (device->on_target_actions != NULL)
-        && (strstr((const char*) device->on_target_actions->str,
-                   action) != NULL)) {
+    CRM_CHECK(action != NULL, return true);
+
+    if ((device != NULL) && (device->on_target_actions != NULL)
+        && pcmk__g_strv_contains(device->on_target_actions, action)) {
 
         if (!localhost_is_target) {
             crm_trace("Operation '%s' using %s can only be executed for local "
                       "host, not %s", action, device->id, target);
-            return FALSE;
+            return false;
         }
 
     } else if (localhost_is_target && !allow_self) {
         crm_trace("'%s' operation does not support self-fencing", action);
-        return FALSE;
+        return false;
     }
-    return TRUE;
+    return true;
 }
 
 /*!
@@ -2108,7 +2120,7 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
 static bool
 localhost_is_eligible_with_remap(const fenced_device_t *device,
                                  const char *action, const char *target,
-                                 gboolean allow_self)
+                                 bool allow_self)
 {
     // Check exact action
     if (localhost_is_eligible(device, action, target, allow_self)) {
@@ -2124,7 +2136,7 @@ localhost_is_eligible_with_remap(const fenced_device_t *device,
          * for remapped "on" actions because the target is off at that point.
          */
         if (localhost_is_eligible(device, PCMK_ACTION_OFF, target, allow_self)
-            || localhost_is_eligible(device, PCMK_ACTION_ON, target, FALSE)) {
+            || localhost_is_eligible(device, PCMK_ACTION_ON, target, false)) {
             return true;
         }
     }
@@ -2152,17 +2164,20 @@ can_fence_host_with_device(fenced_device_t *dev,
                            struct device_search_s *search)
 {
     gboolean can = FALSE;
-    const char *check_type = "Internal bug";
-    const char *target = NULL;
-    const char *alias = NULL;
     const char *dev_id = "Unspecified device";
-    const char *action = (search == NULL)? NULL : search->action;
+    const char *action = NULL;
+    const char *target = NULL;
+    const char *check_type = "Internal bug";
+    const char *alias = NULL;
 
-    CRM_CHECK((dev != NULL) && (action != NULL), goto search_report_results);
+    CRM_CHECK((dev != NULL) && (search != NULL) && (search->action != NULL),
+              goto search_report_results);
 
     if (dev->id != NULL) {
         dev_id = dev->id;
     }
+
+    action = search->action;
 
     target = search->host;
     if (target == NULL) {
@@ -2387,7 +2402,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
  */
 static void
 add_disallowed(xmlNode *xml, const char *action, const fenced_device_t *device,
-               const char *target, gboolean allow_self)
+               const char *target, bool allow_self)
 {
     if (!localhost_is_eligible(device, action, target, allow_self)) {
         crm_trace("Action '%s' using %s is disallowed for local host",
@@ -2409,7 +2424,7 @@ add_disallowed(xmlNode *xml, const char *action, const fenced_device_t *device,
 static void
 add_action_reply(xmlNode *xml, const char *action,
                  const fenced_device_t *device, const char *target,
-                 gboolean allow_self)
+                 bool allow_self)
 {
     xmlNode *child = pcmk__xe_create(xml, PCMK__XE_ST_DEVICE_ACTION);
 
@@ -2524,7 +2539,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
             add_action_reply(dev, PCMK_ACTION_OFF, device, query->target,
                              pcmk__is_set(query->call_options,
                                           st_opt_allow_self_fencing));
-            add_action_reply(dev, PCMK_ACTION_ON, device, query->target, FALSE);
+            add_action_reply(dev, PCMK_ACTION_ON, device, query->target, false);
         }
 
         /* A query without a target wants device parameters */

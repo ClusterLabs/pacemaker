@@ -463,14 +463,10 @@ pcmk__throttle_load_avg(float *load)
     }
 
     if (fgets(buffer, sizeof(buffer), stream) != NULL) {
-        char *nl = strstr(buffer, "\n");
-
         /* Grab the 1-minute average, ignore the rest */
         *load = strtof(buffer, NULL);
-        if (nl != NULL) {
-            nl[0] = 0;
-        }
 
+        g_strchomp(buffer);
         fclose(stream);
         return true;
     }

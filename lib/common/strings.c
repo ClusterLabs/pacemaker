@@ -915,30 +915,78 @@ pcmk__parse_ms(const char *input, long long *result)
 
 /*!
  * \internal
+ * \brief Data for \c cmp_str_in_list()
+ */
+struct str_in_list_data {
+    const char *str;
+    uint32_t flags;
+};
+
+/*!
+ * \internal
+ * \brief Call \c pcmk__strcmp() against an element of a \c GList
+ *
+ * \param[in] a  List element (a string)
+ * \param[in] b  String to compare against \p and the flags for comparison (a
+ *               (<tt>struct str_in_list_data</tt>)
+ *
+ * \return A negative integer if \p a comes before \p b->str, a positive integer
+ *         if \p a comes after \p b->str, or 0 if \p a is equal to \p b->str
+ *         (according to \p b->flags)
+ */
+static gint
+cmp_str_in_list(gconstpointer a, gconstpointer b)
+{
+    const char *element = a;
+    const struct str_in_list_data *data = b;
+
+    return pcmk__strcmp(element, data->str, data->flags);
+}
+
+/*!
+ * \internal
  * \brief Find a string in a list of strings
  *
- * \note This function takes the same flags and has the same behavior as
- *       pcmk__str_eq().
+ * \param[in] str    String to search for
+ * \param[in] list   List to search
+ * \param[in] flags  Group of <tt>enum pcmk__str_flags</tt> to pass to
+ *                   \c pcmk__str_eq()
  *
- * \note No matter what input string or flags are provided, an empty
- *       list will always return FALSE.
- *
- * \param[in] s      String to search for
- * \param[in] lst    List to search
- * \param[in] flags  A bitfield of pcmk__str_flags to modify operation
- *
- * \return \c TRUE if \p s is in \p lst, or \c FALSE otherwise
+ * \return \c true if \p str is in \p list, or \c false otherwise
  */
-gboolean
-pcmk__str_in_list(const gchar *s, const GList *lst, uint32_t flags)
+bool
+pcmk__str_in_list(const char *str, const GList *list, uint32_t flags)
 {
-    for (const GList *ele = lst; ele != NULL; ele = ele->next) {
-        if (pcmk__str_eq(s, ele->data, flags)) {
-            return TRUE;
+    const struct str_in_list_data data = {
+        .str = str,
+        .flags = flags,
+    };
+
+    return (g_list_find_custom((GList *) list, &data, cmp_str_in_list) != NULL);
+}
+
+/*!
+ * \internal
+ * \brief Check whether a string is in an array of <tt>gchar *</tt>
+ *
+ * \param[in] strv  <tt>NULL</tt>-terminated array of strings to search
+ * \param[in] str   String to search for
+ *
+ * \return \c true if \p str is an element of \p strv, or \c false otherwise
+ */
+bool
+pcmk__g_strv_contains(gchar **strv, const gchar *str)
+{
+    // @COMPAT Replace with calls to g_strv_contains() when we require glib 2.44
+    CRM_CHECK((strv != NULL) && (str != NULL), return false);
+
+    for (; *strv != NULL; strv++) {
+        if (pcmk__str_eq(*strv, str, pcmk__str_none)) {
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 static bool
