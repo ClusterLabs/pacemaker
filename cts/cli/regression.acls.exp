@@ -30,7 +30,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -90,7 +90,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -151,7 +151,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -212,7 +212,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -276,7 +276,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -343,7 +343,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -413,7 +413,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -486,7 +486,7 @@
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -531,10 +531,10 @@ cibadmin: CIB API call failed: Permission denied
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: unknownguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute         - unknownguy: Set enable-acl
-=#=#=#= Begin test: unknownguy: Set stonith-enabled =#=#=#=
+=#=#=#= Begin test: unknownguy: Set fencing-enabled =#=#=#=
 crm_attribute: Error performing operation: Permission denied
-=#=#=#= End test: unknownguy: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
-* Passed: crm_attribute         - unknownguy: Set stonith-enabled
+=#=#=#= End test: unknownguy: Set fencing-enabled - Insufficient privileges (4) =#=#=#=
+* Passed: crm_attribute         - unknownguy: Set fencing-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Lack of ACL denies user 'unknownguy' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
@@ -549,10 +549,10 @@ cibadmin: CIB API call failed: Permission denied
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: l33t-haxor: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute         - l33t-haxor: Set enable-acl
-=#=#=#= Begin test: l33t-haxor: Set stonith-enabled =#=#=#=
+=#=#=#= Begin test: l33t-haxor: Set fencing-enabled =#=#=#=
 crm_attribute: Error performing operation: Permission denied
-=#=#=#= End test: l33t-haxor: Set stonith-enabled - Insufficient privileges (4) =#=#=#=
-* Passed: crm_attribute         - l33t-haxor: Set stonith-enabled
+=#=#=#= End test: l33t-haxor: Set fencing-enabled - Insufficient privileges (4) =#=#=#=
+* Passed: crm_attribute         - l33t-haxor: Set fencing-enabled
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Parent ACL denies user 'l33t-haxor' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
@@ -595,7 +595,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -638,16 +638,16 @@ Error setting enable-acl=false (section=crm_config, set=<null>): Permission deni
 crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: niceguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute         - niceguy: Set enable-acl
-=#=#=#= Begin test: niceguy: Set stonith-enabled =#=#=#=
-pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bootstrap-options-stonith-enabled"
-=#=#=#= Current cib after: niceguy: Set stonith-enabled =#=#=#=
+=#=#=#= Begin test: niceguy: Set fencing-enabled =#=#=#=
+pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bootstrap-options-fencing-enabled"
+=#=#=#= Current cib after: niceguy: Set fencing-enabled =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -677,7 +677,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bo
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -712,8 +712,8 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bo
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: niceguy: Set stonith-enabled - OK (0) =#=#=#=
-* Passed: crm_attribute         - niceguy: Set stonith-enabled
+=#=#=#= End test: niceguy: Set fencing-enabled - OK (0) =#=#=#=
+* Passed: crm_attribute         - niceguy: Set fencing-enabled
 =#=#=#= Begin test: niceguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy']
 pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
@@ -727,7 +727,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -757,7 +757,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -794,15 +794,15 @@ cibadmin: CIB API call failed: Permission denied
 </cib>
 =#=#=#= End test: root: Query configuration - OK (0) =#=#=#=
 * Passed: cibadmin              - root: Query configuration
-=#=#=#= Begin test: root: Set stonith-enabled =#=#=#=
-=#=#=#= Current cib after: root: Set stonith-enabled =#=#=#=
+=#=#=#= Begin test: root: Set fencing-enabled =#=#=#=
+=#=#=#= Current cib after: root: Set fencing-enabled =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -832,7 +832,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -867,8 +867,8 @@ cibadmin: CIB API call failed: Permission denied
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: root: Set stonith-enabled - OK (0) =#=#=#=
-* Passed: crm_attribute         - root: Set stonith-enabled
+=#=#=#= End test: root: Set fencing-enabled - OK (0) =#=#=#=
+* Passed: crm_attribute         - root: Set fencing-enabled
 =#=#=#= Begin test: root: Create a resource =#=#=#=
 =#=#=#= Current cib after: root: Create a resource =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
@@ -877,7 +877,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -909,7 +909,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -954,7 +954,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -987,7 +987,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1051,7 +1051,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1088,7 +1088,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1135,7 +1135,7 @@ Stopped
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1172,7 +1172,7 @@ Stopped
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1219,7 +1219,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1254,7 +1254,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1302,7 +1302,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1339,7 +1339,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1410,7 +1410,7 @@ Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attribut
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1438,7 +1438,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1476,7 +1476,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1524,7 +1524,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="false"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1561,7 +1561,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1608,7 +1608,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1645,7 +1645,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1692,7 +1692,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1729,7 +1729,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1776,7 +1776,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1813,7 +1813,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1857,7 +1857,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1894,7 +1894,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -1938,7 +1938,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -1971,7 +1971,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2015,7 +2015,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2048,7 +2048,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2092,7 +2092,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2125,7 +2125,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2169,7 +2169,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2202,7 +2202,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2246,7 +2246,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2279,7 +2279,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2323,7 +2323,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2356,7 +2356,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2400,7 +2400,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2433,7 +2433,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2477,7 +2477,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2510,7 +2510,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2554,7 +2554,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2588,7 +2588,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2631,7 +2631,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2665,7 +2665,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dum
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2711,7 +2711,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2745,7 +2745,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
@@ -2791,7 +2791,7 @@ cibadmin: CIB API call failed: Permission denied
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -2825,7 +2825,7 @@ cibadmin: CIB API call failed: Permission denied
       </acl_role>
       <acl_role id="observer">
         <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
         <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
       </acl_role>
       <acl_role id="admin">
