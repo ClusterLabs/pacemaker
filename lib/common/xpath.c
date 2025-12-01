@@ -325,8 +325,8 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
 {
     char *retval = NULL;
     char *patt = NULL;
-    char *start = NULL;
-    char *end = NULL;
+    const char *start = NULL;
+    const char *end = NULL;
 
     if (node == NULL || xpath == NULL) {
         return retval;
@@ -343,7 +343,7 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
     start += strlen(patt);
     start++;
 
-    end = strstr(start, "\'");
+    end = strchr(start, '\'');
     pcmk__assert(end != NULL);
     retval = strndup(start, end-start);
 
