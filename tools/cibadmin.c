@@ -491,12 +491,12 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
     },
     [cibadmin_cmd_delete] = {
         PCMK__CIB_REQUEST_DELETE,
-        cibadmin_pre_delete_all, NULL,
+        NULL, NULL,
         cibadmin_cf_requires_input|cibadmin_cf_xpath_input,
     },
     [cibadmin_cmd_delete_all] = {
         PCMK__CIB_REQUEST_DELETE,
-        NULL, NULL,
+        cibadmin_pre_delete_all, NULL,
         cibadmin_cf_requires_input|cibadmin_cf_unsafe|cibadmin_cf_xpath_input,
     },
     [cibadmin_cmd_empty] = {
