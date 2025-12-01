@@ -67,8 +67,11 @@
     } while (0)
 
 static void
-all_params_null(void **state)
+null_params(void **state)
 {
+    char *std = NULL;
+    char *prov = NULL;
+    char *type = NULL;
     int rc = pcmk_ok;
 
     rc = crm_parse_agent_spec(NULL, NULL, NULL, NULL);
@@ -82,6 +85,43 @@ all_params_null(void **state)
 
     rc = crm_parse_agent_spec("::", NULL, NULL, NULL);
     assert_int_equal(rc, -EINVAL);
+
+    // With valid spec (no provider)
+    rc = crm_parse_agent_spec("stonith:fence_xvm", NULL, NULL, NULL);
+    assert_int_equal(rc, -EINVAL);
+
+    // With valid spec (has provider)
+    rc = crm_parse_agent_spec("ocf:pacemaker:ping", NULL, NULL, NULL);
+    assert_int_equal(rc, -EINVAL);
+
+    // Test varying NULL params with valid spec
+
+    rc = crm_parse_agent_spec("ocf:pacemaker:ping", NULL, NULL, &type);
+    assert_int_equal(rc, -EINVAL);
+    assert_null(type);
+
+    rc = crm_parse_agent_spec("ocf:pacemaker:ping", NULL, &prov, NULL);
+    assert_int_equal(rc, -EINVAL);
+    assert_null(prov);
+
+    rc = crm_parse_agent_spec("ocf:pacemaker:ping", NULL, &prov, &type);
+    assert_int_equal(rc, -EINVAL);
+    assert_null(prov);
+    assert_null(type);
+
+    rc = crm_parse_agent_spec("ocf:pacemaker:ping", &std, NULL, NULL);
+    assert_int_equal(rc, -EINVAL);
+    assert_null(std);
+
+    rc = crm_parse_agent_spec("ocf:pacemaker:ping", &std, NULL, &type);
+    assert_int_equal(rc, -EINVAL);
+    assert_null(std);
+    assert_null(type);
+
+    rc = crm_parse_agent_spec("ocf:pacemaker:ping", &std, &prov, NULL);
+    assert_int_equal(rc, -EINVAL);
+    assert_null(std);
+    assert_null(prov);
 }
 
 static void
@@ -124,10 +164,22 @@ get_systemd_values(void **state)
                             pcmk_ok, true);
 }
 
+static void
+type_ends_with_colon(void **state)
+{
+    /* It's not clear that this would ever be allowed in practice. However, for
+     * standards that support a provider, everything after the first colon
+     * should be considered the type. This includes a trailing colon.
+     */
+    assert_parse_agent_spec("stonith:fence_xvm:", "stonith", NULL, "fence_xvm:",
+                            pcmk_ok, true);
+}
+
 PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test(all_params_null),
+                cmocka_unit_test(null_params),
                 cmocka_unit_test(no_prov_or_type),
                 cmocka_unit_test(no_type),
                 cmocka_unit_test(get_std_and_ty),
                 cmocka_unit_test(get_all_values),
-                cmocka_unit_test(get_systemd_values))
+                cmocka_unit_test(get_systemd_values),
+                cmocka_unit_test(type_ends_with_colon))
