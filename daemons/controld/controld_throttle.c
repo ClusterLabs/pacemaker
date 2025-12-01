@@ -77,23 +77,23 @@ throttle_check_thresholds(float load, const char *desc,
                           const float thresholds[4])
 {
     if (load > thresholds[3]) {
-        crm_notice("Extreme %s detected: %f", desc, load);
+        pcmk__notice("Extreme %s detected: %f", desc, load);
         return throttle_extreme;
 
     } else if (load > thresholds[2]) {
-        crm_notice("High %s detected: %f", desc, load);
+        pcmk__notice("High %s detected: %f", desc, load);
         return throttle_high;
 
     } else if (load > thresholds[1]) {
-        crm_info("Moderate %s detected: %f", desc, load);
+        pcmk__info("Moderate %s detected: %f", desc, load);
         return throttle_med;
 
     } else if (load > thresholds[0]) {
-        crm_debug("Noticeable %s detected: %f", desc, load);
+        pcmk__debug("Noticeable %s detected: %f", desc, load);
         return throttle_low;
     }
 
-    crm_trace("Negligible %s detected: %f", desc, load);
+    pcmk__trace("Negligible %s detected: %f", desc, load);
     return throttle_none;
 }
 
@@ -171,7 +171,7 @@ throttle_mode(void)
         if (cpu_load > mode) {
             mode = cpu_load;
         }
-        crm_debug("Current load is %f across %u core(s)", load, cores);
+        pcmk__debug("Current load is %f across %u core(s)", load, cores);
     }
 
     return mode;
@@ -184,8 +184,8 @@ throttle_send_command(enum throttle_state_e mode)
     static enum throttle_state_e last = -1;
 
     if(mode != last) {
-        crm_info("New throttle mode: %s load (was %s)",
-                 load2str(mode), load2str(last));
+        pcmk__info("New throttle mode: %s load (was %s)", load2str(mode),
+                   load2str(last));
         last = mode;
 
         xml = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
@@ -238,9 +238,9 @@ throttle_update_job_max(const char *preference)
         int rc = pcmk__scan_ll(env_limit, &max, 0LL);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ignoring local option PCMK_" PCMK__ENV_NODE_ACTION_LIMIT
-                     " because '%s' is not a valid value: %s",
-                     env_limit, pcmk_rc_str(rc));
+            pcmk__warn("Ignoring local option PCMK_" PCMK__ENV_NODE_ACTION_LIMIT
+                       " because '%s' is not a valid value: %s",
+                       env_limit, pcmk_rc_str(rc));
             env_limit = NULL;
         }
     }
@@ -333,10 +333,11 @@ throttle_get_total_job_limit(int l)
     if(limit == l) {
 
     } else if(l == 0) {
-        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d", limit);
+        pcmk__trace("Using " PCMK_OPT_BATCH_LIMIT "=%d", limit);
 
     } else {
-        crm_trace("Using " PCMK_OPT_BATCH_LIMIT "=%d instead of %d", limit, l);
+        pcmk__trace("Using " PCMK_OPT_BATCH_LIMIT "=%d instead of %d", limit,
+                    l);
     }
     return limit;
 }
@@ -353,7 +354,7 @@ throttle_get_job_limit(const char *node)
         r->node = pcmk__str_copy(node);
         r->mode = throttle_low;
         r->max = throttle_job_max;
-        crm_trace("Defaulting to local values for unknown node %s", node);
+        pcmk__trace("Defaulting to local values for unknown node %s", node);
 
         g_hash_table_insert(throttle_records, r->node, r);
     }
@@ -373,7 +374,7 @@ throttle_get_job_limit(const char *node)
             jobs = QB_MAX(1, r->max);
             break;
         default:
-            crm_err("Unknown throttle mode %.4x on %s", r->mode, node);
+            pcmk__err("Unknown throttle mode %.4x on %s", r->mode, node);
             break;
     }
     return jobs;
@@ -401,7 +402,8 @@ throttle_update(xmlNode *xml)
     r->max = max;
     r->mode = (enum throttle_state_e) mode;
 
-    crm_debug("Node %s has %s load and supports at most %d jobs; new job limit %d",
-              from, load2str((enum throttle_state_e) mode), max,
-              throttle_get_job_limit(from));
+    pcmk__debug("Node %s has %s load and supports at most %d jobs; new job "
+                "limit %d",
+                from, load2str((enum throttle_state_e) mode), max,
+                throttle_get_job_limit(from));
 }

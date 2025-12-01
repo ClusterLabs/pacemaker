@@ -239,7 +239,7 @@ cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
@@ -296,9 +296,9 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     const cib__operation_t *operation = NULL;
 
-    crm_info("Handling %s operation for %s as %s",
-             pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
-             pcmk__s(user_name, "default user"));
+    pcmk__info("Handling %s operation for %s as %s",
+               pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
+               pcmk__s(user_name, "default user"));
 
     if (output_data != NULL) {
         *output_data = NULL;
@@ -317,7 +317,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     if (file_get_op_function(operation) == NULL) {
         // @COMPAT: At compatibility break, use EOPNOTSUPP
-        crm_err("Operation %s is not supported by CIB file clients", op);
+        pcmk__err("Operation %s is not supported by CIB file clients", op);
         return -EPROTONOSUPPORT;
     }
 
@@ -418,16 +418,17 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     }
 
     if (rc == pcmk_ok) {
-        crm_debug("Opened connection to local file '%s' for %s",
-                  private->filename, pcmk__s(name, "client"));
+        pcmk__debug("Opened connection to local file '%s' for %s",
+                    private->filename, pcmk__s(name, "client"));
         cib->state = cib_connected_command;
         cib->type = cib_command;
         register_client(cib);
 
     } else {
-        crm_info("Connection to local file '%s' for %s (client %s) failed: %s",
-                 private->filename, pcmk__s(name, "client"), private->id,
-                 pcmk_strerror(rc));
+        pcmk__info("Connection to local file '%s' for %s (client %s) failed: "
+                   "%s",
+                   private->filename, pcmk__s(name, "client"), private->id,
+                   pcmk_strerror(rc));
     }
     return rc;
 }
@@ -454,7 +455,8 @@ cib_file_write_live(xmlNode *cib_root, char *path)
     /* Get the desired uid/gid */
     rc = pcmk__daemon_user(&daemon_uid, &daemon_gid);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not find user " CRM_DAEMON_USER ": %s", pcmk_rc_str(rc));
+        pcmk__err("Could not find user " CRM_DAEMON_USER ": %s",
+                  pcmk_rc_str(rc));
         return rc;
     }
 
@@ -463,7 +465,7 @@ cib_file_write_live(xmlNode *cib_root, char *path)
      * otherwise, block access so we don't create wrong owner
      */
     if ((euid != 0) && (euid != daemon_uid)) {
-        crm_err("Must be root or " CRM_DAEMON_USER " to modify live CIB");
+        pcmk__err("Must be root or " CRM_DAEMON_USER " to modify live CIB");
 
         // @TODO Should this return an error instead?
         return pcmk_rc_ok;
@@ -528,7 +530,7 @@ cib_file_signoff(cib_t *cib)
     int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
     unregister_client(cib);
@@ -553,10 +555,10 @@ cib_file_signoff(cib_t *cib)
         }
 
         if (rc == pcmk_ok) {
-            crm_info("Wrote CIB to %s", private->filename);
+            pcmk__info("Wrote CIB to %s", private->filename);
             cib_clear_file_flags(private, cib_file_flag_dirty);
         } else {
-            crm_err("Could not write CIB to %s", private->filename);
+            pcmk__err("Could not write CIB to %s", private->filename);
         }
     }
 
@@ -674,7 +676,7 @@ cib_file_new(const char *cib_location)
     private->flags = 0;
     if (cib_file_is_live(cib_location)) {
         cib_set_file_flags(private, cib_file_flag_live);
-        crm_trace("File %s detected as live CIB", cib_location);
+        pcmk__trace("File %s detected as live CIB", cib_location);
     }
 
     /* assign variant specific ops */
@@ -709,16 +711,16 @@ cib_file_verify_digest(xmlNode *root, const char *sigfile)
     switch (rc) {
         case pcmk_rc_ok:
             if (expected == NULL) {
-                crm_err("On-disk digest at %s is empty", sigfile);
+                pcmk__err("On-disk digest at %s is empty", sigfile);
                 return FALSE;
             }
             break;
         case ENOENT:
-            crm_warn("No on-disk digest present at %s", sigfile);
+            pcmk__warn("No on-disk digest present at %s", sigfile);
             return TRUE;
         default:
-            crm_err("Could not read on-disk digest from %s: %s",
-                    sigfile, pcmk_rc_str(rc));
+            pcmk__err("Could not read on-disk digest from %s: %s", sigfile,
+                      pcmk_rc_str(rc));
             return FALSE;
     }
     passed = pcmk__verify_digest(root, expected);
@@ -757,19 +759,22 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     /* Verify that file exists and its size is nonzero */
     s_res = stat(filename, &buf);
     if (s_res < 0) {
-        crm_warn("Could not verify cluster configuration file %s: "
-                 "stat() failed: %s",
-                 filename, strerror(errno));
+        pcmk__warn("Could not verify cluster configuration file %s: "
+                   "stat() failed: %s",
+                   filename, strerror(errno));
         return -errno;
     } else if (buf.st_size == 0) {
-        crm_warn("Cluster configuration file %s is corrupt (size is zero)", filename);
+        pcmk__warn("Cluster configuration file %s is corrupt (size is zero)",
+                   filename);
         return -pcmk_err_cib_corrupt;
     }
 
     /* Parse XML */
     local_root = pcmk__xml_read(filename);
     if (local_root == NULL) {
-        crm_warn("Cluster configuration file %s is corrupt (unparseable as XML)", filename);
+        pcmk__warn("Cluster configuration file %s is corrupt (unparseable as "
+                   "XML)",
+                   filename);
         return -pcmk_err_cib_corrupt;
     }
 
@@ -829,14 +834,14 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
 
     /* Back up the CIB, by hard-linking it to the backup name */
     if ((link(cib_path, backup_path) < 0) && (errno != ENOENT)) {
-        crm_err("Could not archive %s by linking to %s: %s", cib_path,
-                backup_path, strerror(errno));
+        pcmk__err("Could not archive %s by linking to %s: %s", cib_path,
+                  backup_path, strerror(errno));
         rc = -1;
 
     /* Back up the CIB signature similarly */
     } else if ((link(cib_digest, backup_digest) < 0) && (errno != ENOENT)) {
-        crm_err("Could not archive %s by linking to %s: %s", cib_digest,
-                backup_digest, strerror(errno));
+        pcmk__err("Could not archive %s by linking to %s: %s", cib_digest,
+                  backup_digest, strerror(errno));
         rc = -1;
 
     /* Update the last counter and ensure everything is sync'd to media */
@@ -849,27 +854,27 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
             if ((chown(backup_path, cib_file_owner, cib_file_group) < 0)
                 && (errno != ENOENT)) {
 
-                crm_err("Could not set owner of %s: %s", backup_path,
-                        strerror(errno));
+                pcmk__err("Could not set owner of %s: %s", backup_path,
+                          strerror(errno));
                 rc = -1;
             }
             if ((chown(backup_digest, cib_file_owner, cib_file_group) < 0)
                 && (errno != ENOENT)) {
 
-                crm_err("Could not set owner of %s: %s", backup_digest,
-                        strerror(errno));
+                pcmk__err("Could not set owner of %s: %s", backup_digest,
+                          strerror(errno));
                 rc = -1;
             }
             rc2 = pcmk__chown_series_sequence(cib_dirname, CIB_SERIES,
                                               cib_file_owner, cib_file_group);
             if (rc2 != pcmk_rc_ok) {
-                crm_err("Could not set owner of sequence file in %s: %s",
-                        cib_dirname, pcmk_rc_str(rc2));
+                pcmk__err("Could not set owner of sequence file in %s: %s",
+                          cib_dirname, pcmk_rc_str(rc2));
                 rc = -1;
             }
         }
         pcmk__sync_directory(cib_dirname);
-        crm_info("Archived previous version as %s", backup_path);
+        pcmk__info("Archived previous version as %s", backup_path);
     }
 
     free(cib_path);
@@ -940,11 +945,11 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     char *tmp_digest = pcmk__assert_asprintf("%s/cib.XXXXXX", cib_dirname);
 
     /* Ensure the admin didn't modify the existing CIB underneath us */
-    crm_trace("Reading cluster configuration file %s", cib_path);
+    pcmk__trace("Reading cluster configuration file %s", cib_path);
     rc = cib_file_read_and_verify(cib_path, NULL, NULL);
     if ((rc != pcmk_ok) && (rc != -ENOENT)) {
-        crm_err("%s was manually modified while the cluster was active!",
-                cib_path);
+        pcmk__err("%s was manually modified while the cluster was active!",
+                  cib_path);
         exit_rc = pcmk_err_cib_modified;
         goto cleanup;
     }
@@ -955,36 +960,36 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
         goto cleanup;
     }
 
-    crm_debug("Writing CIB to disk");
+    pcmk__debug("Writing CIB to disk");
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     cib_file_prepare_xml(cib_root);
 
     /* Write the CIB to a temporary file, so we can deploy (near) atomically */
     fd = mkstemp(tmp_cib);
     if (fd < 0) {
-        crm_err("Couldn't open temporary file %s for writing CIB: %s", tmp_cib,
-                strerror(errno));
+        pcmk__err("Couldn't open temporary file %s for writing CIB: %s",
+                  tmp_cib, strerror(errno));
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
 
     /* Protect the temporary file */
     if (fchmod(fd, S_IRUSR | S_IWUSR) < 0) {
-        crm_err("Couldn't protect temporary file %s for writing CIB: %s",
-                tmp_cib, strerror(errno));
+        pcmk__err("Couldn't protect temporary file %s for writing CIB: %s",
+                  tmp_cib, strerror(errno));
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
     if (cib_do_chown && (fchown(fd, cib_file_owner, cib_file_group) < 0)) {
-        crm_err("Couldn't protect temporary file %s for writing CIB: %s",
-                tmp_cib, strerror(errno));
+        pcmk__err("Couldn't protect temporary file %s for writing CIB: %s",
+                  tmp_cib, strerror(errno));
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
 
     /* Write out the CIB */
     if (pcmk__xml_write_fd(cib_root, tmp_cib, fd) != pcmk_rc_ok) {
-        crm_err("Changes couldn't be written to %s", tmp_cib);
+        pcmk__err("Changes couldn't be written to %s", tmp_cib);
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
@@ -992,51 +997,51 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     /* Calculate CIB digest */
     digest = pcmk__digest_on_disk_cib(cib_root);
     pcmk__assert(digest != NULL);
-    crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
-             (admin_epoch ? admin_epoch : "0"), (epoch ? epoch : "0"), digest);
+    pcmk__info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
+               pcmk__s(admin_epoch, "0"), pcmk__s(epoch, "0"), digest);
 
     /* Write the CIB digest to a temporary file */
     fd = mkstemp(tmp_digest);
     if (fd < 0) {
-        crm_err("Could not create temporary file %s for CIB digest: %s",
-                tmp_digest, strerror(errno));
+        pcmk__err("Could not create temporary file %s for CIB digest: %s",
+                  tmp_digest, strerror(errno));
         exit_rc = pcmk_err_cib_save;
         goto cleanup;
     }
     if (cib_do_chown && (fchown(fd, cib_file_owner, cib_file_group) < 0)) {
-        crm_err("Couldn't protect temporary file %s for writing CIB: %s",
-                tmp_cib, strerror(errno));
+        pcmk__err("Couldn't protect temporary file %s for writing CIB: %s",
+                  tmp_cib, strerror(errno));
         exit_rc = pcmk_err_cib_save;
         close(fd);
         goto cleanup;
     }
     rc = pcmk__write_sync(fd, digest);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not write digest to %s: %s",
-                tmp_digest, pcmk_rc_str(rc));
+        pcmk__err("Could not write digest to %s: %s", tmp_digest,
+                  pcmk_rc_str(rc));
         exit_rc = pcmk_err_cib_save;
         close(fd);
         goto cleanup;
     }
     close(fd);
-    crm_debug("Wrote digest %s to disk", digest);
+    pcmk__debug("Wrote digest %s to disk", digest);
 
     /* Verify that what we wrote is sane */
-    crm_info("Reading cluster configuration file %s (digest: %s)",
-             tmp_cib, tmp_digest);
+    pcmk__info("Reading cluster configuration file %s (digest: %s)", tmp_cib,
+               tmp_digest);
     rc = cib_file_read_and_verify(tmp_cib, tmp_digest, NULL);
     pcmk__assert(rc == 0);
 
     /* Rename temporary files to live, and sync directory changes to media */
-    crm_debug("Activating %s", tmp_cib);
+    pcmk__debug("Activating %s", tmp_cib);
     if (rename(tmp_cib, cib_path) < 0) {
-        crm_err("Couldn't rename %s as %s: %s", tmp_cib, cib_path,
-                strerror(errno));
+        pcmk__err("Couldn't rename %s as %s: %s", tmp_cib, cib_path,
+                  strerror(errno));
         exit_rc = pcmk_err_cib_save;
     }
     if (rename(tmp_digest, digest_path) < 0) {
-        crm_err("Couldn't rename %s as %s: %s", tmp_digest, digest_path,
-                strerror(errno));
+        pcmk__err("Couldn't rename %s as %s: %s", tmp_digest, digest_path,
+                  strerror(errno));
         exit_rc = pcmk_err_cib_save;
     }
     pcmk__sync_directory(cib_dirname);
@@ -1079,17 +1084,17 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
 
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
-            crm_err("Aborting transaction for CIB file client (%s) on file "
-                    "'%s' due to failed %s request: %s",
-                    private->id, private->filename, op, pcmk_rc_str(rc));
-            crm_log_xml_info(request, "Failed request");
+            pcmk__err("Aborting transaction for CIB file client (%s) on file "
+                      "'%s' due to failed %s request: %s",
+                      private->id, private->filename, op, pcmk_rc_str(rc));
+            pcmk__log_xml_info(request, "Failed request");
             return rc;
         }
 
-        crm_trace("Applied %s request to transaction working CIB for CIB file "
-                  "client (%s) on file '%s'",
-                  op, private->id, private->filename);
-        crm_log_xml_trace(request, "Successful request");
+        pcmk__trace("Applied %s request to transaction working CIB for CIB "
+                    "file client (%s) on file '%s'",
+                    op, private->id, private->filename);
+        pcmk__log_xml_trace(request, "Successful request");
     }
 
     return pcmk_rc_ok;
@@ -1130,18 +1135,18 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
               *result_cib = pcmk__xml_copy(NULL, private->cib_xml));
 
-    crm_trace("Committing transaction for CIB file client (%s) on file '%s' to "
-              "working CIB",
-              private->id, private->filename);
+    pcmk__trace("Committing transaction for CIB file client (%s) on file '%s' "
+                "to working CIB",
+                private->id, private->filename);
 
     // Apply all changes to a working copy of the CIB
     private->cib_xml = *result_cib;
 
     rc = cib_file_process_transaction_requests(cib, transaction);
 
-    crm_trace("Transaction commit %s for CIB file client (%s) on file '%s'",
-              ((rc == pcmk_rc_ok)? "succeeded" : "failed"),
-              private->id, private->filename);
+    pcmk__trace("Transaction commit %s for CIB file client (%s) on file '%s'",
+                ((rc == pcmk_rc_ok)? "succeeded" : "failed"),
+                private->id, private->filename);
 
     /* Some request types (for example, erase) may have freed private->cib_xml
      * (the working copy) and pointed it at a new XML object. In that case, it
@@ -1176,9 +1181,9 @@ cib_file_process_commit_transaction(const char *op, int options,
     if (rc != pcmk_rc_ok) {
         cib_file_opaque_t *private = cib->variant_opaque;
 
-        crm_err("Could not commit transaction for CIB file client (%s) on "
-                "file '%s': %s",
-                private->id, private->filename, pcmk_rc_str(rc));
+        pcmk__err("Could not commit transaction for CIB file client (%s) on "
+                  "file '%s': %s",
+                  private->id, private->filename, pcmk_rc_str(rc));
     }
     return pcmk_rc2legacy(rc);
 }

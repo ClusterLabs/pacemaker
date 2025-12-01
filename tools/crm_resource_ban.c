@@ -124,7 +124,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
         pcmk__xe_set(expr, PCMK_XA_END, later_s);
     }
 
-    crm_log_xml_notice(fragment, "Modify");
+    pcmk__log_xml_notice(fragment, "Modify");
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_sync_call);
     rc = pcmk_legacy2rc(rc);
@@ -204,7 +204,7 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
         pcmk__xe_set(expr, PCMK_XA_END, later_s);
     }
 
-    crm_log_xml_info(fragment, "Modify");
+    pcmk__log_xml_info(fragment, "Modify");
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_sync_call);
     rc = pcmk_legacy2rc(rc);
@@ -300,7 +300,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
         pcmk__xe_set(location, PCMK_XE_NODE, host);
     }
 
-    crm_log_xml_info(fragment, "Delete");
+    pcmk__log_xml_info(fragment, "Delete");
     rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_sync_call);
     if (rc == -ENXIO) {
@@ -488,9 +488,9 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
          */
         rc = pcmk__xe_get_datetime(date_expr_node, PCMK_XA_END, &end);
         if (rc != pcmk_rc_ok) {
-            crm_trace("Date expression %s has invalid " PCMK_XA_END ": %s",
-                      pcmk__s(pcmk__xe_id(date_expr_node), "without ID"),
-                      pcmk_rc_str(rc));
+            pcmk__trace("Date expression %s has invalid " PCMK_XA_END ": %s",
+                        pcmk__s(pcmk__xe_id(date_expr_node), "without ID"),
+                        pcmk_rc_str(rc));
             continue; // Treat as unexpired
         }
 
@@ -501,7 +501,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
             fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
             location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
             pcmk__xe_set_id(location, "%s", pcmk__xe_id(constraint_node));
-            crm_log_xml_info(fragment, "Delete");
+            pcmk__log_xml_info(fragment, "Delete");
 
             rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                         cib_sync_call);

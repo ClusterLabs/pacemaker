@@ -93,17 +93,18 @@ controld_stop_timer(fsa_timer_t *timer)
     CRM_CHECK(timer != NULL, return false);
 
     if (timer->source_id != 0) {
-        crm_trace("Stopping %s (would inject %s if popped after %ums, src=%d)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
+        pcmk__trace("Stopping %s (would inject %s if popped after %ums, "
+                    "src=%d)",
+                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                    timer->period_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
         return true;
     }
 
-    crm_trace("%s already stopped (would inject %s if popped after %ums)",
-              get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-              timer->period_ms);
+    pcmk__trace("%s already stopped (would inject %s if popped after %ums)",
+                get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                timer->period_ms);
     return false;
 }
 
@@ -119,13 +120,14 @@ controld_start_timer(fsa_timer_t *timer)
     if (timer->source_id == 0 && timer->period_ms > 0) {
         timer->source_id = pcmk__create_timer(timer->period_ms, timer->callback, timer);
         pcmk__assert(timer->source_id != 0);
-        crm_debug("Started %s (inject %s if pops after %ums, source=%d)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
+        pcmk__debug("Started %s (inject %s if pops after %ums, source=%d)",
+                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                    timer->period_ms, timer->source_id);
     } else {
-        crm_debug("%s already running (inject %s if pops after %ums, source=%d)",
-                  get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                  timer->period_ms, timer->source_id);
+        pcmk__debug("%s already running (inject %s if pops after %ums, "
+                    "source=%d)",
+                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                    timer->period_ms, timer->source_id);
     }
 }
 
@@ -195,19 +197,20 @@ crm_timer_popped(gpointer data)
     fsa_timer_t *timer = (fsa_timer_t *) data;
 
     if (timer->log_error) {
-        crm_err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
-                get_timer_desc(timer),
-                fsa_state2string(controld_globals.fsa_state),
-                fsa_input2string(timer->fsa_input), timer->period_ms);
+        pcmk__err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
+                  get_timer_desc(timer),
+                  fsa_state2string(controld_globals.fsa_state),
+                  fsa_input2string(timer->fsa_input), timer->period_ms);
     } else {
-        crm_info("%s just popped " QB_XS " input=%s time=%ums",
-                 get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                 timer->period_ms);
+        pcmk__info("%s just popped " QB_XS " input=%s time=%ums",
+                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                   timer->period_ms);
         timer->counter++;
     }
 
     if ((timer == election_timer) && (election_timer->counter > 5)) {
-        crm_notice("We appear to be in an election loop, something may be wrong");
+        pcmk__notice("We appear to be in an election loop, something may be "
+                     "wrong");
         crm_write_blackbox(0, NULL);
         election_timer->counter = 0;
     }
@@ -215,9 +218,9 @@ crm_timer_popped(gpointer data)
     controld_stop_timer(timer);  // Make timer _not_ go off again
 
     if (timer->fsa_input == I_INTEGRATED) {
-        crm_info("Welcomed: %d, Integrated: %d",
-                 crmd_join_phase_count(controld_join_welcomed),
-                 crmd_join_phase_count(controld_join_integrated));
+        pcmk__info("Welcomed: %d, Integrated: %d",
+                   crmd_join_phase_count(controld_join_welcomed),
+                   crmd_join_phase_count(controld_join_integrated));
         if (crmd_join_phase_count(controld_join_welcomed) == 0) {
             // If we don't even have ourselves, start again
             register_fsa_error(I_ELECTION, NULL);
@@ -228,15 +231,15 @@ crm_timer_popped(gpointer data)
 
     } else if ((timer == recheck_timer)
                && (controld_globals.fsa_state != S_IDLE)) {
-        crm_debug("Discarding %s event in state: %s",
-                  fsa_input2string(timer->fsa_input),
-                  fsa_state2string(controld_globals.fsa_state));
+        pcmk__debug("Discarding %s event in state: %s",
+                    fsa_input2string(timer->fsa_input),
+                    fsa_state2string(controld_globals.fsa_state));
 
     } else if ((timer == finalization_timer)
                && (controld_globals.fsa_state != S_FINALIZE_JOIN)) {
-        crm_debug("Discarding %s event in state: %s",
-                  fsa_input2string(timer->fsa_input),
-                  fsa_state2string(controld_globals.fsa_state));
+        pcmk__debug("Discarding %s event in state: %s",
+                    fsa_input2string(timer->fsa_input),
+                    fsa_state2string(controld_globals.fsa_state));
 
     } else if (timer->fsa_input != I_NULL) {
         controld_fsa_append(C_TIMER_POPPED, timer->fsa_input, NULL);
@@ -340,8 +343,9 @@ controld_configure_fsa_timers(GHashTable *options)
     // Shutdown escalation timer
     value = g_hash_table_lookup(options, PCMK_OPT_SHUTDOWN_ESCALATION);
     pcmk_parse_interval_spec(value, &(shutdown_escalation_timer->period_ms));
-    crm_debug("Shutdown escalation occurs if DC has not responded to request "
-              "in %ums", shutdown_escalation_timer->period_ms);
+    pcmk__debug("Shutdown escalation occurs if DC has not responded to request "
+                "in %ums",
+                shutdown_escalation_timer->period_ms);
 
     // Transition timer
     value = g_hash_table_lookup(options, PCMK_OPT_TRANSITION_DELAY);
@@ -350,7 +354,8 @@ controld_configure_fsa_timers(GHashTable *options)
     // Recheck interval
     value = g_hash_table_lookup(options, PCMK_OPT_CLUSTER_RECHECK_INTERVAL);
     pcmk_parse_interval_spec(value, &recheck_interval_ms);
-    crm_debug("Re-run scheduler after %dms of inactivity", recheck_interval_ms);
+    pcmk__debug("Re-run scheduler after %dms of inactivity",
+                recheck_interval_ms);
 }
 
 void
@@ -497,7 +502,7 @@ controld_shutdown_start_countdown(guint default_period_ms)
         shutdown_escalation_timer->period_ms = default_period_ms;
     }
 
-    crm_notice("Initiating controller shutdown sequence " QB_XS " limit=%ums",
+    pcmk__notice("Initiating controller shutdown sequence " QB_XS " limit=%ums",
                shutdown_escalation_timer->period_ms);
     controld_start_timer(shutdown_escalation_timer);
 }

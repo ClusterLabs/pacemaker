@@ -136,9 +136,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
         GString *xpath = pcmk__element_xpath(xml);
 
-        crm_trace("%s.%s moved to position %d",
-                  xml->name, pcmk__xe_id(xml),
-                  pcmk__xml_position(xml, pcmk__xf_skip));
+        pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
+                    pcmk__xml_position(xml, pcmk__xf_skip));
 
         if (xpath != NULL) {
             change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
@@ -252,7 +251,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
         format = 2;
     }
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return NULL;
     }
 
@@ -260,7 +259,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target,
     if ((target == NULL)
         || !pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
 
-        crm_trace("No change %d", format);
+        pcmk__trace("No change %d", format);
         return NULL;
     }
 
@@ -347,7 +346,7 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return EINVAL;
     }
 
@@ -382,11 +381,11 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
                                  &(source[i])) != pcmk_rc_ok) {
                 return EINVAL;
             }
-            crm_trace("Got source[%s]=%d", vfields[i], source[i]);
+            pcmk__trace("Got source[%s]=%d", vfields[i], source[i]);
 
         } else {
-            crm_trace("No source versions found; keeping source[%s]=%d",
-                      vfields[i], source[i]);
+            pcmk__trace("No source versions found; keeping source[%s]=%d",
+                        vfields[i], source[i]);
         }
 
         if (target_xml != NULL) {
@@ -394,11 +393,11 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
                                  &(target[i])) != pcmk_rc_ok) {
                 return EINVAL;
             }
-            crm_trace("Got target[%s]=%d", vfields[i], target[i]);
+            pcmk__trace("Got target[%s]=%d", vfields[i], target[i]);
 
         } else {
-            crm_trace("No target versions found; keeping target[%s]=%d",
-                      vfields[i], target[i]);
+            pcmk__trace("No target versions found; keeping target[%s]=%d",
+                        vfields[i], target[i]);
         }
     }
 
@@ -430,12 +429,11 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
          */
         if (pcmk__xe_get_int(cib_root, vfields[i],
                              &(current[i])) == pcmk_rc_ok) {
-            crm_trace("Got %d for current[%s]%s",
-                      current[i], vfields[i],
-                      ((current[i] < 0)? ", using 0" : ""));
+            pcmk__trace("Got %d for current[%s]%s", current[i], vfields[i],
+                        ((current[i] < 0)? ", using 0" : ""));
         } else {
-            crm_debug("Failed to get value for current[%s], using 0",
-                      vfields[i]);
+            pcmk__debug("Failed to get value for current[%s], using 0",
+                        vfields[i]);
         }
         if (current[i] < 0) {
             current[i] = 0;
@@ -465,20 +463,20 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     // Ensure current version matches patchset source version
     for (int i = 0; i < PCMK__NELEM(vfields); i++) {
         if (current[i] < source[i]) {
-            crm_debug("Current %s is too low "
-                      "(%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
-                      vfields[i], current[0], current[1], current[2],
-                      source[0], source[1], source[2],
-                      target[0], target[1], target[2]);
+            pcmk__debug("Current %s is too low "
+                        "(%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
+                        vfields[i], current[0], current[1], current[2],
+                        source[0], source[1], source[2],
+                        target[0], target[1], target[2]);
             return pcmk_rc_diff_resync;
         }
         if (current[i] > source[i]) {
-            crm_info("Current %s is too high "
-                     "(%d.%d.%d > %d.%d.%d --> %d.%d.%d)",
-                     vfields[i], current[0], current[1], current[2],
-                     source[0], source[1], source[2],
-                     target[0], target[1], target[2]);
-            crm_log_xml_info(patchset, "OldPatch");
+            pcmk__info("Current %s is too high "
+                       "(%d.%d.%d > %d.%d.%d --> %d.%d.%d)",
+                       vfields[i], current[0], current[1], current[2],
+                       source[0], source[1], source[2],
+                       target[0], target[1], target[2]);
+            pcmk__log_xml_info(patchset, "OldPatch");
             return pcmk_rc_old_data;
         }
     }
@@ -486,15 +484,15 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     // Ensure target version is newer than source version
     for (int i = 0; i < PCMK__NELEM(vfields); i++) {
         if (target[i] > source[i]) {
-            crm_debug("Can apply patch %d.%d.%d to %d.%d.%d",
-                      target[0], target[1], target[2],
-                      current[0], current[1], current[2]);
+            pcmk__debug("Can apply patch %d.%d.%d to %d.%d.%d",
+                        target[0], target[1], target[2],
+                        current[0], current[1], current[2]);
             return pcmk_rc_ok;
         }
     }
 
-    crm_notice("Versions did not change in patch %d.%d.%d",
-               target[0], target[1], target[2]);
+    pcmk__notice("Versions did not change in patch %d.%d.%d",
+                 target[0], target[1], target[2]);
     return pcmk_rc_old_data;
 }
 
@@ -551,7 +549,6 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
     char *remainder;
     char *id;
     char *tag;
-    char *path = NULL;
     int rc;
     size_t key_len;
 
@@ -603,11 +600,17 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
     } while ((rc == 2) && target);
 
     if (target) {
-        crm_trace("Found %s for %s",
-                  (path = (char *) xmlGetNodePath(target)), key);
-        free(path);
+        pcmk__if_tracing(
+            {
+                char *path = (char *) xmlGetNodePath(target);
+
+                pcmk__trace("Found %s for %s", path, key);
+                free(path);
+            },
+            {}
+        );
     } else {
-        crm_debug("No match for %s", key);
+        pcmk__debug("No match for %s", key);
     }
 
     free(remainder);
@@ -671,7 +674,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             continue;
         }
 
-        crm_trace("Processing %s %s", change->name, op);
+        pcmk__trace("Processing %s %s", change->name, op);
 
         /* PCMK_VALUE_DELETE changes for XML comments are generated with
          * PCMK_XE_POSITION
@@ -680,14 +683,14 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             pcmk__xe_get_int(change, PCMK_XE_POSITION, &position);
         }
         match = search_v2_xpath(xml, xpath, position);
-        crm_trace("Performing %s on %s with %p", op, xpath, match);
+        pcmk__trace("Performing %s on %s with %p", op, xpath, match);
 
         if ((match == NULL) && (strcmp(op, PCMK_VALUE_DELETE) == 0)) {
-            crm_debug("No %s match for %s in %p", op, xpath, xml->doc);
+            pcmk__debug("No %s match for %s in %p", op, xpath, xml->doc);
             continue;
 
         } else if (match == NULL) {
-            crm_err("No %s match for %s in %p", op, xpath, xml->doc);
+            pcmk__err("No %s match for %s in %p", op, xpath, xml->doc);
             rc = pcmk_rc_diff_failed;
             continue;
 
@@ -735,7 +738,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
 
         } else {
-            crm_err("Unknown operation: %s", op);
+            pcmk__err("Unknown operation: %s", op);
             rc = pcmk_rc_diff_failed;
         }
     }
@@ -754,7 +757,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
         op = pcmk__xe_get(change, PCMK_XA_OPERATION);
         xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
-        crm_trace("Continue performing %s on %s with %p", op, xpath, match);
+        pcmk__trace("Continue performing %s on %s with %p", op, xpath, match);
 
         if (strcmp(op, PCMK_VALUE_CREATE) == 0) {
             int position = 0;
@@ -772,12 +775,12 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             child = pcmk__xml_copy(match, change->children);
 
             if (match_child != NULL) {
-                crm_trace("Adding %s at position %d", child->name, position);
+                pcmk__trace("Adding %s at position %d", child->name, position);
                 xmlAddPrevSibling(match_child, child);
 
             } else {
-                crm_trace("Adding %s at position %d (end)",
-                          child->name, position);
+                pcmk__trace("Adding %s at position %d (end)", child->name,
+                            position);
             }
 
         } else if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
@@ -800,11 +803,13 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                     match_child = match_child->next;
                 }
 
-                crm_trace("Moving %s to position %d (was %d, prev %p, %s %p)",
-                          match->name, position,
-                          pcmk__xml_position(match, pcmk__xf_skip),
-                          match->prev, (match_child? "next":"last"),
-                          (match_child? match_child : match->parent->last));
+                pcmk__trace("Moving %s to position %d (was %d, prev %p, %s %p)",
+                            match->name, position,
+                            pcmk__xml_position(match, pcmk__xf_skip),
+                            match->prev,
+                            ((match_child != NULL)? "next" : "last"),
+                            ((match_child != NULL)? match_child
+                                                  : match->parent->last));
 
                 if (match_child) {
                     xmlAddPrevSibling(match_child, match);
@@ -815,15 +820,15 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 }
 
             } else {
-                crm_trace("%s is already in position %d",
-                          match->name, position);
+                pcmk__trace("%s is already in position %d", match->name,
+                            position);
             }
 
             if (position != pcmk__xml_position(match, pcmk__xf_skip)) {
-                crm_err("Moved %s.%s to position %d instead of %d (%p)",
-                        match->name, pcmk__xe_id(match),
-                        pcmk__xml_position(match, pcmk__xf_skip),
-                        position, match->prev);
+                pcmk__err("Moved %s.%s to position %d instead of %d (%p)",
+                          match->name, pcmk__xe_id(match),
+                          pcmk__xml_position(match, pcmk__xf_skip),
+                          position, match->prev);
                 rc = pcmk_rc_diff_failed;
             }
         }
@@ -866,7 +871,7 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
         pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
 
         if (format != 2) {
-            crm_err("Unknown patch format: %d", format);
+            pcmk__err("Unknown patch format: %d", format);
             rc = -EINVAL;
 
         } else {
@@ -879,8 +884,8 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
 
         new_digest = pcmk__digest_xml(xml, true);
         if (!pcmk__str_eq(new_digest, digest, pcmk__str_casei)) {
-            crm_info("v%d digest mis-match: expected %s, calculated %s",
-                     format, digest, new_digest);
+            pcmk__info("v%d digest mis-match: expected %s, calculated %s",
+                       format, digest, new_digest);
             rc = -pcmk_err_diff_failed;
             pcmk__if_tracing(
                 {
@@ -893,8 +898,8 @@ xml_apply_patchset(xmlNode *xml, const xmlNode *patchset, bool check_version)
             );
 
         } else {
-            crm_trace("v%d digest matched: expected %s, calculated %s",
-                      format, digest, new_digest);
+            pcmk__trace("v%d digest matched: expected %s, calculated %s",
+                        format, digest, new_digest);
         }
         free(new_digest);
     }
@@ -927,7 +932,7 @@ pcmk__cib_element_in_patchset(const xmlNode *patchset, const char *element)
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
+        pcmk__warn("Unknown patch format: %d", format);
         return false;
     }
 
@@ -988,21 +993,21 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return true;
     }
 
     if (source != NULL) {
         for (int i = 0; i < PCMK__NELEM(vfields); i++) {
             pcmk__xe_get_int(source, vfields[i], &(del[i]));
-            crm_trace("Got %d for del[%s]", del[i], vfields[i]);
+            pcmk__trace("Got %d for del[%s]", del[i], vfields[i]);
         }
     }
 
     if (target != NULL) {
         for (int i = 0; i < PCMK__NELEM(vfields); i++) {
             pcmk__xe_get_int(target, vfields[i], &(add[i]));
-            crm_trace("Got %d for add[%s]", add[i], vfields[i]);
+            pcmk__trace("Got %d for add[%s]", add[i], vfields[i]);
         }
     }
     return false;

@@ -598,7 +598,7 @@ unpack_order_set(const xmlNode *set, enum pe_order_kind parent_kind,
     }
 
     if (pcmk__list_of_1(resources)) {
-        crm_trace("Single set: %s", id);
+        pcmk__trace("Single set: %s", id);
         goto done;
     }
 
@@ -894,7 +894,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     // Check whether there are any resource sets with template or tag references
     *expanded_xml = pcmk__expand_tags_in_sets(xml_obj, scheduler);
     if (*expanded_xml != NULL) {
-        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
+        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
         return pcmk_rc_ok;
     }
 
@@ -973,7 +973,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     if (any_sets) {
-        crm_log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
+        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
     } else {
         pcmk__xml_free(*expanded_xml);
         *expanded_xml = NULL;
@@ -1268,12 +1268,13 @@ order_resource_actions_after(pcmk_action_t *first_action,
 
         if (first_action != NULL) {
             order_actions(first_action, then_action_iter, flags);
+
         } else {
             pcmk__clear_action_flags(then_action_iter, pcmk__action_runnable);
             // coverity[null_field] order->rsc1 can't be NULL here
-            crm_warn("%s of %s is unrunnable because there is no %s of %s "
-                     "to order it after", then_action_iter->task, rsc->id,
-                     order->task1, order->rsc1->id);
+            pcmk__warn("%s of %s is unrunnable because there is no %s of %s "
+                       "to order it after", then_action_iter->task, rsc->id,
+                       order->task1, order->rsc1->id);
         }
     }
 
@@ -1388,7 +1389,7 @@ update_action_for_orderings(gpointer data, gpointer user_data)
 void
 pcmk__apply_orderings(pcmk_scheduler_t *sched)
 {
-    crm_trace("Applying ordering constraints");
+    pcmk__trace("Applying ordering constraints");
 
     /* Ordering constraints need to be processed in the order they were created.
      * rsc_order_first() and order_resource_actions_after() require the relevant
@@ -1421,18 +1422,19 @@ pcmk__apply_orderings(pcmk_scheduler_t *sched)
             order_resource_actions_after(order->action1, rsc, order);
 
         } else {
-            crm_trace("Applying ordering constraint %d (non-resource actions)",
-                      order->id);
+            pcmk__trace("Applying ordering constraint %d (non-resource "
+                        "actions)",
+                        order->id);
             order_actions(order->action1, order->action2, order->flags);
         }
     }
 
     g_list_foreach(sched->priv->actions, block_colocation_dependents, NULL);
 
-    crm_trace("Ordering probes");
+    pcmk__trace("Ordering probes");
     pcmk__order_probes(sched);
 
-    crm_trace("Updating %d actions", g_list_length(sched->priv->actions));
+    pcmk__trace("Updating %u actions", g_list_length(sched->priv->actions));
     g_list_foreach(sched->priv->actions, update_action_for_orderings, sched);
 
     pcmk__disable_invalid_orderings(sched);
@@ -1454,9 +1456,9 @@ pcmk__order_after_each(pcmk_action_t *after, GList *list)
         pcmk_action_t *before = (pcmk_action_t *) iter->data;
         const char *before_desc = before->task? before->task : before->uuid;
 
-        crm_debug("Ordering %s on %s before %s on %s",
-                  before_desc, pcmk__node_name(before->node),
-                  after_desc, pcmk__node_name(after->node));
+        pcmk__debug("Ordering %s on %s before %s on %s", before_desc,
+                    pcmk__node_name(before->node), after_desc,
+                    pcmk__node_name(after->node));
         order_actions(before, after, pcmk__ar_ordered);
     }
 }

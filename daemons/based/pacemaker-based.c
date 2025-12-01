@@ -59,7 +59,7 @@ static crm_exit_t exit_code = CRM_EX_OK;
 static void
 cib_enable_writes(int nsig)
 {
-    crm_info("(Re)enabling disk writes");
+    pcmk__info("(Re)enabling disk writes");
     cib_writes_enabled = TRUE;
 }
 
@@ -226,12 +226,12 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_BASED, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker CIB manager");
+    pcmk__notice("Starting Pacemaker CIB manager");
 
     old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
     if (old_instance == NULL) {
         /* crm_ipc_new() will have already logged an error message with
-         * crm_err()
+         * pcmk__err()
          */
         exit_code = CRM_EX_FATAL;
         goto done;
@@ -241,8 +241,8 @@ main(int argc, char **argv)
         /* IPC end-point already up */
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_crit("Aborting start-up because another CIB manager instance is "
-                 "already active");
+        pcmk__crit("Aborting start-up because another CIB manager instance is "
+                   "already active");
         goto done;
     } else {
         /* not up or not authentic, we'll proceed either way */
@@ -260,12 +260,12 @@ main(int argc, char **argv)
     if (cib_root == NULL) {
         cib_root = g_strdup(CRM_CONFIG_DIR);
     } else {
-        crm_notice("Using custom config location: %s", cib_root);
+        pcmk__notice("Using custom config location: %s", cib_root);
     }
 
     if (!pcmk__daemon_can_write(cib_root, NULL)) {
         exit_code = CRM_EX_FATAL;
-        crm_err("Terminating due to bad permissions on %s", cib_root);
+        pcmk__err("Terminating due to bad permissions on %s", cib_root);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Bad permissions on %s (see logs for details)", cib_root);
         goto done;
@@ -278,7 +278,8 @@ main(int argc, char **argv)
 
     // Run the main loop
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker CIB manager successfully started and accepting connections");
+    pcmk__notice("Pacemaker CIB manager successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
@@ -326,7 +327,7 @@ cib_cs_dispatch(cpg_handle_t handle,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Invalid XML: '%.120s'", data);
+        pcmk__err("Invalid XML: '%.120s'", data);
         free(data);
         return;
     }
@@ -341,10 +342,10 @@ static void
 cib_cs_destroy(gpointer user_data)
 {
     if (cib_shutdown_flag) {
-        crm_info("Corosync disconnection complete");
+        pcmk__info("Corosync disconnection complete");
     } else {
-        crm_crit("Exiting immediately after losing connection "
-                 "to cluster layer");
+        pcmk__crit("Exiting immediately after losing connection to cluster "
+                   "layer");
         terminate_cib(CRM_EX_DISCONNECT);
     }
 }
@@ -360,7 +361,7 @@ cib_peer_update_callback(enum pcmk__node_update type,
             if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
                 && (pcmk__ipc_client_count() == 0)) {
 
-                crm_info("Exiting after no more peers or clients remain");
+                pcmk__info("Exiting after no more peers or clients remain");
                 terminate_cib(-1);
             }
             break;
@@ -386,7 +387,7 @@ cib_init(void)
     config_hash = pcmk__strkey_table(free, free);
 
     if (!startCib("cib.xml")) {
-        crm_crit("Cannot start CIB... terminating");
+        pcmk__crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
 
@@ -394,7 +395,7 @@ cib_init(void)
         pcmk__cluster_set_status_callback(&cib_peer_update_callback);
 
         if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
-            crm_crit("Cannot sign in to the cluster... terminating");
+            pcmk__crit("Cannot sign in to the cluster... terminating");
             crm_exit(CRM_EX_FATAL);
         }
     }

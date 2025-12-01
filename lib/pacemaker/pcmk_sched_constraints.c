@@ -54,7 +54,7 @@ pcmk__unpack_constraints(pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        crm_trace("Unpacking %s constraint '%s'", tag, id);
+        pcmk__trace("Unpacking %s constraint '%s'", tag, id);
 
         if (pcmk__str_eq(PCMK_XE_RSC_ORDER, tag, pcmk__str_none)) {
             pcmk__unpack_ordering(xml_obj, scheduler);
@@ -90,12 +90,12 @@ pcmk__find_constraint_resource(GList *rsc_list, const char *id)
             if (!pcmk__str_eq(match->id, id, pcmk__str_none)) {
                 /* We found an instance of a clone instead */
                 match = uber_parent(match);
-                crm_debug("Found %s for %s", match->id, id);
+                pcmk__debug("Found %s for %s", match->id, id);
             }
             return match;
         }
     }
-    crm_trace("No match for %s", id);
+    pcmk__trace("No match for %s", id);
     return NULL;
 }
 
@@ -120,7 +120,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     if (g_hash_table_lookup_extended(scheduler->priv->templates, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
-            crm_notice("No resource is derived from template '%s'", id);
+            pcmk__notice("No resource is derived from template '%s'", id);
             return false;
         }
         return true;
@@ -130,7 +130,7 @@ find_constraint_tag(const pcmk_scheduler_t *scheduler, const char *id,
     if (g_hash_table_lookup_extended(scheduler->priv->tags, id,
                                      NULL, (gpointer *) tag)) {
         if (*tag == NULL) {
-            crm_notice("No resource is tagged with '%s'", id);
+            pcmk__notice("No resource is tagged with '%s'", id);
             return false;
         }
         return true;
@@ -431,7 +431,7 @@ pcmk__tag_to_set(xmlNode *xml_obj, xmlNode **rsc_set, const char *attr,
 void
 pcmk__create_internal_constraints(pcmk_scheduler_t *scheduler)
 {
-    crm_trace("Create internal constraints");
+    pcmk__trace("Create internal constraints");
     for (GList *iter = scheduler->priv->resources;
          iter != NULL; iter = iter->next) {
 

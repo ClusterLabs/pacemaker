@@ -214,7 +214,7 @@ pcmk__log_graph(unsigned int log_level, pcmk__graph_t *graph)
 {
     if ((graph == NULL) || (graph->num_actions == 0)) {
         if (log_level == LOG_TRACE) {
-            crm_debug("Empty transition graph");
+            pcmk__debug("Empty transition graph");
         }
         return;
     }
