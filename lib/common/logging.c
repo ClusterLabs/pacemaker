@@ -407,7 +407,13 @@ done:
     return rc;
 }
 
-// Enable libqb logging to a new log file
+/*!
+ * \internal
+ * \brief Enable a libqb log target, extend max line length, and apply filter
+ *
+ * \param[in] target  Log target (either an <tt>enum qb_log_target_slot</tt> or
+ *                    the return value of a \c qb_log_file_open() call)
+ */
 static void
 enable_logfile(int32_t target)
 {
@@ -421,6 +427,13 @@ enable_logfile(int32_t target)
     crm_update_callsites();
 }
 
+/*!
+ * \internal
+ * \brief Disable a libqb log target
+ *
+ * \param[in] target  Log target (either an <tt>enum qb_log_target_slot</tt> or
+ *                    the return value of a \c qb_log_file_open() call)
+ */
 static inline void
 disable_logfile(int32_t target)
 {
