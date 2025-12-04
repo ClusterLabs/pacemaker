@@ -17,7 +17,7 @@
 
 #include <inttypes.h>               // PRIu32
 #include <stdbool.h>
-#include <stdint.h>                 // uint32_t
+#include <stdint.h>                 // int32_t, uint32_t
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -409,22 +409,22 @@ done:
 
 // Enable libqb logging to a new log file
 static void
-enable_logfile(int fd)
+enable_logfile(int32_t target)
 {
-    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
+    qb_log_ctl(target, QB_LOG_CONF_ENABLED, QB_TRUE);
 
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
     // Longer than default, for logging long XML lines
-    qb_log_ctl(fd, QB_LOG_CONF_MAX_LINE_LEN, 800);
+    qb_log_ctl(target, QB_LOG_CONF_MAX_LINE_LEN, 800);
 #endif
 
     crm_update_callsites();
 }
 
 static inline void
-disable_logfile(int fd)
+disable_logfile(int32_t target)
 {
-    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_FALSE);
+    qb_log_ctl(target, QB_LOG_CONF_ENABLED, QB_FALSE);
 }
 
 static void
@@ -451,12 +451,12 @@ setenv_logfile(const char *filename)
 int
 pcmk__add_logfile(const char *filename)
 {
-    int fd = 0;
+    static int32_t default_target = -1;
+    static bool have_logfile = false;
+
+    int32_t target = 0;
     int rc = pcmk_rc_ok;
     bool is_default = false;
-
-    static int default_fd = -1;
-    static bool have_logfile = false;
 
     // No logging to do if the file is "/dev/null" or special value "none"
     if (pcmk__str_eq(filename, "/dev/null", pcmk__str_none)
@@ -475,7 +475,7 @@ pcmk__add_logfile(const char *filename)
 
     // If the caller wants the default and we already have it, we're done
     is_default = pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none);
-    if (is_default && (default_fd >= 0)) {
+    if (is_default && (default_target >= 0)) {
         return pcmk_rc_ok;
     }
 
@@ -487,9 +487,9 @@ pcmk__add_logfile(const char *filename)
     }
 
     // Open as a libqb log file
-    fd = qb_log_file_open(filename);
-    if (fd < 0) {
-        rc = -fd;   // fd == -errno
+    target = qb_log_file_open(filename);
+    if (target < 0) {
+        rc = -target;   // target == -errno
         pcmk__warn("Logging to '%s' is disabled because qb_log_file_open() "
                    "failed: %s " QB_XS " uid=%lld gid=%lld",
                    filename, strerror(rc), (long long) geteuid(),
@@ -498,16 +498,16 @@ pcmk__add_logfile(const char *filename)
     }
 
     if (is_default) {
-        default_fd = fd;
+        default_target = target;
         setenv_logfile(filename);
 
-    } else if (default_fd >= 0) {
+    } else if (default_target >= 0) {
         pcmk__notice("Switching logging to %s", filename);
-        disable_logfile(default_fd);
+        disable_logfile(default_target);
     }
 
     pcmk__notice("Additional logging available in %s", filename);
-    enable_logfile(fd);
+    enable_logfile(target);
     have_logfile = true;
     return pcmk_rc_ok;
 }
