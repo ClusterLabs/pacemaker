@@ -367,32 +367,44 @@ chmod_logfile(const char *filename, int logfd)
     }
 }
 
-// If we're root, correct a log file's permissions if needed
+/*!
+ * \internal
+ * \brief If we're root, ensure a log file has correct permissions and ownership
+ *
+ * \param[in] filename  Log file name
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-set_logfile_permissions(const char *filename, FILE *logfile)
+set_logfile_permissions(const char *filename)
 {
     int fd = 0;
     int rc = pcmk_rc_ok;
 
     if (geteuid() != 0) {
-        return pcmk_rc_ok;
+        goto done;
     }
 
-    fd = fileno(logfile);
+    fd = open(filename, O_RDWR);
     if (fd < 0) {
         rc = errno;
-        pcmk__warn("Logging to '%s' is disabled because couldn't get file "
-                   "descriptor: %s", filename, strerror(rc));
-        return rc;
+        pcmk__warn("Logging to '%s' is disabled because open() failed as root: "
+                   "%s", filename, strerror(rc));
+        goto done;
     }
 
     rc = chown_logfile(filename, fd);
     if (rc != pcmk_rc_ok) {
-        return rc;
+        goto done;
     }
 
     chmod_logfile(filename, fd);
-    return pcmk_rc_ok;
+
+done:
+    if (fd >= 0) {
+        close(fd);
+    }
+    return rc;
 }
 
 // Enable libqb logging to a new log file
@@ -444,7 +456,6 @@ pcmk__add_logfile(const char *filename)
 {
     int fd = 0;
     int rc = pcmk_rc_ok;
-    FILE *logfile = NULL;
     bool is_default = false;
 
     static int default_fd = -1;
@@ -471,26 +482,14 @@ pcmk__add_logfile(const char *filename)
         return pcmk_rc_ok;
     }
 
-    // Check whether we have write access to the file
-    logfile = fopen(filename, "a");
-    if (logfile == NULL) {
-        rc = errno;
-        pcmk__warn("Logging to '%s' is disabled because couldn't open for "
-                   "append: %s " QB_XS " uid=%lld gid=%lld",
-                   filename, strerror(rc), (long long) geteuid(),
-                   (long long) getegid());
-        return rc;
-    }
-
-    rc = set_logfile_permissions(filename, logfile);
+    // If we're root, ensure ownership and permissions are correct
+    rc = set_logfile_permissions(filename);
     if (rc != pcmk_rc_ok) {
         // Warning has already been logged
-        fclose(logfile);
         return rc;
     }
 
-    // Close and reopen as libqb logging target
-    fclose(logfile);
+    // Open as a libqb log file
     fd = qb_log_file_open(filename);
     if (fd < 0) {
         rc = -fd;   // fd == -errno
