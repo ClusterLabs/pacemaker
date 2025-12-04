@@ -493,9 +493,12 @@ pcmk__add_logfile(const char *filename)
     fclose(logfile);
     fd = qb_log_file_open(filename);
     if (fd < 0) {
-        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " qb_log_file_open",
-                   filename, strerror(-fd));
-        return -fd; // == +errno
+        rc = -fd;   // fd == -errno
+        pcmk__warn("Logging to '%s' is disabled because qb_log_file_open() "
+                   "failed: %s " QB_XS " uid=%lld gid=%lld",
+                   filename, strerror(rc), (long long) geteuid(),
+                   (long long) getegid());
+        return rc;
     }
 
     if (is_default) {
