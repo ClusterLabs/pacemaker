@@ -1047,9 +1047,9 @@ cluster_options_html(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
     if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+        out->list_item(out, NULL, "Fencing of failed nodes enabled");
     } else {
-        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+        out->list_item(out, NULL, "Fencing of failed nodes disabled");
     }
 
     if (pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
@@ -1143,9 +1143,9 @@ cluster_options_text(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
     if (pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
-        out->list_item(out, NULL, "STONITH of failed nodes enabled");
+        out->list_item(out, NULL, "Fencing of failed nodes enabled");
     } else {
-        out->list_item(out, NULL, "STONITH of failed nodes disabled");
+        out->list_item(out, NULL, "Fencing of failed nodes disabled");
     }
 
     if (pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
@@ -1218,7 +1218,7 @@ static int
 cluster_options_xml(pcmk__output_t *out, va_list args) {
     pcmk_scheduler_t *scheduler = va_arg(args, pcmk_scheduler_t *);
 
-    const char *stonith_enabled = pcmk__flag_text(scheduler->flags,
+    const char *fencing_enabled = pcmk__flag_text(scheduler->flags,
                                                   pcmk__sched_fencing_enabled);
     const char *symmetric_cluster =
         pcmk__flag_text(scheduler->flags, pcmk__sched_symmetric_cluster);
@@ -1228,24 +1228,30 @@ cluster_options_xml(pcmk__output_t *out, va_list args) {
                                                    pcmk__sched_in_maintenance);
     const char *stop_all_resources = pcmk__flag_text(scheduler->flags,
                                                      pcmk__sched_stop_all);
-    char *stonith_timeout_ms_s =
+    char *fencing_timeout_ms_s =
         pcmk__assert_asprintf("%u", scheduler->priv->fence_timeout_ms);
 
     char *priority_fencing_delay_ms_s =
         pcmk__assert_asprintf("%u", scheduler->priv->priority_fencing_ms);
 
+    /* @COMPAT PCMK_XA_STONITH_ENABLED and PCMK_XA_STONITH_TIMEOUT_MS are
+     * deprecated since 3.0.2
+     */
     pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_OPTIONS,
-                                 PCMK_XA_STONITH_ENABLED, stonith_enabled,
+                                 PCMK_XA_FENCING_ENABLED, fencing_enabled,
+                                 PCMK_XA_FENCING_TIMEOUT_MS,
+                                     fencing_timeout_ms_s,
                                  PCMK_XA_SYMMETRIC_CLUSTER, symmetric_cluster,
                                  PCMK_XA_NO_QUORUM_POLICY, no_quorum_policy,
                                  PCMK_XA_MAINTENANCE_MODE, maintenance_mode,
                                  PCMK_XA_STOP_ALL_RESOURCES, stop_all_resources,
-                                 PCMK_XA_STONITH_TIMEOUT_MS,
-                                     stonith_timeout_ms_s,
                                  PCMK_XA_PRIORITY_FENCING_DELAY_MS,
                                      priority_fencing_delay_ms_s,
+                                 PCMK_XA_STONITH_ENABLED, fencing_enabled,
+                                 PCMK_XA_STONITH_TIMEOUT_MS,
+                                     fencing_timeout_ms_s,
                                  NULL);
-    free(stonith_timeout_ms_s);
+    free(fencing_timeout_ms_s);
     free(priority_fencing_delay_ms_s);
 
     return pcmk_rc_ok;

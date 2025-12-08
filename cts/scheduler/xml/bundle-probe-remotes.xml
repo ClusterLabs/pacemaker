@@ -8,7 +8,6 @@
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test"/>
         <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1508466790"/>
-        <nvpair id="cib-bootstrap-options-cluster-ipc-limit" name="cluster-ipc-limit" value="1024"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

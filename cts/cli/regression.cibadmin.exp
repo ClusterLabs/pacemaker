@@ -3,7 +3,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -21,7 +21,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -42,7 +42,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -63,7 +63,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -79,12 +79,12 @@
 =#=#=#= End test: Validate CIB (XML) - OK (0) =#=#=#=
 * Passed: cibadmin              - Validate CIB (XML)
 =#=#=#= Begin test: Digest calculation =#=#=#=
-02e4118f17d65a512f1f540ff30dc116
+9130d6f39c2b83bd032a00e76621508c
 =#=#=#= End test: Digest calculation - OK (0) =#=#=#=
 * Passed: cibadmin              - Digest calculation
 =#=#=#= Begin test: Digest calculation (XML) =#=#=#=
 <pacemaker-result api-version="X" request="cibadmin --output-as=xml -5 -p">
-  <md5-sum digest="02e4118f17d65a512f1f540ff30dc116"/>
+  <md5-sum digest="9130d6f39c2b83bd032a00e76621508c"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Digest calculation (XML) - OK (0) =#=#=#=
@@ -96,7 +96,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -124,7 +124,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
