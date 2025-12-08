@@ -105,53 +105,73 @@ crm_generate_ra_key(const char *standard, const char *provider,
  * \brief Parse a "standard[:provider]:type" agent specification
  *
  * \param[in]  spec      Agent specification
- * \param[out] standard  Newly allocated memory containing agent standard (or NULL)
- * \param[out] provider  Newly allocated memory containing agent provider (or NULL)
- * \param[put] type      Newly allocated memory containing agent type (or NULL)
+ * \param[out] standard  Where to store agent standard (may not be \c NULL)
+ * \param[out] provider  Where to store agent provider if the standard supports
+ *                       one (may not be \c NULL)
+ * \param[put] type      Where to store agent type (may not be \c NULL)
  *
- * \return pcmk_ok if the string could be parsed, -EINVAL otherwise
+ * \return \c pcmk_ok if the string could be parsed, \c -EINVAL otherwise
  *
  * \note It is acceptable for the type to contain a ':' if the standard supports
  *       that. For example, systemd supports the form "systemd:UNIT@A:B".
- * \note It is the caller's responsibility to free the returned values.
+ * \note On success, the caller is responsible for freeing \p *standard,
+ *       \p *provider, and \p *type using \c free(). On failure, all of these
+ *       are left unchanged.
  */
 int
 crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                      char **type)
 {
-    const char *colon = NULL;
+    gchar **parts = NULL;
+    int rc = pcmk_ok;
 
-    CRM_CHECK(spec && standard && provider && type, return -EINVAL);
-    *standard = NULL;
-    *provider = NULL;
-    *type = NULL;
+    CRM_CHECK((spec != NULL) && (standard != NULL) && (provider != NULL)
+              && (type != NULL), return -EINVAL);
 
-    colon = strchr(spec, ':');
-    if ((colon == NULL) || (colon == spec)) {
-        return -EINVAL;
+    parts = g_strsplit(spec, ":", 3);
+
+    if (pcmk__str_empty(parts[0])) {
+        // Empty standard
+        rc = -EINVAL;
+        goto done;
     }
 
-    *standard = strndup(spec, colon - spec);
-    spec = colon + 1;
-
-    if (pcmk__is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
-        colon = strchr(spec, ':');
-        if ((colon == NULL) || (colon == spec)) {
-            free(*standard);
-            return -EINVAL;
+    if (pcmk__is_set(pcmk_get_ra_caps(parts[0]), pcmk_ra_cap_provider)) {
+        if (pcmk__str_empty(parts[1]) || pcmk__str_empty(parts[2])) {
+            // Empty provider or type
+            rc = -EINVAL;
+            goto done;
         }
-        *provider = strndup(spec, colon - spec);
-        spec = colon + 1;
+
+        *standard = pcmk__str_copy(parts[0]);
+        *provider = pcmk__str_copy(parts[1]);
+        *type = pcmk__str_copy(parts[2]);
+
+    } else {
+        if (pcmk__str_empty(parts[1])) {
+            // Empty type
+            rc = -EINVAL;
+            goto done;
+        }
+
+        *standard = pcmk__str_copy(parts[0]);
+
+        if (parts[2] == NULL) {
+            // Common case: type does not contain a colon
+            *type = pcmk__str_copy(parts[1]);
+
+        } else {
+            // Accommodate "systemd:UNIT@A:B", for example
+            gchar *joined = g_strjoinv(":", parts + 1);
+
+            *type = pcmk__str_copy(joined);
+            g_free(joined);
+        }
     }
 
-    if (*spec == '\0') {
-        free(*standard);
-        free(*provider);
-        return -EINVAL;
-    }
-
-    *type = strdup(spec);
-    return pcmk_ok;
+done:
+    g_strfreev(parts);
+    return rc;
 }
 
 /*!
