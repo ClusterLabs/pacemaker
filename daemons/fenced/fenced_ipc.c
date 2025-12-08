@@ -26,7 +26,7 @@
 #include <crm/stonith-ng.h>                   // stonith_call_options
 
 static int32_t
-st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+fenced_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
     if (stonith_shutdown_flag) {
         crm_info("Ignoring new client [%d] during shutdown",
@@ -42,7 +42,7 @@ st_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 
 /* Exit code means? */
 static int32_t
-st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
+fenced_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
@@ -138,7 +138,7 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
 
 /* Error code means? */
 static int32_t
-st_ipc_closed(qb_ipcs_connection_t * c)
+fenced_ipc_closed(qb_ipcs_connection_t * c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
 
@@ -154,16 +154,16 @@ st_ipc_closed(qb_ipcs_connection_t * c)
 }
 
 static void
-st_ipc_destroy(qb_ipcs_connection_t * c)
+fenced_ipc_destroy(qb_ipcs_connection_t * c)
 {
     crm_trace("Connection %p destroyed", c);
-    st_ipc_closed(c);
+    fenced_ipc_closed(c);
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = st_ipc_accept,
+    .connection_accept = fenced_ipc_accept,
     .connection_created = NULL,
-    .msg_process = st_ipc_dispatch,
-    .connection_closed = st_ipc_closed,
-    .connection_destroyed = st_ipc_destroy
+    .msg_process = fenced_ipc_dispatch,
+    .connection_closed = fenced_ipc_closed,
+    .connection_destroyed = fenced_ipc_destroy
 };
