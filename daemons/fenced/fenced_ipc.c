@@ -25,11 +25,22 @@
 #include <crm/crm.h>                          // CRM_OP_RM_NODE_CACHE
 #include <crm/stonith-ng.h>                   // stonith_call_options
 
+/*!
+ * \internal
+ * \brief Accept a new client IPC connection
+ *
+ * \param[in,out] c    New connection
+ * \param[in]     uid  Client user id
+ * \param[in]     gid  Client group id
+ *
+ * \return 0 on success, -errno otherwise
+ */
 static int32_t
-fenced_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+fenced_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
+    crm_trace("New client connection %p", c);
     if (stonith_shutdown_flag) {
-        crm_info("Ignoring new client [%d] during shutdown",
+        crm_info("Ignoring new connection from pid %d during shutdown",
                  pcmk__client_pid(c));
         return -ECONNREFUSED;
     }
@@ -40,24 +51,32 @@ fenced_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     return 0;
 }
 
-/* Exit code means? */
+/*!
+ * \internal
+ * \brief Handle a message from an IPC connection
+ *
+ * \param[in,out] c     Established IPC connection
+ * \param[in]     data  The message data read from the connection - this can be
+ *                      a complete IPC message or just a part of one if it's
+ *                      very large
+ * \param[in]     size  Unused
+ *
+ * \return 0 in all cases
+ */
 static int32_t
-fenced_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
+fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     uint32_t id = 0;
     uint32_t flags = 0;
     uint32_t call_options = st_opt_none;
-    xmlNode *request = NULL;
-    pcmk__client_t *c = pcmk__find_client(qbc);
+    xmlNode *msg = NULL;
+    pcmk__client_t *client = pcmk__find_client(c);
     const char *op = NULL;
     int rc = pcmk_rc_ok;
 
-    if (c == NULL) {
-        crm_info("Invalid client: %p", qbc);
-        return 0;
-    }
+    CRM_CHECK(client != NULL, return 0);
 
-    rc = pcmk__ipc_msg_append(&c->buffer, data);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {
         /* We haven't read the complete message yet, so just return. */
@@ -67,9 +86,9 @@ fenced_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        request = pcmk__client_data2xml(c, &id, &flags);
-        g_byte_array_free(c->buffer, TRUE);
-        c->buffer = NULL;
+        msg = pcmk__client_data2xml(client, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
 
     } else {
         /* Some sort of error occurred reassembling the message.  All we can
@@ -77,86 +96,101 @@ fenced_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
          */
         crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
-        if (c->buffer != NULL) {
-            g_byte_array_free(c->buffer, TRUE);
-            c->buffer = NULL;
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
         }
 
         return 0;
     }
 
-    if (request == NULL) {
-        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
+    if (msg == NULL) {
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
-    op = pcmk__xe_get(request, PCMK__XA_CRM_TASK);
+    op = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
     if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
-        pcmk__xe_set(request, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        pcmk__xe_set(request, PCMK__XA_ST_OP, op);
-        pcmk__xe_set(request, PCMK__XA_ST_CLIENTID, c->id);
-        pcmk__xe_set(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-        pcmk__xe_set(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
+        pcmk__xe_set(msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+        pcmk__xe_set(msg, PCMK__XA_ST_OP, op);
+        pcmk__xe_set(msg, PCMK__XA_ST_CLIENTID, client->id);
+        pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(client));
+        pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, request);
-        pcmk__xml_free(request);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, msg);
+        pcmk__xml_free(msg);
         return 0;
     }
 
-    if (c->name == NULL) {
-        const char *value = pcmk__xe_get(request, PCMK__XA_ST_CLIENTNAME);
+    if (client->name == NULL) {
+        const char *value = pcmk__xe_get(msg, PCMK__XA_ST_CLIENTNAME);
 
-        c->name = pcmk__assert_asprintf("%s.%u", pcmk__s(value, "unknown"),
-                                        c->pid);
+        client->name = pcmk__assert_asprintf("%s.%u", pcmk__s(value, "unknown"),
+                                             client->pid);
     }
 
-    rc = pcmk__xe_get_flags(request, PCMK__XA_ST_CALLOPT, &call_options,
+    rc = pcmk__xe_get_flags(msg, PCMK__XA_ST_CALLOPT, &call_options,
                             st_opt_none);
     if (rc != pcmk_rc_ok) {
         crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
-              " from client %s", flags, call_options, id, pcmk__client_name(c));
+              " from client %s", flags, call_options, id, pcmk__client_name(client));
 
     if (pcmk__is_set(call_options, st_opt_sync_call)) {
         pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
-        CRM_LOG_ASSERT(c->request_id == 0);     /* This means the client has two synchronous events in-flight */
-        c->request_id = id;     /* Reply only to the last one */
+        CRM_LOG_ASSERT(client->request_id == 0);     /* This means the client has two synchronous events in-flight */
+        client->request_id = id;     /* Reply only to the last one */
     }
 
-    pcmk__xe_set(request, PCMK__XA_ST_CLIENTID, c->id);
-    pcmk__xe_set(request, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(c));
-    pcmk__xe_set(request, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
+    pcmk__xe_set(msg, PCMK__XA_ST_CLIENTID, client->id);
+    pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(client));
+    pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-    crm_log_xml_trace(request, "ipc-received");
-    stonith_command(c, id, flags, request, NULL);
+    crm_log_xml_trace(msg, "ipc-received");
+    stonith_command(client, id, flags, msg, NULL);
 
-    pcmk__xml_free(request);
+    pcmk__xml_free(msg);
     return 0;
 }
 
-/* Error code means? */
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ *
+ * \return 0 (i.e. do not re-run this callback)
+ */
 static int32_t
-fenced_ipc_closed(qb_ipcs_connection_t * c)
+fenced_ipc_closed(qb_ipcs_connection_t *c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        return 0;
+        crm_trace("Ignoring request to clean up unknown connection %p", c);
+    } else {
+        crm_trace("Cleaning up closed client connection %p", c);
+        pcmk__free_client(client);
     }
 
-    crm_trace("Connection %p closed", c);
-    pcmk__free_client(client);
-
-    /* 0 means: yes, go ahead and destroy the connection */
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ *
+ * \note We handle a destroyed connection the same as a closed one,
+ *       but we need a separate handler because the return type is different.
+ */
 static void
-fenced_ipc_destroy(qb_ipcs_connection_t * c)
+fenced_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Connection %p destroyed", c);
+    crm_trace("Destroying client connection %p", c);
     fenced_ipc_closed(c);
 }
 
