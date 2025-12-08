@@ -401,3 +401,4 @@ extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;
 extern gboolean stonith_shutdown_flag;
+extern struct qb_ipcs_service_handlers ipc_callbacks;
