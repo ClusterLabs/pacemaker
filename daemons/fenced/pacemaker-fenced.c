@@ -49,7 +49,6 @@ static GMainLoop *mainloop = NULL;
 
 gboolean stonith_shutdown_flag = FALSE;
 
-static qb_ipcs_service_t *ipcs = NULL;
 static pcmk__output_t *out = NULL;
 
 pcmk__supported_format_t formats[] = {
@@ -325,17 +324,12 @@ static void
 stonith_cleanup(void)
 {
     fenced_cib_cleanup();
-    if (ipcs) {
-        qb_ipcs_destroy(ipcs);
-    }
-
+    fenced_ipc_cleanup();
     pcmk__cluster_destroy_node_caches();
-    pcmk__client_cleanup();
     free_stonith_remote_op_list();
     free_topology_list();
     fenced_free_device_table();
     free_metadata_cache();
-    fenced_unregister_handlers();
 }
 
 /*!
@@ -524,8 +518,7 @@ main(int argc, char **argv)
 
     fenced_init_device_table();
     init_topology_list();
-
-    pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
+    fenced_ipc_init();
 
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);

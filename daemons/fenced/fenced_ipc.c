@@ -25,6 +25,8 @@
 #include <crm/crm.h>                          // CRM_OP_RM_NODE_CACHE
 #include <crm/stonith-ng.h>                   // stonith_call_options
 
+static qb_ipcs_service_t *ipcs = NULL;
+
 /*!
  * \internal
  * \brief Accept a new client IPC connection
@@ -194,10 +196,33 @@ fenced_ipc_destroy(qb_ipcs_connection_t *c)
     fenced_ipc_closed(c);
 }
 
-struct qb_ipcs_service_handlers ipc_callbacks = {
+static struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = fenced_ipc_accept,
     .connection_created = NULL,
     .msg_process = fenced_ipc_dispatch,
     .connection_closed = fenced_ipc_closed,
     .connection_destroyed = fenced_ipc_destroy
 };
+
+void
+fenced_ipc_cleanup(void)
+{
+    if (ipcs != NULL) {
+        pcmk__drop_all_clients(ipcs);
+        qb_ipcs_destroy(ipcs);
+        ipcs = NULL;
+    }
+
+    fenced_unregister_handlers();
+    pcmk__client_cleanup();
+}
+
+/*!
+ * \internal
+ * \brief Set up fenced IPC communication
+ */
+void
+fenced_ipc_init(void)
+{
+    pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
+}

@@ -377,6 +377,9 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
+void fenced_ipc_init(void);
+void fenced_ipc_cleanup(void);
+
 /*!
  * \internal
  * \brief Get the device flag to use with a given action when searching devices
@@ -401,4 +404,3 @@ extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;
 extern gboolean stonith_shutdown_flag;
-extern struct qb_ipcs_service_handlers ipc_callbacks;
