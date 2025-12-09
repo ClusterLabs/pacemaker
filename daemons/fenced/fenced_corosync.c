@@ -47,7 +47,7 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
  * \param[in] data  Previous value of what changed
  */
 static void
-st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
+fenced_peer_change_cb(enum pcmk__node_update type, pcmk__node_status_t *node,
                         const void *data)
 {
     if ((type != pcmk__node_update_processes)
@@ -71,7 +71,7 @@ st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 
 #if SUPPORT_COROSYNC
 static void
-handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
+fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
                    uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     xmlNode *xml = NULL;
@@ -96,7 +96,7 @@ handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
 }
 
 static void
-stonith_peer_cs_destroy(gpointer user_data)
+fenced_cpg_destroy(gpointer user_data)
 {
     crm_crit("Lost connection to cluster layer, shutting down");
     stonith_shutdown(0);
@@ -112,13 +112,13 @@ fenced_cluster_connect(void)
 
 #if SUPPORT_COROSYNC
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        pcmk_cluster_set_destroy_fn(fenced_cluster, stonith_peer_cs_destroy);
-        pcmk_cpg_set_deliver_fn(fenced_cluster, handle_cpg_message);
+        pcmk_cluster_set_destroy_fn(fenced_cluster, fenced_cpg_destroy);
+        pcmk_cpg_set_deliver_fn(fenced_cluster, fenced_cpg_dispatch);
         pcmk_cpg_set_confchg_fn(fenced_cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
 
-    pcmk__cluster_set_status_callback(&st_peer_update_callback);
+    pcmk__cluster_set_status_callback(&fenced_peer_change_cb);
 
     rc = pcmk_cluster_connect(fenced_cluster);
     if (rc != pcmk_rc_ok) {
