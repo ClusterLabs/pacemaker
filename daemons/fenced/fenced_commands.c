@@ -3179,13 +3179,29 @@ is_privileged(const pcmk__client_t *c, const char *op)
     }
 }
 
+static xmlNode *
+handle_unknown_request(pcmk__request_t *request)
+{
+    crm_err("Unknown %s request %s from %s %s",
+            (request->ipc_client != NULL) ? "IPC" : "CPG",
+            request->op, pcmk__request_origin_type(request),
+            pcmk__request_origin(request));
+    pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                        "Unknown request type '%s' (bug?)",
+                        pcmk__s(request->op, ""));
+    return fenced_construct_reply(request->xml, NULL, &request->result);
+}
+
 // CRM_OP_REGISTER
 static xmlNode *
 handle_register_request(pcmk__request_t *request)
 {
     xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
-    pcmk__assert(request->ipc_client != NULL);
+    if (request->peer != NULL) {
+        return handle_unknown_request(request);
+    }
+
     pcmk__xe_set(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
     pcmk__xe_set(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -3277,7 +3293,10 @@ handle_notify_request(pcmk__request_t *request)
 {
     const char *flag_name = NULL;
 
-    pcmk__assert(request->ipc_client != NULL);
+    if (request->peer != NULL) {
+        return handle_unknown_request(request);
+    }
+
     flag_name = pcmk__xe_get(request->xml, PCMK__XA_ST_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
@@ -3537,18 +3556,6 @@ handle_cache_request(pcmk__request_t *request)
     pcmk__cluster_forget_cluster_node(node_id, name);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
-}
-
-static xmlNode *
-handle_unknown_request(pcmk__request_t *request)
-{
-    crm_err("Unknown IPC request %s from %s %s",
-            request->op, pcmk__request_origin_type(request),
-            pcmk__request_origin(request));
-    pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                        "Unknown IPC request type '%s' (bug?)",
-                        pcmk__s(request->op, ""));
-    return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
 static void
