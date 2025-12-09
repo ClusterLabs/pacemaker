@@ -76,7 +76,12 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     const char *op = NULL;
     int rc = pcmk_rc_ok;
 
+    // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
+    if (data == NULL) {
+        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
+        return 0;
+    }
 
     rc = pcmk__ipc_msg_append(&client->buffer, data);
 
@@ -107,12 +112,13 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
     if (msg == NULL) {
+        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
     op = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
-    if(pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         pcmk__xe_set(msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
         pcmk__xe_set(msg, PCMK__XA_ST_OP, op);
         pcmk__xe_set(msg, PCMK__XA_ST_CLIENTID, client->id);
@@ -142,15 +148,16 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     if (pcmk__is_set(call_options, st_opt_sync_call)) {
         pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
-        CRM_LOG_ASSERT(client->request_id == 0);     /* This means the client has two synchronous events in-flight */
-        client->request_id = id;     /* Reply only to the last one */
+        /* This means the client has two synchronous events in-flight */
+        CRM_LOG_ASSERT(client->request_id == 0);
+        /* Reply only to the last one */
+        client->request_id = id;
     }
 
     pcmk__xe_set(msg, PCMK__XA_ST_CLIENTID, client->id);
     pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(client));
     pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-    crm_log_xml_trace(msg, "ipc-received");
     stonith_command(client, id, flags, msg, NULL);
 
     pcmk__xml_free(msg);
