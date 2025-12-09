@@ -576,7 +576,7 @@ invalid:
 
 // Return value is guaranteed not to be NULL
 static crm_time_t *
-utc_from_crm_time(const crm_time_t *dt)
+copy_time_to_utc(const crm_time_t *dt)
 {
     const uint32_t flags = crm_time_log_date
                            |crm_time_log_timeofday
@@ -591,10 +591,11 @@ utc_from_crm_time(const crm_time_t *dt)
     utc->seconds = dt->seconds;
     utc->offset = 0;
 
-    if (dt->offset) {
+    if (dt->offset != 0) {
         crm_time_add_seconds(utc, -dt->offset);
+
     } else {
-        /* Durations (which are the only things that can include months, never have a timezone */
+        // Durations (the only things that can include months) never have a TZ
         utc->months = dt->months;
     }
 
@@ -670,7 +671,6 @@ crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
 long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
-    int lpc;
     crm_time_t *utc = NULL;
     long long in_seconds = 0;
 
@@ -678,15 +678,14 @@ crm_time_get_seconds(const crm_time_t *dt)
         return 0;
     }
 
-    // @TODO This is inefficient if dt is already in UTC
-    utc = utc_from_crm_time(dt);
-    if (utc == NULL) {
-        return 0;
+    if (dt->offset != 0) {
+        utc = copy_time_to_utc(dt);
+        dt = utc;
     }
 
     // @TODO We should probably use <= if dt is a duration
-    for (lpc = 1; lpc < utc->years; lpc++) {
-        long long dmax = year_days(lpc);
+    for (int i = 1; i < dt->years; i++) {
+        long long dmax = year_days(i);
 
         in_seconds += SECONDS_IN_DAY * dmax;
     }
@@ -696,14 +695,14 @@ crm_time_get_seconds(const crm_time_t *dt)
      * be applied. Assume 30-day months so that something vaguely sane happens
      * in this case.
      */
-    if (utc->months > 0) {
-        in_seconds += SECONDS_IN_DAY * 30 * (long long) (utc->months);
+    if (dt->months > 0) {
+        in_seconds += SECONDS_IN_DAY * 30 * (long long) (dt->months);
     }
 
-    if (utc->days > 0) {
-        in_seconds += SECONDS_IN_DAY * (long long) (utc->days - 1);
+    if (dt->days > 0) {
+        in_seconds += SECONDS_IN_DAY * (long long) (dt->days - 1);
     }
-    in_seconds += utc->seconds;
+    in_seconds += dt->seconds;
 
     crm_time_free(utc);
     return in_seconds;
@@ -968,7 +967,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
     // Convert to UTC if local timezone was not requested
     if ((dt->offset != 0) && !pcmk__is_set(flags, crm_time_log_with_timezone)) {
-        utc = utc_from_crm_time(dt);
+        utc = copy_time_to_utc(dt);
         dt = utc;
     }
 
@@ -1479,7 +1478,7 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
     }
 
     answer = pcmk_copy_time(dt);
-    utc = utc_from_crm_time(value);
+    utc = copy_time_to_utc(value);
 
     crm_time_add_years(answer, utc->years);
     crm_time_add_months(answer, utc->months);
@@ -1621,8 +1620,8 @@ crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    utc = utc_from_crm_time(value);
-    answer = utc_from_crm_time(dt);
+    utc = copy_time_to_utc(value);
+    answer = copy_time_to_utc(dt);
     answer->duration = TRUE;
 
     crm_time_add_years(answer, -utc->years);
@@ -1647,7 +1646,7 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    utc = utc_from_crm_time(value);
+    utc = copy_time_to_utc(value);
     answer = pcmk_copy_time(dt);
 
     crm_time_add_years(answer, -utc->years);
@@ -1691,8 +1690,8 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
         return 1;
     }
 
-    t1 = utc_from_crm_time(a);
-    t2 = utc_from_crm_time(b);
+    t1 = copy_time_to_utc(a);
+    t2 = copy_time_to_utc(b);
 
     do_cmp_field(t1, t2, years);
     do_cmp_field(t1, t2, days);
