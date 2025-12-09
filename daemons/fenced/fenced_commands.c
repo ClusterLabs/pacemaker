@@ -3584,16 +3584,22 @@ fenced_unregister_handlers(void)
 }
 
 static void
-handle_request(pcmk__request_t *request)
+fenced_handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
+    char *log_msg = NULL;
+    const char *exec_status_s = NULL;
     const char *reason = NULL;
 
     if (fenced_handlers == NULL) {
         fenced_register_handlers();
     }
+
     reply = pcmk__process_request(request, fenced_handlers);
+
     if (reply != NULL) {
+        crm_log_xml_trace(reply, "Reply");
+
         if (pcmk__is_set(request->flags, pcmk__request_reuse_options)
             && (request->ipc_client != NULL)) {
             /* Certain IPC-only commands must reuse the call options from the
@@ -3603,6 +3609,7 @@ handle_request(pcmk__request_t *request)
             pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
                                request->ipc_flags);
             request->ipc_client->request_id = 0;
+
         } else {
             stonith_send_reply(reply, request->call_options,
                                request->peer, request->ipc_client);
@@ -3610,14 +3617,25 @@ handle_request(pcmk__request_t *request)
         pcmk__xml_free(reply);
     }
 
+    exec_status_s = pcmk_exec_status_str(request->result.execution_status);
     reason = request->result.exit_reason;
-    crm_debug("Processed %s request from %s %s: %s%s%s%s",
-              request->op, pcmk__request_origin_type(request),
-              pcmk__request_origin(request),
-              pcmk_exec_status_str(request->result.execution_status),
-              (reason == NULL)? "" : " (",
-              (reason == NULL)? "" : reason,
-              (reason == NULL)? "" : ")");
+    log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: %s%s%s%s",
+                                    request->op,
+                                    pcmk__request_origin_type(request),
+                                    pcmk__request_origin(request),
+                                    exec_status_s,
+                                    (reason == NULL)? "" : " (",
+                                    pcmk__s(reason, ""),
+                                    (reason == NULL)? "" : ")");
+
+    if (!pcmk__result_ok(&request->result)) {
+        crm_warn("%s", log_msg);
+    } else {
+        crm_debug("%s", log_msg);
+    }
+
+    free(log_msg);
+    pcmk__reset_request(request);
 }
 
 static void
@@ -3709,7 +3727,6 @@ stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
             pcmk__set_request_flags(&request, pcmk__request_sync);
         }
 
-        handle_request(&request);
-        pcmk__reset_request(&request);
+        fenced_handle_request(&request);
     }
 }
