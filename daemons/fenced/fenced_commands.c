@@ -3590,7 +3590,7 @@ fenced_unregister_handlers(void)
     }
 }
 
-static void
+void
 fenced_handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;

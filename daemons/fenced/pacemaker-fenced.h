@@ -382,6 +382,8 @@ void fenced_ipc_cleanup(void);
 
 int fenced_cluster_connect(void);
 
+void fenced_handle_request(pcmk__request_t *request);
+
 /*!
  * \internal
  * \brief Get the device flag to use with a given action when searching devices

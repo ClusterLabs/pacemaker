@@ -22,10 +22,34 @@
 
 #include <crm/common/ipc.h>                   // crm_ipc_flags, pcmk_ipc_fenced
 #include <crm/common/results.h>               // pcmk_rc_*, pcmk_rc_str
+#include <crm/fencing/internal.h>             // STONITH_OP_*
 #include <crm/crm.h>                          // CRM_OP_RM_NODE_CACHE
 #include <crm/stonith-ng.h>                   // stonith_call_options
 
 static qb_ipcs_service_t *ipcs = NULL;
+
+static void
+handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
+{
+    const char *op = pcmk__xe_get(request, PCMK__XA_ST_OP);
+
+    if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
+        process_remote_stonith_query(request);
+
+    } else if (pcmk__str_any_of(op, STONITH_OP_NOTIFY, STONITH_OP_FENCE,
+                                NULL)) {
+        fenced_process_fencing_reply(request);
+
+    } else {
+        crm_err("Ignoring unknown %s reply from client %s",
+                pcmk__s(op, "untyped"), pcmk__client_name(client));
+        crm_log_xml_warn(request, "UnknownOp");
+        return;
+    }
+
+    crm_debug("Processed %s reply from client %s", op,
+              pcmk__client_name(client));
+}
 
 /*!
  * \internal
@@ -158,7 +182,30 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(client));
     pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-    stonith_command(client, id, flags, msg, NULL);
+    if (pcmk__xpath_find_one(msg->doc, "//" PCMK__XE_ST_REPLY,
+                             LOG_NEVER) != NULL) {
+        handle_ipc_reply(client, msg);
+
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = call_options,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_ST_OP);
+        CRM_CHECK(request.op != NULL, return 0);
+
+        if (pcmk__is_set(request.call_options, st_opt_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
+
+        fenced_handle_request(&request);
+    }
 
     pcmk__xml_free(msg);
     return 0;
