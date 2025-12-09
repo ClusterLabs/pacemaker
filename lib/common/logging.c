@@ -515,6 +515,10 @@ pcmk__add_logfile(const char *filename)
         setenv_logfile(filename);
 
     } else if (default_target >= 0) {
+        /* @TODO Why do we disable logging to the default log file when adding
+         * another log file? This seems wrong, especially if the default file is
+         * configured explicitly.
+         */
         pcmk__notice("Switching logging to %s", filename);
         disable_logfile(default_target);
     }
