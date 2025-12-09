@@ -3641,8 +3641,7 @@ fenced_handle_request(pcmk__request_t *request)
 static void
 handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
 {
-    // Copy, because request might be freed before we want to log this
-    char *op = pcmk__xe_get_copy(request, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(request, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
@@ -3656,13 +3655,12 @@ handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
                 pcmk__s(op, "untyped"), ((client == NULL)? "peer" : "client"),
                 ((client == NULL)? remote_peer : pcmk__client_name(client)));
         crm_log_xml_warn(request, "UnknownOp");
-        free(op);
         return;
     }
+
     crm_debug("Processed %s reply from %s %s",
               op, ((client == NULL)? "peer" : "client"),
               ((client == NULL)? remote_peer : pcmk__client_name(client)));
-    free(op);
 }
 
 /*!
