@@ -469,12 +469,11 @@ attrd_cluster_connect(void)
     pcmk__cluster_set_status_callback(&attrd_peer_change_cb);
 
     rc = pcmk_cluster_connect(attrd_cluster);
-    rc = pcmk_rc2legacy(rc);
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         crm_err("Cluster connection failed");
-        return rc;
     }
-    return pcmk_ok;
+
+    return rc;
 }
 
 void

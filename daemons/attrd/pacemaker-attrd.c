@@ -164,12 +164,13 @@ main(int argc, char **argv)
         crm_info("CIB connection active");
     }
 
-    if (attrd_cluster_connect() != pcmk_ok) {
+    if (attrd_cluster_connect() != pcmk_rc_ok) {
         attrd_exit_status = CRM_EX_FATAL;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
                     "Could not connect to the cluster");
         goto done;
     }
+
     crm_info("Cluster connection active");
 
     // Initialization that requires the cluster to be connected
