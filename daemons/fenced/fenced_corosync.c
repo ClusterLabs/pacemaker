@@ -25,17 +25,15 @@
 pcmk_cluster_t *fenced_cluster = NULL;
 
 static void
-stonith_peer_callback(xmlNode *msg, void *private_data)
+fenced_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
-    const char *remote_peer = pcmk__xe_get(msg, PCMK__XA_SRC);
-    const char *op = pcmk__xe_get(msg, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(xml, PCMK__XA_ST_OP);
 
     if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
         return;
     }
 
-    crm_log_xml_trace(msg, "Peer[inbound]");
-    stonith_command(NULL, 0, 0, msg, remote_peer);
+    stonith_command(NULL, 0, 0, xml, peer->name);
 }
 
 /*!
@@ -99,7 +97,9 @@ fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
                 from, nodeid, data);
     } else {
         pcmk__xe_set(xml, PCMK__XA_SRC, from);
-        stonith_peer_callback(xml, NULL);
+        fenced_peer_message(pcmk__get_node(nodeid, from, NULL,
+                                           pcmk__node_search_cluster_member),
+                            xml);
     }
 
     pcmk__xml_free(xml);
