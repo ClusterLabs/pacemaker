@@ -25,7 +25,7 @@
 pcmk_cluster_t *fenced_cluster = NULL;
 
 static void
-stonith_peer_callback(xmlNode * msg, void *private_data)
+stonith_peer_callback(xmlNode *msg, void *private_data)
 {
     const char *remote_peer = pcmk__xe_get(msg, PCMK__XA_SRC);
     const char *op = pcmk__xe_get(msg, PCMK__XA_ST_OP);
@@ -48,7 +48,7 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
  */
 static void
 fenced_peer_change_cb(enum pcmk__node_update type, pcmk__node_status_t *node,
-                        const void *data)
+                      const void *data)
 {
     if ((type != pcmk__node_update_processes)
         && !pcmk__is_set(node->flags, pcmk__node_status_remote)) {
@@ -70,33 +70,50 @@ fenced_peer_change_cb(enum pcmk__node_update type, pcmk__node_status_t *node,
 }
 
 #if SUPPORT_COROSYNC
+/*!
+ * \internal
+ * \brief Callback for when a peer message is received
+ *
+ * \param[in]     handle     The cluster connection
+ * \param[in]     group_name The group that \p nodeid is a member of
+ * \param[in]     nodeid     Peer node that sent \p msg
+ * \param[in]     pid        Process that sent \p msg
+ * \param[in,out] msg        Received message
+ * \param[in]     msg_len    Length of \p msg
+ */
 static void
-fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
-                   uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
+                    uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     xmlNode *xml = NULL;
     const char *from = NULL;
     char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
 
-    if(data == NULL) {
+    if (data == NULL) {
         return;
     }
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Invalid XML: '%.120s'", data);
-        free(data);
-        return;
+        crm_err("Bad message received from %s[%" PRIu32 "]: '%.120s'",
+                from, nodeid, data);
+    } else {
+        pcmk__xe_set(xml, PCMK__XA_SRC, from);
+        stonith_peer_callback(xml, NULL);
     }
-    pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    stonith_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
     free(data);
 }
 
+/*!
+ * \internal
+ * \brief Callback for when the cluster object is destroyed
+ *
+ * \param[in] unused Unused
+ */
 static void
-fenced_cpg_destroy(gpointer user_data)
+fenced_cpg_destroy(gpointer unused)
 {
     crm_crit("Lost connection to cluster layer, shutting down");
     stonith_shutdown(0);
