@@ -380,6 +380,8 @@ void fenced_scheduler_run(xmlNode *cib);
 void fenced_ipc_init(void);
 void fenced_ipc_cleanup(void);
 
+int fenced_cluster_connect(void);
+
 /*!
  * \internal
  * \brief Get the device flag to use with a given action when searching devices
@@ -404,3 +406,4 @@ extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;
 extern gboolean stonith_shutdown_flag;
+extern pcmk_cluster_t *fenced_cluster;

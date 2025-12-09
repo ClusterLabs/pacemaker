@@ -67,54 +67,6 @@ crm_exit_t exit_code = CRM_EX_OK;
 
 static void stonith_cleanup(void);
 
-static void
-stonith_peer_callback(xmlNode * msg, void *private_data)
-{
-    const char *remote_peer = pcmk__xe_get(msg, PCMK__XA_SRC);
-    const char *op = pcmk__xe_get(msg, PCMK__XA_ST_OP);
-
-    if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
-        return;
-    }
-
-    crm_log_xml_trace(msg, "Peer[inbound]");
-    stonith_command(NULL, 0, 0, msg, remote_peer);
-}
-
-#if SUPPORT_COROSYNC
-static void
-handle_cpg_message(cpg_handle_t handle, const struct cpg_name *groupName,
-                   uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
-{
-    xmlNode *xml = NULL;
-    const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
-
-    if(data == NULL) {
-        return;
-    }
-
-    xml = pcmk__xml_parse(data);
-    if (xml == NULL) {
-        crm_err("Invalid XML: '%.120s'", data);
-        free(data);
-        return;
-    }
-    pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    stonith_peer_callback(xml, NULL);
-
-    pcmk__xml_free(xml);
-    free(data);
-}
-
-static void
-stonith_peer_cs_destroy(gpointer user_data)
-{
-    crm_crit("Lost connection to cluster layer, shutting down");
-    stonith_shutdown(0);
-}
-#endif
-
 void
 do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
                int call_options)
@@ -332,37 +284,6 @@ stonith_cleanup(void)
     free_metadata_cache();
 }
 
-/*!
- * \internal
- * \brief Callback for peer status changes
- *
- * \param[in] type  What changed
- * \param[in] node  What peer had the change
- * \param[in] data  Previous value of what changed
- */
-static void
-st_peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
-                        const void *data)
-{
-    if ((type != pcmk__node_update_processes)
-        && !pcmk__is_set(node->flags, pcmk__node_status_remote)) {
-        /*
-         * This is a hack until we can send to a nodeid and/or we fix node name lookups
-         * These messages are ignored in stonith_peer_callback()
-         */
-        xmlNode *query = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
-
-        pcmk__xe_set(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        pcmk__xe_set(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
-
-        crm_debug("Broadcasting our uname because of node %" PRIu32,
-                  node->cluster_layer_id);
-        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, query);
-
-        pcmk__xml_free(query);
-    }
-}
-
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_fence_attrs() or
  * crm_resource --list-options=fencing instead of querying daemon metadata.
  *
@@ -407,7 +328,6 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    pcmk_cluster_t *cluster = NULL;
     crm_ipc_t *old_instance = NULL;
 
     GError *error = NULL;
@@ -493,24 +413,16 @@ main(int argc, char **argv)
         goto done;
     }
 
-    cluster = pcmk_cluster_new();
-
-#if SUPPORT_COROSYNC
-    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        pcmk_cluster_set_destroy_fn(cluster, stonith_peer_cs_destroy);
-        pcmk_cpg_set_deliver_fn(cluster, handle_cpg_message);
-        pcmk_cpg_set_confchg_fn(cluster, pcmk__cpg_confchg_cb);
-    }
-#endif // SUPPORT_COROSYNC
-
-    pcmk__cluster_set_status_callback(&st_peer_update_callback);
-
-    if (pcmk_cluster_connect(cluster) != pcmk_rc_ok) {
+    if (fenced_cluster_connect() != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
-        crm_crit("Cannot sign in to the cluster... terminating");
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Could not connect to the cluster");
         goto done;
     }
-    fenced_set_local_node(cluster->priv->node_name);
+
+    crm_info("Cluster connection active");
+
+    fenced_set_local_node(fenced_cluster->priv->node_name);
 
     if (!options.stand_alone) {
         setup_cib();
@@ -532,7 +444,7 @@ done:
     g_strfreev(options.log_files);
 
     stonith_cleanup();
-    pcmk_cluster_free(cluster);
+    pcmk_cluster_free(fenced_cluster);
     fenced_scheduler_cleanup();
 
     pcmk__output_and_clear_error(&error, out);

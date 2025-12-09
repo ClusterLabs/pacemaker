@@ -42,6 +42,7 @@ pacemaker_fenced_LDADD += $(CLUSTERLIBS)
 pacemaker_fenced_SOURCES	= pacemaker-fenced.c	\
 				  fenced_cib.c		\
 				  fenced_commands.c	\
+				  fenced_corosync.c	\
 				  fenced_ipc.c		\
 				  fenced_remote.c	\
 				  fenced_scheduler.c	\
