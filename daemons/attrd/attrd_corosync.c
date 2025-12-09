@@ -133,21 +133,30 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
     }
 }
 
+/*!
+ * \internal
+ * \brief Callback for when a peer message is received
+ *
+ * \param[in]     handle     The cluster connection
+ * \param[in]     group_name The group that \p nodeid is a member of
+ * \param[in]     nodeid     Peer node that sent \p msg
+ * \param[in]     pid        Process that sent \p msg
+ * \param[in,out] msg        Received message
+ * \param[in]     msg_len    Length of \p msg
+ */
 static void
-attrd_cpg_dispatch(cpg_handle_t handle,
-                 const struct cpg_name *groupName,
-                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+attrd_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
+                   uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     xmlNode *xml = NULL;
     const char *from = NULL;
     char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
 
-    if(data == NULL) {
+    if (data == NULL) {
         return;
     }
 
     xml = pcmk__xml_parse(data);
-
     if (xml == NULL) {
         crm_err("Bad message received from %s[%" PRIu32 "]: '%.120s'",
                 from, nodeid, data);
@@ -161,6 +170,12 @@ attrd_cpg_dispatch(cpg_handle_t handle,
     free(data);
 }
 
+/*!
+ * \internal
+ * \brief Callback for when the cluster object is destroyed
+ *
+ * \param[in] unused Unused
+ */
 static void
 attrd_cpg_destroy(gpointer unused)
 {
@@ -194,6 +209,14 @@ attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 
 #define state_text(state) pcmk__s((state), "in unknown state")
 
+/*!
+ * \internal
+ * \brief Callback for peer status changes
+ *
+ * \param[in] type  What changed
+ * \param[in] node  What peer had the change
+ * \param[in] data  Previous value of what changed
+ */
 static void
 attrd_peer_change_cb(enum pcmk__node_update kind, pcmk__node_status_t *peer,
                      const void *data)
