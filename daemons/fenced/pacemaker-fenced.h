@@ -378,6 +378,7 @@ void fenced_ipc_init(void);
 void fenced_ipc_cleanup(void);
 
 int fenced_cluster_connect(void);
+void fenced_cluster_disconnect(void);
 
 void fenced_handle_request(pcmk__request_t *request);
 

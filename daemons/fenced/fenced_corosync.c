@@ -197,3 +197,10 @@ fenced_cluster_connect(void)
 
     return rc;
 }
+
+void
+fenced_cluster_disconnect(void)
+{
+    pcmk_cluster_disconnect(fenced_cluster);
+    pcmk_cluster_free(fenced_cluster);
+}

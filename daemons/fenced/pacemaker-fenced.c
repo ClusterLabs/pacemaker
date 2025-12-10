@@ -456,8 +456,7 @@ done:
     g_strfreev(options.log_files);
 
     stonith_cleanup();
-    pcmk_cluster_disconnect(fenced_cluster);
-    pcmk_cluster_free(fenced_cluster);
+    fenced_cluster_disconnect();
     fenced_scheduler_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
