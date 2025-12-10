@@ -24,12 +24,12 @@ extern "C" {
 
 int pcmk_parse_interval_spec(const char *input, guint *result_ms);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/strings_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/strings_compat.h>
 #endif
 
 #endif // PCMK__CRM_COMMON_STRINGS__H

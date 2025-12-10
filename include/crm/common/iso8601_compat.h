@@ -1,0 +1,73 @@
+/*
+ * Copyright 2004-2025 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
+
+#ifndef PCMK__CRM_COMMON_ISO8601_COMPAT__H
+#define PCMK__CRM_COMMON_ISO8601_COMPAT__H
+
+#include <stdbool.h>
+#include <stdint.h>             // uint32_t
+#include <time.h>               // time_t
+
+#include <crm/common/iso8601.h> // crm_time_t
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * \file
+ * \brief Deprecated Pacemaker time API
+ * \ingroup core
+ * \deprecated Do not include this header directly. The time APIs in this
+ *             header, and the header itself, will be removed in a future
+ *             release.
+ */
+
+//! \deprecated Do not use
+bool crm_time_leapyear(int year);
+
+//! \deprecated Do not use
+int crm_time_days_in_month(int month, int year);
+
+//! \deprecated Do not use
+int crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m);
+
+//! \deprecated Do not use
+int crm_time_weeks_in_year(int year);
+
+//! \deprecated Do not use
+int crm_time_january1_weekday(int year);
+
+//! \deprecated Do not use
+void crm_time_set(crm_time_t *target, const crm_time_t *source);
+
+//! \deprecated Do not use
+bool crm_time_check(const crm_time_t *dt);
+
+//! \deprecated Do not use
+void crm_time_set_timet(crm_time_t *target, const time_t *source_sec);
+
+//! \deprecated Do not use
+int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                         uint32_t *d);
+
+//! \deprecated Do not use
+#define crm_time_log(level, prefix, dt, flags)  \
+    crm_time_log_alias(level, __FILE__, __func__, __LINE__, prefix, dt, flags)
+
+//! \deprecated Do not use
+void crm_time_log_alias(int log_level, const char *file, const char *function,
+                        int line, const char *prefix,
+                        const crm_time_t *date_time, int flags);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // PCMK__CRM_COMMON_ISO8601_COMPAT__H

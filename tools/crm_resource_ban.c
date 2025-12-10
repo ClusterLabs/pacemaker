@@ -22,6 +22,8 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     crm_time_t *now = NULL;
     crm_time_t *later = NULL;
     crm_time_t *duration = NULL;
+    const uint32_t duration_flags = crm_time_log_date|crm_time_log_timeofday;
+    const uint32_t time_flags = duration_flags|crm_time_log_with_timezone;
 
     if (move_lifetime == NULL) {
         return NULL;
@@ -46,12 +48,10 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
         return NULL;
     }
 
-    crm_time_log(LOG_INFO, "now     ", now,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_INFO, "later   ", later,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_INFO, "duration", duration, crm_time_log_date | crm_time_log_timeofday);
-    later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    pcmk__time_log(LOG_INFO, "now     ", now, time_flags);
+    pcmk__time_log(LOG_INFO, "later   ", later, time_flags);
+    pcmk__time_log(LOG_INFO, "duration", duration, duration_flags);
+    later_s = crm_time_as_string(later, time_flags);
     out->info(out, "Migration will take effect until: %s", later_s);
 
     crm_time_free(duration);

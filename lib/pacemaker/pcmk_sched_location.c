@@ -255,7 +255,7 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
     }
 
     location_rule = pcmk__new_location(rule_id, rsc, 0, discovery, NULL);
-    CRM_CHECK(location_rule != NULL, return NULL);
+    CRM_CHECK(location_rule != NULL, return false);
 
     location_rule->role_filter = role;
 

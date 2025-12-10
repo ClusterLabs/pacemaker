@@ -128,11 +128,11 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
     const char *kind_s = pcmk__alert_flag2text(kind);
 
     struct timespec now_tv = { 0, };
-    crm_time_t now_dt = { 0, };
+    crm_time_t *now_dt = NULL;
     int now_usec = 0;
 
     qb_util_timespec_from_epoch_get(&now_tv);
-    crm_time_set_timet(&now_dt, &(now_tv.tv_sec));
+    now_dt = pcmk__copy_timet(now_tv.tv_sec);
     now_usec = now_tv.tv_nsec / QB_TIME_NS_IN_USEC;
 
     params = alert_key2param(params, PCMK__alert_key_kind, kind_s);
@@ -173,7 +173,7 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         copy_params = alert_key2param(copy_params, PCMK__alert_key_recipient,
                                       entry->recipient);
 
-        str = pcmk__time_format_hr(entry->tstamp_format, &now_dt, now_usec);
+        str = pcmk__time_format_hr(entry->tstamp_format, now_dt, now_usec);
         if (str != NULL) {
             copy_params = alert_key2param(copy_params,
                                           PCMK__alert_key_timestamp, str);
@@ -202,6 +202,8 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
             any_success = true;
         }
     }
+
+    crm_time_free(now_dt);
 
     if (any_failure) {
         return (any_success? -1 : -2);

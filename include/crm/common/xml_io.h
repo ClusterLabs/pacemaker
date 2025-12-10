@@ -20,12 +20,12 @@ extern "C" {
  * \ingroup core
  */
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/xml_io_compat.h>
-#endif
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/xml_io_compat.h>
 #endif
 
 #endif  // PCMK__CRM_COMMON_XML_IO__H

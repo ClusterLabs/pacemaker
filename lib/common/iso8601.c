@@ -50,8 +50,11 @@
 #  define GMTOFF(tm) (-timezone+daylight)
 #endif
 
-#define HOUR_SECONDS    (60 * 60)
-#define DAY_SECONDS     (HOUR_SECONDS * 24)
+#define SECONDS_IN_MINUTE   60
+#define MINUTES_IN_HOUR     60
+#define SECONDS_IN_HOUR     (SECONDS_IN_MINUTE * MINUTES_IN_HOUR)
+#define HOURS_IN_DAY        24
+#define SECONDS_IN_DAY      (SECONDS_IN_HOUR * HOURS_IN_DAY)
 
 /*!
  * \internal
@@ -69,17 +72,518 @@
         ((QB_ABS(usec) < QB_TIME_US_IN_SEC)     \
          && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
 
-static crm_time_t *parse_date(const char *date_str);
-
-static crm_time_t *
-crm_get_utc_time(const crm_time_t *dt)
+/*!
+ * \brief Allocate memory for an uninitialized time object
+ *
+ * \return Newly allocated time object (guaranteed not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c crm_time_free().
+ */
+crm_time_t *
+crm_time_new_undefined(void)
 {
+    return pcmk__assert_alloc(1, sizeof(crm_time_t));
+}
+
+static bool
+is_leap_year(int year)
+{
+    return ((year % 4) == 0)
+           && (((year % 100) != 0) || (year % 400 == 0));
+}
+
+// Jan-Dec plus Feb of leap years
+static int month_days[13] = {
+    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29
+};
+
+/*!
+ * \brief Return number of days in given month of given year
+ *
+ * \param[in] month  Ordinal month (1-12)
+ * \param[in] year   Gregorian year
+ *
+ * \return Number of days in given month (0 if given month or year is invalid)
+ */
+static int
+days_in_month_year(int month, int year)
+{
+    if ((month < 1) || (month > 12) || (year < 1)) {
+        return 0;
+    }
+    if ((month == 2) && is_leap_year(year)) {
+        month = 13;
+    }
+    return month_days[month - 1];
+}
+
+/*!
+ * \internal
+ * \brief Get ordinal day number of year corresponding to given date
+ *
+ * \param[in] y   Year
+ * \param[in] m   Month (1-12)
+ * \param[in] d   Day of month (1-31)
+ *
+ * \return Day number of year \p y corresponding to month \p m and day \p d,
+ *         or 0 for invalid arguments
+ */
+static int
+get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
+{
+    int result = 0;
+
+    CRM_CHECK((y > 0) && (y <= INT_MAX) && (m >= 1) && (m <= 12)
+              && (d >= 1) && (d <= 31), return 0);
+
+    result = d;
+    for (int lpc = 1; lpc < m; lpc++) {
+        result += days_in_month_year(lpc, y);
+    }
+    return result;
+}
+
+static int
+year_days(int year)
+{
+    return is_leap_year(year)? 366 : 365;
+}
+
+/* From http://myweb.ecu.edu/mccartyr/ISOwdALG.txt :
+ *
+ * 5. Find the Jan1Weekday for Y (Monday=1, Sunday=7)
+ *  YY = (Y-1) % 100
+ *  C = (Y-1) - YY
+ *  G = YY + YY/4
+ *  Jan1Weekday = 1 + (((((C / 100) % 4) x 5) + G) % 7)
+ */
+static int
+jan1_day_of_week(int year)
+{
+    int YY = (year - 1) % 100;
+    int C = (year - 1) - YY;
+    int G = YY + YY / 4;
+    int jan1 = 1 + (((((C / 100) % 4) * 5) + G) % 7);
+
+    crm_trace("YY=%d, C=%d, G=%d", YY, C, G);
+    crm_trace("January 1 %.4d: %d", year, jan1);
+    return jan1;
+}
+
+static int
+weeks_in_year(int year)
+{
+    int weeks = 52;
+    int jan1 = jan1_day_of_week(year);
+
+    /* if jan1 == thursday */
+    if (jan1 == 4) {
+        weeks++;
+    } else {
+        jan1 = jan1_day_of_week(year + 1);
+        /* if dec31 == thursday aka. jan1 of next year is a friday */
+        if (jan1 == 5) {
+            weeks++;
+        }
+
+    }
+    return weeks;
+}
+
+/*!
+ * \internal
+ * \brief Determine number of seconds from an hour:minute:second string
+ *
+ * \param[in]  time_str  Time specification string
+ * \param[out] result    Number of seconds equivalent to time_str
+ *
+ * \return \c true if specification was valid, or \c false otherwise
+ * \note This may return the number of seconds in a day (which is out of bounds
+ *       for a time object) if given 24:00:00.
+ */
+static bool
+parse_hms(const char *time_str, int *result)
+{
+    int rc;
+    uint32_t hour = 0;
+    uint32_t minute = 0;
+    uint32_t second = 0;
+
+    *result = 0;
+
+    // Must have at least hour, but minutes and seconds are optional
+    rc = sscanf(time_str, "%" SCNu32 ":%" SCNu32 ":%" SCNu32,
+                &hour, &minute, &second);
+    if (rc == 1) {
+        rc = sscanf(time_str, "%2" SCNu32 "%2" SCNu32 "%2" SCNu32,
+                    &hour, &minute, &second);
+    }
+    if (rc == 0) {
+        crm_err("%s is not a valid ISO 8601 time specification", time_str);
+        return false;
+    }
+
+    crm_trace("Got valid time: %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+              hour, minute, second);
+
+    if ((hour == HOURS_IN_DAY) && (minute == 0) && (second == 0)) {
+        // Equivalent to 00:00:00 of next day, return number of seconds in day
+    } else if (hour >= HOURS_IN_DAY) {
+        crm_err("%s is not a valid ISO 8601 time specification "
+                "because %" PRIu32 " is not a valid hour", time_str, hour);
+        return false;
+    }
+    if (minute >= MINUTES_IN_HOUR) {
+        crm_err("%s is not a valid ISO 8601 time specification "
+                "because %" PRIu32 " is not a valid minute", time_str, minute);
+        return false;
+    }
+    if (second >= SECONDS_IN_MINUTE) {
+        crm_err("%s is not a valid ISO 8601 time specification "
+                "because %" PRIu32 " is not a valid second", time_str, second);
+        return false;
+    }
+
+    *result = (hour * SECONDS_IN_HOUR) + (minute * SECONDS_IN_MINUTE) + second;
+    return true;
+}
+
+static bool
+parse_offset(const char *offset_str, int *offset)
+{
+    tzset();
+
+    if (offset_str == NULL) {
+        // Use local offset
+#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
+        time_t now = time(NULL);
+        struct tm *now_tm = localtime(&now);
+#endif
+        int h_offset = GMTOFF(now_tm) / SECONDS_IN_HOUR;
+        int m_offset = (GMTOFF(now_tm) - (SECONDS_IN_HOUR * h_offset))
+                       / SECONDS_IN_MINUTE;
+
+        if (h_offset < 0 && m_offset < 0) {
+            m_offset = 0 - m_offset;
+        }
+        *offset = (SECONDS_IN_HOUR * h_offset) + (SECONDS_IN_MINUTE * m_offset);
+        return true;
+    }
+
+    if (offset_str[0] == 'Z') { // @TODO invalid if anything after?
+        *offset = 0;
+        return true;
+    }
+
+    *offset = 0;
+    if ((offset_str[0] == '+') || (offset_str[0] == '-')
+        || isdigit((int)offset_str[0])) {
+
+        bool negate = false;
+
+        if (offset_str[0] == '+') {
+            offset_str++;
+        } else if (offset_str[0] == '-') {
+            negate = true;
+            offset_str++;
+        }
+        if (!parse_hms(offset_str, offset)) {
+            return false;
+        }
+        if (negate) {
+            *offset = 0 - *offset;
+        }
+    } // @TODO else invalid?
+    return true;
+}
+
+static void
+seconds_to_hms(int seconds, uint32_t *h, uint32_t *m, uint32_t *s)
+{
+    int hours = 0;
+    int minutes = 0;
+
+    hours = seconds / SECONDS_IN_HOUR;
+    seconds %= SECONDS_IN_HOUR;
+
+    minutes = seconds / SECONDS_IN_MINUTE;
+    seconds %= SECONDS_IN_MINUTE;
+
+    *h = (uint32_t) QB_ABS(hours);
+    *m = (uint32_t) QB_ABS(minutes);
+    *s = (uint32_t) QB_ABS(seconds);
+}
+
+/*!
+ * \internal
+ * \brief Parse the time portion of an ISO 8601 date/time string
+ *
+ * \param[in]     time_str  Time portion of specification (after any 'T')
+ * \param[in,out] a_time    Time object to parse into
+ *
+ * \return \c true if valid time was parsed, \c false otherwise
+ * \note This may add a day to a_time (if the time is 24:00:00).
+ */
+static bool
+parse_time(const char *time_str, crm_time_t *a_time)
+{
+    uint32_t h, m, s;
+    const char *offset_s = NULL;
+
+    tzset();
+
+    if (time_str != NULL) {
+        if (!parse_hms(time_str, &(a_time->seconds))) {
+            return false;
+        }
+
+        offset_s = strstr(time_str, "Z");
+
+        /* @COMPAT: Spaces between the time and the offset are not supported
+         * by the standard according to section 3.4.1 and 4.2.5.2.
+         */
+        if (offset_s == NULL) {
+            offset_s = strpbrk(time_str, " +-");
+        }
+
+        if (offset_s != NULL) {
+            while (isspace(*offset_s)) {
+                offset_s++;
+            }
+        }
+    }
+
+    if (!parse_offset(offset_s, &(a_time->offset))) {
+        return false;
+    }
+
+    seconds_to_hms(a_time->offset, &h, &m, &s);
+    crm_trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
+              (a_time->offset < 0)? '-' : '+', h, m);
+
+    if (a_time->seconds == SECONDS_IN_DAY) {
+        // 24:00:00 == 00:00:00 of next day
+        a_time->seconds = 0;
+        crm_time_add_days(a_time, 1);
+    }
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a time object represents a sensible date/time
+ *
+ * \param[in] dt  Date/time object to check
+ *
+ * \return \c true if days and seconds are valid given the year, or \c false
+ *         otherwise
+ */
+static bool
+valid_time(const crm_time_t *dt)
+{
+    return (dt != NULL)
+           && (dt->days > 0) && (dt->days <= year_days(dt->years))
+           && (dt->seconds >= 0) && (dt->seconds < SECONDS_IN_DAY);
+}
+
+/*
+ * \internal
+ * \brief Parse a time object from an ISO 8601 date/time specification
+ *
+ * \param[in] date_str  ISO 8601 date/time specification (or
+ *                      \c PCMK__VALUE_EPOCH)
+ *
+ * \return New time object on success, NULL (and set errno) otherwise
+ */
+static crm_time_t *
+parse_date(const char *date_str)
+{
+    const uint32_t flags = crm_time_log_date|crm_time_log_timeofday;
+    const char *time_s = NULL;
+    crm_time_t *dt = NULL;
+
+    uint32_t year = 0U;
+    uint32_t month = 0U;
+    uint32_t day = 0U;
+    uint32_t week = 0U;
+
+    int rc = 0;
+
+    if (pcmk__str_empty(date_str)) {
+        crm_err("No ISO 8601 date/time specification given");
+        goto invalid;
+    }
+
+    if ((date_str[0] == 'T')
+        || ((strlen(date_str) > 2) && (date_str[2] == ':'))) {
+        /* Just a time supplied - Infer current date */
+        dt = pcmk__copy_timet(time(NULL));
+        if (date_str[0] == 'T') {
+            time_s = date_str + 1;
+        } else {
+            time_s = date_str;
+        }
+        goto parse_time_segment;
+    }
+
+    dt = crm_time_new_undefined();
+
+    if ((strncasecmp(PCMK__VALUE_EPOCH, date_str, 5) == 0)
+        && ((date_str[5] == '\0')
+            || (date_str[5] == '/')
+            || isspace(date_str[5]))) {
+
+        dt->days = 1;
+        dt->years = 1970;
+        pcmk__time_log(LOG_TRACE, "Unpacked", dt, flags);
+        return dt;
+    }
+
+    /* YYYY-MM-DD */
+    rc = sscanf(date_str, "%" SCNu32 "-%" SCNu32 "-%" SCNu32 "",
+                &year, &month, &day);
+    if (rc == 1) {
+        /* YYYYMMDD */
+        rc = sscanf(date_str, "%4" SCNu32 "%2" SCNu32 "%2" SCNu32 "",
+                    &year, &month, &day);
+    }
+    if (rc == 3) {
+        if ((month < 1U) || (month > 12U)) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid month",
+                    date_str, month);
+            goto invalid;
+        } else if ((year < 1U) || (year > INT_MAX)) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid year",
+                    date_str, year);
+            goto invalid;
+        } else if ((day < 1) || (day > INT_MAX)
+                   || (day > days_in_month_year(month, year))) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid day of the month",
+                    date_str, day);
+            goto invalid;
+        } else {
+            dt->years = year;
+            dt->days = get_ordinal_days(year, month, day);
+            crm_trace("Parsed Gregorian date '%.4" PRIu32 "-%.3d' "
+                      "from date string '%s'", year, dt->days, date_str);
+        }
+        goto parse_time_segment;
+    }
+
+    /* YYYY-DDD */
+    rc = sscanf(date_str, "%" SCNu32 "-%" SCNu32, &year, &day);
+    if (rc == 2) {
+        if ((year < 1U) || (year > INT_MAX)) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid year",
+                    date_str, year);
+            goto invalid;
+        } else if ((day < 1U) || (day > INT_MAX) || (day > year_days(year))) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid day of year %"
+                    PRIu32 " (1-%d)",
+                    date_str, day, year, year_days(year));
+            goto invalid;
+        }
+        crm_trace("Parsed ordinal year %d and days %d from date string '%s'",
+                  year, day, date_str);
+        dt->days = day;
+        dt->years = year;
+        goto parse_time_segment;
+    }
+
+    /* YYYY-Www-D */
+    rc = sscanf(date_str, "%" SCNu32 "-W%" SCNu32 "-%" SCNu32,
+                &year, &week, &day);
+    if (rc == 3) {
+        if ((week < 1U) || (week > weeks_in_year(year))) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid week of year %"
+                    PRIu32 " (1-%d)",
+                    date_str, week, year, weeks_in_year(year));
+            goto invalid;
+        } else if ((day < 1U) || (day > 7U)) {
+            crm_err("'%s' is not a valid ISO 8601 date/time specification "
+                    "because '%" PRIu32 "' is not a valid day of the week",
+                    date_str, day);
+            goto invalid;
+        } else {
+            /*
+             * See https://en.wikipedia.org/wiki/ISO_week_date
+             *
+             * Monday 29 December 2008 is written "2009-W01-1"
+             * Sunday 3 January 2010 is written "2009-W53-7"
+             * Saturday 27 September 2008 is written "2008-W37-6"
+             *
+             * If 1 January is on a Monday, Tuesday, Wednesday or Thursday, it
+             * is in week 1. If 1 January is on a Friday, Saturday or Sunday,
+             * it is in week 52 or 53 of the previous year.
+             */
+            int jan1 = jan1_day_of_week(year);
+
+            crm_trace("Parsed year %" PRIu32 " (Jan 1 = %d), week %" PRIu32
+                      ", and day %" PRIu32 " from date string '%s'",
+                      year, jan1, week, day, date_str);
+
+            dt->years = year;
+            crm_time_add_days(dt, (week - 1) * 7);
+
+            if (jan1 <= 4) {
+                crm_time_add_days(dt, 1 - jan1);
+            } else {
+                crm_time_add_days(dt, 8 - jan1);
+            }
+
+            crm_time_add_days(dt, day);
+        }
+        goto parse_time_segment;
+    }
+
+    crm_err("'%s' is not a valid ISO 8601 date/time specification", date_str);
+    goto invalid;
+
+parse_time_segment:
+    if (time_s == NULL) {
+        time_s = date_str + strspn(date_str, "0123456789-W");
+        if ((time_s[0] == ' ') || (time_s[0] == 'T')) {
+            ++time_s;
+        } else {
+            time_s = NULL;
+        }
+    }
+    if ((time_s != NULL) && !parse_time(time_s, dt)) {
+        goto invalid;
+    }
+
+    pcmk__time_log(LOG_TRACE, "Unpacked", dt, flags);
+
+    if (!valid_time(dt)) {
+        crm_err("'%s' is not a valid ISO 8601 date/time specification",
+                date_str);
+        goto invalid;
+    }
+    return dt;
+
+invalid:
+    crm_time_free(dt);
+    errno = EINVAL;
+    return NULL;
+}
+
+// Return value is guaranteed not to be NULL
+static crm_time_t *
+copy_time_to_utc(const crm_time_t *dt)
+{
+    const uint32_t flags = crm_time_log_date
+                           |crm_time_log_timeofday
+                           |crm_time_log_with_timezone;
     crm_time_t *utc = NULL;
 
-    if (dt == NULL) {
-        errno = EINVAL;
-        return NULL;
-    }
+    pcmk__assert(dt != NULL);
 
     utc = crm_time_new_undefined();
     utc->years = dt->years;
@@ -87,17 +591,16 @@ crm_get_utc_time(const crm_time_t *dt)
     utc->seconds = dt->seconds;
     utc->offset = 0;
 
-    if (dt->offset) {
+    if (dt->offset != 0) {
         crm_time_add_seconds(utc, -dt->offset);
+
     } else {
-        /* Durations (which are the only things that can include months, never have a timezone */
+        // Durations (the only things that can include months) never have a TZ
         utc->months = dt->months;
     }
 
-    crm_time_log(LOG_TRACE, "utc-source", dt,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_TRACE, "utc-target", utc,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    pcmk__time_log(LOG_TRACE, "utc-source", dt, flags);
+    pcmk__time_log(LOG_TRACE, "utc-target", utc, flags);
     return utc;
 }
 
@@ -109,19 +612,6 @@ crm_time_new(const char *date_time)
         return pcmk__copy_timet(time(NULL));
     }
     return parse_date(date_time);
-}
-
-/*!
- * \brief Allocate memory for an uninitialized time object
- *
- * \return Newly allocated time object
- * \note The caller is responsible for freeing the return value using
- *       crm_time_free().
- */
-crm_time_t *
-crm_time_new_undefined(void)
-{
-    return (crm_time_t *) pcmk__assert_alloc(1, sizeof(crm_time_t));
 }
 
 /*!
@@ -148,177 +638,39 @@ crm_time_free(crm_time_t * dt)
     free(dt);
 }
 
-static int
-year_days(int year)
-{
-    return crm_time_leapyear(year)? 366 : 365;
-}
-
-/* From http://myweb.ecu.edu/mccartyr/ISOwdALG.txt :
- *
- * 5. Find the Jan1Weekday for Y (Monday=1, Sunday=7)
- *  YY = (Y-1) % 100
- *  C = (Y-1) - YY
- *  G = YY + YY/4
- *  Jan1Weekday = 1 + (((((C / 100) % 4) x 5) + G) % 7)
- */
-int
-crm_time_january1_weekday(int year)
-{
-    int YY = (year - 1) % 100;
-    int C = (year - 1) - YY;
-    int G = YY + YY / 4;
-    int jan1 = 1 + (((((C / 100) % 4) * 5) + G) % 7);
-
-    crm_trace("YY=%d, C=%d, G=%d", YY, C, G);
-    crm_trace("January 1 %.4d: %d", year, jan1);
-    return jan1;
-}
-
-int
-crm_time_weeks_in_year(int year)
-{
-    int weeks = 52;
-    int jan1 = crm_time_january1_weekday(year);
-
-    /* if jan1 == thursday */
-    if (jan1 == 4) {
-        weeks++;
-    } else {
-        jan1 = crm_time_january1_weekday(year + 1);
-        /* if dec31 == thursday aka. jan1 of next year is a friday */
-        if (jan1 == 5) {
-            weeks++;
-        }
-
-    }
-    return weeks;
-}
-
-// Jan-Dec plus Feb of leap years
-static int month_days[13] = {
-    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29
-};
-
-/*!
- * \brief Return number of days in given month of given year
- *
- * \param[in] month  Ordinal month (1-12)
- * \param[in] year   Gregorian year
- *
- * \return Number of days in given month (0 if given month or year is invalid)
- */
-int
-crm_time_days_in_month(int month, int year)
-{
-    if ((month < 1) || (month > 12) || (year < 1)) {
-        return 0;
-    }
-    if ((month == 2) && crm_time_leapyear(year)) {
-        month = 13;
-    }
-    return month_days[month - 1];
-}
-
-bool
-crm_time_leapyear(int year)
-{
-    bool is_leap = false;
-
-    if (year % 4 == 0) {
-        is_leap = true;
-    }
-    if (year % 100 == 0 && year % 400 != 0) {
-        is_leap = false;
-    }
-    return is_leap;
-}
-
-/*!
- * \internal
- * \brief Get ordinal day number of year corresponding to given date
- *
- * \param[in] y   Year
- * \param[in] m   Month (1-12)
- * \param[in] d   Day of month (1-31)
- *
- * \return Day number of year \p y corresponding to month \p m and day \p d,
- *         or 0 for invalid arguments
- */
-static int
-get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
-{
-    int result = 0;
-
-    CRM_CHECK((y > 0) && (y <= INT_MAX) && (m >= 1) && (m <= 12)
-              && (d >= 1) && (d <= 31), return 0);
-
-    result = d;
-    for (int lpc = 1; lpc < m; lpc++) {
-        result += crm_time_days_in_month(lpc, y);
-    }
-    return result;
-}
-
 void
-crm_time_log_alias(int log_level, const char *file, const char *function,
-                   int line, const char *prefix, const crm_time_t *date_time,
-                   int flags)
+pcmk__time_log_as(const char *file, const char *function, int line,
+                  uint8_t level, const char *prefix, const crm_time_t *dt,
+                  uint32_t flags)
 {
-    char *date_s = crm_time_as_string(date_time, flags);
+    char *date_s = crm_time_as_string(dt, flags);
 
-    if (log_level == LOG_STDOUT) {
-        printf("%s%s%s\n",
-               (prefix? prefix : ""), (prefix? ": " : ""), date_s);
+    if (prefix != NULL) {
+        char *old = date_s;
+
+        date_s = pcmk__assert_asprintf("%s: %s", prefix, date_s);
+        free(old);
+    }
+
+    if (level == LOG_STDOUT) {
+        printf("%s\n", date_s);
     } else {
-        do_crm_log_alias(log_level, file, function, line, "%s%s%s",
-                         (prefix? prefix : ""), (prefix? ": " : ""), date_s);
+        do_crm_log_alias(level, file, function, line, "%s", date_s);
     }
     free(date_s);
-}
-
-static void
-crm_time_get_sec(int sec, uint32_t *h, uint32_t *m, uint32_t *s)
-{
-    uint32_t hours, minutes, seconds;
-
-    seconds = QB_ABS(sec);
-
-    hours = seconds / HOUR_SECONDS;
-    seconds -= HOUR_SECONDS * hours;
-
-    minutes = seconds / 60;
-    seconds -= 60 * minutes;
-
-    crm_trace("%d == %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
-              sec, hours, minutes, seconds);
-
-    *h = hours;
-    *m = minutes;
-    *s = seconds;
 }
 
 int
 crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                        uint32_t *s)
 {
-    crm_time_get_sec(dt->seconds, h, m, s);
-    return TRUE;
-}
-
-int
-crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
-{
-    uint32_t s;
-
-    crm_time_get_sec(dt->seconds, h, m, &s);
+    seconds_to_hms(dt->seconds, h, m, s);
     return TRUE;
 }
 
 long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
-    int lpc;
     crm_time_t *utc = NULL;
     long long in_seconds = 0;
 
@@ -326,17 +678,16 @@ crm_time_get_seconds(const crm_time_t *dt)
         return 0;
     }
 
-    // @TODO This is inefficient if dt is already in UTC
-    utc = crm_get_utc_time(dt);
-    if (utc == NULL) {
-        return 0;
+    if (dt->offset != 0) {
+        utc = copy_time_to_utc(dt);
+        dt = utc;
     }
 
     // @TODO We should probably use <= if dt is a duration
-    for (lpc = 1; lpc < utc->years; lpc++) {
-        long long dmax = year_days(lpc);
+    for (int i = 1; i < dt->years; i++) {
+        long long dmax = year_days(i);
 
-        in_seconds += DAY_SECONDS * dmax;
+        in_seconds += SECONDS_IN_DAY * dmax;
     }
 
     /* utc->months can be set only for durations. By definition, the value
@@ -344,14 +695,14 @@ crm_time_get_seconds(const crm_time_t *dt)
      * be applied. Assume 30-day months so that something vaguely sane happens
      * in this case.
      */
-    if (utc->months > 0) {
-        in_seconds += DAY_SECONDS * 30 * (long long) (utc->months);
+    if (dt->months > 0) {
+        in_seconds += SECONDS_IN_DAY * 30 * (long long) (dt->months);
     }
 
-    if (utc->days > 0) {
-        in_seconds += DAY_SECONDS * (long long) (utc->days - 1);
+    if (dt->days > 0) {
+        in_seconds += SECONDS_IN_DAY * (long long) (dt->days - 1);
     }
-    in_seconds += utc->seconds;
+    in_seconds += dt->seconds;
 
     crm_time_free(utc);
     return in_seconds;
@@ -373,7 +724,7 @@ crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
 
     if(dt->years != 0) {
         for (months = 1; months <= 12 && days > 0; months++) {
-            int mdays = crm_time_days_in_month(months, dt->years);
+            int mdays = days_in_month_year(months, dt->years);
 
             if (mdays >= days) {
                 break;
@@ -405,19 +756,17 @@ crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
     return TRUE;
 }
 
-int
-crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
-                     uint32_t *d)
+void
+pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w, uint32_t *d)
 {
-    /*
-     * Monday 29 December 2008 is written "2009-W01-1"
-     * Sunday 3 January 2010 is written "2009-W53-7"
-     */
+    // Based on ISO week date: https://en.wikipedia.org/wiki/ISO_week_date
     int year_num = 0;
-    int jan1 = crm_time_january1_weekday(dt->years);
+    int jan1 = jan1_day_of_week(dt->years);
     int h = -1;
 
-    CRM_CHECK(dt->days > 0, return FALSE);
+    if (dt->days <= 0) {
+        return;
+    }
 
 /* 6. Find the Weekday for Y M D */
     h = dt->days + jan1 - 1;
@@ -427,7 +776,7 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     if (dt->days <= (8 - jan1) && jan1 > 4) {
         crm_trace("year--, jan1=%d", jan1);
         year_num = dt->years - 1;
-        *w = crm_time_weeks_in_year(year_num);
+        *w = weeks_in_year(year_num);
 
     } else {
         year_num = dt->years;
@@ -458,10 +807,7 @@ crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
     *y = year_num;
     crm_trace("Converted %.4d-%.3d to %.4" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
               dt->years, dt->days, *y, *w, *d);
-    return TRUE;
 }
-
-#define DATE_MAX 128
 
 /*!
  * \internal
@@ -522,14 +868,14 @@ duration_as_string(const crm_time_t *dt, int usec, bool show_usec, GString *buf)
     }
 
     // More than one minute, so provide a more readable breakdown into units
-    if (QB_ABS(dt->seconds) >= 60) {
+    if (QB_ABS(dt->seconds) >= SECONDS_IN_MINUTE) {
         uint32_t h = 0;
         uint32_t m = 0;
         uint32_t s = 0;
         uint32_t u = QB_ABS(usec);
         bool print_sec_component = false;
 
-        crm_time_get_sec(dt->seconds, &h, &m, &s);
+        seconds_to_hms(dt->seconds, &h, &m, &s);
         print_sec_component = ((s != 0) || (show_usec && (u != 0)));
 
         g_string_append(buf, " (");
@@ -621,8 +967,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
     // Convert to UTC if local timezone was not requested
     if ((dt->offset != 0) && !pcmk__is_set(flags, crm_time_log_with_timezone)) {
-        crm_trace("UTC conversion");
-        utc = crm_get_utc_time(dt);
+        utc = copy_time_to_utc(dt);
         dt = utc;
     }
 
@@ -630,11 +975,12 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
     if (pcmk__is_set(flags, crm_time_log_date)) {
         if (pcmk__is_set(flags, crm_time_weeks)) { // YYYY-WW-D
-            uint32_t y = 0;
-            uint32_t w = 0;
-            uint32_t d = 0;
+            if (dt->days > 0) {
+                uint32_t y = 0;
+                uint32_t w = 0;
+                uint32_t d = 0;
 
-            if (crm_time_get_isoweek(dt, &y, &w, &d)) {
+                pcmk__time_get_ywd(dt, &y, &w, &d);
                 g_string_append_printf(buf,
                                        "%" PRIu32 "-W%.2" PRIu32 "-%" PRIu32,
                                        y, w, d);
@@ -680,7 +1026,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
         if (pcmk__is_set(flags, crm_time_log_with_timezone)
             && (dt->offset != 0)) {
-            crm_time_get_sec(dt->offset, &h, &m, &s);
+
+            seconds_to_hms(dt->offset, &h, &m, &s);
             g_string_append_printf(buf, " %c%.2" PRIu32 ":%.2" PRIu32,
                                    ((dt->offset < 0)? '-' : '+'), h, m);
 
@@ -708,355 +1055,6 @@ char *
 crm_time_as_string(const crm_time_t *dt, int flags)
 {
     return time_as_string_common(dt, 0, flags);
-}
-
-/*!
- * \internal
- * \brief Determine number of seconds from an hour:minute:second string
- *
- * \param[in]  time_str  Time specification string
- * \param[out] result    Number of seconds equivalent to time_str
- *
- * \return \c true if specification was valid, \c false (and set errno) otherwise
- * \note This may return the number of seconds in a day (which is out of bounds
- *       for a time object) if given 24:00:00.
- */
-static bool
-crm_time_parse_sec(const char *time_str, int *result)
-{
-    int rc;
-    uint32_t hour = 0;
-    uint32_t minute = 0;
-    uint32_t second = 0;
-
-    *result = 0;
-
-    // Must have at least hour, but minutes and seconds are optional
-    rc = sscanf(time_str, "%" SCNu32 ":%" SCNu32 ":%" SCNu32,
-                &hour, &minute, &second);
-    if (rc == 1) {
-        rc = sscanf(time_str, "%2" SCNu32 "%2" SCNu32 "%2" SCNu32,
-                    &hour, &minute, &second);
-    }
-    if (rc == 0) {
-        crm_err("%s is not a valid ISO 8601 time specification", time_str);
-        errno = EINVAL;
-        return false;
-    }
-
-    crm_trace("Got valid time: %.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
-              hour, minute, second);
-
-    if ((hour == 24) && (minute == 0) && (second == 0)) {
-        // Equivalent to 00:00:00 of next day, return number of seconds in day
-    } else if (hour >= 24) {
-        crm_err("%s is not a valid ISO 8601 time specification "
-                "because %" PRIu32 " is not a valid hour", time_str, hour);
-        errno = EINVAL;
-        return false;
-    }
-    if (minute >= 60) {
-        crm_err("%s is not a valid ISO 8601 time specification "
-                "because %" PRIu32 " is not a valid minute", time_str, minute);
-        errno = EINVAL;
-        return false;
-    }
-    if (second >= 60) {
-        crm_err("%s is not a valid ISO 8601 time specification "
-                "because %" PRIu32 " is not a valid second", time_str, second);
-        errno = EINVAL;
-        return false;
-    }
-
-    *result = (hour * HOUR_SECONDS) + (minute * 60) + second;
-    return true;
-}
-
-static bool
-crm_time_parse_offset(const char *offset_str, int *offset)
-{
-    tzset();
-
-    if (offset_str == NULL) {
-        // Use local offset
-#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
-        time_t now = time(NULL);
-        struct tm *now_tm = localtime(&now);
-#endif
-        int h_offset = GMTOFF(now_tm) / HOUR_SECONDS;
-        int m_offset = (GMTOFF(now_tm) - (HOUR_SECONDS * h_offset)) / 60;
-
-        if (h_offset < 0 && m_offset < 0) {
-            m_offset = 0 - m_offset;
-        }
-        *offset = (HOUR_SECONDS * h_offset) + (60 * m_offset);
-        return true;
-    }
-
-    if (offset_str[0] == 'Z') { // @TODO invalid if anything after?
-        *offset = 0;
-        return true;
-    }
-
-    *offset = 0;
-    if ((offset_str[0] == '+') || (offset_str[0] == '-')
-        || isdigit((int)offset_str[0])) {
-
-        bool negate = false;
-
-        if (offset_str[0] == '+') {
-            offset_str++;
-        } else if (offset_str[0] == '-') {
-            negate = true;
-            offset_str++;
-        }
-        if (!crm_time_parse_sec(offset_str, offset)) {
-            return false;
-        }
-        if (negate) {
-            *offset = 0 - *offset;
-        }
-    } // @TODO else invalid?
-    return true;
-}
-
-/*!
- * \internal
- * \brief Parse the time portion of an ISO 8601 date/time string
- *
- * \param[in]     time_str  Time portion of specification (after any 'T')
- * \param[in,out] a_time    Time object to parse into
- *
- * \return \c true if valid time was parsed, \c false (and set errno) otherwise
- * \note This may add a day to a_time (if the time is 24:00:00).
- */
-static bool
-crm_time_parse(const char *time_str, crm_time_t *a_time)
-{
-    uint32_t h, m, s;
-    const char *offset_s = NULL;
-
-    tzset();
-
-    if (time_str != NULL) {
-        if (!crm_time_parse_sec(time_str, &(a_time->seconds))) {
-            return false;
-        }
-
-        offset_s = strstr(time_str, "Z");
-
-        /* @COMPAT: Spaces between the time and the offset are not supported
-         * by the standard according to section 3.4.1 and 4.2.5.2.
-         */
-        if (offset_s == NULL) {
-            offset_s = strpbrk(time_str, " +-");
-        }
-
-        if (offset_s != NULL) {
-            while (isspace(*offset_s)) {
-                offset_s++;
-            }
-        }
-    }
-
-    if (!crm_time_parse_offset(offset_s, &(a_time->offset))) {
-        return false;
-    }
-    crm_time_get_sec(a_time->offset, &h, &m, &s);
-    crm_trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
-              (a_time->offset < 0)? '-' : '+', h, m);
-
-    if (a_time->seconds == DAY_SECONDS) {
-        // 24:00:00 == 00:00:00 of next day
-        a_time->seconds = 0;
-        crm_time_add_days(a_time, 1);
-    }
-    return true;
-}
-
-/*
- * \internal
- * \brief Parse a time object from an ISO 8601 date/time specification
- *
- * \param[in] date_str  ISO 8601 date/time specification (or
- *                      \c PCMK__VALUE_EPOCH)
- *
- * \return New time object on success, NULL (and set errno) otherwise
- */
-static crm_time_t *
-parse_date(const char *date_str)
-{
-    const char *time_s = NULL;
-    crm_time_t *dt = NULL;
-
-    uint32_t year = 0U;
-    uint32_t month = 0U;
-    uint32_t day = 0U;
-    uint32_t week = 0U;
-
-    int rc = 0;
-
-    if (pcmk__str_empty(date_str)) {
-        crm_err("No ISO 8601 date/time specification given");
-        goto invalid;
-    }
-
-    if ((date_str[0] == 'T')
-        || ((strlen(date_str) > 2) && (date_str[2] == ':'))) {
-        /* Just a time supplied - Infer current date */
-        dt = crm_time_new(NULL);
-        if (date_str[0] == 'T') {
-            time_s = date_str + 1;
-        } else {
-            time_s = date_str;
-        }
-        goto parse_time;
-    }
-
-    dt = crm_time_new_undefined();
-
-    if ((strncasecmp(PCMK__VALUE_EPOCH, date_str, 5) == 0)
-        && ((date_str[5] == '\0')
-            || (date_str[5] == '/')
-            || isspace(date_str[5]))) {
-        dt->days = 1;
-        dt->years = 1970;
-        crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
-        return dt;
-    }
-
-    /* YYYY-MM-DD */
-    rc = sscanf(date_str, "%" SCNu32 "-%" SCNu32 "-%" SCNu32 "",
-                &year, &month, &day);
-    if (rc == 1) {
-        /* YYYYMMDD */
-        rc = sscanf(date_str, "%4" SCNu32 "%2" SCNu32 "%2" SCNu32 "",
-                    &year, &month, &day);
-    }
-    if (rc == 3) {
-        if ((month < 1U) || (month > 12U)) {
-            crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid month",
-                    date_str, month);
-            goto invalid;
-        } else if ((year < 1U) || (year > INT_MAX)) {
-            crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid year",
-                    date_str, year);
-            goto invalid;
-        } else if ((day < 1) || (day > INT_MAX)
-                   || (day > crm_time_days_in_month(month, year))) {
-            crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid day of the month",
-                    date_str, day);
-            goto invalid;
-        } else {
-            dt->years = year;
-            dt->days = get_ordinal_days(year, month, day);
-            crm_trace("Parsed Gregorian date '%.4" PRIu32 "-%.3d' "
-                      "from date string '%s'", year, dt->days, date_str);
-        }
-        goto parse_time;
-    }
-
-    /* YYYY-DDD */
-    rc = sscanf(date_str, "%" SCNu32 "-%" SCNu32, &year, &day);
-    if (rc == 2) {
-        if ((year < 1U) || (year > INT_MAX)) {
-            crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid year",
-                    date_str, year);
-            goto invalid;
-        } else if ((day < 1U) || (day > INT_MAX) || (day > year_days(year))) {
-            crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid day of year %"
-                    PRIu32 " (1-%d)",
-                    date_str, day, year, year_days(year));
-            goto invalid;
-        }
-        crm_trace("Parsed ordinal year %d and days %d from date string '%s'",
-                  year, day, date_str);
-        dt->days = day;
-        dt->years = year;
-        goto parse_time;
-    }
-
-    /* YYYY-Www-D */
-    rc = sscanf(date_str, "%" SCNu32 "-W%" SCNu32 "-%" SCNu32,
-                &year, &week, &day);
-    if (rc == 3) {
-        if ((week < 1U) || (week > crm_time_weeks_in_year(year))) {
-            crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid week of year %"
-                    PRIu32 " (1-%d)",
-                    date_str, week, year, crm_time_weeks_in_year(year));
-            goto invalid;
-        } else if ((day < 1U) || (day > 7U)) {
-            crm_err("'%s' is not a valid ISO 8601 date/time specification "
-                    "because '%" PRIu32 "' is not a valid day of the week",
-                    date_str, day);
-            goto invalid;
-        } else {
-            /*
-             * See https://en.wikipedia.org/wiki/ISO_week_date
-             *
-             * Monday 29 December 2008 is written "2009-W01-1"
-             * Sunday 3 January 2010 is written "2009-W53-7"
-             * Saturday 27 September 2008 is written "2008-W37-6"
-             *
-             * If 1 January is on a Monday, Tuesday, Wednesday or Thursday, it
-             * is in week 1. If 1 January is on a Friday, Saturday or Sunday,
-             * it is in week 52 or 53 of the previous year.
-             */
-            int jan1 = crm_time_january1_weekday(year);
-
-            crm_trace("Parsed year %" PRIu32 " (Jan 1 = %d), week %" PRIu32
-                      ", and day %" PRIu32 " from date string '%s'",
-                      year, jan1, week, day, date_str);
-
-            dt->years = year;
-            crm_time_add_days(dt, (week - 1) * 7);
-
-            if (jan1 <= 4) {
-                crm_time_add_days(dt, 1 - jan1);
-            } else {
-                crm_time_add_days(dt, 8 - jan1);
-            }
-
-            crm_time_add_days(dt, day);
-        }
-        goto parse_time;
-    }
-
-    crm_err("'%s' is not a valid ISO 8601 date/time specification", date_str);
-    goto invalid;
-
-  parse_time:
-
-    if (time_s == NULL) {
-        time_s = date_str + strspn(date_str, "0123456789-W");
-        if ((time_s[0] == ' ') || (time_s[0] == 'T')) {
-            ++time_s;
-        } else {
-            time_s = NULL;
-        }
-    }
-    if ((time_s != NULL) && !crm_time_parse(time_s, dt)) {
-        goto invalid;
-    }
-
-    crm_time_log(LOG_TRACE, "Unpacked", dt, crm_time_log_date | crm_time_log_timeofday);
-    if (!crm_time_check(dt)) {
-        crm_err("'%s' is not a valid ISO 8601 date/time specification",
-                date_str);
-        goto invalid;
-    }
-    return dt;
-
-invalid:
-    crm_time_free(dt);
-    errno = EINVAL;
-    return NULL;
 }
 
 // Parse an ISO 8601 numeric value and return number of characters consumed
@@ -1213,7 +1211,7 @@ crm_time_parse_duration(const char *period_s)
                 break;
 
             case 'H':
-                result = diff->seconds + (long long) an_int * HOUR_SECONDS;
+                result = diff->seconds + ((long long) an_int * SECONDS_IN_HOUR);
                 if ((result < INT_MIN) || (result > INT_MAX)) {
                     crm_err("'%s' is not a valid ISO 8601 time duration "
                             "because integer at '%s' is too %s",
@@ -1293,12 +1291,12 @@ crm_time_parse_period(const char *period_str)
     if (period_str[0] == 'P') {
         period->diff = crm_time_parse_duration(period_str);
         if (period->diff == NULL) {
-            goto error;
+            goto invalid;
         }
     } else {
         period->start = parse_date(period_str);
         if (period->start == NULL) {
-            goto error;
+            goto invalid;
         }
     }
 
@@ -1314,18 +1312,18 @@ crm_time_parse_period(const char *period_str)
             }
             period->diff = crm_time_parse_duration(period_str);
             if (period->diff == NULL) {
-                goto error;
+                goto invalid;
             }
         } else {
             period->end = parse_date(period_str);
             if (period->end == NULL) {
-                goto error;
+                goto invalid;
             }
         }
 
     } else if (period->diff != NULL) {
         // Only duration given, assume start is now
-        period->start = crm_time_new(NULL);
+        period->start = pcmk__copy_timet(time(NULL));
 
     } else {
         // Only start given
@@ -1342,12 +1340,12 @@ crm_time_parse_period(const char *period_str)
         period->end = crm_time_add(period->start, period->diff);
     }
 
-    if (!crm_time_check(period->start)) {
+    if (!valid_time(period->start)) {
         crm_err("'%s' is not a valid ISO 8601 time period "
                 "because the start is invalid", period_str);
         goto invalid;
     }
-    if (!crm_time_check(period->end)) {
+    if (!valid_time(period->end)) {
         crm_err("'%s' is not a valid ISO 8601 time period "
                 "because the end is invalid", period_str);
         goto invalid;
@@ -1356,7 +1354,6 @@ crm_time_parse_period(const char *period_str)
 
 invalid:
     errno = EINVAL;
-error:
     crm_time_free_period(period);
     return NULL;
 }
@@ -1377,76 +1374,6 @@ crm_time_free_period(crm_time_period_t *period)
     }
 }
 
-void
-crm_time_set(crm_time_t *target, const crm_time_t *source)
-{
-    crm_trace("target=%p, source=%p", target, source);
-
-    CRM_CHECK(target != NULL && source != NULL, return);
-
-    target->years = source->years;
-    target->days = source->days;
-    target->months = source->months;    /* Only for durations */
-    target->seconds = source->seconds;
-    target->offset = source->offset;
-
-    crm_time_log(LOG_TRACE, "source", source,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_TRACE, "target", target,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-}
-
-static void
-ha_set_tm_time(crm_time_t *target, const struct tm *source)
-{
-    int h_offset = 0;
-    int m_offset = 0;
-
-    /* Ensure target is fully initialized */
-    target->years = 0;
-    target->months = 0;
-    target->days = 0;
-    target->seconds = 0;
-    target->offset = 0;
-    target->duration = FALSE;
-
-    if (source->tm_year > 0) {
-        /* years since 1900 */
-        target->years = 1900;
-        crm_time_add_years(target, source->tm_year);
-    }
-
-    if (source->tm_yday >= 0) {
-        /* days since January 1 [0-365] */
-        target->days = 1 + source->tm_yday;
-    }
-
-    if (source->tm_hour >= 0) {
-        target->seconds += HOUR_SECONDS * source->tm_hour;
-    }
-    if (source->tm_min >= 0) {
-        target->seconds += 60 * source->tm_min;
-    }
-    if (source->tm_sec >= 0) {
-        target->seconds += source->tm_sec;
-    }
-
-    /* tm_gmtoff == offset from UTC in seconds */
-    h_offset = GMTOFF(source) / HOUR_SECONDS;
-    m_offset = (GMTOFF(source) - (HOUR_SECONDS * h_offset)) / 60;
-    crm_trace("Time offset is %lds (%.2d:%.2d)",
-              GMTOFF(source), h_offset, m_offset);
-
-    target->offset += HOUR_SECONDS * h_offset;
-    target->offset += 60 * m_offset;
-}
-
-void
-crm_time_set_timet(crm_time_t *target, const time_t *source)
-{
-    ha_set_tm_time(target, localtime(source));
-}
-
 /*!
  * \internal
  * \brief Set one time object to another if the other is earlier
@@ -1457,11 +1384,21 @@ crm_time_set_timet(crm_time_t *target, const time_t *source)
 void
 pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 {
-    if ((target != NULL) && (source != NULL)
-        && (!crm_time_is_defined(target)
-            || (crm_time_compare(source, target) < 0))) {
-        crm_time_set(target, source);
+    const int flags = crm_time_log_date
+                      |crm_time_log_timeofday
+                      |crm_time_log_with_timezone;
+
+    if ((target == NULL)
+        || (source == NULL)
+        || (crm_time_is_defined(target)
+            && (crm_time_compare(source, target) >= 0))) {
+
+        return;
     }
+
+    *target = *source;
+    pcmk__time_log(LOG_TRACE, "source", source, flags);
+    pcmk__time_log(LOG_TRACE, "target", target, flags);
 }
 
 crm_time_t *
@@ -1469,24 +1406,63 @@ pcmk_copy_time(const crm_time_t *source)
 {
     crm_time_t *target = crm_time_new_undefined();
 
-    crm_time_set(target, source);
+    *target = *source;
     return target;
 }
 
 /*!
  * \internal
- * \brief Convert a \p time_t time to a \p crm_time_t time
+ * \brief Convert a \c time_t time to a \c crm_time_t time
  *
- * \param[in] source  Time to convert
+ * \param[in] source_sec  Time to convert (as seconds since epoch)
  *
- * \return A \p crm_time_t object representing \p source
+ * \return Newly allocated \c crm_time_t object representing \p source_sec
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c crm_time_free().
  */
 crm_time_t *
-pcmk__copy_timet(time_t source)
+pcmk__copy_timet(time_t source_sec)
 {
+    const struct tm *source = localtime(&source_sec);
     crm_time_t *target = crm_time_new_undefined();
 
-    crm_time_set_timet(target, &source);
+    int h_offset = 0;
+    int m_offset = 0;
+
+    if (source->tm_year > 0) {
+        // Years since 1900
+        target->years = 1900;
+        crm_time_add_years(target, source->tm_year);
+    }
+
+    if (source->tm_yday >= 0) {
+        // Days since January 1 (0-365)
+        target->days = 1 + source->tm_yday;
+    }
+
+    if (source->tm_hour >= 0) {
+        target->seconds += SECONDS_IN_HOUR * source->tm_hour;
+    }
+
+    if (source->tm_min >= 0) {
+        target->seconds += SECONDS_IN_MINUTE * source->tm_min;
+    }
+
+    if (source->tm_sec >= 0) {
+        target->seconds += source->tm_sec;
+    }
+
+    // GMTOFF(source) == offset from UTC in seconds
+    h_offset = GMTOFF(source) / SECONDS_IN_HOUR;
+    m_offset = (GMTOFF(source) - (SECONDS_IN_HOUR * h_offset))
+               / SECONDS_IN_MINUTE;
+    crm_trace("Time offset is %lds (%.2d:%.2d)", GMTOFF(source), h_offset,
+              m_offset);
+
+    target->offset += SECONDS_IN_HOUR * h_offset;
+    target->offset += SECONDS_IN_MINUTE * m_offset;
+
     return target;
 }
 
@@ -1502,12 +1478,7 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
     }
 
     answer = pcmk_copy_time(dt);
-
-    utc = crm_get_utc_time(value);
-    if (utc == NULL) {
-        crm_time_free(answer);
-        return NULL;
-    }
+    utc = copy_time_to_utc(value);
 
     crm_time_add_years(answer, utc->years);
     crm_time_add_months(answer, utc->months);
@@ -1649,16 +1620,8 @@ crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    utc = crm_get_utc_time(value);
-    if (utc == NULL) {
-        return NULL;
-    }
-
-    answer = crm_get_utc_time(dt);
-    if (answer == NULL) {
-        crm_time_free(utc);
-        return NULL;
-    }
+    utc = copy_time_to_utc(value);
+    answer = copy_time_to_utc(dt);
     answer->duration = TRUE;
 
     crm_time_add_years(answer, -utc->years);
@@ -1683,12 +1646,9 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    utc = crm_get_utc_time(value);
-    if (utc == NULL) {
-        return NULL;
-    }
-
+    utc = copy_time_to_utc(value);
     answer = pcmk_copy_time(dt);
+
     crm_time_add_years(answer, -utc->years);
     if(utc->months != 0) {
         crm_time_add_months(answer, -utc->months);
@@ -1698,21 +1658,6 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
     crm_time_free(utc);
 
     return answer;
-}
-
-/*!
- * \brief Check whether a time object represents a sensible date/time
- *
- * \param[in] dt  Date/time object to check
- *
- * \return \c true if years, days, and seconds are sensible, \c false otherwise
- */
-bool
-crm_time_check(const crm_time_t *dt)
-{
-    return (dt != NULL)
-           && (dt->days > 0) && (dt->days <= year_days(dt->years))
-           && (dt->seconds >= 0) && (dt->seconds < DAY_SECONDS);
 }
 
 #define do_cmp_field(l, r, field)					\
@@ -1732,20 +1677,25 @@ int
 crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 {
     int rc = 0;
-    crm_time_t *t1 = crm_get_utc_time(a);
-    crm_time_t *t2 = crm_get_utc_time(b);
+    crm_time_t *t1 = NULL;
+    crm_time_t *t2 = NULL;
 
-    if ((t1 == NULL) && (t2 == NULL)) {
-        rc = 0;
-    } else if (t1 == NULL) {
-        rc = -1;
-    } else if (t2 == NULL) {
-        rc = 1;
-    } else {
-        do_cmp_field(t1, t2, years);
-        do_cmp_field(t1, t2, days);
-        do_cmp_field(t1, t2, seconds);
+    if ((a == NULL) && (b == NULL)) {
+        return 0;
     }
+    if (a == NULL) {
+        return -1;
+    }
+    if (b == NULL) {
+        return 1;
+    }
+
+    t1 = copy_time_to_utc(a);
+    t2 = copy_time_to_utc(b);
+
+    do_cmp_field(t1, t2, years);
+    do_cmp_field(t1, t2, days);
+    do_cmp_field(t1, t2, seconds);
 
     crm_time_free(t1);
     crm_time_free(t2);
@@ -1761,23 +1711,23 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 void
 crm_time_add_seconds(crm_time_t *a_time, int extra)
 {
-    int days = extra / DAY_SECONDS;
+    int days = extra / SECONDS_IN_DAY;
 
     pcmk__assert(a_time != NULL);
 
     crm_trace("Adding %d seconds (including %d whole day%s) to %d",
               extra, days, pcmk__plural_s(days), a_time->seconds);
 
-    a_time->seconds += extra % DAY_SECONDS;
+    a_time->seconds += extra % SECONDS_IN_DAY;
 
     // Check whether the addition crossed a day boundary
-    if (a_time->seconds > DAY_SECONDS) {
+    if (a_time->seconds > SECONDS_IN_DAY) {
         ++days;
-        a_time->seconds -= DAY_SECONDS;
+        a_time->seconds -= SECONDS_IN_DAY;
 
     } else if (a_time->seconds < 0) {
         --days;
-        a_time->seconds += DAY_SECONDS;
+        a_time->seconds += SECONDS_IN_DAY;
     }
 
     crm_time_add_days(a_time, days);
@@ -1798,7 +1748,7 @@ crm_time_add_days(crm_time_t *a_time, int extra)
 
     if (extra > 0) {
         while ((a_time->days + (long long) extra) > year_days(a_time->years)) {
-            if ((a_time->years + 1LL) > INT_MAX) {
+            if (a_time->years == INT_MAX) {
                 // Clip to latest we can handle
                 a_time->days = year_days(a_time->years);
                 return;
@@ -1810,7 +1760,7 @@ crm_time_add_days(crm_time_t *a_time, int extra)
         const int min_days = a_time->duration? 0 : 1;
 
         while ((a_time->days + (long long) extra) < min_days) {
-            if ((a_time->years - 1) < 1) {
+            if (a_time->years <= 1) {
                 a_time->days = 1; // Clip to earliest we can handle (no BCE)
                 return;
             }
@@ -1849,7 +1799,7 @@ crm_time_add_months(crm_time_t * a_time, int extra)
         }
     }
 
-    dmax = crm_time_days_in_month(m, y);
+    dmax = days_in_month_year(m, y);
     if (dmax < d) {
         /* Preserve day-of-month unless the month doesn't have enough days */
         d = dmax;
@@ -1867,13 +1817,13 @@ crm_time_add_months(crm_time_t * a_time, int extra)
 void
 crm_time_add_minutes(crm_time_t * a_time, int extra)
 {
-    crm_time_add_seconds(a_time, extra * 60);
+    crm_time_add_seconds(a_time, extra * SECONDS_IN_MINUTE);
 }
 
 void
 crm_time_add_hours(crm_time_t * a_time, int extra)
 {
-    crm_time_add_seconds(a_time, extra * HOUR_SECONDS);
+    crm_time_add_seconds(a_time, extra * SECONDS_IN_HOUR);
 }
 
 void
@@ -1943,13 +1893,13 @@ get_g_date_time(const struct tm *tm, int offset)
     GTimeZone *tz = NULL;
     GDateTime *dt = NULL;
 
-    if (QB_ABS(offset) <= DAY_SECONDS) {
+    if (QB_ABS(offset) <= SECONDS_IN_DAY) {
         uint32_t hours = 0;
         uint32_t minutes = 0;
         uint32_t seconds = 0;
         int rc = 0;
 
-        crm_time_get_sec(offset, &hours, &minutes, &seconds);
+        seconds_to_hms(offset, &hours, &minutes, &seconds);
 
         rc = snprintf(buf, sizeof(buf), "%c%02" PRIu32 ":%02" PRIu32,
                       ((offset >= 0)? '+' : '-'), hours, minutes);
@@ -1958,7 +1908,7 @@ get_g_date_time(const struct tm *tm, int offset)
 
     } else {
         // offset out of range; use NULL as offset_s
-        CRM_LOG_ASSERT(QB_ABS(offset) <= DAY_SECONDS);
+        CRM_LOG_ASSERT(QB_ABS(offset) <= SECONDS_IN_DAY);
     }
 
     /* @FIXME @COMPAT As of glib 2.68, g_time_zone_new() is deprecated in favor
@@ -2171,15 +2121,18 @@ char *
 pcmk__epoch2str(const time_t *source, uint32_t flags)
 {
     time_t epoch_time = (source == NULL)? time(NULL) : *source;
+    crm_time_t *dt = NULL;
+    char *result = NULL;
 
     if (flags == 0) {
         return pcmk__str_copy(g_strchomp(ctime(&epoch_time)));
-    } else {
-        crm_time_t dt;
-
-        crm_time_set_timet(&dt, &epoch_time);
-        return crm_time_as_string(&dt, flags);
     }
+
+    dt = pcmk__copy_timet(epoch_time);
+    result = crm_time_as_string(dt, flags);
+
+    crm_time_free(dt);
+    return result;
 }
 
 /*!
@@ -2203,14 +2156,19 @@ char *
 pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
 {
     struct timespec tmp_ts;
-    crm_time_t dt;
+    crm_time_t *dt = NULL;
+    char *result = NULL;
 
     if (ts == NULL) {
         qb_util_timespec_from_epoch_get(&tmp_ts);
         ts = &tmp_ts;
     }
-    crm_time_set_timet(&dt, &ts->tv_sec);
-    return time_as_string_common(&dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags);
+
+    dt = pcmk__copy_timet(ts->tv_sec);
+    result = time_as_string_common(dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags);
+
+    crm_time_free(dt);
+    return result;
 }
 
 /*!
@@ -2228,9 +2186,9 @@ const char *
 pcmk__readable_interval(guint interval_ms)
 {
 #define MS_IN_S (1000)
-#define MS_IN_M (MS_IN_S * 60)
-#define MS_IN_H (MS_IN_M * 60)
-#define MS_IN_D (MS_IN_H * 24)
+#define MS_IN_M (MS_IN_S * SECONDS_IN_MINUTE)
+#define MS_IN_H (MS_IN_M * MINUTES_IN_HOUR)
+#define MS_IN_D (MS_IN_H * HOURS_IN_DAY)
 #define MAXSTR sizeof("..d..h..m..s...ms")
     static char str[MAXSTR];
     GString *buf = NULL;
@@ -2273,3 +2231,103 @@ pcmk__readable_interval(guint interval_ms)
     g_string_free(buf, TRUE);
     return str;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/iso8601_compat.h>
+
+bool
+crm_time_leapyear(int year)
+{
+    return is_leap_year(year);
+}
+
+int
+crm_time_days_in_month(int month, int year)
+{
+    return days_in_month_year(month, year);
+}
+
+int
+crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
+{
+    uint32_t s;
+
+    seconds_to_hms(dt->seconds, h, m, &s);
+    return TRUE;
+}
+
+int
+crm_time_weeks_in_year(int year)
+{
+    return weeks_in_year(year);
+}
+
+int
+crm_time_january1_weekday(int year)
+{
+    return jan1_day_of_week(year);
+}
+
+void
+crm_time_set(crm_time_t *target, const crm_time_t *source)
+{
+    const uint32_t flags = crm_time_log_date
+                           |crm_time_log_timeofday
+                           |crm_time_log_with_timezone;
+
+    crm_trace("target=%p, source=%p", target, source);
+
+    CRM_CHECK(target != NULL && source != NULL, return);
+
+    target->years = source->years;
+    target->days = source->days;
+    target->months = source->months;    /* Only for durations */
+    target->seconds = source->seconds;
+    target->offset = source->offset;
+
+    pcmk__time_log(LOG_TRACE, "source", source, flags);
+    pcmk__time_log(LOG_TRACE, "target", target, flags);
+}
+
+bool
+crm_time_check(const crm_time_t *dt)
+{
+    return valid_time(dt);
+}
+
+void
+crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
+{
+    crm_time_t *source = NULL;
+
+    if (source_sec == NULL) {
+        return;
+    }
+
+    source = pcmk__copy_timet(*source_sec);
+    *target = *source;
+    crm_time_free(source);
+}
+
+int
+crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                     uint32_t *d)
+{
+    CRM_CHECK(dt->days > 0, return FALSE);
+    pcmk__time_get_ywd(dt, y, w, d);
+    return TRUE;
+}
+
+void
+crm_time_log_alias(int log_level, const char *file, const char *function,
+                   int line, const char *prefix, const crm_time_t *date_time,
+                   int flags)
+{
+    pcmk__time_log_as(file, function, line, pcmk__clip_log_level(log_level),
+                      prefix, date_time, flags);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -30,12 +30,12 @@ bool xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml,
 
 bool pcmk_acl_required(const char *user);
 
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/common/acl_compat.h>
-#endif  // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-
 #ifdef __cplusplus
 }
 #endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/acl_compat.h>
+#endif  // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #endif // PCMK__CRM_COMMON_ACL__H
