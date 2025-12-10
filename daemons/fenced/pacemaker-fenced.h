@@ -309,9 +309,6 @@ void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 void fenced_unregister_handlers(void);
 
-void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                            xmlNode *op_request, const char *remote_peer);
-
 int fenced_device_register(const xmlNode *dev, bool from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);

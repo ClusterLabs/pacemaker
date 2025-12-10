@@ -19,21 +19,74 @@
 #include <crm/cluster.h>                      // pcmk_cluster_connect
 #include <crm/common/ipc.h>                   // pcmk_ipc_server
 #include <crm/common/results.h>               // pcmk_rc_*
+#include <crm/stonith-ng.h>                   // st_opt_*
 
 #include "pacemaker-fenced.h"
 
 pcmk_cluster_t *fenced_cluster = NULL;
 
 static void
+handle_cpg_reply(const char *remote_peer, xmlNode *request)
+{
+    const char *op = pcmk__xe_get(request, PCMK__XA_ST_OP);
+
+    if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
+        process_remote_stonith_query(request);
+
+    } else if (pcmk__str_any_of(op, STONITH_OP_NOTIFY, STONITH_OP_FENCE,
+                                NULL)) {
+        fenced_process_fencing_reply(request);
+
+    } else {
+        crm_err("Ignoring unknown %s reply from peer %s", pcmk__s(op, "untyped"),
+                remote_peer);
+        crm_log_xml_warn(request, "UnknownOp");
+        return;
+    }
+
+    crm_debug("Processed %s reply from peer %s", op, remote_peer);
+}
+
+static void
 fenced_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
     const char *op = pcmk__xe_get(xml, PCMK__XA_ST_OP);
+    int rc = pcmk_rc_ok;
 
     if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
         return;
     }
 
-    stonith_command(NULL, 0, 0, xml, peer->name);
+    if (pcmk__xpath_find_one(xml->doc, "//" PCMK__XE_ST_REPLY,
+                             LOG_NEVER) != NULL) {
+        handle_cpg_reply(peer->name, xml);
+
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = NULL,
+            .ipc_id         = 0,
+            .ipc_flags      = 0,
+            .peer           = peer->name,
+            .xml            = xml,
+            .call_options   = st_opt_none,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        rc = pcmk__xe_get_flags(xml, PCMK__XA_ST_CALLOPT,
+                                (uint32_t *) &request.call_options, st_opt_none);
+        if (rc != pcmk_rc_ok) {
+            crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        }
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_ST_OP);
+        CRM_CHECK(request.op != NULL, return);
+
+        if (pcmk__is_set(request.call_options, st_opt_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
+
+        fenced_handle_request(&request);
+    }
 }
 
 /*!
