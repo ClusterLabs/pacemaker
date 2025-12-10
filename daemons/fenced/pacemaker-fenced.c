@@ -324,11 +324,37 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
+static bool
+ipc_already_running(void)
+{
+    crm_ipc_t *old_instance = NULL;
+    int rc = pcmk_rc_ok;
+
+    old_instance = crm_ipc_new("stonith-ng", 0);
+    if (old_instance == NULL) {
+        /* This is an error - memory allocation failed, etc. - but crm_ipc_new
+         * will have already logged an error message.
+         */
+        return false;
+    }
+
+    rc = pcmk__connect_generic_ipc(old_instance);
+    if (rc != pcmk_rc_ok) {
+        crm_debug("No existing stonith-ng instance found: %s",
+                  pcmk_rc_str(rc));
+        crm_ipc_destroy(old_instance);
+        return false;
+    }
+
+    crm_ipc_close(old_instance);
+    crm_ipc_destroy(old_instance);
+    return true;
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    crm_ipc_t *old_instance = NULL;
 
     GError *error = NULL;
 
@@ -379,26 +405,12 @@ main(int argc, char **argv)
 
     crm_notice("Starting Pacemaker fencer");
 
-    old_instance = crm_ipc_new("stonith-ng", 0);
-    if (old_instance == NULL) {
-        /* crm_ipc_new() will have already logged an error message with
-         * crm_err()
-         */
-        exit_code = CRM_EX_FATAL;
+    if (ipc_already_running()) {
+        exit_code = CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Aborting start-up because a fencer instance is already active");
+        crm_crit("%s", error->message);
         goto done;
-    }
-
-    if (pcmk__connect_generic_ipc(old_instance) == pcmk_rc_ok) {
-        // IPC endpoint already up
-        crm_ipc_close(old_instance);
-        crm_ipc_destroy(old_instance);
-        crm_crit("Aborting start-up because another fencer instance is "
-                 "already active");
-        goto done;
-    } else {
-        // Not up or not authentic, we'll proceed either way
-        crm_ipc_destroy(old_instance);
-        old_instance = NULL;
     }
 
     mainloop_add_signal(SIGTERM, stonith_shutdown);
