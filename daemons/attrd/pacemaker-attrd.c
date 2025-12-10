@@ -56,7 +56,6 @@ static pcmk__supported_format_t formats[] = {
 };
 
 lrmd_t *the_lrmd = NULL;
-pcmk_cluster_t *attrd_cluster = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
 
@@ -204,8 +203,7 @@ main(int argc, char **argv)
 
         attrd_free_removed_peers();
         attrd_free_waitlist();
-        pcmk_cluster_disconnect(attrd_cluster);
-        pcmk_cluster_free(attrd_cluster);
+        attrd_cluster_disconnect();
         g_hash_table_destroy(attributes);
     }
 

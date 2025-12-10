@@ -23,6 +23,8 @@
 
 #include "pacemaker-attrd.h"
 
+pcmk_cluster_t *attrd_cluster = NULL;
+
 /*!
  * \internal
  * \brief Nodes removed by \c attrd_peer_remove()
@@ -497,6 +499,13 @@ attrd_cluster_connect(void)
     }
 
     return rc;
+}
+
+void
+attrd_cluster_disconnect(void)
+{
+    pcmk_cluster_disconnect(attrd_cluster);
+    pcmk_cluster_free(attrd_cluster);
 }
 
 void

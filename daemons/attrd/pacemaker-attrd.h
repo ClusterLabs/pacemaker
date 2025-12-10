@@ -191,6 +191,7 @@ void attrd_free_removed_peers(void);
 void attrd_erase_removed_peer_attributes(void);
 
 int attrd_cluster_connect(void);
+void attrd_cluster_disconnect(void);
 void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);
 void attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
                        const char *host, bool filter);
