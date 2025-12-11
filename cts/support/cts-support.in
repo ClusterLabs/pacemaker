@@ -84,7 +84,7 @@ def cmd_install(src):
         install(DUMMY_DAEMON, d)
 
         print(f"Installing {DUMMY_DAEMON_UNIT} ...")
-        install(DUMMY_DAEMON_UNIT, BuildOptions.UNIT_DIR)
+        install(DUMMY_DAEMON_UNIT, BuildOptions.UNIT_DIR, 0o644)
         daemon_reload()
 
     runtime_unit_dir = f"{BuildOptions.RUNTIME_STATE_DIR}/systemd/system"
