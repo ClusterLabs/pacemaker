@@ -136,6 +136,33 @@ class Corosync:
 
         raise TimeoutError
 
+    def _start(self):
+        """Start corosync using whatever method is supported on the system."""
+        # pylint doesn't understand that self._env is subscriptable.
+        # pylint: disable=unsubscriptable-object
+        if self._env["have_systemd"]:
+            cmd = ["systemctl", "start", "corosync.service"]
+        else:
+            cmd = ["corosync"]
+
+        if self.verbose:
+            print("Starting corosync")
+
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+            p.wait()
+
+    def _stop(self):
+        """Stop corosync using whatever method is supported on the system."""
+        # pylint doesn't understand that self._env is subscriptable.
+        # pylint: disable=unsubscriptable-object
+        if self._env["have_systemd"]:
+            cmd = ["systemctl", "stop", "corosync.service"]
+
+            with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+                p.wait()
+        else:
+            killall(["corosync"])
+
     def start(self, kill_first=False, timeout=10):
         """
         Start the corosync process.
@@ -147,31 +174,20 @@ class Corosync:
                       TimeoutError
         """
         if kill_first:
-            killall(["corosync"])
+            self._stop()
 
         self._existing_cfg_file = generate_corosync_cfg(self.logdir,
                                                         self.cluster_name, localname())
         logfile = corosync_log_file(BuildOptions.COROSYNC_CONFIG_FILE)
 
-        # pylint doesn't understand that self._env is subscriptable.
-        # pylint: disable=unsubscriptable-object
-        if self._env["have_systemd"]:
-            cmd = ["systemctl", "start", "corosync.service"]
-        else:
-            cmd = ["corosync"]
-
-        if self.verbose:
-            print("Starting corosync")
-
-        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as test:
-            test.wait()
+        self._start()
 
         # Wait for corosync to be ready before returning
         self._ready(logfile, timeout=timeout)
 
     def stop(self):
         """Stop the corosync process."""
-        killall(["corosync"])
+        self._stop()
 
         if self.verbose:
             print("Corosync output")
