@@ -430,15 +430,19 @@ cmd_device(const async_command_t *cmd)
 const char *
 fenced_device_reboot_action(const char *device_id)
 {
+    fenced_device_t *device = NULL;
     const char *action = NULL;
 
-    if ((device_table != NULL) && (device_id != NULL)) {
-        fenced_device_t *device = g_hash_table_lookup(device_table, device_id);
-
-        if ((device != NULL) && (device->params != NULL)) {
-            action = g_hash_table_lookup(device->params, "pcmk_reboot_action");
-        }
+    if ((device_table == NULL) || (device_id == NULL)) {
+        return PCMK_ACTION_REBOOT;
     }
+
+    device = g_hash_table_lookup(device_table, device_id);
+
+    if ((device != NULL) && (device->params != NULL)) {
+        action = g_hash_table_lookup(device->params, "pcmk_reboot_action");
+    }
+
     return pcmk__s(action, PCMK_ACTION_REBOOT);
 }
 
@@ -453,13 +457,18 @@ fenced_device_reboot_action(const char *device_id)
 bool
 fenced_device_supports_on(const char *device_id)
 {
-    if ((device_table != NULL) && (device_id != NULL)) {
-        fenced_device_t *device = g_hash_table_lookup(device_table, device_id);
+    fenced_device_t *device = NULL;
 
-        if (device != NULL) {
-            return pcmk__is_set(device->flags, fenced_df_supports_on);
-        }
+    if ((device_table == NULL) || (device_id == NULL)) {
+        return false;
     }
+
+    device = g_hash_table_lookup(device_table, device_id);
+
+    if (device != NULL) {
+        return pcmk__is_set(device->flags, fenced_df_supports_on);
+    }
+
     return false;
 }
 
