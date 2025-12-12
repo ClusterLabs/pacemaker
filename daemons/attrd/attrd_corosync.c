@@ -135,6 +135,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
     }
 }
 
+#if SUPPORT_COROSYNC
 /*!
  * \internal
  * \brief Callback for when a peer message is received
@@ -190,6 +191,7 @@ attrd_cpg_destroy(gpointer unused)
         attrd_shutdown(0);
     }
 }
+#endif // SUPPORT_COROSYNC
 
 /*!
  * \internal
@@ -487,9 +489,13 @@ attrd_cluster_connect(void)
 
     attrd_cluster = pcmk_cluster_new();
 
-    pcmk_cluster_set_destroy_fn(attrd_cluster, attrd_cpg_destroy);
-    pcmk_cpg_set_deliver_fn(attrd_cluster, attrd_cpg_dispatch);
-    pcmk_cpg_set_confchg_fn(attrd_cluster, pcmk__cpg_confchg_cb);
+#if SUPPORT_COROSYNC
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        pcmk_cluster_set_destroy_fn(attrd_cluster, attrd_cpg_destroy);
+        pcmk_cpg_set_deliver_fn(attrd_cluster, attrd_cpg_dispatch);
+        pcmk_cpg_set_confchg_fn(attrd_cluster, pcmk__cpg_confchg_cb);
+    }
+#endif // SUPPORT_COROSYNC
 
     pcmk__cluster_set_status_callback(&attrd_peer_change_cb);
 
