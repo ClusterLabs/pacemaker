@@ -144,22 +144,22 @@ pcmk__read_series_sequence(const char *directory, const char *series,
     fp = fopen(series_file, "r");
     if (fp == NULL) {
         rc = errno;
-        crm_debug("Could not open series file %s: %s",
-                  series_file, strerror(rc));
+        pcmk__debug("Could not open series file %s: %s", series_file,
+                    strerror(rc));
         free(series_file);
         return rc;
     }
     errno = 0;
     if (fscanf(fp, "%u", seq) != 1) {
         rc = (errno == 0)? ENODATA : errno;
-        crm_debug("Could not read sequence number from series file %s: %s",
-                  series_file, pcmk_rc_str(rc));
+        pcmk__debug("Could not read sequence number from series file %s: %s",
+                    series_file, pcmk_rc_str(rc));
         fclose(fp);
         return rc;
     }
     fclose(fp);
-    crm_trace("Found last sequence number %u in series file %s",
-              *seq, series_file);
+    pcmk__trace("Found last sequence number %u in series file %s", *seq,
+                series_file);
     free(series_file);
     return pcmk_rc_ok;
 }
@@ -198,13 +198,13 @@ pcmk__write_series_sequence(const char *directory, const char *series,
         int rc = fprintf(file_strm, "%u", sequence);
 
         if (rc < 0) {
-            crm_err("Cannot write to series file %s", series_file);
+            pcmk__err("Cannot write to series file %s", series_file);
         }
         fflush(file_strm);
         fclose(file_strm);
 
     } else {
-        crm_err("Cannot open series file %s for writing", series_file);
+        pcmk__err("Cannot open series file %s for writing", series_file);
     }
 
     free(series_file);
@@ -247,22 +247,22 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
     int rc = pcmk__daemon_user(&daemon_uid, NULL);
 
     if (rc != pcmk_rc_ok) {
-        crm_notice("Could not find user " CRM_DAEMON_USER ": %s",
-                   pcmk_rc_str(rc));
+        pcmk__notice("Could not find user " CRM_DAEMON_USER ": %s",
+                     pcmk_rc_str(rc));
         return false;
     }
     if (target_stat->st_uid != daemon_uid) {
-        crm_notice("%s is not owned by user " CRM_DAEMON_USER " "
-                   QB_XS " uid %lld != %lld",
-                   target_name, (long long) daemon_uid,
-                   (long long) target_stat->st_uid);
+        pcmk__notice("%s is not owned by user " CRM_DAEMON_USER " "
+                     QB_XS " uid %lld != %lld",
+                     target_name, (long long) daemon_uid,
+                     (long long) target_stat->st_uid);
         return false;
     }
     if ((target_stat->st_mode & (S_IRUSR | S_IWUSR)) == 0) {
-        crm_notice("%s is not readable and writable by user %s "
-                   QB_XS " st_mode=0%lo",
-                   target_name, CRM_DAEMON_USER,
-                   (unsigned long) target_stat->st_mode);
+        pcmk__notice("%s is not readable and writable by user %s "
+                     QB_XS " st_mode=0%lo",
+                     target_name, CRM_DAEMON_USER,
+                     (unsigned long) target_stat->st_mode);
         return false;
     }
     return true;
@@ -275,24 +275,24 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
     int rc = pcmk__daemon_user(NULL, &daemon_gid);
 
     if (rc != pcmk_rc_ok) {
-        crm_notice("Could not find group '" CRM_DAEMON_GROUP "': %s",
-                   pcmk_rc_str(rc));
+        pcmk__notice("Could not find group " CRM_DAEMON_GROUP ": %s",
+                     pcmk_rc_str(rc));
         return false;
     }
 
     if (target_stat->st_gid != daemon_gid) {
-        crm_notice("%s is not owned by group '" CRM_DAEMON_GROUP "' "
-                   QB_XS " gid %lld != %lld",
-                   target_name, (long long) daemon_gid,
-                   (long long) target_stat->st_gid);
+        pcmk__notice("%s is not owned by group " CRM_DAEMON_GROUP " "
+                     QB_XS " gid %lld != %lld",
+                     target_name, (long long) daemon_gid,
+                     (long long) target_stat->st_gid);
         return false;
     }
 
     if ((target_stat->st_mode & (S_IRGRP | S_IWGRP)) == 0) {
-        crm_notice("%s is not readable and writable by group %s "
-                   QB_XS " st_mode=0%lo",
-                   target_name, CRM_DAEMON_GROUP,
-                   (unsigned long) target_stat->st_mode);
+        pcmk__notice("%s is not readable and writable by group %s "
+                     QB_XS " st_mode=0%lo",
+                     target_name, CRM_DAEMON_GROUP,
+                     (unsigned long) target_stat->st_mode);
         return false;
     }
     return true;
@@ -330,14 +330,14 @@ pcmk__daemon_can_write(const char *dir, const char *file)
 
         s_res = stat(full_file, &buf);
         if (s_res < 0) {
-            crm_notice("%s not found: %s", target, pcmk_rc_str(errno));
+            pcmk__notice("%s not found: %s", target, pcmk_rc_str(errno));
             free(full_file);
             full_file = NULL;
             target = NULL;
 
         } else if (!S_ISREG(buf.st_mode)) {
-            crm_err("%s must be a regular file " QB_XS " st_mode=0%lo",
-                    target, (unsigned long) buf.st_mode);
+            pcmk__err("%s must be a regular file " QB_XS " st_mode=0%lo",
+                      target, (unsigned long) buf.st_mode);
             free(full_file);
             return false;
         }
@@ -348,12 +348,12 @@ pcmk__daemon_can_write(const char *dir, const char *file)
         target = dir;
         s_res = stat(dir, &buf);
         if (s_res < 0) {
-            crm_err("%s not found: %s", dir, pcmk_rc_str(errno));
+            pcmk__err("%s not found: %s", dir, pcmk_rc_str(errno));
             return false;
 
         } else if (!S_ISDIR(buf.st_mode)) {
-            crm_err("%s must be a directory " QB_XS " st_mode=0%lo",
-                    dir, (unsigned long) buf.st_mode);
+            pcmk__err("%s must be a directory " QB_XS " st_mode=0%lo", dir,
+                      (unsigned long) buf.st_mode);
             return false;
         }
     }
@@ -361,10 +361,10 @@ pcmk__daemon_can_write(const char *dir, const char *file)
     if (!pcmk__daemon_user_can_write(target, &buf)
         && !pcmk__daemon_group_can_write(target, &buf)) {
 
-        crm_err("%s must be owned and writable by either user %s or group %s "
-                QB_XS " st_mode=0%lo",
-                target, CRM_DAEMON_USER, CRM_DAEMON_GROUP,
-                (unsigned long) buf.st_mode);
+        pcmk__err("%s must be owned and writable by either user "
+                  CRM_DAEMON_USER " or group " CRM_DAEMON_GROUP " "
+                  QB_XS " st_mode=0%lo",
+                  target, (unsigned long) buf.st_mode);
         free(full_file);
         return false;
     }
@@ -388,22 +388,22 @@ pcmk__sync_directory(const char *name)
 
     directory = opendir(name);
     if (directory == NULL) {
-        crm_err("Could not open %s for syncing: %s", name, strerror(errno));
+        pcmk__err("Could not open %s for syncing: %s", name, strerror(errno));
         return;
     }
 
     fd = dirfd(directory);
     if (fd < 0) {
-        crm_err("Could not obtain file descriptor for %s: %s", name,
-                strerror(errno));
+        pcmk__err("Could not obtain file descriptor for %s: %s", name,
+                  strerror(errno));
         return;
     }
 
     if (fsync(fd) < 0) {
-        crm_err("Could not sync %s: %s", name, strerror(errno));
+        pcmk__err("Could not sync %s: %s", name, strerror(errno));
     }
     if (closedir(directory) < 0) {
-        crm_err("Could not close %s after fsync: %s", name, strerror(errno));
+        pcmk__err("Could not close %s after fsync: %s", name, strerror(errno));
     }
 }
 

@@ -25,11 +25,11 @@ stop_te_timer(pcmk__graph_action_t *action)
         return FALSE;
     }
     if (action->timer != 0) {
-        crm_trace("Stopping action timer");
+        pcmk__trace("Stopping action timer");
         g_source_remove(action->timer);
         action->timer = 0;
     } else {
-        crm_trace("Action timer was already stopped");
+        pcmk__trace("Action timer was already stopped");
         return FALSE;
     }
     return TRUE;
@@ -39,13 +39,13 @@ static gboolean
 te_graph_trigger(gpointer user_data)
 {
     if (controld_globals.transition_graph == NULL) {
-        crm_debug("Nothing to do");
+        pcmk__debug("Nothing to do");
         return TRUE;
     }
 
-    crm_trace("Invoking graph %d in state %s",
-              controld_globals.transition_graph->id,
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__trace("Invoking graph %d in state %s",
+                controld_globals.transition_graph->id,
+                fsa_state2string(controld_globals.fsa_state));
 
     switch (controld_globals.fsa_state) {
         case S_STARTING:
@@ -68,23 +68,23 @@ te_graph_trigger(gpointer user_data)
         controld_globals.transition_graph->batch_limit = orig_limit;
 
         if (graph_rc == pcmk__graph_active) {
-            crm_trace("Transition not yet complete");
+            pcmk__trace("Transition not yet complete");
             return TRUE;
 
         } else if (graph_rc == pcmk__graph_pending) {
-            crm_trace("Transition not yet complete - no actions fired");
+            pcmk__trace("Transition not yet complete - no actions fired");
             return TRUE;
         }
 
         if (graph_rc != pcmk__graph_complete) {
-            crm_warn("Transition failed: %s",
-                     pcmk__graph_status2text(graph_rc));
+            pcmk__warn("Transition failed: %s",
+                       pcmk__graph_status2text(graph_rc));
             pcmk__log_graph(LOG_NOTICE, controld_globals.transition_graph);
         }
     }
 
-    crm_debug("Transition %d is now complete",
-              controld_globals.transition_graph->id);
+    pcmk__debug("Transition %d is now complete",
+                controld_globals.transition_graph->id);
     controld_globals.transition_graph->complete = true;
     notify_crmd(controld_globals.transition_graph);
 
@@ -116,7 +116,7 @@ controld_destroy_transition_trigger(void)
 void
 controld_trigger_graph_as(const char *fn, int line)
 {
-    crm_trace("%s:%d - Triggered graph processing", fn, line);
+    pcmk__trace("%s:%d - Triggered graph processing", fn, line);
     mainloop_set_trigger(transition_trigger);
 }
 
@@ -189,9 +189,9 @@ node_pending_timer_popped(gpointer key)
         return FALSE;
     }
 
-    crm_warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) "
-             "on joining the process group",
-             (const char *) key, controld_globals.node_pending_timeout);
+    pcmk__warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) on "
+               "joining the process group",
+               (const char *) key, controld_globals.node_pending_timeout);
 
     if (controld_globals.node_pending_timeout > 0) {
         abort_timer_popped(node_pending_timer);
@@ -221,10 +221,10 @@ init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
         return;
     }
 
-    crm_notice("Waiting for pending %s with " PCMK_XA_ID " '%s' "
-               "to join the process group (timeout=%us)",
-               pcmk__s(node->name, "node"), node->xml_id,
-               controld_globals.node_pending_timeout);
+    pcmk__notice("Waiting for pending %s with " PCMK_XA_ID " '%s' to join the "
+                 "process group (timeout=%us)",
+                 pcmk__s(node->name, "node"), node->xml_id,
+                 controld_globals.node_pending_timeout);
 
     key = pcmk__str_copy(node->xml_id);
     node_pending_timer = pcmk__assert_alloc(1, sizeof(struct abort_timer_s));
@@ -319,18 +319,21 @@ update_abort_priority(pcmk__graph_t *graph, int priority,
     }
 
     if (graph->abort_priority < priority) {
-        crm_debug("Abort priority upgraded from %d to %d", graph->abort_priority, priority);
+        pcmk__debug("Abort priority upgraded from %d to %d",
+                    graph->abort_priority, priority);
         graph->abort_priority = priority;
         if (graph->abort_reason != NULL) {
-            crm_debug("'%s' abort superseded by %s", graph->abort_reason, abort_reason);
+            pcmk__debug("'%s' abort superseded by %s", graph->abort_reason,
+                        abort_reason);
         }
         graph->abort_reason = abort_reason;
         change = TRUE;
     }
 
     if (graph->completion_action < action) {
-        crm_debug("Abort action %s superseded by %s: %s",
-                  abort2text(graph->completion_action), abort2text(action), abort_reason);
+        pcmk__debug("Abort action %s superseded by %s: %s",
+                    abort2text(graph->completion_action), abort2text(action),
+                    abort_reason);
         graph->completion_action = action;
         change = TRUE;
     }
@@ -348,6 +351,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
     int level = LOG_INFO;
     const xmlNode *diff = NULL;
     const xmlNode *change = NULL;
+    const bool complete = controld_globals.transition_graph->complete;
 
     CRM_CHECK(controld_globals.transition_graph != NULL, return);
 
@@ -357,9 +361,9 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
         case S_NOT_DC:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_info("Abort %s suppressed: state=%s (%scomplete)",
-                     abort_text, fsa_state2string(controld_globals.fsa_state),
-                     (controld_globals.transition_graph->complete? "" : "in"));
+            pcmk__info("Abort %s suppressed: state=%s (%scomplete)",
+                       abort_text, fsa_state2string(controld_globals.fsa_state),
+                       (complete? "" : "in"));
             return;
         default:
             break;

@@ -129,7 +129,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
 
     xpath_base = pcmk_cib_xpath_for(PCMK_XE_RESOURCES);
     if (xpath_base == NULL) {
-        crm_err(PCMK_XE_RESOURCES " CIB element not known (bug?)");
+        pcmk__err(PCMK_XE_RESOURCES " CIB element not known (bug?)");
         return ENOMSG;
     }
 
@@ -164,7 +164,7 @@ find_resource_attr(pcmk__output_t *out, cib_t * the_cib, const char *attr,
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
-        crm_log_xml_debug(xml_search, "Match");
+        pcmk__log_xml_debug(xml_search, "Match");
         if (xml_search->children != NULL) {
             rc = ENOTUNIQ;
             pcmk__warn_multiple_name_matches(out, xml_search, attr_name);
@@ -448,8 +448,9 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
         switch (rc) {
             case pcmk_rc_ok:
                 found_attr_id = pcmk__xe_get_copy(xml_search, PCMK_XA_ID);
-                crm_debug("Found a match for " PCMK_XA_NAME "='%s': "
-                          PCMK_XA_ID "='%s'", attr_name, found_attr_id);
+                pcmk__debug("Found a match for " PCMK_XA_NAME "='%s': "
+                            PCMK_XA_ID "='%s'",
+                            attr_name, found_attr_id);
                 rsc_attr_id = found_attr_id;
                 break;
 
@@ -501,7 +502,7 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
             xml_top = xml_obj;
         }
 
-        crm_log_xml_debug(xml_top, "Update");
+        pcmk__log_xml_debug(xml_top, "Update");
 
         rc = cib->cmds->modify(cib, PCMK_XE_RESOURCES, xml_top, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
@@ -547,15 +548,15 @@ update_attribute(pcmk_resource_t *rsc, const char *requested_name,
                  lpc != NULL; lpc = lpc->next) {
                 pcmk__colocation_t *cons = (pcmk__colocation_t *) lpc->data;
 
-                crm_debug("Checking %s %d", cons->id, cons->score);
+                pcmk__debug("Checking %s %d", cons->id, cons->score);
 
                 if (pcmk__is_set(cons->dependent->flags, pcmk__rsc_detect_loop)
                     || (cons->score <= 0)) {
                     continue;
                 }
 
-                crm_debug("Setting %s=%s for dependent resource %s",
-                          attr_name, attr_value, cons->dependent->id);
+                pcmk__debug("Setting %s=%s for dependent resource %s",
+                            attr_name, attr_value, cons->dependent->id);
                 update_attribute(cons->dependent, cons->dependent->id, NULL,
                                  attr_set_type, NULL, attr_name, attr_value,
                                  recursive, cib, cib_xml_orig, force, results);
@@ -698,7 +699,7 @@ cli_resource_delete_attribute(pcmk_resource_t *rsc, const char *requested_name,
         }
 
         xml_obj = crm_create_nvpair_xml(NULL, rsc_attr_id, attr_name, NULL);
-        crm_log_xml_debug(xml_obj, "Delete");
+        pcmk__log_xml_debug(xml_obj, "Delete");
 
         rc = cib->cmds->remove(cib, PCMK_XE_RESOURCES, xml_obj, cib_sync_call);
         rc = pcmk_legacy2rc(rc);
@@ -833,11 +834,11 @@ clear_rsc_history(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
         return rc;
     }
 
-    crm_trace("Processing %d mainloop inputs",
-              pcmk_controld_api_replies_expected(controld_api));
+    pcmk__trace("Processing %d mainloop inputs",
+                pcmk_controld_api_replies_expected(controld_api));
     while (g_main_context_iteration(NULL, FALSE)) {
-        crm_trace("Processed mainloop input, %d still remaining",
-                  pcmk_controld_api_replies_expected(controld_api));
+        pcmk__trace("Processed mainloop input, %d still remaining",
+                    pcmk_controld_api_replies_expected(controld_api));
     }
     return rc;
 }
@@ -927,8 +928,8 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
     while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
         pcmk_resource_t *rsc = NULL;
 
-        crm_debug("Erasing failures of %s on %s",
-                  failed_id, pcmk__node_name(node));
+        pcmk__debug("Erasing failures of %s on %s", failed_id,
+                    pcmk__node_name(node));
 
         rsc = pe_find_resource(scheduler->priv->resources, failed_id);
         if (rsc == NULL) {
@@ -1274,7 +1275,7 @@ cli_resource_fail(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
                  rsc_id, pcmk__node_name(node));
         return pcmk_rc_ok;
     }
-    crm_notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
+    pcmk__notice("Failing %s on %s", rsc_id, pcmk__node_name(node));
     return send_lrm_rsc_op(controld_api, true, rsc, rsc_id, node);
 }
 
@@ -1329,17 +1330,17 @@ bool resource_is_running_on(pcmk_resource_t *rsc, const char *host)
 
         if (pcmk__strcase_any_of(host, node->priv->name, node->priv->id,
                                  NULL)) {
-            crm_trace("Resource %s is running on %s\n", rsc->id, host);
+            pcmk__trace("Resource %s is running on %s\n", rsc->id, host);
             goto done;
         }
     }
 
     if (host != NULL) {
-        crm_trace("Resource %s is not running on: %s\n", rsc->id, host);
+        pcmk__trace("Resource %s is not running on: %s\n", rsc->id, host);
         found = false;
 
     } else if(host == NULL && hosts == NULL) {
-        crm_trace("Resource %s is not running\n", rsc->id);
+        pcmk__trace("Resource %s is not running\n", rsc->id);
         found = false;
     }
 
@@ -1388,7 +1389,7 @@ static void dump_list(GList *items, const char *tag)
     GList *item = NULL;
 
     for (item = items; item != NULL; item = item->next) {
-        crm_trace("%s[%d]: %s", tag, lpc, (char*)item->data);
+        pcmk__trace("%s[%d]: %s", tag, lpc, (char*)item->data);
         lpc++;
     }
 }
@@ -1862,7 +1863,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
-                crm_trace("%us remaining", timeout);
+                pcmk__trace("%us remaining", timeout);
             }
             rc = update_dataset(cib, scheduler, &cib_xml_orig, false);
             if(rc != pcmk_rc_ok) {
@@ -1883,8 +1884,9 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             dump_list(list_delta, "Delta");
         }
 
-        crm_trace("%u (was %u) resources remaining", g_list_length(list_delta),
-                  before);
+        pcmk__trace("%u (was %u) resources remaining",
+                    g_list_length(list_delta), before);
+
         if(before == g_list_length(list_delta)) {
             /* aborted during stop phase, print the contents of list_delta */
             out->err(out, "Could not complete shutdown of %s, %d resources remaining", rsc_id, g_list_length(list_delta));
@@ -1946,7 +1948,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             sleep(sleep_interval);
             if(timeout) {
                 timeout -= sleep_interval;
-                crm_trace("%ds remaining", timeout);
+                pcmk__trace("%ds remaining", timeout);
             }
 
             rc = update_dataset(cib, scheduler, &cib_xml_orig, false);
@@ -2045,7 +2047,7 @@ actions_are_pending(const GList *actions)
         const pcmk_action_t *a = (const pcmk_action_t *) action->data;
 
         if (action_is_pending(a)) {
-            crm_notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
+            pcmk__notice("Waiting for %s (flags=%#.8x)", a->uuid, a->flags);
             return true;
         }
     }
@@ -2136,8 +2138,8 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
             break;
         }
 
-        crm_info("Waiting up to %lld seconds for cluster actions to complete",
-                 (long long) time_diff);
+        pcmk__info("Waiting up to %lld seconds for cluster actions to complete",
+                   (long long) time_diff);
 
         if (rc == pcmk_rc_ok) { /* this avoids sleep on first loop iteration */
             sleep(WAIT_SLEEP_S);
@@ -2527,9 +2529,9 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
         }
 
         cur_is_dest = true;
-        crm_info("%s is already %s on %s, reinforcing placement with location "
-                 "constraint",
-                 rsc_id, active_s, pcmk__node_name(dest));
+        pcmk__info("%s is already %s on %s, reinforcing placement with "
+                   "location constraint",
+                   rsc_id, active_s, pcmk__node_name(dest));
     }
 
     /* @TODO The constraint changes in the following commands should done
@@ -2548,9 +2550,9 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
     rc = cli_resource_prefer(out, rsc_id, dest->priv->name, move_lifetime,
                              cib, promoted_role_only, PCMK_ROLE_PROMOTED);
 
-    crm_trace("%s%s now prefers %s%s",
-              rsc->id, (promoted_role_only? " (promoted)" : ""),
-              pcmk__node_name(dest), (force? " (forced)" : ""));
+    pcmk__trace("%s%s now prefers %s%s",
+                rsc->id, (promoted_role_only? " (promoted)" : ""),
+                pcmk__node_name(dest), (force? " (forced)" : ""));
 
     /* Ban the current location if force is set and the current location is not
      * the destination. It is possible to use move to enforce a location without
@@ -2573,8 +2575,8 @@ cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
                       rsc_id, active_s);
 
         } else {
-            crm_trace("Not banning %s from its current location: not active",
-                      rsc_id);
+            pcmk__trace("Not banning %s from its current location: not active",
+                        rsc_id);
         }
     }
 

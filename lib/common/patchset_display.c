@@ -204,13 +204,13 @@ xml_patchset_default(pcmk__output_t *out, va_list args)
     int format = 1;
 
     if (patchset == NULL) {
-        crm_trace("Empty patch");
+        pcmk__trace("Empty patch");
         return pcmk_rc_no_output;
     }
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;
     }
 
@@ -243,12 +243,12 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
     uint8_t log_level = pcmk__output_get_log_level(out);
     int format = 1;
 
-    if (log_level == LOG_NEVER) {
+    if (log_level == PCMK__LOG_NEVER) {
         return pcmk_rc_no_output;
     }
 
     if (patchset == NULL) {
-        crm_trace("Empty patch");
+        pcmk__trace("Empty patch");
         return pcmk_rc_no_output;
     }
 
@@ -265,7 +265,7 @@ xml_patchset_log(pcmk__output_t *out, va_list args)
 
     pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_err("Unknown patch format: %d", format);
+        pcmk__err("Unknown patch format: %d", format);
         return pcmk_rc_bad_xml_patch;
     }
 
@@ -303,7 +303,7 @@ xml_patchset_xml(pcmk__output_t *out, va_list args)
         g_string_free(buf, TRUE);
         return pcmk_rc_ok;
     }
-    crm_trace("Empty patch");
+    pcmk__trace("Empty patch");
     return pcmk_rc_no_output;
 }
 

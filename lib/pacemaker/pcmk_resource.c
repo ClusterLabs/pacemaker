@@ -43,7 +43,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     // Find node's resource history
     xpath = pcmk__assert_asprintf(XPATH_OP_HISTORY, node->priv->name, rsc->id);
     history = pcmk__xpath_find_one(rsc->priv->scheduler->input->doc, xpath,
-                                   LOG_NEVER);
+                                   PCMK__LOG_NEVER);
     free(xpath);
 
     // Examine each history entry
