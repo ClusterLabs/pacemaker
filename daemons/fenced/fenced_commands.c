@@ -1159,6 +1159,7 @@ build_device_from_xml(const xmlNode *dev)
     const char *value;
     fenced_device_t *device = NULL;
     char *agent = pcmk__xe_get_copy(dev, PCMK_XA_AGENT);
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK(agent != NULL, return device);
 
@@ -1185,27 +1186,24 @@ build_device_from_xml(const xmlNode *dev)
         g_list_free_full(device->targets, free);
         device->targets = NULL;
     }
-    switch (get_agent_metadata(device->agent, &device->agent_metadata)) {
-        case pcmk_rc_ok:
-            if (device->agent_metadata) {
-                read_action_metadata(device);
-                device->default_host_arg =
-                    stonith__default_host_arg(device->agent_metadata);
-            }
-            break;
 
-        case EAGAIN:
-            if (device->timer == NULL) {
-                device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
-                                           TRUE, get_agent_metadata_cb, device);
-            }
-            if (!mainloop_timer_running(device->timer)) {
-                mainloop_timer_start(device->timer);
-            }
-            break;
+    rc = get_agent_metadata(device->agent, &device->agent_metadata);
 
-        default:
-            break;
+    if ((rc == pcmk_rc_ok) && (device->agent_metadata != NULL)) {
+        read_action_metadata(device);
+        device->default_host_arg =
+            stonith__default_host_arg(device->agent_metadata);
+
+    } else if (rc == EAGAIN) {
+        if (device->timer == NULL) {
+            device->timer = mainloop_timer_add("get_agent_metadata", 10 * 1000,
+                                               TRUE, get_agent_metadata_cb,
+                                               device);
+        }
+
+        if (!mainloop_timer_running(device->timer)) {
+            mainloop_timer_start(device->timer);
+        }
     }
 
     value = pcmk__xe_get(dev, PCMK__XA_RSC_PROVIDES);
