@@ -72,7 +72,7 @@ ipc_already_running(void)
 
     rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s manager instance found: %s",
+        crm_debug("No existing %s instance found: %s",
                   pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(old_instance);
         return false;
