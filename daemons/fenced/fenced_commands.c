@@ -361,40 +361,43 @@ static int
 get_action_timeout(const fenced_device_t *device, const char *action,
                    int default_timeout)
 {
-    if (action && device && device->params) {
-        char *timeout_param = NULL;
-        const char *value = NULL;
+    char *timeout_param = NULL;
+    const char *value = NULL;
 
-        /* If "reboot" was requested but the device does not support it,
-         * we will remap to "off", so check timeout for "off" instead
-         */
-        if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)
-            && !pcmk__is_set(device->flags, fenced_df_supports_reboot)) {
-            crm_trace("%s doesn't support reboot, using timeout for off instead",
-                      device->id);
-            action = PCMK_ACTION_OFF;
-        }
+    if ((action == NULL) || (device == NULL) || (device->params == NULL)) {
+        return default_timeout;
+    }
 
-        /* If the device config specified an action-specific timeout, use it */
-        timeout_param = pcmk__assert_asprintf("pcmk_%s_timeout", action);
-        value = g_hash_table_lookup(device->params, timeout_param);
-        free(timeout_param);
+    /* If "reboot" was requested but the device does not support it,
+     * we will remap to "off", so check timeout for "off" instead
+     */
+    if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)
+        && !pcmk__is_set(device->flags, fenced_df_supports_reboot)) {
+        crm_trace("%s doesn't support reboot, using timeout for off instead",
+                  device->id);
+        action = PCMK_ACTION_OFF;
+    }
 
-        if (value) {
-            long long timeout_ms = 0;
+    /* If the device config specified an action-specific timeout, use it */
+    timeout_param = pcmk__assert_asprintf("pcmk_%s_timeout", action);
+    value = g_hash_table_lookup(device->params, timeout_param);
+    free(timeout_param);
 
-            if ((pcmk__parse_ms(value, &timeout_ms) == pcmk_rc_ok)
-                && (timeout_ms >= 0)) {
+    if (value) {
+        long long timeout_ms = 0;
 
-                int timeout_sec = 0;
+        if ((pcmk__parse_ms(value, &timeout_ms) == pcmk_rc_ok)
+            && (timeout_ms >= 0)) {
 
-                timeout_ms = QB_MIN(timeout_ms, UINT_MAX);
-                timeout_sec = pcmk__timeout_ms2s((guint) timeout_ms);
+            int timeout_sec = 0;
 
-                return QB_MIN(timeout_sec, INT_MAX);
-            }
+            timeout_ms = QB_MIN(timeout_ms, UINT_MAX);
+            timeout_sec = pcmk__timeout_ms2s((guint) timeout_ms);
+
+            return QB_MIN(timeout_sec, INT_MAX);
         }
     }
+
     return default_timeout;
 }
 
