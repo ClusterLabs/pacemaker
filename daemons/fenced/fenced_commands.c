@@ -1111,26 +1111,30 @@ read_action_metadata(fenced_device_t *device)
 static const char *
 target_list_type(fenced_device_t *dev)
 {
-    const char *check_type = NULL;
+    const char *check_type = g_hash_table_lookup(dev->params,
+                                                 PCMK_FENCING_HOST_CHECK);
 
-    check_type = g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_CHECK);
-
-    if (check_type == NULL) {
-
-        if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_LIST)) {
-            check_type = PCMK_VALUE_STATIC_LIST;
-        } else if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_MAP)) {
-            check_type = PCMK_VALUE_STATIC_LIST;
-        } else if (pcmk__is_set(dev->flags, fenced_df_supports_list)) {
-            check_type = PCMK_VALUE_DYNAMIC_LIST;
-        } else if (pcmk__is_set(dev->flags, fenced_df_supports_status)) {
-            check_type = PCMK_VALUE_STATUS;
-        } else {
-            check_type = PCMK_VALUE_NONE;
-        }
+    if (check_type != NULL) {
+        return check_type;
     }
 
-    return check_type;
+    if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_LIST)) {
+        return PCMK_VALUE_STATIC_LIST;
+    }
+
+    if (g_hash_table_lookup(dev->params, PCMK_FENCING_HOST_MAP)) {
+        return PCMK_VALUE_STATIC_LIST;
+    }
+
+    if (pcmk__is_set(dev->flags, fenced_df_supports_list)) {
+        return PCMK_VALUE_DYNAMIC_LIST;
+    }
+
+    if (pcmk__is_set(dev->flags, fenced_df_supports_status)) {
+        return PCMK_VALUE_STATUS;
+    }
+
+    return PCMK_VALUE_NONE;
 }
 
 static fenced_device_t *
