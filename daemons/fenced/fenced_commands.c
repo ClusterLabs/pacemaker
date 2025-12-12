@@ -3397,10 +3397,18 @@ handle_relay_request(pcmk__request_t *request)
 static xmlNode *
 handle_fence_request(pcmk__request_t *request)
 {
+    const char *alternate_host = NULL;
+    xmlNode *dev = NULL;
+    const char *target = NULL;
+    const char *action = NULL;
+    const char *device = NULL;
+
     if (request->peer != NULL) {
         fence_locally(request->xml, &request->result);
+        goto done;
+    }
 
-    } else if (pcmk__is_set(request->call_options, st_opt_manual_ack)) {
+    if (pcmk__is_set(request->call_options, st_opt_manual_ack)) {
         switch (fenced_handle_manual_confirmation(request->ipc_client,
                                                   request->xml)) {
             case pcmk_rc_ok:
@@ -3416,79 +3424,75 @@ handle_fence_request(pcmk__request_t *request)
                 break;
         }
 
-    } else {
-        const char *alternate_host = NULL;
-        xmlNode *dev = pcmk__xpath_find_one(request->xml->doc,
-                                            "//*[@" PCMK__XA_ST_TARGET "]",
-                                            LOG_TRACE);
-        const char *target = pcmk__xe_get(dev, PCMK__XA_ST_TARGET);
-        const char *action = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ACTION);
-        const char *device = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ID);
-
-        if (request->ipc_client != NULL) {
-            int tolerance = 0;
-
-            crm_notice("Client %s wants to fence (%s) %s using %s",
-                       pcmk__request_origin(request), action,
-                       target, (device? device : "any device"));
-            pcmk__xe_get_int(dev, PCMK__XA_ST_TOLERANCE, &tolerance);
-            if (stonith_check_fence_tolerance(tolerance, target, action)) {
-                pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE,
-                                 NULL);
-                return fenced_construct_reply(request->xml, NULL,
-                                              &request->result);
-            }
-            alternate_host = check_alternate_host(target);
-
-        } else {
-            crm_notice("Peer %s wants to fence (%s) '%s' with device '%s'",
-                       request->peer, action, target,
-                       (device == NULL)? "(any)" : device);
-        }
-
-        if (alternate_host != NULL) {
-            const char *client_id = NULL;
-            remote_fencing_op_t *op = NULL;
-            pcmk__node_status_t *node =
-                pcmk__get_node(0, alternate_host, NULL,
-                               pcmk__node_search_cluster_member);
-
-            if (request->ipc_client->id == 0) {
-                client_id = pcmk__xe_get(request->xml, PCMK__XA_ST_CLIENTID);
-            } else {
-                client_id = request->ipc_client->id;
-            }
-
-            /* Create a duplicate fencing operation to relay with the client ID.
-             * When a query response is received, this operation should be
-             * deleted to avoid keeping the duplicate around.
-             */
-            op = create_remote_stonith_op(client_id, request->xml, FALSE);
-
-            pcmk__xe_set(request->xml, PCMK__XA_ST_OP, STONITH_OP_RELAY);
-            pcmk__xe_set(request->xml, PCMK__XA_ST_CLIENTID,
-                         request->ipc_client->id);
-            pcmk__xe_set(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
-
-            // @TODO On failure, fail request immediately, or maybe panic
-            pcmk__cluster_send_message(node, pcmk_ipc_fenced, request->xml);
-
-            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
-                             NULL);
-
-        } else if (initiate_remote_stonith_op(request->ipc_client, request->xml,
-                                              FALSE) == NULL) {
-            set_bad_request_result(&request->result);
-
-        } else {
-            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
-                             NULL);
-        }
+        goto done;
     }
 
+    dev = pcmk__xpath_find_one(request->xml->doc,
+                               "//*[@" PCMK__XA_ST_TARGET "]", LOG_TRACE);
+    target = pcmk__xe_get(dev, PCMK__XA_ST_TARGET);
+    action = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ACTION);
+    device = pcmk__xe_get(dev, PCMK__XA_ST_DEVICE_ID);
+
+    if (request->ipc_client != NULL) {
+        int tolerance = 0;
+
+        crm_notice("Client %s wants to fence (%s) %s using %s",
+                   pcmk__request_origin(request), action, target,
+                   (device? device : "any device"));
+        pcmk__xe_get_int(dev, PCMK__XA_ST_TOLERANCE, &tolerance);
+        if (stonith_check_fence_tolerance(tolerance, target, action)) {
+            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+            return fenced_construct_reply(request->xml, NULL, &request->result);
+        }
+        alternate_host = check_alternate_host(target);
+
+    } else {
+        crm_notice("Peer %s wants to fence (%s) '%s' with device '%s'",
+                   request->peer, action, target,
+                   (device == NULL)? "(any)" : device);
+    }
+
+    if (alternate_host != NULL) {
+        const char *client_id = NULL;
+        remote_fencing_op_t *op = NULL;
+        pcmk__node_status_t *node = pcmk__get_node(0, alternate_host, NULL,
+                                                   pcmk__node_search_cluster_member);
+
+        if (request->ipc_client->id == 0) {
+            client_id = pcmk__xe_get(request->xml, PCMK__XA_ST_CLIENTID);
+        } else {
+            client_id = request->ipc_client->id;
+        }
+
+        /* Create a duplicate fencing operation to relay with the client ID.
+         * When a query response is received, this operation should be
+         * deleted to avoid keeping the duplicate around.
+         */
+        op = create_remote_stonith_op(client_id, request->xml, FALSE);
+
+        pcmk__xe_set(request->xml, PCMK__XA_ST_OP, STONITH_OP_RELAY);
+        pcmk__xe_set(request->xml, PCMK__XA_ST_CLIENTID,
+                     request->ipc_client->id);
+        pcmk__xe_set(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
+
+        // @TODO On failure, fail request immediately, or maybe panic
+        pcmk__cluster_send_message(node, pcmk_ipc_fenced, request->xml);
+
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING, NULL);
+
+    } else if (initiate_remote_stonith_op(request->ipc_client, request->xml,
+                                          FALSE) == NULL) {
+        set_bad_request_result(&request->result);
+
+    } else {
+        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING, NULL);
+    }
+
+done:
     if (request->result.execution_status == PCMK_EXEC_PENDING) {
         return NULL;
     }
+
     return fenced_construct_reply(request->xml, NULL, &request->result);
 }
 
