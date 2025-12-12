@@ -3221,11 +3221,11 @@ is_privileged(const pcmk__client_t *c, const char *op)
 {
     if ((c == NULL) || pcmk__is_set(c->flags, pcmk__client_privileged)) {
         return true;
-    } else {
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 pcmk__s(op, ""), pcmk__client_name(c));
-        return false;
     }
+
+    crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
+             pcmk__s(op, ""), pcmk__client_name(c));
+    return false;
 }
 
 static xmlNode *
