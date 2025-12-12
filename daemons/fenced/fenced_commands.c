@@ -363,6 +363,7 @@ get_action_timeout(const fenced_device_t *device, const char *action,
 {
     char *timeout_param = NULL;
     const char *value = NULL;
+    long long timeout_ms = 0;
 
     if ((action == NULL) || (device == NULL) || (device->params == NULL)) {
         return default_timeout;
@@ -383,19 +384,19 @@ get_action_timeout(const fenced_device_t *device, const char *action,
     value = g_hash_table_lookup(device->params, timeout_param);
     free(timeout_param);
 
-    if (value) {
-        long long timeout_ms = 0;
+    if (value == NULL) {
+        return default_timeout;
+    }
 
-        if ((pcmk__parse_ms(value, &timeout_ms) == pcmk_rc_ok)
-            && (timeout_ms >= 0)) {
+    if ((pcmk__parse_ms(value, &timeout_ms) == pcmk_rc_ok)
+        && (timeout_ms >= 0)) {
 
-            int timeout_sec = 0;
+        int timeout_sec = 0;
 
-            timeout_ms = QB_MIN(timeout_ms, UINT_MAX);
-            timeout_sec = pcmk__timeout_ms2s((guint) timeout_ms);
+        timeout_ms = QB_MIN(timeout_ms, UINT_MAX);
+        timeout_sec = pcmk__timeout_ms2s((guint) timeout_ms);
 
-            return QB_MIN(timeout_sec, INT_MAX);
-        }
+        return QB_MIN(timeout_sec, INT_MAX);
     }
 
     return default_timeout;
