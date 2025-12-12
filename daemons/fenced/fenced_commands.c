@@ -3173,13 +3173,16 @@ remove_relay_op(xmlNode * request)
     /* If the operation to be deleted is registered as a duplicate, delete the registration. */
     while (g_hash_table_iter_next(&iter, NULL, (void **)&list_op)) {
         GList *dup_iter = NULL;
-        if (list_op != relay_op) {
-            for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
-                remote_fencing_op_t *other = dup_iter->data;
-                if (other == relay_op) {
-                    other->duplicates = g_list_remove(other->duplicates, relay_op);
-                    break;
-                }
+
+        if (list_op == relay_op) {
+            continue;
+        }
+
+        for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
+            remote_fencing_op_t *other = dup_iter->data;
+            if (other == relay_op) {
+                other->duplicates = g_list_remove(other->duplicates, relay_op);
+                break;
             }
         }
     }
