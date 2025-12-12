@@ -2461,18 +2461,18 @@ static void
 stonith_send_reply(const xmlNode *reply, int call_options,
                    const char *remote_peer, pcmk__client_t *client)
 {
+    const pcmk__node_status_t *node = NULL;
+
     CRM_CHECK((reply != NULL) && ((remote_peer != NULL) || (client != NULL)),
               return);
 
     if (remote_peer == NULL) {
         do_local_reply(reply, client, call_options);
-    } else {
-        const pcmk__node_status_t *node =
-            pcmk__get_node(0, remote_peer, NULL,
-                           pcmk__node_search_cluster_member);
-
-        pcmk__cluster_send_message(node, pcmk_ipc_fenced, reply);
+        return;
     }
+
+    node = pcmk__get_node(0, remote_peer, NULL, pcmk__node_search_cluster_member);
+    pcmk__cluster_send_message(node, pcmk_ipc_fenced, reply);
 }
 
 static void
