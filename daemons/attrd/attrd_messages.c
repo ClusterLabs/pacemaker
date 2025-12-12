@@ -55,7 +55,8 @@ remove_unsupported_sync_points(pcmk__request_t *request)
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
-    crm_err("Unknown IPC request %s from %s %s",
+    crm_err("Unknown %s request %s from %s %s",
+            (request->ipc_client != NULL) ? "IPC" : "CPG",
             request->op, pcmk__request_origin_type(request),
             pcmk__request_origin(request));
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
@@ -104,24 +105,24 @@ handle_clear_failure_request(pcmk__request_t *request)
 static xmlNode *
 handle_confirm_request(pcmk__request_t *request)
 {
-    if (request->peer != NULL) {
-        int callid;
+    int callid = 0;
 
-        crm_debug("Received confirmation from %s", request->peer);
-
-        if (pcmk__xe_get_int(request->xml, PCMK__XA_CALL_ID,
-                             &callid) != pcmk_rc_ok) {
-            pcmk__set_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                             "Could not get callid from XML");
-        } else {
-            attrd_handle_confirmation(callid, request->peer);
-        }
-
-        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
-    } else {
+    if (request->ipc_client != NULL) {
         return handle_unknown_request(request);
     }
+
+    crm_debug("Received confirmation from %s", request->peer);
+
+    if (pcmk__xe_get_int(request->xml, PCMK__XA_CALL_ID,
+                         &callid) != pcmk_rc_ok) {
+        pcmk__set_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                         "Could not get callid from XML");
+    } else {
+        attrd_handle_confirmation(callid, request->peer);
+    }
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
 static xmlNode *
@@ -129,29 +130,31 @@ handle_query_request(pcmk__request_t *request)
 {
     if (request->peer != NULL) {
         return handle_unknown_request(request);
-    } else {
-        return attrd_client_query(request);
     }
+
+    return attrd_client_query(request);
 }
 
 static xmlNode *
 handle_remove_request(pcmk__request_t *request)
 {
-    if (request->peer != NULL) {
-        const char *host = pcmk__xe_get(request->xml, PCMK__XA_ATTR_HOST);
-        bool reap = false;
+    const char *host = NULL;
+    bool reap = false;
 
-        if (pcmk__xe_get_bool(request->xml, PCMK__XA_REAP,
-                              &reap) != pcmk_rc_ok) {
-            reap = true; // Default to true for backward compatibility
-        }
-        attrd_peer_remove(host, reap, request->peer);
-        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-
-    } else {
+    if (request->ipc_client != NULL) {
         attrd_client_peer_remove(request);
+        return NULL;
     }
 
+    host = pcmk__xe_get(request->xml, PCMK__XA_ATTR_HOST);
+
+    if (pcmk__xe_get_bool(request->xml, PCMK__XA_REAP,
+                          &reap) != pcmk_rc_ok) {
+        reap = true; // Default to true for backward compatibility
+    }
+
+    attrd_peer_remove(host, reap, request->peer);
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
 }
 
@@ -161,6 +164,7 @@ handle_refresh_request(pcmk__request_t *request)
     if (request->peer != NULL) {
         return handle_unknown_request(request);
     }
+
     attrd_client_refresh(request);
     return NULL;
 }
@@ -168,24 +172,24 @@ handle_refresh_request(pcmk__request_t *request)
 static xmlNode *
 handle_sync_response_request(pcmk__request_t *request)
 {
+    pcmk__node_status_t *peer = NULL;
+    bool peer_won = false;
+
     if (request->ipc_client != NULL) {
         return handle_unknown_request(request);
-    } else {
-        if (request->peer != NULL) {
-            pcmk__node_status_t *peer =
-                pcmk__get_node(0, request->peer, NULL,
-                               pcmk__node_search_cluster_member);
-            bool peer_won = attrd_check_for_new_writer(peer, request->xml);
-
-            if (!pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
-                              pcmk__str_casei)) {
-                attrd_peer_sync_response(peer, peer_won, request->xml);
-            }
-        }
-
-        pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-        return NULL;
     }
+
+    peer = pcmk__get_node(0, request->peer, NULL,
+                          pcmk__node_search_cluster_member);
+    peer_won = attrd_check_for_new_writer(peer, request->xml);
+
+    if (!pcmk__str_eq(peer->name, attrd_cluster->priv->node_name,
+                      pcmk__str_casei)) {
+        attrd_peer_sync_response(peer, peer_won, request->xml);
+    }
+
+    pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+    return NULL;
 }
 
 static xmlNode *

@@ -3179,13 +3179,29 @@ is_privileged(const pcmk__client_t *c, const char *op)
     }
 }
 
+static xmlNode *
+handle_unknown_request(pcmk__request_t *request)
+{
+    crm_err("Unknown %s request %s from %s %s",
+            (request->ipc_client != NULL) ? "IPC" : "CPG",
+            request->op, pcmk__request_origin_type(request),
+            pcmk__request_origin(request));
+    pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
+                        "Unknown request type '%s' (bug?)",
+                        pcmk__s(request->op, ""));
+    return fenced_construct_reply(request->xml, NULL, &request->result);
+}
+
 // CRM_OP_REGISTER
 static xmlNode *
 handle_register_request(pcmk__request_t *request)
 {
     xmlNode *reply = pcmk__xe_create(NULL, "reply");
 
-    pcmk__assert(request->ipc_client != NULL);
+    if (request->peer != NULL) {
+        return handle_unknown_request(request);
+    }
+
     pcmk__xe_set(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
     pcmk__xe_set(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
@@ -3277,7 +3293,10 @@ handle_notify_request(pcmk__request_t *request)
 {
     const char *flag_name = NULL;
 
-    pcmk__assert(request->ipc_client != NULL);
+    if (request->peer != NULL) {
+        return handle_unknown_request(request);
+    }
+
     flag_name = pcmk__xe_get(request->xml, PCMK__XA_ST_NOTIFY_ACTIVATE);
     if (flag_name != NULL) {
         crm_debug("Enabling %s callbacks for client %s",
@@ -3539,18 +3558,6 @@ handle_cache_request(pcmk__request_t *request)
     return NULL;
 }
 
-static xmlNode *
-handle_unknown_request(pcmk__request_t *request)
-{
-    crm_err("Unknown IPC request %s from %s %s",
-            request->op, pcmk__request_origin_type(request),
-            pcmk__request_origin(request));
-    pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
-                        "Unknown IPC request type '%s' (bug?)",
-                        pcmk__s(request->op, ""));
-    return fenced_construct_reply(request->xml, NULL, &request->result);
-}
-
 static void
 fenced_register_handlers(void)
 {
@@ -3583,17 +3590,23 @@ fenced_unregister_handlers(void)
     }
 }
 
-static void
-handle_request(pcmk__request_t *request)
+void
+fenced_handle_request(pcmk__request_t *request)
 {
     xmlNode *reply = NULL;
+    char *log_msg = NULL;
+    const char *exec_status_s = NULL;
     const char *reason = NULL;
 
     if (fenced_handlers == NULL) {
         fenced_register_handlers();
     }
+
     reply = pcmk__process_request(request, fenced_handlers);
+
     if (reply != NULL) {
+        crm_log_xml_trace(reply, "Reply");
+
         if (pcmk__is_set(request->flags, pcmk__request_reuse_options)
             && (request->ipc_client != NULL)) {
             /* Certain IPC-only commands must reuse the call options from the
@@ -3603,6 +3616,7 @@ handle_request(pcmk__request_t *request)
             pcmk__ipc_send_xml(request->ipc_client, request->ipc_id, reply,
                                request->ipc_flags);
             request->ipc_client->request_id = 0;
+
         } else {
             stonith_send_reply(reply, request->call_options,
                                request->peer, request->ipc_client);
@@ -3610,106 +3624,23 @@ handle_request(pcmk__request_t *request)
         pcmk__xml_free(reply);
     }
 
+    exec_status_s = pcmk_exec_status_str(request->result.execution_status);
     reason = request->result.exit_reason;
-    crm_debug("Processed %s request from %s %s: %s%s%s%s",
-              request->op, pcmk__request_origin_type(request),
-              pcmk__request_origin(request),
-              pcmk_exec_status_str(request->result.execution_status),
-              (reason == NULL)? "" : " (",
-              (reason == NULL)? "" : reason,
-              (reason == NULL)? "" : ")");
-}
+    log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: %s%s%s%s",
+                                    request->op,
+                                    pcmk__request_origin_type(request),
+                                    pcmk__request_origin(request),
+                                    exec_status_s,
+                                    (reason == NULL)? "" : " (",
+                                    pcmk__s(reason, ""),
+                                    (reason == NULL)? "" : ")");
 
-static void
-handle_reply(pcmk__client_t *client, xmlNode *request, const char *remote_peer)
-{
-    // Copy, because request might be freed before we want to log this
-    char *op = pcmk__xe_get_copy(request, PCMK__XA_ST_OP);
-
-    if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
-        process_remote_stonith_query(request);
-
-    } else if (pcmk__str_any_of(op, STONITH_OP_NOTIFY, STONITH_OP_FENCE,
-                                NULL)) {
-        fenced_process_fencing_reply(request);
-
+    if (!pcmk__result_ok(&request->result)) {
+        crm_warn("%s", log_msg);
     } else {
-        crm_err("Ignoring unknown %s reply from %s %s",
-                pcmk__s(op, "untyped"), ((client == NULL)? "peer" : "client"),
-                ((client == NULL)? remote_peer : pcmk__client_name(client)));
-        crm_log_xml_warn(request, "UnknownOp");
-        free(op);
-        return;
-    }
-    crm_debug("Processed %s reply from %s %s",
-              op, ((client == NULL)? "peer" : "client"),
-              ((client == NULL)? remote_peer : pcmk__client_name(client)));
-    free(op);
-}
-
-/*!
- * \internal
- * \brief Handle a message from an IPC client or CPG peer
- *
- * \param[in,out] client      If not NULL, IPC client that sent message
- * \param[in]     id          If from IPC client, IPC message ID
- * \param[in]     flags       Message flags
- * \param[in,out] message     Message XML
- * \param[in]     remote_peer If not NULL, CPG peer that sent message
- */
-void
-stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                xmlNode *message, const char *remote_peer)
-{
-    uint32_t call_options = st_opt_none;
-    int rc = pcmk_rc_ok;
-    bool is_reply = false;
-
-    CRM_CHECK(message != NULL, return);
-
-    if (pcmk__xpath_find_one(message->doc, "//" PCMK__XE_ST_REPLY,
-                             LOG_NEVER) != NULL) {
-        is_reply = true;
+        crm_debug("%s", log_msg);
     }
 
-    rc = pcmk__xe_get_flags(message, PCMK__XA_ST_CALLOPT, &call_options,
-                            st_opt_none);
-    if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from message: %s", pcmk_rc_str(rc));
-    }
-
-    crm_debug("Processing %ssynchronous %s %s %u from %s %s",
-              pcmk__is_set(call_options, st_opt_sync_call)? "" : "a",
-              pcmk__xe_get(message, PCMK__XA_ST_OP),
-              (is_reply? "reply" : "request"), id,
-              ((client == NULL)? "peer" : "client"),
-              ((client == NULL)? remote_peer : pcmk__client_name(client)));
-
-    if (pcmk__is_set(call_options, st_opt_sync_call)) {
-        pcmk__assert((client == NULL) || (client->request_id == id));
-    }
-
-    if (is_reply) {
-        handle_reply(client, message, remote_peer);
-    } else {
-        pcmk__request_t request = {
-            .ipc_client     = client,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = remote_peer,
-            .xml            = message,
-            .call_options   = call_options,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
-
-        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_ST_OP);
-        CRM_CHECK(request.op != NULL, return);
-
-        if (pcmk__is_set(request.call_options, st_opt_sync_call)) {
-            pcmk__set_request_flags(&request, pcmk__request_sync);
-        }
-
-        handle_request(&request);
-        pcmk__reset_request(&request);
-    }
+    free(log_msg);
+    pcmk__reset_request(request);
 }

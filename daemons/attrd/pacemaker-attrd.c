@@ -56,7 +56,6 @@ static pcmk__supported_format_t formats[] = {
 };
 
 lrmd_t *the_lrmd = NULL;
-pcmk_cluster_t *attrd_cluster = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
 
@@ -73,7 +72,7 @@ ipc_already_running(void)
 
     rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s manager instance found: %s",
+        crm_debug("No existing %s instance found: %s",
                   pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(old_instance);
         return false;
@@ -164,12 +163,13 @@ main(int argc, char **argv)
         crm_info("CIB connection active");
     }
 
-    if (attrd_cluster_connect() != pcmk_ok) {
+    if (attrd_cluster_connect() != pcmk_rc_ok) {
         attrd_exit_status = CRM_EX_FATAL;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
                     "Could not connect to the cluster");
         goto done;
     }
+
     crm_info("Cluster connection active");
 
     // Initialization that requires the cluster to be connected
@@ -203,8 +203,7 @@ main(int argc, char **argv)
 
         attrd_free_removed_peers();
         attrd_free_waitlist();
-        pcmk_cluster_disconnect(attrd_cluster);
-        pcmk_cluster_free(attrd_cluster);
+        attrd_cluster_disconnect();
         g_hash_table_destroy(attributes);
     }
 

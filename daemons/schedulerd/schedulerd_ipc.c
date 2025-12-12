@@ -53,7 +53,7 @@ schedulerd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
  * \param[in]     data  The message data read from the connection - this can be
  *                      a complete IPC message or just a part of one if it's
  *                      very large
- * \param[size]   size  Unused
+ * \param[in]     size  Unused
  *
  * \return 0 in all cases
  */

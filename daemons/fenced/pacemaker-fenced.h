@@ -309,9 +309,6 @@ void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 void fenced_unregister_handlers(void);
 
-void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                            xmlNode *op_request, const char *remote_peer);
-
 int fenced_device_register(const xmlNode *dev, bool from_cib);
 
 void stonith_device_remove(const char *id, bool from_cib);
@@ -377,6 +374,14 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
+void fenced_ipc_init(void);
+void fenced_ipc_cleanup(void);
+
+int fenced_cluster_connect(void);
+void fenced_cluster_disconnect(void);
+
+void fenced_handle_request(pcmk__request_t *request);
+
 /*!
  * \internal
  * \brief Get the device flag to use with a given action when searching devices
@@ -401,3 +406,4 @@ extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;
 extern gboolean stonith_shutdown_flag;
+extern pcmk_cluster_t *fenced_cluster;
