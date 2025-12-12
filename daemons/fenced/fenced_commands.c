@@ -1761,6 +1761,7 @@ unpack_level_request(xmlNode *xml, enum fenced_target_by *mode, char **target,
 void
 fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
 {
+    int nlevels = 0;
     int id = 0;
     xmlNode *level;
     enum fenced_target_by mode;
@@ -1850,12 +1851,10 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
         g_strfreev(devices);
     }
 
-    {
-        int nlevels = count_active_levels(tp);
+    nlevels = count_active_levels(tp);
 
-        crm_info("Target %s has %d active fencing level%s",
-                 tp->target, nlevels, pcmk__plural_s(nlevels));
-    }
+    crm_info("Target %s has %d active fencing level%s", tp->target, nlevels,
+             pcmk__plural_s(nlevels));
 
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
