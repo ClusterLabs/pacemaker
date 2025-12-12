@@ -2735,11 +2735,12 @@ cancel_stonith_command(async_command_t * cmd)
 {
     fenced_device_t *device = cmd_device(cmd);
 
-    if (device) {
-        crm_trace("Cancel scheduled '%s' action using %s",
-                  cmd->action, device->id);
-        device->pending_ops = g_list_remove(device->pending_ops, cmd);
+    if (device == NULL) {
+        return;
     }
+
+    crm_trace("Cancel scheduled '%s' action using %s", cmd->action, device->id);
+    device->pending_ops = g_list_remove(device->pending_ops, cmd);
 }
 
 /*!
