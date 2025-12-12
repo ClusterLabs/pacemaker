@@ -12,9 +12,7 @@
 #include <stdbool.h>
 
 #include <crm/crm.h>
-#include <crm/common/attrs_internal.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>

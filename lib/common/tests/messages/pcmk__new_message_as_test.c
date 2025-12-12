@@ -13,9 +13,6 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/ipc.h>                 // pcmk_ipc_controld
-#include <crm/common/messages_internal.h>   // pcmk__new_message_as()
-#include <crm/common/servers_internal.h>    // pcmk__server_message_type()
-#include <crm/common/xml_internal.h>        // pcmk__xe_create(), etc.
 
 #include <crm/common/unittest_internal.h>
 

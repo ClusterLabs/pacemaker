@@ -11,7 +11,6 @@
 
 #include <stdio.h>  // NULL
 
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/unittest_internal.h>
 
 #define YEAR_S "2024"

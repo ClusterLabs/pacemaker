@@ -13,7 +13,6 @@
 #include <sys/types.h>      // time_t
 
 #include <crm/common/scheduler.h>
-#include <crm/common/scheduler_internal.h>
 #include <crm/common/unittest_internal.h>
 
 static void

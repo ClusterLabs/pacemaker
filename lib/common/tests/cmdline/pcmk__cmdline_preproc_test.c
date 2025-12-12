@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/cmdline_internal.h>
 
 #include <glib.h>
 #include <stdint.h>

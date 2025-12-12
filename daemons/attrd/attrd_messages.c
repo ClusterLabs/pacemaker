@@ -12,7 +12,6 @@
 #include <inttypes.h>   // PRIu32
 #include <glib.h>
 
-#include <crm/common/messages_internal.h>
 #include <crm/cluster/internal.h>   // pcmk__get_node()
 #include <crm/common/xml.h>
 
