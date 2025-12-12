@@ -2417,11 +2417,13 @@ static void
 add_disallowed(xmlNode *xml, const char *action, const fenced_device_t *device,
                const char *target, gboolean allow_self)
 {
-    if (!localhost_is_eligible(device, action, target, allow_self)) {
-        crm_trace("Action '%s' using %s is disallowed for local host",
-                  action, device->id);
-        pcmk__xe_set_bool(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
+    if (localhost_is_eligible(device, action, target, allow_self)) {
+        return;
     }
+
+    crm_trace("Action '%s' using %s is disallowed for local host", action,
+              device->id);
+    pcmk__xe_set_bool(xml, PCMK__XA_ST_ACTION_DISALLOWED, true);
 }
 
 /*!
