@@ -3112,21 +3112,24 @@ set_fencing_completed(remote_fencing_op_t *op)
 static const char *
 check_alternate_host(const char *target)
 {
-    if (pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
-        GHashTableIter gIter;
-        pcmk__node_status_t *entry = NULL;
+    GHashTableIter gIter;
+    pcmk__node_status_t *entry = NULL;
 
-        g_hash_table_iter_init(&gIter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-            if (fencing_peer_active(entry)
-                && !pcmk__str_eq(entry->name, target, pcmk__str_casei)) {
-                crm_notice("Forwarding self-fencing request to %s",
-                           entry->name);
-                return entry->name;
-            }
-        }
-        crm_warn("Will handle own fencing because no peer can");
+    if (!pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
+        return NULL;
     }
+
+    g_hash_table_iter_init(&gIter, pcmk__peer_cache);
+    while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+        if (fencing_peer_active(entry)
+            && !pcmk__str_eq(entry->name, target, pcmk__str_casei)) {
+            crm_notice("Forwarding self-fencing request to %s",
+                       entry->name);
+            return entry->name;
+        }
+    }
+
+    crm_warn("Will handle own fencing because no peer can");
     return NULL;
 }
 
