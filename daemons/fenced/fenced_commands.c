@@ -3409,19 +3409,16 @@ handle_fence_request(pcmk__request_t *request)
     }
 
     if (pcmk__is_set(request->call_options, st_opt_manual_ack)) {
-        switch (fenced_handle_manual_confirmation(request->ipc_client,
-                                                  request->xml)) {
-            case pcmk_rc_ok:
-                pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE,
-                                 NULL);
-                break;
-            case EINPROGRESS:
-                pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
-                                 NULL);
-                break;
-            default:
-                set_bad_request_result(&request->result);
-                break;
+        int rc = fenced_handle_manual_confirmation(request->ipc_client,
+                                                   request->xml);
+
+        if (rc == pcmk_rc_ok) {
+            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+        } else if (rc == EINPROGRESS) {
+            pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_PENDING,
+                             NULL);
+        } else {
+            set_bad_request_result(&request->result);
         }
 
         goto done;
