@@ -3154,40 +3154,42 @@ remove_relay_op(xmlNode * request)
     op_id = pcmk__xe_get(request, PCMK__XA_ST_REMOTE_OP);
     client_name = pcmk__xe_get(request, PCMK__XA_ST_CLIENTNAME);
 
+    if ((relay_op_id == NULL) || (target == NULL)
+        || !pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
+        return;
+    }
+
     /* Delete RELAY operation. */
-    if ((relay_op_id != NULL) && (target != NULL)
-        && pcmk__str_eq(target, fenced_get_local_node(), pcmk__str_casei)) {
-        relay_op = g_hash_table_lookup(stonith_remote_op_list, relay_op_id);
+    relay_op = g_hash_table_lookup(stonith_remote_op_list, relay_op_id);
 
-        if (relay_op) {
-            GHashTableIter iter;
-            remote_fencing_op_t *list_op = NULL; 
-            g_hash_table_iter_init(&iter, stonith_remote_op_list);
+    if (relay_op) {
+        GHashTableIter iter;
+        remote_fencing_op_t *list_op = NULL;
+        g_hash_table_iter_init(&iter, stonith_remote_op_list);
 
-            /* If the operation to be deleted is registered as a duplicate, delete the registration. */
-            while (g_hash_table_iter_next(&iter, NULL, (void **)&list_op)) {
-                GList *dup_iter = NULL;
-                if (list_op != relay_op) {
-                    for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
-                        remote_fencing_op_t *other = dup_iter->data;
-                        if (other == relay_op) {
-                            other->duplicates = g_list_remove(other->duplicates, relay_op);
-                            break;
-                        }
+        /* If the operation to be deleted is registered as a duplicate, delete the registration. */
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&list_op)) {
+            GList *dup_iter = NULL;
+            if (list_op != relay_op) {
+                for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
+                    remote_fencing_op_t *other = dup_iter->data;
+                    if (other == relay_op) {
+                        other->duplicates = g_list_remove(other->duplicates, relay_op);
+                        break;
                     }
                 }
             }
-            crm_debug("Deleting relay op %s ('%s'%s%s for %s), "
-                      "replaced by op %s ('%s'%s%s for %s)",
-                      relay_op->id, relay_op->action,
-                      (relay_op->target == NULL)? "" : " targeting ",
-                      pcmk__s(relay_op->target, ""),
-                      relay_op->client_name, op_id, relay_op->action,
-                      (target == NULL)? "" : " targeting ", pcmk__s(target, ""),
-                      client_name);
-
-            g_hash_table_remove(stonith_remote_op_list, relay_op_id);
         }
+        crm_debug("Deleting relay op %s ('%s'%s%s for %s), "
+                  "replaced by op %s ('%s'%s%s for %s)",
+                  relay_op->id, relay_op->action,
+                  (relay_op->target == NULL)? "" : " targeting ",
+                  pcmk__s(relay_op->target, ""),
+                  relay_op->client_name, op_id, relay_op->action,
+                  (target == NULL)? "" : " targeting ", pcmk__s(target, ""),
+                  client_name);
+
+        g_hash_table_remove(stonith_remote_op_list, relay_op_id);
     }
 }
 
