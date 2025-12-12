@@ -1390,18 +1390,19 @@ device_params_diff(GHashTable *first, GHashTable *second) {
 
     g_hash_table_iter_init(&gIter, first);
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
+        char *other_value = NULL;
 
-        if(strstr(key, "CRM_meta") == key) {
+        if ((strstr(key, "CRM_meta") == key)
+            || pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_none)) {
             continue;
-        } else if (strcmp(key, PCMK_XA_CRM_FEATURE_SET) == 0) {
-            continue;
-        } else {
-            char *other_value = g_hash_table_lookup(second, key);
+        }
 
-            if (!other_value || !pcmk__str_eq(other_value, value, pcmk__str_casei)) {
-                crm_trace("Different value for %s: %s != %s", key, other_value, value);
-                return 1;
-            }
+        other_value = g_hash_table_lookup(second, key);
+
+        if ((other_value == NULL)
+            || !pcmk__str_eq(other_value, value, pcmk__str_casei)) {
+            crm_trace("Different value for %s: %s != %s", key, other_value, value);
+            return 1;
         }
     }
 
