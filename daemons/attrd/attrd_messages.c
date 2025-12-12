@@ -55,7 +55,8 @@ remove_unsupported_sync_points(pcmk__request_t *request)
 static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
-    crm_err("Unknown IPC request %s from %s %s",
+    crm_err("Unknown %s request %s from %s %s",
+            (request->ipc_client != NULL) ? "IPC" : "CPG",
             request->op, pcmk__request_origin_type(request),
             pcmk__request_origin(request));
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
