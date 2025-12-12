@@ -154,9 +154,11 @@ fenced_has_watchdog_device(void)
 void
 fenced_foreach_device(GHFunc fn, gpointer user_data)
 {
-    if (device_table != NULL) {
-        g_hash_table_foreach(device_table, fn, user_data);
+    if (device_table == NULL) {
+        return;
     }
+
+    g_hash_table_foreach(device_table, fn, user_data);
 }
 
 /*!
@@ -169,9 +171,11 @@ fenced_foreach_device(GHFunc fn, gpointer user_data)
 void
 fenced_foreach_device_remove(GHRFunc fn)
 {
-    if (device_table != NULL) {
-        g_hash_table_foreach_remove(device_table, fn, NULL);
+    if (device_table == NULL) {
+        return;
     }
+
+    g_hash_table_foreach_remove(device_table, fn, NULL);
 }
 
 static gboolean
@@ -923,9 +927,11 @@ free_device(gpointer data)
 void
 fenced_init_device_table(void)
 {
-    if (device_table == NULL) {
-        device_table = pcmk__strkey_table(NULL, free_device);
+    if (device_table != NULL) {
+        return;
     }
+
+    device_table = pcmk__strkey_table(NULL, free_device);
 }
 
 /*!
@@ -935,10 +941,12 @@ fenced_init_device_table(void)
 void
 fenced_free_device_table(void)
 {
-    if (device_table != NULL) {
-        g_hash_table_destroy(device_table);
-        device_table = NULL;
+    if (device_table == NULL) {
+        return;
     }
+
+    g_hash_table_destroy(device_table);
+    device_table = NULL;
 }
 
 static GHashTable *
@@ -985,18 +993,24 @@ done:
 GHashTable *metadata_cache = NULL;
 
 void
-free_metadata_cache(void) {
-    if (metadata_cache != NULL) {
-        g_hash_table_destroy(metadata_cache);
-        metadata_cache = NULL;
+free_metadata_cache(void)
+{
+    if (metadata_cache == NULL) {
+        return;
     }
+
+    g_hash_table_destroy(metadata_cache);
+    metadata_cache = NULL;
 }
 
 static void
-init_metadata_cache(void) {
-    if (metadata_cache == NULL) {
-        metadata_cache = pcmk__strkey_table(free, free);
+init_metadata_cache(void)
+{
+    if (metadata_cache != NULL) {
+        return;
     }
+
+    metadata_cache = pcmk__strkey_table(free, free);
 }
 
 int
@@ -1632,18 +1646,22 @@ free_topology_entry(gpointer data)
 void
 free_topology_list(void)
 {
-    if (topology != NULL) {
-        g_hash_table_destroy(topology);
-        topology = NULL;
+    if (topology == NULL) {
+        return;
     }
+
+    g_hash_table_destroy(topology);
+    topology = NULL;
 }
 
 void
 init_topology_list(void)
 {
-    if (topology == NULL) {
-        topology = pcmk__strkey_table(NULL, free_topology_entry);
+    if (topology != NULL) {
+        return;
     }
+
+    topology = pcmk__strkey_table(NULL, free_topology_entry);
 }
 
 char *
