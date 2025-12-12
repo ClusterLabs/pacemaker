@@ -2143,16 +2143,18 @@ localhost_is_eligible_with_remap(const fenced_device_t *device,
 
     // Check potential remaps
 
-    if (pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
-        /* "reboot" might get remapped to "off" then "on", so even if reboot is
-         * disallowed, return true if either of those is allowed. We'll report
-         * the disallowed actions with the results. We never allow self-fencing
-         * for remapped "on" actions because the target is off at that point.
-         */
-        if (localhost_is_eligible(device, PCMK_ACTION_OFF, target, allow_self)
-            || localhost_is_eligible(device, PCMK_ACTION_ON, target, FALSE)) {
-            return true;
-        }
+    if (!pcmk__str_eq(action, PCMK_ACTION_REBOOT, pcmk__str_none)) {
+        return false;
+    }
+
+    /* "reboot" might get remapped to "off" then "on", so even if reboot is
+     * disallowed, return true if either of those is allowed. We'll report
+     * the disallowed actions with the results. We never allow self-fencing
+     * for remapped "on" actions because the target is off at that point.
+     */
+    if (localhost_is_eligible(device, PCMK_ACTION_OFF, target, allow_self)
+        || localhost_is_eligible(device, PCMK_ACTION_ON, target, FALSE)) {
+        return true;
     }
 
     return false;
