@@ -1003,35 +1003,44 @@ int
 get_agent_metadata(const char *agent, xmlNode ** metadata)
 {
     char *buffer = NULL;
+    stonith_t *st = NULL;
+    int rc = pcmk_ok;
 
     if (metadata == NULL) {
         return EINVAL;
     }
+
     *metadata = NULL;
+
     if (pcmk__str_eq(agent, STONITH_WATCHDOG_AGENT_INTERNAL, pcmk__str_none)) {
         return pcmk_rc_ok;
     }
+
     init_metadata_cache();
     buffer = g_hash_table_lookup(metadata_cache, agent);
-    if (buffer == NULL) {
-        stonith_t *st = stonith__api_new();
-        int rc;
 
-        if (st == NULL) {
-            crm_warn("Could not get agent meta-data: "
-                     "API memory allocation failed");
-            return EAGAIN;
-        }
-        rc = st->cmds->metadata(st, st_opt_sync_call, agent,
-                                NULL, &buffer, 10);
-        stonith__api_free(st);
-        if (rc || !buffer) {
-            crm_err("Could not retrieve metadata for fencing agent %s", agent);
-            return EAGAIN;
-        }
-        g_hash_table_replace(metadata_cache, pcmk__str_copy(agent), buffer);
+    if (buffer != NULL) {
+        goto done;
     }
 
+    st = stonith__api_new();
+
+    if (st == NULL) {
+        crm_warn("Could not get agent meta-data: API memory allocation failed");
+        return EAGAIN;
+    }
+
+    rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
+    stonith__api_free(st);
+
+    if ((rc != pcmk_ok) || (buffer == NULL)) {
+        crm_err("Could not retrieve metadata for fencing agent %s", agent);
+        return EAGAIN;
+    }
+
+    g_hash_table_replace(metadata_cache, pcmk__str_copy(agent), buffer);
+
+done:
     *metadata = pcmk__xml_parse(buffer);
     return pcmk_rc_ok;
 }
