@@ -2823,14 +2823,17 @@ next_required_device(async_command_t *cmd)
         fenced_device_t *next_device = g_hash_table_lookup(device_table,
                                                            iter->data);
 
-        if (is_action_required(cmd->action, next_device)) {
-            /* This is only called for successful actions, so it's OK to skip
-             * non-required devices.
-             */
-            cmd->next_device_iter = iter->next;
-            return next_device;
+        if (!is_action_required(cmd->action, next_device)) {
+            continue;
         }
+
+        /* This is only called for successful actions, so it's OK to skip
+         * non-required devices.
+         */
+        cmd->next_device_iter = iter->next;
+        return next_device;
     }
+
     return NULL;
 }
 
