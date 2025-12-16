@@ -1394,7 +1394,7 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
  * \internal
  * \brief Returns true if any key in first is not in second or second has a different value for key
  */
-static int
+static bool
 device_params_diff(GHashTable *first, GHashTable *second) {
     char *key = NULL;
     char *value = NULL;
@@ -1402,9 +1402,9 @@ device_params_diff(GHashTable *first, GHashTable *second) {
 
     g_hash_table_iter_init(&gIter, first);
     while (g_hash_table_iter_next(&gIter, (void **)&key, (void **)&value)) {
-        char *other_value = NULL;
+        const char *other_value = NULL;
 
-        if ((strstr(key, "CRM_meta") == key)
+        if (g_str_has_prefix(key, CRM_META "_")
             || pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_none)) {
             continue;
         }
@@ -1413,12 +1413,13 @@ device_params_diff(GHashTable *first, GHashTable *second) {
 
         if ((other_value == NULL)
             || !pcmk__str_eq(other_value, value, pcmk__str_casei)) {
-            crm_trace("Different value for %s: %s != %s", key, other_value, value);
-            return 1;
+            crm_trace("Different value for %s: %s != %s", key,
+                      pcmk__s(other_value, "<null>"), value);
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 /*!
