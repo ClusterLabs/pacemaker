@@ -679,8 +679,7 @@ stonith_device_execute(fenced_device_t *device)
     stonith_action_t *action = NULL;
     int active_cmds = 0;
     int action_limit = 0;
-    GList *gIter = NULL;
-    GList *gIterNext = NULL;
+    GList *iter = NULL;
 
     CRM_CHECK(device != NULL, return FALSE);
 
@@ -693,10 +692,11 @@ stonith_device_execute(fenced_device_t *device)
         return TRUE;
     }
 
-    for (gIter = device->pending_ops; gIter != NULL; gIter = gIterNext) {
-        async_command_t *pending_op = gIter->data;
+    iter = device->pending_ops;
 
-        gIterNext = gIter->next;
+    while (iter != NULL) {
+        GList *next = iter->next;
+        async_command_t *pending_op = iter->data;
 
         if ((pending_op != NULL) && (pending_op->delay_id != 0)) {
             crm_trace("Operation '%s'%s%s using %s was asked to run too early, "
@@ -705,11 +705,12 @@ stonith_device_execute(fenced_device_t *device)
                       ((pending_op->target == NULL)? "" : " targeting "),
                       pcmk__s(pending_op->target, ""),
                       device->id, pending_op->start_delay);
+            iter = next;
             continue;
         }
 
-        device->pending_ops = g_list_remove_link(device->pending_ops, gIter);
-        g_list_free_1(gIter);
+        device->pending_ops = g_list_remove_link(device->pending_ops, iter);
+        g_list_free_1(iter);
 
         cmd = pending_op;
         break;
@@ -886,14 +887,13 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
 static void
 free_device(gpointer data)
 {
-    GList *gIter = NULL;
     fenced_device_t *device = data;
 
     g_hash_table_destroy(device->params);
     g_hash_table_destroy(device->aliases);
 
-    for (gIter = device->pending_ops; gIter != NULL; gIter = gIter->next) {
-        async_command_t *cmd = gIter->data;
+    for (GList *iter = device->pending_ops; iter != NULL; iter = iter->next) {
+        async_command_t *cmd = iter->data;
 
         crm_warn("Removal of device '%s' purged operation '%s'", device->id, cmd->action);
         report_internal_result(cmd, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
@@ -1064,7 +1064,6 @@ read_action_metadata(fenced_device_t *device)
 {
     xmlXPathObject *xpath = NULL;
     int max = 0;
-    int lpc = 0;
 
     if (device->agent_metadata == NULL) {
         return;
@@ -1079,9 +1078,9 @@ read_action_metadata(fenced_device_t *device)
         return;
     }
 
-    for (lpc = 0; lpc < max; lpc++) {
+    for (int i = 0; i < max; i++) {
         const char *action = NULL;
-        xmlNode *match = pcmk__xpath_result(xpath, lpc);
+        xmlNode *match = pcmk__xpath_result(xpath, i);
 
         CRM_LOG_ASSERT(match != NULL);
         if(match == NULL) { continue; };
@@ -1612,14 +1611,14 @@ stonith_device_remove(const char *id, bool from_cib)
 static int
 count_active_levels(const stonith_topology_t *tp)
 {
-    int lpc = 0;
     int count = 0;
 
-    for (lpc = 0; lpc < ST__LEVEL_COUNT; lpc++) {
-        if (tp->levels[lpc] != NULL) {
+    for (int i = 0; i < ST__LEVEL_COUNT; i++) {
+        if (tp->levels[i] != NULL) {
             count++;
         }
     }
+
     return count;
 }
 
@@ -1628,13 +1627,12 @@ free_topology_entry(gpointer data)
 {
     stonith_topology_t *tp = data;
 
-    int lpc = 0;
-
-    for (lpc = 0; lpc < ST__LEVEL_COUNT; lpc++) {
-        if (tp->levels[lpc] != NULL) {
-            g_list_free_full(tp->levels[lpc], free);
+    for (int i = 0; i < ST__LEVEL_COUNT; i++) {
+        if (tp->levels[i] != NULL) {
+            g_list_free_full(tp->levels[i], free);
         }
     }
+
     free(tp->target);
     free(tp->target_value);
     free(tp->target_pattern);
@@ -1955,13 +1953,12 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
     size_t delim_len = delim?strlen(delim):0;
     size_t alloc_size = 1 + (max?((max-1+(terminate_with_delim?1:0))*delim_len):0);
     char *rv;
-    GList *gIter;
 
     char *pos = NULL;
     const char *lead_delim = "";
 
-    for (gIter = list; gIter != NULL; gIter = gIter->next) {
-        const char *value = (const char *) gIter->data;
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
+        const char *value = (const char *) iter->data;
 
         alloc_size += strlen(value);
     }
@@ -1969,8 +1966,8 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
     rv = pcmk__assert_alloc(alloc_size, sizeof(char));
     pos = rv;
 
-    for (gIter = list; gIter != NULL; gIter = gIter->next) {
-        const char *value = (const char *) gIter->data;
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
+        const char *value = (const char *) iter->data;
 
         pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
         lead_delim = delim;
@@ -2500,7 +2497,6 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     int available_devices = 0;
     xmlNode *wrapper = NULL;
     xmlNode *list = NULL;
-    GList *lpc = NULL;
     pcmk__client_t *client = NULL;
 
     if (query->client_id != NULL) {
@@ -2517,8 +2513,8 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
     list = pcmk__xe_create(wrapper, __func__);
     pcmk__xe_set(list, PCMK__XA_ST_TARGET, query->target);
 
-    for (lpc = devices; lpc != NULL; lpc = lpc->next) {
-        fenced_device_t *device = g_hash_table_lookup(device_table, lpc->data);
+    for (const GList *iter = devices; iter != NULL; iter = iter->next) {
+        fenced_device_t *device = g_hash_table_lookup(device_table, iter->data);
         const char *action = query->action;
         xmlNode *dev = NULL;
 
@@ -2837,7 +2833,8 @@ reply_to_duplicates(async_command_t *cmd, const pcmk__action_result_t *result,
 static fenced_device_t *
 next_required_device(async_command_t *cmd)
 {
-    for (GList *iter = cmd->next_device_iter; iter != NULL; iter = iter->next) {
+    for (const GList *iter = cmd->next_device_iter; iter != NULL;
+         iter = iter->next) {
         fenced_device_t *next_device = g_hash_table_lookup(device_table,
                                                            iter->data);
 
@@ -3190,13 +3187,12 @@ remove_relay_op(xmlNode * request)
 
     /* If the operation to be deleted is registered as a duplicate, delete the registration. */
     while (g_hash_table_iter_next(&iter, NULL, (void **)&list_op)) {
-        GList *dup_iter = NULL;
-
         if (list_op == relay_op) {
             continue;
         }
 
-        for (dup_iter = list_op->duplicates; dup_iter != NULL; dup_iter = dup_iter->next) {
+        for (GList *dup_iter = list_op->duplicates; dup_iter != NULL;
+             dup_iter = dup_iter->next) {
             remote_fencing_op_t *other = dup_iter->data;
 
             if (other != relay_op) {
