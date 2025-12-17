@@ -26,7 +26,7 @@ disabled_null_value(void **state)
 static void
 enabled_true_value(void **state)
 {
-    // Return true if option value is true, with or without daemon name
+    // Return true if option value parses to true, with or without daemon name
     pcmk__mock_getenv = true;
 
     expect_string(__wrap_getenv, name, ENV_VAR);
@@ -34,7 +34,15 @@ enabled_true_value(void **state)
     assert_true(pcmk__env_option_enabled(NULL, OPTION));
 
     expect_string(__wrap_getenv, name, ENV_VAR);
+    will_return(__wrap_getenv, "1");
+    assert_true(pcmk__env_option_enabled(NULL, OPTION));
+
+    expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, "true");
+    assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+
+    expect_string(__wrap_getenv, name, ENV_VAR);
+    will_return(__wrap_getenv, "1");
     assert_true(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     pcmk__mock_getenv = false;
@@ -43,7 +51,7 @@ enabled_true_value(void **state)
 static void
 disabled_false_value(void **state)
 {
-    // Return false if option value is false (no daemon list)
+    // Return false if option value parses to false, with or without daemon name
     pcmk__mock_getenv = true;
 
     expect_string(__wrap_getenv, name, ENV_VAR);
@@ -51,7 +59,15 @@ disabled_false_value(void **state)
     assert_false(pcmk__env_option_enabled(NULL, OPTION));
 
     expect_string(__wrap_getenv, name, ENV_VAR);
+    will_return(__wrap_getenv, "0");
+    assert_false(pcmk__env_option_enabled(NULL, OPTION));
+
+    expect_string(__wrap_getenv, name, ENV_VAR);
     will_return(__wrap_getenv, "false");
+    assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
+
+    expect_string(__wrap_getenv, name, ENV_VAR);
+    will_return(__wrap_getenv, "0");
     assert_false(pcmk__env_option_enabled(PCMK__SERVER_EXECD, OPTION));
 
     pcmk__mock_getenv = false;
