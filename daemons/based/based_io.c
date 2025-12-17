@@ -171,7 +171,7 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     sigfile = pcmk__assert_asprintf("%s.sig", file);
     if (pcmk__daemon_can_write(dir, file) == FALSE
             || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
-        cib_status = -EACCES;
+        cib_status = EACCES;
         return NULL;
     }
 
@@ -179,7 +179,7 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     sigfilepath = pcmk__assert_asprintf("%s/%s", dir, sigfile);
     free(sigfile);
 
-    cib_status = pcmk_ok;
+    cib_status = pcmk_rc_ok;
     root = retrieveCib(filename, sigfilepath);
     free(filename);
     free(sigfilepath);
@@ -271,7 +271,7 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     }
 
     if (!pcmk__configured_schema_validates(root)) {
-        cib_status = -pcmk_err_schema_validation;
+        cib_status = pcmk_rc_schema_validation;
     }
     return root;
 }
@@ -302,7 +302,7 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
         pcmk__assert(new_cib != saved_cib);
         the_cib = new_cib;
         pcmk__xml_free(saved_cib);
-        if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
+        if (cib_writes_enabled && cib_status == pcmk_rc_ok && to_disk) {
             crm_debug("Triggering CIB write for %s op", op);
             mainloop_set_trigger(cib_writer);
         }

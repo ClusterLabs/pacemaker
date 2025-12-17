@@ -33,7 +33,7 @@
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
 bool cib_shutdown_flag = false;
-int cib_status = pcmk_ok;
+int cib_status = pcmk_rc_ok;
 
 pcmk_cluster_t *crm_cluster = NULL;
 
