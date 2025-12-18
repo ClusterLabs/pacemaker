@@ -551,32 +551,20 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
     return pcmk_ok;
 }
 
-static bool
-update_results(xmlNode *failed, xmlNode *target, const char *operation,
-               int return_code)
+static void
+update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
 {
-    xmlNode *xml_node = NULL;
-    bool was_error = false;
-    const char *error_msg = NULL;
+    xmlNode *failed_update = pcmk__xe_create(failed, PCMK__XE_FAILED_UPDATE);
 
-    if (return_code != pcmk_ok) {
-        error_msg = pcmk_strerror(return_code);
+    pcmk__xml_copy(failed_update, target);
 
-        was_error = true;
-        xml_node = pcmk__xe_create(failed, PCMK__XE_FAILED_UPDATE);
-        pcmk__xml_copy(xml_node, target);
+    pcmk__xe_set(failed_update, PCMK_XA_ID, pcmk__xe_id(target));
+    pcmk__xe_set(failed_update, PCMK_XA_OBJECT_TYPE,
+                 (const char *) target->name);
+    pcmk__xe_set(failed_update, PCMK_XA_OPERATION, operation);
+    pcmk__xe_set(failed_update, PCMK_XA_REASON, pcmk_strerror(rc));
 
-        pcmk__xe_set(xml_node, PCMK_XA_ID, pcmk__xe_id(target));
-        pcmk__xe_set(xml_node, PCMK_XA_OBJECT_TYPE,
-                     (const char *) target->name);
-        pcmk__xe_set(xml_node, PCMK_XA_OPERATION, operation);
-        pcmk__xe_set(xml_node, PCMK_XA_REASON, error_msg);
-
-        pcmk__warn("Action %s failed: %s (cde=%d)", operation, error_msg,
-                   return_code);
-    }
-
-    return was_error;
+    pcmk__warn("Action %s failed: %s", operation, pcmk_strerror(rc));
 }
 
 int
@@ -621,14 +609,17 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
         for (a_child = pcmk__xml_first_child(input); a_child != NULL;
              a_child = pcmk__xml_next(a_child)) {
             result = add_cib_object(update_section, a_child);
-            if (update_results(failed, a_child, op, result)) {
+            if (result != pcmk_ok) {
+                update_results(failed, a_child, op, result);
                 break;
             }
         }
 
     } else {
         result = add_cib_object(update_section, input);
-        update_results(failed, input, op, result);
+        if (result != pcmk_ok) {
+            update_results(failed, input, op, result);
+        }
     }
 
     if ((result == pcmk_ok) && (failed->children != NULL)) {
