@@ -202,32 +202,19 @@ fake_text_err(pcmk__output_t *out, const char *format, ...)
     }
 }
 
-pcmk__output_t *
-pcmk__mk_fake_text_output(char **argv)
+void
+pcmk__output_setup_fake_text(pcmk__output_t *out)
 {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
-
-    if (retval == NULL) {
-        return NULL;
-    }
-
-    retval->fmt_name = "text";
-
-    retval->init = fake_text_init;
-    retval->free_priv = fake_text_free_priv;
-
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    retval->err = fake_text_err;
-
-    return retval;
+    out->fmt_name = "text";
+    out->init = fake_text_init;
+    out->free_priv = fake_text_free_priv;
+    out->err = fake_text_err;
 }
 
 int
 pcmk__output_test_setup_group(void **state)
 {
-    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
+    pcmk__register_format(NULL, "text", pcmk__output_setup_fake_text, NULL);
     return 0;
 }
 
@@ -268,16 +255,16 @@ pcmk__expect_fake_text_err(void)
     expect_function_call(fake_text_err);
 }
 
-pcmk__output_t *
-pcmk__output_null_create1(char **argv)
+void
+pcmk__output_setup_dummy1(pcmk__output_t *out)
 {
-    return NULL;
+    return;
 }
 
-pcmk__output_t *
-pcmk__output_null_create2(char **argv)
+void
+pcmk__output_setup_dummy2(pcmk__output_t *out)
 {
-    return NULL;
+    return;
 }
 
 int

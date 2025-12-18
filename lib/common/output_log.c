@@ -300,42 +300,31 @@ log_prompt(const char *prompt, bool echo, char **dest) {
     /* This function intentionally left blank */
 }
 
-pcmk__output_t *
-pcmk__mk_log_output(char **argv) {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+void
+pcmk__output_setup_log(pcmk__output_t *out)
+{
+    out->fmt_name = "log";
 
-    if (retval == NULL) {
-        return NULL;
-    }
+    out->init = log_init;
+    out->free_priv = log_free_priv;
+    out->finish = log_finish;
+    out->reset = log_reset;
 
-    retval->fmt_name = "log";
-    retval->request = pcmk__quote_cmdline(argv);
+    out->subprocess_output = log_subprocess_output;
+    out->version = log_version;
+    out->info = log_info;
+    out->transient = log_transient;
+    out->err = log_err;
+    out->output_xml = log_output_xml;
 
-    retval->init = log_init;
-    retval->free_priv = log_free_priv;
-    retval->finish = log_finish;
-    retval->reset = log_reset;
+    out->begin_list = log_begin_list;
+    out->list_item = log_list_item;
+    out->end_list = log_end_list;
 
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    retval->subprocess_output = log_subprocess_output;
-    retval->version = log_version;
-    retval->info = log_info;
-    retval->transient = log_transient;
-    retval->err = log_err;
-    retval->output_xml = log_output_xml;
-
-    retval->begin_list = log_begin_list;
-    retval->list_item = log_list_item;
-    retval->end_list = log_end_list;
-
-    retval->is_quiet = log_is_quiet;
-    retval->spacer = log_spacer;
-    retval->progress = log_progress;
-    retval->prompt = log_prompt;
-
-    return retval;
+    out->is_quiet = log_is_quiet;
+    out->spacer = log_spacer;
+    out->progress = log_progress;
+    out->prompt = log_prompt;
 }
 
 /*!
