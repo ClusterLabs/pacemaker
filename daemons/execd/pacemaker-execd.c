@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,7 +35,6 @@
 #endif
 
 static GMainLoop *mainloop = NULL;
-static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *fencer_api = NULL;
 time_t start_time;
 
@@ -179,23 +178,18 @@ exit_executor(void)
     pcmk__info("Terminating with %d client%s", nclients,
                pcmk__plural_s(nclients));
     stonith__api_free(fencer_api);
-
-    if (ipcs) {
-        mainloop_del_ipc_server(ipcs);
-    }
+    execd_ipc_cleanup();
 
 #ifdef PCMK__COMPILE_REMOTE
     execd_stop_tls_server();
     ipc_proxy_cleanup();
 #endif
 
-    pcmk__client_cleanup();
-    execd_unregister_handlers();
-
     if (mainloop) {
         lrmd_drain_alerts(mainloop);
     }
 
+    execd_unregister_handlers();
     g_hash_table_destroy(rsc_list);
 
     // @TODO End mainloop instead so all cleanup is done
@@ -431,13 +425,8 @@ main(int argc, char **argv)
     }
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
-    if (ipcs == NULL) {
-        pcmk__err("Failed to create IPC server: shutting down and inhibiting "
-                  "respawn");
-        exit_code = CRM_EX_FATAL;
-        goto done;
-    }
+
+    execd_ipc_init();
 
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {

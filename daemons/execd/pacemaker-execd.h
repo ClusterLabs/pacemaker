@@ -20,8 +20,6 @@
 extern GHashTable *rsc_list;
 extern time_t start_time;
 
-extern struct qb_ipcs_service_handlers lrmd_ipc_callbacks;
-
 typedef struct lrmd_rsc_s {
     char *rsc_id;
     char *class;
@@ -101,6 +99,9 @@ void lrmd_drain_alerts(GMainLoop *mloop);
 
 bool execd_invalid_msg(xmlNode *msg);
 void execd_handle_request(pcmk__request_t *request);
+
+void execd_ipc_init(void);
+void execd_ipc_cleanup(void);
 
 xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);
 void execd_send_generic_notify(int rc, xmlNode *request);
