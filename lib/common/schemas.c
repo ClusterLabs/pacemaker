@@ -173,24 +173,16 @@ version_from_filename(const char *filename, pcmk__schema_version_t *version)
 static int
 schema_filter(const struct dirent *a)
 {
-    int rc = 0;
     pcmk__schema_version_t version = SCHEMA_ZERO;
 
-    if (!g_str_has_prefix(a->d_name, "pacemaker-")) {
-        // pcmk__trace("%s - wrong prefix", a->d_name);
+    if (g_str_has_prefix(a->d_name, "pacemaker-")
+        && g_str_has_suffix(a->d_name, ".rng")
+        && version_from_filename(a->d_name, &version)) {
 
-    } else if (!g_str_has_suffix(a->d_name, ".rng")) {
-        // pcmk__trace("%s - wrong suffix", a->d_name);
-
-    } else if (!version_from_filename(a->d_name, &version)) {
-        // pcmk__trace("%s - wrong format", a->d_name);
-
-    } else {
-        // pcmk__debug("%s - candidate", a->d_name);
-        rc = 1;
+        return 1;
     }
 
-    return rc;
+    return 0;
 }
 
 static int
