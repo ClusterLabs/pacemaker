@@ -626,13 +626,13 @@ do_state_transition(enum crmd_fsa_state cur_state,
             controld_purge_fencing_cleanup();
 
             if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-                pcmk__info("(Re)Issuing shutdown request now" " that we have a "
+                pcmk__info("(Re)Issuing shutdown request now that we have a "
                            "new DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
             CRM_LOG_ASSERT(controld_globals.dc_name != NULL);
             if (controld_globals.dc_name == NULL) {
-                pcmk__err("Reached S_NOT_DC without a DC" " being recorded");
+                pcmk__err("Reached S_NOT_DC without a DC being recorded");
             }
             break;
 
@@ -679,8 +679,8 @@ do_state_transition(enum crmd_fsa_state cur_state,
         case S_IDLE:
             CRM_LOG_ASSERT(AM_I_DC);
             if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-                pcmk__info("(Re)Issuing shutdown request now" " that we are "
-                           "the DC");
+                pcmk__info("(Re)Issuing shutdown request now that we are the "
+                           "DC");
                 controld_set_fsa_action_flags(A_SHUTDOWN_REQ);
             }
             controld_start_recheck_timer();

@@ -308,7 +308,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     set_config_flag(scheduler, PCMK_OPT_SYMMETRIC_CLUSTER,
                     pcmk__sched_symmetric_cluster);
     if (pcmk__is_set(scheduler->flags, pcmk__sched_symmetric_cluster)) {
-        pcmk__debug("Cluster is symmetric" " - resources can run anywhere by "
+        pcmk__debug("Cluster is symmetric - resources can run anywhere by "
                     "default");
     }
 

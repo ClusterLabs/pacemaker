@@ -139,8 +139,8 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             pcmk__debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
             pcmk__log_xml_trace(op_reply, "Old reply");
         } else {
-            pcmk__err("Received a __future__ reply:" " %d (wanted %d)",
-                      reply_id, msg_id);
+            pcmk__err("Received a __future__ reply: %d (wanted %d)", reply_id,
+                      msg_id);
         }
 
         pcmk__xml_free(op_reply);
