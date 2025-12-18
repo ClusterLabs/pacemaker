@@ -145,33 +145,38 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
                  pcmk__s(stonith__exit_reason(data), "unspecified reason"));
 }
 
-#define single_test(cmd, str, num_notifications, expected_rc) \
-{ \
-    int rc = 0; \
-    rc = cmd; \
-    expected_notifications = 0;  \
-    if (num_notifications) { \
-        expected_notifications = num_notifications; \
-        dispatch_helper(500);  \
-    } \
-    if (rc != expected_rc) { \
-        pcmk__err("FAILURE - expected rc %d != %d(%s) for cmd - %s",        \
-                  expected_rc, rc, pcmk_strerror(rc), str);                 \
-        crm_exit(CRM_EX_ERROR); \
-    } else if (expected_notifications) { \
-        pcmk__err("FAILURE - expected %d notifications, got only %d for "   \
-                  "cmd - %s",                                               \
-                  num_notifications,                                        \
-                  (num_notifications - expected_notifications), str);       \
-        crm_exit(CRM_EX_ERROR); \
-    } else { \
-        if (verbose) {                   \
+#define single_test(cmd, str, num_notifications, expected_rc)               \
+    do {                                                                    \
+        int rc = cmd;                                                       \
+                                                                            \
+        expected_notifications = 0;                                         \
+                                                                            \
+        if (num_notifications != 0) {                                       \
+            expected_notifications = num_notifications;                     \
+            dispatch_helper(500);                                           \
+        }                                                                   \
+                                                                            \
+        if (rc != expected_rc) {                                            \
+            pcmk__err("FAILURE - expected rc %d != %d(%s) for cmd - %s",    \
+                      expected_rc, rc, pcmk_strerror(rc), str);             \
+            crm_exit(CRM_EX_ERROR);                                         \
+        }                                                                   \
+                                                                            \
+        if (expected_notifications != 0) {                                  \
+            /* @TODO Make this message's logic more clear */                \
+            pcmk__err("FAILURE - expected %d notifications, got only %d "   \
+                      "for cmd - %s",                                       \
+                      num_notifications,                                    \
+                      (num_notifications - expected_notifications), str);   \
+            crm_exit(CRM_EX_ERROR);                                         \
+        }                                                                   \
+                                                                            \
+        if (verbose) {                                                      \
             pcmk__info("SUCCESS - %s: %d", str, rc);                        \
-        } else {   \
+        } else {                                                            \
             pcmk__debug("SUCCESS - %s: %d", str, rc);                       \
-        }                          \
-    } \
-}\
+        }                                                                   \
+    } while (0)
 
 static void
 run_fence_failure_test(void)
