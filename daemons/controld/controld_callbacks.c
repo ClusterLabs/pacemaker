@@ -63,7 +63,6 @@ crmd_ha_msg_filter(xmlNode * msg)
         }
     }
 
-    // pcmk__log_xml_trace(msg, "HA[inbound]");
     route_message(C_HA_MESSAGE, msg);
 
   done:
