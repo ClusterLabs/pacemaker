@@ -333,11 +333,10 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
     }
 
     patt = pcmk__assert_asprintf("/%s[@" PCMK_XA_ID "=", node);
-    start = strstr(xpath, patt);
 
-    if (!start) {
-        free(patt);
-        return retval;
+    start = strstr(xpath, patt);
+    if (start == NULL) {
+        goto done;
     }
 
     start += strlen(patt);
@@ -347,6 +346,7 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
     pcmk__assert(end != NULL);
     retval = strndup(start, end-start);
 
+done:
     free(patt);
     return retval;
 }

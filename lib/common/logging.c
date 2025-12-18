@@ -15,6 +15,8 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#include <inttypes.h>               // PRIu32
+#include <stdint.h>                 // uint32_t
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -45,6 +47,11 @@ typedef time_t log_time_t;
 unsigned int crm_log_level = LOG_INFO;
 unsigned int crm_trace_nonlog = 0;
 bool pcmk__is_daemon = false;
+
+static gchar **trace_blackbox = NULL;
+static gchar **trace_files = NULL;
+static gchar **trace_formats = NULL;
+static gchar **trace_functions = NULL;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
 static guint pcmk__log_id = 0;
@@ -589,116 +596,151 @@ crm_quark_to_string(uint32_t tag)
 }
 
 static void
-crm_log_filter_source(int source, const char *trace_files, const char *trace_fns,
-                      const char *trace_fmts, const char *trace_tags, const char *trace_blackbox,
-                      struct qb_log_callsite *cs)
+crm_log_filter_source(int source, struct qb_log_callsite *cs)
 {
     if (qb_log_ctl(source, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         return;
-    } else if (cs->tags != crm_trace_nonlog && source == QB_LOG_BLACKBOX) {
+    }
+
+    if ((cs->tags != crm_trace_nonlog) && (source == QB_LOG_BLACKBOX)) {
         /* Blackbox gets everything if enabled */
         qb_bit_set(cs->targets, source);
+        return;
+    }
 
-    } else if (source == blackbox_trigger && blackbox_trigger > 0) {
+    if ((source == blackbox_trigger) && (blackbox_trigger > 0)) {
         /* Should this log message result in the blackbox being dumped */
         if (cs->priority <= LOG_ERR) {
             qb_bit_set(cs->targets, source);
 
-        } else if (trace_blackbox) {
+        } else if (trace_blackbox != NULL) {
             char *key = pcmk__assert_asprintf("%s:%d", cs->function,
                                               cs->lineno);
 
-            if (strstr(trace_blackbox, key) != NULL) {
+            if (pcmk__g_strv_contains(trace_blackbox, key)) {
                 qb_bit_set(cs->targets, source);
             }
             free(key);
         }
+        return;
+    }
 
-    } else if (source == QB_LOG_SYSLOG) {       /* No tracing to syslog */
-        if (cs->priority <= crm_log_priority && cs->priority <= crm_log_level) {
+    if (source == QB_LOG_SYSLOG) {
+        // No tracing to syslog
+        if ((cs->priority <= crm_log_priority)
+            && (cs->priority <= crm_log_level)) {
+
             qb_bit_set(cs->targets, source);
         }
-        /* Log file tracing options... */
-    } else if (cs->priority <= crm_log_level) {
-        qb_bit_set(cs->targets, source);
-    } else if (trace_files && strstr(trace_files, cs->filename) != NULL) {
-        qb_bit_set(cs->targets, source);
-    } else if (trace_fns && strstr(trace_fns, cs->function) != NULL) {
-        qb_bit_set(cs->targets, source);
-    } else if (trace_fmts && strstr(trace_fmts, cs->format) != NULL) {
-        qb_bit_set(cs->targets, source);
-    } else if (trace_tags
-               && cs->tags != 0
-               && cs->tags != crm_trace_nonlog && g_quark_to_string(cs->tags) != NULL) {
-        qb_bit_set(cs->targets, source);
+        return;
     }
-}
 
-#ifndef HAVE_STRCHRNUL
-/* strchrnul() is a GNU extension. If not present, use our own definition.
- * The GNU version returns char*, but we only need it to be const char*.
- */
-static const char *
-strchrnul(const char *s, int c)
-{
-    while ((*s != c) && (*s != '\0')) {
-        ++s;
+    if (cs->priority <= crm_log_level) {
+        qb_bit_set(cs->targets, source);
+        return;
     }
-    return s;
+
+    if ((trace_files != NULL)
+        && pcmk__g_strv_contains(trace_files, cs->filename)) {
+
+        qb_bit_set(cs->targets, source);
+        return;
+    }
+
+    if ((trace_functions != NULL)
+        && pcmk__g_strv_contains(trace_functions, cs->function)) {
+
+        qb_bit_set(cs->targets, source);
+        return;
+    }
+
+    if ((trace_formats != NULL)
+        && pcmk__g_strv_contains(trace_formats, cs->format)) {
+
+        qb_bit_set(cs->targets, source);
+        return;
+    }
+
+    if ((cs->tags != 0) && (cs->tags != crm_trace_nonlog)
+        && (g_quark_to_string(cs->tags) != NULL)) {
+
+        qb_bit_set(cs->targets, source);
+    }
 }
-#endif
 
 static void
 crm_log_filter(struct qb_log_callsite *cs)
 {
-    int lpc = 0;
-    static int need_init = 1;
-    static const char *trace_fns = NULL;
-    static const char *trace_tags = NULL;
-    static const char *trace_fmts = NULL;
-    static const char *trace_files = NULL;
-    static const char *trace_blackbox = NULL;
-
-    if (need_init) {
-        need_init = 0;
-        trace_fns = pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS);
-        trace_fmts = pcmk__env_option(PCMK__ENV_TRACE_FORMATS);
-        trace_tags = pcmk__env_option(PCMK__ENV_TRACE_TAGS);
-        trace_files = pcmk__env_option(PCMK__ENV_TRACE_FILES);
-        trace_blackbox = pcmk__env_option(PCMK__ENV_TRACE_BLACKBOX);
-
-        if (trace_tags != NULL) {
-            uint32_t tag;
-            const char *offset = NULL;
-            const char *next = trace_tags;
-
-            // @TODO Use g_strsplit() to simplify
-            do {
-                char *token = NULL;
-
-                offset = next;
-                next = strchrnul(offset, ',');
-
-                token = pcmk__assert_asprintf("%.*s", (int) (next - offset),
-                                              offset);
-                tag = g_quark_from_string(token);
-                crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);
-
-                free(token);
-
-                if (next[0] != 0) {
-                    next++;
-                }
-
-            } while (next != NULL && next[0] != 0);
-        }
-    }
-
     cs->targets = 0;            /* Reset then find targets to enable */
-    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        crm_log_filter_source(lpc, trace_files, trace_fns, trace_fmts, trace_tags, trace_blackbox,
-                              cs);
+    for (int i = QB_LOG_SYSLOG; i < QB_LOG_TARGET_MAX; i++) {
+        crm_log_filter_source(i, cs);
     }
+}
+
+/*!
+ * \internal
+ * \brief Parse environment variables specifying which objects to trace
+ */
+static void
+init_tracing(void)
+{
+    const char *blackbox = pcmk__env_option(PCMK__ENV_TRACE_BLACKBOX);
+    const char *files = pcmk__env_option(PCMK__ENV_TRACE_FILES);
+    const char *formats = pcmk__env_option(PCMK__ENV_TRACE_FORMATS);
+    const char *functions = pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS);
+    const char *tags = pcmk__env_option(PCMK__ENV_TRACE_TAGS);
+
+    if (blackbox != NULL) {
+        trace_blackbox = g_strsplit(blackbox, ",", 0);
+    }
+
+    if (files != NULL) {
+        trace_files = g_strsplit(files, ",", 0);
+    }
+
+    if (formats != NULL) {
+        trace_formats = g_strsplit(formats, ",", 0);
+    }
+
+    if (functions != NULL) {
+        trace_functions = g_strsplit(functions, ",", 0);
+    }
+
+    if (tags != NULL) {
+        gchar **trace_tags = g_strsplit(tags, ",", 0);
+
+        for (gchar **tag = trace_tags; *tag != NULL; tag++) {
+            if (pcmk__str_empty(*tag)) {
+                continue;
+            }
+
+            crm_info("Created GQuark %lld from token '%s' in '%s'",
+                     (long long) g_quark_from_string(*tag), *tag, tags);
+        }
+
+        // We have the GQuarks, so we don't need the array anymore
+        g_strfreev(trace_tags);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free arrays of parsed trace objects
+ */
+static void
+cleanup_tracing(void)
+{
+    g_strfreev(trace_blackbox);
+    trace_blackbox = NULL;
+
+    g_strfreev(trace_files);
+    trace_files = NULL;
+
+    g_strfreev(trace_formats);
+    trace_formats = NULL;
+
+    g_strfreev(trace_functions);
+    trace_functions = NULL;
 }
 
 gboolean
@@ -848,6 +890,8 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     }
 
     have_logging = true;
+
+    init_tracing();
 
     /* @TODO Try to create a more obvious "global Pacemaker initializer"
      * function than crm_log_preinit(), and call pcmk__schema_init() there.
@@ -1147,8 +1191,7 @@ void
 crm_log_output_fn(const char *file, const char *function, int line, int level, const char *prefix,
                   const char *output)
 {
-    const char *next = NULL;
-    const char *offset = NULL;
+    gchar **out_lines = NULL;
 
     if (level == LOG_NEVER) {
         return;
@@ -1161,17 +1204,14 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
         output = "-- empty --";
     }
 
-    next = output;
-    do {
-        offset = next;
-        next = strchrnul(offset, '\n');
-        do_crm_log_alias(level, file, function, line, "%s [ %.*s ]", prefix,
-                         (int)(next - offset), offset);
-        if (next[0] != 0) {
-            next++;
-        }
+    out_lines = g_strsplit(output, "\n", 0);
 
-    } while (next != NULL && next[0] != 0);
+    for (gchar **out_line = out_lines; *out_line != NULL; out_line++) {
+        do_crm_log_alias(level, file, function, line, "%s [ %s ]",
+                         prefix, *out_line);
+    }
+
+    g_strfreev(out_lines);
 }
 
 void
@@ -1288,16 +1328,18 @@ pcmk__log_xml_patchset_as(const char *file, const char *function, uint32_t line,
 
 /*!
  * \internal
- * \brief Free the logging library's internal log output object
+ * \brief Free the logging library's internal data structures
  */
 void
-pcmk__free_common_logger(void)
+pcmk__free_logging_data(void)
 {
     if (logger_out != NULL) {
         logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
         pcmk__output_free(logger_out);
         logger_out = NULL;
     }
+
+    cleanup_tracing();
 }
 
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context)

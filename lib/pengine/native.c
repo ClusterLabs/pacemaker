@@ -1143,10 +1143,14 @@ bool
 pe__native_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
                        bool check_parent)
 {
-    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-        pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                          pcmk__str_star_matches)
+        || pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
+
         return false;
-    } else if (check_parent && (rsc->priv->parent != NULL)) {
+    }
+
+    if (check_parent && (rsc->priv->parent != NULL)) {
         const pcmk_resource_t *up = pe__const_top_resource(rsc, true);
 
         return up->priv->fns->is_filtered(up, only_rsc, false);

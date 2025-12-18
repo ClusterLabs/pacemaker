@@ -358,9 +358,9 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
     services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                          "Unable to invoke systemd DBus method");
 
-    if (strstr(error->name, "org.freedesktop.systemd1.InvalidName")
-        || strstr(error->name, "org.freedesktop.systemd1.LoadFailed")
-        || strstr(error->name, "org.freedesktop.systemd1.NoSuchUnit")) {
+    if (dbus_error_has_name(error, "org.freedesktop.systemd1.InvalidName")
+        || dbus_error_has_name(error, "org.freedesktop.systemd1.LoadFailed")
+        || dbus_error_has_name(error, "org.freedesktop.systemd1.NoSuchUnit")) {
 
         if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
             crm_trace("Masking systemd stop failure (%s) for %s "
@@ -383,8 +383,8 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
      */
     } else if (pcmk__str_any_of(op->action, PCMK_ACTION_MONITOR,
                                 PCMK_ACTION_STATUS, NULL)
-               && strstr(error->name, DBUS_ERROR_NO_REPLY)
-               && strstr(error->message, "disconnected")) {
+               && dbus_error_has_name(error, DBUS_ERROR_NO_REPLY)
+               && (strstr(error->message, "disconnected") != NULL)) {
         services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
     }
 

@@ -803,7 +803,7 @@ pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
 /* user data for looping through remote node xpath searches */
 struct node_data {
     pcmk__output_t *out;
-    int found;
+    bool found;
     const char *field;  /* XML attribute to check for node name */
     const char *type;
     bool bash_export;
@@ -820,74 +820,88 @@ remote_node_print_helper(xmlNode *result, void *user_data)
     // node name and node id are the same for remote/guest nodes
     out->message(out, "crmadmin-node", data->type,
                  pcmk__s(name, id), id, data->bash_export);
-    data->found++;
+    data->found = true;
 }
 
-// \return Standard Pacemaker return code
+/*!
+ * \internal
+ * \brief Output list of nodes from the CIB
+ *
+ * \param[in,out] out          Output object
+ * \param[in]     types        Comma-separated list of node types to return.
+ *                             Valid types: \c "all", \c "cluster", \c "guest",
+ *                             \c "remote". A value of \c NULL is equivalent to
+ *                             \c "all".
+ * \param[in]     bash_export  If \c true, output a list of shell commands of
+ *                             the form <tt>export NODE_NAME=UUID</tt>, if the
+ *                             output format supports this
+ *
+ * \return Standard Pacemaker return code
+ */
 int
-pcmk__list_nodes(pcmk__output_t *out, const char *node_types, bool bash_export)
+pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
 {
+    struct node_data data = {
+        .out = out,
+        .found = false,
+        .bash_export = bash_export
+    };
+
+    gchar **node_types = NULL;
+    bool all = false;
     xmlNode *xml_node = NULL;
-    int rc;
+    int rc = cib__signon_query(out, NULL, &xml_node);
 
-    rc = cib__signon_query(out, NULL, &xml_node);
-
-    if (rc == pcmk_rc_ok) {
-        struct node_data data = {
-            .out = out,
-            .found = 0,
-            .bash_export = bash_export
-        };
-
-        /* PCMK_XE_NODES acts as the list's element name for CLI tools that
-         * use pcmk__output_enable_list_element.  Otherwise PCMK_XE_NODES is
-         * the value of the list's PCMK_XA_NAME attribute.
-         */
-        out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
-
-        if (!pcmk__str_empty(node_types) && strstr(node_types, "all")) {
-            node_types = NULL;
-        }
-
-        if (pcmk__str_empty(node_types) || strstr(node_types, "cluster")) {
-            data.field = PCMK_XA_ID;
-            data.type = "cluster";
-            pcmk__xpath_foreach_result(xml_node->doc,
-                                       PCMK__XP_MEMBER_NODE_CONFIG,
-                                       remote_node_print_helper, &data);
-        }
-
-        if (pcmk__str_empty(node_types) || strstr(node_types, "guest")) {
-            data.field = PCMK_XA_VALUE;
-            data.type = "guest";
-            pcmk__xpath_foreach_result(xml_node->doc,
-                                       PCMK__XP_GUEST_NODE_CONFIG,
-                                       remote_node_print_helper, &data);
-        }
-
-        if (pcmk__str_empty(node_types)
-            || pcmk__str_eq(node_types, ",|^remote", pcmk__str_regex)) {
-            data.field = PCMK_XA_ID;
-            data.type = "remote";
-            pcmk__xpath_foreach_result(xml_node->doc,
-                                       PCMK__XP_REMOTE_NODE_CONFIG,
-                                       remote_node_print_helper, &data);
-        }
-
-        out->end_list(out);
-
-        if (data.found == 0) {
-            out->info(out, "No nodes configured");
-        }
-
-        pcmk__xml_free(xml_node);
+    if (rc != pcmk_rc_ok) {
+        return rc;
     }
 
-    return rc;
+    /* PCMK_XE_NODES acts as the list's element name for CLI tools that use
+     * pcmk__output_enable_list_element(). Otherwise, PCMK_XE_NODES is the value
+     * of the list's PCMK_XA_NAME attribute.
+     */
+    out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
+
+    all = pcmk__str_empty(types);
+    if (!all) {
+        node_types = g_strsplit(types, ",", 0);
+        all = pcmk__g_strv_contains(node_types, "all");
+    }
+
+    if (all || pcmk__g_strv_contains(node_types, "cluster")) {
+        data.field = PCMK_XA_ID;
+        data.type = "cluster";
+        pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
+                                   remote_node_print_helper, &data);
+    }
+
+    if (all || pcmk__g_strv_contains(node_types, "guest")) {
+        data.field = PCMK_XA_VALUE;
+        data.type = "guest";
+        pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_GUEST_NODE_CONFIG,
+                                   remote_node_print_helper, &data);
+    }
+
+    if (all || pcmk__g_strv_contains(node_types, "remote")) {
+        data.field = PCMK_XA_ID;
+        data.type = "remote";
+        pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_REMOTE_NODE_CONFIG,
+                                   remote_node_print_helper, &data);
+    }
+
+    out->end_list(out);
+
+    if (!data.found) {
+        out->info(out, "No nodes configured");
+    }
+
+    g_strfreev(node_types);
+    pcmk__xml_free(xml_node);
+    return pcmk_rc_ok;
 }
 
 int
-pcmk_list_nodes(xmlNodePtr *xml, const char *node_types)
+pcmk_list_nodes(xmlNode **xml, const char *types)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -899,7 +913,7 @@ pcmk_list_nodes(xmlNodePtr *xml, const char *node_types)
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__list_nodes(out, node_types, FALSE);
+    rc = pcmk__list_nodes(out, types, false);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

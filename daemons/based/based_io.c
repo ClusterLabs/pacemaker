@@ -103,7 +103,7 @@ static int cib_archive_filter(const struct dirent * a)
         crm_trace("%s - wrong type (%#o)",
                   a->d_name, (unsigned int) (s.st_mode & S_IFMT));
 
-    } else if(strstr(a->d_name, "cib-") != a->d_name) {
+    } else if (!g_str_has_prefix(a->d_name, "cib-")) {
         crm_trace("%s - wrong prefix", a->d_name);
 
     } else if (g_str_has_suffix(a->d_name, ".sig")) {
@@ -163,7 +163,6 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     char *filename = NULL;
     const char *name = NULL;
     const char *value = NULL;
-    const char *use_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
 
     xmlNode *root = NULL;
     xmlNode *status = NULL;
@@ -222,9 +221,9 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
         crm_warn("Continuing with an empty configuration");
     }
 
-    if (cib_writes_enabled && (use_valgrind != NULL)
-        && (pcmk__is_true(use_valgrind)
-            || (strstr(use_valgrind, PCMK__SERVER_BASED) != NULL))) {
+    if (cib_writes_enabled
+        && pcmk__env_option_enabled(PCMK__SERVER_BASED,
+                                    PCMK__ENV_VALGRIND_ENABLED)) {
 
         cib_writes_enabled = FALSE;
         crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");

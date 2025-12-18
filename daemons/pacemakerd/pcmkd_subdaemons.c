@@ -438,27 +438,16 @@ start_child(pcmkd_child_t * child)
     bool use_valgrind = false;
     bool use_callgrind = false;
     const char *name = pcmk__server_name(child->server);
-    const char *env_valgrind = pcmk__env_option(PCMK__ENV_VALGRIND_ENABLED);
-    const char *env_callgrind = pcmk__env_option(PCMK__ENV_CALLGRIND_ENABLED);
     char *path = NULL;
 
     child->flags &= ~(child_active_before_startup | child_shutting_down);
     child->check_count = 0;
 
-    if (pcmk__is_true(env_callgrind)) {
+    if (pcmk__env_option_enabled(name, PCMK__ENV_CALLGRIND_ENABLED)) {
         use_callgrind = true;
         use_valgrind = true;
 
-    } else if ((env_callgrind != NULL)
-               && (strstr(env_callgrind, name) != NULL)) {
-        use_callgrind = true;
-        use_valgrind = true;
-
-    } else if (pcmk__is_true(env_valgrind)) {
-        use_valgrind = true;
-
-    } else if ((env_valgrind != NULL)
-               && (strstr(env_valgrind, name) != NULL)) {
+    } else if (pcmk__env_option_enabled(name, PCMK__ENV_VALGRIND_ENABLED)) {
         use_valgrind = true;
     }
 
