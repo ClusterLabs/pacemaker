@@ -1178,11 +1178,13 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     int rc = pcmk_rc_ok;
     const char *operation = NULL;
 
+    CRM_CHECK(dev != NULL, return NULL);
+
     init_stonith_remote_op_hash_table(&stonith_remote_op_list);
 
     /* If this operation is owned by another node, check to make
      * sure we haven't already created this operation. */
-    if (peer && dev) {
+    if (peer) {
         const char *op_id = pcmk__xe_get(dev, PCMK__XA_ST_REMOTE_OP);
 
         CRM_CHECK(op_id != NULL, return NULL);
@@ -1202,7 +1204,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     // Value -1 means disable any static/random fencing delays
     pcmk__xe_get_int(request, PCMK__XA_ST_DELAY, &(op->client_delay));
 
-    if (peer && dev) {
+    if (peer) {
         op->id = pcmk__xe_get_copy(dev, PCMK__XA_ST_REMOTE_OP);
     } else {
         op->id = pcmk__generate_uuid();
@@ -1259,8 +1261,8 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
 
     pcmk__trace("%s new fencing op %s ('%s' targeting %s for client %s, base "
                 "timeout %ds, %u %s expected)",
-                ((peer && (dev != NULL))? "Recorded" : "Generated"), op->id,
-                op->action, op->target, op->client_name, op->base_timeout,
+                (peer? "Recorded" : "Generated"), op->id, op->action,
+                op->target, op->client_name, op->base_timeout,
                 op->replies_expected,
                 pcmk__plural_alt(op->replies_expected, "reply", "replies"));
 
