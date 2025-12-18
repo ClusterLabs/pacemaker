@@ -610,8 +610,7 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
         }
     }
 
-    pcmk__trace("Peer %s has not hit their limit yet. current jobs = %d "
-                "limit= %d limit",
+    pcmk__trace("Peer %s has not hit their limit yet (jobs=%d limit=%d)",
                 target, r->jobs, limit);
 
     return true;
