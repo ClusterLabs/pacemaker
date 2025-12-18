@@ -161,9 +161,25 @@ execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     if (msg == NULL) {
         return 0;
+    } else if (execd_invalid_msg(msg)) {
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
+        CRM_CHECK(request.op != NULL, return 0);
+
+        execd_handle_request(&request);
     }
 
-    execd_process_message(client, id, flags, msg);
     pcmk__xml_free(msg);
     return 0;
 }
