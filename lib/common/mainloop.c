@@ -1072,11 +1072,12 @@ child_kill_helper(mainloop_child_t *child)
 {
     int rc;
     if (child->flags & mainloop_leave_pid_group) {
-        pcmk__debug("Kill pid %lld only. leave group intact",
+        pcmk__debug("Killing PID %lld only. Leaving its process group intact.",
                     (long long) child->pid);
         rc = kill(child->pid, SIGKILL);
     } else {
-        pcmk__debug("Kill pid %lld's group", (long long) child->pid);
+        pcmk__debug("Killing PID %lld's entire process group",
+                    (long long) child->pid);
         rc = kill(-child->pid, SIGKILL);
     }
 
