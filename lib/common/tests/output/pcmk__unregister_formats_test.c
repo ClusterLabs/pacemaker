@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,21 +12,24 @@
 #include <crm/common/unittest_internal.h>
 
 static pcmk__output_t *
-null_create_fn(char **argv) {
+null_create_fn(char **argv)
+{
     return NULL;
 }
 
 static void
-invalid_params(void **state) {
-    /* This is basically just here to make sure that calling pcmk__unregister_formats
-     * with formatters=NULL doesn't segfault.
+invalid_params(void **state)
+{
+    /* This is basically just here to make sure that calling
+     * pcmk__unregister_formats with formatters set to NULL doesn't segfault
      */
     pcmk__unregister_formats();
     assert_null(pcmk__output_formatters());
 }
 
 static void
-non_null_formatters(void **state) {
+non_null_formatters(void **state)
+{
     pcmk__register_format(NULL, "fake", null_create_fn, NULL);
 
     pcmk__unregister_formats();

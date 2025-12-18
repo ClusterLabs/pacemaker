@@ -16,23 +16,27 @@
 #include <glib.h>
 
 static bool
-fake_text_init(pcmk__output_t *out) {
+fake_text_init(pcmk__output_t *out)
+{
     return true;
 }
 
 static void
-fake_text_free_priv(pcmk__output_t *out) {
+fake_text_free_priv(pcmk__output_t *out)
+{
     /* This function intentionally left blank */
 }
 
 G_GNUC_PRINTF(2, 3)
 static void
-fake_text_err(pcmk__output_t *out, const char *format, ...) {
+fake_text_err(pcmk__output_t *out, const char *format, ...)
+{
     function_called();
 }
 
 static pcmk__output_t *
-mk_fake_text_output(char **argv) {
+mk_fake_text_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -52,19 +56,22 @@ mk_fake_text_output(char **argv) {
 }
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     pcmk__unregister_formats();
     return 0;
 }
 
 static void
-standard_usage(void **state) {
+standard_usage(void **state)
+{
     GError *error = NULL;
     pcmk__output_t *out = NULL;
 

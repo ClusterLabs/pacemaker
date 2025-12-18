@@ -16,27 +16,32 @@
 #include "../../crmcommon_private.h"
 
 static int
-null_message_fn(pcmk__output_t *out, va_list args) {
+null_message_fn(pcmk__output_t *out, va_list args)
+{
     return pcmk_rc_ok;
 }
 
 static int
-null_message_fn_2(pcmk__output_t *out, va_list args) {
+null_message_fn_2(pcmk__output_t *out, va_list args)
+{
     return pcmk_rc_ok;
 }
 
 static bool
-fake_text_init(pcmk__output_t *out) {
+fake_text_init(pcmk__output_t *out)
+{
     return true;
 }
 
 static void
-fake_text_free_priv(pcmk__output_t *out) {
+fake_text_free_priv(pcmk__output_t *out)
+{
     /* This function intentionally left blank */
 }
 
 static pcmk__output_t *
-mk_fake_text_output(char **argv) {
+mk_fake_text_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -54,19 +59,22 @@ mk_fake_text_output(char **argv) {
 }
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     pcmk__unregister_formats();
     return 0;
 }
 
 static void
-null_params(void **state) {
+null_params(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__output_new(&out, "text", NULL, NULL);
@@ -80,7 +88,8 @@ null_params(void **state) {
 }
 
 static void
-add_message(void **state) {
+add_message(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__bare_output_new(&out, "text", NULL, NULL);
@@ -91,14 +100,16 @@ add_message(void **state) {
     /* Add a fake function and check that it's the only item in the hash table. */
     pcmk__register_message(out, "fake", null_message_fn);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "fake"), null_message_fn);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "fake"),
+                     null_message_fn);
 
     /* Add a second fake function which should overwrite the first one, leaving
      * only one item in the hash table but pointing at the new function.
      */
     pcmk__register_message(out, "fake", null_message_fn_2);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "fake"), null_message_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "fake"),
+                     null_message_fn_2);
 
     pcmk__output_free(out);
 }

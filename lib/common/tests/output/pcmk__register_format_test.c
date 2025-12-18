@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,42 +12,54 @@
 #include <crm/common/unittest_internal.h>
 
 static pcmk__output_t *
-null_create_fn(char **argv) {
+null_create_fn(char **argv)
+{
     return NULL;
 }
 
 static pcmk__output_t *
-null_create_fn_2(char **argv) {
+null_create_fn_2(char **argv)
+{
     return NULL;
 }
 
 static void
-invalid_params(void **state) {
+invalid_params(void **state)
+{
     pcmk__assert_asserts(pcmk__register_format(NULL, "fake", NULL, NULL));
     pcmk__assert_asserts(pcmk__register_format(NULL, "", null_create_fn, NULL));
-    pcmk__assert_asserts(pcmk__register_format(NULL, NULL, null_create_fn, NULL));
+    pcmk__assert_asserts(pcmk__register_format(NULL, NULL, null_create_fn,
+                                               NULL));
 }
 
 static void
-add_format(void **state) {
+add_format(void **state)
+{
+    int rc = pcmk_rc_ok;
     GHashTable *formatters = NULL;
-    gpointer value;
+    gpointer value = NULL;
 
     /* For starters, there should be no formatters defined. */
     assert_null(pcmk__output_formatters());
 
-    /* Add a fake formatter and check that it's the only item in the hash table. */
-    assert_int_equal(pcmk__register_format(NULL, "fake", null_create_fn, NULL), pcmk_rc_ok);
+    /* Add a fake formatter and check that it's the only item in the hash
+     * table
+     */
+    rc = pcmk__register_format(NULL, "fake", null_create_fn, NULL);
+    assert_int_equal(rc, pcmk_rc_ok);
+
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 1);
 
     value = g_hash_table_lookup(formatters, "fake");
     assert_ptr_equal(value, null_create_fn);
 
-    /* Add a second fake formatter which should overwrite the first one, leaving
-     * only one item in the hash table but pointing at the new function.
+    /* Add a second fake formatter that should overwrite the first one, leaving
+     * only one item (with the new function) in the hash table
      */
-    assert_int_equal(pcmk__register_format(NULL, "fake", null_create_fn_2, NULL), pcmk_rc_ok);
+    rc = pcmk__register_format(NULL, "fake", null_create_fn_2, NULL);
+    assert_int_equal(rc, pcmk_rc_ok);
+
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 1);
 

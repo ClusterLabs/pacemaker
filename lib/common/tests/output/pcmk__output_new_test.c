@@ -18,18 +18,21 @@
 static bool init_succeeds = true;
 
 static bool
-fake_text_init(pcmk__output_t *out) {
+fake_text_init(pcmk__output_t *out)
+{
     return init_succeeds;
 }
 
 static void
-fake_text_free_priv(pcmk__output_t *out) {
+fake_text_free_priv(pcmk__output_t *out)
+{
     /* This function intentionally left blank */
 }
 
 /* "text" is the default for pcmk__output_new. */
 static pcmk__output_t *
-mk_fake_text_output(char **argv) {
+mk_fake_text_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -47,39 +50,48 @@ mk_fake_text_output(char **argv) {
 }
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     pcmk__unregister_formats();
     return 0;
 }
 
 static void
-empty_formatters(void **state) {
+empty_formatters(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__assert_asserts(pcmk__output_new(&out, "fake", NULL, NULL));
 }
 
 static void
-invalid_params(void **state) {
-    /* This must be called with the setup/teardown functions so formatters is not NULL. */
+invalid_params(void **state)
+{
+    /* This must be called with the setup/teardown functions so that formatters
+     * is not NULL
+     */
     pcmk__assert_asserts(pcmk__output_new(NULL, "fake", NULL, NULL));
 }
 
 static void
-no_such_format(void **state) {
+no_such_format(void **state)
+{
     pcmk__output_t *out = NULL;
 
-    assert_int_equal(pcmk__output_new(&out, "fake", NULL, NULL), pcmk_rc_unknown_format);
+    assert_int_equal(pcmk__output_new(&out, "fake", NULL, NULL),
+                     pcmk_rc_unknown_format);
 }
 
 static void
-create_fails(void **state) {
+create_fails(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__mock_calloc = true;   // calloc() will return NULL
@@ -92,11 +104,13 @@ create_fails(void **state) {
 }
 
 static void
-fopen_fails(void **state) {
+fopen_fails(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__mock_fopen = true;
-#if defined(HAVE_FOPEN64) && defined(_FILE_OFFSET_BITS) && (_FILE_OFFSET_BITS == 64) && (SIZEOF_LONG < 8)
+#if defined(HAVE_FOPEN64) && defined(_FILE_OFFSET_BITS) \
+    && (_FILE_OFFSET_BITS == 64) && (SIZEOF_LONG < 8)
     expect_string(__wrap_fopen64, pathname, "destfile");
     expect_string(__wrap_fopen64, mode, "w");
     will_return(__wrap_fopen64, EPERM);
@@ -112,7 +126,8 @@ fopen_fails(void **state) {
 }
 
 static void
-init_fails(void **state) {
+init_fails(void **state)
+{
     pcmk__output_t *out = NULL;
 
     init_succeeds = false;
@@ -121,7 +136,8 @@ init_fails(void **state) {
 }
 
 static void
-everything_succeeds(void **state) {
+everything_succeeds(void **state)
+{
     pcmk__output_t *out = NULL;
 
     assert_int_equal(pcmk__output_new(&out, "text", NULL, NULL), pcmk_rc_ok);
@@ -135,7 +151,8 @@ everything_succeeds(void **state) {
 }
 
 static void
-no_fmt_name_given(void **state) {
+no_fmt_name_given(void **state)
+{
     pcmk__output_t *out = NULL;
 
     assert_int_equal(pcmk__output_new(&out, NULL, NULL, NULL), pcmk_rc_ok);
