@@ -435,14 +435,19 @@ execd_unregister_handlers(void)
     }
 }
 
-static bool
-invalid_msg(xmlNode *msg)
+bool
+execd_invalid_msg(xmlNode *msg)
 {
-    const char *to = pcmk__xe_get(msg, PCMK__XA_T);
+    const char *to = NULL;
+    bool invalid = true;
+
+    CRM_CHECK(msg != NULL, return invalid);
+
+    to = pcmk__xe_get(msg, PCMK__XA_T);
 
     /* IPC proxy messages do not get a t="" attribute set on them. */
-    bool invalid = !pcmk__str_eq(to, CRM_SYSTEM_LRMD, pcmk__str_none) &&
-                   !pcmk__xe_is(msg, PCMK__XE_LRMD_IPC_PROXY);
+    invalid = !pcmk__str_eq(to, CRM_SYSTEM_LRMD, pcmk__str_none)
+              && !pcmk__xe_is(msg, PCMK__XE_LRMD_IPC_PROXY);
 
     if (invalid) {
         pcmk__info("Ignoring invalid IPC message: to '%s' not " CRM_SYSTEM_LRMD,
@@ -454,16 +459,20 @@ invalid_msg(xmlNode *msg)
 }
 
 void
-execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *msg)
+execd_handle_request(pcmk__request_t *request)
 {
-    int rc = pcmk_rc_ok;
+    char *log_msg = NULL;
+    const char *reason = NULL;
+    const char *exec_status_s = NULL;
+    xmlNode *reply = NULL;
 
     if (execd_handlers == NULL) {
         execd_register_handlers();
     }
 
-    if (!c->name) {
-        c->name = pcmk__xe_get_copy(msg, PCMK__XA_LRMD_CLIENTNAME);
+    if (request->ipc_client->name == NULL) {
+        request->ipc_client->name = pcmk__xe_get_copy(request->xml,
+                                                      PCMK__XA_LRMD_CLIENTNAME);
     }
 
     lrmd_call_id++;
@@ -471,72 +480,53 @@ execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags, xmlNode *m
         lrmd_call_id = 1;
     }
 
-    pcmk__xe_set(msg, PCMK__XA_LRMD_CLIENTID, c->id);
-    pcmk__xe_set(msg, PCMK__XA_LRMD_CLIENTNAME, c->name);
-    pcmk__xe_set_int(msg, PCMK__XA_LRMD_CALLID, lrmd_call_id);
+    pcmk__xe_set(request->xml, PCMK__XA_LRMD_CLIENTID, request->ipc_client->id);
+    pcmk__xe_set(request->xml, PCMK__XA_LRMD_CLIENTNAME,
+                 request->ipc_client->name);
+    pcmk__xe_set_int(request->xml, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
-    if (invalid_msg(msg)) {
-        pcmk__ipc_send_ack(c, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
-    } else {
-        char *log_msg = NULL;
-        const char *reason = NULL;
-        const char *status_s = NULL;
-        xmlNode *reply = NULL;
+    reply = pcmk__process_request(request, execd_handlers);
 
-        pcmk__request_t request = {
-            .ipc_client     = c,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = NULL,
-            .xml            = msg,
-            .call_options   = 0,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
+    if (reply != NULL) {
+        int rc = pcmk_rc_ok;
+        int reply_rc = pcmk_ok;
 
-        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
-        CRM_CHECK(request.op != NULL, return);
+        pcmk__log_xml_trace(reply, "Reply");
 
-        pcmk__trace("Processing %s operation from %s", request.op, c->id);
-
-        reply = pcmk__process_request(&request, execd_handlers);
-
-        if (reply != NULL) {
-            int reply_rc = pcmk_ok;
-
-            rc = lrmd_server_send_reply(c, id, reply);
-            if (rc != pcmk_rc_ok) {
-                pcmk__warn("Reply to client %s failed: %s " QB_XS " rc=%d",
-                           pcmk__client_name(c), pcmk_rc_str(rc), rc);
-            }
-
-            pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &reply_rc);
-            if (requires_notify(request.op, reply_rc)) {
-                execd_send_generic_notify(reply_rc, request.xml);
-            }
-
-            pcmk__xml_free(reply);
+        rc = lrmd_server_send_reply(request->ipc_client, request->ipc_id, reply);
+        if (rc != pcmk_rc_ok) {
+            pcmk__warn("Reply to client %s failed: %s " QB_XS " rc=%d",
+                       pcmk__client_name(request->ipc_client), pcmk_rc_str(rc),
+                       rc);
         }
 
-        reason = request.result.exit_reason;
-        status_s = pcmk_exec_status_str(request.result.execution_status);
-
-        log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
-                                        "%s%s%s%s",
-                                        request.op,
-                                        pcmk__request_origin_type(&request),
-                                        pcmk__request_origin(&request),
-                                        status_s,
-                                        ((reason == NULL)? "" : " ("),
-                                        ((reason == NULL)? "" : reason),
-                                        ((reason == NULL)? "" : ")"));
-
-        if (!pcmk__result_ok(&request.result)) {
-            pcmk__warn("%s", log_msg);
-        } else {
-            pcmk__debug("%s", log_msg);
+        pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &reply_rc);
+        if (requires_notify(request->op, reply_rc)) {
+            execd_send_generic_notify(reply_rc, request->xml);
         }
 
-        free(log_msg);
-        pcmk__reset_request(&request);
+        pcmk__xml_free(reply);
     }
+
+    exec_status_s = pcmk_exec_status_str(request->result.execution_status);
+    reason = request->result.exit_reason;
+
+    log_msg = pcmk__assert_asprintf("Processed %s request from %s %s: "
+                                    "%s%s%s%s",
+                                    request->op,
+                                    pcmk__request_origin_type(request),
+                                    pcmk__request_origin(request),
+                                    exec_status_s,
+                                    ((reason == NULL)? "" : " ("),
+                                    pcmk__s(reason, ""),
+                                    ((reason == NULL)? "" : ")"));
+
+    if (!pcmk__result_ok(&request->result)) {
+        pcmk__warn("%s", log_msg);
+    } else {
+        pcmk__debug("%s", log_msg);
+    }
+
+    free(log_msg);
+    pcmk__reset_request(request);
 }

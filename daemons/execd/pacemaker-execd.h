@@ -99,8 +99,8 @@ void execd_unregister_handlers(void);
 
 void lrmd_drain_alerts(GMainLoop *mloop);
 
-void execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags,
-                          xmlNode *msg);
+bool execd_invalid_msg(xmlNode *msg);
+void execd_handle_request(pcmk__request_t *request);
 
 xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);
 void execd_send_generic_notify(int rc, xmlNode *request);
