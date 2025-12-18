@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -55,13 +55,14 @@ enum mon_exec_mode {
 void crm_mon_register_messages(pcmk__output_t *out);
 
 #if PCMK__ENABLE_CURSES
-pcmk__output_t *crm_mon_mk_curses_output(char **argv);
+void crm_mon_output_setup_curses(pcmk__output_t *out);
 void curses_formatted_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 void curses_formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 void curses_indented_printf(pcmk__output_t *out, const char *format, ...) G_GNUC_PRINTF(2, 3);
 void curses_indented_vprintf(pcmk__output_t *out, const char *format, va_list args) G_GNUC_PRINTF(2, 0);
 
-#define CRM_MON_SUPPORTED_FORMAT_CURSES { "console", crm_mon_mk_curses_output, NULL }
+#define CRM_MON_SUPPORTED_FORMAT_CURSES \
+    { "console", crm_mon_output_setup_curses, NULL }
 #endif
 
 #endif

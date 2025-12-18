@@ -24,7 +24,7 @@ invalid_params(void **state)
 static void
 non_null_formatters(void **state)
 {
-    pcmk__register_format(NULL, "fake", pcmk__output_null_create1, NULL);
+    pcmk__register_format(NULL, "fake", pcmk__output_setup_dummy1, NULL);
 
     pcmk__unregister_formats();
     assert_null(pcmk__output_formatters());

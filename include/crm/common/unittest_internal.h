@@ -138,7 +138,7 @@ void pcmk__cib_test_cleanup(char *out_path);
 
 void pcmk__test_init_logging(const char *name, const char *filename);
 
-pcmk__output_t *pcmk__mk_fake_text_output(char **argv);
+void pcmk__output_setup_fake_text(pcmk__output_t *out);
 int pcmk__output_test_setup_group(void **state);
 int pcmk__output_test_teardown_group(void **state);
 void pcmk__set_fake_text_init_succeeds(bool value);
@@ -146,8 +146,8 @@ void pcmk__set_testing_output_free(bool value);
 void pcmk__set_testing_output_and_clear_error(bool value);
 void pcmk__expect_fake_text_free_priv(void);
 void pcmk__expect_fake_text_err(void);
-pcmk__output_t *pcmk__output_null_create1(char **argv);
-pcmk__output_t *pcmk__output_null_create2(char **argv);
+void pcmk__output_setup_dummy1(pcmk__output_t *out);
+void pcmk__output_setup_dummy2(pcmk__output_t *out);
 int pcmk__output_message_dummy1(pcmk__output_t *out, va_list args);
 int pcmk__output_message_dummy2(pcmk__output_t *out, va_list args);
 

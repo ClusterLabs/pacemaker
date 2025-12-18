@@ -71,7 +71,7 @@ int
 pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
                       const char *filename, char **argv)
 {
-    pcmk__output_factory_t create = NULL;
+    pcmk__output_setup_fn_t setup_fn = NULL;
 
     pcmk__assert((formatters != NULL) && (out != NULL));
 
@@ -79,19 +79,25 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
      * what it supports so this also may not be valid.
      */
     if (fmt_name == NULL) {
-        create = g_hash_table_lookup(formatters, "text");
+        setup_fn = g_hash_table_lookup(formatters, "text");
     } else {
-        create = g_hash_table_lookup(formatters, fmt_name);
+        setup_fn = g_hash_table_lookup(formatters, fmt_name);
     }
 
-    if (create == NULL) {
+    if (setup_fn == NULL) {
         return pcmk_rc_unknown_format;
     }
 
-    *out = create(argv);
+    *out = calloc(1, sizeof(pcmk__output_t));
     if (*out == NULL) {
         return ENOMEM;
     }
+
+    setup_fn(*out);
+
+    (*out)->request = pcmk__quote_cmdline(argv);
+    (*out)->register_message = pcmk__register_message;
+    (*out)->message = pcmk__call_message;
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
         (*out)->dest = stdout;
@@ -133,12 +139,12 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
 
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
-                      pcmk__output_factory_t create,
+                      pcmk__output_setup_fn_t setup_fn,
                       const GOptionEntry *options)
 {
     char *name_copy = NULL;
 
-    pcmk__assert((create != NULL) && !pcmk__str_empty(name));
+    pcmk__assert((setup_fn != NULL) && !pcmk__str_empty(name));
 
     // cppcheck doesn't understand the above pcmk__assert line
     // cppcheck-suppress ctunullpointer
@@ -155,7 +161,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
         g_option_group_add_entries(group, options);
     }
 
-    g_hash_table_insert(formatters, name_copy, create);
+    g_hash_table_insert(formatters, name_copy, setup_fn);
     return pcmk_rc_ok;
 }
 
@@ -166,9 +172,12 @@ pcmk__register_formats(GOptionGroup *group,
     if (formats == NULL) {
         return;
     }
+
     for (const pcmk__supported_format_t *entry = formats; entry->name != NULL;
          entry++) {
-        pcmk__register_format(group, entry->name, entry->create, entry->options);
+
+        pcmk__register_format(group, entry->name, entry->setup_fn,
+                              entry->options);
     }
 }
 
