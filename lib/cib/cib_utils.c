@@ -224,6 +224,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                bool *config_changed, xmlNode **current_cib,
                xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
+    const bool dry_run = pcmk__is_set(call_options, cib_dryrun);
     int rc = pcmk_ok;
     bool check_schema = true;
     bool make_copy = true;
@@ -236,8 +237,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     const bool enable_acl = cib_acl_enabled(*current_cib, user);
     bool with_digest = false;
 
-    pcmk__trace("Begin %s%s%s op",
-                (pcmk__is_set(call_options, cib_dryrun)? "dry run of " : ""),
+    pcmk__trace("Begin %s%s%s op", (dry_run? "dry run of " : ""),
                 (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);

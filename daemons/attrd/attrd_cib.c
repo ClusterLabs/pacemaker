@@ -451,14 +451,32 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
 
     while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
         const char *node_xml_id = attrd_get_node_xml_id(at->nodename);
+        const char *failed_s = NULL;
 
         rc = attrd_send_attribute_alert(at->nodename, node_xml_id,
                                         a->id, at->current);
-        pcmk__trace("Sent alerts for %s[%s]=%s with node XML ID %s (%s agents "
-                    "failed)",
+
+        switch (rc) {
+            case pcmk_ok:
+                failed_s = "no agents failed";
+                break;
+
+            case -1:
+                failed_s = "some agents failed";
+                break;
+
+            case -2:
+                failed_s = "all agents failed";
+                break;
+
+            default:
+                failed_s = "bug: unexpected return code";
+                break;
+        }
+
+        pcmk__trace("Sent alerts for %s[%s]=%s with node XML ID %s (%s, rc=%d)",
                     a->id, at->nodename, at->current,
-                    pcmk__s(node_xml_id, "unknown"),
-                    ((rc == 0)? "no" : ((rc == -1)? "some" : "all")));
+                    pcmk__s(node_xml_id, "<unknown>"), failed_s, rc);
     }
 }
 
