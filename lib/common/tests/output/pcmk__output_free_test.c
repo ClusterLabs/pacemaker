@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,23 +13,27 @@
 #include <crm/common/output_internal.h>
 
 static int
-null_message_fn(pcmk__output_t *out, va_list args) {
+null_message_fn(pcmk__output_t *out, va_list args)
+{
     return pcmk_rc_ok;
 }
 
 static bool
-fake_text_init(pcmk__output_t *out) {
+fake_text_init(pcmk__output_t *out)
+{
     return true;
 }
 
 static void
-fake_text_free_priv(pcmk__output_t *out) {
+fake_text_free_priv(pcmk__output_t *out)
+{
     function_called();
     /* This function intentionally left blank */
 }
 
 static pcmk__output_t *
-mk_fake_text_output(char **argv) {
+mk_fake_text_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -47,19 +51,22 @@ mk_fake_text_output(char **argv) {
 }
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     pcmk__unregister_formats();
     return 0;
 }
 
 static void
-no_messages(void **state) {
+no_messages(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__output_new(&out, "text", NULL, NULL);
@@ -69,7 +76,8 @@ no_messages(void **state) {
 }
 
 static void
-messages(void **state) {
+messages(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__output_new(&out, "text", NULL, NULL);

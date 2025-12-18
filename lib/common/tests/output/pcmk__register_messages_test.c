@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,27 +15,32 @@
 #include "../../crmcommon_private.h"
 
 static int
-null_message_fn(pcmk__output_t *out, va_list args) {
+null_message_fn(pcmk__output_t *out, va_list args)
+{
     return pcmk_rc_ok;
 }
 
 static int
-null_message_fn_2(pcmk__output_t *out, va_list args) {
+null_message_fn_2(pcmk__output_t *out, va_list args)
+{
     return pcmk_rc_ok;
 }
 
 static bool
-fake_text_init(pcmk__output_t *out) {
+fake_text_init(pcmk__output_t *out)
+{
     return true;
 }
 
 static void
-fake_text_free_priv(pcmk__output_t *out) {
+fake_text_free_priv(pcmk__output_t *out)
+{
     /* This function intentionally left blank */
 }
 
 static pcmk__output_t *
-mk_fake_text_output(char **argv) {
+mk_fake_text_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -53,19 +58,22 @@ mk_fake_text_output(char **argv) {
 }
 
 static int
-setup(void **state) {
+setup(void **state)
+{
     pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
     return 0;
 }
 
 static int
-teardown(void **state) {
+teardown(void **state)
+{
     pcmk__unregister_formats();
     return 0;
 }
 
 static void
-invalid_entries(void **state) {
+invalid_entries(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -87,7 +95,8 @@ invalid_entries(void **state) {
 }
 
 static void
-valid_entries(void **state) {
+valid_entries(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -100,14 +109,17 @@ valid_entries(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 2);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"), null_message_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     null_message_fn);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"),
+                     null_message_fn_2);
 
     pcmk__output_free(out);
 }
 
 static void
-duplicate_message_ids(void **state) {
+duplicate_message_ids(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -120,13 +132,15 @@ duplicate_message_ids(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     null_message_fn_2);
 
     pcmk__output_free(out);
 }
 
 static void
-duplicate_functions(void **state) {
+duplicate_functions(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -139,14 +153,17 @@ duplicate_functions(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 2);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"), null_message_fn);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     null_message_fn);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"),
+                     null_message_fn);
 
     pcmk__output_free(out);
 }
 
 static void
-default_handler(void **state) {
+default_handler(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -158,13 +175,15 @@ default_handler(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     null_message_fn);
 
     pcmk__output_free(out);
 }
 
 static void
-override_default_handler(void **state) {
+override_default_handler(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -177,7 +196,8 @@ override_default_handler(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     null_message_fn_2);
 
     pcmk__output_free(out);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,23 +13,27 @@
 #include <crm/common/output_internal.h>
 
 static pcmk__output_t *
-null_create_fn(char **argv) {
+null_create_fn(char **argv)
+{
     return NULL;
 }
 
 static pcmk__output_t *
-null_create_fn_2(char **argv) {
+null_create_fn_2(char **argv)
+{
     return NULL;
 }
 
 static void
-no_formats(void **state) {
+no_formats(void **state)
+{
     pcmk__register_formats(NULL, NULL);
     assert_null(pcmk__output_formatters());
 }
 
 static void
-invalid_entries(void **state) {
+invalid_entries(void **state)
+{
     /* Here, we can only test that an empty name won't be added.  A NULL name is
      * the marker for the end of the format table.
      */
@@ -42,7 +46,8 @@ invalid_entries(void **state) {
 }
 
 static void
-valid_entries(void **state) {
+valid_entries(void **state)
+{
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
@@ -62,7 +67,8 @@ valid_entries(void **state) {
 }
 
 static void
-duplicate_keys(void **state) {
+duplicate_keys(void **state)
+{
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
@@ -81,7 +87,8 @@ duplicate_keys(void **state) {
 }
 
 static void
-duplicate_values(void **state) {
+duplicate_values(void **state)
+{
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
