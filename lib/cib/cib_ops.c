@@ -562,9 +562,9 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
     pcmk__xe_set(failed_update, PCMK_XA_OBJECT_TYPE,
                  (const char *) target->name);
     pcmk__xe_set(failed_update, PCMK_XA_OPERATION, operation);
-    pcmk__xe_set(failed_update, PCMK_XA_REASON, pcmk_strerror(rc));
+    pcmk__xe_set(failed_update, PCMK_XA_REASON, pcmk_rc_str(rc));
 
-    pcmk__warn("Action %s failed: %s", operation, pcmk_strerror(rc));
+    pcmk__warn("Action %s failed: %s", operation, pcmk_rc_str(rc));
 }
 
 int
@@ -608,9 +608,10 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
 
         for (a_child = pcmk__xml_first_child(input); a_child != NULL;
              a_child = pcmk__xml_next(a_child)) {
+
             result = add_cib_object(update_section, a_child);
             if (result != pcmk_ok) {
-                update_results(failed, a_child, op, result);
+                update_results(failed, a_child, op, pcmk_legacy2rc(result));
                 break;
             }
         }
@@ -618,7 +619,7 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     } else {
         result = add_cib_object(update_section, input);
         if (result != pcmk_ok) {
-            update_results(failed, input, op, result);
+            update_results(failed, input, op, pcmk_legacy2rc(result));
         }
     }
 
