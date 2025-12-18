@@ -440,7 +440,13 @@ class Test:
         elif rc < 0:
             # This is a negative number, which is a signal.
             rc = abs(rc)
-            rc_str = signal.strsignal(rc)
+
+            # @COMPAT signal.strsignal was added in Python 3.8. Drop this
+            # workaround when we require Python 3.8 or later.
+            try:
+                rc_str = signal.strsignal(rc)
+            except AttributeError:
+                rc_str = signal.Signals(rc).name
         else:
             # This is a non-negative number.  We don't have to do anything to the
             # number itself, but we do need to get the error string.
