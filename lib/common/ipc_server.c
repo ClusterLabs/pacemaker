@@ -1094,9 +1094,9 @@ pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
  * \brief Add an IPC server to the main loop for the attribute manager API
  *
  * \param[out] ipcs  Where to store newly created IPC server
- * \param[in] cb  IPC callbacks
+ * \param[in]  cb    IPC callbacks
  *
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  */
 void
 pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
@@ -1114,12 +1114,33 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
 
 /*!
  * \internal
+ * \brief Add an IPC server to the main loop for the executor API
+ *
+ * \param[out] ipcs  Where to store newly created IPC server
+ * \param[in]  cb    IPC callbacks
+ *
+ * \note This function exits fatally on error.
+ */
+void
+pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
+                      struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server(PCMK__VALUE_LRMD, QB_IPC_SHM, cb);
+
+    if (*ipcs == NULL) {
+        pcmk__err("Failed to create IPC server: shutting down and inhibiting respawn");
+        crm_exit(CRM_EX_FATAL);
+    }
+}
+
+/*!
+ * \internal
  * \brief Add an IPC server to the main loop for the fencer API
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
  *
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  */
 void
 pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
@@ -1143,7 +1164,7 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
  *
- * \note This function exits with CRM_EX_OSERR if unable to create the servers.
+ * \note This function exits with CRM_EX_OSERR on error.
  */
 void
 pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
@@ -1169,10 +1190,10 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
  * \brief Add an IPC server to the main loop for the scheduler API
  *
  * \param[out] ipcs  Where to store newly created IPC server
- * \param[in] cb  IPC callbacks
+ * \param[in]  cb    IPC callbacks
  *
  * \return Newly created IPC server
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  */
 void
 pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
