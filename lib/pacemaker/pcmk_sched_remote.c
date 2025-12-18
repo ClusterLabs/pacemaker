@@ -184,10 +184,11 @@ apply_remote_ordering(pcmk_action_t *action)
     remote_rsc = action->node->priv->remote;
     pcmk__assert(remote_rsc != NULL);
 
-    crm_trace("Order %s action %s relative to %s%s (state: %s)",
-              action->task, action->uuid,
-              pcmk__is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
-              remote_rsc->id, state2text(state));
+    pcmk__trace("Order %s action %s relative to %s%s (state: %s)", action->task,
+                action->uuid,
+                (pcmk__is_set(remote_rsc->flags,
+                              pcmk__rsc_failed)? "failed " : ""),
+                remote_rsc->id, state2text(state));
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
@@ -318,12 +319,14 @@ apply_launcher_ordering(pcmk_action_t *action)
                       "container failed", FALSE);
     }
 
-    crm_trace("Order %s action %s relative to %s%s for %s%s",
-              action->task, action->uuid,
-              pcmk__is_set(remote_rsc->flags, pcmk__rsc_failed)? "failed " : "",
-              remote_rsc->id,
-              pcmk__is_set(launcher->flags, pcmk__rsc_failed)? "failed " : "",
-              launcher->id);
+    pcmk__trace("Order %s action %s relative to %s%s for %s%s", action->task,
+                action->uuid,
+                (pcmk__is_set(remote_rsc->flags,
+                              pcmk__rsc_failed)? "failed " : ""),
+                remote_rsc->id,
+                (pcmk__is_set(launcher->flags,
+                              pcmk__rsc_failed)? "failed " : ""),
+                launcher->id);
 
     if (pcmk__strcase_any_of(action->task, PCMK_ACTION_MIGRATE_TO,
                              PCMK_ACTION_MIGRATE_FROM, NULL)) {
@@ -397,7 +400,7 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
         return;
     }
 
-    crm_trace("Creating remote connection orderings");
+    pcmk__trace("Creating remote connection orderings");
 
     for (GList *iter = scheduler->priv->actions;
          iter != NULL; iter = iter->next) {
@@ -480,11 +483,11 @@ pcmk__order_remote_connection_actions(pcmk_scheduler_t *scheduler)
          * this logic rather than create_graph_action().
          */
         if (remote->priv->launcher != NULL) {
-            crm_trace("Container ordering for %s", action->uuid);
+            pcmk__trace("Container ordering for %s", action->uuid);
             apply_launcher_ordering(action);
 
         } else {
-            crm_trace("Remote ordering for %s", action->uuid);
+            pcmk__trace("Remote ordering for %s", action->uuid);
             apply_remote_ordering(action);
         }
     }
@@ -563,29 +566,32 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
     }
 
     if (began_on == NULL) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "next node %s (starting)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (ended_on? ended_on->priv->name : "none"),
-                  partial_migration? " (partial migration)" : "");
+        pcmk__trace("Routing %s for %s through remote connection's next node "
+                    "%s (starting)%s",
+                    action->task,
+                    ((action->rsc != NULL)? action->rsc->id : "no resource"),
+                    ((ended_on != NULL)? ended_on->priv->name : "none"),
+                    (partial_migration? " (partial migration)" : ""));
         return ended_on;
     }
 
     if (ended_on == NULL) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "current node %s (stopping)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->priv->name : "none"),
-                  partial_migration? " (partial migration)" : "");
+        pcmk__trace("Routing %s for %s through remote connection's current "
+                    "node %s (stopping)%s",
+                    action->task,
+                    ((action->rsc != NULL)? action->rsc->id : "no resource"),
+                    ((began_on != NULL)? began_on->priv->name : "none"),
+                    (partial_migration? " (partial migration)" : ""));
         return began_on;
     }
 
     if (pcmk__same_node(began_on, ended_on)) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "current node %s (not moving)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->priv->name : "none"),
-                  partial_migration? " (partial migration)" : "");
+        pcmk__trace("Routing %s for %s through remote connection's current "
+                    "node %s (not moving)%s",
+                    action->task,
+                    ((action->rsc != NULL)? action->rsc->id : "no resource"),
+                    ((began_on != NULL)? began_on->priv->name : "none"),
+                    (partial_migration? " (partial migration)" : ""));
         return began_on;
     }
 
@@ -616,11 +622,12 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
                              PCMK_ACTION_DEMOTE, PCMK_ACTION_MIGRATE_FROM,
                              PCMK_ACTION_MIGRATE_TO, NULL)
         && !partial_migration) {
-        crm_trace("Routing %s for %s through remote connection's "
-                  "current node %s (moving)%s",
-                  action->task, (action->rsc? action->rsc->id : "no resource"),
-                  (began_on? began_on->priv->name : "none"),
-                  partial_migration? " (partial migration)" : "");
+        pcmk__trace("Routing %s for %s through remote connection's current "
+                    "node %s (moving)%s",
+                    action->task,
+                    ((action->rsc != NULL)? action->rsc->id : "no resource"),
+                    ((began_on != NULL)? began_on->priv->name : "none"),
+                    (partial_migration? " (partial migration)" : ""));
         return began_on;
     }
 
@@ -628,11 +635,12 @@ pcmk__connection_host_for_action(const pcmk_action_t *action)
      * clear failcount, delete, ...) must occur after the connection starts on
      * the node it is moving to.
      */
-    crm_trace("Routing %s for %s through remote connection's "
-              "next node %s (moving)%s",
-              action->task, (action->rsc? action->rsc->id : "no resource"),
-              (ended_on? ended_on->priv->name : "none"),
-              partial_migration? " (partial migration)" : "");
+    pcmk__trace("Routing %s for %s through remote connection's next node %s "
+                "(moving)%s",
+                action->task,
+                ((action->rsc != NULL)? action->rsc->id : "no resource"),
+                ((ended_on != NULL)? ended_on->priv->name : "none"),
+                (partial_migration? " (partial migration)" : ""));
     return ended_on;
 }
 

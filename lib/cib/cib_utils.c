@@ -79,16 +79,16 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     *patchset = NULL;
 
     if (msg == NULL) {
-        crm_err("CIB diff notification received with no XML");
+        pcmk__err("CIB diff notification received with no XML");
         return ENOMSG;
     }
 
     if ((pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok)
         || (rc != pcmk_ok)) {
 
-        crm_warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
-                 pcmk_strerror(rc), rc);
-        crm_log_xml_debug(msg, "failed");
+        pcmk__warn("Ignore failed CIB update: %s " QB_XS " rc=%d",
+                   pcmk_strerror(rc), rc);
+        pcmk__log_xml_debug(msg, "failed");
         return pcmk_legacy2rc(rc);
     }
 
@@ -96,7 +96,7 @@ cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset)
     *patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     if (*patchset == NULL) {
-        crm_err("CIB diff notification received with no patchset");
+        pcmk__err("CIB diff notification received with no patchset");
         return ENOMSG;
     }
     return pcmk_rc_ok;
@@ -165,7 +165,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
         g_hash_table_destroy(options);
     }
 
-    crm_trace("CIB ACL is %s", rc ? "enabled" : "disabled");
+    pcmk__trace("CIB ACL is %s", (rc? "enabled" : "disabled"));
     return rc;
 }
 
@@ -224,6 +224,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                bool *config_changed, xmlNode **current_cib,
                xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
+    const bool dry_run = pcmk__is_set(call_options, cib_dryrun);
     int rc = pcmk_ok;
     bool check_schema = true;
     bool make_copy = true;
@@ -236,9 +237,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     const bool enable_acl = cib_acl_enabled(*current_cib, user);
     bool with_digest = false;
 
-    crm_trace("Begin %s%s%s op",
-              (pcmk__is_set(call_options, cib_dryrun)? "dry run of " : ""),
-              (is_query? "read-only " : ""), op);
+    pcmk__trace("Begin %s%s%s op", (dry_run? "dry run of " : ""),
+                (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return -ENOMSG);
     CRM_CHECK(current_cib != NULL, return -ENOMSG);
@@ -265,11 +265,11 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                                      &cib_filtered)) {
 
             if (cib_filtered == NULL) {
-                crm_debug("Pre-filtered the entire cib");
+                pcmk__debug("Pre-filtered the entire cib");
                 return -EACCES;
             }
             cib_ro = cib_filtered;
-            crm_log_xml_trace(cib_ro, "filtered");
+            pcmk__log_xml_trace(cib_ro, "filtered");
         }
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
@@ -341,7 +341,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
          * invalid now) for comparison. Confirm this, and check more clearly.
          */
         if (!pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_tracking)) {
-            crm_trace("Inferring changes after %s op", op);
+            pcmk__trace("Inferring changes after %s op", op);
             pcmk__xml_commit_changes(scratch->doc);
             if (enable_acl) {
                 pcmk__enable_acl(*current_cib, scratch, user);
@@ -358,7 +358,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         goto done;
 
     } else if(rc == pcmk_ok && xml_acl_denied(scratch)) {
-        crm_trace("ACL rejected part or all of the proposed changes");
+        pcmk__trace("ACL rejected part or all of the proposed changes");
         rc = -EACCES;
         goto done;
 
@@ -376,8 +376,9 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
         rc = pcmk__check_feature_set(new_version);
         if (rc != pcmk_rc_ok) {
-            crm_err("Discarding update with feature set '%s' greater than "
-                    "our own '%s'", new_version, CRM_FEATURE_SET);
+            pcmk__err("Discarding update with feature set '%s' greater than "
+                      "our own '%s'",
+                      new_version, CRM_FEATURE_SET);
             rc = pcmk_rc2legacy(rc);
             goto done;
         }
@@ -391,26 +392,26 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         pcmk__xe_get_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
 
         if (old > new) {
-            crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                    PCMK_XA_ADMIN_EPOCH, old, new, call_options);
-            crm_log_xml_warn(req, "Bad Op");
-            crm_log_xml_warn(input, "Bad Data");
+            pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
+                      PCMK_XA_ADMIN_EPOCH, old, new, call_options);
+            pcmk__log_xml_warn(req, "Bad Op");
+            pcmk__log_xml_warn(input, "Bad Data");
             rc = -pcmk_err_old_data;
 
         } else if (old == new) {
             pcmk__xe_get_int(scratch, PCMK_XA_EPOCH, &new);
             pcmk__xe_get_int(patchset_cib, PCMK_XA_EPOCH, &old);
             if (old > new) {
-                crm_err("%s went backwards: %d -> %d (Opts: %#x)",
-                        PCMK_XA_EPOCH, old, new, call_options);
-                crm_log_xml_warn(req, "Bad Op");
-                crm_log_xml_warn(input, "Bad Data");
+                pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
+                          PCMK_XA_EPOCH, old, new, call_options);
+                pcmk__log_xml_warn(req, "Bad Op");
+                pcmk__log_xml_warn(input, "Bad Data");
                 rc = -pcmk_err_old_data;
             }
         }
     }
 
-    crm_trace("Massaging CIB contents");
+    pcmk__trace("Massaging CIB contents");
     pcmk__strip_xml_text(scratch);
 
     if (make_copy) {
@@ -434,7 +435,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             pcmk__xml_patchset_add_digest(local_diff, scratch);
         }
         pcmk__log_xml_patchset(LOG_INFO, local_diff);
-        crm_log_xml_trace(local_diff, "raw patch");
+        pcmk__log_xml_trace(local_diff, "raw patch");
     }
 
     if (make_copy && (local_diff != NULL)) {
@@ -459,10 +460,10 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                                               NULL);
                     pcmk__xml_write_temp_file(local_diff, "PatchApply:diff",
                                               NULL);
-                    crm_err("v%d patchset error, patch failed to apply: %s "
-                            "(%d)",
-                            format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
-                            test_rc);
+                    pcmk__err("v%d patchset error, patch failed to apply: %s "
+                              "(%d)",
+                              format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
+                              test_rc);
                 }
                 pcmk__xml_free(cib_copy);
             },
@@ -527,7 +528,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         }
     }
 
-    crm_trace("Perform validation: %s", pcmk__btoa(check_schema));
+    pcmk__trace("Perform validation: %s", pcmk__btoa(check_schema));
     if ((rc == pcmk_ok) && check_schema
         && !pcmk__configured_schema_validates(scratch)) {
         rc = -pcmk_err_schema_validation;
@@ -544,7 +545,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
 
         if (*result_cib == NULL) {
-            crm_debug("Pre-filtered the entire cib result");
+            pcmk__debug("Pre-filtered the entire cib result");
         }
         pcmk__xml_free(scratch);
     }
@@ -556,7 +557,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     }
 
     pcmk__xml_free(top);
-    crm_trace("Done");
+    pcmk__trace("Done");
     return rc;
 }
 
@@ -583,7 +584,8 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     pcmk__xe_set(*op_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
     pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLID, cib->call_id);
 
-    crm_trace("Sending call options: %.8lx, %d", (long)call_options, call_options);
+    pcmk__trace("Sending call options: %.8lx, %d", (long) call_options,
+                call_options);
     pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
 
     if (data != NULL) {
@@ -617,14 +619,14 @@ validate_transaction_request(const xmlNode *request)
     }
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)) {
-        crm_err("Operation %s is not supported in CIB transactions", op);
+        pcmk__err("Operation %s is not supported in CIB transactions", op);
         return EOPNOTSUPP;
     }
 
     if (host != NULL) {
-        crm_err("Operation targeting a specific node (%s) is not supported in "
-                "a CIB transaction",
-                host);
+        pcmk__err("Operation targeting a specific node (%s) is not supported "
+                  "in a CIB transaction",
+                  host);
         return EOPNOTSUPP;
     }
     return pcmk_rc_ok;
@@ -660,9 +662,10 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);
-        crm_err("Failed to add '%s' operation to transaction for client %s: %s",
-                op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
-        crm_log_xml_info(request, "failed");
+        pcmk__err("Failed to add '%s' operation to transaction for client %s: "
+                  "%s",
+                  op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
+        pcmk__log_xml_info(request, "failed");
     }
     return pcmk_rc2legacy(rc);
 }
@@ -685,11 +688,11 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     blob = cib__lookup_id(call_id);
 
     if (blob == NULL) {
-        crm_trace("No callback found for call %d", call_id);
+        pcmk__trace("No callback found for call %d", call_id);
     }
 
     if (cib == NULL) {
-        crm_debug("No cib object supplied");
+        pcmk__debug("No cib object supplied");
     }
 
     if (rc == -pcmk_err_diff_resync) {
@@ -698,13 +701,13 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     }
 
     if (blob && blob->callback && (rc == pcmk_ok || blob->only_success == FALSE)) {
-        crm_trace("Invoking callback %s for call %d",
-                  pcmk__s(blob->id, "without ID"), call_id);
+        pcmk__trace("Invoking callback %s for call %d",
+                    pcmk__s(blob->id, "without ID"), call_id);
         blob->callback(msg, call_id, rc, output, blob->user_data);
 
     } else if ((cib != NULL) && (rc != pcmk_ok)) {
-        crm_warn("CIB command failed: %s", pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "Failed CIB Update");
+        pcmk__warn("CIB command failed: %s", pcmk_strerror(rc));
+        pcmk__log_xml_debug(msg, "Failed CIB Update");
     }
 
     /* This may free user_data, so do it after the callback */
@@ -712,7 +715,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         remove_cib_op_callback(call_id, FALSE);
     }
 
-    crm_trace("OP callback activated for %d", call_id);
+    pcmk__trace("OP callback activated for %d", call_id);
 }
 
 void
@@ -723,28 +726,29 @@ cib_native_notify(gpointer data, gpointer user_data)
     const char *event = NULL;
 
     if (msg == NULL) {
-        crm_warn("Skipping callback - NULL message");
+        pcmk__warn("Skipping callback - NULL message");
         return;
     }
 
     event = pcmk__xe_get(msg, PCMK__XA_SUBT);
 
     if (entry == NULL) {
-        crm_warn("Skipping callback - NULL callback client");
+        pcmk__warn("Skipping callback - NULL callback client");
         return;
 
     } else if (entry->callback == NULL) {
-        crm_warn("Skipping callback - NULL callback");
+        pcmk__warn("Skipping callback - NULL callback");
         return;
 
     } else if (!pcmk__str_eq(entry->event, event, pcmk__str_casei)) {
-        crm_trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
+        pcmk__trace("Skipping callback - event mismatch %p/%s vs. %s", entry,
+                    entry->event, event);
         return;
     }
 
-    crm_trace("Invoking callback for %p/%s event...", entry, event);
+    pcmk__trace("Invoking callback for %p/%s event...", entry, event);
     entry->callback(event, msg);
-    crm_trace("Callback invoked...");
+    pcmk__trace("Callback invoked...");
 }
 
 gboolean
@@ -845,11 +849,12 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                               NULL);
 
         if (rc != pcmk_ok) {
-            crm_debug("Update didn't apply: %s (%d) %p",
-                      pcmk_strerror(rc), rc, *output);
+            pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc),
+                        rc, *output);
 
             if (rc == -pcmk_err_old_data) {
-                crm_trace("Masking error, we already have the supplied update");
+                pcmk__trace("Masking error, we already have the supplied "
+                            "update");
                 return pcmk_ok;
             }
             pcmk__xml_free(*output);
@@ -864,7 +869,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         if (out != NULL) {                              \
             out->err(out, fmt, ##args);                 \
         } else {                                        \
-            crm_err(fmt, ##args);                       \
+            pcmk__err(fmt, ##args);                     \
         }                                               \
     } while (0)
 
@@ -948,8 +953,8 @@ cib__create_signon(cib_t **cib)
         return ENOMEM;
     }
 
-    crm_trace("Attempting connection to CIB API (up to %d time%s)",
-              attempts, pcmk__plural_s(attempts));
+    pcmk__trace("Attempting connection to CIB API (up to %d time%s)", attempts,
+                pcmk__plural_s(attempts));
 
     for (int remaining = attempts - 1; remaining >= 0; --remaining) {
         rc = (*cib)->cmds->signon(*cib, crm_system_name, cib_command);
@@ -962,8 +967,9 @@ cib__create_signon(cib_t **cib)
 
         // Retry after soft error (interrupted by signal, etc.)
         pcmk__sleep_ms((attempts - remaining) * 500);
-        crm_debug("Re-attempting connection to CIB manager (%d attempt%s remaining)",
-                  remaining, pcmk__plural_s(remaining));
+        pcmk__debug("Re-attempting connection to CIB manager (%d attempt%s "
+                    "remaining)",
+                    remaining, pcmk__plural_s(remaining));
     }
 
     rc = pcmk_legacy2rc(rc);

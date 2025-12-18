@@ -41,14 +41,14 @@ handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
         fenced_process_fencing_reply(request);
 
     } else {
-        crm_err("Ignoring unknown %s reply from client %s",
-                pcmk__s(op, "untyped"), pcmk__client_name(client));
-        crm_log_xml_warn(request, "UnknownOp");
+        pcmk__err("Ignoring unknown %s reply from client %s",
+                  pcmk__s(op, "untyped"), pcmk__client_name(client));
+        pcmk__log_xml_warn(request, "UnknownOp");
         return;
     }
 
-    crm_debug("Processed %s reply from client %s", op,
-              pcmk__client_name(client));
+    pcmk__debug("Processed %s reply from client %s", op,
+                pcmk__client_name(client));
 }
 
 /*!
@@ -64,10 +64,10 @@ handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
 static int32_t
 fenced_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("New client connection %p", c);
+    pcmk__trace("New client connection %p", c);
     if (stonith_shutdown_flag) {
-        crm_info("Ignoring new connection from pid %d during shutdown",
-                 pcmk__client_pid(c));
+        pcmk__info("Ignoring new connection from pid %d during shutdown",
+                   pcmk__client_pid(c));
         return -ECONNREFUSED;
     }
 
@@ -103,7 +103,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
     if (data == NULL) {
-        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
@@ -125,7 +125,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (client->buffer != NULL) {
             g_byte_array_free(client->buffer, TRUE);
@@ -136,7 +136,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
     if (msg == NULL) {
-        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
@@ -164,11 +164,12 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     rc = pcmk__xe_get_flags(msg, PCMK__XA_ST_CALLOPT, &call_options,
                             st_opt_none);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    crm_trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
-              " from client %s", flags, call_options, id, pcmk__client_name(client));
+    pcmk__trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
+                " from client %s",
+                flags, call_options, id, pcmk__client_name(client));
 
     if (pcmk__is_set(call_options, st_opt_sync_call)) {
         pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
@@ -183,7 +184,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
     if (pcmk__xpath_find_one(msg->doc, "//" PCMK__XE_ST_REPLY,
-                             LOG_NEVER) != NULL) {
+                             PCMK__LOG_NEVER) != NULL) {
         handle_ipc_reply(client, msg);
 
     } else {
@@ -225,9 +226,9 @@ fenced_ipc_closed(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        crm_trace("Ignoring request to clean up unknown connection %p", c);
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
     } else {
-        crm_trace("Cleaning up closed client connection %p", c);
+        pcmk__trace("Cleaning up closed client connection %p", c);
         pcmk__free_client(client);
     }
 
@@ -246,7 +247,7 @@ fenced_ipc_closed(qb_ipcs_connection_t *c)
 static void
 fenced_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Destroying client connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     fenced_ipc_closed(c);
 }
 

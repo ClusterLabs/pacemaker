@@ -76,7 +76,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
     if ((controld_globals.transition_graph->pending == 0)
         && (xml->children != NULL) && (xml->children->next != NULL)) {
 
-        crm_log_xml_trace(change, "lrm-refresh");
+        pcmk__log_xml_trace(change, "lrm-refresh");
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                          "History refresh", NULL);
         return;
@@ -84,7 +84,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
     for (rsc = pcmk__xe_first_child(xml, NULL, NULL, NULL); rsc != NULL;
          rsc = pcmk__xe_next(rsc, NULL)) {
-        crm_trace("Processing %s", pcmk__xe_id(rsc));
+        pcmk__trace("Processing %s", pcmk__xe_id(rsc));
         process_lrm_resource_diff(rsc, node);
     }
 }
@@ -130,7 +130,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
 
     node_uuid = extract_node_uuid(xpath);
     if(node_uuid == NULL) {
-        crm_err("Could not extract node ID from %s", xpath);
+        pcmk__err("Could not extract node ID from %s", xpath);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart, reason,
                          change);
         return;
@@ -138,11 +138,11 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
 
     down = match_down_event(node_uuid);
     if (down == NULL) {
-        crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
+        pcmk__trace("Not expecting %s to be down (%s)", node_uuid, xpath);
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart, reason,
                          change);
     } else {
-        crm_trace("Expecting changes to %s (%s)", node_uuid, xpath);
+        pcmk__trace("Expecting changes to %s (%s)", node_uuid, xpath);
     }
     free(node_uuid);
 }
@@ -161,8 +161,8 @@ process_op_deletion(const char *xpath, xmlNode *change)
         key = strrchr(mutable_key, '\'');
     }
     if (key == NULL) {
-        crm_warn("Ignoring malformed CIB update (resource deletion of %s)",
-                 xpath);
+        pcmk__warn("Ignoring malformed CIB update (resource deletion of %s)",
+                   xpath);
         free(mutable_key);
         return;
     }
@@ -190,7 +190,7 @@ process_delete_diff(const char *xpath, const char *op, xmlNode *change)
         abort_unless_down(xpath, op, change, "Node state removal");
 
     } else {
-        crm_trace("Ignoring delete of %s", xpath);
+        pcmk__trace("Ignoring delete of %s", xpath);
     }
 }
 
@@ -246,7 +246,7 @@ te_update_diff_element(xmlNode *change, void *userdata)
         return pcmk_rc_ok;
 
     } else if (xpath == NULL) {
-        crm_trace("Ignoring %s change for version field", op);
+        pcmk__trace("Ignoring %s change for version field", op);
         return pcmk_rc_ok;
 
     } else if ((strcmp(op, PCMK_VALUE_MOVE) == 0)
@@ -256,7 +256,7 @@ te_update_diff_element(xmlNode *change, void *userdata)
         /* We still need to consider moves within the resources section,
          * since they affect placement order.
          */
-        crm_trace("Ignoring move change at %s", xpath);
+        pcmk__trace("Ignoring move change at %s", xpath);
         return pcmk_rc_ok;
     }
 
@@ -273,22 +273,22 @@ te_update_diff_element(xmlNode *change, void *userdata)
     } else if (!pcmk__str_any_of(op,
                                  PCMK_VALUE_DELETE, PCMK_VALUE_MOVE,
                                  NULL)) {
-        crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
-                 op, xpath);
+        pcmk__warn("Ignoring malformed CIB update (%s operation on %s is "
+                   "unrecognized)",
+                   op, xpath);
         return pcmk_rc_ok;
     }
 
     if (match) {
         if (match->type == XML_COMMENT_NODE) {
-            crm_trace("Ignoring %s operation for comment at %s", op, xpath);
+            pcmk__trace("Ignoring %s operation for comment at %s", op, xpath);
             return pcmk_rc_ok;
         }
         name = (const char *)match->name;
     }
 
-    crm_trace("Handling %s operation for %s%s%s",
-              op, (xpath? xpath : "CIB"),
-              (name? " matched by " : ""), (name? name : ""));
+    pcmk__trace("Handling %s operation for %s%s%s", op, pcmk__s(xpath, "CIB"),
+                ((name != NULL)? " matched by " : ""), pcmk__s(name, ""));
 
     if (strstr(xpath, "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION)) {
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
@@ -311,8 +311,8 @@ te_update_diff_element(xmlNode *change, void *userdata)
         process_delete_diff(xpath, op, change);
 
     } else if (name == NULL) {
-        crm_warn("Ignoring malformed CIB update (%s at %s has no result)",
-                 op, xpath);
+        pcmk__warn("Ignoring malformed CIB update (%s at %s has no result)", op,
+                   xpath);
 
     } else if (strcmp(name, PCMK_XE_CIB) == 0) {
         process_cib_diff(match, change, op, xpath);
@@ -346,8 +346,9 @@ te_update_diff_element(xmlNode *change, void *userdata)
         free(local_node);
 
     } else {
-        crm_warn("Ignoring malformed CIB update (%s at %s has unrecognized result %s)",
-                 op, xpath, name);
+        pcmk__warn("Ignoring malformed CIB update (%s at %s has unrecognized "
+                   "result %s)",
+                   op, xpath, name);
     }
 
     return pcmk_rc_ok;
@@ -368,19 +369,19 @@ te_update_diff(const char *event, xmlNode * msg)
     pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
 
     if (controld_globals.transition_graph == NULL) {
-        crm_trace("No graph");
+        pcmk__trace("No graph");
         return;
 
     } else if (rc < pcmk_ok) {
-        crm_trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
+        pcmk__trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
         return;
 
     } else if (controld_globals.transition_graph->complete
                && (controld_globals.fsa_state != S_IDLE)
                && (controld_globals.fsa_state != S_TRANSITION_ENGINE)
                && (controld_globals.fsa_state != S_POLICY_ENGINE)) {
-        crm_trace("Filter state=%s (complete)",
-                  fsa_state2string(controld_globals.fsa_state));
+        pcmk__trace("Filter state=%s (complete)",
+                    fsa_state2string(controld_globals.fsa_state));
         return;
     }
 
@@ -390,19 +391,19 @@ te_update_diff(const char *event, xmlNode * msg)
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     pcmk__xml_patchset_versions(diff, p_del, p_add);
-    crm_debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
-              p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__debug("Processing (%s) diff: %d.%d.%d -> %d.%d.%d (%s)", op,
+                p_del[0], p_del[1], p_del[2], p_add[0], p_add[1], p_add[2],
+                fsa_state2string(controld_globals.fsa_state));
 
     pcmk__xe_get_int(diff, PCMK_XA_FORMAT, &format);
 
     if (format == 2) {
-        crm_log_xml_trace(diff, "patch");
+        pcmk__log_xml_trace(diff, "patch");
         pcmk__xe_foreach_child(diff, NULL, te_update_diff_element, NULL);
 
     } else {
-        crm_warn("Ignoring malformed CIB update (unknown patch format %d)",
-                 format);
+        pcmk__warn("Ignoring malformed CIB update (unknown patch format %d)",
+                   format);
     }
     controld_remove_all_outside_events();
 }
@@ -420,35 +421,38 @@ process_te_message(xmlNode * msg, xmlNode * xml_data)
     value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_TO);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, CRM_SYSTEM_TENGINE, pcmk__str_none)) {
-        crm_info("Received invalid transition request: subsystem '%s' not '"
-                 CRM_SYSTEM_TENGINE "'", pcmk__s(value, ""));
+        pcmk__info("Received invalid transition request: subsystem '%s' not '"
+                   CRM_SYSTEM_TENGINE "'",
+                   pcmk__s(value, ""));
         return;
     }
 
     // Only the lrm_invoke command is supported as a transition request
     value = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
     if (!pcmk__str_eq(value, CRM_OP_INVOKE_LRM, pcmk__str_none)) {
-        crm_info("Received invalid transition request: command '%s' not '"
-                 CRM_OP_INVOKE_LRM "'", pcmk__s(value, ""));
+        pcmk__info("Received invalid transition request: command '%s' not '"
+                   CRM_OP_INVOKE_LRM "'",
+                   pcmk__s(value, ""));
         return;
     }
 
     // Transition requests must be marked as coming from the executor
     value = pcmk__xe_get(msg, PCMK__XA_CRM_SYS_FROM);
     if (!pcmk__str_eq(value, CRM_SYSTEM_LRMD, pcmk__str_none)) {
-        crm_info("Received invalid transition request: from '%s' not '"
-                 CRM_SYSTEM_LRMD "'", pcmk__s(value, ""));
+        pcmk__info("Received invalid transition request: from '%s' not '"
+                   CRM_SYSTEM_LRMD "'",
+                   pcmk__s(value, ""));
         return;
     }
 
-    crm_debug("Processing transition request with ref='%s' origin='%s'",
-              pcmk__s(pcmk__xe_get(msg, PCMK_XA_REFERENCE), ""),
-              pcmk__s(pcmk__xe_get(msg, PCMK__XA_SRC), ""));
+    pcmk__debug("Processing transition request with ref='%s' origin='%s'",
+                pcmk__s(pcmk__xe_get(msg, PCMK_XA_REFERENCE), ""),
+                pcmk__s(pcmk__xe_get(msg, PCMK__XA_SRC), ""));
 
     xpathObj = pcmk__xpath_search(xml_data->doc, "//" PCMK__XE_LRM_RSC_OP);
     nmatches = pcmk__xpath_num_results(xpathObj);
     if (nmatches == 0) {
-        crm_err("Received transition request with no results (bug?)");
+        pcmk__err("Received transition request with no results (bug?)");
     } else {
         for (int lpc = 0; lpc < nmatches; lpc++) {
             xmlNode *rsc_op = pcmk__xpath_result(xpathObj, lpc);
@@ -467,7 +471,7 @@ void
 cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     if (rc < pcmk_ok) {
-        crm_err("Update %d FAILED: %s", call_id, pcmk_strerror(rc));
+        pcmk__err("Update %d FAILED: %s", call_id, pcmk_strerror(rc));
     }
 }
 
@@ -495,19 +499,19 @@ action_timer_callback(gpointer data)
     via_node = pcmk__xe_get(action->xml, PCMK__XA_ROUTER_NODE);
 
     if (controld_globals.transition_graph->complete) {
-        crm_notice("Node %s did not send %s result (via %s) within %dms "
-                   "(ignoring because transition not in progress)",
-                   (on_node? on_node : ""), (task? task : "unknown action"),
-                   (via_node? via_node : "controller"), action->timeout);
+        pcmk__notice("Node %s did not send %s result (via %s) within %dms "
+                     "(ignoring because transition not in progress)",
+                     pcmk__s(on_node, ""), pcmk__s(task, "unknown action"),
+                     pcmk__s(via_node, "controller"), action->timeout);
     } else {
         /* fail the action */
 
-        crm_err("Node %s did not send %s result (via %s) within %dms "
-                "(action timeout plus " PCMK_OPT_CLUSTER_DELAY ")",
-                (on_node? on_node : ""), (task? task : "unknown action"),
-                (via_node? via_node : "controller"),
-                (action->timeout
-                 + controld_globals.transition_graph->network_delay));
+        pcmk__err("Node %s did not send %s result (via %s) within %dms "
+                  "(action timeout plus " PCMK_OPT_CLUSTER_DELAY ")",
+                  pcmk__s(on_node, ""), pcmk__s(task, "unknown action"),
+                  pcmk__s(via_node, "controller"),
+                  (action->timeout
+                   + controld_globals.transition_graph->network_delay));
         pcmk__log_graph_action(LOG_ERR, action);
 
         pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);

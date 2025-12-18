@@ -74,7 +74,7 @@ services__systemd2ocf(int exit_status)
 static inline DBusMessage *
 systemd_new_method(const char *method)
 {
-    crm_trace("Calling: %s on " BUS_NAME_MANAGER, method);
+    pcmk__trace("Calling: %s on " BUS_NAME_MANAGER, method);
     return dbus_message_new_method_call(BUS_NAME, BUS_PATH, BUS_NAME_MANAGER,
                                         method);
 }
@@ -123,7 +123,7 @@ systemd_call_simple_method(const char *method)
     msg = systemd_new_method(method);
 
     if (msg == NULL) {
-        crm_err("Could not create message to send %s to systemd", method);
+        pcmk__err("Could not create message to send %s to systemd", method);
         return NULL;
     }
 
@@ -132,13 +132,13 @@ systemd_call_simple_method(const char *method)
     dbus_message_unref(msg);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Could not send %s to systemd: %s (%s)",
-                method, error.message, error.name);
+        pcmk__err("Could not send %s to systemd: %s (%s)", method,
+                  error.message, error.name);
         dbus_error_free(&error);
         return NULL;
 
     } else if (reply == NULL) {
-        crm_err("Could not send %s to systemd: no reply received", method);
+        pcmk__err("Could not send %s to systemd: no reply received", method);
         return NULL;
     }
 
@@ -172,8 +172,9 @@ subscribe_to_signals(void)
     dbus_bus_add_match(systemd_proxy, match_rule, &error);
 
     if (dbus_error_is_set(&error)) {
-        crm_err("Could not listen for systemd DBus signals: %s " QB_XS " (%s)",
-                error.message, error.name);
+        pcmk__err("Could not listen for systemd DBus signals: %s "
+                  QB_XS " (%s)",
+                  error.message, error.name);
         dbus_error_free(&error);
         return ECOMM;
     }
@@ -197,7 +198,7 @@ systemd_init(void)
 
     if (systemd_proxy
         && dbus_connection_get_is_connected(systemd_proxy) == FALSE) {
-        crm_warn("Connection to System DBus is closed. Reconnecting...");
+        pcmk__warn("Connection to System DBus is closed. Reconnecting...");
         pcmk_dbus_disconnect(systemd_proxy);
         systemd_proxy = NULL;
         need_init = 1;
@@ -314,12 +315,12 @@ systemd_daemon_reload_complete(DBusPendingCall *pending, void *user_data)
     }
 
     if (pcmk_dbus_find_error(pending, reply, &error)) {
-        crm_warn("Could not issue systemd reload %d: %s",
-                 reload_count, error.message);
+        pcmk__warn("Could not issue systemd reload %d: %s", reload_count,
+                   error.message);
         dbus_error_free(&error);
 
     } else {
-        crm_trace("Reload %d complete", reload_count);
+        pcmk__trace("Reload %d complete", reload_count);
     }
 
     if(pending) {
@@ -363,9 +364,9 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         || dbus_error_has_name(error, "org.freedesktop.systemd1.NoSuchUnit")) {
 
         if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-            crm_trace("Masking systemd stop failure (%s) for %s "
-                      "because unknown service can be considered stopped",
-                      error->name, pcmk__s(op->rsc, "unknown resource"));
+            pcmk__trace("Masking systemd stop failure (%s) for %s "
+                        "because unknown service can be considered stopped",
+                        error->name, pcmk__s(op->rsc, "unknown resource"));
             services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -388,10 +389,10 @@ set_result_from_method_error(svc_action_t *op, const DBusError *error)
         services__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
     }
 
-    crm_info("DBus request for %s of systemd unit %s%s%s failed: %s",
-             op->action, op->agent,
-             ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""),
-             error->message);
+    pcmk__info("DBus request for %s of systemd unit %s%s%s failed: %s",
+               op->action, op->agent,
+               ((op->rsc != NULL)? " for resource " : ""), pcmk__s(op->rsc, ""),
+               error->message);
 }
 
 /*!
@@ -424,11 +425,12 @@ execute_after_loadunit(DBusMessage *reply, svc_action_t *op)
         if (op != NULL) {
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                                  "systemd DBus method had unexpected reply");
-            crm_info("Could not load systemd unit %s for %s: "
-                     "DBus reply has unexpected type", op->agent, op->id);
+            pcmk__info("Could not load systemd unit %s for %s: DBus reply has "
+                       "unexpected type",
+                       op->agent, op->id);
         } else {
-            crm_info("Could not load systemd unit: "
-                     "DBus reply has unexpected type");
+            pcmk__info("Could not load systemd unit: DBus reply has unexpected "
+                       "type");
         }
 
     } else {
@@ -469,7 +471,7 @@ loadunit_completed(DBusPendingCall *pending, void *user_data)
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    crm_trace("LoadUnit result for %s arrived", op->id);
+    pcmk__trace("LoadUnit result for %s arrived", op->id);
 
     // Grab the reply
     if (pending != NULL) {
@@ -636,13 +638,15 @@ systemd_unit_listall(void)
         return NULL;
     }
     if (!dbus_message_iter_init(reply, &args)) {
-        crm_err("Could not list systemd unit files: systemd reply has no arguments");
+        pcmk__err("Could not list systemd unit files: systemd reply has no "
+                  "arguments");
         dbus_message_unref(reply);
         return NULL;
     }
     if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY,
                               __func__, __LINE__)) {
-        crm_err("Could not list systemd unit files: systemd reply has invalid arguments");
+        pcmk__err("Could not list systemd unit files: systemd reply has "
+                  "invalid arguments");
         dbus_message_unref(reply);
         return NULL;
     }
@@ -657,28 +661,28 @@ systemd_unit_listall(void)
         char *basename = NULL;
 
         if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __func__, __LINE__)) {
-            crm_warn("Skipping systemd reply argument with unexpected type");
+            pcmk__warn("Skipping systemd reply argument with unexpected type");
             continue;
         }
 
         dbus_message_iter_recurse(&unit, &elem);
         if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __func__, __LINE__)) {
-            crm_warn("Skipping systemd reply argument with no string");
+            pcmk__warn("Skipping systemd reply argument with no string");
             continue;
         }
 
         dbus_message_iter_get_basic(&elem, &value);
         if (value.str == NULL) {
-            crm_debug("ListUnitFiles reply did not provide a string");
+            pcmk__debug("ListUnitFiles reply did not provide a string");
             continue;
         }
-        crm_trace("DBus ListUnitFiles listed: %s", value.str);
+        pcmk__trace("DBus ListUnitFiles listed: %s", value.str);
 
         match = systemd_unit_extension(value.str);
         if (match == NULL) {
             // This is not a unit file type we know how to manage
-            crm_debug("ListUnitFiles entry '%s' is not supported as resource",
-                      value.str);
+            pcmk__debug("ListUnitFiles entry '%s' is not supported as resource",
+                        value.str);
             continue;
         }
 
@@ -703,7 +707,7 @@ systemd_unit_listall(void)
 
     dbus_message_unref(reply);
 
-    crm_trace("Found %d manageable systemd unit files", nfiles);
+    pcmk__trace("Found %d manageable systemd unit files", nfiles);
     units = g_list_sort(units, sort_str);
     return units;
 }
@@ -824,9 +828,9 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                                      __func__, __LINE__)) {
         const char *reason = "systemd D-Bus method had unexpected reply";
 
-        crm_info("DBus request for %s of %s succeeded but "
-                 "return type was unexpected",
-                 op->action, pcmk__s(op->rsc, "unknown resource"));
+        pcmk__info("DBus request for %s of %s succeeded but return type was "
+                   "unexpected",
+                   op->action, pcmk__s(op->rsc, "unknown resource"));
 
         if (!op->synchronous && start_stop) {
             /* The start or stop job is enqueued but is not complete. We need a
@@ -849,8 +853,8 @@ process_unit_method_reply(DBusMessage *reply, svc_action_t *op)
                               DBUS_TYPE_OBJECT_PATH, &path,
                               DBUS_TYPE_INVALID);
 
-        crm_debug("DBus request for %s of %s using %s succeeded",
-                  op->action, pcmk__s(op->rsc, "unknown resource"), path);
+        pcmk__debug("DBus request for %s of %s using %s succeeded",
+                    op->action, pcmk__s(op->rsc, "unknown resource"), path);
 
         if (!op->synchronous && start_stop) {
             // Should be set to unknown/pending already
@@ -910,8 +914,8 @@ job_removed_filter(DBusConnection *connection, DBusMessage *message,
                                DBUS_TYPE_STRING, &unit_name,
                                DBUS_TYPE_STRING, &result,
                                DBUS_TYPE_INVALID)) {
-        crm_err("Could not interpret systemd DBus signal: %s " QB_XS " (%s)",
-                error.message, error.name);
+        pcmk__err("Could not interpret systemd DBus signal: %s " QB_XS " (%s)",
+                  error.message, error.name);
         dbus_error_free(&error);
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
@@ -923,8 +927,9 @@ job_removed_filter(DBusConnection *connection, DBusMessage *message,
 
     action_name = pcmk__s(action->action, "(unknown)");
 
-    crm_trace("Setting %s result for %s (JobRemoved id=%" PRIu32 ", result=%s",
-              action_name, unit_name, job_id, result);
+    pcmk__trace("Setting %s result for %s (JobRemoved id=%" PRIu32
+                ", result=%s",
+                action_name, unit_name, job_id, result);
 
     if (pcmk__str_eq(result, "done", pcmk__str_none)) {
         services__set_result(action, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
@@ -974,7 +979,7 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
     DBusMessage *reply = NULL;
     svc_action_t *op = user_data;
 
-    crm_trace("Result for %s arrived", op->id);
+    pcmk__trace("Result for %s arrived", op->id);
 
     // Grab the reply
     if (pending != NULL) {
@@ -1007,7 +1012,7 @@ unit_method_complete(DBusPendingCall *pending, void *user_data)
                                        finalize_async_action_dbus)) {
             return;
         }
-        crm_err("Could not add D-Bus filter for systemd JobRemoved signals");
+        pcmk__err("Could not add D-Bus filter for systemd JobRemoved signals");
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                              "Failed to add D-Bus filter for systemd "
                              "JobRemoved signal");
@@ -1094,8 +1099,8 @@ systemd_create_override(const char *agent, int timeout)
     filename = get_override_dir(unit_name);
     rc = pcmk__build_path(filename->str, 0755);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not create systemd override directory %s: %s",
-                filename->str, pcmk_rc_str(rc));
+        pcmk__err("Could not create systemd override directory %s: %s",
+                  filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1103,8 +1108,8 @@ systemd_create_override(const char *agent, int timeout)
     fp = fopen(filename->str, "w");
     if (fp == NULL) {
         rc = errno;
-        crm_err("Cannot open systemd override file %s for writing: %s",
-                filename->str, pcmk_rc_str(rc));
+        pcmk__err("Cannot open systemd override file %s for writing: %s",
+                  filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1112,8 +1117,8 @@ systemd_create_override(const char *agent, int timeout)
     fd = fileno(fp);
     if ((fd < 0) || (fchmod(fd, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH) < 0)) {
         rc = errno;
-        crm_err("Failed to set permissions on systemd override file %s: %s",
-                filename->str, pcmk_rc_str(rc));
+        pcmk__err("Failed to set permissions on systemd override file %s: %s",
+                  filename->str, pcmk_rc_str(rc));
         goto done;
     }
 
@@ -1125,7 +1130,7 @@ systemd_create_override(const char *agent, int timeout)
 
     if (fputs(override->str, fp) == EOF) {
         rc = EIO;
-        crm_err("Cannot write to systemd override file %s", filename->str);
+        pcmk__err("Cannot write to systemd override file %s", filename->str);
     }
 
 done:
@@ -1170,8 +1175,8 @@ systemd_remove_override(const char *agent, int timeout)
 
         if (rc != ENOENT) {
             // Stop may be called when already stopped, which is fine
-            crm_warn("Cannot remove systemd override file %s: %s",
-                     filename->str, pcmk_rc_str(rc));
+            pcmk__warn("Cannot remove systemd override file %s: %s",
+                       filename->str, pcmk_rc_str(rc));
         }
 
     } else {
@@ -1203,9 +1208,8 @@ parse_status_result(const char *name, const char *state, void *userdata)
 {
     svc_action_t *op = userdata;
 
-    crm_trace("Resource %s has %s='%s'",
-              pcmk__s(op->rsc, "(unspecified)"), name,
-              pcmk__s(state, "<null>"));
+    pcmk__trace("Resource %s has %s='%s'", pcmk__s(op->rsc, "(unspecified)"),
+                name, pcmk__s(state, "<null>"));
 
     if (pcmk__str_eq(state, "active", pcmk__str_none)) {
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
@@ -1302,9 +1306,9 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
         return;
     }
 
-    crm_trace("Calling %s for unit path %s%s%s",
-              method, unit,
-              ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
+    pcmk__trace("Calling %s for unit path %s%s%s", method, unit,
+                ((op->rsc != NULL)? " for resource " : ""),
+                pcmk__s(op->rsc, ""));
 
     msg = systemd_new_method(method);
     pcmk__assert(msg != NULL);
@@ -1353,8 +1357,8 @@ systemd_timeout_callback(gpointer p)
     svc_action_t * op = p;
 
     op->opaque->timerid = 0;
-    crm_info("%s action for systemd unit %s named '%s' timed out",
-             op->action, op->agent, op->rsc);
+    pcmk__info("%s action for systemd unit %s named '%s' timed out", op->action,
+               op->agent, op->rsc);
     services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_TIMEOUT,
                             "%s action for systemd unit %s "
                             "did not complete in time", op->action, op->agent);
@@ -1402,9 +1406,10 @@ services__execute_systemd(svc_action_t *op)
         goto done;
     }
 
-    crm_debug("Performing %ssynchronous %s op on systemd unit %s%s%s",
-              (op->synchronous? "" : "a"), op->action, op->agent,
-              ((op->rsc == NULL)? "" : " for resource "), pcmk__s(op->rsc, ""));
+    pcmk__debug("Performing %ssynchronous %s op on systemd unit %s%s%s",
+                (op->synchronous? "" : "a"), op->action, op->agent,
+                ((op->rsc != NULL)? " for resource " : ""),
+                pcmk__s(op->rsc, ""));
 
     if (pcmk__str_eq(op->action, PCMK_ACTION_META_DATA, pcmk__str_casei)) {
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);

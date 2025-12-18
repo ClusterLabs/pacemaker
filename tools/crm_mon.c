@@ -876,7 +876,7 @@ setup_fencer_connection(void)
 
     rc = st->cmds->connect(st, crm_system_name, NULL);
     if (rc == pcmk_ok) {
-        crm_trace("Setting up fencer API callbacks");
+        pcmk__trace("Setting up fencer API callbacks");
         if (options.watch_fencing) {
             st->cmds->register_notification(st,
                                             PCMK__VALUE_ST_NOTIFY_DISCONNECT,
@@ -1191,13 +1191,13 @@ avoid_zombies(void)
 
     memset(&sa, 0, sizeof(struct sigaction));
     if (sigemptyset(&sa.sa_mask) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
+        pcmk__warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
         return;
     }
     sa.sa_handler = SIG_IGN;
     sa.sa_flags = SA_RESTART|SA_NOCLDWAIT;
     if (sigaction(SIGCHLD, &sa, NULL) < 0) {
-        crm_warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
+        pcmk__warn("Cannot avoid zombies: %s", pcmk_rc_str(errno));
     }
 }
 
@@ -1612,7 +1612,7 @@ main(int argc, char **argv)
             break;
     }
 
-    crm_info("Starting %s", crm_system_name);
+    pcmk__info("Starting %s", crm_system_name);
 
     if (options.exec_mode == mon_exec_one_shot) {
         // Needs cib but not scheduler
@@ -1684,7 +1684,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
 
-    crm_info("Exiting %s", crm_system_name);
+    pcmk__info("Exiting %s", crm_system_name);
 
     return clean_up(CRM_EX_OK);
 }
@@ -1700,7 +1700,8 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     char *status_s = pcmk__itoa(status);
     char *target_rc_s = pcmk__itoa(target_rc);
 
-    crm_debug("Sending external notification to '%s' via '%s'", options.external_recipient, options.external_agent);
+    pcmk__debug("Sending external notification to '%s' via '%s'",
+                options.external_recipient, options.external_agent);
 
     if(rsc) {
         setenv("CRM_notify_rsc", rsc, 1);
@@ -1720,12 +1721,12 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
         out->err(out, "notification fork() failed: %s", strerror(errno));
     }
     if (pid == 0) {
-        /* crm_debug("notification: I am the child. Executing the nofitication program."); */
         execl(options.external_agent, options.external_agent, NULL);
         crm_exit(CRM_EX_ERROR);
     }
 
-    crm_trace("Finished running custom notification program '%s'.", options.external_agent);
+    pcmk__trace("Finished running custom notification program '%s'",
+                options.external_agent);
     free(target_rc_s);
     free(status_s);
     free(rc_s);
@@ -1766,12 +1767,12 @@ handle_rsc_op(xmlNode *xml, void *userdata)
 
     if (!decode_transition_magic(magic, NULL, NULL, NULL, &status, &rc,
                                  &target_rc)) {
-        crm_err("Invalid event %s detected for %s", magic, id);
+        pcmk__err("Invalid event %s detected for %s", magic, id);
         return pcmk_rc_ok;
     }
 
     if (parse_op_key(id, &rsc, &task, NULL) == FALSE) {
-        crm_err("Invalid event detected for %s", id);
+        pcmk__err("Invalid event detected for %s", id);
         goto bail;
     }
 
@@ -1794,25 +1795,25 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     }
 
     if (node == NULL) {
-        crm_err("No node detected for event %s (%s)", magic, id);
+        pcmk__err("No node detected for event %s (%s)", magic, id);
         goto bail;
     }
 
     /* look up where we expected it to be? */
     desc = pcmk_rc_str(pcmk_rc_ok);
     if ((status == PCMK_EXEC_DONE) && (target_rc == rc)) {
-        crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
+        pcmk__notice("%s of %s on %s completed: %s", task, rsc, node, desc);
         if (rc == PCMK_OCF_NOT_RUNNING) {
             notify = FALSE;
         }
 
     } else if (status == PCMK_EXEC_DONE) {
         desc = crm_exit_str(rc);
-        crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
+        pcmk__warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 
     } else {
         desc = pcmk_exec_status_str(status);
-        crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
+        pcmk__warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
     if (notify && (options.external_agent != NULL)) {
@@ -1879,12 +1880,12 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         name = (const char *)match->name;
     }
 
-    crm_trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
+    pcmk__trace("Handling %s operation for %s %p, %s", op, xpath, match, name);
     if(xpath == NULL) {
         /* Version field, ignore */
 
     } else if(name == NULL) {
-        crm_debug("No result for %s operation to %s", op, xpath);
+        pcmk__debug("No result for %s operation to %s", op, xpath);
         pcmk__assert(pcmk__str_any_of(op, PCMK_VALUE_MOVE, PCMK_VALUE_DELETE,
                                       NULL));
 
@@ -1926,7 +1927,8 @@ crm_diff_update_element(xmlNode *change, void *userdata)
         free(local_node);
 
     } else {
-        crm_trace("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
+        pcmk__trace("Ignoring %s operation for %s %p, %s", op, xpath, match,
+                    name);
     }
 
     return pcmk_rc_ok;
@@ -1950,20 +1952,22 @@ crm_diff_update(const char *event, xmlNode * msg)
         switch (rc) {
             case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
-                crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__notice("[%s] Patch aborted: %s (%d)", event,
+                             pcmk_strerror(rc), rc);
                 pcmk__xml_free(current_cib); current_cib = NULL;
                 break;
             case pcmk_ok:
                 cib_updated = TRUE;
                 break;
             default:
-                crm_notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
+                pcmk__notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
+                             rc);
                 pcmk__xml_free(current_cib); current_cib = NULL;
         }
     }
 
     if (current_cib == NULL) {
-        crm_trace("Re-requesting the full cib");
+        pcmk__trace("Re-requesting the full cib");
         cib->cmds->query(cib, NULL, &current_cib, cib_sync_call);
     }
 
@@ -1981,7 +1985,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             pcmk__xe_foreach_child(diff, NULL, crm_diff_update_element, NULL);
 
         } else {
-            crm_err("Unknown patch format: %d", format);
+            pcmk__err("Unknown patch format: %d", format);
         }
     }
 

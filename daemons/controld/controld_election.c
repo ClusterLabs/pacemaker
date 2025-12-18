@@ -78,8 +78,8 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
         case S_RECOVERY:
         case S_STOPPING:
         case S_TERMINATE:
-            crm_warn("Not voting in election, we're in state %s",
-                     fsa_state2string(cur_state));
+            pcmk__warn("Not voting in election, we're in state %s",
+                       fsa_state2string(cur_state));
             controld_fsa_append(C_FSA_INTERNAL,
                                 (AM_I_DC? I_RELEASE_DC : I_PENDING), NULL);
             return;
@@ -90,8 +90,8 @@ do_election_vote(long long action, enum crmd_fsa_cause cause,
             break;
 
         default:
-            crm_err("Bug: Voting in DC election in unexpected state %s",
-                    fsa_state2string(cur_state));
+            pcmk__err("Bug: Voting in DC election in unexpected state %s",
+                      fsa_state2string(cur_state));
             break;
     }
 
@@ -107,7 +107,8 @@ do_election_check(long long action, enum crmd_fsa_cause cause,
     if (controld_globals.fsa_state == S_ELECTION) {
         election_check(controld_globals.cluster);
     } else {
-        crm_debug("Ignoring election check because we are not in an election");
+        pcmk__debug("Ignoring election check because we are not in an "
+                    "election");
     }
 }
 
@@ -122,7 +123,7 @@ do_election_count_vote(long long action, enum crmd_fsa_cause cause,
 
     if (pcmk__peer_cache == NULL) {
         if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Internal error: no peer cache");
+            pcmk__err("Internal error: no peer cache");
         }
         return;
     }
@@ -153,7 +154,7 @@ do_election_count_vote(long long action, enum crmd_fsa_cause cause,
             break;
 
         default:
-            crm_trace("Election message resulted in state %d", rc);
+            pcmk__trace("Election message resulted in state %d", rc);
             break;
     }
 }
@@ -167,8 +168,8 @@ feature_update_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
         return;
     }
 
-    crm_notice("Feature set update failed: %s " QB_XS " rc=%d", pcmk_rc_str(rc),
-               rc);
+    pcmk__notice("Feature set update failed: %s " QB_XS " rc=%d",
+                 pcmk_rc_str(rc), rc);
     register_fsa_error(I_ERROR, NULL);
 }
 
@@ -197,7 +198,7 @@ do_dc_takeover(long long action, enum crmd_fsa_cause cause,
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     const bool have_watchdog = (pcmk__locate_sbd() != 0);
 
-    crm_info("Taking over DC status for this partition");
+    pcmk__info("Taking over DC status for this partition");
     controld_set_fsa_input_flags(R_THE_DC);
     controld_execute_fencing_cleanup();
 
@@ -239,12 +240,12 @@ do_dc_release(long long action, enum crmd_fsa_cause cause,
               fsa_data_t *msg_data)
 {
     if (pcmk__is_set(action, A_DC_RELEASE)) {
-        crm_debug("Releasing the role of DC");
+        pcmk__debug("Releasing the role of DC");
         controld_clear_fsa_input_flags(R_THE_DC);
         controld_expect_sched_reply(NULL);
 
     } else if (pcmk__is_set(action, A_DC_RELEASED)) {
-        crm_info("DC role released");
+        pcmk__info("DC role released");
 
         if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
             xmlNode *update = NULL;
@@ -264,9 +265,9 @@ do_dc_release(long long action, enum crmd_fsa_cause cause,
         controld_fsa_append(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);
 
     } else {
-        crm_err("Not releasing DC role due to unexpected action %s",
-                fsa_action2string(action));
+        pcmk__err("Not releasing DC role due to unexpected action %s",
+                  fsa_action2string(action));
     }
 
-    crm_trace("Local node is%s the DC", (AM_I_DC? "" : " not"));
+    pcmk__trace("Local node is%s the DC", (AM_I_DC? "" : " not"));
 }

@@ -602,8 +602,8 @@ purge_node_from_cib(const char *node_name, long node_id)
     cib__clean_up_connection(&cib);
 
     if ((rc == pcmk_rc_ok) && (commit_rc == pcmk_ok)) {
-        crm_debug("Purged node %s (%ld) from CIB",
-                  pcmk__s(node_name, "by ID"), node_id);
+        pcmk__debug("Purged node %s (%ld) from CIB",
+                    pcmk__s(node_name, "by ID"), node_id);
     }
     return rc;
 }
@@ -695,8 +695,8 @@ purge_node_from_fencer(const char *node_name, long node_id)
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc >= 0) {
         rc = pcmk_rc_ok;
-        crm_debug("Purged node %s (%ld) from fencer",
-                  pcmk__s(node_name, "by ID"), node_id);
+        pcmk__debug("Purged node %s (%ld) from fencer",
+                    pcmk__s(node_name, "by ID"), node_id);
     } else {
         rc = pcmk_legacy2rc(rc);
         fprintf(stderr, "Could not purge node %s from fencer: %s\n",

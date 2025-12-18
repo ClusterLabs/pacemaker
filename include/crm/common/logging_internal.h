@@ -11,7 +11,9 @@
 #define PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 
 #include <stdint.h>                     // UINT32_C
+
 #include <glib.h>
+#include <qb/qblog.h>                   // LOG_TRACE, qb_*
 
 #include <crm/common/internal.h>        // pcmk__is_set()
 #include <crm/common/logging.h>
@@ -20,6 +22,161 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Define custom log priorities.
+ *
+ * syslog(3) uses int for priorities, but libqb's struct qb_log_callsite uses
+ * uint8_t, so make sure they fit in the latter.
+ */
+
+/*!
+ * \internal
+ * \brief Request to print message to \c stdout instead of logging it
+ *
+ * Some callees print nothing when this is the log level.
+ *
+ * \note This value must stay the same as \c LOG_STDOUT until the latter is
+ *       dropped. Be mindful of public API functions that may pass arbitrary
+ *       integer log levels as well.
+ */
+#define PCMK__LOG_STDOUT 254
+
+/*!
+ * \internal
+ * \brief Request not to print or log message anywhere
+ *
+ * \note This value must stay the same as \c LOG_NEVER until the latter is
+ *       dropped. Be mindful of public API functions that may pass arbitrary
+ *       integer log levels as well.
+ */
+#define PCMK__LOG_NEVER 255
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_EMERG level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__emerg(fmt, args...) qb_log(LOG_EMERG, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_CRIT level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__crit(fmt, args...) qb_log(LOG_CRIT, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_ERR level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__err(fmt, args...) qb_log(LOG_ERR, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_WARN level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__warn(fmt, args...) qb_log(LOG_WARNING, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_NOTICE level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__notice(fmt, args...) qb_log(LOG_NOTICE, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_INFO level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__info(fmt, args...) qb_log(LOG_INFO, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_DEBUG level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__debug(fmt, args...) do_crm_log_unlikely(LOG_DEBUG, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log a message at \c LOG_TRACE level
+ *
+ * \param[in] fmt   \c printf() format string for log message
+ * \param[in] args  Format string arguments
+ */
+#define pcmk__trace(fmt, args...) do_crm_log_unlikely(LOG_TRACE, fmt, ##args)
+
+/*!
+ * \internal
+ * \brief Log XML line-by-line in a formatted fashion at \c LOG_ERR level
+ *
+ * \param[in] xml     XML to log
+ * \param[in] prefix  Prefix for each line
+ */
+#define pcmk__log_xml_err(xml, prefix) do_crm_log_xml(LOG_ERR, prefix, xml)
+
+/*!
+ * \internal
+ * \brief Log XML line-by-line in a formatted fashion at \c LOG_WARNING level
+ *
+ * \param[in] xml     XML to log
+ * \param[in] prefix  Prefix for each line
+ */
+#define pcmk__log_xml_warn(xml, prefix) do_crm_log_xml(LOG_WARNING, prefix, xml)
+
+/*!
+ * \internal
+ * \brief Log XML line-by-line in a formatted fashion at \c LOG_NOTICE level
+ *
+ * \param[in] xml     XML to log
+ * \param[in] prefix  Prefix for each line
+ */
+#define pcmk__log_xml_notice(xml, prefix) \
+        do_crm_log_xml(LOG_NOTICE, prefix, xml)
+
+/*!
+ * \internal
+ * \brief Log XML line-by-line in a formatted fashion at \c LOG_INFO level
+ *
+ * \param[in] xml     XML to log
+ * \param[in] prefix  Prefix for each line
+ */
+#define pcmk__log_xml_info(xml, prefix) do_crm_log_xml(LOG_INFO, prefix, xml)
+
+/*!
+ * \internal
+ * \brief Log XML line-by-line in a formatted fashion at \c LOG_DEBUG level
+ *
+ * \param[in] xml     XML to log
+ * \param[in] prefix  Prefix for each line
+ */
+#define pcmk__log_xml_debug(xml, prefix) do_crm_log_xml(LOG_DEBUG, prefix, xml)
+
+/*!
+ * \internal
+ * \brief Log XML line-by-line in a formatted fashion at \c LOG_TRACE level
+ *
+ * \param[in] xml     XML to log
+ * \param[in] prefix  Prefix for each line
+ */
+#define pcmk__log_xml_trace(xml, prefix) do_crm_log_xml(LOG_TRACE, prefix, xml)
 
 /* Some warnings are too noisy when logged every time a given function is called
  * (for example, using a deprecated feature). As an alternative, we allow
@@ -56,7 +213,7 @@ enum pcmk__warnings {
 #define pcmk__warn_once(wo_flag, fmt...) do {                           \
         if (!pcmk__is_set(pcmk__warnings, wo_flag)) {                   \
             if (wo_flag == pcmk__wo_blind) {                            \
-                crm_warn(fmt);                                          \
+                pcmk__warn(fmt);                                        \
             } else {                                                    \
                 pcmk__config_warn(fmt);                                 \
             }                                                           \
@@ -101,7 +258,7 @@ extern bool pcmk__config_has_warning;
 #define pcmk__config_err(fmt...) do {                               \
         pcmk__config_has_error = true;                              \
         if (pcmk__config_error_handler == NULL) {                   \
-            crm_err(fmt);                                           \
+            pcmk__err(fmt);                                         \
         } else {                                                    \
             pcmk__config_error_handler(pcmk__config_error_context, fmt);   \
         }                                                           \
@@ -116,7 +273,7 @@ extern bool pcmk__config_has_warning;
 #define pcmk__config_warn(fmt...) do {                                      \
         pcmk__config_has_warning = true;                                    \
         if (pcmk__config_warning_handler == NULL) {                         \
-            crm_warn(fmt);                                                  \
+            pcmk__warn(fmt);                                                \
         } else {                                                            \
             pcmk__config_warning_handler(pcmk__config_warning_context, fmt);\
         }                                                                   \
@@ -158,15 +315,16 @@ extern bool pcmk__config_has_warning;
  * \param[in] level  Priority at which to log the messages
  * \param[in] xml    XML to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT or
+ *       \c PCMK__LOG_NEVER.
  */
 #define pcmk__log_xml_changes(level, xml) do {                              \
         uint8_t _level = pcmk__clip_log_level(level);                       \
         static struct qb_log_callsite *xml_cs = NULL;                       \
                                                                             \
         switch (_level) {                                                   \
-            case LOG_STDOUT:                                                \
-            case LOG_NEVER:                                                 \
+            case PCMK__LOG_STDOUT:                                          \
+            case PCMK__LOG_NEVER:                                           \
                 break;                                                      \
             default:                                                        \
                 if (xml_cs == NULL) {                                       \
@@ -189,15 +347,16 @@ extern bool pcmk__config_has_warning;
  * \param[in] level     Priority at which to log the messages
  * \param[in] patchset  XML patchset to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT or
+ *       \c PCMK__LOG_NEVER.
  */
 #define pcmk__log_xml_patchset(level, patchset) do {                        \
         uint8_t _level = pcmk__clip_log_level(level);                       \
         static struct qb_log_callsite *xml_cs = NULL;                       \
                                                                             \
         switch (_level) {                                                   \
-            case LOG_STDOUT:                                                \
-            case LOG_NEVER:                                                 \
+            case PCMK__LOG_STDOUT:                                          \
+            case PCMK__LOG_NEVER:                                           \
                 break;                                                      \
             default:                                                        \
                 if (xml_cs == NULL) {                                       \

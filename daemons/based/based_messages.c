@@ -50,16 +50,16 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
     *answer = NULL;
 
     if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
-        crm_info("Peer %s is requesting to shut down", host);
+        pcmk__info("Peer %s is requesting to shut down", host);
         return pcmk_ok;
     }
 
     if (!cib_shutdown_flag) {
-        crm_err("Peer %s mistakenly thinks we wanted to shut down", host);
+        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
         return -EINVAL;
     }
 
-    crm_info("Exiting after %s acknowledged our shutdown request", host);
+    pcmk__info("Exiting after %s acknowledged our shutdown request", host);
     terminate_cib(CRM_EX_OK);
     return pcmk_ok;
 }
@@ -70,7 +70,7 @@ cib_process_noop(const char *op, int options, const char *section, xmlNode *req,
                  xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
                  xmlNode **answer)
 {
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
     *answer = NULL;
     return pcmk_ok;
 }
@@ -82,7 +82,7 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 {
     int result = pcmk_ok;
 
-    crm_trace("Processing \"%s\" event", op);
+    pcmk__trace("Processing \"%s\" event", op);
 
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
@@ -96,14 +96,14 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
         if (!based_is_primary) {
-            crm_info("We are now in R/W mode");
+            pcmk__info("We are now in R/W mode");
             based_is_primary = true;
         } else {
-            crm_debug("We are still in R/W mode");
+            pcmk__debug("We are still in R/W mode");
         }
 
     } else if (based_is_primary) {
-        crm_info("We are now in R/O mode");
+        pcmk__info("We are now in R/O mode");
         based_is_primary = false;
     }
 
@@ -121,7 +121,7 @@ send_sync_request(const char *host)
     xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
     pcmk__node_status_t *peer = NULL;
 
-    crm_info("Requesting re-sync from %s", (host? host : "all peers"));
+    pcmk__info("Requesting re-sync from %s", (host? host : "all peers"));
     sync_in_progress = 1;
 
     pcmk__xe_set(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
@@ -145,7 +145,7 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 
     xmlNode *wrapper = NULL;
 
-    crm_trace("Processing \"%s\" event %s from %s", op, seq, host);
+    pcmk__trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
     pcmk__xe_set(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
@@ -172,11 +172,11 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
         );
     }
 
-    crm_info("Reporting our current digest to %s: %s for %s.%s.%s",
-             host, digest,
-             pcmk__xe_get(existing_cib, PCMK_XA_ADMIN_EPOCH),
-             pcmk__xe_get(existing_cib, PCMK_XA_EPOCH),
-             pcmk__xe_get(existing_cib, PCMK_XA_NUM_UPDATES));
+    pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
+               host, digest,
+               pcmk__xe_get(existing_cib, PCMK_XA_ADMIN_EPOCH),
+               pcmk__xe_get(existing_cib, PCMK_XA_EPOCH),
+               pcmk__xe_get(existing_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 
@@ -216,11 +216,12 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
         const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
 
-        crm_trace("Processing \"%s\" event", op);
+        pcmk__trace("Processing \"%s\" event", op);
         original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
         if (original_schema == NULL) {
-            crm_info("Rejecting upgrade request from %s: No "
-                     PCMK_XA_VALIDATE_WITH, host);
+            pcmk__info("Rejecting upgrade request from %s: No "
+                       PCMK_XA_VALIDATE_WITH,
+                       host);
             return -pcmk_err_cib_corrupt;
         }
 
@@ -232,7 +233,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             xmlNode *up = pcmk__xe_create(NULL, __func__);
 
             rc = pcmk_ok;
-            crm_notice("Upgrade request from %s verified", host);
+            pcmk__notice("Upgrade request from %s verified", host);
 
             pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
             pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
@@ -257,9 +258,10 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             origin = pcmk__search_node_caches(0, host, NULL,
                                               pcmk__node_search_cluster_member);
 
-            crm_info("Rejecting upgrade request from %s: %s "
-                     QB_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
-                     (origin? origin->name : "lost"));
+            pcmk__info("Rejecting upgrade request from %s: %s "
+                       QB_XS " rc=%d peer=%s",
+                       host, pcmk_strerror(rc), rc,
+                       ((origin != NULL)? origin->name : "lost"));
 
             if (origin) {
                 xmlNode *up = pcmk__xe_create(NULL, __func__);
@@ -273,7 +275,7 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
                 pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
                 pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC, rc);
                 if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
-                    crm_warn("Could not send CIB upgrade result to %s", host);
+                    pcmk__warn("Could not send CIB upgrade result to %s", host);
                 }
                 pcmk__xml_free(up);
             }
@@ -320,15 +322,16 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
                                  &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 
         sync_in_progress++;
-        crm_notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
-                   diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                   diff_add_admin_epoch, diff_add_epoch, diff_add_updates);
+        pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
+                     "progress)",
+                     diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
+                     diff_add_admin_epoch, diff_add_epoch, diff_add_updates);
         return -pcmk_err_diff_resync;
     }
 
     rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
-    crm_trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
-              (based_is_primary? "primary": "secondary"));
+    pcmk__trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
+                (based_is_primary? "primary": "secondary"));
 
     if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
         pcmk__xml_free(*result_cib);
@@ -338,7 +341,7 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
     } else if (rc == -pcmk_err_diff_resync) {
         rc = -pcmk_err_diff_failed;
         if (options & cib_force_diff) {
-            crm_warn("Not requesting full refresh in R/W mode");
+            pcmk__warn("Not requesting full refresh in R/W mode");
         }
     }
 
@@ -417,7 +420,7 @@ sync_our_cib(xmlNode *request, bool all)
     CRM_CHECK(the_cib != NULL, return -EINVAL);
     CRM_CHECK(all || (host != NULL), return -EINVAL);
 
-    crm_debug("Syncing CIB to %s", all ? "all peers" : host);
+    pcmk__debug("Syncing CIB to %s", (all? "all peers" : host));
 
     replace_request = cib_msg_copy(request);
 
@@ -473,8 +476,8 @@ cib_process_commit_transaction(const char *op, int options, const char *section,
     if (rc != pcmk_rc_ok) {
         char *source = based_transaction_source_str(client, origin);
 
-        crm_err("Could not commit transaction for %s: %s",
-                source, pcmk_rc_str(rc));
+        pcmk__err("Could not commit transaction for %s: %s", source,
+                  pcmk_rc_str(rc));
         free(source);
     }
     return pcmk_rc2legacy(rc);
@@ -497,13 +500,13 @@ cib_process_schemas(const char *op, int options, const char *section, xmlNode *r
     wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
     data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
     if (data == NULL) {
-        crm_warn("No data specified in request");
+        pcmk__warn("No data specified in request");
         return -EPROTO;
     }
 
     after_ver = pcmk__xe_get(data, PCMK_XA_VERSION);
     if (after_ver == NULL) {
-        crm_warn("No version specified in request");
+        pcmk__warn("No version specified in request");
         return -EPROTO;
     }
 

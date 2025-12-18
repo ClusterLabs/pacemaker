@@ -118,8 +118,9 @@ pcmk__xpath_match_element(xmlNode *match)
                 // Probably an attribute; return parent element instead
                 return match->parent;
             }
-            crm_err("Cannot get element from XPath expression match of type %s",
-                    pcmk__xml_element_type_text(match->type));
+            pcmk__err("Cannot get element from XPath expression match of type "
+                      "%s",
+                      pcmk__xml_element_type_text(match->type));
             return NULL;
     }
 }
@@ -221,7 +222,7 @@ pcmk__xpath_find_one(xmlDoc *doc, const char *path, uint8_t level)
         goto done;
     }
 
-    if (level >= LOG_NEVER) {
+    if (level >= PCMK__LOG_NEVER) {
         // For no matches or multiple matches, the rest is just logging
         goto done;
     }
@@ -407,7 +408,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     CRM_CHECK(xpathObj != NULL, return NULL);
 
     if (index >= max) {
-        crm_err("Requested index %d of only %d items", index, max);
+        pcmk__err("Requested index %d of only %d items", index, max);
         return NULL;
 
     } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
@@ -435,7 +436,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
                && (match->parent->type == XML_ELEMENT_NODE)) {
                 return match->parent;
            }
-           crm_warn("Unsupported XPath match type %d (bug?)", match->type);
+           pcmk__warn("Unsupported XPath match type %d (bug?)", match->type);
            return NULL;
     }
 }
@@ -544,14 +545,14 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     max = pcmk__xpath_num_results(xpathObj);
 
     if (max == 0) {
-        if (error_level < LOG_NEVER) {
+        if (error_level < PCMK__LOG_NEVER) {
             do_crm_log(error_level, "No match for %s in %s",
                        xpath, pcmk__s(nodePath, "unknown path"));
             crm_log_xml_explicit(xml_obj, "Unexpected Input");
         }
 
     } else if (max > 1) {
-        if (error_level < LOG_NEVER) {
+        if (error_level < PCMK__LOG_NEVER) {
             int lpc = 0;
 
             do_crm_log(error_level, "Too many matches for %s in %s",

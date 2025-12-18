@@ -270,9 +270,9 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                                cib_xpath|cib_sync_call);
 
     if ((cib_object != NULL) && (pcmk__xe_id(cib_object) == NULL)) {
-        crm_err("Detected multiple " PCMK__XE_NODE_STATE " entries for "
-                "xpath=%s, bailing",
-                xpath);
+        pcmk__err("Detected multiple " PCMK__XE_NODE_STATE " entries for "
+                  "xpath=%s, bailing",
+                  xpath);
         duplicate = true;
         goto done;
     }
@@ -295,8 +295,9 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
                                        cib_xpath|cib_sync_call);
 
             if ((cib_object != NULL) && (pcmk__xe_id(cib_object) == NULL)) {
-                crm_err("Can't inject node state for %s because multiple "
-                        "state entries found for ID %s", node, found_uuid);
+                pcmk__err("Can't inject node state for %s because multiple "
+                          "state entries found for ID %s",
+                          node, found_uuid);
                 duplicate = true;
                 free(xpath_by_uuid);
                 goto done;
@@ -322,7 +323,7 @@ pcmk__inject_node(cib_t *cib_conn, const char *node, const char *uuid)
 
         rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                    cib_xpath|cib_sync_call);
-        crm_trace("Injecting node state for %s (rc=%d)", node, rc);
+        pcmk__trace("Injecting node state for %s (rc=%d)", node, rc);
     }
 
 done:
@@ -330,7 +331,7 @@ done:
     free(xpath);
 
     if (duplicate) {
-        crm_log_xml_warn(cib_object, "Duplicates");
+        pcmk__log_xml_warn(cib_object, "Duplicates");
         crm_exit(CRM_EX_SOFTWARE);
         return NULL; // not reached, but makes static analysis happy
     }
@@ -460,8 +461,8 @@ pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
         return NULL;
     }
 
-    crm_info("Injecting new resource %s into node state '%s'",
-             lrm_name, pcmk__xe_id(cib_node));
+    pcmk__info("Injecting new resource %s into node state '%s'", lrm_name,
+               pcmk__xe_id(cib_node));
 
     lrm = pcmk__xe_first_child(cib_node, PCMK__XE_LRM, NULL, NULL);
     if (lrm == NULL) {
@@ -518,8 +519,8 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
     }
 
     if (rc == pcmk_rc_ok) { // Ticket state found, use it
-        crm_debug("Injecting attribute into existing ticket state %s",
-                  ticket_id);
+        pcmk__debug("Injecting attribute into existing ticket state %s",
+                    ticket_id);
         xml_top = ticket_state_xml;
 
     } else if (rc == ENXIO) { // No ticket state, create it
@@ -536,7 +537,7 @@ set_ticket_state_attr(pcmk__output_t *out, const char *ticket_id,
 
     // Add the attribute to the ticket state
     pcmk__xe_set_bool(ticket_state_xml, attr_name, attr_value);
-    crm_log_xml_debug(xml_top, "Update");
+    pcmk__log_xml_debug(xml_top, "Update");
 
     // Commit the change to the CIB
     rc = cib->cmds->modify(cib, PCMK_XE_STATUS, xml_top, cib_sync_call);

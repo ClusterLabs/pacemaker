@@ -108,7 +108,7 @@ remote_proxy_end_session(remote_proxy_t *proxy)
     if (proxy == NULL) {
         return;
     }
-    crm_trace("ending session ID %s", proxy->session_id);
+    pcmk__trace("Ending session ID %s", proxy->session_id);
 
     if (proxy->source) {
         mainloop_del_ipc_client(proxy->source);
@@ -120,7 +120,7 @@ remote_proxy_free(gpointer data)
 {
     remote_proxy_t *proxy = data;
 
-    crm_trace("freed proxy session ID %s", proxy->session_id);
+    pcmk__trace("Freed proxy session ID %s", proxy->session_id);
     free(proxy->node_name);
     free(proxy->session_id);
     free(proxy);
@@ -136,18 +136,21 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 
     xml = pcmk__xml_parse(buffer);
     if (xml == NULL) {
-        crm_warn("Received a NULL msg from IPC service.");
+        pcmk__warn("Received a NULL msg from IPC service.");
         return 1;
     }
 
     flags = crm_ipc_buffer_flags(proxy->ipc);
     if (flags & crm_ipc_proxied_relay_response) {
-        crm_trace("Passing response back to %.8s on %s: %.200s - request id: %d", proxy->session_id, proxy->node_name, buffer, proxy->last_request_id);
+        pcmk__trace("Passing response back to %.8s on %s: %.200s - request id: "
+                    "%d", proxy->session_id, proxy->node_name, buffer,
+                    proxy->last_request_id);
         remote_proxy_relay_response(proxy, xml, proxy->last_request_id);
         proxy->last_request_id = 0;
 
     } else {
-        crm_trace("Passing event back to %.8s on %s: %.200s", proxy->session_id, proxy->node_name, buffer);
+        pcmk__trace("Passing event back to %.8s on %s: %.200s",
+                    proxy->session_id, proxy->node_name, buffer);
         remote_proxy_relay_event(proxy, xml);
     }
     pcmk__xml_free(xml);
@@ -159,8 +162,6 @@ void
 remote_proxy_disconnected(gpointer userdata)
 {
     remote_proxy_t *proxy = userdata;
-
-    crm_trace("destroying %p", proxy);
 
     proxy->source = NULL;
     proxy->ipc = NULL;
@@ -180,7 +181,7 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     remote_proxy_t *proxy = NULL;
 
     if(channel == NULL) {
-        crm_err("No channel specified to proxy");
+        pcmk__err("No channel specified to proxy");
         remote_proxy_notify_destroy(lrmd, session_id);
         return NULL;
     }
@@ -206,8 +207,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
         }
     }
 
-    crm_trace("new remote proxy client established to %s on %s, session id %s",
-              channel, node_name, session_id);
+    pcmk__trace("New remote proxy client established to %s on %s, session id "
+                "%s", channel, node_name, session_id);
     g_hash_table_insert(proxy_table, proxy->session_id, proxy);
 
     return proxy;
@@ -264,8 +265,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 
         rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Couldn't parse controller flags from remote request: %s",
-                     pcmk_rc_str(rc));
+            pcmk__warn("Couldn't parse controller flags from remote request: "
+                       "%s",
+                       pcmk_rc_str(rc));
         }
 
         pcmk__assert(node_name != NULL);
@@ -290,8 +292,11 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             if(rc < 0) {
                 xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_NACK);
 
-                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
-                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
+                pcmk__err("Could not relay %s request %d from %s to %s for %s: "
+                          "%s (%d)",
+                          op, msg_id, proxy->node_name,
+                          crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc),
+                          rc);
 
                 /* Send a n'ack so the caller doesn't block */
                 pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
@@ -301,8 +306,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                 pcmk__xml_free(op_reply);
 
             } else {
-                crm_trace("Relayed %s request %d from %s to %s for %s",
-                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+                pcmk__trace("Relayed %s request %d from %s to %s for %s", op,
+                            msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                            name);
                 proxy->last_request_id = msg_id;
             }
 
@@ -311,16 +317,20 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             xmlNode *op_reply = NULL;
             // @COMPAT pacemaker_remoted <= 1.1.10
 
-            crm_trace("Relaying %s request %d from %s to %s for %s",
-                      op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+            pcmk__trace("Relaying %s request %d from %s to %s for %s", op,
+                        msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                        name);
 
             rc = crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
             if(rc < 0) {
-                crm_err("Could not relay %s request %d from %s to %s for %s: %s (%d)",
-                         op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name, pcmk_strerror(rc), rc);
+                pcmk__err("Could not relay %s request %d from %s to %s for %s: "
+                          "%s (%d)",
+                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                          name, pcmk_strerror(rc), rc);
             } else {
-                crm_trace("Relayed %s request %d from %s to %s for %s",
-                          op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);
+                pcmk__trace("Relayed %s request %d from %s to %s for %s", op,
+                            msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                            name);
             }
 
             if(op_reply) {
@@ -329,6 +339,6 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             }
         }
     } else {
-        crm_err("Unknown proxy operation: %s", op);
+        pcmk__err("Unknown proxy operation: %s", op);
     }
 }

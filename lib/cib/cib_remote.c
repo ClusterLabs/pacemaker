@@ -75,7 +75,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
 
     if (op == NULL) {
-        crm_err("No operation specified");
+        pcmk__err("No operation specified");
         return -EINVAL;
     }
 
@@ -91,7 +91,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return rc;
     }
 
-    crm_trace("Sending %s message to the CIB manager", op);
+    pcmk__trace("Sending %s message to the CIB manager", op);
     if (!(call_options & cib_sync_call)) {
         pcmk__remote_send_xml(&private->callback, op_msg);
     } else {
@@ -100,14 +100,14 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     pcmk__xml_free(op_msg);
 
     if ((call_options & cib_discard_reply)) {
-        crm_trace("Discarding reply");
+        pcmk__trace("Discarding reply");
         return pcmk_ok;
 
     } else if (!(call_options & cib_sync_call)) {
         return cib->call_id;
     }
 
-    crm_trace("Waiting for a synchronous reply");
+    pcmk__trace("Waiting for a synchronous reply");
 
     start_time = time(NULL);
     remaining_time = cib->call_timeout ? cib->call_timeout : 60;
@@ -131,15 +131,16 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
             break;
 
         } else if (reply_id < msg_id) {
-            crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml_trace(op_reply, "Old reply");
+            pcmk__debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
+            pcmk__log_xml_trace(op_reply, "Old reply");
 
         } else if ((reply_id - 10000) > msg_id) {
             /* wrap-around case */
-            crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
-            crm_log_xml_trace(op_reply, "Old reply");
+            pcmk__debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
+            pcmk__log_xml_trace(op_reply, "Old reply");
         } else {
-            crm_err("Received a __future__ reply:" " %d (wanted %d)", reply_id, msg_id);
+            pcmk__err("Received a __future__ reply: %d (wanted %d)", reply_id,
+                      msg_id);
         }
 
         pcmk__xml_free(op_reply);
@@ -150,14 +151,14 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
 
     if (rc == ENOTCONN) {
-        crm_err("Disconnected while waiting for reply.");
+        pcmk__err("Disconnected while waiting for reply");
         return -ENOTCONN;
     } else if (op_reply == NULL) {
-        crm_err("No reply message - empty");
+        pcmk__err("No reply message - empty");
         return -ENOMSG;
     }
 
-    crm_trace("Synchronous reply received");
+    pcmk__trace("Synchronous reply received");
 
     /* Start processing the reply... */
     if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
@@ -170,11 +171,11 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
 
     if (rc == pcmk_ok || rc == -EPERM) {
-        crm_log_xml_debug(op_reply, "passed");
+        pcmk__log_xml_debug(op_reply, "passed");
 
     } else {
-        crm_err("Call failed: %s", pcmk_strerror(rc));
-        crm_log_xml_warn(op_reply, "failed");
+        pcmk__err("Call failed: %s", pcmk_strerror(rc));
+        pcmk__log_xml_warn(op_reply, "failed");
     }
 
     if (output_data == NULL) {
@@ -186,7 +187,8 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         if (tmp == NULL) {
-            crm_trace("No output in reply to \"%s\" command %d", op, cib->call_id - 1);
+            pcmk__trace("No output in reply to \"%s\" command %d", op,
+                        (cib->call_id - 1));
         } else {
             *output_data = pcmk__xml_copy(NULL, tmp);
         }
@@ -224,8 +226,8 @@ cib_remote_callback_dispatch(gpointer user_data)
         case EAGAIN:
             /* Have we timed out? */
             if (time(NULL) >= private->start_time + private->timeout_sec) {
-                crm_info("Error reading from CIB manager connection: %s",
-                         pcmk_rc_str(ETIME));
+                pcmk__info("Error reading from CIB manager connection: %s",
+                           pcmk_rc_str(ETIME));
                 return -1;
             }
 
@@ -234,8 +236,8 @@ cib_remote_callback_dispatch(gpointer user_data)
 
         default:
             /* Error */
-            crm_info("Error reading from CIB manager connection: %s",
-                     pcmk_rc_str(rc));
+            pcmk__info("Error reading from CIB manager connection: %s",
+                       pcmk_rc_str(rc));
             return -1;
     }
 
@@ -248,14 +250,14 @@ cib_remote_callback_dispatch(gpointer user_data)
 
     type = pcmk__xe_get(msg, PCMK__XA_T);
 
-    crm_trace("Activating %s callbacks...", type);
+    pcmk__trace("Activating %s callbacks...", type);
 
     if (pcmk__str_eq(type, PCMK__VALUE_CIB, pcmk__str_none)) {
         cib_native_callback(cib, msg, 0, 0);
     } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
         g_list_foreach(cib->notify_list, cib_native_notify, msg);
     } else {
-        crm_err("Unknown message type: %s", type);
+        pcmk__err("Unknown message type: %s", type);
     }
 
     pcmk__xml_free(msg);
@@ -279,8 +281,8 @@ cib_remote_command_dispatch(gpointer user_data)
     if (rc == EAGAIN) {
         /* Have we timed out? */
         if (time(NULL) >= private->start_time + private->timeout_sec) {
-            crm_info("Error reading from CIB manager connection: %s",
-                     pcmk_rc_str(ETIME));
+            pcmk__info("Error reading from CIB manager connection: %s",
+                       pcmk_rc_str(ETIME));
             return -1;
         }
 
@@ -290,11 +292,11 @@ cib_remote_command_dispatch(gpointer user_data)
 
     free(private->command.buffer);
     private->command.buffer = NULL;
-    crm_err("received late reply for remote cib connection, discarding");
+    pcmk__err("Received late reply for remote cib connection, discarding");
 
     if (rc != pcmk_rc_ok) {
-        crm_info("Error reading from CIB manager connection: %s",
-                 pcmk_rc_str(rc));
+        pcmk__info("Error reading from CIB manager connection: %s",
+                   pcmk_rc_str(rc));
         return -1;
     }
 
@@ -346,7 +348,7 @@ cib_tls_close(cib_t *cib)
 static void
 cib_remote_connection_destroy(gpointer user_data)
 {
-    crm_err("Connection destroyed");
+    pcmk__err("Connection destroyed");
     cib_tls_close(user_data);
 }
 
@@ -370,8 +372,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     rc = pcmk__connect_remote(private->server, private->port, 0, NULL,
                               &(connection->tcp_socket), NULL, NULL);
     if (rc != pcmk_rc_ok) {
-        crm_info("Remote connection to %s:%d failed: %s " QB_XS " rc=%d",
-                 private->server, private->port, pcmk_rc_str(rc), rc);
+        pcmk__info("Remote connection to %s:%d failed: %s " QB_XS " rc=%d",
+                   private->server, private->port, pcmk_rc_str(rc), rc);
         return -ENOTCONN;
     }
 
@@ -394,9 +396,11 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
                                         &tls_rc);
         if (rc != pcmk_rc_ok) {
-            crm_err("Remote CIB session creation for %s:%d failed: %s",
-                    private->server, private->port,
-                    (rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc));
+            const bool proto_err = (rc == EPROTO);
+
+            pcmk__err("Remote CIB session creation for %s:%d failed: %s",
+                      private->server, private->port,
+                      (proto_err? gnutls_strerror(tls_rc) : pcmk_rc_str(rc)));
             gnutls_deinit(connection->tls_session);
             connection->tls_session = NULL;
             cib_tls_close(cib);
@@ -428,7 +432,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     answer = pcmk__remote_message_xml(connection);
 
-    crm_log_xml_trace(answer, "Reply");
+    pcmk__log_xml_trace(answer, "Reply");
     if (answer == NULL) {
         rc = -EPROTO;
 
@@ -438,7 +442,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         const char *tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
 
         if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-            crm_err("Invalid registration message: %s", msg_type);
+            pcmk__err("Invalid registration message: %s", msg_type);
             rc = -EPROTO;
 
         } else if (tmp_ticket == NULL) {
@@ -456,7 +460,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         return rc;
     }
 
-    crm_trace("remote client connection established");
+    pcmk__trace("remote client connection established");
     private->timeout_sec = 60;
     connection->source = mainloop_add_fd("cib-remote", G_PRIORITY_HIGH,
                                          connection->tcp_socket, cib,
@@ -499,14 +503,14 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
 done:
     if (rc == pcmk_ok) {
-        crm_info("Opened connection to %s:%d for %s",
-                 private->server, private->port, name);
+        pcmk__info("Opened connection to %s:%d for %s", private->server,
+                   private->port, name);
         cib->state = cib_connected_command;
         cib->type = cib_command;
 
     } else {
-        crm_info("Connection to %s:%d for %s failed: %s\n",
-                 private->server, private->port, name, pcmk_strerror(rc));
+        pcmk__info("Connection to %s:%d for %s failed: %s\n", private->server,
+                   private->port, name, pcmk_strerror(rc));
     }
 
     return rc;
@@ -517,7 +521,7 @@ cib_remote_signoff(cib_t *cib)
 {
     int rc = pcmk_ok;
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
     cib_tls_close(cib);
 
     cib->cmds->end_transaction(cib, false, cib_none);
@@ -532,7 +536,7 @@ cib_remote_free(cib_t *cib)
 {
     int rc = pcmk_ok;
 
-    crm_warn("Freeing CIB");
+    pcmk__warn("Freeing CIB");
     if (cib->state != cib_disconnected) {
         rc = cib_remote_signoff(cib);
         if (rc == pcmk_ok) {

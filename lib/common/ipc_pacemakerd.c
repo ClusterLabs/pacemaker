@@ -207,9 +207,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         int rc = pcmk__scan_ll(status, &ack_status, CRM_EX_OK);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Ack reply from %s has invalid " PCMK_XA_STATUS
-                     " '%s' (bug?)",
-                     pcmk_ipc_name(api, true), pcmk__s(status, ""));
+            pcmk__warn("Ack reply from %s has invalid " PCMK_XA_STATUS " '%s' "
+                       "(bug?)",
+                       pcmk_ipc_name(api, true), pcmk__s(status, ""));
         }
         return ack_status == CRM_EX_INDETERMINATE;
     }
@@ -220,23 +220,23 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
          * so we can't enforce this check until we no longer support
          * Pacemaker Remote nodes connecting to cluster nodes older than that.
          */
-        crm_trace("Message from %s has unexpected message type '%s' "
-                  "(bug if not from pacemakerd <3.0.0)",
-                  pcmk_ipc_name(api, true), pcmk__s(value, ""));
+        pcmk__trace("Message from %s has unexpected message type '%s' (bug if "
+                    "not from pacemakerd <3.0.0)",
+                    pcmk_ipc_name(api, true), pcmk__s(value, ""));
     }
 
     value = pcmk__xe_get(reply, PCMK__XA_SUBT);
     if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
-        crm_info("Unrecognizable message from %s: "
-                 "message type '%s' not '" PCMK__VALUE_RESPONSE "'",
-                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from %s: message type '%s' not "
+                   "'" PCMK__VALUE_RESPONSE "'",
+                   pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
-        crm_info("Unrecognizable message from %s: no reference",
-                 pcmk_ipc_name(api, true));
+        pcmk__info("Unrecognizable message from %s: no reference",
+                   pcmk_ipc_name(api, true));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -270,8 +270,8 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         reply_data.reply_type = pcmk_pacemakerd_reply_shutdown;
         reply_data.data.shutdown.status = atoi(op_status);
     } else {
-        crm_info("Unrecognizable message from %s: unknown command '%s'",
-                 pcmk_ipc_name(api, true), pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from %s: unknown command '%s'",
+                   pcmk_ipc_name(api, true), pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -322,8 +322,8 @@ do_pacemakerd_api_call(pcmk_ipc_api_t *api, const char *ipc_name, const char *ta
     if (cmd) {
         rc = pcmk__send_ipc_request(api, cmd);
         if (rc != pcmk_rc_ok) {
-            crm_debug("Couldn't send request to %s: %s rc=%d",
-                      pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
+            pcmk__debug("Couldn't send request to %s: %s rc=%d",
+                        pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
         }
         pcmk__xml_free(cmd);
     } else {

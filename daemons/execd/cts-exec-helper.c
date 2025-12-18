@@ -169,7 +169,7 @@ test_exit(crm_exit_t exit_code)
 
 #define print_result(fmt, args...)  \
     if (!options.quiet) {           \
-        printf(fmt "\n" , ##args);  \
+        printf(fmt "\n", ##args);   \
     }
 
 static void
@@ -191,7 +191,7 @@ read_events(lrmd_event_data_t * event)
                           pcmk__s(event->op_type, "none"),
                           crm_exit_str((crm_exit_t) event->rc),
                           pcmk_exec_status_str(event->op_status)) >= 0);
-    crm_info("%s", buf);
+    pcmk__info("%s", buf);
 
     if (options.listen && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
         print_result("LISTEN EVENT SUCCESSFUL");
@@ -232,13 +232,13 @@ connection_events(lrmd_event_data_t * event)
     }
 
     if (!rc) {
-        crm_info("Executor client connection established");
+        pcmk__info("Executor client connection established");
         start_test(NULL);
         return;
     } else {
         sleep(1);
         try_connect();
-        crm_notice("Executor client connection failed");
+        pcmk__notice("Executor client connection failed");
     }
 }
 
@@ -466,7 +466,7 @@ generate_params(void)
     // Calculate cluster status
     scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
-        crm_crit("Could not allocate scheduler data");
+        pcmk__crit("Could not allocate scheduler data");
         return ENOMEM;
     }
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
@@ -480,7 +480,7 @@ generate_params(void)
                                       pcmk_rsc_match_history
                                       |pcmk_rsc_match_basename);
     if (rsc == NULL) {
-        crm_err("Resource does not exist in config");
+        pcmk__err("Resource does not exist in config");
         pcmk_free_scheduler(scheduler);
         return EINVAL;
     }
@@ -607,7 +607,7 @@ main(int argc, char **argv)
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
-    crm_info("Starting");
+    pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 

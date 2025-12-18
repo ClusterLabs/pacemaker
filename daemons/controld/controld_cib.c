@@ -37,12 +37,12 @@ handle_cib_disconnect(gpointer user_data)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_CIB_CONNECTED)) {
         // @TODO This should trigger a reconnect, not a shutdown
-        crm_crit("Lost connection to the CIB manager, shutting down");
+        pcmk__crit("Lost connection to the CIB manager, shutting down");
         controld_fsa_append(C_FSA_INTERNAL, I_ERROR, NULL);
         controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
     } else { // Expected
-        crm_info("Disconnected from the CIB manager");
+        pcmk__info("Disconnected from the CIB manager");
     }
 }
 
@@ -52,7 +52,7 @@ do_cib_updated(const char *event, xmlNode * msg)
     const xmlNode *patchset = NULL;
     const char *client_name = NULL;
 
-    crm_debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
+    pcmk__debug("Received CIB diff notification: DC=%s", pcmk__btoa(AM_I_DC));
 
     if (cib__get_notify_patchset(msg, &patchset) != pcmk_rc_ok) {
         return;
@@ -85,9 +85,9 @@ do_cib_updated(const char *event, xmlNode * msg)
         if (client_name == NULL) {
             client_name = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTID);
         }
-        crm_notice("Populating nodes and starting an election after %s event "
-                   "triggered by %s",
-                   event, pcmk__s(client_name, "(unidentified client)"));
+        pcmk__notice("Populating nodes and starting an election after %s event "
+                     "triggered by %s",
+                     event, pcmk__s(client_name, "(unidentified client)"));
 
         populate_cib_nodes(controld_node_update_quick|controld_node_update_all,
                            __func__);
@@ -102,7 +102,7 @@ controld_disconnect_cib_manager(void)
 
     pcmk__assert(cib_conn != NULL);
 
-    crm_debug("Disconnecting from the CIB manager");
+    pcmk__debug("Disconnecting from the CIB manager");
 
     controld_clear_fsa_input_flags(R_CIB_CONNECTED);
 
@@ -137,8 +137,8 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
         if ((cib_conn->state != cib_disconnected)
             && (pending_rsc_update != 0)) {
 
-            crm_info("Waiting for resource update %d to complete",
-                     pending_rsc_update);
+            pcmk__info("Waiting for resource update %d to complete",
+                       pending_rsc_update);
             controld_fsa_stall(msg_data, action);
             return;
         }
@@ -150,8 +150,8 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
     }
 
     if (cur_state == S_STOPPING) {
-        crm_err("Ignoring request to connect to the CIB manager after "
-                "shutdown");
+        pcmk__err("Ignoring request to connect to the CIB manager after "
+                  "shutdown");
         return;
     }
 
@@ -165,16 +165,17 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
     }
 
     if (rc != pcmk_ok) {
-        crm_info("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
+        pcmk__info("Could not connect to the CIB manager: %s",
+                   pcmk_strerror(rc));
 
     } else if (cib_conn->cmds->set_connection_dnotify(cib_conn,
                                                       dnotify_fn) != pcmk_ok) {
-        crm_err("Could not set dnotify callback");
+        pcmk__err("Could not set dnotify callback");
 
     } else if (cib_conn->cmds->add_notify_callback(cib_conn,
                                                    PCMK__VALUE_CIB_DIFF_NOTIFY,
                                                    update_cb) != pcmk_ok) {
-        crm_err("Could not set CIB notification callback (update)");
+        pcmk__err("Could not set CIB notification callback (update)");
 
     } else {
         controld_set_fsa_input_flags(R_CIB_CONNECTED);
@@ -185,14 +186,15 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
         cib_retries++;
 
         if (cib_retries < 30) {
-            crm_warn("Couldn't complete CIB registration %d times... "
-                     "pause and retry", cib_retries);
+            pcmk__warn("Couldn't complete CIB registration %d times... pause "
+                       "and retry",
+                       cib_retries);
             controld_start_wait_timer();
             controld_fsa_stall(msg_data, action);
 
         } else {
-            crm_err("Could not complete CIB registration %d times... "
-                    "hard error", cib_retries);
+            pcmk__err("Could not complete CIB registration %d times... "
+                      "hard error", cib_retries);
             register_fsa_error(I_ERROR, msg_data);
         }
     }
@@ -216,8 +218,8 @@ cib_op_timeout(void)
                                              + 1U);
 
     calculated_timeout = QB_MAX(calculated_timeout, MIN_CIB_OP_TIMEOUT);
-    crm_trace("Calculated timeout: %s",
-              pcmk__readable_interval(calculated_timeout * 1000));
+    pcmk__trace("Calculated timeout: %s",
+                pcmk__readable_interval(calculated_timeout * 1000));
 
     if (controld_globals.cib_conn) {
         controld_globals.cib_conn->call_timeout = calculated_timeout;
@@ -238,8 +240,8 @@ crmd_cib_smart_opt(void)
 
     if ((controld_globals.fsa_state == S_ELECTION)
         || (controld_globals.fsa_state == S_PENDING)) {
-        crm_info("Sending update to local CIB in state: %s",
-                 fsa_state2string(controld_globals.fsa_state));
+        pcmk__info("Sending update to local CIB in state: %s",
+                   fsa_state2string(controld_globals.fsa_state));
         cib__set_call_options(call_opt, "update", cib_none);
     }
     return call_opt;
@@ -252,10 +254,12 @@ cib_delete_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     char *desc = user_data;
 
     if (rc == 0) {
-        crm_debug("Deletion of %s (via CIB call %d) succeeded", desc, call_id);
+        pcmk__debug("Deletion of %s (via CIB call %d) succeeded", desc,
+                    call_id);
     } else {
-        crm_warn("Deletion of %s (via CIB call %d) failed: %s " QB_XS " rc=%d",
-                 desc, call_id, pcmk_strerror(rc), rc);
+        pcmk__warn("Deletion of %s (via CIB call %d) failed: %s "
+                   QB_XS " rc=%d",
+                   desc, call_id, pcmk_strerror(rc), rc);
     }
 }
 
@@ -333,8 +337,8 @@ controld_delete_node_history(const char *uname, bool unlocked_only, int options)
                           cib_xpath|cib_multiple);
     cib_rc = cib->cmds->remove(cib, xpath, NULL, options);
     fsa_register_cib_callback(cib_rc, desc, cib_delete_callback);
-    crm_info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s",
-             desc, cib_rc, xpath);
+    pcmk__info("Deleting %s (via CIB call %d) " QB_XS " xpath=%s", desc, cib_rc,
+               xpath);
 
     // CIB library handles freeing desc
     free(xpath);
@@ -372,7 +376,7 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     desc = pcmk__assert_asprintf("resource history for %s on %s", rsc_id, node);
     if (cib == NULL) {
-        crm_err("Unable to clear %s: no CIB connection", desc);
+        pcmk__err("Unable to clear %s: no CIB connection", desc);
         free(desc);
         return ENOTCONN;
     }
@@ -386,10 +390,10 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     if (rc < 0) {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Could not delete resource status of %s on %s%s%s: %s "
-                QB_XS " rc=%d", rsc_id, node,
-                (user_name? " for user " : ""), (user_name? user_name : ""),
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not delete resource status of %s on %s%s%s: %s "
+                  QB_XS " rc=%d",
+                  rsc_id, node, ((user_name != NULL)? " for user " : ""),
+                  pcmk__s(user_name, ""), pcmk_rc_str(rc), rc);
         free(desc);
         free(xpath);
         return rc;
@@ -397,15 +401,15 @@ controld_delete_resource_history(const char *rsc_id, const char *node,
 
     if (pcmk__is_set(call_options, cib_sync_call)) {
         if (pcmk__is_set(call_options, cib_dryrun)) {
-            crm_debug("Deletion of %s would succeed", desc);
+            pcmk__debug("Deletion of %s would succeed", desc);
         } else {
-            crm_debug("Deletion of %s succeeded", desc);
+            pcmk__debug("Deletion of %s succeeded", desc);
         }
         free(desc);
 
     } else {
-        crm_info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s",
-                 desc, rc, xpath);
+        pcmk__info("Clearing %s (via CIB call %d) " QB_XS " xpath=%s", desc, rc,
+                   xpath);
         fsa_register_cib_callback(rc, desc, cib_delete_callback);
         // CIB library handles freeing desc
     }
@@ -476,7 +480,8 @@ build_parameter_list(const lrmd_event_data_t *op,
         }
 
         if (accept_for_list) {
-            crm_trace("Attr %s is %s", param->rap_name, ra_param_flag2text(param_type));
+            pcmk__trace("Attr %s is %s", param->rap_name,
+                        ra_param_flag2text(param_type));
 
             if (list == NULL) {
                 // We will later search for " WORD ", so start list with a space
@@ -485,19 +490,22 @@ build_parameter_list(const lrmd_event_data_t *op,
             pcmk__add_word(&list, 0, param->rap_name);
 
         } else {
-            crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
+            pcmk__trace("Rejecting %s for %s", param->rap_name,
+                        ra_param_flag2text(param_type));
         }
 
         if (accept_for_xml) {
             const char *v = g_hash_table_lookup(op->params, param->rap_name);
 
             if (v != NULL) {
-                crm_trace("Adding attr %s=%s to the xml result", param->rap_name, v);
+                pcmk__trace("Adding attr %s=%s to the xml result",
+                            param->rap_name, v);
                 pcmk__xe_set(*result, param->rap_name, v);
             }
 
         } else {
-            crm_trace("Removing attr %s from the xml result", param->rap_name);
+            pcmk__trace("Removing attr %s from the xml result",
+                        param->rap_name);
             pcmk__xe_remove_attr(*result, param->rap_name);
         }
     }
@@ -555,9 +563,9 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
     pcmk__xe_set(update, PCMK__XA_OP_RESTART_DIGEST, digest);
 
     if ((list != NULL) && (list->len > 0)) {
-        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        pcmk__trace("%s: %s, %s", op->rsc_id, digest, list->str);
     } else {
-        crm_trace("%s: %s", op->rsc_id, digest);
+        pcmk__trace("%s: %s", op->rsc_id, digest);
     }
 
     if (list != NULL) {
@@ -587,10 +595,10 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
         pcmk__xe_set(update, PCMK__XA_OP_SECURE_PARAMS, list->str);
         pcmk__xe_set(update, PCMK__XA_OP_SECURE_DIGEST, digest);
 
-        crm_trace("%s: %s, %s", op->rsc_id, digest, (const char *) list->str);
+        pcmk__trace("%s: %s, %s", op->rsc_id, digest, list->str);
         g_string_free(list, TRUE);
     } else {
-        crm_trace("%s: no secure parameters", op->rsc_id);
+        pcmk__trace("%s: no secure parameters", op->rsc_id);
     }
 
     pcmk__xml_free(secure);
@@ -638,16 +646,16 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
     if ((rsc == NULL) || (op->params == NULL)
         || !crm_op_needs_metadata(rsc->standard, op->op_type)) {
 
-        crm_trace("No digests needed for %s action on %s (params=%p rsc=%p)",
-                  op->op_type, op->rsc_id, op->params, rsc);
+        pcmk__trace("No digests needed for %s action on %s (params=%p rsc=%p)",
+                    op->op_type, op->rsc_id, op->params, rsc);
         return;
     }
 
     lrm_state = controld_get_executor_state(node_name, false);
     if (lrm_state == NULL) {
-        crm_warn("Cannot calculate digests for operation " PCMK__OP_FMT
-                 " because we have no connection to executor for %s",
-                 op->rsc_id, op->op_type, op->interval_ms, node_name);
+        pcmk__warn("Cannot calculate digests for operation " PCMK__OP_FMT
+                   " because we have no connection to executor for %s",
+                   op->rsc_id, op->op_type, op->interval_ms, node_name);
         return;
     }
 
@@ -663,8 +671,8 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
         return;
     }
 
-    crm_trace("Including additional digests for %s:%s:%s",
-              rsc->standard, rsc->provider, rsc->type);
+    pcmk__trace("Including additional digests for %s:%s:%s", rsc->standard,
+                rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
@@ -713,9 +721,9 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
 
     lrmd__set_result(op, PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING, NULL);
 
-    crm_debug("Recording pending %s-interval %s for %s on %s in the CIB",
-              pcmk__readable_interval(op->interval_ms), op->op_type, op->rsc_id,
-              node_name);
+    pcmk__debug("Recording pending %s-interval %s for %s on %s in the CIB",
+                pcmk__readable_interval(op->interval_ms), op->op_type,
+                op->rsc_id, node_name);
     controld_update_resource_history(node_name, rsc, op, 0);
     return true;
 }
@@ -727,16 +735,17 @@ cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *use
         case pcmk_ok:
         case -pcmk_err_diff_failed:
         case -pcmk_err_diff_resync:
-            crm_trace("Resource history update completed (call=%d rc=%d)",
-                      call_id, rc);
+            pcmk__trace("Resource history update completed (call=%d rc=%d)",
+                        call_id, rc);
             break;
         default:
             if (call_id > 0) {
-                crm_warn("Resource history update %d failed: %s "
-                         QB_XS " rc=%d", call_id, pcmk_strerror(rc), rc);
+                pcmk__warn("Resource history update %d failed: %s "
+                           QB_XS " rc=%d",
+                           call_id, pcmk_strerror(rc), rc);
             } else {
-                crm_warn("Resource history update failed: %s " QB_XS " rc=%d",
-                         pcmk_strerror(rc), rc);
+                pcmk__warn("Resource history update failed: %s " QB_XS " rc=%d",
+                           pcmk_strerror(rc), rc);
             }
     }
 
@@ -792,15 +801,15 @@ controld_update_cib(const char *section, xmlNode *data, int options,
     if (cib != NULL) {
         cib_rc = cib->cmds->modify(cib, section, data, options);
         if (cib_rc >= 0) {
-            crm_debug("Submitted CIB update %d for %s section",
-                      cib_rc, section);
+            pcmk__debug("Submitted CIB update %d for %s section", cib_rc,
+                        section);
         }
     }
 
     if (callback == NULL) {
         if (cib_rc < 0) {
-            crm_err("Failed to update CIB %s section: %s",
-                    section, pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
+            pcmk__err("Failed to update CIB %s section: %s", section,
+                      pcmk_rc_str(pcmk_legacy2rc(cib_rc)));
         }
 
     } else {
@@ -843,7 +852,7 @@ controld_update_resource_history(const char *node_name,
     CRM_CHECK((node_name != NULL) && (op != NULL), return);
 
     if (rsc == NULL) {
-        crm_warn("Resource %s no longer exists in the executor", op->rsc_id);
+        pcmk__warn("Resource %s no longer exists in the executor", op->rsc_id);
         controld_ack_event_directly(NULL, NULL, rsc, op, op->rsc_id);
         return;
     }
@@ -889,8 +898,8 @@ controld_update_resource_history(const char *node_name,
         container = g_hash_table_lookup(op->params,
                                         CRM_META "_" PCMK__META_CONTAINER);
         if (container != NULL) {
-            crm_trace("Resource %s is a part of container resource %s",
-                      op->rsc_id, container);
+            pcmk__trace("Resource %s is a part of container resource %s",
+                        op->rsc_id, container);
             pcmk__xe_set(xml, PCMK__META_CONTAINER, container);
         }
     }
@@ -902,7 +911,7 @@ controld_update_resource_history(const char *node_name,
      * discovered during the next election. Worst case, the node is wrongly
      * fenced for running a resource it isn't.
      */
-    crm_log_xml_trace(update, __func__);
+    pcmk__log_xml_trace(update, __func__);
     controld_update_cib(PCMK_XE_STATUS, update, call_opt, cib_rsc_callback);
     pcmk__xml_free(update);
 }
@@ -932,12 +941,13 @@ controld_delete_action_history(const lrmd_event_data_t *op)
         free(op_id);
     }
 
-    crm_debug("Erasing resource operation history for " PCMK__OP_FMT " (call=%d)",
-              op->rsc_id, op->op_type, op->interval_ms, op->call_id);
+    pcmk__debug("Erasing resource operation history for " PCMK__OP_FMT
+                " (call=%d)",
+                op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
     controld_globals.cib_conn->cmds->remove(controld_globals.cib_conn,
                                             PCMK_XE_STATUS, xml_top, cib_none);
-    crm_log_xml_trace(xml_top, "op:cancel");
+    pcmk__log_xml_trace(xml_top, "op:cancel");
     pcmk__xml_free(xml_top);
 }
 

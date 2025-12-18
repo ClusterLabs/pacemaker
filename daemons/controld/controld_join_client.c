@@ -59,7 +59,7 @@ do_cl_join_query(long long action, enum crmd_fsa_cause cause,
     // Unset any existing value so that any response is not discarded
     update_dc(NULL);
 
-    crm_debug("Querying for a DC");
+    pcmk__debug("Querying for a DC");
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
     pcmk__xml_free(req);
 }
@@ -76,15 +76,15 @@ do_cl_join_announce(long long action, enum crmd_fsa_cause cause,
     xmlNode *req = NULL;
 
     if (cur_state != S_PENDING) {
-        crm_warn("Not announcing cluster join because in state %s",
-                 fsa_state2string(cur_state));
+        pcmk__warn("Not announcing cluster join because in state %s",
+                   fsa_state2string(cur_state));
         return;
     }
 
     update_dc(NULL);
 
     // Send as a broadcast
-    crm_debug("Announcing availability");
+    pcmk__debug("Announcing availability");
     req = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_DC, CRM_OP_JOIN_ANNOUNCE, NULL);
     pcmk__cluster_send_message(NULL, pcmk_ipc_controld, req);
@@ -105,7 +105,7 @@ join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
     CRM_LOG_ASSERT(join_id != NULL);
 
     if (query_call_id != call_id) {
-        crm_trace("Query %d superseded", call_id);
+        pcmk__trace("Query %d superseded", call_id);
         return;
     }
 
@@ -113,21 +113,21 @@ join_query_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
 
     if ((rc != pcmk_ok) || (output == NULL)) {
         rc = pcmk_legacy2rc(rc);
-        crm_err("Could not retrieve version details for join-%s: %s (%d)",
-                pcmk__s(join_id, "(unknown)"), pcmk_rc_str(rc), rc);
+        pcmk__err("Could not retrieve version details for join-%s: %s (%d)",
+                  pcmk__s(join_id, "(unknown)"), pcmk_rc_str(rc), rc);
 
         register_fsa_error(I_ERROR, NULL);
         return;
     }
 
     if (controld_globals.dc_name == NULL) {
-        crm_debug("Membership is in flux, not continuing join-%s",
-                  pcmk__s(join_id, "(unknown)"));
+        pcmk__debug("Membership is in flux, not continuing join-%s",
+                    pcmk__s(join_id, "(unknown)"));
         return;
     }
 
-    crm_debug("Responding to join offer join-%s from %s",
-              pcmk__s(join_id, "(unknown)"), controld_globals.dc_name);
+    pcmk__debug("Responding to join offer join-%s from %s",
+                pcmk__s(join_id, "(unknown)"), controld_globals.dc_name);
 
     dc_node = pcmk__get_node(0, controld_globals.dc_name, NULL,
                              pcmk__node_search_cluster_member);
@@ -165,19 +165,19 @@ do_cl_join_offer_respond(long long action, enum crmd_fsa_cause cause,
     join_id = pcmk__xe_get(input->msg, PCMK__XA_JOIN_ID);
 
     if (query_call_id > 0) {
-        crm_trace("Cancelling previous join query: %d", query_call_id);
+        pcmk__trace("Cancelling previous join query: %d", query_call_id);
         remove_cib_op_callback(query_call_id, false);
         query_call_id = 0;
     }
 
     if (!update_dc(input->msg)) {
-        crm_warn("Discarding cluster join offer from node %s (expected %s)",
-                 welcome_from, controld_globals.dc_name);
+        pcmk__warn("Discarding cluster join offer from node %s (expected %s)",
+                   welcome_from, controld_globals.dc_name);
         return;
     }
 
-    crm_trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
-              welcome_from, join_id);
+    pcmk__trace("Accepting cluster join offer from node %s " QB_XS " join-%s",
+                welcome_from, join_id);
 
     update_dc_expected_if_leaving(input->msg);
 
@@ -198,8 +198,9 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                bool remote)
 {
     if (pcmk__str_eq(start_state, PCMK_VALUE_STANDBY, pcmk__str_casei)) {
-        crm_notice("Forcing node %s to join in %s state per configured "
-                   "environment", node_name, start_state);
+        pcmk__notice("Forcing node %s to join in %s state per configured "
+                     "environment",
+                     node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
                               PCMK_XE_NODES, node_uuid,
@@ -208,8 +209,9 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               (remote? PCMK_VALUE_REMOTE : NULL));
 
     } else if (pcmk__str_eq(start_state, PCMK_VALUE_ONLINE, pcmk__str_casei)) {
-        crm_notice("Forcing node %s to join in %s state per configured "
-                   "environment", node_name, start_state);
+        pcmk__notice("Forcing node %s to join in %s state per configured "
+                     "environment",
+                     node_name, start_state);
         cib__update_node_attr(controld_globals.logger_out,
                               controld_globals.cib_conn, cib_sync_call,
                               PCMK_XE_NODES, node_uuid,
@@ -218,12 +220,12 @@ set_join_state(const char *start_state, const char *node_name, const char *node_
                               (remote? PCMK_VALUE_REMOTE : NULL));
 
     } else if (pcmk__str_eq(start_state, PCMK_VALUE_DEFAULT, pcmk__str_casei)) {
-        crm_debug("Not forcing a starting state on node %s", node_name);
+        pcmk__debug("Not forcing a starting state on node %s", node_name);
 
     } else {
-        crm_warn("Unrecognized start state '%s', using "
-                 "'" PCMK_VALUE_DEFAULT "' (%s)",
-                 start_state, node_name);
+        pcmk__warn("Unrecognized start state '%s', using "
+                   "'" PCMK_VALUE_DEFAULT "' (%s)",
+                   start_state, node_name);
     }
 }
 
@@ -276,7 +278,7 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
     op = pcmk__xe_get(input->msg, PCMK__XA_CRM_TASK);
 
     if (!pcmk__str_eq(op, CRM_OP_JOIN_ACKNAK, pcmk__str_none)) {
-        crm_trace("Ignoring op=%s message", pcmk__s(op, "(unspecified)"));
+        pcmk__trace("Ignoring op=%s message", pcmk__s(op, "(unspecified)"));
         return;
     }
 
@@ -284,23 +286,24 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
     pcmk__xe_get_int(input->msg, PCMK__XA_JOIN_ID, &join_id);
 
     if (!pcmk__xe_attr_is_true(input->msg, CRM_OP_JOIN_ACKNAK)) {
-        crm_err("Shutting down because cluster join with leader %s failed "
-                QB_XS " join-%d NACK'd",
-                pcmk__s(welcome_from, "(unknown)"), join_id);
+        pcmk__err("Shutting down because cluster join with leader %s failed "
+                  QB_XS " join-%d NACK'd",
+                  pcmk__s(welcome_from, "(unknown)"), join_id);
         register_fsa_error(I_ERROR, msg_data);
         controld_set_fsa_input_flags(R_STAYDOWN);
         return;
     }
 
     if (!AM_I_DC && controld_is_local_node(welcome_from)) {
-        crm_warn("Discarding our own welcome - we're no longer the DC");
+        pcmk__warn("Discarding our own welcome - we're no longer the DC");
         return;
     }
 
     if (!update_dc(input->msg)) {
-        crm_warn("Discarding %s from node %s (expected from %s)",
-                 pcmk__s(op, "unspecified op"),
-                 pcmk__s(welcome_from, "(unknown)"), controld_globals.dc_name);
+        pcmk__warn("Discarding %s from node %s (expected from %s)",
+                   pcmk__s(op, "unspecified op"),
+                   pcmk__s(welcome_from, "(unknown)"),
+                   controld_globals.dc_name);
         return;
     }
 
@@ -313,15 +316,15 @@ do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
     // Send our status section to the DC
     state = controld_query_executor_state();
     if (state == NULL) {
-        crm_err("Could not confirm join-%d with %s: "
-                "Failed to get executor state for local node",
-                join_id, controld_globals.dc_name);
+        pcmk__err("Could not confirm join-%d with %s: Failed to get executor "
+                  "state for local node",
+                  join_id, controld_globals.dc_name);
         register_fsa_error(I_FAIL, msg_data);
         return;
     }
 
-    crm_debug("Confirming join-%d: sending local operation history to %s",
-              join_id, controld_globals.dc_name);
+    pcmk__debug("Confirming join-%d: sending local operation history to %s",
+                join_id, controld_globals.dc_name);
 
     join_confirm = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD,
                                      controld_globals.dc_name, CRM_SYSTEM_DC,

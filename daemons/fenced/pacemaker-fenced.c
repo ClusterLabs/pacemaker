@@ -85,12 +85,12 @@ do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
 
     local_rc = pcmk__ipc_send_xml(client, rid, notify_src, ipc_flags);
     if (local_rc == pcmk_rc_ok) {
-        crm_trace("Sent response %d to client %s",
-                  rid, pcmk__client_name(client));
+        pcmk__trace("Sent response %d to client %s", rid,
+                    pcmk__client_name(client));
     } else {
-        crm_warn("%synchronous reply to client %s failed: %s",
-                 (pcmk__is_set(call_options, st_opt_sync_call)? "S" : "As"),
-                 pcmk__client_name(client), pcmk_rc_str(local_rc));
+        pcmk__warn("%synchronous reply to client %s failed: %s",
+                   (pcmk__is_set(call_options, st_opt_sync_call)? "S" : "As"),
+                   pcmk__client_name(client), pcmk_rc_str(local_rc));
     }
 }
 
@@ -136,10 +136,10 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(update_msg != NULL, return);
 
     type = pcmk__xe_get(update_msg, PCMK__XA_SUBT);
-    CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
+    CRM_CHECK(type != NULL, pcmk__log_xml_err(update_msg, "notify"); return);
 
     if (client->ipcs == NULL) {
-        crm_trace("Skipping client with NULL channel");
+        pcmk__trace("Skipping client with NULL channel");
         return;
     }
 
@@ -148,12 +148,13 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
                                     crm_ipc_server_event);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("%s notification of client %s failed: %s "
-                     QB_XS " id=%.8s rc=%d", type, pcmk__client_name(client),
-                     pcmk_rc_str(rc), client->id, rc);
+            pcmk__warn("%s notification of client %s failed: %s "
+                       QB_XS " id=%.8s rc=%d",
+                       type, pcmk__client_name(client), pcmk_rc_str(rc),
+                       client->id, rc);
         } else {
-            crm_trace("Sent %s notification to client %s",
-                      type, pcmk__client_name(client));
+            pcmk__trace("Sent %s notification to client %s", type,
+                        pcmk__client_name(client));
         }
     }
 }
@@ -178,7 +179,8 @@ do_stonith_async_timeout_update(const char *client_id, const char *call_id, int 
     pcmk__xe_set(notify_data, PCMK__XA_ST_CALLID, call_id);
     pcmk__xe_set_int(notify_data, PCMK__XA_ST_TIMEOUT, timeout);
 
-    crm_trace("timeout update is %d for client %s and call id %s", timeout, client_id, call_id);
+    pcmk__trace("timeout update is %d for client %s and call id %s", timeout,
+                client_id, call_id);
 
     if (client) {
         pcmk__ipc_send_xml(client, 0, notify_data, crm_ipc_server_event);
@@ -215,10 +217,10 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
         pcmk__xml_copy(wrapper, data);
     }
 
-    crm_trace("Notifying clients");
+    pcmk__trace("Notifying clients");
     pcmk__foreach_ipc_client(stonith_notify_client, update_msg);
     pcmk__xml_free(update_msg);
-    crm_trace("Notify complete");
+    pcmk__trace("Notify complete");
 }
 
 /*!
@@ -265,7 +267,7 @@ node_does_watchdog_fencing(const char *node)
 void
 stonith_shutdown(int nsig)
 {
-    crm_info("Terminating with %d clients", pcmk__ipc_client_count());
+    pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
     stonith_shutdown_flag = TRUE;
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
@@ -340,8 +342,8 @@ ipc_already_running(void)
 
     rc = pcmk__connect_generic_ipc(old_instance);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing stonith-ng instance found: %s",
-                  pcmk_rc_str(rc));
+        pcmk__debug("No existing stonith-ng instance found: %s",
+                    pcmk_rc_str(rc));
         crm_ipc_destroy(old_instance);
         return false;
     }
@@ -403,13 +405,13 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO + args->verbosity, TRUE,
                  (args->verbosity > 0), argc, argv, FALSE);
 
-    crm_notice("Starting Pacemaker fencer");
+    pcmk__notice("Starting Pacemaker fencer");
 
     if (ipc_already_running()) {
         exit_code = CRM_EX_OK;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Aborting start-up because a fencer instance is already active");
-        crm_crit("%s", error->message);
+        pcmk__crit("%s", error->message);
         goto done;
     }
 
@@ -432,7 +434,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_info("Cluster connection active");
+    pcmk__info("Cluster connection active");
 
     fenced_set_local_node(fenced_cluster->priv->node_name);
 
@@ -446,7 +448,8 @@ main(int argc, char **argv)
 
     // Create the mainloop and run it...
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker fencer successfully started and accepting connections");
+    pcmk__notice("Pacemaker fencer successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
 
 done:

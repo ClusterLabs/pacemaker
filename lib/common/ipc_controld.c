@@ -114,10 +114,10 @@ post_connect(pcmk_ipc_api_t *api)
     rc = pcmk__send_ipc_request(api, hello);
     pcmk__xml_free(hello);
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not send IPC hello to %s: %s " QB_XS " rc=%s",
-                 pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
+        pcmk__info("Could not send IPC hello to %s: %s " QB_XS " rc=%s",
+                   pcmk_ipc_name(api, true), pcmk_rc_str(rc), rc);
     } else {
-        crm_debug("Sent IPC hello to %s", pcmk_ipc_name(api, true));
+        pcmk__debug("Sent IPC hello to %s", pcmk_ipc_name(api, true));
     }
     return rc;
 }
@@ -229,25 +229,26 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
          * connecting to cluster nodes <3.0.0, or rolling upgrades from <3.0.0,
          * we can drop this check.
          */
-        crm_trace("Received a reply that was marked as a request "
-                  "(bug unless sent by a controller <3.0.0)");
+        pcmk__trace("Received a reply that was marked as a request (bug unless "
+                    "sent by a controller <3.0.0)");
 
     } else if (!pcmk__str_eq(value, PCMK__VALUE_RESPONSE, pcmk__str_none)) {
-        crm_info("Unrecognizable message from controller: "
-                 "invalid message type '%s'", pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from controller: invalid message "
+                   "type '%s'",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     if (pcmk__str_empty(pcmk__xe_get(reply, PCMK_XA_REFERENCE))) {
-        crm_info("Unrecognizable message from controller: no reference");
+        pcmk__info("Unrecognizable message from controller: no reference");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
 
     value = pcmk__xe_get(reply, PCMK__XA_CRM_TASK);
     if (pcmk__str_empty(value)) {
-        crm_info("Unrecognizable message from controller: no command name");
+        pcmk__info("Unrecognizable message from controller: no command name");
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -277,8 +278,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         set_nodes_data(&reply_data, msg_data);
 
     } else {
-        crm_info("Unrecognizable message from controller: unknown command '%s'",
-                 value);
+        pcmk__info("Unrecognizable message from controller: unknown command "
+                   "'%s'",
+                   value);
         status = CRM_EX_PROTOCOL;
     }
 
@@ -398,9 +400,9 @@ pcmk_controld_api_reprobe(pcmk_ipc_api_t *api, const char *target_node,
     if (router_node == NULL) {
         router_node = target_node;
     }
-    crm_debug("Sending %s IPC request to reprobe %s via %s",
-              pcmk_ipc_name(api, true), pcmk__s(target_node, "local node"),
-              pcmk__s(router_node, "local node"));
+    pcmk__debug("Sending %s IPC request to reprobe %s via %s",
+                pcmk_ipc_name(api, true), pcmk__s(target_node, "local node"),
+                pcmk__s(router_node, "local node"));
     msg_data = create_reprobe_message_data(target_node, router_node);
     request = create_controller_request(api, CRM_OP_REPROBE, router_node,
                                         msg_data);
@@ -569,11 +571,11 @@ pcmk_controld_api_fail(pcmk_ipc_api_t *api,
                        const char *standard, const char *provider,
                        const char *type)
 {
-    crm_debug("Sending %s IPC request to fail %s (a.k.a. %s) on %s via %s",
-              pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
-              pcmk__s(rsc_long_id, "no other names"),
-              pcmk__s(target_node, "unspecified node"),
-              pcmk__s(router_node, "unspecified node"));
+    pcmk__debug("Sending %s IPC request to fail %s (a.k.a. %s) on %s via %s",
+                pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
+                pcmk__s(rsc_long_id, "no other names"),
+                pcmk__s(target_node, "unspecified node"),
+                pcmk__s(router_node, "unspecified node"));
     return controller_resource_op(api, CRM_OP_LRM_FAIL, target_node,
                                   router_node, false, rsc_id, rsc_long_id,
                                   standard, provider, type);
@@ -602,11 +604,11 @@ pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
                           const char *standard, const char *provider,
                           const char *type, bool cib_only)
 {
-    crm_debug("Sending %s IPC request to refresh %s (a.k.a. %s) on %s via %s",
-              pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
-              pcmk__s(rsc_long_id, "no other names"),
-              pcmk__s(target_node, "unspecified node"),
-              pcmk__s(router_node, "unspecified node"));
+    pcmk__debug("Sending %s IPC request to refresh %s (a.k.a. %s) on %s via %s",
+                pcmk_ipc_name(api, true), pcmk__s(rsc_id, "unknown resource"),
+                pcmk__s(rsc_long_id, "no other names"),
+                pcmk__s(target_node, "unspecified node"),
+                pcmk__s(router_node, "unspecified node"));
     return controller_resource_op(api, CRM_OP_LRM_DELETE, target_node,
                                   router_node, cib_only, rsc_id, rsc_long_id,
                                   standard, provider, type);
@@ -641,10 +643,10 @@ create_hello_message(const char *uuid, const char *client_name,
 
     if (pcmk__str_empty(uuid) || pcmk__str_empty(client_name)
         || pcmk__str_empty(major_version) || pcmk__str_empty(minor_version)) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "missing information",
-                client_name? client_name : "unknown client",
-                uuid? uuid : "unknown");
+        pcmk__err("Could not create IPC hello message from %s (UUID %s): "
+                  "missing information",
+                  pcmk__s(client_name, "unknown client"),
+                  pcmk__s(uuid, "unknown"));
         return NULL;
     }
 
@@ -662,11 +664,12 @@ create_hello_message(const char *uuid, const char *client_name,
     free(sender_system);
     pcmk__xml_free(hello_node);
     if (hello == NULL) {
-        crm_err("Could not create IPC hello message from %s (UUID %s): "
-                "Request creation failed", client_name, uuid);
+        pcmk__err("Could not create IPC hello message from %s (UUID %s): "
+                  "Request creation failed",
+                  client_name, uuid);
         return NULL;
     }
 
-    crm_trace("Created hello message from %s (UUID %s)", client_name, uuid);
+    pcmk__trace("Created hello message from %s (UUID %s)", client_name, uuid);
     return hello;
 }

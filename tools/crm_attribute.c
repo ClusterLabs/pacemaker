@@ -574,9 +574,9 @@ output_one_attribute(xmlNode *node, void *userdata)
     od->out->message(od->out, "attribute", type, attr_id, name, value, NULL,
                      od->out->quiet, true);
     od->did_output = true;
-    crm_info("Read %s='%s' %s%s",
-             pcmk__s(name, "<null>"), pcmk__s(value, ""),
-             options.set_name ? "in " : "", options.set_name ? options.set_name : "");
+    pcmk__info("Read %s='%s' %s%s", pcmk__s(name, "<null>"), pcmk__s(value, ""),
+               ((options.set_name != NULL)? "in " : ""),
+               pcmk__s(options.set_name, ""));
 
     return pcmk_rc_ok;
 }
@@ -816,7 +816,7 @@ main(int argc, char **argv)
     }
 
     if (options.inhibit) {
-        crm_warn("Inhibiting notifications for this update");
+        pcmk__warn("Inhibiting notifications for this update");
         cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
@@ -937,8 +937,8 @@ main(int argc, char **argv)
         if (options.command == attr_cmd_delete) {
             update = "<none>";
         }
-        crm_info("Update %s=%s sent to the attribute manager",
-                 options.attr_name, update);
+        pcmk__info("Update %s=%s sent to the attribute manager",
+                   options.attr_name, update);
 
     } else if (options.command == attr_cmd_delete) {
         rc = command_delete(out, the_cib);

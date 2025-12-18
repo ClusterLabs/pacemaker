@@ -48,25 +48,27 @@ scan_ll(const char *text, long long *result, long long default_value,
         local_result = strtoll(text, &local_end_text, 10);
         if (errno == ERANGE) {
             rc = errno;
-            crm_debug("Integer parsed from '%s' was clipped to %lld",
-                      text, local_result);
+            pcmk__debug("Integer parsed from '%s' was clipped to %lld", text,
+                        local_result);
 
         } else if (local_end_text == text) {
             rc = pcmk_rc_bad_input;
             local_result = default_value;
-            crm_debug("Could not parse integer from '%s' (using %lld instead): "
-                      "No digits found", text, default_value);
+            pcmk__debug("Could not parse integer from '%s' (using %lld "
+                        "instead): No digits found",
+                        text, default_value);
 
         } else if (errno != 0) {
             rc = errno;
             local_result = default_value;
-            crm_debug("Could not parse integer from '%s' (using %lld instead): "
-                      "%s", text, default_value, pcmk_rc_str(rc));
+            pcmk__debug("Could not parse integer from '%s' (using %lld "
+                        "instead): %s",
+                        text, default_value, pcmk_rc_str(rc));
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
-            crm_debug("Characters left over after parsing '%s': '%s'",
-                      text, local_end_text);
+            pcmk__debug("Characters left over after parsing '%s': '%s'",
+                        text, local_end_text);
         }
         errno = rc;
     }
@@ -122,11 +124,12 @@ pcmk__scan_min_int(const char *text, int *result, int minimum)
     rc = pcmk__scan_ll(text, &result_ll, (long long) minimum);
 
     if (result_ll < (long long) minimum) {
-        crm_warn("Clipped '%s' to minimum acceptable value %d", text, minimum);
+        pcmk__warn("Clipped '%s' to minimum acceptable value %d", text,
+                   minimum);
         result_ll = (long long) minimum;
 
     } else if (result_ll > INT_MAX) {
-        crm_warn("Clipped '%s' to maximum integer %d", text, INT_MAX);
+        pcmk__warn("Clipped '%s' to maximum integer %d", text, INT_MAX);
         result_ll = (long long) INT_MAX;
         rc = EOVERFLOW;
     }
@@ -154,12 +157,13 @@ pcmk__scan_port(const char *text, int *port)
     int rc = pcmk__scan_ll(text, &port_ll, -1LL);
 
     if (rc != pcmk_rc_ok) {
-        crm_warn("'%s' is not a valid port: %s", text, pcmk_rc_str(rc));
+        pcmk__warn("'%s' is not a valid port: %s", text, pcmk_rc_str(rc));
 
     } else if ((text != NULL) // wasn't default or invalid
         && ((port_ll < 0LL) || (port_ll > 65535LL))) {
-        crm_warn("Ignoring port specification '%s' "
-                 "not in valid range (0-65535)", text);
+        pcmk__warn("Ignoring port specification '%s' not in valid range "
+                   "(0-65535)",
+                   text);
         rc = (port_ll < 0LL)? pcmk_rc_before_range : pcmk_rc_after_range;
         port_ll = -1LL;
     }
@@ -202,7 +206,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
 
     if (text == NULL) {
         rc = EINVAL;
-        crm_debug("No text and no default conversion value supplied");
+        pcmk__debug("No text and no default conversion value supplied");
 
     } else {
         errno = 0;
@@ -228,26 +232,27 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
                 over_under = "under";
             }
 
-            crm_debug("Floating-point value parsed from '%s' would %sflow "
-                      "(using %g instead)", text, over_under, *result);
+            pcmk__debug("Floating-point value parsed from '%s' would %sflow "
+                        "(using %g instead)",
+                        text, over_under, *result);
 
         } else if (errno != 0) {
             rc = errno;
             // strtod() set *result = 0 on parse failure
             *result = PCMK__PARSE_DBL_DEFAULT;
 
-            crm_debug("Could not parse floating-point value from '%s' (using "
-                      "%.1f instead): %s", text, PCMK__PARSE_DBL_DEFAULT,
-                      pcmk_rc_str(rc));
+            pcmk__debug("Could not parse floating-point value from '%s' (using "
+                        "%.1f instead): %s",
+                        text, PCMK__PARSE_DBL_DEFAULT, pcmk_rc_str(rc));
 
         } else if (local_end_text == text) {
             // errno == 0, but nothing was parsed
             rc = EINVAL;
             *result = PCMK__PARSE_DBL_DEFAULT;
 
-            crm_debug("Could not parse floating-point value from '%s' (using "
-                      "%.1f instead): No digits found", text,
-                      PCMK__PARSE_DBL_DEFAULT);
+            pcmk__debug("Could not parse floating-point value from '%s' (using "
+                        "%.1f instead): No digits found",
+                        text, PCMK__PARSE_DBL_DEFAULT);
 
         } else if (QB_ABS(*result) <= DBL_MIN) {
             /*
@@ -265,20 +270,21 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
             for (const char *p = text; p != local_end_text; p++) {
                 if (strchr("0.eE", *p) == NULL) {
                     rc = pcmk_rc_underflow;
-                    crm_debug("Floating-point value parsed from '%s' would "
-                              "underflow (using %g instead)", text, *result);
+                    pcmk__debug("Floating-point value parsed from '%s' would "
+                                "underflow (using %g instead)", text, *result);
                     break;
                 }
             }
 
         } else {
-            crm_trace("Floating-point value parsed successfully from "
-                      "'%s': %g", text, *result);
+            pcmk__trace("Floating-point value parsed successfully from '%s': "
+                        "%g",
+                        text, *result);
         }
 
         if ((end_text == NULL) && !pcmk__str_empty(local_end_text)) {
-            crm_debug("Characters left over after parsing '%s': '%s'",
-                      text, local_end_text);
+            pcmk__debug("Characters left over after parsing '%s': '%s'", text,
+                        local_end_text);
         }
     }
 
@@ -321,14 +327,16 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
 
     rc = pcmk__scan_ll(value, &value_ll, 0LL);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Using default (%u) for %s because '%s' is not a "
-                 "valid integer: %s", default_val, key, value, pcmk_rc_str(rc));
+        pcmk__warn("Using default (%u) for %s because '%s' is not a valid "
+                   "integer: %s",
+                   default_val, key, value, pcmk_rc_str(rc));
         return rc;
     }
 
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
-        crm_warn("Using default (%u) for %s because '%s' is not in valid range",
-                 default_val, key, value);
+        pcmk__warn("Using default (%u) for %s because '%s' is not in valid "
+                   "range",
+                   default_val, key, value);
         return ERANGE;
     }
 
@@ -376,8 +384,8 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
     }
 
     if (msec < 0) {
-        crm_warn("Using 0 instead of invalid interval specification '%s'",
-                 input);
+        pcmk__warn("Using 0 instead of invalid interval specification '%s'",
+                   input);
         msec = 0;
 
         if (rc == pcmk_rc_ok) {
@@ -612,8 +620,8 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     free(uncompressed);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Compression of %d bytes failed: %s " QB_XS " rc=%d",
-                length, pcmk_rc_str(rc), rc);
+        pcmk__err("Compression of %d bytes failed: %s " QB_XS " rc=%d", length,
+                  pcmk_rc_str(rc), rc);
         free(compressed);
         return rc;
     }
@@ -621,13 +629,13 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &after_t);
 
-    crm_trace("Compressed %d bytes into %d (ratio %d:1) in %.0fms",
-             length, *result_len, length / (*result_len),
-             (after_t.tv_sec - before_t.tv_sec) * 1000 +
-             (after_t.tv_nsec - before_t.tv_nsec) / 1e6);
+    pcmk__trace("Compressed %d bytes into %d (ratio %d:1) in %.0fms", length,
+                *result_len, (length / *result_len),
+                (((after_t.tv_sec - before_t.tv_sec) * 1000)
+                 + ((after_t.tv_nsec - before_t.tv_nsec) / 1e6)));
 #else
-    crm_trace("Compressed %d bytes into %d (ratio %d:1)",
-             length, *result_len, length / (*result_len));
+    pcmk__trace("Compressed %d bytes into %d (ratio %d:1)", length, *result_len,
+                (length / *result_len));
 #endif
 
     *result = compressed;
@@ -883,7 +891,7 @@ pcmk__parse_ms(const char *input, long long *result)
     }
 
     if (rc == ERANGE) {
-        crm_warn("'%s' will be clipped to %lld", input, local_result);
+        pcmk__warn("'%s' will be clipped to %lld", input, local_result);
 
         /* Continue through rest of body before returning ERANGE
          *
@@ -892,8 +900,8 @@ pcmk__parse_ms(const char *input, long long *result)
          */
 
     } else if (rc != pcmk_rc_ok) {
-        crm_warn("'%s' is not a valid time duration: %s", input,
-                 pcmk_rc_str(rc));
+        pcmk__warn("'%s' is not a valid time duration: %s", input,
+                   pcmk_rc_str(rc));
         return rc;
     }
 
@@ -1179,7 +1187,8 @@ pcmk__strcmp(const char *s1, const char *s2, uint32_t flags)
         regcomp_rc = regcomp(&r_patt, s2, reg_flags);
         if (regcomp_rc != 0) {
             rc = 1;
-            crm_err("Bad regex '%s' for update: %s", s2, strerror(regcomp_rc));
+            pcmk__err("Bad regex '%s' for update: %s", s2,
+                      strerror(regcomp_rc));
         } else {
             rc = regexec(&r_patt, s1, 0, NULL, 0);
             regfree(&r_patt);
@@ -1365,11 +1374,11 @@ crm_get_msec(const char *input)
     rc = scan_ll(input, &msec, PCMK__PARSE_INT_DEFAULT, &units);
 
     if ((rc == ERANGE) && (msec > 0)) {
-        crm_warn("'%s' will be clipped to %lld", input, msec);
+        pcmk__warn("'%s' will be clipped to %lld", input, msec);
 
     } else if ((rc != pcmk_rc_ok) || (msec < 0)) {
-        crm_warn("'%s' is not a valid time duration: %s",
-                 input, ((rc == pcmk_rc_ok)? "Negative" : pcmk_rc_str(rc)));
+        pcmk__warn("'%s' is not a valid time duration: %s", input,
+                   ((rc == pcmk_rc_ok)? "Negative" : pcmk_rc_str(rc)));
         return PCMK__PARSE_INT_DEFAULT;
     }
 

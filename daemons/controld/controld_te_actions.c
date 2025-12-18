@@ -71,8 +71,8 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         remote_ra_process_pseudo(pseudo->xml);
     }
 
-    crm_debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
-              pcmk__xe_get(pseudo->xml, PCMK__XA_OPERATION_KEY));
+    pcmk__debug("Pseudo-action %d (%s) fired and confirmed", pseudo->id,
+                pcmk__xe_get(pseudo->xml, PCMK__XA_OPERATION_KEY));
     te_action_confirmed(pseudo, graph);
     return pcmk_rc_ok;
 }
@@ -144,14 +144,14 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
         no_wait = TRUE;
     }
 
-    crm_info("Handling controller request '%s' (%s on %s)%s%s",
-             id, task, on_node, (is_local? " locally" : ""),
-             (no_wait? " without waiting" : ""));
+    pcmk__info("Handling controller request '%s' (%s on %s)%s%s", id, task,
+               on_node, (is_local? " locally" : ""),
+               (no_wait? " without waiting" : ""));
 
     if (is_local
         && pcmk__str_eq(task, PCMK_ACTION_DO_SHUTDOWN, pcmk__str_none)) {
         /* defer until everything else completes */
-        crm_info("Controller request '%s' is a local shutdown", id);
+        pcmk__info("Controller request '%s' is a local shutdown", id);
         graph->completion_action = pcmk__graph_shutdown;
         graph->abort_reason = "local shutdown";
         te_action_confirmed(action, graph);
@@ -180,7 +180,7 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__xml_free(cmd);
 
     if (rc == FALSE) {
-        crm_err("Action %d failed: send", action->id);
+        pcmk__err("Action %d failed: send", action->id);
         return ECOMM;
 
     } else if (no_wait) {
@@ -188,8 +188,10 @@ execute_cluster_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     } else {
         if (action->timeout <= 0) {
-            crm_err("Action %d: %s on %s had an invalid timeout (%dms).  Using %ums instead",
-                    action->id, task, on_node, action->timeout, graph->network_delay);
+            pcmk__err("Action %d: %s on %s had an invalid timeout (%dms). "
+                      "Using %ums instead",
+                      action->id, task, on_node, action->timeout,
+                      graph->network_delay);
             action->timeout = (int) graph->network_delay;
         }
         te_start_action_timer(graph, action);
@@ -276,7 +278,7 @@ controld_record_action_event(pcmk__graph_action_t *action,
 
     rsc_id = pcmk__xe_id(action_rsc);
     CRM_CHECK(rsc_id != NULL,
-              crm_log_xml_err(action->xml, "Bad:action"); return);
+              pcmk__log_xml_err(action->xml, "Bad:action"); return);
 
 /*
   update the CIB
@@ -311,8 +313,9 @@ controld_record_action_event(pcmk__graph_action_t *action,
     fsa_register_cib_callback(rc, NULL, cib_action_updated);
     pcmk__xml_free(state);
 
-    crm_trace("Sent CIB update (call ID %d) for synthesized event of action %d (%s on %s)",
-              rc, action->id, task_uuid, target);
+    pcmk__trace("Sent CIB update (call ID %d) for synthesized event of action "
+                "%d (%s on %s)",
+                rc, action->id, task_uuid, target);
     pcmk__set_graph_action_flags(action, pcmk__graph_action_sent_update);
 }
 
@@ -326,8 +329,8 @@ controld_record_action_timeout(pcmk__graph_action_t *action)
 
     int target_rc = get_target_rc(action);
 
-    crm_warn("%s %d: %s on %s timed out",
-             action->xml->name, action->id, task_uuid, target);
+    pcmk__warn("%s %d: %s on %s timed out", action->xml->name, action->id,
+               task_uuid, target);
 
     op = synthesize_timeout_event(action, target_rc);
     controld_record_action_event(action, op);
@@ -422,10 +425,10 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
             pcmk__get_node(0, router_node, NULL,
                            pcmk__node_search_cluster_member);
 
-        crm_notice("Asking %s to execute %s on %s%s "
-                   QB_XS " transition %s action %d",
-                   router_node, task_uuid, on_node,
-                   (no_wait? " without waiting" : ""), counter, action->id);
+        pcmk__notice("Asking %s to execute %s on %s%s "
+                     QB_XS " transition %s action %d",
+                     router_node, task_uuid, on_node,
+                     (no_wait? " without waiting" : ""), counter, action->id);
         rc = pcmk__cluster_send_message(node, pcmk_ipc_execd, cmd);
     }
 
@@ -435,25 +438,28 @@ execute_rsc_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     pcmk__set_graph_action_flags(action, pcmk__graph_action_executed);
 
     if (rc == FALSE) {
-        crm_err("Action %d failed: send", action->id);
+        pcmk__err("Action %d failed: send", action->id);
         return ECOMM;
 
     } else if (no_wait) {
         /* Just mark confirmed. Don't bump the job count only to immediately
          * decrement it.
          */
-        crm_info("Action %d confirmed - no wait", action->id);
+        pcmk__info("Action %d confirmed - no wait", action->id);
         pcmk__set_graph_action_flags(action, pcmk__graph_action_confirmed);
         pcmk__update_graph(controld_globals.transition_graph, action);
         trigger_graph();
 
     } else if (pcmk__is_set(action->flags, pcmk__graph_action_confirmed)) {
-        crm_debug("Action %d: %s %s on %s(timeout %dms) was already confirmed.",
-                  action->id, task, task_uuid, on_node, action->timeout);
+        pcmk__debug("Action %d: %s %s on %s (timeout %dms) was already "
+                    "confirmed",
+                    action->id, task, task_uuid, on_node, action->timeout);
     } else {
         if (action->timeout <= 0) {
-            crm_err("Action %d: %s %s on %s had an invalid timeout (%dms).  Using %ums instead",
-                    action->id, task, task_uuid, on_node, action->timeout, graph->network_delay);
+            pcmk__err("Action %d: %s %s on %s had an invalid timeout (%dms). "
+                      "Using %ums instead",
+                      action->id, task, task_uuid, on_node, action->timeout,
+                      graph->network_delay);
             action->timeout = (int) graph->network_delay;
         }
         te_update_job_count(action, 1);
@@ -514,7 +520,7 @@ te_update_job_count_on(const char *target, int offset, bool migrate)
     if(migrate) {
         r->migrate_jobs += offset;
     }
-    crm_trace("jobs[%s] = %d", target, r->jobs);
+    pcmk__trace("jobs[%s] = %d", target, r->jobs);
 }
 
 static void
@@ -590,20 +596,22 @@ allowed_on_node(const pcmk__graph_t *graph, const pcmk__graph_action_t *action,
     }
 
     if(limit <= r->jobs) {
-        crm_trace("Peer %s is over their job limit of %d (%d): deferring %s",
-                  target, limit, r->jobs, id);
+        pcmk__trace("Peer %s is over their job limit of %d (%d): deferring %s",
+                    target, limit, r->jobs, id);
         return false;
 
     } else if(graph->migration_limit > 0 && r->migrate_jobs >= graph->migration_limit) {
         if (pcmk__strcase_any_of(task, PCMK_ACTION_MIGRATE_TO,
                                  PCMK_ACTION_MIGRATE_FROM, NULL)) {
-            crm_trace("Peer %s is over their migration job limit of %d (%d): deferring %s",
-                      target, graph->migration_limit, r->migrate_jobs, id);
+            pcmk__trace("Peer %s is over their migration job limit of %d (%d): "
+                        "deferring %s",
+                        target, graph->migration_limit, r->migrate_jobs, id);
             return false;
         }
     }
 
-    crm_trace("Peer %s has not hit their limit yet. current jobs = %d limit= %d limit", target, r->jobs, limit);
+    pcmk__trace("Peer %s has not hit their limit yet (jobs=%d limit=%d)",
+                target, r->jobs, limit);
 
     return true;
 }
@@ -697,8 +705,8 @@ notify_crmd(pcmk__graph_t *graph)
     const char *type = "unknown";
     enum crmd_fsa_input event = I_NULL;
 
-    crm_debug("Processing transition completion in state %s",
-              fsa_state2string(controld_globals.fsa_state));
+    pcmk__debug("Processing transition completion in state %s",
+                fsa_state2string(controld_globals.fsa_state));
 
     CRM_CHECK(graph->complete, graph->complete = true);
 
@@ -738,13 +746,14 @@ notify_crmd(pcmk__graph_t *graph)
                 event = I_STOP;
 
             } else {
-                crm_err("We didn't ask to be shut down, yet the scheduler is telling us to");
+                pcmk__err("We didn't ask to be shut down, yet the scheduler is "
+                          "telling us to");
                 event = I_TERMINATE;
             }
     }
 
-    crm_debug("Transition %d status: %s - %s", graph->id, type,
-              pcmk__s(graph->abort_reason, "unspecified reason"));
+    pcmk__debug("Transition %d status: %s - %s", graph->id, type,
+                pcmk__s(graph->abort_reason, "unspecified reason"));
 
     graph->abort_reason = NULL;
     graph->completion_action = pcmk__graph_done;

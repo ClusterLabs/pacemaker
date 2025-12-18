@@ -39,7 +39,7 @@ static qb_ipcs_service_t *ipcs = NULL;
 static int32_t
 pacemakerd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    crm_trace("New client connection %p", c);
+    pcmk__trace("New client connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
@@ -60,9 +60,9 @@ pacemakerd_ipc_closed(qb_ipcs_connection_t *c)
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        crm_trace("Ignoring request to clean up unknown connection %p", c);
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
     } else {
-        crm_trace("Cleaning up closed client connection %p", c);
+        pcmk__trace("Cleaning up closed client connection %p", c);
 
         if (shutdown_complete_state_reported_to == client->pid) {
             shutdown_complete_state_reported_client_closed = true;
@@ -87,7 +87,7 @@ pacemakerd_ipc_closed(qb_ipcs_connection_t *c)
 static void
 pacemakerd_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    crm_trace("Destroying client connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     pacemakerd_ipc_closed(c);
 }
 
@@ -115,7 +115,7 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
     if (data == NULL) {
-        crm_debug("No IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
@@ -137,7 +137,7 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
         if (client->buffer != NULL) {
             g_byte_array_free(client->buffer, TRUE);
@@ -148,7 +148,7 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
     if (msg == NULL) {
-        crm_debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
                            CRM_EX_PROTOCOL);
         return 0;

@@ -47,8 +47,8 @@ update_fencing_max_attempts(const char *value)
     CRM_CHECK((rc == pcmk_rc_ok) && (score > 0), return);
 
     if (fencing_max_attempts != score) {
-        crm_debug("Maximum fencing attempts per transition is now %d (was %lu)",
-                  score, fencing_max_attempts);
+        pcmk__debug("Maximum fencing attempts per transition is now %d "
+                    "(was %lu)", score, fencing_max_attempts);
     }
     fencing_max_attempts = score;
 }
@@ -67,8 +67,9 @@ set_fence_reaction(const char *reaction_s)
 
     } else {
         if (!pcmk__str_eq(reaction_s, PCMK_VALUE_STOP, pcmk__str_casei)) {
-            crm_warn("Invalid value '%s' for %s, using 'stop'",
-                     reaction_s, PCMK_OPT_FENCING_REACTION);
+            pcmk__warn("Invalid value '%s' for " PCMK_OPT_FENCING_REACTION
+                       ", using 'stop'",
+                       reaction_s);
         }
         fence_reaction_panic = false;
     }
@@ -118,8 +119,8 @@ too_many_fencing_failures(const char *target)
     return false;
 
 too_many:
-    crm_warn("Too many failures (%d) to fence %s, giving up",
-             GPOINTER_TO_INT(value), target);
+    pcmk__warn("Too many failures (%d) to fence %s, giving up",
+               GPOINTER_TO_INT(value), target);
     return true;
 }
 
@@ -176,14 +177,15 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
                     void *user_data)
 {
     if (rc < pcmk_ok) {
-        crm_err("Fencing update %d for %s: failed - %s (%d)",
-                call_id, (char *)user_data, pcmk_strerror(rc), rc);
-        crm_log_xml_warn(msg, "Failed update");
+        pcmk__err("Fencing update %d for %s: failed - %s (%d)",
+                  call_id, (char *)user_data, pcmk_strerror(rc), rc);
+        pcmk__log_xml_warn(msg, "Failed update");
         abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_shutdown,
                          "CIB update failed", NULL);
 
     } else {
-        crm_info("Fencing update %d for %s: complete", call_id, (char *)user_data);
+        pcmk__info("Fencing update %d for %s: complete", call_id,
+                   (const char *) user_data);
     }
 }
 
@@ -223,7 +225,8 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
     }
 
     if (peer->xml_id == NULL) {
-        crm_info("Recording XML ID '%s' for node '%s'", target_xml_id, target);
+        pcmk__info("Recording XML ID '%s' for node '%s'", target_xml_id,
+                   target);
         peer->xml_id = pcmk__str_copy(target_xml_id);
     }
 
@@ -244,7 +247,8 @@ update_node_state_after_fencing(const char *target, const char *target_xml_id)
                                                  cib_can_create);
     pcmk__xml_free(node_state);
 
-    crm_debug("Updating node state for %s after fencing (call %d)", target, rc);
+    pcmk__debug("Updating node state for %s after fencing (call %d)", target,
+                rc);
     fsa_register_cib_callback(rc, pcmk__str_copy(target), cib_fencing_updated);
 
     // Delete node's resource history from CIB
@@ -323,7 +327,7 @@ controld_remove_fencing_cleanup(const char *target)
 
         iter = iter->next;
         if (pcmk__str_eq(target, iter_name, pcmk__str_casei)) {
-            crm_trace("Removing %s from the cleanup list", iter_name);
+            pcmk__trace("Removing %s from the cleanup list", iter_name);
             fencing_cleanup_list = g_list_delete_link(fencing_cleanup_list,
                                                       tmp);
             free(iter_name);
@@ -341,7 +345,7 @@ controld_purge_fencing_cleanup(void)
     for (GList *iter = fencing_cleanup_list; iter != NULL; iter = iter->next) {
         char *target = iter->data;
 
-        crm_info("Purging %s from fencing cleanup list", target);
+        pcmk__info("Purging %s from fencing cleanup list", target);
         free(target);
     }
     g_list_free(fencing_cleanup_list);
@@ -361,7 +365,8 @@ controld_execute_fencing_cleanup(void)
             pcmk__get_node(0, target, NULL, pcmk__node_search_cluster_member);
         const char *uuid = pcmk__cluster_get_xml_id(target_node);
 
-        crm_notice("Marking %s, target of a previous fencing action, as clean", target);
+        pcmk__notice("Marking %s, target of a previous fencing action, as "
+                     "clean", target);
         update_node_state_after_fencing(target, uuid);
         free(target);
     }
@@ -413,14 +418,14 @@ fail_incompletable_fencing(pcmk__graph_t *graph)
                 pcmk__set_graph_action_flags(action, pcmk__graph_action_failed);
                 last_action = action->xml;
                 pcmk__update_graph(graph, action);
-                crm_notice("Failing action %d (%s): fencer terminated",
-                           action->id, pcmk__xe_id(action->xml));
+                pcmk__notice("Failing action %d (%s): fencer terminated",
+                             action->id, pcmk__xe_id(action->xml));
             }
         }
     }
 
     if (last_action != NULL) {
-        crm_warn("Fencing failure resulted in unrunnable actions");
+        pcmk__warn("Fencing failure resulted in unrunnable actions");
         abort_for_fencing_failure(pcmk__graph_restart, NULL, last_action);
         return true;
     }
@@ -434,12 +439,12 @@ destroy_fencer_connection(stonith_t *st, stonith_event_t *e)
     controld_cleanup_fencing_history_sync(st, false);
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
-        crm_err("Lost fencer connection (will attempt to reconnect)");
+        pcmk__err("Lost fencer connection (will attempt to reconnect)");
         if (!mainloop_timer_running(controld_fencer_connect_timer)) {
             mainloop_timer_start(controld_fencer_connect_timer);
         }
     } else {
-        crm_info("Disconnected from fencer");
+        pcmk__info("Disconnected from fencer");
     }
 
     if (fencer_api != NULL) {
@@ -480,7 +485,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     }
 
     if (event == NULL) {
-        crm_err("Notify data not found");
+        pcmk__err("Notify data not found");
         return;
     }
 
@@ -506,15 +511,15 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
     if (pcmk__str_eq(PCMK_ACTION_ON, event->action, pcmk__str_none)) {
         // Unfencing doesn't need special handling, just a log message
         if (succeeded) {
-            crm_notice("%s was unfenced by %s at the request of %s@%s",
-                       event->target, executioner, client, event->origin);
+            pcmk__notice("%s was unfenced by %s at the request of %s@%s",
+                         event->target, executioner, client, event->origin);
         } else {
-            crm_err("Unfencing of %s by %s failed (%s%s%s) with exit status %d",
-                    event->target, executioner,
-                    pcmk_exec_status_str(exec_status),
-                    ((reason == NULL)? "" : ": "),
-                    ((reason == NULL)? "" : reason),
-                    stonith__event_exit_status(event));
+            pcmk__err("Unfencing of %s by %s failed (%s%s%s) with exit status "
+                      "%d",
+                      event->target, executioner,
+                      pcmk_exec_status_str(exec_status),
+                      ((reason == NULL)? "" : ": "),
+                      pcmk__s(reason, ""), stonith__event_exit_status(event));
         }
         return;
     }
@@ -529,8 +534,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
          * set our status to lost because of the fencing callback and discard
          * our subsequent election votes as "not part of our cluster".
          */
-        crm_crit("We were allegedly just fenced by %s for %s!",
-                 executioner, event->origin); // Dumps blackbox if enabled
+        pcmk__crit("We were allegedly just fenced by %s for %s!", executioner,
+                   event->origin); // Dumps blackbox if enabled
         if (fence_reaction_panic) {
             pcmk__panic("Notified of own fencing");
         } else {
@@ -551,15 +556,13 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
         }
     }
 
-    crm_notice("Peer %s was%s terminated (%s) by %s on behalf of %s@%s: "
-               "%s%s%s%s " QB_XS " event=%s",
-               event->target, (succeeded? "" : " not"),
-               event->action, executioner, client, event->origin,
-               (succeeded? "OK" : pcmk_exec_status_str(exec_status)),
-               ((reason == NULL)? "" : " ("),
-               ((reason == NULL)? "" : reason),
-               ((reason == NULL)? "" : ")"),
-               event->id);
+    pcmk__notice("Peer %s was%s terminated (%s) by %s on behalf of %s@%s: "
+                 "%s%s%s%s " QB_XS " event=%s",
+                 event->target, (succeeded? "" : " not"), event->action,
+                 executioner, client, event->origin,
+                 (succeeded? "OK" : pcmk_exec_status_str(exec_status)),
+                 ((reason != NULL)? " (" : ""), pcmk__s(reason, ""),
+                 ((reason != NULL)? ")" : ""), event->id);
 
     if (succeeded) {
         const uint32_t flags = pcmk__node_search_any
@@ -591,8 +594,8 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
                 /* Abort the current transition if it wasn't the cluster that
                  * initiated fencing.
                  */
-                crm_info("External fencing operation from %s fenced %s",
-                         client, event->target);
+                pcmk__info("External fencing operation from %s fenced %s",
+                           client, event->target);
                 abort_transition(PCMK_SCORE_INFINITY, pcmk__graph_restart,
                                  "External Fencing Operation", NULL);
             }
@@ -603,10 +606,10 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
             // Assume the target was our DC if we don't currently have one
 
             if (controld_globals.dc_name != NULL) {
-                crm_notice("Fencing target %s was our DC", event->target);
+                pcmk__notice("Fencing target %s was our DC", event->target);
             } else {
-                crm_notice("Fencing target %s may have been our DC",
-                           event->target);
+                pcmk__notice("Fencing target %s may have been our DC",
+                             event->target);
             }
 
             /* Given the CIB resyncing that occurs around elections,
@@ -649,13 +652,14 @@ controld_timer_fencer_connect(gpointer user_data)
     if (fencer_api == NULL) {
         fencer_api = stonith__api_new();
         if (fencer_api == NULL) {
-            crm_err("Could not connect to fencer: API memory allocation failed");
+            pcmk__err("Could not connect to fencer: API memory allocation "
+                      "failed");
             return G_SOURCE_REMOVE;
         }
     }
 
     if (fencer_api->state != stonith_disconnected) {
-        crm_trace("Already connected to fencer, no need to retry");
+        pcmk__trace("Already connected to fencer, no need to retry");
         return G_SOURCE_REMOVE;
     }
 
@@ -663,8 +667,8 @@ controld_timer_fencer_connect(gpointer user_data)
         // Blocking (retry failures now until successful)
         rc = stonith__api_connect_retry(fencer_api, crm_system_name, 30);
         if (rc != pcmk_rc_ok) {
-            crm_err("Could not connect to fencer in 30 attempts: %s "
-                    QB_XS " rc=%d", pcmk_rc_str(rc), rc);
+            pcmk__err("Could not connect to fencer in 30 attempts: %s "
+                      QB_XS " rc=%d", pcmk_rc_str(rc), rc);
         }
     } else {
         // Non-blocking (retry failures later in main loop)
@@ -680,8 +684,9 @@ controld_timer_fencer_connect(gpointer user_data)
         if (rc != pcmk_ok) {
             if (pcmk__is_set(controld_globals.fsa_input_register,
                              R_ST_REQUIRED)) {
-                crm_notice("Fencer connection failed (will retry): %s "
-                           QB_XS " rc=%d", pcmk_strerror(rc), rc);
+                pcmk__notice("Fencer connection failed (will retry): %s "
+                             QB_XS " rc=%d",
+                             pcmk_strerror(rc), rc);
 
                 if (!mainloop_timer_running(controld_fencer_connect_timer)) {
                     mainloop_timer_start(controld_fencer_connect_timer);
@@ -689,8 +694,9 @@ controld_timer_fencer_connect(gpointer user_data)
 
                 return G_SOURCE_CONTINUE;
             } else {
-                crm_info("Fencer connection failed (ignoring because no longer required): %s "
-                         QB_XS " rc=%d", pcmk_strerror(rc), rc);
+                pcmk__info("Fencer connection failed (ignoring because no "
+                           "longer required): %s " QB_XS " rc=%d",
+                           pcmk_strerror(rc), rc);
             }
             return G_SOURCE_REMOVE;
         }
@@ -708,7 +714,7 @@ controld_timer_fencer_connect(gpointer user_data)
                                     PCMK__VALUE_ST_NOTIFY_HISTORY_SYNCED,
                                     fencing_history_synced);
         controld_trigger_fencing_history_sync(true);
-        crm_notice("Fencer successfully connected");
+        pcmk__notice("Fencer successfully connected");
     }
 
     return G_SOURCE_REMOVE;
@@ -754,8 +760,8 @@ sync_fencing_history(gpointer user_data)
         stonith__history_free(history);
         return TRUE;
     } else {
-        crm_info("Skipping triggering fencing history sync because fencer is "
-                 "disconnected");
+        pcmk__info("Skipping triggering fencing history sync because fencer is "
+                   "disconnected");
         return FALSE;
     }
 }
@@ -770,9 +776,9 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
     const char *target = NULL;
 
     if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fence operation %d result: "
-                "No transition key given (bug?)",
-                ((data == NULL)? -1 : data->call_id));
+        pcmk__err("Ignoring fence operation %d result: No transition key given "
+                  "(bug?)",
+                  ((data == NULL)? -1 : data->call_id));
         return;
     }
 
@@ -782,9 +788,9 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
         if (reason == NULL) {
            reason = pcmk_exec_status_str(stonith__execution_status(data));
         }
-        crm_notice("Result of fence operation %d: %d (%s) " QB_XS " key=%s",
-                   data->call_id, stonith__exit_status(data), reason,
-                   (const char *) data->userdata);
+        pcmk__notice("Result of fence operation %d: %d (%s) " QB_XS " key=%s",
+                     data->call_id, stonith__exit_status(data), reason,
+                     (const char *) data->userdata);
         return;
     }
 
@@ -795,29 +801,29 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
     if (controld_globals.transition_graph->complete || (action_id < 0)
         || !pcmk__str_eq(uuid, controld_globals.te_uuid, pcmk__str_none)
         || (controld_globals.transition_graph->id != transition_id)) {
-        crm_info("Ignoring fence operation %d result: "
-                 "Not from current transition " QB_XS
-                 " complete=%s action=%d uuid=%s (vs %s) transition=%d (vs %d)",
-                 data->call_id,
-                 pcmk__btoa(controld_globals.transition_graph->complete),
-                 action_id, uuid, controld_globals.te_uuid, transition_id,
-                 controld_globals.transition_graph->id);
+
+        pcmk__info("Ignoring fence operation %d result: Not from current "
+                   "transition " QB_XS " complete=%s action=%d uuid=%s (vs %s) "
+                   "transition=%d (vs %d)",
+                   data->call_id,
+                   pcmk__btoa(controld_globals.transition_graph->complete),
+                   action_id, uuid, controld_globals.te_uuid, transition_id,
+                   controld_globals.transition_graph->id);
         goto bail;
     }
 
     action = controld_get_action(action_id);
     if (action == NULL) {
-        crm_err("Ignoring fence operation %d result: "
-                "Action %d not found in transition graph (bug?) "
-                QB_XS " uuid=%s transition=%d",
-                data->call_id, action_id, uuid, transition_id);
+        pcmk__err("Ignoring fence operation %d result: Action %d not found in "
+                  "transition graph (bug?) " QB_XS " uuid=%s transition=%d",
+                  data->call_id, action_id, uuid, transition_id);
         goto bail;
     }
 
     target = pcmk__xe_get(action->xml, PCMK__META_ON_NODE);
     if (target == NULL) {
-        crm_err("Ignoring fence operation %d result: No target given (bug?)",
-                data->call_id);
+        pcmk__err("Ignoring fence operation %d result: No target given (bug?)",
+                  data->call_id);
         goto bail;
     }
 
@@ -827,7 +833,8 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
         const char *op = crm_meta_value(action->params,
                                         PCMK__META_STONITH_ACTION);
 
-        crm_info("Fence operation %d for %s succeeded", data->call_id, target);
+        pcmk__info("Fence operation %d for %s succeeded", data->call_id,
+                  target);
         if (!(pcmk__is_set(action->flags, pcmk__graph_action_confirmed))) {
             te_action_confirmed(action, NULL);
             if (pcmk__str_eq(PCMK_ACTION_ON, op, pcmk__str_casei)) {
@@ -886,13 +893,14 @@ fencing_cb(stonith_t *stonith, stonith_callback_data_t *data)
          * checking again, so don't start a new transition in that case.
          */
         if (status == PCMK_EXEC_NO_FENCE_DEVICE) {
-            crm_warn("Fence operation %d for %s failed: %s "
-                     "(aborting transition and giving up for now)",
-                     data->call_id, target, reason);
+            pcmk__warn("Fence operation %d for %s failed: %s (aborting "
+                       "transition and giving up for now)",
+                       data->call_id, target, reason);
             abort_action = pcmk__graph_wait;
         } else {
-            crm_notice("Fence operation %d for %s failed: %s "
-                       "(aborting transition)", data->call_id, target, reason);
+            pcmk__notice("Fence operation %d for %s failed: %s (aborting "
+                         "transition)",
+                         data->call_id, target, reason);
         }
 
         /* Increment the fail count now, so abort_for_fencing_failure() can
@@ -958,18 +966,18 @@ controld_execute_fence_action(pcmk__graph_t *graph,
     CRM_CHECK(target != NULL, invalid_action = TRUE);
 
     if (invalid_action) {
-        crm_log_xml_warn(action->xml, "BadAction");
+        pcmk__log_xml_warn(action->xml, "BadAction");
         return EPROTO;
     }
 
     priority_delay = crm_meta_value(action->params,
                                     PCMK_OPT_PRIORITY_FENCING_DELAY);
 
-    crm_notice("Requesting fencing (%s) targeting node %s "
-               QB_XS " action=%s timeout=%i%s%s",
-               type, target, id, timeout_sec,
-               priority_delay ? " priority_delay=" : "",
-               priority_delay ? priority_delay : "");
+    pcmk__notice("Requesting fencing (%s) targeting node %s "
+                 QB_XS " action=%s timeout=%i%s%s",
+                 type, target, id, timeout_sec,
+                 ((priority_delay != NULL)? " priority_delay=" : ""),
+                 pcmk__s(priority_delay, ""));
 
     /* Passing NULL means block until we can connect... */
     controld_timer_fencer_connect(NULL);
@@ -1037,7 +1045,7 @@ static void
 fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 {
     controld_cleanup_fencing_history_sync(st, false);
-    crm_debug("Fencing history synced - cancel all timers");
+    pcmk__debug("Fencing history synced - cancel all timers");
 }
 
 static gboolean
@@ -1080,7 +1088,8 @@ controld_trigger_fencing_history_sync(bool long_timeout)
                                    FALSE, fencing_history_sync_set_trigger,
                                    NULL);
         }
-        crm_info("Fence history will be synchronized cluster-wide within 30 seconds");
+        pcmk__info("Fence history will be synchronized cluster-wide within 30 "
+                   "seconds");
         mainloop_timer_start(fencing_history_sync_timer_long);
 
     } else {
@@ -1090,7 +1099,8 @@ controld_trigger_fencing_history_sync(bool long_timeout)
                                    FALSE, fencing_history_sync_set_trigger,
                                    NULL);
         }
-        crm_info("Fence history will be synchronized cluster-wide within 5 seconds");
+        pcmk__info("Fence history will be synchronized cluster-wide within 5 "
+                   "seconds");
         mainloop_timer_start(fencing_history_sync_timer_short);
     }
 

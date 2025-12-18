@@ -332,9 +332,9 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"),
                      PCMK_VALUE_BLOCK, pcmk__str_casei)) {
-        crm_debug("Setting flag to leave pid group on timeout and "
-                  "only kill action pid for " PCMK__OP_FMT,
-                  cmd->rsc_id, cmd->action, cmd->interval_ms);
+        pcmk__debug("Setting flag to leave pid group on timeout and only kill "
+                    "action pid for " PCMK__OP_FMT,
+                    cmd->rsc_id, cmd->action, cmd->interval_ms);
         cmd->service_flags = pcmk__set_flags_as(__func__, __LINE__,
                                                 LOG_TRACE, "Action",
                                                 cmd->action, 0,
@@ -482,10 +482,10 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
      */
-    crm_warn("Duplicate recurring op entry detected (" PCMK__OP_FMT
-             "), merging with previous op entry",
-             rsc->rsc_id, normalize_action_name(rsc, dup->action),
-             dup->interval_ms);
+    pcmk__warn("Duplicate recurring op entry detected (" PCMK__OP_FMT "), "
+               "merging with previous op entry",
+               rsc->rsc_id, normalize_action_name(rsc, dup->action),
+               dup->interval_ms);
 
     // Merge new action's call ID and user data into existing action
     dup->first_notify_sent = false;
@@ -520,7 +520,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(rsc != NULL, return);
 
-    crm_trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
+    pcmk__trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
 
     if (merge_recurring_duplicate(rsc, cmd)) {
         // Equivalent of cmd has already been scheduled
@@ -567,7 +567,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
 
     CRM_CHECK(client != NULL, return);
     if (client->name == NULL) {
-        crm_trace("Skipping notification to client without name");
+        pcmk__trace("Skipping notification to client without name");
         return;
     }
     if (pcmk__is_set(client->flags, pcmk__client_to_proxy)) {
@@ -575,8 +575,8 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
          * running as Pacemaker Remote, we may have clients proxied to other
          * IPC services in the cluster, so skip those.
          */
-        crm_trace("Skipping executor API notification to client %s",
-                  pcmk__client_name(client));
+        pcmk__trace("Skipping executor API notification to client %s",
+                    pcmk__client_name(client));
         return;
     }
 
@@ -736,8 +736,9 @@ cmd_reset(lrmd_cmd_t * cmd)
 static void
 cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 {
-    crm_trace("Resource operation rsc:%s action:%s completed (%p %p)", cmd->rsc_id, cmd->action,
-              rsc ? rsc->active : NULL, cmd);
+    pcmk__trace("Resource operation rsc:%s action:%s completed (%p %p)",
+                cmd->rsc_id, cmd->action, ((rsc != NULL)? rsc->active : NULL),
+                cmd);
 
     if (rsc && (rsc->active == cmd)) {
         rsc->active = NULL;
@@ -834,8 +835,9 @@ action_complete(svc_action_t * action)
 #endif
 
     if (!cmd) {
-        crm_err("Completed executor action (%s) does not match any known operations",
-                action->id);
+        pcmk__err("Completed executor action (%s) does not match any known "
+                  "operations",
+                  action->id);
         return;
     }
 
@@ -905,11 +907,11 @@ action_complete(svc_action_t * action)
             int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
             int timeout_left = cmd->timeout_orig - time_sum;
 
-            crm_debug("%s systemd %s is now complete (elapsed=%dms, "
-                      "remaining=%dms): %s (%d)",
-                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
-                      crm_exit_str(cmd->result.exit_status),
-                      cmd->result.exit_status);
+            pcmk__debug("%s systemd %s is now complete (elapsed=%dms, "
+                        "remaining=%dms): %s (%d)",
+                        cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                        crm_exit_str(cmd->result.exit_status),
+                        cmd->result.exit_status);
             cmd_original_times(cmd);
 
             // Monitors may return "not running", but start/stop shouldn't
@@ -936,11 +938,12 @@ action_complete(svc_action_t * action)
             int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
 
             if (time_left >= 0) {
-                crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout "
-                           "(first pending notification=%s timeout=%ds)",
-                           cmd->rsc_id, cmd->action, cmd->result.exit_status,
-                           g_strchomp(ctime(&cmd->epoch_rcchange)),
-                           cmd->timeout_orig);
+                pcmk__notice("Giving up on %s %s (rc=%d): monitor pending "
+                             "timeout (first pending notification=%s "
+                             "timeout=%ds)",
+                             cmd->rsc_id, cmd->action, cmd->result.exit_status,
+                             g_strchomp(ctime(&cmd->epoch_rcchange)),
+                             cmd->timeout_orig);
                 pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                                  PCMK_EXEC_TIMEOUT,
                                  "Investigate reason for timeout, and adjust "
@@ -968,21 +971,24 @@ action_complete(svc_action_t * action)
         cmd->timeout = timeout_left;
 
         if (pcmk__result_ok(&(cmd->result))) {
-            crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
+            pcmk__debug("%s %s may still be in progress: re-scheduling "
+                        "(elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                        cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                        delay);
 
         } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
-            crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                     cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
+            pcmk__info("%s %s is still in progress: re-scheduling "
+                       "(elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                       cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
         } else {
-            crm_notice("%s %s failed: %s: Re-scheduling (remaining "
-                       "timeout %s) " QB_XS
-                       " exitstatus=%d elapsed=%dms start_delay=%dms)",
-                       cmd->rsc_id, cmd->action,
-                       crm_exit_str(cmd->result.exit_status),
-                       pcmk__readable_interval(timeout_left),
-                       cmd->result.exit_status, time_sum, delay);
+            pcmk__notice("%s %s failed: %s: Re-scheduling (remaining timeout "
+                         "%s) "
+                         QB_XS " exitstatus=%d elapsed=%dms start_delay=%dms)",
+                         cmd->rsc_id, cmd->action,
+                         crm_exit_str(cmd->result.exit_status),
+                         pcmk__readable_interval(timeout_left),
+                         cmd->result.exit_status, time_sum, delay);
         }
 
         cmd_reset(cmd);
@@ -995,10 +1001,10 @@ action_complete(svc_action_t * action)
         return;
 
     } else {
-        crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
-                   cmd->rsc_id,
-                   (cmd->real_action? cmd->real_action : cmd->action),
-                   cmd->result.exit_status, time_sum, timeout_left);
+        pcmk__notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, "
+                     "remaining=%dms)",
+                     cmd->rsc_id, pcmk__s(cmd->real_action, cmd->action),
+                     cmd->result.exit_status, time_sum, timeout_left);
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_TIMEOUT,
                          "Investigate reason for timeout, and adjust "
@@ -1118,8 +1124,8 @@ execd_fencer_connection_failed(void)
     GHashTableIter iter;
     lrmd_rsc_t *rsc = NULL;
 
-    crm_warn("Connection to fencer lost (any pending operations for "
-             "fence devices will be considered failed)");
+    pcmk__warn("Connection to fencer lost (any pending operations for fence "
+               "devices will be considered failed)");
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &rsc)) {
@@ -1239,8 +1245,8 @@ static void
 fencing_rsc_monitor_cb(stonith_t *stonith, stonith_callback_data_t *data)
 {
     if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fencing resource monitor result: "
-                "Invalid callback arguments (bug?)");
+        pcmk__err("Ignoring fencing resource monitor result: "
+                  "Invalid callback arguments (bug?)");
     } else {
         fencing_rsc_action_complete((lrmd_cmd_t *) data->userdata,
                                     stonith__exit_status(data),
@@ -1347,8 +1353,9 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 
     pcmk__assert((rsc != NULL) && (cmd != NULL));
 
-    crm_trace("Creating action, resource:%s action:%s class:%s provider:%s agent:%s",
-              rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
+    pcmk__trace("Creating action, resource:%s action:%s class:%s provider:%s "
+                "agent:%s",
+                rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
 
     params_copy = pcmk__str_table_dup(cmd->params);
 
@@ -1405,7 +1412,7 @@ execute_resource_action(gpointer user_data)
     CRM_CHECK(rsc != NULL, return FALSE);
 
     if (rsc->active) {
-        crm_trace("%s is still active", rsc->rsc_id);
+        pcmk__trace("%s is still active", rsc->rsc_id);
         return TRUE;
     }
 
@@ -1414,9 +1421,9 @@ execute_resource_action(gpointer user_data)
 
         cmd = first->data;
         if (cmd->delay_id) {
-            crm_trace
-                ("Command %s %s was asked to run too early, waiting for start_delay timeout of %dms",
-                 cmd->rsc_id, cmd->action, cmd->start_delay);
+            pcmk__trace("Command %s %s was asked to run too early, waiting for "
+                        "start_delay timeout of %dms",
+                        cmd->rsc_id, cmd->action, cmd->start_delay);
             return TRUE;
         }
         rsc->pending_ops = g_list_remove_link(rsc->pending_ops, first);
@@ -1429,7 +1436,7 @@ execute_resource_action(gpointer user_data)
     }
 
     if (!cmd) {
-        crm_trace("Nothing further to do for %s", rsc->rsc_id);
+        pcmk__trace("Nothing further to do for %s", rsc->rsc_id);
         return TRUE;
     }
 
@@ -1521,8 +1528,9 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
 
     if (pcmk__compare_versions(protocol_version,
                                LRMD_COMPATIBLE_PROTOCOL) < 0) {
-        crm_err("Cluster API version must be greater than or equal to %s, not %s",
-                LRMD_COMPATIBLE_PROTOCOL, protocol_version);
+        pcmk__err("Cluster API version must be greater than or equal to "
+                  LRMD_COMPATIBLE_PROTOCOL " , not %s",
+                  protocol_version);
         rc = EPROTO;
     }
 
@@ -1586,13 +1594,13 @@ execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request
         pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) &&
         pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
-        crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
+        pcmk__notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
         execd_free_rsc(rsc);
         return;
     }
 
     g_hash_table_replace(rsc_list, rsc->rsc_id, rsc);
-    crm_info("Cached agent information for '%s'", rsc->rsc_id);
+    pcmk__info("Cached agent information for '%s'", rsc->rsc_id);
 }
 
 int
@@ -1610,7 +1618,7 @@ execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
     } else {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Agent information for '%s' not in cache", rsc_id);
+            pcmk__info("Agent information for '%s' not in cache", rsc_id);
             rc = ENODEV;
         }
     }
@@ -1644,15 +1652,15 @@ execd_process_rsc_unregister(pcmk__client_t *client, xmlNode *request)
 
     rsc = g_hash_table_lookup(rsc_list, rsc_id);
     if (rsc == NULL) {
-        crm_info("Ignoring unregistration of resource '%s', which is not registered",
-                 rsc_id);
+        pcmk__info("Ignoring unregistration of resource '%s', which is not "
+                   "registered", rsc_id);
         return pcmk_rc_ok;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
-        crm_trace("Operation (%p) still in progress for unregistered resource %s",
-                  rsc->active, rsc_id);
+        pcmk__trace("Operation (%p) still in progress for unregistered "
+                    "resource %s", rsc->active, rsc_id);
         rc = EINPROGRESS;
     }
 
@@ -1676,8 +1684,8 @@ execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request)
     }
 
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
-        crm_info("Resource '%s' not found (%d active resources)",
-                 rsc_id, g_hash_table_size(rsc_list));
+        pcmk__info("Resource '%s' not found (%d active resources)", rsc_id,
+                   g_hash_table_size(rsc_list));
         return ENODEV;
     }
 
@@ -1845,8 +1853,8 @@ execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
     if (rsc_id != NULL) {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Resource '%s' not found (%d active resources)",
-                     rsc_id, g_hash_table_size(rsc_list));
+            pcmk__info("Resource '%s' not found (%d active resources)", rsc_id,
+                       g_hash_table_size(rsc_list));
             rc = ENODEV;
         }
     }

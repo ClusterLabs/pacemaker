@@ -101,8 +101,8 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
         && !g_str_has_prefix(key, CRM_META "_")
         && !pcmk__str_eq(key, PCMK_XA_CRM_FEATURE_SET, pcmk__str_none)) {
 
-        crm_trace("Passing %s=%s with fence action",
-                  (const char *) key, (const char *) (value? value : ""));
+        pcmk__trace("Passing %s=%s with fence action", (const char *) key,
+                    pcmk__s((const char *) value, ""));
         pcmk__insert_dup((GHashTable *) user_data, key, pcmk__s(value, ""));
     }
 }
@@ -140,8 +140,8 @@ make_args(const char *agent, const char *action, const char *target,
         free(buffer);
 
         if (value) {
-            crm_debug("Substituting '%s' for fence action %s targeting %s",
-                      value, action, pcmk__s(target, "no node"));
+            pcmk__debug("Substituting '%s' for fence action %s targeting %s",
+                        value, action, pcmk__s(target, "no node"));
             action = value;
         }
     }
@@ -184,8 +184,8 @@ make_args(const char *agent, const char *action, const char *target,
                 if (alias == NULL) {
                     alias = target;
                 }
-                crm_debug("Passing %s='%s' with fence action %s targeting %s",
-                          param, alias, action, pcmk__s(target, "no node"));
+                pcmk__debug("Passing %s='%s' with fence action %s targeting %s",
+                            param, alias, action, pcmk__s(target, "no node"));
                 pcmk__insert_dup(arg_list, param, alias);
             }
         }
@@ -259,10 +259,11 @@ stonith__action_create(const char *agent, const char *action_name,
 {
     stonith_action_t *action = pcmk__assert_alloc(1, sizeof(stonith_action_t));
 
+    pcmk__debug("Preparing '%s' action targeting %s using agent %s",
+                action_name, pcmk__s(target, "no node"), agent);
+
     action->args = make_args(agent, action_name, target, device_args, port_map,
                              default_host_arg);
-    crm_debug("Preparing '%s' action targeting %s using agent %s",
-              action_name, pcmk__s(target, "no node"), agent);
     action->agent = strdup(agent);
     action->action = strdup(action_name);
     action->timeout = action->remaining_timeout = timeout_sec;
@@ -291,8 +292,9 @@ update_remaining_timeout(stonith_action_t * action)
     int diff = time(NULL) - action->initial_start_time;
 
     if (action->tries >= action->max_retries) {
-        crm_info("Attempted to execute agent %s (%s) the maximum number of times (%d) allowed",
-                 action->agent, action->action, action->max_retries);
+        pcmk__info("Attempted to execute agent %s (%s) the maximum number of "
+                   "times (%d) allowed",
+                   action->agent, action->action, action->max_retries);
         action->remaining_timeout = 0;
     } else if ((action->result.execution_status != PCMK_EXEC_TIMEOUT)
                && (diff < (action->timeout * 0.7))) {
@@ -461,7 +463,7 @@ stonith__find_xe_with_result(xmlNode *xml)
 {
     xmlNode *match = pcmk__xpath_find_one(xml->doc,
                                           "//*[@" PCMK__XA_RC_CODE "]",
-                                          LOG_NEVER);
+                                          PCMK__LOG_NEVER);
 
     if (match == NULL) {
         /* @COMPAT Peers <=2.1.2 in a rolling upgrade provide only a legacy
@@ -561,8 +563,8 @@ stonith_action_async_forked(svc_action_t *svc_action)
     pcmk__set_result(&(action->result), PCMK_OCF_UNKNOWN, PCMK_EXEC_PENDING,
                      NULL);
 
-    crm_trace("Child process %d performing action '%s' successfully forked",
-              action->pid, action->action);
+    pcmk__trace("Child process %d performing action '%s' successfully forked",
+                action->pid, action->action);
 }
 
 /*!
@@ -628,10 +630,10 @@ internal_stonith_action_execute(stonith_action_t * action)
         action->initial_start_time = time(NULL);
     } else {
         // Later attempt after earlier failure
-        crm_info("Attempt %d to execute '%s' action of agent %s "
-                 "(%ds timeout remaining)",
-                 action->tries, action->action, action->agent,
-                 action->remaining_timeout);
+        pcmk__info("Attempt %d to execute '%s' action of agent %s (%ds timeout "
+                   "remaining)",
+                   action->tries, action->action, action->agent,
+                   action->remaining_timeout);
         is_retry = 1;
     }
 

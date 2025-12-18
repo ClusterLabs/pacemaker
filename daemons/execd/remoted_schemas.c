@@ -34,7 +34,7 @@ rm_files(const char *pathname, const struct stat *sbuf, int type, struct FTW *ft
 
     if (remove(pathname) != 0) {
         int rc = errno;
-        crm_err("Could not remove %s: %s", pathname, pcmk_rc_str(rc));
+        pcmk__err("Could not remove %s: %s", pathname, pcmk_rc_str(rc));
         return -1;
     }
 
@@ -69,17 +69,17 @@ clean_up_extra_schema_files(void)
 
         if (errno == ENOTDIR) {
             /* Something other than a directory already has that name. */
-            crm_err("%s already exists but is not a directory",
-                    remote_schema_dir);
+            pcmk__err("%s already exists but is not a directory",
+                      remote_schema_dir);
         } else {
             rc = errno;
-            crm_err("Could not clear directory %s: %s", remote_schema_dir,
-                    pcmk_rc_str(rc));
+            pcmk__err("Could not clear directory %s: %s", remote_schema_dir,
+                      pcmk_rc_str(rc));
         }
     } else {
         rc = errno;
-        crm_err("Could not create directory for schemas: %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Could not create directory for schemas: %s",
+                  pcmk_rc_str(rc));
     }
 }
 
@@ -93,7 +93,7 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
 
     file = pcmk__xe_get(xml, PCMK_XA_PATH);
     if (file == NULL) {
-        crm_warn("No destination path given in schema request");
+        pcmk__warn("No destination path given in schema request");
         return;
     }
 
@@ -112,12 +112,14 @@ write_extra_schema_file(xmlNode *xml, void *user_data)
 
         stream = fopen(path, "w+");
         if (stream == NULL) {
-            crm_warn("Could not write schema file %s: %s", path, strerror(errno));
+            pcmk__warn("Could not write schema file %s: %s", path,
+                       strerror(errno));
         } else {
             rc = fprintf(stream, "%s", child->content);
 
             if (rc < 0) {
-                crm_warn("Could not write schema file %s: %s", path, strerror(errno));
+                pcmk__warn("Could not write schema file %s: %s", path,
+                           strerror(errno));
             }
 
             fclose(stream);
@@ -145,7 +147,7 @@ get_schema_files(void)
     rc = cib->cmds->signon(cib, crm_system_name, cib_query);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not connect to the CIB manager: %s", pcmk_rc_str(rc));
+        pcmk__err("Could not connect to the CIB manager: %s", pcmk_rc_str(rc));
         pcmk_common_cleanup();
         _exit(pcmk_rc2exitc(rc));
     }
@@ -153,7 +155,7 @@ get_schema_files(void)
     rc = cib->cmds->fetch_schemas(cib, &reply, pcmk__highest_schema_name(),
                                   cib_sync_call);
     if (rc != pcmk_ok) {
-        crm_err("Could not get schema files: %s", pcmk_strerror(rc));
+        pcmk__err("Could not get schema files: %s", pcmk_strerror(rc));
         rc = pcmk_legacy2rc(rc);
 
     } else if (reply->children != NULL) {
@@ -211,16 +213,17 @@ get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, i
          */
         pcmk__load_schemas_from_dir(remote_schema_dir);
         pcmk__sort_schemas();
-        crm_info("Fetching extra schema files completed successfully");
+        pcmk__info("Fetching extra schema files completed successfully");
 
     } else {
         if (signo == 0) {
-            crm_err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
+            pcmk__err("%s: process %lld exited %d", errmsg, (long long) pid,
+                      exitcode);
 
         } else {
-            crm_err("%s: process %d terminated with signal %d (%s)%s",
-                    errmsg, (int) pid, signo, strsignal(signo),
-                    (core? " and dumped core" : ""));
+            pcmk__err("%s: process %lld terminated with signal %d (%s)%s",
+                      errmsg, (long long) pid, signo, strsignal(signo),
+                      ((core != 0)? " and dumped core" : ""));
         }
 
         /* Clean up any incomplete schema data we might have been downloading
@@ -245,7 +248,7 @@ remoted_request_cib_schema_files(void)
      */
     if (schema_fetch_pid != 0) {
         if (mainloop_child_kill(schema_fetch_pid) == FALSE) {
-            crm_warn("Unable to kill pre-existing schema-fetch process");
+            pcmk__warn("Unable to kill pre-existing schema-fetch process");
             return;
         }
 
@@ -264,13 +267,14 @@ remoted_request_cib_schema_files(void)
     pcmk__schema_cleanup();
     pcmk__schema_init();
 
-    crm_info("Fetching extra schema files from cluster");
+    pcmk__info("Fetching extra schema files from cluster");
     pid = fork();
 
     switch (pid) {
         case -1: {
             rc = errno;
-            crm_warn("Could not spawn process to get schema files: %s", pcmk_rc_str(rc));
+            pcmk__warn("Could not spawn process to get schema files: %s",
+                       pcmk_rc_str(rc));
             break;
         }
 

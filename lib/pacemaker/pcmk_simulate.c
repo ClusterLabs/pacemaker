@@ -344,17 +344,18 @@ profile_filter(const struct dirent *entry)
         goto done;
     }
     if (filename[0] == '.') {
-        crm_trace("Not profiling hidden file '%s'", filename);
+        pcmk__trace("Not profiling hidden file '%s'", filename);
         goto done;
     }
     if (!g_str_has_suffix(filename, ".xml")) {
-        crm_trace("Not profiling file '%s' without '.xml' extension", filename);
+        pcmk__trace("Not profiling file '%s' without '.xml' extension",
+                    filename);
         goto done;
     }
 
     buf = pcmk__assert_asprintf("%s/%s", profiling_dir, filename);
     if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
-        crm_trace("Not profiling file '%s': not a regular file", filename);
+        pcmk__trace("Not profiling file '%s': not a regular file", filename);
         goto done;
     }
 
@@ -582,12 +583,12 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
 
     // Certain actions don't need to be displayed or history entries
     if (pcmk__str_eq(operation, CRM_OP_REPROBE, pcmk__str_none)) {
-        crm_debug("No history injection for %s op on %s", operation, node);
+        pcmk__debug("No history injection for %s op on %s", operation, node);
         goto done; // Confirm action and update graph
     }
 
     if (action_rsc == NULL) { // Shouldn't be possible
-        crm_log_xml_err(action->xml, "Bad");
+        pcmk__log_xml_err(action->xml, "Bad");
         free(node);
         return EPROTO;
     }
@@ -599,7 +600,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
      */
     resource_config_name = pcmk__xe_get(action_rsc, PCMK_XA_ID);
     if (resource_config_name == NULL) { // Shouldn't be possible
-        crm_log_xml_err(action->xml, "No ID");
+        pcmk__log_xml_err(action->xml, "No ID");
         free(node);
         return EPROTO;
     }
@@ -642,8 +643,8 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
                                                  resource_config_name,
                                                  rclass, rtype, rprovider);
     if (cib_resource == NULL) {
-        crm_err("Could not simulate action %d history for resource %s",
-                action->id, resource);
+        pcmk__err("Could not simulate action %d history for resource %s",
+                  action->id, resource);
         free(node);
         pcmk__xml_free(cib_node);
         return EINVAL;

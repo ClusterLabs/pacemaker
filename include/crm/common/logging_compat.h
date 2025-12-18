@@ -42,17 +42,65 @@ extern "C" {
             default: {                                                      \
                 const char *err = strerror(errno);                          \
                 if (_level <= crm_log_level) {                              \
-                    fprintf(stderr, fmt ": %s (%d)\n" , ##args, err,        \
-                            errno);                                         \
+                    fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno); \
                 }                                                           \
                 /* Pass original level arg since do_crm_log() also declares \
                  * _level                                                   \
                  */                                                         \
-                do_crm_log((level), fmt ": %s (%d)" , ##args, err, errno);  \
+                do_crm_log((level), fmt ": %s (%d)", ##args, err, errno);   \
             }                                                               \
             break;                                                          \
         }                                                                   \
     } while (0)
+
+//! \deprecated Do not use
+#define crm_emerg(fmt, args...) qb_log(LOG_EMERG, fmt, ##args)
+
+//! \deprecated Do not use
+#define crm_crit(fmt, args...) qb_log(LOG_CRIT, fmt, ##args)
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define crm_err(fmt, args...) qb_log(LOG_ERR, fmt, ##args)
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define crm_warn(fmt, args...) qb_log(LOG_WARNING, fmt, ##args)
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define crm_notice(fmt, args...) qb_log(LOG_NOTICE, fmt, ##args)
+
+//! \deprecated Do not use
+#define crm_info(fmt, args...) qb_log(LOG_INFO, fmt, ##args)
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+#define crm_debug(fmt, args...) do_crm_log_unlikely(LOG_DEBUG, fmt, ##args)
+
+//! \deprecated Do not use
+#define crm_trace(fmt, args...) do_crm_log_unlikely(LOG_TRACE, fmt, ##args)
+
+//! \deprecated Do not use
+#define crm_log_xml_crit(xml, text) do_crm_log_xml(LOG_CRIT, text, xml)
+
+//! \deprecated Do not use
+#define crm_log_xml_err(xml, text) do_crm_log_xml(LOG_ERR, text, xml)
+
+//! \deprecated Do not use
+#define crm_log_xml_warn(xml, text) do_crm_log_xml(LOG_WARNING, text, xml)
+
+//! \deprecated Do not use
+#define crm_log_xml_notice(xml, text) do_crm_log_xml(LOG_NOTICE, text, xml)
+
+//! \deprecated Do not use
+#define crm_log_xml_info(xml, text) do_crm_log_xml(LOG_INFO, text, xml)
+
+//! \deprecated Do not use
+#define crm_log_xml_debug(xml, text) do_crm_log_xml(LOG_DEBUG, text, xml)
+
+//! \deprecated Do not use
+#define crm_log_xml_trace(xml, text) do_crm_log_xml(LOG_TRACE, text, xml)
 
 #ifdef __cplusplus
 }

@@ -708,7 +708,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     rule_input.now = scheduler->priv->now;
 
-    crm_log_xml_trace(xml_obj, "[raw XML]");
+    pcmk__log_xml_trace(xml_obj, "[raw XML]");
 
     id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
     if (id == NULL) {
@@ -743,7 +743,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     rsc_private->scheduler = scheduler;
 
     if (expanded_xml) {
-        crm_log_xml_trace(expanded_xml, "[expanded XML]");
+        pcmk__log_xml_trace(expanded_xml, "[expanded XML]");
         rsc_private->xml = expanded_xml;
         rsc_private->orig_xml = xml_obj;
 

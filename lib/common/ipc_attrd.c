@@ -74,9 +74,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
     value = pcmk__xe_get(reply, PCMK__XA_T);
     if (pcmk__str_empty(value)
         || !pcmk__str_eq(value, PCMK__VALUE_ATTRD, pcmk__str_none)) {
-        crm_info("Unrecognizable message from attribute manager: "
-                 "message type '%s' not '" PCMK__VALUE_ATTRD "'",
-                 pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from attribute manager: message "
+                   "type '%s' not '" PCMK__VALUE_ATTRD "'",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -95,8 +95,9 @@ dispatch(pcmk_ipc_api_t *api, xmlNode *reply)
         set_pairs_data(&reply_data, reply);
 
     } else {
-        crm_info("Unrecognizable message from attribute manager: "
-                 "message subtype '%s' unknown", pcmk__s(value, ""));
+        pcmk__info("Unrecognizable message from attribute manager: message "
+                   "subtype '%s' unknown",
+                   pcmk__s(value, ""));
         status = CRM_EX_PROTOCOL;
         goto done;
     }
@@ -209,9 +210,10 @@ pcmk__attrd_api_clear_failures(pcmk_ipc_api_t *api, const char *node,
         interval_desc = "all";
         op_desc = "operations";
     }
-    crm_debug("Asking %s to clear failure of %s %s for %s on %s",
-              pcmk_ipc_name(api, true), interval_desc, op_desc,
-              pcmk__s(resource, "all resources"), pcmk__s(node, "all nodes"));
+    pcmk__debug("Asking %s to clear failure of %s %s for %s on %s",
+                pcmk_ipc_name(api, true), interval_desc, op_desc,
+                pcmk__s(resource, "all resources"),
+                pcmk__s(node, "all nodes"));
 
     pcmk__xe_set(request, PCMK_XA_TASK, PCMK__ATTRD_CMD_CLEAR_FAILURE);
     pcmk__xe_set(request, PCMK__XA_ATTR_HOST, node);
@@ -261,10 +263,10 @@ pcmk__attrd_api_purge(pcmk_ipc_api_t *api, const char *node, bool reap)
         node = target;
     }
 
-    crm_debug("Asking %s to purge transient attributes%s for %s",
-              pcmk_ipc_name(api, true),
-              (reap? " and node cache entries" : ""),
-              pcmk__s(node, "local node"));
+    pcmk__debug("Asking %s to purge transient attributes%s for %s",
+                pcmk_ipc_name(api, true),
+                (reap? " and node cache entries" : ""),
+                pcmk__s(node, "local node"));
 
     request = create_attrd_op(NULL);
 
@@ -302,9 +304,8 @@ pcmk__attrd_api_query(pcmk_ipc_api_t *api, const char *node, const char *name,
         }
     }
 
-    crm_debug("Querying %s for value of '%s'%s%s",
-              pcmk_ipc_name(api, true), name,
-              ((node == NULL)? "" : " on "), pcmk__s(node, ""));
+    pcmk__debug("Querying %s for value of '%s'%s%s", pcmk_ipc_name(api, true),
+                name, ((node != NULL)? " on " : ""), pcmk__s(node, ""));
 
     request = create_attrd_op(NULL);
 
@@ -328,8 +329,8 @@ pcmk__attrd_api_refresh(pcmk_ipc_api_t *api, const char *node)
         node = target;
     }
 
-    crm_debug("Asking %s to write all transient attributes for %s to CIB",
-              pcmk_ipc_name(api, true), pcmk__s(node, "local node"));
+    pcmk__debug("Asking %s to write all transient attributes for %s to CIB",
+                pcmk_ipc_name(api, true), pcmk__s(node, "local node"));
 
     request = create_attrd_op(NULL);
 
@@ -411,9 +412,9 @@ pcmk__attrd_api_update(pcmk_ipc_api_t *api, const char *node, const char *name,
         node = target;
     }
 
-    crm_debug("Asking %s to update '%s' to '%s' for %s",
-              pcmk_ipc_name(api, true), name, pcmk__s(value, "(null)"),
-              pcmk__s(node, "local node"));
+    pcmk__debug("Asking %s to update '%s' to '%s' for %s",
+                pcmk_ipc_name(api, true), name, pcmk__s(value, "(null)"),
+                pcmk__s(node, "local node"));
 
     request = create_attrd_op(user_name);
     populate_update_op(request, node, name, value, dampen, set, options);

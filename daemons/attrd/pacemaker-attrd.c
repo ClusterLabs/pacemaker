@@ -72,8 +72,8 @@ ipc_already_running(void)
 
     rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s instance found: %s",
-                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
+        pcmk__debug("No existing %s instance found: %s",
+                    pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(old_instance);
         return false;
     }
@@ -133,15 +133,15 @@ main(int argc, char **argv)
     pcmk__add_logfiles(log_files, out);
 
     crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker node attribute manager%s",
-               stand_alone ? " in standalone mode" : "");
+    pcmk__notice("Starting Pacemaker node attribute manager%s",
+                 (stand_alone ? " in standalone mode" : ""));
 
     if (ipc_already_running()) {
         attrd_exit_status = CRM_EX_OK;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
                     "Aborting start-up because an attribute manager "
                     "instance is already active");
-        crm_crit("%s", error->message);
+        pcmk__crit("%s", error->message);
         goto done;
     }
 
@@ -160,7 +160,7 @@ main(int argc, char **argv)
                         "Could not connect to the CIB");
             goto done;
         }
-        crm_info("CIB connection active");
+        pcmk__info("CIB connection active");
     }
 
     if (attrd_cluster_connect() != pcmk_rc_ok) {
@@ -170,7 +170,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    crm_info("Cluster connection active");
+    pcmk__info("Cluster connection active");
 
     // Initialization that requires the cluster to be connected
     attrd_election_init();
@@ -187,12 +187,13 @@ main(int argc, char **argv)
     attrd_send_protocol(NULL);
 
     attrd_ipc_init();
-    crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
+    pcmk__notice("Pacemaker node attribute manager successfully started and "
+                 "accepting connections");
     attrd_run_mainloop();
 
   done:
     if (initialized) {
-        crm_info("Shutting down attribute manager");
+        pcmk__info("Shutting down attribute manager");
 
         attrd_ipc_cleanup();
         attrd_lrmd_disconnect();

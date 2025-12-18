@@ -46,15 +46,16 @@ decompress_file(const char *filename)
     FILE *input = fopen(filename, "r");
 
     if (input == NULL) {
-        crm_err("Could not open %s for reading: %s", filename, strerror(errno));
+        pcmk__err("Could not open %s for reading: %s", filename,
+                  strerror(errno));
         return NULL;
     }
 
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not prepare to read compressed %s: %s "
-                QB_XS " rc=%d", filename, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not prepare to read compressed %s: %s " QB_XS " rc=%d",
+                  filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
@@ -65,7 +66,7 @@ decompress_file(const char *filename)
         read_len = BZ2_bzRead(&rc, bz_file, buffer + length, PCMK__BUFFER_SIZE);
 
         if ((rc == BZ_OK) || (rc == BZ_STREAM_END)) {
-            crm_trace("Read %ld bytes from file: %d", (long) read_len, rc);
+            pcmk__trace("Read %ld bytes from file: %d", (long) read_len, rc);
             length += read_len;
         }
     } while (rc == BZ_OK);
@@ -73,8 +74,8 @@ decompress_file(const char *filename)
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
         rc = pcmk__bzlib2rc(rc);
-        crm_err("Could not read compressed %s: %s " QB_XS " rc=%d",
-                filename, pcmk_rc_str(rc), rc);
+        pcmk__err("Could not read compressed %s: %s " QB_XS " rc=%d", filename,
+                  pcmk_rc_str(rc), rc);
         free(buffer);
         buffer = NULL;
     } else {
@@ -146,7 +147,7 @@ pcmk__xml_read(const char *filename)
 
     last_error = xmlCtxtGetLastError(ctxt);
     if ((last_error != NULL) && (xml != NULL)) {
-        crm_log_xml_debug(xml, "partial");
+        pcmk__log_xml_debug(xml, "partial");
         pcmk__xml_free(xml);
         xml = NULL;
     }
@@ -192,7 +193,7 @@ pcmk__xml_parse(const char *input)
 
     last_error = xmlCtxtGetLastError(ctxt);
     if ((last_error != NULL) && (xml != NULL)) {
-        crm_log_xml_debug(xml, "partial");
+        pcmk__log_xml_debug(xml, "partial");
         pcmk__xml_free(xml);
         xml = NULL;
     }
@@ -371,7 +372,7 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
                  int depth)
 {
     if (data == NULL) {
-        crm_trace("Nothing to dump");
+        pcmk__trace("Nothing to dump");
         return;
     }
 
@@ -395,8 +396,8 @@ pcmk__xml_string(const xmlNode *data, uint32_t options, GString *buffer,
             dump_xml_cdata(data, options, buffer, depth);
             break;
         default:
-            crm_warn("Cannot convert XML %s node to text " QB_XS " type=%d",
-                     pcmk__xml_element_type_text(data->type), data->type);
+            pcmk__warn("Cannot convert XML %s node to text " QB_XS " type=%d",
+                       pcmk__xml_element_type_text(data->type), data->type);
             break;
     }
 }
@@ -424,18 +425,18 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
 
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not compressing %s: could not prepare file stream: %s "
-                 QB_XS " rc=%d",
-                 filename, pcmk_rc_str(rc), rc);
+        pcmk__warn("Not compressing %s: could not prepare file stream: %s "
+                   QB_XS " rc=%d",
+                   filename, pcmk_rc_str(rc), rc);
         goto done;
     }
 
     BZ2_bzWrite(&rc, bz_file, text, strlen(text));
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not compressing %s: could not compress data: %s "
-                 QB_XS " rc=%d errno=%d",
-                 filename, pcmk_rc_str(rc), rc, errno);
+        pcmk__warn("Not compressing %s: could not compress data: %s "
+                   QB_XS " rc=%d errno=%d",
+                   filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
 
@@ -443,14 +444,14 @@ write_compressed_stream(char *text, const char *filename, FILE *stream,
     bz_file = NULL;
     rc = pcmk__bzlib2rc(rc);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not compressing %s: could not write compressed data: %s "
-                 QB_XS " rc=%d errno=%d",
-                 filename, pcmk_rc_str(rc), rc, errno);
+        pcmk__warn("Not compressing %s: could not write compressed data: %s "
+                   QB_XS " rc=%d errno=%d",
+                   filename, pcmk_rc_str(rc), rc, errno);
         goto done;
     }
 
-    crm_trace("Compressed XML for %s from %u bytes to %u",
-              filename, bytes_in, *bytes_out);
+    pcmk__trace("Compressed XML for %s from %u bytes to %u", filename, bytes_in,
+                *bytes_out);
 
 done:
     if (bz_file != NULL) {
@@ -481,11 +482,11 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
 
     pcmk__xml_string(xml, pcmk__xml_fmt_pretty, buffer, 0);
     CRM_CHECK(!pcmk__str_empty(buffer->str),
-              crm_log_xml_info(xml, "dump-failed");
+              pcmk__log_xml_info(xml, "dump-failed");
               rc = pcmk_rc_error;
               goto done);
 
-    crm_log_xml_trace(xml, "writing");
+    pcmk__log_xml_trace(xml, "writing");
 
     if (compress
         && (write_compressed_stream(buffer->str, filename, stream,
@@ -496,7 +497,7 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
     rc = fprintf(stream, "%s", buffer->str);
     if (rc < 0) {
         rc = EIO;
-        crm_err("Error writing %s", filename);
+        pcmk__err("Error writing %s", filename);
         goto done;
     }
     bytes_out = (unsigned int) rc;
@@ -505,17 +506,17 @@ write_xml_stream(const xmlNode *xml, const char *filename, FILE *stream,
 done:
     if (fflush(stream) != 0) {
         rc = errno;
-        crm_err("Error flushing %s: %s", filename, strerror(errno));
+        pcmk__err("Error flushing %s: %s", filename, strerror(errno));
     }
 
     // Don't report error if the file does not support synchronization
     if ((fsync(fileno(stream)) < 0) && (errno != EROFS) && (errno != EINVAL)) {
         rc = errno;
-        crm_err("Error synchronizing %s: %s", filename, strerror(errno));
+        pcmk__err("Error synchronizing %s: %s", filename, strerror(errno));
     }
 
     fclose(stream);
-    crm_trace("Saved %u bytes to %s as XML", bytes_out, filename);
+    pcmk__trace("Saved %u bytes to %s as XML", bytes_out, filename);
 
     g_string_free(buffer, TRUE);
     return rc;
@@ -624,7 +625,7 @@ pcmk__xml_write_temp_file(const xmlNode *xml, const char *desc,
     }
     path = pcmk__assert_asprintf("%s/%s", pcmk__get_tmpdir(), filename);
 
-    crm_info("Saving %s to %s", desc, path);
+    pcmk__info("Saving %s to %s", desc, path);
     pcmk__xml_write_file(xml, filename, false);
 
     free(path);
@@ -649,7 +650,7 @@ save_xml_to_file(const xmlNode *xml, const char *desc, const char *filename)
         free(uuid);
     }
 
-    crm_info("Saving %s to %s", desc, filename);
+    pcmk__info("Saving %s to %s", desc, filename);
     pcmk__xml_write_file(xml, filename, false);
     free(f);
 }

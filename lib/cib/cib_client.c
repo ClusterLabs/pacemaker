@@ -39,12 +39,12 @@ ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
         if (a_client->callback == b_client->callback) {
             return 0;
         } else if (((long)a_client->callback) < ((long)b_client->callback)) {
-            crm_trace("callbacks for %s are not equal: %p < %p",
-                      a_client->event, a_client->callback, b_client->callback);
+            pcmk__trace("callbacks for %s are not equal: %p < %p",
+                        a_client->event, a_client->callback, b_client->callback);
             return -1;
         }
-        crm_trace("callbacks for %s are not equal: %p > %p",
-                  a_client->event, a_client->callback, b_client->callback);
+        pcmk__trace("callbacks for %s are not equal: %p > %p", a_client->event,
+                    a_client->callback, b_client->callback);
         return 1;
     }
     return rc;
@@ -62,8 +62,8 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
         return -EPROTONOSUPPORT;
     }
 
-    crm_trace("Adding callback for %s events (%d)",
-              event, g_list_length(cib->notify_list));
+    pcmk__trace("Adding callback for %s events (%u)", event,
+                g_list_length(cib->notify_list));
 
     new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
@@ -73,7 +73,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
                                    ciblib_GCompareFunc);
 
     if (list_item != NULL) {
-        crm_warn("Callback already present");
+        pcmk__warn("Callback already present");
         free(new_client);
         return -EINVAL;
 
@@ -82,7 +82,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
 
         cib->cmds->register_notification(cib, event, 1);
 
-        crm_trace("Callback added (%d)", g_list_length(cib->notify_list));
+        pcmk__trace("Callback added (%d)", g_list_length(cib->notify_list));
     }
     return pcmk_ok;
 }
@@ -100,7 +100,7 @@ get_notify_list_event_count(cib_t *cib, const char *event)
             count++;
         }
     }
-    crm_trace("event(%s) count : %d", event, count);
+    pcmk__trace("event(%s) count : %d", event, count);
     return count;
 }
 
@@ -117,11 +117,11 @@ cib_client_del_notify_callback(cib_t *cib, const char *event,
     }
 
     if (get_notify_list_event_count(cib, event) == 0) {
-        crm_debug("The callback of the event does not exist(%s)", event);
+        pcmk__debug("The callback of the event does not exist(%s)", event);
         return pcmk_ok;
     }
 
-    crm_debug("Removing callback for %s events", event);
+    pcmk__debug("Removing callback for %s events", event);
 
     new_client = pcmk__assert_alloc(1, sizeof(cib_notify_client_t));
     new_client->event = event;
@@ -135,10 +135,10 @@ cib_client_del_notify_callback(cib_t *cib, const char *event,
         cib->notify_list = g_list_remove(cib->notify_list, list_client);
         free(list_client);
 
-        crm_trace("Removed callback");
+        pcmk__trace("Removed callback");
 
     } else {
-        crm_trace("Callback not present");
+        pcmk__trace("Callback not present");
     }
 
     if (get_notify_list_event_count(cib, event) == 0) {
@@ -155,8 +155,8 @@ cib_async_timeout_handler(gpointer data)
 {
     struct timer_rec_s *timer = data;
 
-    crm_debug("Async call %d timed out after %ds",
-              timer->call_id, timer->timeout);
+    pcmk__debug("Async call %d timed out after %ds", timer->call_id,
+                timer->timeout);
     cib_native_callback(timer->cib, NULL, timer->call_id, -ETIME);
 
     // We remove the handler in remove_cib_op_callback()
@@ -177,7 +177,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
         if (only_success == FALSE) {
             callback(NULL, call_id, call_id, NULL, user_data);
         } else {
-            crm_warn("CIB call failed: %s", pcmk_strerror(call_id));
+            pcmk__warn("CIB call failed: %s", pcmk_strerror(call_id));
         }
         if (user_data && free_func) {
             free_func(user_data);
@@ -206,7 +206,7 @@ cib_client_register_callback_full(cib_t *cib, int call_id, int timeout,
                                               async_timer);
     }
 
-    crm_trace("Adding callback %s for call %d", callback_name, call_id);
+    pcmk__trace("Adding callback %s for call %d", callback_name, call_id);
     pcmk__intkey_table_insert(cib_op_callback_table, call_id, blob);
 
     return TRUE;
@@ -350,8 +350,8 @@ cib_client_init_transaction(cib_t *cib)
         const char *client_id = NULL;
 
         cib->cmds->client_id(cib, NULL, &client_id);
-        crm_err("Failed to initialize CIB transaction for client %s: %s",
-                client_id, pcmk_rc_str(rc));
+        pcmk__err("Failed to initialize CIB transaction for client %s: %s",
+                  client_id, pcmk_rc_str(rc));
     }
     return pcmk_rc2legacy(rc);
 }
@@ -373,8 +373,8 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
         if (cib->transaction == NULL) {
             rc = pcmk_rc_no_transaction;
 
-            crm_err("Failed to commit transaction for CIB client %s: %s",
-                    client_id, pcmk_rc_str(rc));
+            pcmk__err("Failed to commit transaction for CIB client %s: %s",
+                      client_id, pcmk_rc_str(rc));
             return pcmk_rc2legacy(rc);
         }
         rc = cib_internal_op(cib, PCMK__CIB_REQUEST_COMMIT_TRANSACT, NULL, NULL,
@@ -383,9 +383,9 @@ cib_client_end_transaction(cib_t *cib, bool commit, int call_options)
     } else {
         // Discard always succeeds
         if (cib->transaction != NULL) {
-            crm_trace("Discarded transaction for CIB client %s", client_id);
+            pcmk__trace("Discarded transaction for CIB client %s", client_id);
         } else {
-            crm_trace("No transaction found for CIB client %s", client_id);
+            pcmk__trace("No transaction found for CIB client %s", client_id);
         }
     }
     pcmk__xml_free(cib->transaction);
@@ -467,11 +467,11 @@ get_shadow_file(const char *suffix)
             int rc = errno;
 
             user = getenv("USER");
-            crm_warn("Could not get password database entry for effective user "
-                     "ID %lld: %s. Assuming user is %s.",
-                     (long long) geteuid(),
-                     ((rc != 0)? strerror(rc) : "No matching entry found"),
-                     pcmk__s(user, "unprivileged user"));
+            pcmk__warn("Could not get password database entry for effective "
+                       "user ID %lld: %s. Assuming user is %s.",
+                       (long long) geteuid(),
+                       ((rc != 0)? strerror(rc) : "No matching entry found"),
+                       pcmk__s(user, "unprivileged user"));
         }
 
         if (pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
@@ -494,9 +494,9 @@ get_shadow_file(const char *suffix)
 
                 rc = mkdir(cib_home, 0700);
                 if (rc < 0 && errno != EEXIST) {
-                    crm_err("Couldn't create user-specific shadow directory "
-                            "%s: %s",
-                            cib_home, strerror(errno));
+                    pcmk__err("Couldn't create user-specific shadow directory "
+                              "%s: %s",
+                              cib_home, strerror(errno));
 
                 } else {
                     dir = cib_home;
@@ -589,8 +589,8 @@ cib_new(void)
         server = "localhost";
     }
 
-    crm_debug("Initializing %s remote CIB access to %s:%d as user %s",
-              (encrypted? "encrypted" : "plain-text"), server, port, user);
+    pcmk__debug("Initializing %s remote CIB access to %s:%d as user %s",
+                (encrypted? "encrypted" : "plain-text"), server, port, user);
     return cib_remote_new(server, user, pass, port, encrypted);
 }
 
@@ -737,7 +737,7 @@ cib_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
     int call = GPOINTER_TO_INT(key);
     cib_callback_client_t *blob = value;
 
-    crm_debug("Call %d (%s): pending", call, pcmk__s(blob->id, "without ID"));
+    pcmk__debug("Call %d (%s): pending", call, pcmk__s(blob->id, "without ID"));
 }
 
 void

@@ -80,12 +80,11 @@ pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
     }
 
     if (attr_n == NULL) {
-        crm_trace("%s XML has no child element of %s type",
-                  (const char *) parent->name, pcmk__s(node_name, "any"));
+        pcmk__trace("%s XML has no child element of %s type", parent->name,
+                    pcmk__s(node_name, "any"));
     } else {
-        crm_trace("%s XML has no child element of %s type with %s='%s'",
-                  (const char *) parent->name, pcmk__s(node_name, "any"),
-                  attr_n, attr_v);
+        pcmk__trace("%s XML has no child element of %s type with %s='%s'",
+                    parent->name, pcmk__s(node_name, "any"), attr_n, attr_v);
     }
     return NULL;
 }
@@ -203,8 +202,9 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
                 rc = pcmk_parse_score(old_value, &old_value_i, 0);
                 if (rc != pcmk_rc_ok) {
                     // @TODO This is inconsistent with old_value==NULL
-                    crm_trace("Using 0 before incrementing %s because '%s' "
-                              "is not a score", name, old_value);
+                    pcmk__trace("Using 0 before incrementing %s because '%s' "
+                                "is not a score",
+                                name, old_value);
                 }
             }
 
@@ -215,8 +215,9 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
                 rc = pcmk_parse_score(++v, &add, 0);
                 if (rc != pcmk_rc_ok) {
                     // @TODO We should probably skip expansion instead
-                    crm_trace("Not incrementing %s because '%s' does not have "
-                              "a valid increment", name, value);
+                    pcmk__trace("Not incrementing %s because '%s' does not "
+                                "have a valid increment",
+                                name, value);
                 }
             }
 
@@ -573,8 +574,8 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     const char *update_id_val = NULL;
     char *trace_s = NULL;
 
-    crm_log_xml_trace(update, "update");
-    crm_log_xml_trace(target, "target");
+    pcmk__log_xml_trace(update, "update");
+    pcmk__log_xml_trace(target, "target");
 
     CRM_CHECK(update != NULL, goto done);
 
@@ -621,11 +622,11 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     if (target == NULL) {
         // Recursive call with no existing matching child
         target = pcmk__xe_create(parent, update_name);
-        crm_trace("Added %s", pcmk__s(trace_s, update_name));
+        pcmk__trace("Added %s", pcmk__s(trace_s, update_name));
 
     } else {
         // Either recursive call with match, or top-level call
-        crm_trace("Found node %s to update", pcmk__s(trace_s, update_name));
+        pcmk__trace("Found node %s to update", pcmk__s(trace_s, update_name));
     }
 
     CRM_CHECK(pcmk__xe_is(target, (const char *) update->name), return);
@@ -635,11 +636,11 @@ update_xe(xmlNode *parent, xmlNode *target, xmlNode *update, uint32_t flags)
     for (xmlNode *child = pcmk__xml_first_child(update); child != NULL;
          child = pcmk__xml_next(child)) {
 
-        crm_trace("Updating child of %s", pcmk__s(trace_s, update_name));
+        pcmk__trace("Updating child of %s", pcmk__s(trace_s, update_name));
         update_xe(target, NULL, child, flags);
     }
 
-    crm_trace("Finished with %s", pcmk__s(trace_s, update_name));
+    pcmk__trace("Finished with %s", pcmk__s(trace_s, update_name));
 
 done:
     free(trace_s);
@@ -685,8 +686,8 @@ delete_xe_if_matching(xmlNode *xml, void *user_data)
         }
     }
 
-    crm_log_xml_trace(xml, "delete-match");
-    crm_log_xml_trace(search, "delete-search");
+    pcmk__log_xml_trace(xml, "delete-match");
+    pcmk__log_xml_trace(search, "delete-search");
     pcmk__xml_free(xml);
 
     // Found a match and deleted it; stop traversing tree
@@ -801,8 +802,8 @@ replace_xe_if_matching(xmlNode *xml, void *user_data)
         return true;
     }
 
-    crm_log_xml_trace(xml, "replace-match");
-    crm_log_xml_trace(replace, "replace-with");
+    pcmk__log_xml_trace(xml, "replace-match");
+    pcmk__log_xml_trace(replace, "replace-with");
     replace_node(xml, replace);
 
     // Found a match and replaced it; stop traversing tree
@@ -893,8 +894,8 @@ update_xe_if_matching(xmlNode *xml, void *user_data)
         return true;
     }
 
-    crm_log_xml_trace(xml, "update-match");
-    crm_log_xml_trace(update, "update-with");
+    pcmk__log_xml_trace(xml, "update-match");
+    pcmk__log_xml_trace(update, "update-with");
     update_xe(NULL, xml, update, data->flags);
 
     // Found a match and replaced it; stop traversing tree
@@ -1061,8 +1062,7 @@ pcmk__xe_set(xmlNode *xml, const char *attr_name, const char *value)
     }
 
     if (dirty && !pcmk__check_acl(xml, attr_name, pcmk__xf_acl_create)) {
-        crm_trace("Cannot add %s=%s to %s",
-                  attr_name, value, (const char *) xml->name);
+        pcmk__trace("Cannot add %s=%s to %s", attr_name, value, xml->name);
         return EACCES;
     }
 
@@ -1579,7 +1579,7 @@ crm_xml_add(xmlNode *node, const char *name, const char *value)
     }
 
     if (dirty && (pcmk__check_acl(node, name, pcmk__xf_acl_create) == FALSE)) {
-        crm_trace("Cannot add %s=%s to %s", name, value, node->name);
+        pcmk__trace("Cannot add %s=%s to %s", name, value, node->name);
         return NULL;
     }
 
@@ -1650,12 +1650,12 @@ crm_element_value(const xmlNode *data, const char *name)
     xmlAttr *attr = NULL;
 
     if (data == NULL) {
-        crm_err("Couldn't find %s in NULL", name ? name : "<null>");
+        pcmk__err("Couldn't find %s in NULL", pcmk__s(name, "<null>"));
         CRM_LOG_ASSERT(data != NULL);
         return NULL;
 
     } else if (name == NULL) {
-        crm_err("Couldn't find NULL in %s", data->name);
+        pcmk__err("Couldn't find NULL in %s", data->name);
         return NULL;
     }
 
@@ -1688,9 +1688,9 @@ crm_element_value_ll(const xmlNode *data, const char *name, long long *dest)
         if (rc == pcmk_rc_ok) {
             return 0;
         }
-        crm_warn("Using default for %s "
-                 "because '%s' is not a valid integer: %s",
-                 name, value, pcmk_rc_str(rc));
+        pcmk__warn("Using default for %s because '%s' is not a valid integer: "
+                   "%s",
+                   name, value, pcmk_rc_str(rc));
     }
     return -1;
 }
@@ -1753,14 +1753,14 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
     value = pcmk__xe_get(data, name);
     rc = pcmk__scan_ll(value, &value_ll, 0LL);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Using default for %s "
-                 "because '%s' is not valid milliseconds: %s",
-                 name, value, pcmk_rc_str(rc));
+        pcmk__warn("Using default for %s because '%s' is not valid "
+                   "milliseconds: %s",
+                   name, value, pcmk_rc_str(rc));
         return -1;
     }
     if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
-        crm_warn("Using default for %s because '%s' is out of range",
-                 name, value);
+        pcmk__warn("Using default for %s because '%s' is out of range", name,
+                   value);
         return -1;
     }
     *dest = (guint) value_ll;
@@ -1780,12 +1780,12 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
 
         *dest = PCMK__PARSE_INT_DEFAULT;
         if (rc != pcmk_rc_ok) {
-            crm_warn("Using default for %s "
-                     "because '%s' is not a valid integer: %s",
-                     name, value, pcmk_rc_str(rc));
+            pcmk__warn("Using default for %s because '%s' is not a valid "
+                       "integer: %s",
+                       name, value, pcmk_rc_str(rc));
         } else if ((value_ll < INT_MIN) || (value_ll > INT_MAX)) {
-            crm_warn("Using default for %s because '%s' is out of range",
-                     name, value);
+            pcmk__warn("Using default for %s because '%s' is out of range",
+                       name, value);
         } else {
             *dest = (int) value_ll;
             return 0;

@@ -101,7 +101,7 @@ pcmk__md5sum(const char *input)
 
     checksum_g = g_compute_checksum_for_string(G_CHECKSUM_MD5, input, -1);
     if (checksum_g == NULL) {
-        crm_err("Failed to compute MD5 checksum for %s", input);
+        pcmk__err("Failed to compute MD5 checksum for %s", input);
         return NULL;
     }
 
@@ -224,11 +224,10 @@ pcmk__digest_xml(const xmlNode *xml, bool filter)
         {
             char *trace_file = pcmk__assert_asprintf("digest-%s", digest);
 
-            crm_trace("Saving %s.%s.%s to %s",
-                      pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
-                      pcmk__xe_get(xml, PCMK_XA_EPOCH),
-                      pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES),
-                      trace_file);
+            pcmk__trace("Saving %s.%s.%s to %s",
+                        pcmk__xe_get(xml, PCMK_XA_ADMIN_EPOCH),
+                        pcmk__xe_get(xml, PCMK_XA_EPOCH),
+                        pcmk__xe_get(xml, PCMK_XA_NUM_UPDATES), trace_file);
             pcmk__xml_write_temp_file(xml, "digest input", trace_file);
             free(trace_file);
         },
@@ -258,16 +257,16 @@ pcmk__verify_digest(const xmlNode *input, const char *expected)
     if (input != NULL) {
         calculated = pcmk__digest_on_disk_cib(input);
         if (calculated == NULL) {
-            crm_err("Could not calculate digest for comparison");
+            pcmk__err("Could not calculate digest for comparison");
             return false;
         }
     }
     passed = pcmk__str_eq(expected, calculated, pcmk__str_casei);
     if (passed) {
-        crm_trace("Digest comparison passed: %s", calculated);
+        pcmk__trace("Digest comparison passed: %s", calculated);
     } else {
-        crm_err("Digest comparison failed: expected %s, calculated %s",
-                expected, calculated);
+        pcmk__err("Digest comparison failed: expected %s, calculated %s",
+                  expected, calculated);
     }
     free(calculated);
     return passed;
@@ -396,15 +395,15 @@ calculate_xml_versioned_digest(xmlNode *input, gboolean sort,
             input = sorted;
         }
 
-        crm_trace("Using v1 digest algorithm for %s",
-                  pcmk__s(version, "unknown feature set"));
+        pcmk__trace("Using v1 digest algorithm for %s",
+                    pcmk__s(version, "unknown feature set"));
 
         digest = calculate_xml_digest_v1(input);
 
         pcmk__xml_free(sorted);
         return digest;
     }
-    crm_trace("Using v2 digest algorithm for %s", version);
+    pcmk__trace("Using v2 digest algorithm for %s", version);
     return pcmk__digest_xml(input, do_filter);
 }
 
@@ -427,14 +426,14 @@ crm_md5sum(const char *buffer)
     raw_digest = g_compute_checksum_for_string(G_CHECKSUM_MD5, buffer, -1);
 
     if (raw_digest == NULL) {
-        crm_err("Failed to calculate hash");
+        pcmk__err("Failed to calculate hash");
         return NULL;
     }
 
     digest = pcmk__str_copy(raw_digest);
     g_free(raw_digest);
 
-    crm_trace("Digest %s.", digest);
+    pcmk__trace("Digest %s.", digest);
     return digest;
 }
 

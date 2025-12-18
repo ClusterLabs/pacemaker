@@ -163,9 +163,9 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
     next_key();
     pcmk__intkey_table_insert(waitlist, waitlist_client, wl);
 
-    crm_trace("Added client %s to waitlist for %s sync point",
-              wl->client_id, sync_point_str(wl->sync_point));
-    crm_trace("%d clients now on waitlist", g_hash_table_size(waitlist));
+    pcmk__trace("Added client %s to waitlist for %s sync point",
+                wl->client_id, sync_point_str(wl->sync_point));
+    pcmk__trace("%u clients now on waitlist", g_hash_table_size(waitlist));
 
     /* And then add the key to the request XML so we can uniquely identify
      * it when it comes time to issue the ACK.
@@ -213,7 +213,8 @@ attrd_remove_client_from_waitlist(pcmk__client_t *client)
 
         if (pcmk__str_eq(wl->client_id, client->id, pcmk__str_none)) {
             g_hash_table_iter_remove(&iter);
-            crm_trace("%d clients now on waitlist", g_hash_table_size(waitlist));
+            pcmk__trace("%u clients now on waitlist",
+                        g_hash_table_size(waitlist));
         }
     }
 }
@@ -241,7 +242,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
     }
 
     if (pcmk__xe_get_int(xml, PCMK__XA_CALL_ID, &callid) != pcmk_rc_ok) {
-        crm_warn("Could not get callid from request XML");
+        pcmk__warn("Could not get callid from request XML");
         return;
     }
 
@@ -254,8 +255,8 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
             return;
         }
 
-        crm_notice("Alerting client %s for reached %s sync point",
-                   wl->client_id, sync_point_str(wl->sync_point));
+        pcmk__notice("Alerting client %s for reached %s sync point",
+                     wl->client_id, sync_point_str(wl->sync_point));
 
         client = pcmk__find_client_by_id(wl->client_id);
         if (client == NULL) {
@@ -267,7 +268,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
         /* And then remove the client so it doesn't get alerted again. */
         pcmk__intkey_table_remove(waitlist, callid);
 
-        crm_trace("%d clients now on waitlist", g_hash_table_size(waitlist));
+        pcmk__trace("%u clients now on waitlist", g_hash_table_size(waitlist));
     }
 }
 
@@ -283,7 +284,7 @@ attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
 int
 attrd_cluster_sync_point_update(xmlNode *xml)
 {
-    crm_trace("Hit cluster sync point for attribute update");
+    pcmk__trace("Hit cluster sync point for attribute update");
     attrd_ack_waitlist_clients(attrd_sync_point_cluster, xml);
     return pcmk_rc_ok;
 }
@@ -376,14 +377,16 @@ confirmation_timeout_cb(gpointer data)
                 return G_SOURCE_REMOVE;
             }
 
-            crm_trace("Timed out waiting for confirmations for client %s", client->id);
+            pcmk__trace("Timed out waiting for confirmations for client %s",
+                        client->id);
             pcmk__ipc_send_ack(client, action->ipc_id,
                                action->flags|crm_ipc_client_response,
                                PCMK__XE_ACK, ATTRD_PROTOCOL_VERSION,
                                CRM_EX_TIMEOUT);
 
             g_hash_table_iter_remove(&iter);
-            crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+            pcmk__trace("%u requests now in expected confirmations table",
+                        g_hash_table_size(expected_confirmations));
             break;
         }
     }
@@ -410,7 +413,7 @@ attrd_do_not_expect_from_peer(const char *host)
 
     keys = g_hash_table_get_keys(expected_confirmations);
 
-    crm_trace("Removing peer %s from expected confirmations", host);
+    pcmk__trace("Removing peer %s from expected confirmations", host);
 
     for (GList *node = keys; node != NULL; node = node->next) {
         int callid = *(int *) node->data;
@@ -445,9 +448,11 @@ attrd_do_not_wait_for_client(pcmk__client_t *client)
         struct confirmation_action *action = (struct confirmation_action *) value;
 
         if (pcmk__str_eq(action->client_id, client->id, pcmk__str_none)) {
-            crm_trace("Removing client %s from expected confirmations", client->id);
+            pcmk__trace("Removing client %s from expected confirmations",
+                        client->id);
             g_hash_table_iter_remove(&iter);
-            crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+            pcmk__trace("%u requests now in expected confirmations table",
+                        g_hash_table_size(expected_confirmations));
             break;
         }
     }
@@ -486,12 +491,12 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
 
     if (pcmk__xe_get_int(request->xml, PCMK__XA_CALL_ID,
                          &callid) != pcmk_rc_ok) {
-        crm_err("Could not get callid from xml");
+        pcmk__err("Could not get callid from xml");
         return;
     }
 
     if (pcmk__intkey_table_lookup(expected_confirmations, callid)) {
-        crm_err("Already waiting on confirmations for call id %d", callid);
+        pcmk__err("Already waiting on confirmations for call id %d", callid);
         return;
     }
 
@@ -516,8 +521,10 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
     mainloop_timer_start(action->timer);
 
     pcmk__intkey_table_insert(expected_confirmations, callid, action);
-    crm_trace("Callid %d now waiting on %d confirmations", callid, g_list_length(respondents));
-    crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+    pcmk__trace("Callid %d now waiting on %u confirmations", callid,
+                g_list_length(respondents));
+    pcmk__trace("%u requests now in expected confirmations table",
+                g_hash_table_size(expected_confirmations));
 }
 
 void
@@ -562,11 +569,13 @@ attrd_handle_confirmation(int callid, const char *host)
     }
 
     action->respondents = g_list_remove(action->respondents, node->data);
-    crm_trace("Callid %d now waiting on %d confirmations", callid, g_list_length(action->respondents));
+    pcmk__trace("Callid %d now waiting on %u confirmations", callid,
+                g_list_length(action->respondents));
 
     if (action->respondents == NULL) {
         action->fn(action->xml);
         pcmk__intkey_table_remove(expected_confirmations, callid);
-        crm_trace("%d requests now in expected confirmations table", g_hash_table_size(expected_confirmations));
+        pcmk__trace("%u requests now in expected confirmations table",
+                    g_hash_table_size(expected_confirmations));
     }
 }

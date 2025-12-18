@@ -124,7 +124,7 @@ services__get_lsb_metadata(const char *type, char **output)
         ra_pathname = pcmk__assert_asprintf(PCMK__LSB_INIT_DIR "/%s", type);
     }
 
-    crm_trace("Looking into %s", ra_pathname);
+    pcmk__trace("Looking into %s", ra_pathname);
     fp = fopen(ra_pathname, "r");
     free(ra_pathname);
 

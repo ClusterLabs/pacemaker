@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@ attrd_lrmd_callback(lrmd_event_data_t * op)
     CRM_CHECK(op != NULL, return);
     switch (op->type) {
         case lrmd_event_disconnect:
-            crm_info("Lost connection to executor");
+            pcmk__info("Lost connection to executor");
             attrd_lrmd_disconnect();
             break;
         default:
@@ -52,8 +52,8 @@ attrd_lrmd_connect(void)
                 break;
             }
 
-            crm_debug("Could not connect to executor, %d tries remaining",
-                      (max_attempts - fails));
+            pcmk__debug("Could not connect to executor, %d tries remaining",
+                        (max_attempts - fails));
             /* @TODO We don't want to block here with sleep, but we should wait
              * some time between connection attempts. We could possibly add a
              * timer with a callback, but then we'd likely need an alert queue.
@@ -84,10 +84,10 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     xmlNode *crmalerts = NULL;
 
     if (rc == -ENXIO) {
-        crm_debug("Local CIB has no alerts section");
+        pcmk__debug("Local CIB has no alerts section");
         return;
     } else if (rc != pcmk_ok) {
-        crm_notice("Could not query local CIB: %s", pcmk_strerror(rc));
+        pcmk__notice("Could not query local CIB: %s", pcmk_strerror(rc));
         return;
     }
 
@@ -96,7 +96,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         crmalerts = pcmk__xe_first_child(crmalerts, PCMK_XE_ALERTS, NULL, NULL);
     }
     if (!crmalerts) {
-        crm_notice("CIB query result has no " PCMK_XE_ALERTS " section");
+        pcmk__notice("CIB query result has no " PCMK_XE_ALERTS " section");
         return;
     }
 
@@ -119,7 +119,7 @@ attrd_read_options(gpointer user_data)
                                           "config_query_callback",
                                           config_query_callback, free);
 
-    crm_trace("Querying the CIB... call %d", call_id);
+    pcmk__trace("Querying the CIB... call %d", call_id);
     return TRUE;
 }
 

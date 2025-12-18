@@ -471,8 +471,8 @@ order_after_stops(pcmk_resource_t *rsc, const pcmk_node_t *node,
         }
 
         if (!pcmk__is_set(stop->flags, pcmk__action_runnable)) {
-            crm_debug("%s unrunnable on %s: stop is unrunnable",
-                      action->uuid, pcmk__node_name(node));
+            pcmk__debug("%s unrunnable on %s: stop is unrunnable", action->uuid,
+                        pcmk__node_name(node));
             pcmk__clear_action_flags(action, pcmk__action_runnable);
         }
 
@@ -507,8 +507,9 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
     }
 
     if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
-        crm_notice("Ignoring %s (recurring monitors for " PCMK_ROLE_STOPPED
-                   " role are not supported for anonymous clones)", op->id);
+        pcmk__notice("Ignoring %s (recurring monitors for " PCMK_ROLE_STOPPED
+                     " role are not supported for anonymous clones)",
+                     op->id);
         return; // @TODO add support
     }
 
@@ -566,10 +567,11 @@ recurring_op_for_inactive(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
         if (pcmk__is_set(stopped_mon->flags, pcmk__action_runnable)
             && !pcmk__is_set(stopped_mon->flags, pcmk__action_optional)) {
-            crm_notice("Start recurring %s-interval %s for "
-                       PCMK_ROLE_STOPPED " %s on %s",
-                       pcmk__readable_interval(op->interval_ms),
-                       stopped_mon->task, rsc->id, pcmk__node_name(stop_node));
+            pcmk__notice("Start recurring %s-interval %s for "
+                         PCMK_ROLE_STOPPED " %s on %s",
+                         pcmk__readable_interval(op->interval_ms),
+                         stopped_mon->task, rsc->id,
+                         pcmk__node_name(stop_node));
         }
     }
 }
@@ -700,9 +702,9 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
               && (node != NULL) && (reason != NULL),
               return);
 
-    crm_info("Recurring %s-interval %s for %s will be stopped on %s: %s",
-             pcmk__readable_interval(interval_ms), task, rsc->id,
-             pcmk__node_name(node), reason);
+    pcmk__info("Recurring %s-interval %s for %s will be stopped on %s: %s",
+               pcmk__readable_interval(interval_ms), task, rsc->id,
+               pcmk__node_name(node), reason);
     cancel = pcmk__new_cancel_action(rsc, task, interval_ms, node);
     pcmk__insert_meta(cancel, PCMK__XA_CALL_ID, call_id);
 

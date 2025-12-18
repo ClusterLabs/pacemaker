@@ -240,8 +240,9 @@ chown_logfile(const char *filename, int logfd)
 
     rc = pcmk__daemon_user(&pcmk_uid, &pcmk_gid);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Not changing '%s' ownership because user information "
-                 "unavailable: %s", filename, pcmk_rc_str(rc));
+        pcmk__warn("Not changing '%s' ownership because user information "
+                   "unavailable: %s",
+                   filename, pcmk_rc_str(rc));
         return pcmk_rc_ok;
     }
     if ((st.st_gid == pcmk_gid)
@@ -249,8 +250,8 @@ chown_logfile(const char *filename, int logfd)
         return pcmk_rc_ok;
     }
     if (fchown(logfd, pcmk_uid, pcmk_gid) < 0) {
-        crm_warn("Couldn't change '%s' ownership to user %s gid %d: %s",
-             filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
+        pcmk__warn("Couldn't change '%s' ownership to user %s gid %d: %s",
+                   filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
     }
     return pcmk_rc_ok;
 }
@@ -270,8 +271,8 @@ chmod_logfile(const char *filename, int logfd)
         }
     }
     if ((filemode != 0) && (fchmod(logfd, filemode) < 0)) {
-        crm_warn("Couldn't change '%s' mode to %04o: %s",
-                 filename, filemode, strerror(errno));
+        pcmk__warn("Couldn't change '%s' mode to %04o: %s", filename, filemode,
+                   strerror(errno));
     }
 }
 
@@ -369,15 +370,15 @@ pcmk__add_logfile(const char *filename)
     logfile = fopen(filename, "a");
     if (logfile == NULL) {
         rc = errno;
-        crm_warn("Logging to '%s' is disabled: %s " QB_XS " uid=%u gid=%u",
-                 filename, strerror(rc), geteuid(), getegid());
+        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " uid=%u gid=%u",
+                   filename, strerror(rc), geteuid(), getegid());
         return rc;
     }
 
     rc = set_logfile_permissions(filename, logfile);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Logging to '%s' is disabled: %s " QB_XS " permissions",
-                 filename, strerror(rc));
+        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " permissions",
+                   filename, strerror(rc));
         fclose(logfile);
         return rc;
     }
@@ -386,8 +387,8 @@ pcmk__add_logfile(const char *filename)
     fclose(logfile);
     fd = qb_log_file_open(filename);
     if (fd < 0) {
-        crm_warn("Logging to '%s' is disabled: %s " QB_XS " qb_log_file_open",
-                 filename, strerror(-fd));
+        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " qb_log_file_open",
+                   filename, strerror(-fd));
         return -fd; // == +errno
     }
 
@@ -396,11 +397,11 @@ pcmk__add_logfile(const char *filename)
         setenv_logfile(filename);
 
     } else if (default_fd >= 0) {
-        crm_notice("Switching logging to %s", filename);
+        pcmk__notice("Switching logging to %s", filename);
         disable_logfile(default_fd);
     }
 
-    crm_notice("Additional logging available in %s", filename);
+    pcmk__notice("Additional logging available in %s", filename);
     enable_logfile(fd);
     have_logfile = true;
     return pcmk_rc_ok;
@@ -467,7 +468,7 @@ crm_control_blackbox(int nsig, bool enable)
             qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
         }
 
-        crm_notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
+        pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
 
         /* Save to disk on abnormal termination */
         crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
@@ -480,8 +481,9 @@ crm_control_blackbox(int nsig, bool enable)
 
         blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
         qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
-        crm_trace("Trigger: %d is %d %d", blackbox_trigger,
-                  qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0), QB_LOG_STATE_ENABLED);
+        pcmk__trace("Trigger: %d is %d %d", blackbox_trigger,
+                    qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0),
+                    QB_LOG_STATE_ENABLED);
 
         crm_update_callsites();
 
@@ -544,14 +546,18 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
             buffer = pcmk__assert_asprintf("%s.%d", blackbox_file_prefix,
                                            counter++);
             if (nsig == SIGTRAP) {
-                crm_notice("Blackbox dump requested, please see %s for contents", buffer);
+                pcmk__notice("Blackbox dump requested, please see %s for "
+                             "contents",
+                             buffer);
 
             } else if (cs) {
                 syslog(LOG_NOTICE,
                        "Problem detected at %s:%d (%s), please see %s for additional details",
                        cs->function, cs->lineno, cs->filename, buffer);
             } else {
-                crm_notice("Problem detected, please see %s for additional details", buffer);
+                pcmk__notice("Problem detected, please see %s for additional "
+                             "details",
+                             buffer);
             }
 
             last = now;
@@ -559,8 +565,8 @@ crm_write_blackbox(int nsig, const struct qb_log_callsite *cs)
             rc = qb_log_blackbox_write_to_file(buffer);
             if (rc < 0) {
                 // System errno
-                crm_err("Failed to write blackbox file %s: %s", buffer,
-                        strerror(-rc));
+                pcmk__err("Failed to write blackbox file %s: %s", buffer,
+                          strerror(-rc));
             }
 
             /* Flush the existing contents
@@ -714,8 +720,8 @@ init_tracing(void)
                 continue;
             }
 
-            crm_info("Created GQuark %lld from token '%s' in '%s'",
-                     (long long) g_quark_from_string(*tag), *tag, tags);
+            pcmk__info("Created GQuark %lld from token '%s' in '%s'",
+                       (long long) g_quark_from_string(*tag), *tag, tags);
         }
 
         // We have the GQuarks, so we don't need the array anymore
@@ -775,16 +781,19 @@ crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint32_t tags)
 void
 crm_update_callsites(void)
 {
-    static gboolean log = TRUE;
+    static bool log = true;
 
     if (log) {
-        log = FALSE;
-        crm_debug
-            ("Enabling callsites based on priority=%d, files=%s, functions=%s, formats=%s, tags=%s",
-             crm_log_level, pcmk__env_option(PCMK__ENV_TRACE_FILES),
-             pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS),
-             pcmk__env_option(PCMK__ENV_TRACE_FORMATS),
-             pcmk__env_option(PCMK__ENV_TRACE_TAGS));
+        log = false;
+        pcmk__debug("Enabling callsites based on priority=%d, files=%s, "
+                    "functions=%s, formats=%s, tags=%s",
+                    crm_log_level,
+                    pcmk__s(pcmk__env_option(PCMK__ENV_TRACE_FILES), "<null>"),
+                    pcmk__s(pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS),
+                            "<null>"),
+                    pcmk__s(pcmk__env_option(PCMK__ENV_TRACE_FORMATS),
+                            "<null>"),
+                    pcmk__s(pcmk__env_option(PCMK__ENV_TRACE_TAGS), "<null>"));
     }
     qb_log_filter_fn_set(crm_log_filter);
 }
@@ -1052,7 +1061,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     /* Summary */
-    crm_trace("Quiet: %d, facility %s", quiet, f_copy);
+    pcmk__trace("Quiet: %d, facility %s", quiet, f_copy);
     pcmk__env_option(PCMK__ENV_LOGFILE);
     pcmk__env_option(PCMK__ENV_LOGFACILITY);
 
@@ -1065,7 +1074,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
         const char *user = getenv("USER");
 
         if (user != NULL && !pcmk__strcase_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
-            crm_trace("Not switching to corefile directory for %s", user);
+            pcmk__trace("Not switching to corefile directory for %s", user);
             pcmk__is_daemon = false;
         }
     }
@@ -1077,15 +1086,15 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
             // Error already logged
 
         } else if (!pcmk__str_any_of(user, "root", CRM_DAEMON_USER, NULL)) {
-            crm_trace("Don't change active directory for regular user %s",
-                      user);
+            pcmk__trace("Don't change active directory for regular user %s",
+                        user);
 
         } else if (chdir(CRM_CORE_DIR) < 0) {
-            crm_info("Cannot change active directory to " CRM_CORE_DIR ": %s",
-                     strerror(errno));
+            pcmk__info("Cannot change active directory to " CRM_CORE_DIR ": %s",
+                       strerror(errno));
 
         } else {
-            crm_info("Changed active directory to " CRM_CORE_DIR);
+            pcmk__info("Changed active directory to " CRM_CORE_DIR);
         }
 
         /* Original meanings from signal(7)
@@ -1121,7 +1130,7 @@ set_crm_log_level(unsigned int level)
     }
     crm_log_level = level;
     crm_update_callsites();
-    crm_trace("New log level: %d", level);
+    pcmk__trace("New log level: %d", level);
     return old;
 }
 
@@ -1183,7 +1192,7 @@ crm_log_args(int argc, char **argv)
     }
     logged = true;
     arg_string = g_strjoinv(" ", argv);
-    crm_notice("Invoked: %s", arg_string);
+    pcmk__notice("Invoked: %s", arg_string);
     g_free(arg_string);
 }
 
@@ -1193,12 +1202,12 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
 {
     gchar **out_lines = NULL;
 
-    if (level == LOG_NEVER) {
+    if (level == PCMK__LOG_NEVER) {
         return;
     }
 
     if (output == NULL) {
-        if (level != LOG_STDOUT) {
+        if (level != PCMK__LOG_STDOUT) {
             level = LOG_TRACE;
         }
         output = "-- empty --";
@@ -1236,7 +1245,7 @@ pcmk__cli_init_logging(const char *name, unsigned int verbosity)
  * \param[in] text      Prefix for each line
  * \param[in] xml       XML to log
  *
- * \note This does nothing when \p level is \p LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  * \note Do not call this function directly. It should be called only from the
  *       \p do_crm_log_xml() macro.
  */
@@ -1275,7 +1284,7 @@ pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
  * \param[in] level     Priority at which to log the messages
  * \param[in] xml       XML whose changes to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  */
 void
 pcmk__log_xml_changes_as(const char *file, const char *function, uint32_t line,
@@ -1306,7 +1315,7 @@ pcmk__log_xml_changes_as(const char *file, const char *function, uint32_t line,
  * \param[in] level     Priority at which to log the messages
  * \param[in] patchset  XML patchset to log
  *
- * \note This does nothing when \p level is \c LOG_STDOUT.
+ * \note This does nothing when \p level is \c PCMK__LOG_STDOUT.
  */
 void
 pcmk__log_xml_patchset_as(const char *file, const char *function, uint32_t line,
