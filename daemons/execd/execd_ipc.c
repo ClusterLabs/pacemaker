@@ -24,7 +24,7 @@
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
 
 static int32_t
-lrmd_ipc_accept(qb_ipcs_connection_t *qbc, uid_t uid, gid_t gid)
+execd_ipc_accept(qb_ipcs_connection_t *qbc, uid_t uid, gid_t gid)
 {
     pcmk__trace("Connection %p", qbc);
     if (pcmk__new_client(qbc, uid, gid) == NULL) {
@@ -34,7 +34,7 @@ lrmd_ipc_accept(qb_ipcs_connection_t *qbc, uid_t uid, gid_t gid)
 }
 
 static void
-lrmd_ipc_created(qb_ipcs_connection_t *qbc)
+execd_ipc_created(qb_ipcs_connection_t *qbc)
 {
     pcmk__client_t *new_client = pcmk__find_client(qbc);
 
@@ -47,7 +47,7 @@ lrmd_ipc_created(qb_ipcs_connection_t *qbc)
 }
 
 static int32_t
-lrmd_ipc_closed(qb_ipcs_connection_t *qbc)
+execd_ipc_closed(qb_ipcs_connection_t *qbc)
 {
     pcmk__client_t *client = pcmk__find_client(qbc);
 
@@ -65,14 +65,14 @@ lrmd_ipc_closed(qb_ipcs_connection_t *qbc)
 }
 
 static void
-lrmd_ipc_destroy(qb_ipcs_connection_t *qbc)
+execd_ipc_destroy(qb_ipcs_connection_t *qbc)
 {
-    lrmd_ipc_closed(qbc);
+    execd_ipc_closed(qbc);
     pcmk__trace("Connection %p", qbc);
 }
 
 static int32_t
-lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
+execd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
@@ -129,9 +129,9 @@ lrmd_ipc_dispatch(qb_ipcs_connection_t *qbc, void *data, size_t size)
 }
 
 struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
-    .connection_accept = lrmd_ipc_accept,
-    .connection_created = lrmd_ipc_created,
-    .msg_process = lrmd_ipc_dispatch,
-    .connection_closed = lrmd_ipc_closed,
-    .connection_destroyed = lrmd_ipc_destroy
+    .connection_accept = execd_ipc_accept,
+    .connection_created = execd_ipc_created,
+    .msg_process = execd_ipc_dispatch,
+    .connection_closed = execd_ipc_closed,
+    .connection_destroyed = execd_ipc_destroy
 };
