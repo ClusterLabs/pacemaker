@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 
 #define XML_PASSING_RULE                                    \
     "<" PCMK_XE_RULE " " PCMK_XA_ID "='rp' >\n"             \

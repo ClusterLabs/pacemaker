@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/util.h>
 #include <unistd.h>

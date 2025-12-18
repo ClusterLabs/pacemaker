@@ -17,7 +17,6 @@
 #include <libxml/tree.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 /*!
  * \internal

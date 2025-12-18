@@ -23,13 +23,12 @@
 #include <libxml/xmlstring.h>           // xmlChar
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
+#include <crm/common/internal.h>
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
 #include <crm/common/mainloop.h>        // mainloop_io_t
-#include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/results.h>         // crm_exit_t
 #include <crm/common/rules.h>           // pcmk_rule_input_t
-#include <crm/common/xml_internal.h>    // enum pcmk__xml_flags
 
 #ifdef __cplusplus
 extern "C" {

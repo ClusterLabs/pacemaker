@@ -7,6 +7,10 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__DIRECT_INCLUDE
+#error "Include <crm/common/internal.h> instead of <scheduler_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
 #define PCMK__CRM_COMMON_SCHEDULER_INTERNAL__H
 
@@ -22,6 +26,7 @@
 #include <crm/common/history_internal.h>
 #include <crm/common/location_internal.h>
 #include <crm/common/nodes_internal.h>
+#include <crm/common/output_internal.h>
 #include <crm/common/primitive_internal.h>
 #include <crm/common/remote_internal.h>
 #include <crm/common/resources_internal.h>

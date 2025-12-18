@@ -17,9 +17,6 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/remote_internal.h>
 #include <crm/common/internal.h>
-#include <crm/common/options_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/scheduler_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

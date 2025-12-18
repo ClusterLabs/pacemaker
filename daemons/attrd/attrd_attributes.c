@@ -16,7 +16,6 @@
 
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
-#include <crm/common/strings_internal.h>
 #include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"

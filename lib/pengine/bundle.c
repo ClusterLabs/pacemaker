@@ -17,7 +17,6 @@
 #include <crm/pengine/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
-#include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
 enum pe__bundle_mount_flags {

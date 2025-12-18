@@ -30,7 +30,6 @@
 #include <crm/cluster/internal.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/remote_internal.h>
 
 #include <pacemaker-based.h>
 

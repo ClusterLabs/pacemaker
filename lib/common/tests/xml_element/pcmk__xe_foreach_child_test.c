@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 
 static int compare_name_handler(xmlNode *xml, void *userdata) {
     function_called();
