@@ -1721,9 +1721,6 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
         out->err(out, "notification fork() failed: %s", strerror(errno));
     }
     if (pid == 0) {
-        /* pcmk__debug("notification: I am the child. Executing the "
-         *             "notification program.");
-         */
         execl(options.external_agent, options.external_agent, NULL);
         crm_exit(CRM_EX_ERROR);
     }
