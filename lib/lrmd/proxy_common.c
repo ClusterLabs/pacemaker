@@ -108,7 +108,7 @@ remote_proxy_end_session(remote_proxy_t *proxy)
     if (proxy == NULL) {
         return;
     }
-    pcmk__trace("ending session ID %s", proxy->session_id);
+    pcmk__trace("Ending session ID %s", proxy->session_id);
 
     if (proxy->source) {
         mainloop_del_ipc_client(proxy->source);
@@ -120,7 +120,7 @@ remote_proxy_free(gpointer data)
 {
     remote_proxy_t *proxy = data;
 
-    pcmk__trace("freed proxy session ID %s", proxy->session_id);
+    pcmk__trace("Freed proxy session ID %s", proxy->session_id);
     free(proxy->node_name);
     free(proxy->session_id);
     free(proxy);
@@ -143,8 +143,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     flags = crm_ipc_buffer_flags(proxy->ipc);
     if (flags & crm_ipc_proxied_relay_response) {
         pcmk__trace("Passing response back to %.8s on %s: %.200s - request id: "
-                    "%d",
-                    proxy->session_id, proxy->node_name, buffer,
+                    "%d", proxy->session_id, proxy->node_name, buffer,
                     proxy->last_request_id);
         remote_proxy_relay_response(proxy, xml, proxy->last_request_id);
         proxy->last_request_id = 0;
@@ -163,8 +162,6 @@ void
 remote_proxy_disconnected(gpointer userdata)
 {
     remote_proxy_t *proxy = userdata;
-
-    pcmk__trace("destroying %p", proxy);
 
     proxy->source = NULL;
     proxy->ipc = NULL;
@@ -210,9 +207,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
         }
     }
 
-    pcmk__trace("new remote proxy client established to %s on %s, session id "
-                "%s",
-                channel, node_name, session_id);
+    pcmk__trace("New remote proxy client established to %s on %s, session id "
+                "%s", channel, node_name, session_id);
     g_hash_table_insert(proxy_table, proxy->session_id, proxy);
 
     return proxy;

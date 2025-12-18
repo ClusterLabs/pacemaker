@@ -631,7 +631,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     /* filter all EXEC events up */
     if (op->type == lrmd_event_exec_complete) {
         if (pcmk__is_set(ra_data->status, takeover_complete)) {
-            pcmk__debug("ignoring event, this connection is taken over by "
+            pcmk__debug("Ignoring event, this connection is taken over by "
                         "another node");
         } else {
             lrm_op_callback(op);
@@ -665,7 +665,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     }
 
     if (!ra_data->cur_cmd) {
-        pcmk__debug("no event to match");
+        pcmk__debug("No event to match");
         return;
     }
 
