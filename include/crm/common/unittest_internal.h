@@ -148,6 +148,8 @@ void pcmk__expect_fake_text_free_priv(void);
 void pcmk__expect_fake_text_err(void);
 pcmk__output_t *pcmk__output_null_create1(char **argv);
 pcmk__output_t *pcmk__output_null_create2(char **argv);
+int pcmk__output_message_dummy1(pcmk__output_t *out, va_list args);
+int pcmk__output_message_dummy2(pcmk__output_t *out, va_list args);
 
 /*!
  * \internal

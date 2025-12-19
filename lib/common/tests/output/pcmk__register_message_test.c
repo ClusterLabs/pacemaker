@@ -15,18 +15,6 @@
 
 #include "../../crmcommon_private.h"
 
-static int
-null_message_fn(pcmk__output_t *out, va_list args)
-{
-    return pcmk_rc_ok;
-}
-
-static int
-null_message_fn_2(pcmk__output_t *out, va_list args)
-{
-    return pcmk_rc_ok;
-}
-
 static void
 null_params(void **state)
 {
@@ -34,9 +22,12 @@ null_params(void **state)
 
     pcmk__output_new(&out, "text", NULL, NULL);
 
-    pcmk__assert_asserts(pcmk__register_message(NULL, "fake", null_message_fn));
-    pcmk__assert_asserts(pcmk__register_message(out, NULL, null_message_fn));
-    pcmk__assert_asserts(pcmk__register_message(out, "", null_message_fn));
+    pcmk__assert_asserts(pcmk__register_message(NULL, "fake",
+                                                pcmk__output_message_dummy1));
+    pcmk__assert_asserts(pcmk__register_message(out, NULL,
+                                                pcmk__output_message_dummy1));
+    pcmk__assert_asserts(pcmk__register_message(out, "",
+                                                pcmk__output_message_dummy1));
     pcmk__assert_asserts(pcmk__register_message(out, "fake", NULL));
 
     pcmk__output_free(out);
@@ -53,18 +44,18 @@ add_message(void **state)
     assert_int_equal(g_hash_table_size(out->messages), 0);
 
     /* Add a fake function and check that it's the only item in the hash table. */
-    pcmk__register_message(out, "fake", null_message_fn);
+    pcmk__register_message(out, "fake", pcmk__output_message_dummy1);
     assert_int_equal(g_hash_table_size(out->messages), 1);
     assert_ptr_equal(g_hash_table_lookup(out->messages, "fake"),
-                     null_message_fn);
+                     pcmk__output_message_dummy1);
 
     /* Add a second fake function which should overwrite the first one, leaving
      * only one item in the hash table but pointing at the new function.
      */
-    pcmk__register_message(out, "fake", null_message_fn_2);
+    pcmk__register_message(out, "fake", pcmk__output_message_dummy2);
     assert_int_equal(g_hash_table_size(out->messages), 1);
     assert_ptr_equal(g_hash_table_lookup(out->messages, "fake"),
-                     null_message_fn_2);
+                     pcmk__output_message_dummy2);
 
     pcmk__output_free(out);
 }

@@ -14,12 +14,6 @@
 #include <crm/common/unittest_internal.h>
 
 static int
-null_message_fn(pcmk__output_t *out, va_list args)
-{
-    return pcmk_rc_ok;
-}
-
-static int
 setup(void **state)
 {
     pcmk__set_testing_output_free(true);
@@ -52,7 +46,7 @@ messages(void **state)
     pcmk__output_t *out = NULL;
 
     pcmk__output_new(&out, "text", NULL, NULL);
-    pcmk__register_message(out, "fake", null_message_fn);
+    pcmk__register_message(out, "fake", pcmk__output_message_dummy1);
 
     pcmk__expect_fake_text_free_priv();
     pcmk__output_free(out);
