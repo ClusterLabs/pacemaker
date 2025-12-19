@@ -139,6 +139,7 @@ void pcmk__cib_test_cleanup(char *out_path);
 void pcmk__test_init_logging(const char *name, const char *filename);
 
 pcmk__output_t *pcmk__mk_fake_text_output(char **argv);
+void pcmk__set_fake_text_init_succeeds(bool value);
 
 /*!
  * \internal

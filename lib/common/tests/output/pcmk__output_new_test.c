@@ -15,34 +15,10 @@
 
 #include "mock_private.h"
 
-static bool init_succeeds = true;
-
-static bool
-fake_text_init(pcmk__output_t *out)
-{
-    return init_succeeds;
-}
-
-/* "text" is the default for pcmk__output_new. */
-static pcmk__output_t *
-mk_fake_text_output(char **argv)
-{
-    pcmk__output_t *retval = pcmk__mk_fake_text_output(argv);
-
-    if (retval == NULL) {
-        return NULL;
-    }
-
-    // Override
-    retval->init = fake_text_init;
-
-    return retval;
-}
-
 static int
 setup(void **state)
 {
-    pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
+    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
     return 0;
 }
 
@@ -120,9 +96,9 @@ init_fails(void **state)
 {
     pcmk__output_t *out = NULL;
 
-    init_succeeds = false;
+    pcmk__set_fake_text_init_succeeds(false);
     assert_int_equal(pcmk__output_new(&out, "text", NULL, NULL), ENOMEM);
-    init_succeeds = true;
+    pcmk__set_fake_text_init_succeeds(true);
 }
 
 static void
@@ -145,6 +121,7 @@ no_fmt_name_given(void **state)
 {
     pcmk__output_t *out = NULL;
 
+    // "text" is the default format for pcmk__output_new()
     assert_int_equal(pcmk__output_new(&out, NULL, NULL, NULL), pcmk_rc_ok);
     assert_string_equal(out->fmt_name, "text");
 

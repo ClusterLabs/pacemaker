@@ -18,6 +18,8 @@
 
 // LCOV_EXCL_START
 
+static bool fake_text_init_succeeds = true;
+
 void
 pcmk__assert_validates(xmlNode *xml)
 {
@@ -178,7 +180,7 @@ pcmk__test_init_logging(const char *name, const char *filename)
 static bool
 fake_text_init(pcmk__output_t *out)
 {
-    return true;
+    return fake_text_init_succeeds;
 }
 
 static void
@@ -205,6 +207,12 @@ pcmk__mk_fake_text_output(char **argv)
     retval->message = pcmk__call_message;
 
     return retval;
+}
+
+void
+pcmk__set_fake_text_init_succeeds(bool value)
+{
+    fake_text_init_succeeds = value;
 }
 
 // LCOV_EXCL_STOP
