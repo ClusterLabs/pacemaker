@@ -104,7 +104,7 @@ call_message(pcmk__output_t *out, const char *message_id, ...)
  */
 int
 pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
-                      const char *filename, char **argv)
+                      const char *filename, const char *const *argv)
 {
     pcmk__output_setup_fn_t setup_fn = NULL;
 
@@ -130,7 +130,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
 
     setup_fn(*out);
 
-    (*out)->request = pcmk__quote_cmdline((const char *const *) argv);
+    (*out)->request = pcmk__quote_cmdline(argv);
     (*out)->message = call_message;
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
@@ -161,7 +161,8 @@ int
 pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
                  const char *filename, char **argv)
 {
-    int rc = pcmk__bare_output_new(out, fmt_name, filename, argv);
+    int rc = pcmk__bare_output_new(out, fmt_name, filename,
+                                   (const char *const *) argv);
 
     if (rc == pcmk_rc_ok) {
         // Register libcrmcommon messages
