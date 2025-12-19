@@ -25,6 +25,12 @@ GHashTable *
 pcmk__output_formatters(void) {
     return formatters;
 }
+
+void
+pcmk__set_output_formatters(GHashTable *value)
+{
+    formatters = value;
+}
 // LCOV_EXCL_STOP
 #endif
 

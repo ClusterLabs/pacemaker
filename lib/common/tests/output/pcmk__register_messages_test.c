@@ -172,10 +172,10 @@ override_default_handler(void **state)
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test_setup_teardown(invalid_entries, setup, teardown),
-                cmocka_unit_test_setup_teardown(valid_entries, setup, teardown),
-                cmocka_unit_test_setup_teardown(duplicate_message_ids, setup, teardown),
-                cmocka_unit_test_setup_teardown(duplicate_functions, setup, teardown),
-                cmocka_unit_test_setup_teardown(default_handler, setup, teardown),
-                cmocka_unit_test_setup_teardown(override_default_handler, setup, teardown))
+PCMK__UNIT_TEST(setup, teardown,
+                cmocka_unit_test(invalid_entries),
+                cmocka_unit_test(valid_entries),
+                cmocka_unit_test(duplicate_message_ids),
+                cmocka_unit_test(duplicate_functions),
+                cmocka_unit_test(default_handler),
+                cmocka_unit_test(override_default_handler))

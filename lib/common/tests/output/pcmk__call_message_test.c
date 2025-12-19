@@ -132,8 +132,8 @@ default_called(void **state)
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test_setup_teardown(no_such_message, setup, teardown),
-                cmocka_unit_test_setup_teardown(message_return_value, setup, teardown),
-                cmocka_unit_test_setup_teardown(wrong_format, setup, teardown),
-                cmocka_unit_test_setup_teardown(default_called, setup, teardown))
+PCMK__UNIT_TEST(setup, teardown,
+                cmocka_unit_test(no_such_message),
+                cmocka_unit_test(message_return_value),
+                cmocka_unit_test(wrong_format),
+                cmocka_unit_test(default_called))

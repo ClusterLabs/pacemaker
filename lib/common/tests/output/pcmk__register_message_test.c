@@ -83,6 +83,6 @@ add_message(void **state)
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test_setup_teardown(null_params, setup, teardown),
-                cmocka_unit_test_setup_teardown(add_message, setup, teardown))
+PCMK__UNIT_TEST(setup, teardown,
+                cmocka_unit_test(null_params),
+                cmocka_unit_test(add_message))

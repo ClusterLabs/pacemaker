@@ -32,9 +32,12 @@ teardown(void **state)
 static void
 empty_formatters(void **state)
 {
+    GHashTable *formatters = pcmk__output_formatters();
     pcmk__output_t *out = NULL;
 
+    pcmk__set_output_formatters(NULL);
     pcmk__assert_asserts(pcmk__output_new(&out, "fake", NULL, NULL));
+    pcmk__set_output_formatters(formatters);
 }
 
 static void
@@ -128,12 +131,12 @@ no_fmt_name_given(void **state)
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
+PCMK__UNIT_TEST(setup, teardown,
                 cmocka_unit_test(empty_formatters),
-                cmocka_unit_test_setup_teardown(invalid_params, setup, teardown),
-                cmocka_unit_test_setup_teardown(no_such_format, setup, teardown),
-                cmocka_unit_test_setup_teardown(create_fails, setup, teardown),
-                cmocka_unit_test_setup_teardown(init_fails, setup, teardown),
-                cmocka_unit_test_setup_teardown(fopen_fails, setup, teardown),
-                cmocka_unit_test_setup_teardown(everything_succeeds, setup, teardown),
-                cmocka_unit_test_setup_teardown(no_fmt_name_given, setup, teardown))
+                cmocka_unit_test(invalid_params),
+                cmocka_unit_test(no_such_format),
+                cmocka_unit_test(create_fails),
+                cmocka_unit_test(init_fails),
+                cmocka_unit_test(fopen_fails),
+                cmocka_unit_test(everything_succeeds),
+                cmocka_unit_test(no_fmt_name_given))
