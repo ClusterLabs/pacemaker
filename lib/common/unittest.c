@@ -280,4 +280,16 @@ pcmk__output_null_create2(char **argv)
     return NULL;
 }
 
+int
+pcmk__output_message_dummy1(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_ok;
+}
+
+int
+pcmk__output_message_dummy2(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_ok;
+}
+
 // LCOV_EXCL_STOP
