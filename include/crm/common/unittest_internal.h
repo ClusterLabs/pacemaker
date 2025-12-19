@@ -140,6 +140,8 @@ void pcmk__test_init_logging(const char *name, const char *filename);
 
 pcmk__output_t *pcmk__mk_fake_text_output(char **argv);
 void pcmk__set_fake_text_init_succeeds(bool value);
+void pcmk__set_testing_output_free(bool value);
+void pcmk__expect_fake_text_free_priv(void);
 
 /*!
  * \internal

@@ -19,6 +19,7 @@
 // LCOV_EXCL_START
 
 static bool fake_text_init_succeeds = true;
+static bool testing_output_free = false;
 
 void
 pcmk__assert_validates(xmlNode *xml)
@@ -186,7 +187,9 @@ fake_text_init(pcmk__output_t *out)
 static void
 fake_text_free_priv(pcmk__output_t *out)
 {
-    // Intentionally left blank
+    if (testing_output_free) {
+        function_called();
+    }
 }
 
 pcmk__output_t *
@@ -213,6 +216,18 @@ void
 pcmk__set_fake_text_init_succeeds(bool value)
 {
     fake_text_init_succeeds = value;
+}
+
+void
+pcmk__set_testing_output_free(bool value)
+{
+    testing_output_free = value;
+}
+
+void
+pcmk__expect_fake_text_free_priv(void)
+{
+    expect_function_call(fake_text_free_priv);
 }
 
 // LCOV_EXCL_STOP
