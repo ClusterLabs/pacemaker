@@ -48,22 +48,7 @@ assert_not_name_char(int code_pt)
     int ref_len = g_unichar_to_utf8(code_pt, utf8_buf);
 
     assert_false(pcmk__xml_is_name_char(utf8_buf, &len));
-
-    if ((code_pt < 0xD800) || (code_pt > 0xDFFF)) {
-        /* Unicode code points in the range D800 to DFFF are UTF-16 surrogate
-         * pair halves. They can be represented in UTF-8, but they shouldn't
-         * appear in valid UTF-8-encoded text. RFC 3629 (Nov 2003) says they
-         * should be treated as invalid:
-         * https://en.wikipedia.org/wiki/UTF-8#Invalid_sequences_and_error_handling.
-         *
-         * GLib treats these characters as valid and returns a length of 3
-         * bytes. So did libxml until v2.12 (commit 845bd99). Since that commit,
-         * libxml treats these characters as invalid and returns a length of 0.
-         * To avoid version-dependent testing behavior, skip the length check
-         * for code points in that range.
-         */
-        assert_int_equal(len, ref_len);
-    }
+    assert_int_equal(len, ref_len);
 }
 
 static void
@@ -256,9 +241,33 @@ unicode_0x3001_to_0xD7FF(void **state)
 }
 
 static void
-unicode_0xD800_to_0xF8FF(void **state)
+unicode_0xD800_to_0xDFFF(void **state)
 {
-    for (int c = 0xD800; c <= 0xF8FF; c++) {
+    /* Unicode code points in the range D800 to DFFF are UTF-16 surrogate pair
+     * halves. They can be represented in UTF-8, but they shouldn't appear in
+     * valid UTF-8-encoded text. RFC 3629 (Nov 2003) says they should be treated
+     * as invalid:
+     * https://en.wikipedia.org/wiki/UTF-8#Invalid_sequences_and_error_handling.
+     *
+     * GLib treats these characters as valid and returns a length of 3 bytes. So
+     * did libxml until v2.12 (commit 845bd99). Since that commit, libxml treats
+     * these characters as invalid and returns a length of 0. To avoid version-
+     * dependent testing behavior, skip the length check for code points in that
+     * range. This means we don't use the helper.
+     */
+    for (int c = 0xD800; c <= 0xDFFF; c++) {
+        gchar utf8_buf[6] = { 0, };
+
+        g_unichar_to_utf8(c, utf8_buf);
+
+        assert_false(pcmk__xml_is_name_char(utf8_buf, NULL));
+    }
+}
+
+static void
+unicode_0xE000_to_0xF8FF(void **state)
+{
+    for (int c = 0xE000; c <= 0xF8FF; c++) {
         assert_not_name_char(c);
     }
 }
@@ -336,7 +345,8 @@ PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(unicode_0x2C00_to_0x2FEF),
                 cmocka_unit_test(unicode_0x2FF0_to_0x3000),
                 cmocka_unit_test(unicode_0x3001_to_0xD7FF),
-                cmocka_unit_test(unicode_0xD800_to_0xF8FF),
+                cmocka_unit_test(unicode_0xD800_to_0xDFFF),
+                cmocka_unit_test(unicode_0xE000_to_0xF8FF),
                 cmocka_unit_test(unicode_0xF900_to_0xFDCF),
                 cmocka_unit_test(unicode_0xFDD0_to_0xFDEF),
                 cmocka_unit_test(unicode_0xFDF0_to_0xFFFD),
