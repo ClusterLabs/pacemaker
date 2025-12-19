@@ -15,32 +15,11 @@
 
 #include <glib.h>
 
-G_GNUC_PRINTF(2, 3)
-static void
-fake_text_err(pcmk__output_t *out, const char *format, ...)
-{
-    function_called();
-}
-
-static pcmk__output_t *
-mk_fake_text_output(char **argv)
-{
-    pcmk__output_t *retval = pcmk__mk_fake_text_output(argv);
-
-    if (retval == NULL) {
-        return NULL;
-    }
-
-    // Override
-    retval->err = fake_text_err;
-
-    return retval;
-}
-
 static int
 setup(void **state)
 {
-    pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
+    pcmk__set_testing_output_and_clear_error(true);
+    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
     return 0;
 }
 
@@ -48,6 +27,7 @@ static int
 teardown(void **state)
 {
     pcmk__unregister_formats();
+    pcmk__set_testing_output_and_clear_error(false);
     return 0;
 }
 
@@ -61,12 +41,12 @@ standard_usage(void **state)
     g_set_error(&error, PCMK__RC_ERROR, pcmk_rc_bad_nvpair,
                 "some error message");
 
-    expect_function_call(fake_text_err);
+    pcmk__expect_fake_text_err();
     pcmk__output_and_clear_error(&error, out);
 
     pcmk__output_free(out);
     assert_null(error);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test_setup_teardown(standard_usage, setup, teardown))
+PCMK__UNIT_TEST(setup, teardown,
+                cmocka_unit_test(standard_usage))
