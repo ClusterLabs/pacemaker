@@ -29,83 +29,78 @@
  * \internal
  * \brief Check that \c pcmk__time_format_hr() produced expected result
  *
- * \param[in] format    Time format string
- * \param[in] expected  Check succeeds if result matches this
+ * \param[in] format    Time format string (<tt>const char *</tt>)
+ * \param[in] expected  Succeed if result matches this (<tt>const char *</tt>)
  */
-static void
-assert_hr_format(const char *format, const char *expected)
-{
-    crm_time_t *dt = NULL;
-    char *result = NULL;
-
-    dt = crm_time_new(DATE_TIME_S);
-    assert_non_null(dt);
-
-    result = pcmk__time_format_hr(format, dt, 0);
-    assert_non_null(result);
-
-    assert_string_equal(result, expected);
-
-    crm_time_free(dt);
-    free(result);
-}
+#define assert_hr_format(format, expected)              \
+    do {                                                \
+        crm_time_t *dt = NULL;                          \
+        char *result = NULL;                            \
+                                                        \
+        dt = crm_time_new(DATE_TIME_S);                 \
+        assert_non_null(dt);                            \
+                                                        \
+        result = pcmk__time_format_hr(format, dt, 0);   \
+        assert_non_null(result);                        \
+        assert_string_equal(result, expected);          \
+                                                        \
+        crm_time_free(dt);                              \
+        free(result);                                   \
+    } while (0)
 
 /*!
  * \internal
  * \brief Check that \c pcmk__time_format_hr() produced expected result (or alt)
  *
- * \param[in] format     Time format string
- * \param[in] expected   Check succeeds if result matches this
- * \param[in] alternate  Check also succeeds if result matches this
+ * \param[in] format     Time format string (<tt>const char *</tt>)
+ * \param[in] expected   Succeed if result matches this (<tt>const char *</tt>)
+ * \param[in] alternate  Succeed if result matches this (<tt>const char *</tt>)
  *
  * \note This allows two possible results because different \c strftime()
  *       implementations handle certain format syntax differently.
  */
-static void
-assert_hr_format_alt(const char *format, const char *expected,
-                     const char *alternate)
-{
-    crm_time_t *dt = NULL;
-    char *result = NULL;
-
-    dt = crm_time_new(DATE_TIME_S);
-    assert_non_null(dt);
-
-    result = pcmk__time_format_hr(format, dt, 0);
-    assert_non_null(result);
-
-    // CMocka has no abstraction for comparing to multiple strings
-    assert_true((strcmp(result, expected) == 0)
-                || (strcmp(result, alternate) == 0));
-
-    crm_time_free(dt);
-    free(result);
-}
+#define assert_hr_format_alt(format, expected, alternate)                   \
+    do {                                                                    \
+        crm_time_t *dt = NULL;                                              \
+        char *result = NULL;                                                \
+                                                                            \
+        dt = crm_time_new(DATE_TIME_S);                                     \
+        assert_non_null(dt);                                                \
+                                                                            \
+        result = pcmk__time_format_hr(format, dt, 0);                       \
+        assert_non_null(result);                                            \
+                                                                            \
+        /* CMocka has no abstraction for comparing to multiple strings */   \
+        assert_true((strcmp(result, expected) == 0)                         \
+                    || (strcmp(result, alternate) == 0));                   \
+                                                                            \
+        crm_time_free(dt);                                                  \
+        free(result);                                                       \
+    } while (0)
 
 /*!
  * \internal
  * \brief Check that \c pcmk__time_format_hr() produced expected high-res result
  *
- * \param[in] format    Time format string
- * \param[in] expected  Check succeeds if result matches this
- * \param[in] usec      Microseconds component of the reference time
+ * \param[in] format    Time format string (<tt>const char *</tt>)
+ * \param[in] expected  Succeed if result matches this (<tt>const char *</tt>)
+ * \param[in] usec      Microseconds component of the reference time (\c int)
  */
-static void
-assert_hr_format_usec(const char *format, const char *expected, int usec)
-{
-    crm_time_t *dt = NULL;
-    char *result = NULL;
-
-    dt = crm_time_new(DATE_TIME_S);
-    assert_non_null(dt);
-
-    result = pcmk__time_format_hr(format, dt, usec);
-    assert_non_null(result);
-    assert_string_equal(result, expected);
-
-    crm_time_free(dt);
-    free(result);
-}
+#define assert_hr_format_usec(format, expected, usec)       \
+    do {                                                    \
+        crm_time_t *dt = NULL;                              \
+        char *result = NULL;                                \
+                                                            \
+        dt = crm_time_new(DATE_TIME_S);                     \
+        assert_non_null(dt);                                \
+                                                            \
+        result = pcmk__time_format_hr(format, dt, usec);    \
+        assert_non_null(result);                            \
+        assert_string_equal(result, expected);              \
+                                                            \
+        crm_time_free(dt);                                  \
+        free(result);                                       \
+    } while (0)
 
 static void
 null_format(void **state)

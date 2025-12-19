@@ -46,27 +46,21 @@ create_patchset(const char *source_s, const char *target_s)
     return patchset;
 }
 
-static void
-assert_in_patchset(const char *source_s, const char *target_s,
-                   const char *element)
-{
-    xmlNode *patchset = create_patchset(source_s, target_s);
+#define assert_in_patchset(source_s, target_s, element)                 \
+    do {                                                                \
+        xmlNode *patchset = create_patchset(source_s, target_s);        \
+                                                                        \
+        assert_true(pcmk__cib_element_in_patchset(patchset, element));  \
+        pcmk__xml_free(patchset);                                       \
+    } while (0)
 
-    assert_true(pcmk__cib_element_in_patchset(patchset, element));
-
-    pcmk__xml_free(patchset);
-}
-
-static void
-assert_not_in_patchset(const char *source_s, const char *target_s,
-                       const char *element)
-{
-    xmlNode *patchset = create_patchset(source_s, target_s);
-
-    assert_false(pcmk__cib_element_in_patchset(patchset, element));
-
-    pcmk__xml_free(patchset);
-}
+#define assert_not_in_patchset(source_s, target_s, element)             \
+    do {                                                                \
+        xmlNode *patchset = create_patchset(source_s, target_s);        \
+                                                                        \
+        assert_false(pcmk__cib_element_in_patchset(patchset, element)); \
+        pcmk__xml_free(patchset);                                       \
+    } while (0)
 
 static void
 null_patchset_asserts(void **state)

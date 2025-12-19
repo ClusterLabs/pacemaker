@@ -16,10 +16,14 @@
 #define TEST_ELEMENT "test"
 #define TEST_ATTR "test_attr"
 
+// C requires at least one named argument before a variadic argument list
 static GHashTable *
-create_id_table(va_list args)
+create_id_table(const void *dummy, ...)
 {
+    va_list args;
     GHashTable *table = NULL;
+
+    va_start(args, dummy);
 
     for (const char *value = va_arg(args, const char *); value != NULL;
          value = va_arg(args, const char *)) {
@@ -30,62 +34,62 @@ create_id_table(va_list args)
         g_hash_table_add(table, (gpointer) value);
     }
 
+    va_end(args);
+
     return table;
 }
 
 /*!
  * \internal
- * \brief Test an invocation of pcmk__xe_dereference_children()
+ * \brief Test an invocation of \c pcmk__xe_dereference_children()
  *
- * \param[in] xml_string    XML to parse, with \c TEST_ELEMENT child to pass to
- *                          tested function
- * \param[in] element_name  Element name to pass to tested function
- * \param[in] ...           NULL-terminated list of child \c TEST_ATTR values to
- *                          expect in tested function's returned list
+ * \param[in] xml_string       XML to parse, with \c TEST_ELEMENT child to pass
+ *                             to tested function (<tt>const char *</tt>)
+ * \param[in] element_name     Element name to pass to tested function
+ *                             (<tt>const char *</tt>)
+ * \param[in] expected_values  <tt>NULL</tt>-terminated list of child
+ *                             \c TEST_ATTR values to expect in tested
+ *                             function's returned list (list of
+ *                             <tt>const char *</tt>)
  */
-static void
-assert_deref(const char *xml_string, const char *element_name, ...)
-{
-    xmlNode *xml = NULL;
-    const xmlNode *test_element = NULL;
-    GHashTable *table = NULL;
-    GList *list = NULL;
-    va_list ap;
-
-    // Parse given XML
-    xml = pcmk__xml_parse(xml_string);
-    assert_non_null(xml);
-
-    // Create a hash table with all expected child IDs
-    va_start(ap, element_name);
-    table = create_id_table(ap);
-    va_end(ap);
-
-    // Call tested function on TEST_ELEMENT child
-    test_element = pcmk__xe_first_child(xml, TEST_ELEMENT, NULL, NULL);
-    list = pcmk__xe_dereference_children(test_element, element_name);
-
-    // Ensure returned list has exactly the expected child IDs
-
-    if (table == NULL) {
-        assert_null(list);
-        pcmk__xml_free(xml);
-        return;
-    }
-
-    for (GList *iter = list; iter != NULL; iter = iter->next) {
-        const xmlNode *node = iter->data;
-        const char *value = pcmk__xe_get(node, TEST_ATTR);
-
-        assert_true(g_hash_table_remove(table, value));
-    }
-
-    assert_int_equal(g_hash_table_size(table), 0);
-
-    g_hash_table_destroy(table);
-    g_list_free(list);
-    pcmk__xml_free(xml);
-}
+#define assert_deref(xml_string, element_name, expected_values...)          \
+    do {                                                                    \
+        xmlNode *xml = NULL;                                                \
+        const xmlNode *test_element = NULL;                                 \
+        GHashTable *table = NULL;                                           \
+        GList *list = NULL;                                                 \
+                                                                            \
+        xml = pcmk__xml_parse(xml_string);                                  \
+        assert_non_null(xml);                                               \
+                                                                            \
+        /* Create a hash table with all expected child IDs */               \
+        table = create_id_table(NULL, expected_values);                     \
+                                                                            \
+        /* Call tested function on TEST_ELEMENT child */                    \
+        test_element = pcmk__xe_first_child(xml, TEST_ELEMENT, NULL, NULL); \
+        list = pcmk__xe_dereference_children(test_element, element_name);   \
+                                                                            \
+        /* Ensure returned list has exactly the expected child IDs */       \
+                                                                            \
+        if (table == NULL) {                                                \
+            assert_null(list);                                              \
+            pcmk__xml_free(xml);                                            \
+            break;                                                          \
+        }                                                                   \
+                                                                            \
+        for (GList *iter = list; iter != NULL; iter = iter->next) {         \
+            const xmlNode *node = iter->data;                               \
+            const char *value = pcmk__xe_get(node, TEST_ATTR);              \
+                                                                            \
+            assert_true(g_hash_table_remove(table, value));                 \
+        }                                                                   \
+                                                                            \
+        assert_int_equal(g_hash_table_size(table), 0);                      \
+                                                                            \
+        g_hash_table_destroy(table);                                        \
+        g_list_free(list);                                                  \
+        pcmk__xml_free(xml);                                                \
+    } while (0)
 
 static void
 null_for_null(void **state)

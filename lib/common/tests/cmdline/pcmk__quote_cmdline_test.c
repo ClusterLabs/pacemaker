@@ -17,16 +17,14 @@
  * says "The quoting style used is undefined (single or double quotes may be
  * used)."
  */
-static void
-assert_quote_cmdline(const char **argv, const gchar *expected_single,
-                     const gchar *expected_double)
-{
-    gchar *processed = pcmk__quote_cmdline((const char *const *) argv);
-
-    assert_true(pcmk__str_any_of(processed, expected_single, expected_double,
-                                 NULL));
-    g_free(processed);
-}
+#define assert_quote_cmdline(argv, expected_single, expected_double)    \
+    do {                                                                \
+        gchar *processed = pcmk__quote_cmdline(argv);                   \
+                                                                        \
+        assert_true(pcmk__str_any_of(processed, expected_single,        \
+                                     expected_double, NULL));           \
+        g_free(processed);                                              \
+    } while (0)
 
 static void
 empty_input(void **state)

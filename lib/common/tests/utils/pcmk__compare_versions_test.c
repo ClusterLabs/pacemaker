@@ -16,16 +16,17 @@
  * \brief Compare two version strings in both directions
  *
  * \param[in] v1           First argument for \c pcmk__compare_versions()
+ *                         (<tt>const char *</tt>)
  * \param[in] v2           Second argument for \c pcmk__compare_versions()
+ *                         (<tt>const char *</tt>)
  * \param[in] expected_rc  Expected return code from
- *                         <tt>pcmk__compare_versions(v1, v2)</tt>
+ *                         <tt>pcmk__compare_versions(v1, v2)</tt> (\c int)
  */
-static void
-assert_compare_versions(const char *v1, const char *v2, int expected_rc)
-{
-    assert_int_equal(pcmk__compare_versions(v1, v2), expected_rc);
-    assert_int_equal(pcmk__compare_versions(v2, v1), -expected_rc);
-}
+#define assert_compare_versions(v1, v2, expected_rc)                    \
+    do {                                                                \
+        assert_int_equal(pcmk__compare_versions(v1, v2), expected_rc);  \
+        assert_int_equal(pcmk__compare_versions(v2, v1), -expected_rc); \
+    } while (0)
 
 static void
 empty_params(void **state)

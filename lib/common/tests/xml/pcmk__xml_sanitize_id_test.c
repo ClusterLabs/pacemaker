@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,15 +11,14 @@
 
 #include <crm/common/unittest_internal.h>
 
-static void
-assert_sanitized(const char *str, const char *reference)
-{
-    char *buf = pcmk__str_copy(str);
-
-    pcmk__xml_sanitize_id(buf);
-    assert_string_equal(buf, reference);
-    free(buf);
-}
+#define assert_sanitized(str, expected)     \
+    do {                                    \
+        char *buf = pcmk__str_copy(str);    \
+                                            \
+        pcmk__xml_sanitize_id(buf);         \
+        assert_string_equal(buf, expected); \
+        free(buf);                          \
+    } while (0)
 
 static void
 null_empty(void **state)

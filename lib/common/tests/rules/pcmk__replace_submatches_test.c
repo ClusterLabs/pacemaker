@@ -22,15 +22,14 @@ static const regmatch_t submatches[] = {
 };
 static const int nmatches = 3;
 
-static void
-assert_submatch(const char *string, const char *reference)
-{
-    char *expanded = pcmk__replace_submatches(string, match, submatches,
-                                              nmatches);
-
-    assert_string_equal(expanded, reference);
-    free(expanded);
-}
+#define assert_submatch(string, expected)                                   \
+    do {                                                                    \
+        char *expanded = pcmk__replace_submatches(string, match,            \
+                                                  submatches, nmatches);    \
+                                                                            \
+        assert_string_equal(expanded, expected);                            \
+        free(expanded);                                                     \
+    } while (0)
 
 static void
 no_source(void **state)

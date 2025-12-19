@@ -19,45 +19,43 @@
 #include <string.h>
 #include <errno.h>
 
-static void
-assert_pid2path_one(int errno_to_set, const char *link_contents, char **dest,
-                    int reference_rc)
-{
-    pcmk__mock_readlink = true;
+#define assert_pid2path_one(errno_to_set, link_contents, dest, expected_rc) \
+    do {                                                                    \
+        pcmk__mock_readlink = true;                                         \
+                                                                            \
+        expect_string(__wrap_readlink, path, "/proc/1000/exe");             \
+        expect_uint_value(__wrap_readlink, bufsize, PATH_MAX);              \
+        will_return(__wrap_readlink, errno_to_set);                         \
+        will_return(__wrap_readlink, link_contents);                        \
+                                                                            \
+        assert_int_equal(pcmk__procfs_pid2path(1000, dest), expected_rc);   \
+                                                                            \
+        pcmk__mock_readlink = false;                                        \
+    } while (0)
 
-    expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_uint_value(__wrap_readlink, bufsize, PATH_MAX);
-    will_return(__wrap_readlink, errno_to_set);
-    will_return(__wrap_readlink, link_contents);
+#define assert_pid2path_null(errno_to_set, link_contents, expected_rc)      \
+    do {                                                                    \
+        char *dest = NULL;                                                  \
+                                                                            \
+        assert_pid2path_one(errno_to_set, link_contents, NULL,              \
+                            expected_rc);                                   \
+        assert_pid2path_one(errno_to_set, link_contents, &dest,             \
+                            expected_rc);                                   \
+        assert_null(dest);                                                  \
+    } while (0)
 
-    assert_int_equal(pcmk__procfs_pid2path(1000, dest), reference_rc);
-
-    pcmk__mock_readlink = false;
-}
-
-static void
-assert_pid2path_null(int errno_to_set, const char *link_contents,
-                     int expected_rc)
-{
-    char *dest = NULL;
-
-    assert_pid2path_one(errno_to_set, link_contents, NULL, expected_rc);
-    assert_pid2path_one(errno_to_set, link_contents, &dest, expected_rc);
-    assert_null(dest);
-}
-
-static void
-assert_pid2path_equals(int errno_to_set, const char *link_contents,
-                       int expected_rc, const char *expected_result)
-{
-    char *dest = NULL;
-
-    assert_pid2path_one(errno_to_set, link_contents, NULL, expected_rc);
-    assert_pid2path_one(errno_to_set, link_contents, &dest, expected_rc);
-
-    assert_string_equal(dest, expected_result);
-    free(dest);
-}
+#define assert_pid2path_equals(errno_to_set, link_contents, expected_rc,    \
+                               expected_result)                             \
+    do {                                                                    \
+        char *dest = NULL;                                                  \
+                                                                            \
+        assert_pid2path_one(errno_to_set, link_contents, NULL,              \
+                            expected_rc);                                   \
+        assert_pid2path_one(errno_to_set, link_contents, &dest,             \
+                            expected_rc);                                   \
+        assert_string_equal(dest, expected_result);                         \
+        free(dest);                                                         \
+    } while (0)
 
 static void
 no_exe_file(void **state)
