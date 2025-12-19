@@ -24,13 +24,7 @@ static void
 assert_compare_version(const char *v1, const char *v2, int expected_rc)
 {
     assert_int_equal(pcmk__compare_versions(v1, v2), expected_rc);
-
-    if (v1 != v2) {
-        /* Try reverse order even if expected_rc == 0, if v1 and v2 are
-         * different strings
-         */
-        assert_int_equal(pcmk__compare_versions(v2, v1), -expected_rc);
-    }
+    assert_int_equal(pcmk__compare_versions(v2, v1), -expected_rc);
 }
 
 static void
