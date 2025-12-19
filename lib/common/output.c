@@ -161,10 +161,9 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
 
 int
 pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
-                 const char *filename, char **argv)
+                 const char *filename, const char *const *argv)
 {
-    int rc = pcmk__bare_output_new(out, fmt_name, filename,
-                                   (const char *const *) argv);
+    int rc = pcmk__bare_output_new(out, fmt_name, filename, argv);
 
     if (rc == pcmk_rc_ok) {
         // Register libcrmcommon messages
@@ -333,14 +332,14 @@ int
 pcmk__log_output_new(pcmk__output_t **out)
 {
     int rc = pcmk_rc_ok;
-    const char* argv[] = { "", NULL };
+    const char *argv[] = { "", NULL };
     pcmk__supported_format_t formats[] = {
         PCMK__SUPPORTED_FORMAT_LOG,
         { NULL, NULL, NULL }
     };
 
     pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(out, "log", NULL, (char **) argv);
+    rc = pcmk__output_new(out, "log", NULL, argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
         pcmk__err("Can't log certain messages due to internal error: %s",
                   pcmk_rc_str(rc));
@@ -362,14 +361,14 @@ int
 pcmk__text_output_new(pcmk__output_t **out, const char *filename)
 {
     int rc = pcmk_rc_ok;
-    const char* argv[] = { "", NULL };
+    const char *argv[] = { "", NULL };
     pcmk__supported_format_t formats[] = {
         PCMK__SUPPORTED_FORMAT_TEXT,
         { NULL, NULL, NULL }
     };
 
     pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(out, "text", filename, (char **) argv);
+    rc = pcmk__output_new(out, "text", filename, argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
         pcmk__err("Can't create text output object to internal error: %s",
                   pcmk_rc_str(rc));
