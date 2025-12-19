@@ -132,7 +132,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
 
     setup_fn(*out);
 
-    (*out)->request = pcmk__quote_cmdline(argv);
+    (*out)->request = pcmk__quote_cmdline((const char *const *) argv);
     (*out)->message = call_message;
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
