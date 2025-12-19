@@ -20,15 +20,14 @@ extern int pcmk__score_yellow;
 
 static int default_score = 99;
 
-static void
-assert_score(const char *score_s, int expected_rc, int expected_score)
-{
-    int score = 0;
-    int rc = pcmk_parse_score(score_s, &score, default_score);
-
-    assert_int_equal(rc, expected_rc);
-    assert_int_equal(score, expected_score);
-}
+#define assert_score(score_s, expected_rc, expected_score)          \
+    do {                                                            \
+        int score = 0;                                              \
+        int rc = pcmk_parse_score(score_s, &score, default_score);  \
+                                                                    \
+        assert_int_equal(rc, expected_rc);                          \
+        assert_int_equal(score, expected_score);                    \
+    } while (0)
 
 static void
 null_score_string(void **state)

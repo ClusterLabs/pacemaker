@@ -13,33 +13,30 @@
 
 #include <crm/common/unittest_internal.h>
 
-static void
-assert_scan_nvpair_success(const gchar *input, const gchar *expected_name,
-                           const gchar *expected_value)
-{
-    gchar *name = NULL;
-    gchar *value = NULL;
-    int rc = pcmk__scan_nvpair(input, &name, &value);
+#define assert_scan_nvpair_success(input, expected_name, expected_value)    \
+    do {                                                                    \
+        gchar *name = NULL;                                                 \
+        gchar *value = NULL;                                                \
+        int rc = pcmk__scan_nvpair(input, &name, &value);                   \
+                                                                            \
+        assert_int_equal(rc, pcmk_rc_ok);                                   \
+        assert_string_equal(name, expected_name);                           \
+        assert_string_equal(value, expected_value);                         \
+                                                                            \
+        g_free(name);                                                       \
+        g_free(value);                                                      \
+    } while (0)
 
-    assert_int_equal(rc, pcmk_rc_ok);
-    assert_string_equal(name, expected_name);
-    assert_string_equal(value, expected_value);
-
-    g_free(name);
-    g_free(value);
-}
-
-static void
-assert_scan_nvpair_failure(const gchar *input)
-{
-    gchar *name = NULL;
-    gchar *value = NULL;
-    int rc = pcmk__scan_nvpair(input, &name, &value);
-
-    assert_int_equal(rc, pcmk_rc_bad_nvpair);
-    assert_null(name);
-    assert_null(value);
-}
+#define assert_scan_nvpair_failure(input)                   \
+    do {                                                    \
+        gchar *name = NULL;                                 \
+        gchar *value = NULL;                                \
+        int rc = pcmk__scan_nvpair(input, &name, &value);   \
+                                                            \
+        assert_int_equal(rc, pcmk_rc_bad_nvpair);           \
+        assert_null(name);                                  \
+        assert_null(value);                                 \
+    } while (0)
 
 static void
 null_asserts(void **state)
