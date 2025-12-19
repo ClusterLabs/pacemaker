@@ -11,12 +11,6 @@
 
 #include <crm/common/unittest_internal.h>
 
-static pcmk__output_t *
-null_create_fn(char **argv)
-{
-    return NULL;
-}
-
 static void
 invalid_params(void **state)
 {
@@ -30,7 +24,7 @@ invalid_params(void **state)
 static void
 non_null_formatters(void **state)
 {
-    pcmk__register_format(NULL, "fake", null_create_fn, NULL);
+    pcmk__register_format(NULL, "fake", pcmk__output_null_create1, NULL);
 
     pcmk__unregister_formats();
     assert_null(pcmk__output_formatters());

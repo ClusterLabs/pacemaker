@@ -146,6 +146,8 @@ void pcmk__set_testing_output_free(bool value);
 void pcmk__set_testing_output_and_clear_error(bool value);
 void pcmk__expect_fake_text_free_priv(void);
 void pcmk__expect_fake_text_err(void);
+pcmk__output_t *pcmk__output_null_create1(char **argv);
+pcmk__output_t *pcmk__output_null_create2(char **argv);
 
 /*!
  * \internal

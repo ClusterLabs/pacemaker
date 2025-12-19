@@ -268,4 +268,16 @@ pcmk__expect_fake_text_err(void)
     expect_function_call(fake_text_err);
 }
 
+pcmk__output_t *
+pcmk__output_null_create1(char **argv)
+{
+    return NULL;
+}
+
+pcmk__output_t *
+pcmk__output_null_create2(char **argv)
+{
+    return NULL;
+}
+
 // LCOV_EXCL_STOP

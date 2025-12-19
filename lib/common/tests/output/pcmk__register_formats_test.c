@@ -11,18 +11,6 @@
 
 #include <crm/common/unittest_internal.h>
 
-static pcmk__output_t *
-null_create_fn(char **argv)
-{
-    return NULL;
-}
-
-static pcmk__output_t *
-null_create_fn_2(char **argv)
-{
-    return NULL;
-}
-
 static void
 no_formats(void **state)
 {
@@ -37,7 +25,7 @@ invalid_entries(void **state)
      * the marker for the end of the format table.
      */
     pcmk__supported_format_t formats[] = {
-        { "", null_create_fn, NULL },
+        { "", pcmk__output_null_create1, NULL },
         { NULL },
     };
 
@@ -50,8 +38,8 @@ valid_entries(void **state)
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
-        { "fmt1", null_create_fn, NULL },
-        { "fmt2", null_create_fn_2, NULL },
+        { "fmt1", pcmk__output_null_create1, NULL },
+        { "fmt2", pcmk__output_null_create2, NULL },
         { NULL },
     };
 
@@ -59,8 +47,10 @@ valid_entries(void **state)
 
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 2);
-    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"), null_create_fn);
-    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt2"), null_create_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"),
+                     pcmk__output_null_create1);
+    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt2"),
+                     pcmk__output_null_create2);
 
     pcmk__unregister_formats();
 }
@@ -71,8 +61,8 @@ duplicate_keys(void **state)
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
-        { "fmt1", null_create_fn, NULL },
-        { "fmt1", null_create_fn_2, NULL },
+        { "fmt1", pcmk__output_null_create1, NULL },
+        { "fmt1", pcmk__output_null_create2, NULL },
         { NULL },
     };
 
@@ -80,7 +70,8 @@ duplicate_keys(void **state)
 
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 1);
-    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"), null_create_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"),
+                     pcmk__output_null_create2);
 
     pcmk__unregister_formats();
 }
@@ -91,8 +82,8 @@ duplicate_values(void **state)
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
-        { "fmt1", null_create_fn, NULL },
-        { "fmt2", null_create_fn, NULL },
+        { "fmt1", pcmk__output_null_create1, NULL },
+        { "fmt2", pcmk__output_null_create1, NULL },
         { NULL },
     };
 
@@ -100,8 +91,10 @@ duplicate_values(void **state)
 
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 2);
-    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"), null_create_fn);
-    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt2"), null_create_fn);
+    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"),
+                     pcmk__output_null_create1);
+    assert_ptr_equal(g_hash_table_lookup(formatters, "fmt2"),
+                     pcmk__output_null_create1);
 
     pcmk__unregister_formats();
 }

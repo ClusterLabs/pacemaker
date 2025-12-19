@@ -11,24 +11,15 @@
 
 #include <crm/common/unittest_internal.h>
 
-static pcmk__output_t *
-null_create_fn(char **argv)
-{
-    return NULL;
-}
-
-static pcmk__output_t *
-null_create_fn_2(char **argv)
-{
-    return NULL;
-}
-
 static void
 invalid_params(void **state)
 {
     pcmk__assert_asserts(pcmk__register_format(NULL, "fake", NULL, NULL));
-    pcmk__assert_asserts(pcmk__register_format(NULL, "", null_create_fn, NULL));
-    pcmk__assert_asserts(pcmk__register_format(NULL, NULL, null_create_fn,
+    pcmk__assert_asserts(pcmk__register_format(NULL, "",
+                                               pcmk__output_null_create1,
+                                               NULL));
+    pcmk__assert_asserts(pcmk__register_format(NULL, NULL,
+                                               pcmk__output_null_create1,
                                                NULL));
 }
 
@@ -45,26 +36,26 @@ add_format(void **state)
     /* Add a fake formatter and check that it's the only item in the hash
      * table
      */
-    rc = pcmk__register_format(NULL, "fake", null_create_fn, NULL);
+    rc = pcmk__register_format(NULL, "fake", pcmk__output_null_create1, NULL);
     assert_int_equal(rc, pcmk_rc_ok);
 
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 1);
 
     value = g_hash_table_lookup(formatters, "fake");
-    assert_ptr_equal(value, null_create_fn);
+    assert_ptr_equal(value, pcmk__output_null_create1);
 
     /* Add a second fake formatter that should overwrite the first one, leaving
      * only one item (with the new function) in the hash table
      */
-    rc = pcmk__register_format(NULL, "fake", null_create_fn_2, NULL);
+    rc = pcmk__register_format(NULL, "fake", pcmk__output_null_create2, NULL);
     assert_int_equal(rc, pcmk_rc_ok);
 
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 1);
 
     value = g_hash_table_lookup(formatters, "fake");
-    assert_ptr_equal(value, null_create_fn_2);
+    assert_ptr_equal(value, pcmk__output_null_create2);
 
     pcmk__unregister_formats();
 }
