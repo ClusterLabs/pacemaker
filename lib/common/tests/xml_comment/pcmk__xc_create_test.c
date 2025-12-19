@@ -18,6 +18,8 @@
  * hassle.
  */
 
+#define CONTENT "some content"
+
 #define assert_create_comment(content, doc_ptr, node_ptr)                   \
     do {                                                                    \
         xml_doc_private_t *docpriv = NULL;                                  \
@@ -42,25 +44,6 @@
     } while (0)
 
 static void
-assert_comment(const char *content)
-{
-    xmlDoc *doc = NULL;
-    xmlNode *node = NULL;
-
-    assert_create_comment(content, &doc, &node);
-
-    if (content == NULL) {
-        assert_null(node->content);
-    } else {
-        assert_non_null(node->content);
-        assert_string_equal((const char *) node->content, content);
-    }
-
-    pcmk__xml_free(node);
-    pcmk__xml_free_doc(doc);
-}
-
-static void
 null_doc(void **state)
 {
     pcmk__assert_asserts(pcmk__xc_create(NULL, NULL));
@@ -70,8 +53,21 @@ null_doc(void **state)
 static void
 with_doc(void **state)
 {
-    assert_comment(NULL);
-    assert_comment("some content");
+    xmlDoc *doc = NULL;
+    xmlNode *node = NULL;
+
+    assert_create_comment(NULL, &doc, &node);
+    assert_null(node->content);
+
+    g_clear_pointer(&node, pcmk__xml_free);
+    g_clear_pointer(&doc, pcmk__xml_free_doc);
+
+    assert_create_comment(CONTENT, &doc, &node);
+    assert_non_null(node->content);
+    assert_string_equal((const char *) node->content, CONTENT);
+
+    g_clear_pointer(&node, pcmk__xml_free);
+    g_clear_pointer(&doc, pcmk__xml_free_doc);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,

@@ -36,26 +36,33 @@ assert_pid2path_one(int errno_to_set, const char *link_contents, char **dest,
 }
 
 static void
-assert_pid2path(int errno_to_set, const char *link_contents, int reference_rc,
-                const char *reference_result)
+assert_pid2path_null(int errno_to_set, const char *link_contents,
+                     int expected_rc)
 {
     char *dest = NULL;
 
-    assert_pid2path_one(errno_to_set, link_contents, NULL, reference_rc);
-    assert_pid2path_one(errno_to_set, link_contents, &dest, reference_rc);
+    assert_pid2path_one(errno_to_set, link_contents, NULL, expected_rc);
+    assert_pid2path_one(errno_to_set, link_contents, &dest, expected_rc);
+    assert_null(dest);
+}
 
-    if (reference_result == NULL) {
-        assert_null(dest);
-    } else {
-        assert_string_equal(dest, reference_result);
-        free(dest);
-    }
+static void
+assert_pid2path_equals(int errno_to_set, const char *link_contents,
+                       int expected_rc, const char *expected_result)
+{
+    char *dest = NULL;
+
+    assert_pid2path_one(errno_to_set, link_contents, NULL, expected_rc);
+    assert_pid2path_one(errno_to_set, link_contents, &dest, expected_rc);
+
+    assert_string_equal(dest, expected_result);
+    free(dest);
 }
 
 static void
 no_exe_file(void **state)
 {
-    assert_pid2path(ENOENT, NULL, ENOENT, NULL);
+    assert_pid2path_null(ENOENT, NULL, ENOENT);
 }
 
 static void
@@ -64,7 +71,7 @@ contents_too_long(void **state)
     // String length equals PATH_MAX
     char *long_path = pcmk__assert_asprintf("%0*d", PATH_MAX, 0);
 
-    assert_pid2path(0, long_path, ENAMETOOLONG, NULL);
+    assert_pid2path_null(0, long_path, ENAMETOOLONG);
     free(long_path);
 }
 
@@ -73,13 +80,13 @@ contents_ok(void **state)
 {
     char *real_path = pcmk__str_copy("/ok");
 
-    assert_pid2path(0, real_path, pcmk_rc_ok, real_path);
+    assert_pid2path_equals(0, real_path, pcmk_rc_ok, real_path);
     free(real_path);
 
     // String length equals PATH_MAX - 1
     real_path = pcmk__assert_asprintf("%0*d", PATH_MAX - 1, 0);
 
-    assert_pid2path(0, real_path, pcmk_rc_ok, real_path);
+    assert_pid2path_equals(0, real_path, pcmk_rc_ok, real_path);
     free(real_path);
 }
 
