@@ -19,12 +19,6 @@ null_message_fn(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-static bool
-fake_text_init(pcmk__output_t *out)
-{
-    return true;
-}
-
 static void
 fake_text_free_priv(pcmk__output_t *out)
 {
@@ -35,18 +29,14 @@ fake_text_free_priv(pcmk__output_t *out)
 static pcmk__output_t *
 mk_fake_text_output(char **argv)
 {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+    pcmk__output_t *retval = pcmk__mk_fake_text_output(argv);
 
     if (retval == NULL) {
         return NULL;
     }
 
-    retval->fmt_name = "text";
-    retval->init = fake_text_init;
+    // Override
     retval->free_priv = fake_text_free_priv;
-
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
 
     return retval;
 }

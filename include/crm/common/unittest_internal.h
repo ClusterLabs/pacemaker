@@ -21,7 +21,7 @@
 
 #include <cmocka.h>
 
-#include <crm/common/xml.h>
+#include <crm/common/internal.h>        // pcmk__output_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -137,6 +137,8 @@ char *pcmk__cib_test_copy_cib(const char *in_file);
 void pcmk__cib_test_cleanup(char *out_path);
 
 void pcmk__test_init_logging(const char *name, const char *filename);
+
+pcmk__output_t *pcmk__mk_fake_text_output(char **argv);
 
 /*!
  * \internal

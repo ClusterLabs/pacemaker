@@ -23,28 +23,18 @@ fake_text_init(pcmk__output_t *out)
     return init_succeeds;
 }
 
-static void
-fake_text_free_priv(pcmk__output_t *out)
-{
-    /* This function intentionally left blank */
-}
-
 /* "text" is the default for pcmk__output_new. */
 static pcmk__output_t *
 mk_fake_text_output(char **argv)
 {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+    pcmk__output_t *retval = pcmk__mk_fake_text_output(argv);
 
     if (retval == NULL) {
         return NULL;
     }
 
-    retval->fmt_name = "text";
+    // Override
     retval->init = fake_text_init;
-    retval->free_priv = fake_text_free_priv;
-
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
 
     return retval;
 }
