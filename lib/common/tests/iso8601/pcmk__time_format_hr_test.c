@@ -67,6 +67,31 @@ assert_hr_format(const char *format, const char *expected,
     free(result);
 }
 
+/*!
+ * \internal
+ * \brief Check that \c pcmk__time_format_hr() produced expected high-res result
+ *
+ * \param[in] format    Time format string
+ * \param[in] expected  Check succeeds if result matches this
+ * \param[in] usec      Microseconds component of the reference time
+ */
+static void
+assert_hr_format_usec(const char *format, const char *expected, int usec)
+{
+    crm_time_t *dt = NULL;
+    char *result = NULL;
+
+    dt = crm_time_new(DATE_TIME_S);
+    assert_non_null(dt);
+
+    result = pcmk__time_format_hr(format, dt, usec);
+    assert_non_null(result);
+    assert_string_equal(result, expected);
+
+    crm_time_free(dt);
+    free(result);
+}
+
 static void
 null_format(void **state)
 {
@@ -145,34 +170,34 @@ with_frac(void **state)
                      "The time is " TIME_S ".000000 right NOW", NULL, 0);
 
     // Display at appropriate resolution by truncating toward zero
-    assert_hr_format("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".123456", NULL,
-                     usec);
-    assert_hr_format("%H:%M:%S.%6N", TIME_S ".123456", NULL, usec);
-    assert_hr_format("%H:%M:%S.%6N %M", TIME_S ".123456 " MINUTE_S, NULL, usec);
-    assert_hr_format("%H:%M:%S.%5N", TIME_S ".12345", NULL, usec);
-    assert_hr_format("%H:%M:%S.%4N", TIME_S ".1234", NULL, usec);
-    assert_hr_format("%H:%M:%S.%3N", TIME_S ".123", NULL, usec);
-    assert_hr_format("%H:%M:%S.%2N", TIME_S ".12", NULL, usec);
-    assert_hr_format("%H:%M:%S.%1N", TIME_S ".1", NULL, usec);
-    assert_hr_format("%H:%M:%S.%0N", TIME_S ".", NULL, usec);
-    assert_hr_format("%H:%M:%S.%N", TIME_S ".", NULL, usec);
+    assert_hr_format_usec("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".123456",
+                          usec);
+    assert_hr_format_usec("%H:%M:%S.%6N", TIME_S ".123456", usec);
+    assert_hr_format_usec("%H:%M:%S.%6N %M", TIME_S ".123456 " MINUTE_S, usec);
+    assert_hr_format_usec("%H:%M:%S.%5N", TIME_S ".12345", usec);
+    assert_hr_format_usec("%H:%M:%S.%4N", TIME_S ".1234", usec);
+    assert_hr_format_usec("%H:%M:%S.%3N", TIME_S ".123", usec);
+    assert_hr_format_usec("%H:%M:%S.%2N", TIME_S ".12", usec);
+    assert_hr_format_usec("%H:%M:%S.%1N", TIME_S ".1", usec);
+    assert_hr_format_usec("%H:%M:%S.%0N", TIME_S ".", usec);
+    assert_hr_format_usec("%H:%M:%S.%N", TIME_S ".", usec);
 
     // Leading zero is ignored, not treated as a request for zero-padding
-    assert_hr_format("%H:%M:%S.%03N", TIME_S ".123", NULL, usec);
+    assert_hr_format_usec("%H:%M:%S.%03N", TIME_S ".123", usec);
 
     // Same as above, but with zero-padding for smaller fractional components
     usec = 789;
-    assert_hr_format("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".000789", NULL,
-                     usec);
-    assert_hr_format("%H:%M:%S.%6N", TIME_S ".000789", NULL, usec);
-    assert_hr_format("%H:%M:%S.%6N %S", TIME_S ".000789 " SECOND_S, NULL, usec);
-    assert_hr_format("%H:%M:%S.%5N", TIME_S ".00078", NULL, usec);
-    assert_hr_format("%H:%M:%S.%4N", TIME_S ".0007", NULL, usec);
-    assert_hr_format("%H:%M:%S.%3N", TIME_S ".000", NULL, usec);
-    assert_hr_format("%H:%M:%S.%2N", TIME_S ".00", NULL, usec);
-    assert_hr_format("%H:%M:%S.%1N", TIME_S ".0", NULL, usec);
-    assert_hr_format("%H:%M:%S.%0N", TIME_S ".", NULL, usec);
-    assert_hr_format("%H:%M:%S.%N", TIME_S ".", NULL, usec);
+    assert_hr_format_usec("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".000789",
+                          usec);
+    assert_hr_format_usec("%H:%M:%S.%6N", TIME_S ".000789", usec);
+    assert_hr_format_usec("%H:%M:%S.%6N %S", TIME_S ".000789 " SECOND_S, usec);
+    assert_hr_format_usec("%H:%M:%S.%5N", TIME_S ".00078", usec);
+    assert_hr_format_usec("%H:%M:%S.%4N", TIME_S ".0007", usec);
+    assert_hr_format_usec("%H:%M:%S.%3N", TIME_S ".000", usec);
+    assert_hr_format_usec("%H:%M:%S.%2N", TIME_S ".00", usec);
+    assert_hr_format_usec("%H:%M:%S.%1N", TIME_S ".0", usec);
+    assert_hr_format_usec("%H:%M:%S.%0N", TIME_S ".", usec);
+    assert_hr_format_usec("%H:%M:%S.%N", TIME_S ".", usec);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,
