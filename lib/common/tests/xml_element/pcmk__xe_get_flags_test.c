@@ -17,29 +17,28 @@
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
 
+#define ATTR_NAME "attribute"
 #define DEFAULT_VALUE 0xfff
 
-static void
-assert_flags(const char *value, int expected_rc, unsigned int expected_flags)
-{
-    int rc = pcmk_rc_ok;
-    uint32_t flags = 0U;
-    xmlNode *xml = pcmk__xe_create(NULL, "element");
-
-    assert_non_null(xml);
-    pcmk__xe_set(xml, "attribute", value);
-
-    // Without output argument
-    assert_int_equal(pcmk__xe_get_flags(xml, "attribute", NULL, DEFAULT_VALUE),
-                     expected_rc);
-
-    // With output argument
-    rc = pcmk__xe_get_flags(xml, "attribute", &flags, DEFAULT_VALUE);
-    assert_int_equal(rc, expected_rc);
-    assert_true(flags == expected_flags);
-
-    pcmk__xml_free(xml);
-}
+#define assert_flags(value, expected_rc, expected_flags)                \
+    do {                                                                \
+        int rc = pcmk_rc_ok;                                            \
+        uint32_t flags = 0;                                             \
+        xmlNode *xml = pcmk__xe_create(NULL, "element");                \
+                                                                        \
+        pcmk__xe_set(xml, ATTR_NAME, value);                            \
+                                                                        \
+        /* Without output argument */                                   \
+        rc = pcmk__xe_get_flags(xml, ATTR_NAME, NULL, DEFAULT_VALUE);   \
+        assert_int_equal(rc, expected_rc);                              \
+                                                                        \
+        /* With output argument */                                      \
+        rc = pcmk__xe_get_flags(xml, ATTR_NAME, &flags, DEFAULT_VALUE); \
+        assert_int_equal(rc, expected_rc);                              \
+        assert_true(flags == expected_flags);                           \
+                                                                        \
+        pcmk__xml_free(xml);                                            \
+    } while (0)
 
 static void
 null_name_invalid(void **state)
@@ -74,10 +73,10 @@ null_xml_default(void **state)
     int rc = pcmk_rc_ok;
     uint32_t flags = 0U;
 
-    assert_int_equal(pcmk__xe_get_flags(NULL, "attribute", NULL, DEFAULT_VALUE),
+    assert_int_equal(pcmk__xe_get_flags(NULL, ATTR_NAME, NULL, DEFAULT_VALUE),
                      pcmk_rc_ok);
 
-    rc = pcmk__xe_get_flags(NULL, "attribute", &flags, DEFAULT_VALUE);
+    rc = pcmk__xe_get_flags(NULL, ATTR_NAME, &flags, DEFAULT_VALUE);
     assert_int_equal(rc, pcmk_rc_ok);
     assert_true(flags == DEFAULT_VALUE);
 }

@@ -18,19 +18,19 @@
 
 static int default_score = 99;
 
-static void
-assert_score(const char *score_s, int expected_rc, int expected_score)
-{
-    int score = 0;
-    int rc = pcmk_rc_ok;
-    xmlNode *xml = pcmk__xe_create(NULL, __func__);
-
-    pcmk__xe_set(xml, ATTR_NAME, score_s);
-    rc = pcmk__xe_get_score(xml, ATTR_NAME, &score, default_score);
-    assert_int_equal(rc, expected_rc);
-    assert_int_equal(score, expected_score);
-    pcmk__xml_free(xml);
-}
+#define assert_score(score_s, expected_rc, expected_score)              \
+    do {                                                                \
+        int rc = pcmk_rc_ok;                                            \
+        int score = 0;                                                  \
+        xmlNode *xml = pcmk__xe_create(NULL, __func__);                 \
+                                                                        \
+        pcmk__xe_set(xml, ATTR_NAME, score_s);                          \
+                                                                        \
+        rc = pcmk__xe_get_score(xml, ATTR_NAME, &score, default_score); \
+        assert_int_equal(rc, expected_rc);                              \
+        assert_int_equal(score, expected_score);                        \
+        pcmk__xml_free(xml);                                            \
+    } while (0)
 
 static void
 invalid_args(void **state)

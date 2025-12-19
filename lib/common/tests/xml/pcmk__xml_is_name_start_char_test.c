@@ -21,35 +21,33 @@
  * \internal
  * \brief Assert that a Unicode character is a valid XML \c NameStartChar
  *
- * \param[in] code_pt  Unicode code point of character to check
+ * \param[in] code_pt  Unicode code point of character to check (\c int)
  */
-static void
-assert_name_start_char(int code_pt)
-{
-    gchar utf8_buf[6] = { 0, };
-    int len = 4;
-    int ref_len = g_unichar_to_utf8(code_pt, utf8_buf);
-
-    assert_true(pcmk__xml_is_name_start_char(utf8_buf, &len));
-    assert_int_equal(len, ref_len);
-}
+#define assert_name_start_char(code_pt)                             \
+    do {                                                            \
+        gchar utf8_buf[6] = { 0, };                                 \
+        int len = 4;                                                \
+        int ref_len = g_unichar_to_utf8(code_pt, utf8_buf);         \
+                                                                    \
+        assert_true(pcmk__xml_is_name_start_char(utf8_buf, &len));  \
+        assert_int_equal(len, ref_len);                             \
+    } while (0)
 
 /*!
  * \internal
  * \brief Assert that a Unicode character is not a valid XML \c NameStartChar
  *
- * \param[in] code_pt  Unicode code point of character to check
+ * \param[in] code_pt  Unicode code point of character to check (\c int)
  */
-static void
-assert_not_name_start_char(int code_pt)
-{
-    gchar utf8_buf[6] = { 0, };
-    int len = 4;
-    int ref_len = g_unichar_to_utf8(code_pt, utf8_buf);
-
-    assert_false(pcmk__xml_is_name_start_char(utf8_buf, &len));
-    assert_int_equal(len, ref_len);
-}
+#define assert_not_name_start_char(code_pt)                         \
+    do {                                                            \
+        gchar utf8_buf[6] = { 0, };                                 \
+        int len = 4;                                                \
+        int ref_len = g_unichar_to_utf8(code_pt, utf8_buf);         \
+                                                                    \
+        assert_false(pcmk__xml_is_name_start_char(utf8_buf, &len)); \
+        assert_int_equal(len, ref_len);                             \
+    } while (0)
 
 static void
 null_len(void **state)

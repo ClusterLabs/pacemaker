@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,15 +13,13 @@
 
 #include "crmcommon_private.h"
 
-static void
-assert_escape(const char *str, const char *reference,
-              enum pcmk__xml_escape_type type)
-{
-    gchar *buf = pcmk__xml_escape(str, type);
-
-    assert_string_equal(buf, reference);
-    g_free(buf);
-}
+#define assert_escape(str, reference, type)         \
+    do {                                            \
+        gchar *buf = pcmk__xml_escape(str, type);   \
+                                                    \
+        assert_string_equal(buf, reference);        \
+        g_free(buf);                                \
+    } while (0)
 
 static void
 null_empty(void **state)

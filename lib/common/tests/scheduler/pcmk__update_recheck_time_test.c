@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,18 +15,17 @@
 #include <crm/common/scheduler.h>
 #include <crm/common/unittest_internal.h>
 
-static void
-assert_recheck(time_t now_time, time_t orig_time, time_t update_time,
-               time_t expected_time, const char *reason)
-{
-    pcmk_scheduler_t *scheduler = pcmk_new_scheduler();
-
-    scheduler->priv->now = pcmk__copy_timet(now_time);
-    scheduler->priv->recheck_by = orig_time;
-    pcmk__update_recheck_time(update_time, scheduler, reason);
-    assert_int_equal(scheduler->priv->recheck_by, expected_time);
-    pcmk_free_scheduler(scheduler);
-}
+#define assert_recheck(now_time, orig_time, update_time, expected_time, \
+                       reason)                                          \
+    do {                                                                \
+        pcmk_scheduler_t *scheduler = pcmk_new_scheduler();             \
+                                                                        \
+        scheduler->priv->now = pcmk__copy_timet(now_time);              \
+        scheduler->priv->recheck_by = orig_time;                        \
+        pcmk__update_recheck_time(update_time, scheduler, reason);      \
+        assert_int_equal(scheduler->priv->recheck_by, expected_time);   \
+        pcmk_free_scheduler(scheduler);                                 \
+    } while (0)
 
 // A NULL scheduler argument is invalid and should assert
 static void

@@ -19,27 +19,30 @@
 
 /*!
  * \internal
- * \brief Update an XML attribute value and check it against a reference value
+ * \brief Update an XML attribute value and check it against the expected value
  *
  * The attribute name is hard-coded as \c ATTR_NAME.
  *
- * \param[in] initial        Initial value
- * \param[in] new            Value to set
- * \param[in] reference_val  Expected attribute value after update
- * \param[in] reference_rc   Expected return code from \c pcmk__xe_set_score()
+ * \param[in] initial         Initial value (<tt>const char *</tt>)
+ * \param[in] new             Value to set (<tt>const char *</tt>)
+ * \param[in] expected_value  Expected attribute value after update
+ *                            (<tt>const char *</tt>)
+ * \param[in] expected_rc     Expected return code from \c pcmk__xe_set_score()
+ *                            (\c int)
  */
-static void
-assert_set_score(const char *initial, const char *new,
-                 const char *reference_val, int reference_rc)
-{
-    xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
-
-    pcmk__xe_set(test_xml, ATTR_NAME, initial);
-    assert_int_equal(pcmk__xe_set_score(test_xml, ATTR_NAME, new), reference_rc);
-    assert_string_equal(pcmk__xe_get(test_xml, ATTR_NAME), reference_val);
-
-    pcmk__xml_free(test_xml);
-}
+#define assert_set_score(initial, new, expected_value, expected_rc)         \
+    do {                                                                    \
+        xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");              \
+                                                                            \
+        pcmk__xe_set(test_xml, ATTR_NAME, initial);                         \
+                                                                            \
+        assert_int_equal(pcmk__xe_set_score(test_xml, ATTR_NAME, new),      \
+                         expected_rc);                                      \
+        assert_string_equal(pcmk__xe_get(test_xml, ATTR_NAME),              \
+                            expected_value);                                \
+                                                                            \
+        pcmk__xml_free(test_xml);                                           \
+    } while (0)
 
 static void
 new_value_name_plus_plus(void **state)

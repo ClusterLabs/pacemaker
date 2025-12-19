@@ -17,75 +17,72 @@
  * \internal
  * \brief Check \c pcmk__parse_bool() succeeds and parses the input to true
  *
- * \param[in] input  Input string
+ * \param[in] input  Input string (<tt>const char *</tt>)
  */
-static void
-assert_parse_bool_true(const char *input)
-{
-    bool result = false;
-
-    // Ensure we still validate the string with a NULL result argument
-    assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);
-
-    assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
-    assert_true(result);
-
-    // Repeat with result initially set to true
-    result = true;
-
-    assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
-    assert_true(result);
-}
+#define assert_parse_bool_true(input)                                       \
+    do {                                                                    \
+        bool result = false;                                                \
+                                                                            \
+        /* Test with NULL result argument (for validation only) */          \
+        assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);        \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_true(result);                                                \
+                                                                            \
+        /* Repeat with result initially set to true */                      \
+        result = true;                                                      \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_true(result);                                                \
+    } while (0)
 
 /*!
  * \internal
  * \brief Check \c pcmk__parse_bool() succeeds and parses the input to false
  *
- * \param[in] input  Input string
+ * \param[in] input  Input string (<tt>const char *</tt>)
  */
-static void
-assert_parse_bool_false(const char *input)
-{
-    bool result = false;
-
-    // Ensure we still validate the string with a NULL result argument
-    assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);
-
-    assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
-    assert_false(result);
-
-    // Repeat with result initially set to true
-    result = true;
-
-    assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
-    assert_false(result);
-}
+#define assert_parse_bool_false(input)                                      \
+    do {                                                                    \
+        bool result = false;                                                \
+                                                                            \
+        /* Test with NULL result argument (for validation only) */          \
+        assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);        \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_false(result);                                               \
+                                                                            \
+        /* Repeat with result initially set to true */                      \
+        result = true;                                                      \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_false(result);                                               \
+    } while (0)
 
 /*!
  * \internal
  * \brief Check that \c pcmk__parse_bool() fails and returns the expected value
  *
- * \param[in] input        Input string
- * \param[in] expected_rc  Expected return code
+ * \param[in] input        Input string (<tt>const char *</tt>)
+ * \param[in] expected_rc  Expected return code (\c int)
  */
-static void
-assert_parse_bool_failure(const char *input, int expected_rc)
-{
-    bool result = false;
-
-    // Ensure we still validate the string with a NULL result argument
-    assert_int_equal(pcmk__parse_bool(input, NULL), expected_rc);
-
-    // Make sure the value of result does not change on failure
-    assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);
-    assert_false(result);
-
-    // Repeat with result initially set to true
-    result = true;
-
-    assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);
-    assert_true(result);
-}
+#define assert_parse_bool_failure(input, expected_rc)                       \
+    do {                                                                    \
+        bool result = false;                                                \
+                                                                            \
+        /* Test with NULL result argument (for validation only) */          \
+        assert_int_equal(pcmk__parse_bool(input, NULL), expected_rc);       \
+                                                                            \
+        /* Make sure the value of result does not change on failure */      \
+        assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);    \
+        assert_false(result);                                               \
+                                                                            \
+        /* Repeat with result initially set to true */                      \
+        result = true;                                                      \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);    \
+        assert_true(result);                                                \
+    } while (0)
 
 static void
 bad_input(void **state)

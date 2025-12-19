@@ -16,22 +16,20 @@
 
 #include <crm/common/iso8601.h>
 
-static void
-assert_add_years(const char *orig_date_time, int years,
-                 const char *expected_date_time)
-{
-    crm_time_t *orig = crm_time_new(orig_date_time);
-    crm_time_t *expected = crm_time_new(expected_date_time);
-
-    assert_non_null(orig);
-    assert_non_null(expected);
-
-    crm_time_add_years(orig, years);
-    assert_int_equal(crm_time_compare(orig, expected), 0);
-
-    crm_time_free(orig);
-    crm_time_free(expected);
-}
+#define assert_add_years(orig_date_time, years, expected_date_time) \
+    do {                                                            \
+        crm_time_t *orig = crm_time_new(orig_date_time);            \
+        crm_time_t *expected = crm_time_new(expected_date_time);    \
+                                                                    \
+        assert_non_null(orig);                                      \
+        assert_non_null(expected);                                  \
+                                                                    \
+        crm_time_add_years(orig, years);                            \
+        assert_int_equal(crm_time_compare(orig, expected), 0);      \
+                                                                    \
+        crm_time_free(orig);                                        \
+        crm_time_free(expected);                                    \
+    } while (0)
 
 static void
 invalid_argument(void **state)

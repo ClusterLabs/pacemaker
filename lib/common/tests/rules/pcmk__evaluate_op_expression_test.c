@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,20 +28,19 @@ static pcmk_rule_input_t rule_input = {
 
 /*!
  * \internal
- * \brief Run one test, comparing return value
+ * \brief Run one test, checking return value
  *
- * \param[in] xml_string    Operation expression XML as string
- * \param[in] reference_rc  Assert that evaluation result equals this
+ * \param[in] xml_string   Operation expression XML (<tt>const char *</tt>)
+ * \param[in] expected_rc  Assert that evaluation result equals this (\c int)
  */
-static void
-assert_op_expression(const char *xml_string, int reference_rc)
-{
-    xmlNode *xml = pcmk__xml_parse(xml_string);
-
-    assert_int_equal(pcmk__evaluate_op_expression(xml, &rule_input),
-                     reference_rc);
-    pcmk__xml_free(xml);
-}
+#define assert_op_expression(xml_string, expected_rc)                       \
+    do {                                                                    \
+        xmlNode *xml = pcmk__xml_parse(xml_string);                         \
+                                                                            \
+        assert_int_equal(pcmk__evaluate_op_expression(xml, &rule_input),    \
+                         expected_rc);                                      \
+        pcmk__xml_free(xml);                                                \
+    } while (0)
 
 
 /*

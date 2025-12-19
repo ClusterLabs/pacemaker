@@ -14,14 +14,13 @@
 //! Magic initial value to test whether a "result" output variable has changed
 static const long long magic = -12345678;
 
-static void
-assert_parse_ms(const char *input, int expected_rc, long long expected_result)
-{
-    long long result = magic;
-
-    assert_int_equal(pcmk__parse_ms(input, &result), expected_rc);
-    assert_int_equal(result, expected_result);
-}
+#define assert_parse_ms(input, expected_rc, expected_result)            \
+    do {                                                                \
+        long long result = magic;                                       \
+                                                                        \
+        assert_int_equal(pcmk__parse_ms(input, &result), expected_rc);  \
+        assert_int_equal(result, expected_result);                      \
+    } while (0)
 
 static void
 bad_input(void **state)

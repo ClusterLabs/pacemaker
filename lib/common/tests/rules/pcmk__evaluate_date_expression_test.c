@@ -21,49 +21,48 @@
  * \internal
  * \brief Run one test, checking return value
  *
- * \param[in] xml          Date expression XML
+ * \param[in] xml          Date expression XML (<tt>const xmlNode *</tt>)
  * \param[in] now_s        Time to evaluate expression with
- * \param[in] expected_rc  Assert that evaluation result equals this
+ *                         (<tt>const char *</tt>)
+ * \param[in] expected_rc  Assert that evaluation result equals this (\c int)
  */
-static void
-assert_date_expr(const xmlNode *xml, const char *now_s, int expected_rc)
-{
-    crm_time_t *now = crm_time_new(now_s);
-
-    assert_int_equal(pcmk__evaluate_date_expression(xml, now, NULL),
-                     expected_rc);
-    crm_time_free(now);
-}
+#define assert_date_expr(xml, now_s, expected_rc)                           \
+    do {                                                                    \
+        crm_time_t *now = crm_time_new(now_s);                              \
+        int rc = pcmk__evaluate_date_expression(xml, now, NULL);            \
+                                                                            \
+        assert_int_equal(rc, expected_rc);                                  \
+        crm_time_free(now);                                                 \
+    } while (0)
 
 /*!
  * \internal
  * \brief Run one test, checking return value and output argument
  *
- * \param[in] xml            Date expression XML
+ * \param[in] xml            Date expression XML (<tt>const xmlNode *</tt>)
  * \param[in] now_s          Time to evaluate expression with
+ *                           (<tt>const char *</tt>)
  * \param[in] next_change_s  Initialize next change time with this time
+ *                           (<tt>const char *</tt>)
  * \param[in] expected_s     Time that next change should be after expression
- *                           evaluation
- * \param[in] expected_rc    Assert that evaluation result equals this
+ *                           evaluation (<tt>const char *</tt>)
+ * \param[in] expected_rc    Assert that evaluation result equals this (\c int)
  */
-static void
-assert_date_expr_change(const xmlNode *xml, const char *now_s,
-                        const char *next_change_s, const char *expected_s,
-                        int expected_rc)
-{
-    crm_time_t *now = crm_time_new(now_s);
-    crm_time_t *next_change = crm_time_new(next_change_s);
-    crm_time_t *expected = crm_time_new(expected_s);
-
-    assert_int_equal(pcmk__evaluate_date_expression(xml, now, next_change),
-                     expected_rc);
-
-    assert_int_equal(crm_time_compare(next_change, expected), 0);
-
-    crm_time_free(now);
-    crm_time_free(next_change);
-    crm_time_free(expected);
-}
+#define assert_date_expr_change(xml, now_s, next_change_s, expected_s,  \
+                                expected_rc)                            \
+    do {                                                                \
+        crm_time_t *now = crm_time_new(now_s);                          \
+        crm_time_t *next_change = crm_time_new(next_change_s);          \
+        crm_time_t *expected = crm_time_new(expected_s);                \
+        int rc = pcmk__evaluate_date_expression(xml, now, next_change); \
+                                                                        \
+        assert_int_equal(rc, expected_rc);                              \
+        assert_int_equal(crm_time_compare(next_change, expected), 0);   \
+                                                                        \
+        crm_time_free(now);                                             \
+        crm_time_free(next_change);                                     \
+        crm_time_free(expected);                                        \
+    } while (0)
 
 #define EXPR_LT_VALID                                   \
     "<" PCMK_XE_DATE_EXPRESSION " " PCMK_XA_ID "='e' "  \
