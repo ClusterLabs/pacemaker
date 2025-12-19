@@ -20,6 +20,7 @@
 
 static bool fake_text_init_succeeds = true;
 static bool testing_output_free = false;
+static bool testing_output_and_clear_error = false;
 
 void
 pcmk__assert_validates(xmlNode *xml)
@@ -192,6 +193,15 @@ fake_text_free_priv(pcmk__output_t *out)
     }
 }
 
+G_GNUC_PRINTF(2, 3)
+static void
+fake_text_err(pcmk__output_t *out, const char *format, ...)
+{
+    if (testing_output_and_clear_error) {
+        function_called();
+    }
+}
+
 pcmk__output_t *
 pcmk__mk_fake_text_output(char **argv)
 {
@@ -209,6 +219,8 @@ pcmk__mk_fake_text_output(char **argv)
     retval->register_message = pcmk__register_message;
     retval->message = pcmk__call_message;
 
+    retval->err = fake_text_err;
+
     return retval;
 }
 
@@ -225,9 +237,21 @@ pcmk__set_testing_output_free(bool value)
 }
 
 void
+pcmk__set_testing_output_and_clear_error(bool value)
+{
+    testing_output_and_clear_error = value;
+}
+
+void
 pcmk__expect_fake_text_free_priv(void)
 {
     expect_function_call(fake_text_free_priv);
+}
+
+void
+pcmk__expect_fake_text_err(void)
+{
+    expect_function_call(fake_text_err);
 }
 
 // LCOV_EXCL_STOP
