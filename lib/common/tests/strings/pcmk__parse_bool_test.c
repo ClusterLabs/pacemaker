@@ -15,13 +15,12 @@
 
 /*!
  * \internal
- * \brief Check \c pcmk__parse_bool() succeeds and parses the input as expected
+ * \brief Check \c pcmk__parse_bool() succeeds and parses the input to true
  *
- * \param[in] input            Input string
- * \param[in] expected_result  Expected parsed value
+ * \param[in] input  Input string
  */
 static void
-assert_parse_bool(const char *input, bool expected_result)
+assert_parse_bool_true(const char *input)
 {
     bool result = false;
 
@@ -29,23 +28,37 @@ assert_parse_bool(const char *input, bool expected_result)
     assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);
 
     assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
-
-    if (expected_result) {
-        assert_true(result);
-    } else {
-        assert_false(result);
-    }
+    assert_true(result);
 
     // Repeat with result initially set to true
     result = true;
 
     assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
+    assert_true(result);
+}
 
-    if (expected_result) {
-        assert_true(result);
-    } else {
-        assert_false(result);
-    }
+/*!
+ * \internal
+ * \brief Check \c pcmk__parse_bool() succeeds and parses the input to false
+ *
+ * \param[in] input  Input string
+ */
+static void
+assert_parse_bool_false(const char *input)
+{
+    bool result = false;
+
+    // Ensure we still validate the string with a NULL result argument
+    assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);
+
+    assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
+    assert_false(result);
+
+    // Repeat with result initially set to true
+    result = true;
+
+    assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);
+    assert_false(result);
 }
 
 /*!
@@ -87,15 +100,15 @@ bad_input(void **state)
 static void
 is_true(void **state)
 {
-    assert_parse_bool("true", true);
-    assert_parse_bool("TrUe", true);
-    assert_parse_bool("on", true);
-    assert_parse_bool("ON", true);
-    assert_parse_bool("yes", true);
-    assert_parse_bool("yES", true);
-    assert_parse_bool("y", true);
-    assert_parse_bool("Y", true);
-    assert_parse_bool("1", true);
+    assert_parse_bool_true("true");
+    assert_parse_bool_true("TrUe");
+    assert_parse_bool_true("on");
+    assert_parse_bool_true("ON");
+    assert_parse_bool_true("yes");
+    assert_parse_bool_true("yES");
+    assert_parse_bool_true("y");
+    assert_parse_bool_true("Y");
+    assert_parse_bool_true("1");
 }
 
 static void
@@ -111,15 +124,15 @@ is_not_true(void **state)
 static void
 is_false(void **state)
 {
-    assert_parse_bool("false", false);
-    assert_parse_bool("fAlSe", false);
-    assert_parse_bool("off", false);
-    assert_parse_bool("OFF", false);
-    assert_parse_bool("no", false);
-    assert_parse_bool("No", false);
-    assert_parse_bool("n", false);
-    assert_parse_bool("N", false);
-    assert_parse_bool("0", false);
+    assert_parse_bool_false("false");
+    assert_parse_bool_false("fAlSe");
+    assert_parse_bool_false("off");
+    assert_parse_bool_false("OFF");
+    assert_parse_bool_false("no");
+    assert_parse_bool_false("No");
+    assert_parse_bool_false("n");
+    assert_parse_bool_false("N");
+    assert_parse_bool_false("0");
 }
 
 static void
