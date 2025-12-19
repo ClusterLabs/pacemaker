@@ -41,18 +41,13 @@ static void
 assert_hr_format(const char *format, const char *expected,
                  const char *alternate)
 {
-    crm_time_t *dt = crm_time_new(DATE_TIME_S);
+    crm_time_t *dt = NULL;
     char *result = NULL;
 
+    dt = crm_time_new(DATE_TIME_S);
     assert_non_null(dt);
 
     result = pcmk__time_format_hr(format, dt, 0);
-
-    if (expected == NULL) {
-        assert_null(result);
-        return;
-    }
-
     assert_non_null(result);
 
     if (alternate == NULL) {
@@ -94,10 +89,20 @@ assert_hr_format_usec(const char *format, const char *expected, int usec)
 static void
 null_format(void **state)
 {
+    crm_time_t *dt = NULL;
+    char *result = NULL;
+
+    // NULL format and NULL crm_time_t
     assert_null(pcmk__time_format_hr(NULL, NULL, 0));
 
-    // For pcmk__time_format_hr(NULL, dt, 0)
-    assert_hr_format(NULL, NULL, NULL);
+    // NULL format and non-NULL crm_time_t
+    dt = crm_time_new(DATE_TIME_S);
+    assert_non_null(dt);
+
+    result = pcmk__time_format_hr(NULL, dt, 0);
+    assert_null(result);
+
+    free(dt);
 }
 
 static void
