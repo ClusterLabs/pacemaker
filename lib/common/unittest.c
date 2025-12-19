@@ -224,6 +224,20 @@ pcmk__mk_fake_text_output(char **argv)
     return retval;
 }
 
+int
+pcmk__output_test_setup_group(void **state)
+{
+    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
+    return 0;
+}
+
+int
+pcmk__output_test_teardown_group(void **state)
+{
+    pcmk__unregister_formats();
+    return 0;
+}
+
 void
 pcmk__set_fake_text_init_succeeds(bool value)
 {
