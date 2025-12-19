@@ -552,7 +552,7 @@ void pcmk__output_free(pcmk__output_t *out);
  * \return Standard Pacemaker return code
  */
 int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
-                     const char *filename, char **argv);
+                     const char *filename, const char *const *argv);
 
 /*!
  * \internal
