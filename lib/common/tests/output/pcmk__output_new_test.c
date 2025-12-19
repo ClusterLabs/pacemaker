@@ -15,20 +15,6 @@
 
 #include "mock_private.h"
 
-static int
-setup(void **state)
-{
-    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
-    return 0;
-}
-
-static int
-teardown(void **state)
-{
-    pcmk__unregister_formats();
-    return 0;
-}
-
 static void
 empty_formatters(void **state)
 {
@@ -131,7 +117,7 @@ no_fmt_name_given(void **state)
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(setup, teardown,
+PCMK__UNIT_TEST(pcmk__output_test_setup_group, pcmk__output_test_teardown_group,
                 cmocka_unit_test(empty_formatters),
                 cmocka_unit_test(invalid_params),
                 cmocka_unit_test(no_such_format),

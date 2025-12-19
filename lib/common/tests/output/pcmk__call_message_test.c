@@ -41,20 +41,6 @@ message_fn_2(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-static int
-setup(void **state)
-{
-    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
-    return 0;
-}
-
-static int
-teardown(void **state)
-{
-    pcmk__unregister_formats();
-    return 0;
-}
-
 static void
 no_such_message(void **state)
 {
@@ -132,7 +118,7 @@ default_called(void **state)
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(setup, teardown,
+PCMK__UNIT_TEST(pcmk__output_test_setup_group, pcmk__output_test_teardown_group,
                 cmocka_unit_test(no_such_message),
                 cmocka_unit_test(message_return_value),
                 cmocka_unit_test(wrong_format),

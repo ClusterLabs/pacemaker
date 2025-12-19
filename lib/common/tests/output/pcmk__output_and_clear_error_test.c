@@ -19,14 +19,14 @@ static int
 setup(void **state)
 {
     pcmk__set_testing_output_and_clear_error(true);
-    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
+    pcmk__output_test_setup_group(state);
     return 0;
 }
 
 static int
 teardown(void **state)
 {
-    pcmk__unregister_formats();
+    pcmk__output_test_teardown_group(state);
     pcmk__set_testing_output_and_clear_error(false);
     return 0;
 }
