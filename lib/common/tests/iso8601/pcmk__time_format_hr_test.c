@@ -27,19 +27,13 @@
 
 /*!
  * \internal
- * \brief Assert that pcmk__time_format_hr() produced expected result
+ * \brief Check that \c pcmk__time_format_hr() produced expected result
  *
- * \param[in] format     Time format string
- * \param[in] expected   Assertion succeeds if result matches this
- * \param[in] alternate  If this is not NULL, assertion may also succeed if
- *                       result matches this
- *
- * \note This allows two possible results because different strftime()
- *       implementations handle certain format syntax differently.
+ * \param[in] format    Time format string
+ * \param[in] expected  Check succeeds if result matches this
  */
 static void
-assert_hr_format(const char *format, const char *expected,
-                 const char *alternate)
+assert_hr_format(const char *format, const char *expected)
 {
     crm_time_t *dt = NULL;
     char *result = NULL;
@@ -50,12 +44,39 @@ assert_hr_format(const char *format, const char *expected,
     result = pcmk__time_format_hr(format, dt, 0);
     assert_non_null(result);
 
-    if (alternate == NULL) {
-        assert_string_equal(result, expected);
-    } else {
-        assert_true((strcmp(result, expected) == 0)
-                    || (strcmp(result, alternate) == 0));
-    }
+    assert_string_equal(result, expected);
+
+    crm_time_free(dt);
+    free(result);
+}
+
+/*!
+ * \internal
+ * \brief Check that \c pcmk__time_format_hr() produced expected result (or alt)
+ *
+ * \param[in] format     Time format string
+ * \param[in] expected   Check succeeds if result matches this
+ * \param[in] alternate  Check also succeeds if result matches this
+ *
+ * \note This allows two possible results because different \c strftime()
+ *       implementations handle certain format syntax differently.
+ */
+static void
+assert_hr_format_alt(const char *format, const char *expected,
+                     const char *alternate)
+{
+    crm_time_t *dt = NULL;
+    char *result = NULL;
+
+    dt = crm_time_new(DATE_TIME_S);
+    assert_non_null(dt);
+
+    result = pcmk__time_format_hr(format, dt, 0);
+    assert_non_null(result);
+
+    // CMocka has no abstraction for comparing to multiple strings
+    assert_true((strcmp(result, expected) == 0)
+                || (strcmp(result, alternate) == 0));
 
     crm_time_free(dt);
     free(result);
@@ -108,52 +129,52 @@ null_format(void **state)
 static void
 no_specifiers(void **state)
 {
-    assert_hr_format("no specifiers", "no specifiers", NULL);
+    assert_hr_format("no specifiers", "no specifiers");
 
     /* @COMPAT The following four tests will fail when we remove the fallback
      * to strftime(). g_date_time_format() requires a literal '%' to be escaped
      * as "%%".
      */
-    assert_hr_format("this has a literal % in it",
-                     "this has a literal % in it",
-                     // *BSD strftime() strips single %
-                     "this has a literal  in it");
-    assert_hr_format("this has a literal %01 in it",
-                     "this has a literal %01 in it",
-                     // *BSD strftime() strips %0
-                     "this has a literal 1 in it");
-    assert_hr_format("%2 this starts and ends with %",
-                     "%2 this starts and ends with %",
-                     // *BSD strftime() strips % in front of nonzero number
-                     "2 this starts and ends with %");
+    assert_hr_format_alt("this has a literal % in it",
+                         "this has a literal % in it",
+                         // *BSD strftime() strips single %
+                         "this has a literal  in it");
+    assert_hr_format_alt("this has a literal %01 in it",
+                         "this has a literal %01 in it",
+                         // *BSD strftime() strips %0
+                         "this has a literal 1 in it");
+    assert_hr_format_alt("%2 this starts and ends with %",
+                         "%2 this starts and ends with %",
+                         // *BSD strftime() strips % in front of nonzero number
+                         "2 this starts and ends with %");
 
     /* strftime() treats % with a number (and no specifier) as a literal string
      * to be formatted with a field width (undocumented and probably a bug ...)
      */
-    assert_hr_format("this ends with %10", "this ends with        %10",
-                     // *BSD strftime() strips % in front of nonzero number
-                     "this ends with 10");
+    assert_hr_format_alt("this ends with %10", "this ends with        %10",
+                         // *BSD strftime() strips % in front of nonzero number
+                         "this ends with 10");
 }
 
 static void
 without_frac(void **state)
 {
-    assert_hr_format("%Y-%m-%d %H:%M:%S", DATE_S " " TIME_S, NULL);
+    assert_hr_format("%Y-%m-%d %H:%M:%S", DATE_S " " TIME_S);
 
-    assert_hr_format("%H:%M %a %b %d", HOUR_S ":" MINUTE_S " Sun Jun 02", NULL);
-    assert_hr_format("%H:%M:%S", TIME_S, NULL);
+    assert_hr_format("%H:%M %a %b %d", HOUR_S ":" MINUTE_S " Sun Jun 02");
+    assert_hr_format("%H:%M:%S", TIME_S);
     assert_hr_format("The time is %H:%M right now",
-                     "The time is " HOUR_S ":" MINUTE_S " right now", NULL);
+                     "The time is " HOUR_S ":" MINUTE_S " right now");
 
     /* @COMPAT This test will fail when we remove the fallback to strftime().
      * g_date_time_format() doesn't support field widths.
      *
      * BSD strftime() also doesn't support field widths, hence the alternate.
      */
-    assert_hr_format("%3S seconds", "0" SECOND_S " seconds", "3S seconds");
+    assert_hr_format_alt("%3S seconds", "0" SECOND_S " seconds", "3S seconds");
 
     // strftime() treats %% as a literal %
-    assert_hr_format("%%H %%N", "%H %N", NULL);
+    assert_hr_format("%%H %%N", "%H %N");
 }
 
 static void
@@ -162,15 +183,14 @@ with_frac(void **state)
     int usec = 123456;
 
     // Display time with no fractional seconds component
-    assert_hr_format("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".000000",
-                     NULL);
-    assert_hr_format("%H:%M:%S.%6N", TIME_S ".000000", NULL);
-    assert_hr_format("%H:%M:%S.%6N %H", TIME_S ".000000 " HOUR_S, NULL);
-    assert_hr_format("%H:%M:%S.%3N", TIME_S ".000", NULL);
-    assert_hr_format("%H:%M:%S.%0N", TIME_S ".", NULL);
-    assert_hr_format("%H:%M:%S.%N", TIME_S ".", NULL);
+    assert_hr_format("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".000000");
+    assert_hr_format("%H:%M:%S.%6N", TIME_S ".000000");
+    assert_hr_format("%H:%M:%S.%6N %H", TIME_S ".000000 " HOUR_S);
+    assert_hr_format("%H:%M:%S.%3N", TIME_S ".000");
+    assert_hr_format("%H:%M:%S.%0N", TIME_S ".");
+    assert_hr_format("%H:%M:%S.%N", TIME_S ".");
     assert_hr_format("The time is %H:%M:%S.%06N right NOW",
-                     "The time is " TIME_S ".000000 right NOW", NULL);
+                     "The time is " TIME_S ".000000 right NOW");
 
     // Display at appropriate resolution by truncating toward zero
     assert_hr_format_usec("%Y-%m-%d %H:%M:%S.%6N", DATE_S " " TIME_S ".123456",
