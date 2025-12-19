@@ -63,6 +63,7 @@ assert_hr_format(const char *format, const char *expected,
                     || (strcmp(result, alternate) == 0));
     }
 
+    crm_time_free(dt);
     free(result);
 }
 
