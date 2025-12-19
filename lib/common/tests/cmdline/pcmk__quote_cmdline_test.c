@@ -21,7 +21,7 @@ static void
 assert_quote_cmdline(const char **argv, const gchar *expected_single,
                      const gchar *expected_double)
 {
-    gchar *processed = pcmk__quote_cmdline((gchar **) argv);
+    gchar *processed = pcmk__quote_cmdline((const char *const *) argv);
 
     assert_true(pcmk__str_any_of(processed, expected_single, expected_double,
                                  NULL));
