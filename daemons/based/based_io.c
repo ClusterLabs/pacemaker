@@ -38,7 +38,111 @@
 
 static crm_trigger_t *write_trigger = NULL;
 
-int write_cib_contents(gpointer p);
+static void
+cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
+{
+    const char *errmsg = "Could not write CIB to disk";
+
+    if ((exitcode != 0) && cib_writes_enabled) {
+        cib_writes_enabled = FALSE;
+        errmsg = "Disabling CIB disk writes after failure";
+    }
+
+    if ((signo == 0) && (exitcode == 0)) {
+        pcmk__trace("Disk write [%d] succeeded", (int) pid);
+
+    } else if (signo == 0) {
+        pcmk__err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
+
+    } else {
+        pcmk__err("%s: process %d terminated with signal %d (%s)%s",
+                  errmsg, (int) pid, signo, strsignal(signo),
+                  ((core != 0)? " and dumped core" : ""));
+    }
+
+    mainloop_trigger_complete(write_trigger);
+}
+
+static int
+write_cib_contents(gpointer p)
+{
+    int exit_rc = pcmk_ok;
+    xmlNode *cib_local = NULL;
+
+    /* Make a copy of the CIB to write (possibly in a forked child) */
+    if (p) {
+        /* Synchronous write out */
+        cib_local = pcmk__xml_copy(NULL, p);
+
+    } else {
+        int pid = 0;
+        int bb_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
+
+        /* Turn it off before the fork() to avoid:
+         * - 2 processes writing to the same shared mem
+         * - the child needing to disable it
+         *   (which would close it from underneath the parent)
+         * This way, the shared mem files are already closed
+         */
+        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
+
+        pid = fork();
+        if (pid < 0) {
+            pcmk__err("Disabling disk writes after fork failure: %s",
+                      pcmk_rc_str(errno));
+            cib_writes_enabled = FALSE;
+            return FALSE;
+        }
+
+        if (pid) {
+            /* Parent */
+            mainloop_child_add(pid, 0, "disk-writer", NULL, cib_diskwrite_complete);
+            if (bb_state == QB_LOG_STATE_ENABLED) {
+                /* Re-enable now that it it safe */
+                qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
+            }
+
+            return -1;          /* -1 means 'still work to do' */
+        }
+
+        /* Asynchronous write-out after a fork() */
+
+        /* In theory, we can scribble on the_cib here and not affect the parent,
+         * but let's be safe anyway.
+         */
+        cib_local = pcmk__xml_copy(NULL, the_cib);
+    }
+
+    /* Write the CIB */
+    exit_rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
+
+    /* A nonzero exit code will cause further writes to be disabled */
+    pcmk__xml_free(cib_local);
+    if (p == NULL) {
+        crm_exit_t exit_code = CRM_EX_OK;
+
+        switch (exit_rc) {
+            case pcmk_ok:
+                exit_code = CRM_EX_OK;
+                break;
+            case pcmk_err_cib_modified:
+                exit_code = CRM_EX_DIGEST; // Existing CIB doesn't match digest
+                break;
+            case pcmk_err_cib_backup: // Existing CIB couldn't be backed up
+            case pcmk_err_cib_save:   // New CIB couldn't be saved
+                exit_code = CRM_EX_CANTCREAT;
+                break;
+            default:
+                exit_code = CRM_EX_ERROR;
+                break;
+        }
+
+        /* Use _exit() because exit() could affect the parent adversely */
+        pcmk_common_cleanup();
+        _exit(exit_code);
+    }
+    return exit_rc;
+}
 
 /*!
  * \internal
@@ -333,110 +437,4 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
                    "to");
     }
     return -ENODATA;
-}
-
-static void
-cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
-{
-    const char *errmsg = "Could not write CIB to disk";
-
-    if ((exitcode != 0) && cib_writes_enabled) {
-        cib_writes_enabled = FALSE;
-        errmsg = "Disabling CIB disk writes after failure";
-    }
-
-    if ((signo == 0) && (exitcode == 0)) {
-        pcmk__trace("Disk write [%d] succeeded", (int) pid);
-
-    } else if (signo == 0) {
-        pcmk__err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
-
-    } else {
-        pcmk__err("%s: process %d terminated with signal %d (%s)%s",
-                  errmsg, (int) pid, signo, strsignal(signo),
-                  ((core != 0)? " and dumped core" : ""));
-    }
-
-    mainloop_trigger_complete(write_trigger);
-}
-
-int
-write_cib_contents(gpointer p)
-{
-    int exit_rc = pcmk_ok;
-    xmlNode *cib_local = NULL;
-
-    /* Make a copy of the CIB to write (possibly in a forked child) */
-    if (p) {
-        /* Synchronous write out */
-        cib_local = pcmk__xml_copy(NULL, p);
-
-    } else {
-        int pid = 0;
-        int bb_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
-
-        /* Turn it off before the fork() to avoid:
-         * - 2 processes writing to the same shared mem
-         * - the child needing to disable it
-         *   (which would close it from underneath the parent)
-         * This way, the shared mem files are already closed
-         */
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
-
-        pid = fork();
-        if (pid < 0) {
-            pcmk__err("Disabling disk writes after fork failure: %s",
-                      pcmk_rc_str(errno));
-            cib_writes_enabled = FALSE;
-            return FALSE;
-        }
-
-        if (pid) {
-            /* Parent */
-            mainloop_child_add(pid, 0, "disk-writer", NULL, cib_diskwrite_complete);
-            if (bb_state == QB_LOG_STATE_ENABLED) {
-                /* Re-enable now that it it safe */
-                qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
-            }
-
-            return -1;          /* -1 means 'still work to do' */
-        }
-
-        /* Asynchronous write-out after a fork() */
-
-        /* In theory, we can scribble on the_cib here and not affect the parent,
-         * but let's be safe anyway.
-         */
-        cib_local = pcmk__xml_copy(NULL, the_cib);
-    }
-
-    /* Write the CIB */
-    exit_rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
-
-    /* A nonzero exit code will cause further writes to be disabled */
-    pcmk__xml_free(cib_local);
-    if (p == NULL) {
-        crm_exit_t exit_code = CRM_EX_OK;
-
-        switch (exit_rc) {
-            case pcmk_ok:
-                exit_code = CRM_EX_OK;
-                break;
-            case pcmk_err_cib_modified:
-                exit_code = CRM_EX_DIGEST; // Existing CIB doesn't match digest
-                break;
-            case pcmk_err_cib_backup: // Existing CIB couldn't be backed up
-            case pcmk_err_cib_save:   // New CIB couldn't be saved
-                exit_code = CRM_EX_CANTCREAT;
-                break;
-            default:
-                exit_code = CRM_EX_ERROR;
-                break;
-        }
-
-        /* Use _exit() because exit() could affect the parent adversely */
-        pcmk_common_cleanup();
-        _exit(exit_code);
-    }
-    return exit_rc;
 }

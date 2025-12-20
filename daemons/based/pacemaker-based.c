@@ -50,7 +50,6 @@ GHashTable *config_hash = NULL;
 static void cib_init(void);
 void cib_shutdown(int nsig);
 static bool startCib(const char *filename);
-extern int write_cib_contents(gpointer p);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 
