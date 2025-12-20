@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 int pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input,
-                      const crm_time_t *date_time, const char **rule_ids);
+                      const crm_time_t *date_time, const char *const *rule_ids);
 
 /*!
  * \internal
