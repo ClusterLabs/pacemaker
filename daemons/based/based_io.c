@@ -66,7 +66,7 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
 static int
 write_cib_contents(gpointer p)
 {
-    int exit_rc = pcmk_ok;
+    int rc = pcmk_ok;
     xmlNode *cib_local = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
 
@@ -87,7 +87,7 @@ write_cib_contents(gpointer p)
         pcmk__err("Disabling disk writes after fork failure: %s",
                   pcmk_rc_str(errno));
         cib_writes_enabled = FALSE;
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     if (pid) {
@@ -98,7 +98,7 @@ write_cib_contents(gpointer p)
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
         }
 
-        return -1;          /* -1 means 'still work to do' */
+        return G_SOURCE_CONTINUE;
     }
 
     /* Asynchronous write-out after a fork() */
@@ -109,12 +109,12 @@ write_cib_contents(gpointer p)
     cib_local = pcmk__xml_copy(NULL, the_cib);
 
     /* Write the CIB */
-    exit_rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
+    rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
 
     /* A nonzero exit code will cause further writes to be disabled */
     pcmk__xml_free(cib_local);
 
-    switch (exit_rc) {
+    switch (rc) {
         case pcmk_ok:
             exit_code = CRM_EX_OK;
             break;
@@ -133,8 +133,6 @@ write_cib_contents(gpointer p)
     /* Use _exit() because exit() could affect the parent adversely */
     pcmk_common_cleanup();
     _exit(exit_code);
-
-    return exit_rc;
 }
 
 /*!
