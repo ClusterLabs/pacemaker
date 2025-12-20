@@ -10,6 +10,6 @@
 #ifndef BASED_IO__H
 #define BASED_IO__H
 
-int write_cib_contents(gpointer p);
+void based_io_init(void);
 
 #endif // BASED_IO__H

@@ -209,7 +209,7 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, cib_shutdown);
     mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
-    cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
+    based_io_init();
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {

@@ -36,7 +36,21 @@
 
 #include <pacemaker-based.h>
 
-crm_trigger_t *cib_writer = NULL;
+static crm_trigger_t *write_trigger = NULL;
+
+/*!
+ * \internal
+ * \brief Initialize data structures for \c pacemaker-based I/O
+ *
+ * Currently there is only one, but this may be expanded later, and the name
+ * clarifies its purpose in the caller.
+ */
+void
+based_io_init(void)
+{
+    write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents,
+                                         NULL);
+}
 
 static void
 cib_rename(const char *old)
@@ -304,7 +318,7 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
         pcmk__xml_free(saved_cib);
         if (cib_writes_enabled && cib_status == pcmk_rc_ok && to_disk) {
             pcmk__debug("Triggering CIB write for %s op", op);
-            mainloop_set_trigger(cib_writer);
+            mainloop_set_trigger(write_trigger);
         }
         return pcmk_ok;
     }
@@ -341,7 +355,7 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
                   ((core != 0)? " and dumped core" : ""));
     }
 
-    mainloop_trigger_complete(cib_writer);
+    mainloop_trigger_complete(write_trigger);
 }
 
 int
