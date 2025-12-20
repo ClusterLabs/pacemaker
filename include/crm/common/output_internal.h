@@ -615,21 +615,6 @@ pcmk__unregister_formats(void);
 
 /*!
  * \internal
- * \brief Register a function to handle a custom message.
- *
- * \note This function is for implementing custom formatters.  It should not
- *       be called directly.  Instead, call out->register_message.
- *
- * \param[in,out] out        The output functions structure.
- * \param[in]     message_id The message to be handled.
- * \param[in]     fn         The custom format function to call for message_id.
- */
-void
-pcmk__register_message(pcmk__output_t *out, const char *message_id,
-                       pcmk__message_fn_t fn);
-
-/*!
- * \internal
  * \brief Register an entire table of custom formatting functions at once.
  *
  * This table can contain multiple formatting functions for the same message ID
