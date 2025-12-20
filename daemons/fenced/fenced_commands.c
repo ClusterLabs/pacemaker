@@ -2144,9 +2144,9 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
     bool localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
                                             pcmk__str_casei);
 
-    CRM_CHECK(action != NULL, return true);
+    CRM_CHECK((device != NULL) && (action != NULL), return true);
 
-    if ((device != NULL) && (device->on_target_actions != NULL)
+    if ((device->on_target_actions != NULL)
         && pcmk__g_strv_contains(device->on_target_actions, action)) {
 
         if (!localhost_is_target) {
