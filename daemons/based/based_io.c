@@ -38,8 +38,6 @@
 
 crm_trigger_t *cib_writer = NULL;
 
-int write_cib_contents(gpointer p);
-
 static void
 cib_rename(const char *old)
 {

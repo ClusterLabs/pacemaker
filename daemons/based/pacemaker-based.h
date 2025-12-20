@@ -30,6 +30,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 
+#include "based_io.h"
 #include "based_transaction.h"
 
 #include <gnutls/gnutls.h>
