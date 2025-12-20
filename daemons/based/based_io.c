@@ -68,7 +68,6 @@ write_cib_contents(gpointer p)
 {
     int rc = pcmk_ok;
     xmlNode *cib_local = NULL;
-    crm_exit_t exit_code = CRM_EX_OK;
 
     /* Make a copy of the CIB to write (possibly in a forked child) */
     int pid = 0;
@@ -114,25 +113,23 @@ write_cib_contents(gpointer p)
     /* A nonzero exit code will cause further writes to be disabled */
     pcmk__xml_free(cib_local);
 
-    switch (rc) {
-        case pcmk_ok:
-            exit_code = CRM_EX_OK;
-            break;
-        case pcmk_err_cib_modified:
-            exit_code = CRM_EX_DIGEST;  // Existing CIB doesn't match digest
-            break;
-        case pcmk_err_cib_backup:       // Existing CIB couldn't be backed up
-        case pcmk_err_cib_save:         // New CIB couldn't be saved
-            exit_code = CRM_EX_CANTCREAT;
-            break;
-        default:
-            exit_code = CRM_EX_ERROR;
-            break;
-    }
+    pcmk_common_cleanup();
 
     /* Use _exit() because exit() could affect the parent adversely */
-    pcmk_common_cleanup();
-    _exit(exit_code);
+    switch (rc) {
+        case pcmk_ok:
+            _exit(CRM_EX_OK);
+
+        case pcmk_err_cib_modified:
+            _exit(CRM_EX_DIGEST);
+
+        case pcmk_err_cib_backup:
+        case pcmk_err_cib_save:
+            _exit(CRM_EX_CANTCREAT);
+
+        default:
+            _exit(CRM_EX_ERROR);
+    }
 }
 
 /*!
