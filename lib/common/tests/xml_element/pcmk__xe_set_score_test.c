@@ -42,13 +42,13 @@ assert_set_score(const char *initial, const char *new,
 }
 
 static void
-value_is_name_plus_plus(void **state)
+new_value_name_plus_plus(void **state)
 {
     assert_set_score("5", ATTR_NAME "++", "6", pcmk_rc_ok);
 }
 
 static void
-value_is_name_plus_equals_integer(void **state)
+new_value_name_plus_equals_integer(void **state)
 {
     assert_set_score("5", ATTR_NAME "+=2", "7", pcmk_rc_ok);
 }
@@ -56,7 +56,7 @@ value_is_name_plus_equals_integer(void **state)
 // NULL input
 
 static void
-target_is_NULL(void **state)
+null_target(void **state)
 {
     // Dumps core via CRM_CHECK()
     assert_int_equal(pcmk__xe_set_score(NULL, ATTR_NAME, ATTR_NAME "++"),
@@ -64,7 +64,7 @@ target_is_NULL(void **state)
 }
 
 static void
-name_is_NULL(void **state)
+null_name(void **state)
 {
     xmlNode *test_xml = pcmk__xe_create(NULL, "test_xml");
 
@@ -79,7 +79,7 @@ name_is_NULL(void **state)
 }
 
 static void
-value_is_NULL(void **state)
+null_new_value(void **state)
 {
     assert_set_score("5", NULL, "5", pcmk_rc_ok);
 }
@@ -87,14 +87,14 @@ value_is_NULL(void **state)
 // the value input doesn't start with the name input
 
 static void
-value_is_wrong_name(void **state)
+new_value_wrong_name(void **state)
 {
     assert_set_score("5", "garbage" ATTR_NAME "++", "garbage" ATTR_NAME "++",
                      pcmk_rc_ok);
 }
 
 static void
-value_is_only_an_integer(void **state)
+new_value_bare_integer(void **state)
 {
     assert_set_score("5", "2", "2", pcmk_rc_ok);
 }
@@ -102,91 +102,62 @@ value_is_only_an_integer(void **state)
 // non-integers
 
 static void
-variable_is_initialized_to_be_non_numeric(void **state)
+initial_value_non_numeric(void **state)
 {
     assert_set_score("hello", ATTR_NAME "++", "1", pcmk_rc_ok);
-}
-
-static void
-variable_is_initialized_to_be_non_numeric_2(void **state)
-{
     assert_set_score("hello", ATTR_NAME "+=2", "2", pcmk_rc_ok);
 }
 
 static void
-variable_is_initialized_to_be_numeric_and_decimal_point_containing(void **state)
+initial_value_decimal(void **state)
 {
     assert_set_score("5.01", ATTR_NAME "++", "6", pcmk_rc_ok);
-}
-
-static void
-variable_is_initialized_to_be_numeric_and_decimal_point_containing_2(void **state)
-{
     assert_set_score("5.50", ATTR_NAME "++", "6", pcmk_rc_ok);
-}
-
-static void
-variable_is_initialized_to_be_numeric_and_decimal_point_containing_3(void **state)
-{
     assert_set_score("5.99", ATTR_NAME "++", "6", pcmk_rc_ok);
 }
 
 static void
-value_is_non_numeric(void **state)
+new_value_non_numeric(void **state)
 {
     assert_set_score("5", ATTR_NAME "+=hello", "5", pcmk_rc_ok);
 }
 
 static void
-value_is_numeric_and_decimal_point_containing(void **state)
+new_value_decimal(void **state)
 {
     assert_set_score("5", ATTR_NAME "+=2.01", "7", pcmk_rc_ok);
-}
-
-static void
-value_is_numeric_and_decimal_point_containing_2(void **state)
-{
     assert_set_score("5", ATTR_NAME "+=1.50", "6", pcmk_rc_ok);
-}
-
-static void
-value_is_numeric_and_decimal_point_containing_3(void **state)
-{
     assert_set_score("5", ATTR_NAME "+=1.99", "6", pcmk_rc_ok);
 }
 
-// undefined input
-
 static void
-name_is_undefined(void **state)
+initial_value_unset(void **state)
 {
     assert_set_score(NULL, ATTR_NAME "++", ATTR_NAME "++", pcmk_rc_ok);
 }
 
-// large input
+// https://gcc.gnu.org/onlinedocs/gcc-15.2.0/cpp/Stringizing.html
+#define xstr(s) str(s)
+#define str(s) #s
 
 static void
-assignment_result_is_too_large(void **state)
+new_value_overflows(void **state)
 {
-    assert_set_score("5", ATTR_NAME "+=100000000000", "1000000", pcmk_rc_ok);
+    assert_set_score("5", ATTR_NAME "+=100000000000", xstr(PCMK_SCORE_INFINITY),
+                     pcmk_rc_ok);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
-                cmocka_unit_test(value_is_name_plus_plus),
-                cmocka_unit_test(value_is_name_plus_equals_integer),
-                cmocka_unit_test(target_is_NULL),
-                cmocka_unit_test(name_is_NULL),
-                cmocka_unit_test(value_is_NULL),
-                cmocka_unit_test(value_is_wrong_name),
-                cmocka_unit_test(value_is_only_an_integer),
-                cmocka_unit_test(variable_is_initialized_to_be_non_numeric),
-                cmocka_unit_test(variable_is_initialized_to_be_non_numeric_2),
-                cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing),
-                cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing_2),
-                cmocka_unit_test(variable_is_initialized_to_be_numeric_and_decimal_point_containing_3),
-                cmocka_unit_test(value_is_non_numeric),
-                cmocka_unit_test(value_is_numeric_and_decimal_point_containing),
-                cmocka_unit_test(value_is_numeric_and_decimal_point_containing_2),
-                cmocka_unit_test(value_is_numeric_and_decimal_point_containing_3),
-                cmocka_unit_test(name_is_undefined),
-                cmocka_unit_test(assignment_result_is_too_large))
+                cmocka_unit_test(new_value_name_plus_plus),
+                cmocka_unit_test(new_value_name_plus_equals_integer),
+                cmocka_unit_test(null_target),
+                cmocka_unit_test(null_name),
+                cmocka_unit_test(null_new_value),
+                cmocka_unit_test(new_value_wrong_name),
+                cmocka_unit_test(new_value_bare_integer),
+                cmocka_unit_test(initial_value_non_numeric),
+                cmocka_unit_test(initial_value_decimal),
+                cmocka_unit_test(new_value_non_numeric),
+                cmocka_unit_test(new_value_decimal),
+                cmocka_unit_test(initial_value_unset),
+                cmocka_unit_test(new_value_overflows))
