@@ -2143,11 +2143,14 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
 {
     bool localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
                                             pcmk__str_casei);
+    const gchar *const *on_target_actions = NULL;
 
     CRM_CHECK((device != NULL) && (action != NULL), return true);
 
-    if ((device->on_target_actions != NULL)
-        && pcmk__g_strv_contains(device->on_target_actions, action)) {
+    on_target_actions = (const gchar *const *) device->on_target_actions;
+
+    if ((on_target_actions != NULL)
+        && pcmk__g_strv_contains(on_target_actions, action)) {
 
         if (!localhost_is_target) {
             pcmk__trace("Operation '%s' using %s can only be executed for "

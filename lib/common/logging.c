@@ -624,7 +624,8 @@ crm_log_filter_source(int source, struct qb_log_callsite *cs)
             char *key = pcmk__assert_asprintf("%s:%d", cs->function,
                                               cs->lineno);
 
-            if (pcmk__g_strv_contains(trace_blackbox, key)) {
+            if (pcmk__g_strv_contains((const gchar *const *) trace_blackbox,
+                                      key)) {
                 qb_bit_set(cs->targets, source);
             }
             free(key);
@@ -648,21 +649,24 @@ crm_log_filter_source(int source, struct qb_log_callsite *cs)
     }
 
     if ((trace_files != NULL)
-        && pcmk__g_strv_contains(trace_files, cs->filename)) {
+        && pcmk__g_strv_contains((const gchar *const *) trace_files,
+                                 cs->filename)) {
 
         qb_bit_set(cs->targets, source);
         return;
     }
 
     if ((trace_functions != NULL)
-        && pcmk__g_strv_contains(trace_functions, cs->function)) {
+        && pcmk__g_strv_contains((const gchar *const *) trace_functions,
+                                 cs->function)) {
 
         qb_bit_set(cs->targets, source);
         return;
     }
 
     if ((trace_formats != NULL)
-        && pcmk__g_strv_contains(trace_formats, cs->format)) {
+        && pcmk__g_strv_contains((const gchar *const *) trace_formats,
+                                 cs->format)) {
 
         qb_bit_set(cs->targets, source);
         return;
