@@ -242,7 +242,8 @@ pcmk__compare_versions(const char *version1, const char *version2)
     segments1 = g_strsplit(pcmk__s(match1, ""), ".", 0);
     segments2 = g_strsplit(pcmk__s(match2, ""), ".", 0);
 
-    for (gchar **segment1 = segments1, **segment2 = segments2;
+    for (const char *const *segment1 = (const char *const *) segments1,
+                    *const *segment2 = (const char *const *) segments2;
          (*segment1 != NULL) || (*segment2 != NULL); ) {
 
         long long value1 = 0;

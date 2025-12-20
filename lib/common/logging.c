@@ -720,7 +720,9 @@ init_tracing(void)
     if (tags != NULL) {
         gchar **trace_tags = g_strsplit(tags, ",", 0);
 
-        for (gchar **tag = trace_tags; *tag != NULL; tag++) {
+        for (const char *const *tag = (const char *const *) trace_tags;
+             *tag != NULL; tag++) {
+
             if (pcmk__str_empty(*tag)) {
                 continue;
             }
@@ -1220,7 +1222,9 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
 
     out_lines = g_strsplit(output, "\n", 0);
 
-    for (gchar **out_line = out_lines; *out_line != NULL; out_line++) {
+    for (const char *const *out_line = (const char *const*) out_lines;
+         *out_line != NULL; out_line++) {
+
         do_crm_log_alias(level, file, function, line, "%s [ %s ]",
                          prefix, *out_line);
     }

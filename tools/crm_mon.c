@@ -302,11 +302,12 @@ find_section_bit(const char *name) {
 
 static gboolean
 apply_exclude(const gchar *excludes, GError **error) {
-    char **parts = NULL;
+    gchar **parts = NULL;
     gboolean result = TRUE;
 
     parts = g_strsplit(excludes, ",", 0);
-    for (char **s = parts; *s != NULL; s++) {
+
+    for (const char *const *s = (const char *const *) parts; *s != NULL; s++) {
         uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
@@ -332,11 +333,12 @@ apply_exclude(const gchar *excludes, GError **error) {
 
 static gboolean
 apply_include(const gchar *includes, GError **error) {
-    char **parts = NULL;
+    gchar **parts = NULL;
     gboolean result = TRUE;
 
     parts = g_strsplit(includes, ",", 0);
-    for (char **s = parts; *s != NULL; s++) {
+
+    for (const char *const *s = (const char *const *) parts; *s != NULL; s++) {
         uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
