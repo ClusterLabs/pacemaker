@@ -66,21 +66,23 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     list = pcmk__xe_dereference_children(test_element, element_name);
 
     // Ensure returned list has exactly the expected child IDs
+
     if (table == NULL) {
         assert_null(list);
-
-    } else {
-        for (GList *iter = list; iter != NULL; iter = iter->next) {
-            const xmlNode *node = iter->data;
-            const char *value = pcmk__xe_get(node, TEST_ATTR);
-
-            assert_true(g_hash_table_remove(table, value));
-        }
-
-        assert_int_equal(g_hash_table_size(table), 0);
-        g_hash_table_destroy(table);
+        pcmk__xml_free(xml);
+        return;
     }
 
+    for (GList *iter = list; iter != NULL; iter = iter->next) {
+        const xmlNode *node = iter->data;
+        const char *value = pcmk__xe_get(node, TEST_ATTR);
+
+        assert_true(g_hash_table_remove(table, value));
+    }
+
+    assert_int_equal(g_hash_table_size(table), 0);
+
+    g_hash_table_destroy(table);
     g_list_free(list);
     pcmk__xml_free(xml);
 }
