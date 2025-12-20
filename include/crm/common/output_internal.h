@@ -537,21 +537,6 @@ struct pcmk__output_s {
 
 /*!
  * \internal
- * \brief Call a formatting function for a previously registered message.
- *
- * \note This function is for implementing custom formatters.  It should not
- *       be called directly.  Instead, call out->message.
- *
- * \param[in,out] out        The output functions structure.
- * \param[in]     message_id The message to be handled.  Unknown messages
- *                           will be ignored.
- * \param[in]     ...        Arguments to be passed to the registered function.
- */
-int
-pcmk__call_message(pcmk__output_t *out, const char *message_id, ...);
-
-/*!
- * \internal
  * \brief Free a ::pcmk__output_t structure that was previously created by
  *        pcmk__output_new().
  *

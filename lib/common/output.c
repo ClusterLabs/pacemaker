@@ -52,6 +52,43 @@ pcmk__output_free(pcmk__output_t *out) {
 
 /*!
  * \internal
+ * \brief Call a formatting function for a previously registered message
+ *
+ * \param[in,out] out         Output object
+ * \param[in]     message_id  Message to handle
+ * \param[in]     ...         Arguments to be passed to the registered function
+ *
+ * \note This function is for implementing custom formatters. It should not
+ *       be called directly. Instead, call <tt>out->message</tt>.
+ *
+ * \return Return value of the formatting function, or \c EINVAL if no
+ *         formatting function is found
+ */
+static int
+call_message(pcmk__output_t *out, const char *message_id, ...)
+{
+    va_list args;
+    int rc = pcmk_rc_ok;
+    pcmk__message_fn_t fn;
+
+    pcmk__assert((out != NULL) && !pcmk__str_empty(message_id));
+
+    fn = g_hash_table_lookup(out->messages, message_id);
+    if (fn == NULL) {
+        pcmk__debug("Called unknown output message '%s' for format '%s'",
+                    message_id, out->fmt_name);
+        return EINVAL;
+    }
+
+    va_start(args, message_id);
+    rc = fn(out, args);
+    va_end(args);
+
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Create a new \p pcmk__output_t structure
  *
  * This function does not register any message functions with the newly created
@@ -97,7 +134,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
 
     (*out)->request = pcmk__quote_cmdline(argv);
     (*out)->register_message = pcmk__register_message;
-    (*out)->message = pcmk__call_message;
+    (*out)->message = call_message;
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
         (*out)->dest = stdout;
@@ -187,28 +224,6 @@ pcmk__unregister_formats(void) {
         g_hash_table_destroy(formatters);
         formatters = NULL;
     }
-}
-
-int
-pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
-    va_list args;
-    int rc = pcmk_rc_ok;
-    pcmk__message_fn_t fn;
-
-    pcmk__assert((out != NULL) && !pcmk__str_empty(message_id));
-
-    fn = g_hash_table_lookup(out->messages, message_id);
-    if (fn == NULL) {
-        pcmk__debug("Called unknown output message '%s' for format '%s'",
-                    message_id, out->fmt_name);
-        return EINVAL;
-    }
-
-    va_start(args, message_id);
-    rc = fn(out, args);
-    va_end(args);
-
-    return rc;
 }
 
 void
