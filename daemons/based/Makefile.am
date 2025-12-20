@@ -10,8 +10,6 @@
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/man.mk
 
-EXTRA_DIST	= cib.pam
-
 halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-based
