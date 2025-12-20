@@ -53,10 +53,8 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     va_list ap;
 
     // Parse given XML
-    if (xml_string != NULL) {
-        xml = pcmk__xml_parse(xml_string);
-        assert_non_null(xml);
-    }
+    xml = pcmk__xml_parse(xml_string);
+    assert_non_null(xml);
 
     // Create a hash table with all expected child IDs
     va_start(ap, element_name);
@@ -90,8 +88,8 @@ assert_deref(const char *xml_string, const char *element_name, ...)
 static void
 null_for_null(void **state)
 {
-    assert_deref(NULL, NULL, NULL);
-    assert_deref(NULL, TEST_ELEMENT, NULL);
+    assert_null(pcmk__xe_dereference_children(NULL, NULL));
+    assert_null(pcmk__xe_dereference_children(NULL, TEST_ELEMENT));
 }
 
 #define XML_NO_CHILDREN "<xml><" TEST_ELEMENT "/></xml>"
