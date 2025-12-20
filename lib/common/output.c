@@ -133,7 +133,6 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
     setup_fn(*out);
 
     (*out)->request = pcmk__quote_cmdline(argv);
-    (*out)->register_message = pcmk__register_message;
     (*out)->message = call_message;
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
@@ -233,9 +232,6 @@ pcmk__unregister_formats(void) {
  * \param[in,out] out         Output object
  * \param[in]     message_id  Message to handle
  * \param[in]     fn          Format function to call for \p message_id
- *
- * \note This function is for implementing custom formatters. It should not
- *       be called directly. Instead, call <tt>out->register_message</tt>.
  */
 void
 pcmk__register_message(pcmk__output_t *out, const char *message_id,
