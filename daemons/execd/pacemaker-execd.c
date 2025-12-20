@@ -372,7 +372,9 @@ main(int argc, char **argv)
 
     // Open additional log files
     if (options.log_files != NULL) {
-        for (gchar **fname = options.log_files; *fname != NULL; fname++) {
+        for (const char *const *fname = (const char *const *) options.log_files;
+             *fname != NULL; fname++) {
+
             rc = pcmk__add_logfile(*fname);
 
             if (rc != pcmk_rc_ok) {

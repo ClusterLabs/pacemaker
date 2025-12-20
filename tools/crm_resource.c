@@ -2133,7 +2133,9 @@ main(int argc, char **argv)
             goto done;
         }
 
-        for (gchar **arg = options.remainder; *arg != NULL; arg++) {
+        for (const char *const *arg = (const char *const *) options.remainder;
+             *arg != NULL; arg++) {
+
             gchar *name = NULL;
             gchar *value = NULL;
             int rc = pcmk__scan_nvpair(*arg, &name, &value);

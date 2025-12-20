@@ -321,7 +321,7 @@ reachable_hosts(pcmk__output_t *out, GList *all)
 
     g_free(path);
     g_ptr_array_add(reachable, NULL);
-    return (char **) g_ptr_array_free(reachable, FALSE);
+    return (gchar **) g_ptr_array_free(reachable, FALSE);
 }
 
 struct node_data {

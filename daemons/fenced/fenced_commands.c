@@ -277,8 +277,8 @@ get_value_for_target(const char *target, const char *values)
 
     mappings = g_strsplit_set(values, "; \t", 0);
 
-    for (gchar **mapping = mappings; (*mapping != NULL) && (value == NULL);
-         mapping++) {
+    for (const char *const *mapping = (const char *const *) mappings;
+         (*mapping != NULL) && (value == NULL); mapping++) {
 
         value = get_value_if_matching(target, *mapping);
     }
@@ -961,7 +961,9 @@ build_port_aliases(const char *hostmap, GList **targets)
     stripped = g_strstrip(g_strdup(hostmap));
     mappings = g_strsplit_set(stripped, "; \t", 0);
 
-    for (gchar **mapping = mappings; *mapping != NULL; mapping++) {
+    for (const char *const *mapping = (const char *const *) mappings;
+         *mapping != NULL; mapping++) {
+
         gchar **nvpair = NULL;
 
         if (pcmk__str_empty(*mapping)) {
@@ -1881,7 +1883,9 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
          */
         gchar **devices = g_strsplit(value, ",", 0);
 
-        for (char **dev = devices; (dev != NULL) && (*dev != NULL); dev++) {
+        for (const char *const *dev = (const char *const *) devices;
+             (dev != NULL) && (*dev != NULL); dev++) {
+
             pcmk__trace("Adding device '%s' for %s[%d]", *dev, tp->target, id);
             tp->levels[id] = g_list_append(tp->levels[id],
                                            pcmk__str_copy(*dev));
