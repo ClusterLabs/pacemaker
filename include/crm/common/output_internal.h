@@ -303,26 +303,12 @@ struct pcmk__output_s {
 
     /*!
      * \internal
-     * \brief Register a custom message.
-     *
-     * \param[in,out] out        The output functions structure.
-     * \param[in]     message_id The name of the message to register.  This name
-     *                           will be used as the message_id parameter to the
-     *                           message function in order to call the custom
-     *                           format function.
-     * \param[in]     fn         The custom format function to call for message_id.
-     */
-    void (*register_message) (pcmk__output_t *out, const char *message_id,
-                              pcmk__message_fn_t fn);
-
-    /*!
-     * \internal
      * \brief Call a previously registered custom message.
      *
      * \param[in,out] out        The output functions structure.
      * \param[in]     message_id The name of the message to call.  This name must
      *                           be the same as the message_id parameter of some
-     *                           previous call to register_message.
+     *                           previous call to \c pcmk__register_message().
      * \param[in] ...            Arguments to be passed to the registered function.
      *
      * \return A standard Pacemaker return code.  Generally: 0 if a function was
