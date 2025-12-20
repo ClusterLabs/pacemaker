@@ -359,6 +359,10 @@ int pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
                           const char *filename, char **argv);
 
 G_GNUC_INTERNAL
+void pcmk__register_message(pcmk__output_t *out, const char *message_id,
+                            pcmk__message_fn_t fn);
+
+G_GNUC_INTERNAL
 void pcmk__register_option_messages(pcmk__output_t *out);
 
 G_GNUC_INTERNAL

@@ -12,6 +12,8 @@
 #include <crm/common/unittest_internal.h>
 #include <crm/common/output_internal.h>
 
+#include "../../crmcommon_private.h"        // pcmk__register_message
+
 static int
 setup(void **state)
 {
