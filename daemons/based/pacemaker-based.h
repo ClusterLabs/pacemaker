@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,6 +30,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 
+#include "based_io.h"
 #include "based_transaction.h"
 
 #include <gnutls/gnutls.h>
@@ -48,7 +49,6 @@ enum cib_client_flags {
 extern bool based_is_primary;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;
-extern crm_trigger_t *cib_writer;
 extern gboolean cib_writes_enabled;
 
 extern GMainLoop *mainloop;
