@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 int pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input,
-                      const crm_time_t *date_time, const char **rule_ids);
+                      const crm_time_t *date_time, const char *const *rule_ids);
 
 /*!
  * \internal

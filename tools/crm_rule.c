@@ -201,7 +201,7 @@ main(int argc, char **argv)
     switch(options.mode) {
         case crm_rule_mode_check:
             rc = pcmk__check_rules(out, input, rule_date,
-                                   (const char **) options.rules);
+                                   (const char *const *) options.rules);
             exit_code = pcmk_rc2exitc(rc);
             break;
 
