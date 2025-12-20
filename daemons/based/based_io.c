@@ -67,9 +67,6 @@ static int
 write_cib_contents(gpointer p)
 {
     int rc = pcmk_ok;
-    xmlNode *cib_local = NULL;
-
-    /* Make a copy of the CIB to write (possibly in a forked child) */
     int pid = 0;
     int bb_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
 
@@ -100,22 +97,18 @@ write_cib_contents(gpointer p)
         return G_SOURCE_CONTINUE;
     }
 
-    /* Asynchronous write-out after a fork() */
-
-    /* In theory, we can scribble on the_cib here and not affect the parent,
-     * but let's be safe anyway.
+    /* Write the CIB. Note that this modifies the_cib, but this child is about
+     * to exit. The parent's copy of the_cib won't be affected.
      */
-    cib_local = pcmk__xml_copy(NULL, the_cib);
-
-    /* Write the CIB */
-    rc = cib_file_write_with_digest(cib_local, cib_root, "cib.xml");
-
-    /* A nonzero exit code will cause further writes to be disabled */
-    pcmk__xml_free(cib_local);
+    rc = cib_file_write_with_digest(the_cib, cib_root, "cib.xml");
 
     pcmk_common_cleanup();
 
-    /* Use _exit() because exit() could affect the parent adversely */
+    /* A nonzero exit code will cause further writes to be disabled. Use _exit()
+     * because exit() could affect the parent adversely.
+     *
+     * @TODO How could it affect the parent adversely?
+     */
     switch (rc) {
         case pcmk_ok:
             _exit(CRM_EX_OK);
