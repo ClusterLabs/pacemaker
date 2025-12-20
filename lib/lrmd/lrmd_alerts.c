@@ -125,14 +125,16 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         }
 
         if (kind == pcmk__alert_attribute) {
+            const gchar *const *select_attr_name =
+                (const gchar *const *) entry->select_attribute_name;
+
             if (attr_name == NULL) {
                 CRM_LOG_ASSERT(attr_name != NULL);
                 continue;
             }
 
-            if ((entry->select_attribute_name != NULL)
-                && !pcmk__g_strv_contains(entry->select_attribute_name,
-                                          attr_name)) {
+            if ((select_attr_name != NULL)
+                && !pcmk__g_strv_contains(select_attr_name, attr_name)) {
 
                 pcmk__trace("Filtering unwanted attribute '%s' alert to %s via "
                             "%s", attr_name, entry->recipient, entry->id);

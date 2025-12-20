@@ -121,7 +121,8 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             if ((hidden != NULL) && !pcmk__str_empty(p_name)) {
                 gchar **hidden_names = g_strsplit(hidden, ",", 0);
 
-                if (pcmk__g_strv_contains(hidden_names, p_name)) {
+                if (pcmk__g_strv_contains((const gchar *const *) hidden_names,
+                                          p_name)) {
                     p_value = "*****";
                 }
                 g_strfreev(hidden_names);

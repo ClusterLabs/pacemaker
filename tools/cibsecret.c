@@ -395,7 +395,8 @@ get_live_peers(pcmk__output_t *out)
     for (const GList *iter = nd.all_nodes; iter != NULL; iter = iter->next) {
         const char *node_name = iter->data;
 
-        if (!pcmk__g_strv_contains(reachable, node_name)) {
+        if (!pcmk__g_strv_contains((const gchar *const *) reachable,
+                                   node_name)) {
             out->info(out, "Node %s is down - you'll need to update it "
                       "with `cibsecret sync` later", node_name);
         }

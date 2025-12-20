@@ -984,7 +984,7 @@ pcmk__str_in_list(const char *str, const GList *list, uint32_t flags)
  * \return \c true if \p str is an element of \p strv, or \c false otherwise
  */
 bool
-pcmk__g_strv_contains(gchar **strv, const gchar *str)
+pcmk__g_strv_contains(const gchar *const *strv, const gchar *str)
 {
     // @COMPAT Replace with calls to g_strv_contains() when we require glib 2.44
     CRM_CHECK((strv != NULL) && (str != NULL), return false);
