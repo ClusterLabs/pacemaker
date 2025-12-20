@@ -13,6 +13,23 @@
 
 #include <crm/common/unittest_internal.h>
 
+static GHashTable *
+create_id_table(va_list args)
+{
+    GHashTable *table = NULL;
+
+    for (const char *value = va_arg(args, const char *); value != NULL;
+         value = va_arg(args, const char *)) {
+
+        if (table == NULL) {
+            table = pcmk__strkey_table(NULL, NULL);
+        }
+        g_hash_table_add(table, (gpointer) value);
+    }
+
+    return table;
+}
+
 /*!
  * \internal
  * \brief Test an invocation of pcmk__xe_dereference_children()
@@ -27,8 +44,8 @@ static void
 assert_deref(const char *xml_string, const char *element_name, ...)
 {
     xmlNode *xml = NULL;
-    GList *list = NULL;
     GHashTable *table = NULL;
+    GList *list = NULL;
     va_list ap;
 
     // Parse given XML
@@ -39,13 +56,7 @@ assert_deref(const char *xml_string, const char *element_name, ...)
 
     // Create a hash table with all expected child IDs
     va_start(ap, element_name);
-    for (const char *value = va_arg(ap, const char *);
-         value != NULL; value = va_arg(ap, const char *)) {
-        if (table == NULL) {
-            table = pcmk__strkey_table(NULL, NULL);
-        }
-        g_hash_table_add(table, (gpointer) value);
-    }
+    table = create_id_table(ap);
     va_end(ap);
 
     // Call tested function on "test" child
@@ -65,12 +76,10 @@ assert_deref(const char *xml_string, const char *element_name, ...)
             list = list->next;
         }
         assert_int_equal(g_hash_table_size(table), 0);
+        g_hash_table_destroy(table);
     }
 
     g_list_free(list);
-    if (table != NULL) {
-        g_hash_table_destroy(table);
-    }
     pcmk__xml_free(xml);
 }
 
