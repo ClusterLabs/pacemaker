@@ -25,15 +25,10 @@ static const int nmatches = 3;
 static void
 assert_submatch(const char *string, const char *reference)
 {
-    char *expanded = NULL;
+    char *expanded = pcmk__replace_submatches(string, match, submatches,
+                                              nmatches);
 
-    expanded = pcmk__replace_submatches(string, match, submatches, nmatches);
-    if ((expanded == NULL) || (reference == NULL)) {
-        assert_null(expanded);
-        assert_null(reference);
-    } else {
-        assert_string_equal(expanded, reference);
-    }
+    assert_string_equal(expanded, reference);
     free(expanded);
 }
 
@@ -41,8 +36,8 @@ static void
 no_source(void **state)
 {
     assert_null(pcmk__replace_submatches(NULL, NULL, NULL, 0));
-    assert_submatch(NULL, NULL);
-    assert_submatch("", NULL);
+    assert_null(pcmk__replace_submatches(NULL, match, submatches, nmatches));
+    assert_null(pcmk__replace_submatches("", match, submatches, nmatches));
 }
 
 static void
