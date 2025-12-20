@@ -70,13 +70,15 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     // Ensure returned list has exactly the expected child IDs
     if (table == NULL) {
         assert_null(list);
+
     } else {
-        while (list != NULL) {
-            const char *value = pcmk__xe_get((xmlNode *) list->data, TEST_ATTR);
+        for (GList *iter = list; iter != NULL; iter = iter->next) {
+            const xmlNode *node = iter->data;
+            const char *value = pcmk__xe_get(node, TEST_ATTR);
 
             assert_true(g_hash_table_remove(table, value));
-            list = list->next;
         }
+
         assert_int_equal(g_hash_table_size(table), 0);
         g_hash_table_destroy(table);
     }
