@@ -67,7 +67,7 @@ static int
 write_cib_contents(gpointer p)
 {
     int rc = pcmk_ok;
-    int pid = 0;
+    pid_t pid = 0;
     int bb_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
 
     /* Turn it off before the fork() to avoid:
@@ -86,7 +86,7 @@ write_cib_contents(gpointer p)
         return G_SOURCE_REMOVE;
     }
 
-    if (pid) {
+    if (pid > 0) {
         /* Parent */
         mainloop_child_add(pid, 0, "disk-writer", NULL, cib_diskwrite_complete);
         if (bb_state == QB_LOG_STATE_ENABLED) {
