@@ -865,24 +865,28 @@ pcmk__list_nodes(pcmk__output_t *out, const char *types, bool bash_export)
     all = pcmk__str_empty(types);
     if (!all) {
         node_types = g_strsplit(types, ",", 0);
-        all = pcmk__g_strv_contains(node_types, "all");
+        all = pcmk__g_strv_contains((const gchar *const *) node_types, "all");
     }
 
-    if (all || pcmk__g_strv_contains(node_types, "cluster")) {
+    if (all
+        || pcmk__g_strv_contains((const gchar *const *) node_types,
+                                 "cluster")) {
         data.field = PCMK_XA_ID;
         data.type = "cluster";
         pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_MEMBER_NODE_CONFIG,
                                    remote_node_print_helper, &data);
     }
 
-    if (all || pcmk__g_strv_contains(node_types, "guest")) {
+    if (all
+        || pcmk__g_strv_contains((const gchar *const *) node_types, "guest")) {
         data.field = PCMK_XA_VALUE;
         data.type = "guest";
         pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_GUEST_NODE_CONFIG,
                                    remote_node_print_helper, &data);
     }
 
-    if (all || pcmk__g_strv_contains(node_types, "remote")) {
+    if (all
+        || pcmk__g_strv_contains((const gchar *const *) node_types, "remote")) {
         data.field = PCMK_XA_ID;
         data.type = "remote";
         pcmk__xpath_foreach_result(xml_node->doc, PCMK__XP_REMOTE_NODE_CONFIG,
