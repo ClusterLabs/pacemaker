@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,8 +9,6 @@
 
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/man.mk
-
-EXTRA_DIST	= cib.pam
 
 halibdir	= $(CRM_DAEMON_DIR)
 
