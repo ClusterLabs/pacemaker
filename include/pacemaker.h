@@ -296,6 +296,7 @@ int pcmk_list_nodes(xmlNode **xml, const char *types);
  */
 int pcmk_status(xmlNodePtr *xml);
 
+// @COMPAT Change rule_ids to type const char *const * at a compatibility break
 /*!
  * \brief Check whether each rule in a list is in effect
  *
