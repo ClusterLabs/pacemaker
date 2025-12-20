@@ -13,7 +13,7 @@
 
 #include <crm/common/unittest_internal.h>
 
-#include "../../crmcommon_private.h"
+#include "../../crmcommon_private.h"        // pcmk__register_message
 
 static void
 null_params(void **state)
