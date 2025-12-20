@@ -13,6 +13,7 @@
 
 #include <crm/common/unittest_internal.h>
 
+#define TEST_ELEMENT "test"
 #define TEST_ATTR "test_attr"
 
 static GHashTable *
@@ -36,8 +37,8 @@ create_id_table(va_list args)
  * \internal
  * \brief Test an invocation of pcmk__xe_dereference_children()
  *
- * \param[in] xml_string    XML to parse, with "test" child to pass to tested
- *                          function
+ * \param[in] xml_string    XML to parse, with \c TEST_ELEMENT child to pass to
+ *                          tested function
  * \param[in] element_name  Element name to pass to tested function
  * \param[in] ...           NULL-terminated list of child \c TEST_ATTR values to
  *                          expect in tested function's returned list
@@ -46,6 +47,7 @@ static void
 assert_deref(const char *xml_string, const char *element_name, ...)
 {
     xmlNode *xml = NULL;
+    const xmlNode *test_element = NULL;
     GHashTable *table = NULL;
     GList *list = NULL;
     va_list ap;
@@ -61,10 +63,9 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     table = create_id_table(ap);
     va_end(ap);
 
-    // Call tested function on "test" child
-    list = pcmk__xe_dereference_children(pcmk__xe_first_child(xml, "test",
-                                                              NULL, NULL),
-                                         element_name);
+    // Call tested function on TEST_ELEMENT child
+    test_element = pcmk__xe_first_child(xml, TEST_ELEMENT, NULL, NULL);
+    list = pcmk__xe_dereference_children(test_element, element_name);
 
     // Ensure returned list has exactly the expected child IDs
     if (table == NULL) {
@@ -88,24 +89,25 @@ static void
 null_for_null(void **state)
 {
     assert_deref(NULL, NULL, NULL);
-    assert_deref(NULL, "test", NULL);
+    assert_deref(NULL, TEST_ELEMENT, NULL);
 }
 
-#define XML_NO_CHILDREN "<xml><test/></xml>"
-#define XML_NO_ELEMENT_CHILDREN "<xml><test><!-- comment -->text</test></xml>"
+#define XML_NO_CHILDREN "<xml><" TEST_ELEMENT "/></xml>"
+#define XML_NO_ELEMENT_CHILDREN \
+    "<xml><" TEST_ELEMENT "><!-- comment -->text</" TEST_ELEMENT "></xml>"
 
 static void
 null_for_no_children(void **state)
 {
     assert_deref(XML_NO_CHILDREN, NULL, NULL);
-    assert_deref(XML_NO_CHILDREN, "test", NULL);
+    assert_deref(XML_NO_CHILDREN, TEST_ELEMENT, NULL);
     assert_deref(XML_NO_ELEMENT_CHILDREN, NULL, NULL);
-    assert_deref(XML_NO_ELEMENT_CHILDREN, "test", NULL);
+    assert_deref(XML_NO_ELEMENT_CHILDREN, TEST_ELEMENT, NULL);
 }
 
 #define XML_NO_IDREF                                            \
     "<xml>\n"                                                   \
-    "  <test>\n"                                                \
+    "  <" TEST_ELEMENT ">\n"                                    \
     "    <!-- comment -->\n"                                    \
     "    <other id='other1' " TEST_ATTR "='othervalue1' />\n"   \
     "    <child id='child1' " TEST_ATTR "='childvalue1' />\n"   \
@@ -113,7 +115,7 @@ null_for_no_children(void **state)
     "    <child id='child2' " TEST_ATTR "='childvalue2' />\n"   \
     "    <child id='child3' " TEST_ATTR "='childvalue3' />\n"   \
     "    <other id='other3' " TEST_ATTR "='othervalue3' />\n"   \
-    "  </test>\n"                                               \
+    "  </" TEST_ELEMENT ">\n"                                   \
     "</xml>\n"
 
 static void
@@ -136,7 +138,7 @@ without_idref(void **state)
     "<xml>\n"                                                   \
     "  <other id='other1' " TEST_ATTR "='othervalue1' />\n"     \
     "  <child id='child2' " TEST_ATTR "='childvalue2' />\n"     \
-    "  <test>\n"                                                \
+    "  <" TEST_ELEMENT ">\n"                                    \
     "    <!-- comment -->\n"                                    \
     "    <other id-ref='other1'/>\n"                            \
     "    <child id='child1' " TEST_ATTR "='childvalue1' />\n"   \
@@ -144,7 +146,7 @@ without_idref(void **state)
     "    <child id-ref='child2' />\n"                           \
     "    <child id='child3' " TEST_ATTR "='childvalue3' />\n"   \
     "    <other id='other3' " TEST_ATTR "='othervalue3' />\n"   \
-    "  </test>\n"                                               \
+    "  </" TEST_ELEMENT ">\n"                                   \
     "</xml>\n"
 
 static void
@@ -165,7 +167,7 @@ with_idref(void **state)
 
 #define XML_WITH_BROKEN_IDREF                                   \
     "<xml>\n"                                                   \
-    "  <test>\n"                                                \
+    "  <" TEST_ELEMENT ">\n"                                    \
     "    <!-- comment -->\n"                                    \
     "    <other id-ref='other1'/>\n"                            \
     "    <child id='child1' " TEST_ATTR "='childvalue1' />\n"   \
@@ -173,7 +175,7 @@ with_idref(void **state)
     "    <child id-ref='child2' />\n"                           \
     "    <child id='child3' " TEST_ATTR "='childvalue3' />\n"   \
     "    <other id='other3' " TEST_ATTR "='othervalue3' />\n"   \
-    "  </test>\n"                                               \
+    "  </" TEST_ELEMENT ">\n"                                   \
     "</xml>\n"
 
 static void
