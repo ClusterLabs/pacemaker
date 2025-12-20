@@ -18,20 +18,36 @@
  * hassle.
  */
 
+#define assert_create_comment(content, doc_ptr, node_ptr)                   \
+    do {                                                                    \
+        xml_doc_private_t *docpriv = NULL;                                  \
+        xml_node_private_t *nodepriv = NULL;                                \
+                                                                            \
+        *(doc_ptr) = pcmk__xml_new_doc();                                   \
+        pcmk__xml_doc_set_flags(*(doc_ptr), pcmk__xf_tracking);             \
+                                                                            \
+        *(node_ptr) = pcmk__xc_create(*(doc_ptr), content);                 \
+        assert_non_null(*(node_ptr));                                       \
+        assert_int_equal((*(node_ptr))->type, XML_COMMENT_NODE);            \
+        assert_ptr_equal((*(node_ptr))->doc, *(doc_ptr));                   \
+                                                                            \
+        docpriv = (*(doc_ptr))->_private;                                   \
+        assert_true(pcmk__is_set(docpriv->flags, pcmk__xf_dirty));          \
+                                                                            \
+        nodepriv = (*(node_ptr))->_private;                                 \
+        assert_non_null(nodepriv);                                          \
+        assert_int_equal(nodepriv->check, PCMK__XML_NODE_PRIVATE_MAGIC);    \
+        assert_true(pcmk__all_flags_set(nodepriv->flags,                    \
+                                        pcmk__xf_dirty|pcmk__xf_created));  \
+    } while (0)
+
 static void
 assert_comment(const char *content)
 {
-    xmlDoc *doc = pcmk__xml_new_doc();
-    xml_doc_private_t *docpriv = doc->_private;
+    xmlDoc *doc = NULL;
     xmlNode *node = NULL;
-    xml_node_private_t *nodepriv = NULL;
 
-    pcmk__xml_doc_set_flags(doc, pcmk__xf_tracking);
-
-    node = pcmk__xc_create(doc, content);
-    assert_non_null(node);
-    assert_int_equal(node->type, XML_COMMENT_NODE);
-    assert_ptr_equal(node->doc, doc);
+    assert_create_comment(content, &doc, &node);
 
     if (content == NULL) {
         assert_null(node->content);
@@ -39,14 +55,6 @@ assert_comment(const char *content)
         assert_non_null(node->content);
         assert_string_equal((const char *) node->content, content);
     }
-
-    nodepriv = node->_private;
-    assert_non_null(nodepriv);
-    assert_int_equal(nodepriv->check, PCMK__XML_NODE_PRIVATE_MAGIC);
-    assert_true(pcmk__all_flags_set(nodepriv->flags,
-                                    pcmk__xf_dirty|pcmk__xf_created));
-
-    assert_true(pcmk__is_set(docpriv->flags, pcmk__xf_dirty));
 
     pcmk__xml_free(node);
     pcmk__xml_free_doc(doc);
