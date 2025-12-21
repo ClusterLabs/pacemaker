@@ -209,22 +209,23 @@ cib_rename(const char *old)
  */
 
 static xmlNode *
-retrieveCib(const char *filename, const char *sigfile)
+retrieveCib(const char *cibfile_path, const char *sigfile_path)
 {
     xmlNode *root = NULL;
-    int rc = cib_file_read_and_verify(filename, sigfile, &root);
+    int rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &root);
 
     if (rc == pcmk_ok) {
-        pcmk__info("Loaded CIB from %s (with digest %s)", filename, sigfile);
+        pcmk__info("Loaded CIB from %s (with digest %s)", cibfile_path,
+                   sigfile_path);
         return root;
     }
 
     pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
-               filename, sigfile, pcmk_strerror(rc));
+               cibfile_path, sigfile_path, pcmk_strerror(rc));
     if (rc == -pcmk_err_cib_modified) {
         // Archive the original files so the contents are not lost
-        cib_rename(filename);
-        cib_rename(sigfile);
+        cib_rename(cibfile_path);
+        cib_rename(sigfile_path);
     }
     return root;
 }
