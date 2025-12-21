@@ -36,6 +36,7 @@
 
 #include <pacemaker-based.h>
 
+static bool writes_enabled = true;
 static crm_trigger_t *write_trigger = NULL;
 
 /*!
@@ -52,8 +53,8 @@ write_cib_cb(mainloop_child_t *child, int core, int signo, int exit_code)
 {
     const char *error = "Could not write CIB to disk";
 
-    if ((exit_code != 0) && cib_writes_enabled) {
-        cib_writes_enabled = FALSE;
+    if ((exit_code != 0) && writes_enabled) {
+        writes_enabled = false;
         error = "Disabling CIB disk writes after failure";
     }
 
@@ -102,7 +103,7 @@ write_cib_async(gpointer user_data)
     if (pid < 0) {
         pcmk__err("Disabling disk writes after fork failure: %s",
                   strerror(errno));
-        cib_writes_enabled = FALSE;
+        writes_enabled = false;
         return G_SOURCE_REMOVE;
     }
 
@@ -155,14 +156,27 @@ write_cib_async(gpointer user_data)
 
 /*!
  * \internal
- * \brief Initialize data structures for \c pacemaker-based I/O
+ * \brief Enable CIB writes to disk (signal handler)
  *
- * Currently there is only one, but this may be expanded later, and the name
- * clarifies its purpose in the caller.
+ * \param[in] nsig  Ignored
+ */
+void
+based_enable_writes(int nsig)
+{
+    pcmk__info("(Re)enabling disk writes");
+    writes_enabled = true;
+}
+
+/*!
+ * \internal
+ * \brief Initialize data structures for \c pacemaker-based I/O
  */
 void
 based_io_init(void)
 {
+    writes_enabled = !stand_alone;
+    mainloop_add_signal(SIGPIPE, based_enable_writes);
+
     write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
 }
 
@@ -179,7 +193,7 @@ cib_rename(const char *old)
         pcmk__err("Couldn't archive unusable file %s (disabling disk writes "
                   "and continuing)",
                   old);
-        cib_writes_enabled = FALSE;
+        writes_enabled = false;
     } else {
         pcmk__err("Archived unusable file %s as %s", old, new);
     }
@@ -350,11 +364,11 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
         pcmk__warn("Continuing with an empty configuration");
     }
 
-    if (cib_writes_enabled
+    if (writes_enabled
         && pcmk__env_option_enabled(PCMK__SERVER_BASED,
                                     PCMK__ENV_VALGRIND_ENABLED)) {
 
-        cib_writes_enabled = FALSE;
+        writes_enabled = false;
         pcmk__err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
@@ -430,7 +444,7 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
         pcmk__assert(new_cib != saved_cib);
         the_cib = new_cib;
         pcmk__xml_free(saved_cib);
-        if (cib_writes_enabled && cib_status == pcmk_rc_ok && to_disk) {
+        if (to_disk && writes_enabled && (cib_status == pcmk_rc_ok)) {
             pcmk__debug("Triggering CIB write for %s op", op);
             mainloop_set_trigger(write_trigger);
         }
