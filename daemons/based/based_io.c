@@ -317,7 +317,7 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
 }
 
 xmlNode *
-readCibXmlFile(const char *dir, const char *cibfile, bool discard_status)
+based_read_cib(const char *dir, bool discard_status)
 {
     struct dirent **namelist = NULL;
 
@@ -328,7 +328,7 @@ readCibXmlFile(const char *dir, const char *cibfile, bool discard_status)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    root = retrieveCib(dir, cibfile);
+    root = retrieveCib(dir, "cib.xml");
 
     if (root == NULL) {
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);

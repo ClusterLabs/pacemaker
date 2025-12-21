@@ -10,7 +10,12 @@
 #ifndef BASED_IO__H
 #define BASED_IO__H
 
+#include <stdbool.h>
+
+#include <libxml/tree.h>                // xmlNode
+
 void based_io_init(void);
 void based_enable_writes(int nsig);
+xmlNode *based_read_cib(const char *dir, bool discard_status);
 
 #endif // BASED_IO__H
