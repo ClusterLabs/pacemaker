@@ -175,6 +175,17 @@ void
 based_io_init(void)
 {
     writes_enabled = !stand_alone;
+    if (writes_enabled
+        && pcmk__env_option_enabled(PCMK__SERVER_BASED,
+                                    PCMK__ENV_VALGRIND_ENABLED)) {
+
+        writes_enabled = false;
+        pcmk__err("*** Disabling disk writes to avoid confusing Valgrind ***");
+    }
+
+    /* @TODO Should we be setting this up if we've explicitly disabled writes
+     * already?
+     */
     mainloop_add_signal(SIGPIPE, based_enable_writes);
 
     write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
@@ -446,14 +457,6 @@ based_read_cib(void)
     if (cib_xml == NULL) {
         cib_xml = createEmptyCib(0);
         pcmk__warn("Continuing with an empty configuration");
-    }
-
-    if (writes_enabled
-        && pcmk__env_option_enabled(PCMK__SERVER_BASED,
-                                    PCMK__ENV_VALGRIND_ENABLED)) {
-
-        writes_enabled = false;
-        pcmk__err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
     set_empty_status(cib_xml);
