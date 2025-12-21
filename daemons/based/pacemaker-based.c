@@ -37,7 +37,6 @@ pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
-static bool preserve_status = false;
 
 gboolean stand_alone = FALSE;
 
@@ -66,8 +65,6 @@ setup_stand_alone(GError **error)
     uid_t uid = 0;
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
-
-    preserve_status = true;
 
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
@@ -406,7 +403,7 @@ cib_init(void)
 static bool
 startCib(void)
 {
-    xmlNode *cib = based_read_cib(cib_root, !preserve_status);
+    xmlNode *cib = based_read_cib(cib_root);
     int port = 0;
 
     if (activateCibXml(cib, true, "start") != 0) {

@@ -317,7 +317,7 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
 }
 
 xmlNode *
-based_read_cib(const char *dir, bool discard_status)
+based_read_cib(const char *dir)
 {
     struct dirent **namelist = NULL;
 
@@ -379,7 +379,7 @@ based_read_cib(const char *dir, bool discard_status)
     }
 
     status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
-    if (discard_status && status != NULL) {
+    if (!stand_alone && (status != NULL)) {
         // Strip out the PCMK_XE_STATUS section if there is one
         pcmk__xml_free(status);
         status = NULL;
@@ -414,7 +414,7 @@ based_read_cib(const char *dir, bool discard_status)
     // Unset (DC should set appropriate value)
     pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
 
-    if (discard_status) {
+    if (!stand_alone) {
         pcmk__log_xml_trace(root, "[on-disk]");
     }
 
