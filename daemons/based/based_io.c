@@ -63,8 +63,18 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
     mainloop_trigger_complete(write_trigger);
 }
 
+/*!
+ * \internal
+ * \brief Write the CIB to disk in a forked child
+ *
+ * This avoids blocking in the parent. The child writes synchronously. The
+ * parent tracks the child via the mainloop and runs a callback when the child
+ * exits.
+ *
+ * \param[in] user_data  Ignored
+ */
 static int
-write_cib_contents(gpointer p)
+write_cib_async(gpointer user_data)
 {
     int rc = pcmk_rc_ok;
     pid_t pid = 0;
@@ -136,8 +146,7 @@ write_cib_contents(gpointer p)
 void
 based_io_init(void)
 {
-    write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents,
-                                         NULL);
+    write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
 }
 
 static void
