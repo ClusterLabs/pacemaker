@@ -219,9 +219,9 @@ cib_rename(const char *old)
 static xmlNode *
 read_current_cib(void)
 {
-    char *sigfile = pcmk__assert_asprintf("%s.sig", CIBFILE);
     char *cibfile_path = pcmk__assert_asprintf("%s/%s", cib_root, CIBFILE);
-    char *sigfile_path = pcmk__assert_asprintf("%s/%s", cib_root, sigfile);
+    char *sigfile_path = pcmk__assert_asprintf("%s.sig", cibfile_path);
+    const char *sigfile = strrchr(sigfile_path, '/') + 1;
 
     xmlNode *root = NULL;
     int rc = pcmk_ok;
@@ -252,7 +252,6 @@ read_current_cib(void)
     }
 
 done:
-    free(sigfile);
     free(cibfile_path);
     free(sigfile_path);
     return root;
