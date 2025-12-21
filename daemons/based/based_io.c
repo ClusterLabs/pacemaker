@@ -320,39 +320,34 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
     return rc;
 }
 
-xmlNode *
-based_read_cib(void)
+/*!
+ * \internal
+ * \brief Read CIB XML from the last valid backup file in \c cib_root
+ *
+ * \return CIB XML parsed from the last valid backup file, or \c NULL if none
+ *         was found
+ */
+static xmlNode *
+read_backup_cib(void)
 {
+    xmlNode *cib_xml = NULL;
     struct dirent **namelist = NULL;
-
-    int num_files = 0;
-    const char *name = NULL;
-    const char *value = NULL;
-
-    xmlNode *root = NULL;
-    xmlNode *status = NULL;
-
-    root = retrieveCib();
-
-    if (root == NULL) {
-        num_files = scandir(cib_root, &namelist, cib_archive_filter,
+    int num_files = scandir(cib_root, &namelist, cib_archive_filter,
                             cib_archive_sort);
-        if (num_files < 0) {
-            pcmk__err("Could not check for CIB backups in %s: %s", cib_root,
-                      pcmk_rc_str(errno));
-        }
+
+    if (num_files < 0) {
+        pcmk__err("Could not check for CIB backups in %s: %s", cib_root,
+                  pcmk_rc_str(errno));
+        goto done;
     }
 
     for (int i = 0; i < num_files; i++) {
-        char *cibfile_path = NULL;
-        char *sigfile_path = NULL;
-        int rc = pcmk_ok;
+        const char *cibfile = namelist[i]->d_name;
+        char *cibfile_path = pcmk__assert_asprintf("%s/%s", cib_root, cibfile);
+        char *sigfile_path = pcmk__assert_asprintf("%s.sig", cibfile_path);
 
-        cibfile_path = pcmk__assert_asprintf("%s/%s", cib_root,
-                                             namelist[i]->d_name);
-        sigfile_path = pcmk__assert_asprintf("%s.sig", cibfile_path);
+        int rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &cib_xml);
 
-        rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &root);
         if (rc == pcmk_ok) {
             pcmk__notice("Loaded CIB from last valid backup %s (with digest "
                          "%s)", cibfile_path, sigfile_path);
@@ -362,7 +357,6 @@ based_read_cib(void)
                        pcmk_strerror(rc));
         }
 
-        free(namelist[i]);
         free(cibfile_path);
         free(sigfile_path);
 
@@ -370,7 +364,30 @@ based_read_cib(void)
             break;
         }
     }
+
+done:
+    for (int i = 0; i < num_files; i++) {
+        free(namelist[i]);
+    }
     free(namelist);
+
+    return cib_xml;
+}
+
+xmlNode *
+based_read_cib(void)
+{
+    const char *name = NULL;
+    const char *value = NULL;
+
+    xmlNode *root = NULL;
+    xmlNode *status = NULL;
+
+    root = retrieveCib();
+
+    if (root == NULL) {
+        root = read_backup_cib();
+    }
 
     if (root == NULL) {
         root = createEmptyCib(0);
