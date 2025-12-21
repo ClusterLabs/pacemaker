@@ -204,14 +204,20 @@ cib_rename(const char *old)
     free(new);
 }
 
-/*
- * It is the callers responsibility to free the output of this function
- */
-
 #define CIBFILE "cib.xml"
 
+/*!
+ * \internal
+ * \brief Read CIB XML from \c CIBFILE in the \c cib_root directory
+ *
+ * \return CIB XML parsed from \c CIBFILE in \c cib_root , or \c NULL if the
+ *         file was not found or if parsing failed
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
 static xmlNode *
-retrieveCib(void)
+read_current_cib(void)
 {
     char *sigfile = pcmk__assert_asprintf("%s.sig", CIBFILE);
     char *cibfile_path = pcmk__assert_asprintf("%s/%s", cib_root, CIBFILE);
@@ -383,7 +389,7 @@ based_read_cib(void)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    root = retrieveCib();
+    root = read_current_cib();
 
     if (root == NULL) {
         root = read_backup_cib();
