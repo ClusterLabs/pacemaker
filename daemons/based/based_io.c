@@ -38,25 +38,35 @@
 
 static crm_trigger_t *write_trigger = NULL;
 
+/*!
+ * \internal
+ * \brief Process the exit status of a child forked from \c write_cib_async()
+ *
+ * \param[in] child      Mainloop child data
+ * \param[in] core       If set to 1, the child process dumped core
+ * \param[in] signo      Signal that the child process exited with
+ * \param[in] exit_code  Child process's exit code
+ */
 static void
-cib_diskwrite_complete(mainloop_child_t *p, int core, int signo, int exitcode)
+write_cib_cb(mainloop_child_t *child, int core, int signo, int exit_code)
 {
-    const char *errmsg = "Could not write CIB to disk";
+    const char *error = "Could not write CIB to disk";
 
-    if ((exitcode != 0) && cib_writes_enabled) {
+    if ((exit_code != 0) && cib_writes_enabled) {
         cib_writes_enabled = FALSE;
-        errmsg = "Disabling CIB disk writes after failure";
+        error = "Disabling CIB disk writes after failure";
     }
 
-    if ((signo == 0) && (exitcode == 0)) {
-        pcmk__trace("Disk write [%d] succeeded", (int) p->pid);
+    if ((signo == 0) && (exit_code == 0)) {
+        pcmk__trace("Disk write [%lld] succeeded", (long long) child->pid);
 
     } else if (signo == 0) {
-        pcmk__err("%s: process %d exited %d", errmsg, (int) p->pid, exitcode);
+        pcmk__err("%s: process %lld exited with code %d", error,
+                  (long long) child->pid, exit_code);
 
     } else {
-        pcmk__err("%s: process %d terminated with signal %d (%s)%s",
-                  errmsg, (int) p->pid, signo, strsignal(signo),
+        pcmk__err("%s: process %lld terminated with signal %d (%s)%s",
+                  error, (long long) child->pid, signo, strsignal(signo),
                   ((core != 0)? " and dumped core" : ""));
     }
 
@@ -98,7 +108,7 @@ write_cib_async(gpointer user_data)
 
     if (pid > 0) {
         // Parent
-        mainloop_child_add(pid, 0, "disk-writer", NULL, cib_diskwrite_complete);
+        mainloop_child_add(pid, 0, "disk-writer", NULL, write_cib_cb);
 
         if (blackbox_state == QB_LOG_STATE_ENABLED) {
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
