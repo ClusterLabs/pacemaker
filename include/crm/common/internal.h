@@ -27,9 +27,10 @@
 #include <crm/common/health_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
-#include <crm/common/results_internal.h>
+#include <crm/common/mainloop_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
+#include <crm/common/results_internal.h>
 #include <crm/common/scores_internal.h>
 #include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
 #include <crm/common/acl_internal.h>

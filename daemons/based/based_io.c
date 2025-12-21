@@ -39,7 +39,7 @@
 static crm_trigger_t *write_trigger = NULL;
 
 static void
-cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
+cib_diskwrite_complete(mainloop_child_t *p, int core, int signo, int exitcode)
 {
     const char *errmsg = "Could not write CIB to disk";
 
@@ -49,14 +49,14 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
     }
 
     if ((signo == 0) && (exitcode == 0)) {
-        pcmk__trace("Disk write [%d] succeeded", (int) pid);
+        pcmk__trace("Disk write [%d] succeeded", (int) p->pid);
 
     } else if (signo == 0) {
-        pcmk__err("%s: process %d exited %d", errmsg, (int) pid, exitcode);
+        pcmk__err("%s: process %d exited %d", errmsg, (int) p->pid, exitcode);
 
     } else {
         pcmk__err("%s: process %d terminated with signal %d (%s)%s",
-                  errmsg, (int) pid, signo, strsignal(signo),
+                  errmsg, (int) p->pid, signo, strsignal(signo),
                   ((core != 0)? " and dumped core" : ""));
     }
 
