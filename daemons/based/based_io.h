@@ -14,6 +14,6 @@
 
 void based_io_init(void);
 void based_enable_writes(int nsig);
-xmlNode *based_read_cib(const char *dir);
+xmlNode *based_read_cib(void);
 
 #endif // BASED_IO__H

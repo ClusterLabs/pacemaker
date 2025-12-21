@@ -211,17 +211,17 @@ cib_rename(const char *old)
 #define CIBFILE "cib.xml"
 
 static xmlNode *
-retrieveCib(const char *dir)
+retrieveCib(void)
 {
     char *sigfile = pcmk__assert_asprintf("%s.sig", CIBFILE);
-    char *cibfile_path = pcmk__assert_asprintf("%s/%s", dir, CIBFILE);
-    char *sigfile_path = pcmk__assert_asprintf("%s/%s", dir, sigfile);
+    char *cibfile_path = pcmk__assert_asprintf("%s/%s", cib_root, CIBFILE);
+    char *sigfile_path = pcmk__assert_asprintf("%s/%s", cib_root, sigfile);
 
     xmlNode *root = NULL;
     int rc = pcmk_ok;
 
-    if (!pcmk__daemon_can_write(dir, CIBFILE)
-        || !pcmk__daemon_can_write(dir, sigfile)) {
+    if (!pcmk__daemon_can_write(cib_root, CIBFILE)
+        || !pcmk__daemon_can_write(cib_root, sigfile)) {
 
         cib_status = EACCES;
         goto done;
@@ -319,7 +319,7 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
 }
 
 xmlNode *
-based_read_cib(const char *dir)
+based_read_cib(void)
 {
     struct dirent **namelist = NULL;
 
@@ -330,7 +330,7 @@ based_read_cib(const char *dir)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    root = retrieveCib(dir);
+    root = retrieveCib();
 
     if (root == NULL) {
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);

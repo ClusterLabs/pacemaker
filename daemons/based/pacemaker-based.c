@@ -403,7 +403,7 @@ cib_init(void)
 static bool
 startCib(void)
 {
-    xmlNode *cib = based_read_cib(cib_root);
+    xmlNode *cib = based_read_cib();
     int port = 0;
 
     if (activateCibXml(cib, true, "start") != 0) {
