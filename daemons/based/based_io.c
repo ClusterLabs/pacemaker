@@ -385,6 +385,32 @@ done:
 
 /*!
  * \internal
+ * \brief Set the CIB XML's \c PCMK_XE_STATUS element to empty if appropriate
+ *
+ * Delete the current \c PCMK_XE_STATUS element if not running in stand-alone
+ * mode. Then create an empty \c PCMK_XE_STATUS child if either of the following
+ * is true:
+ * * not running in stand-alone mode
+ * * running in stand-alone mode with no \c PCMK_XE_STATUS element
+ *
+ * \param[in,out] cib_xml  CIB XML
+ */
+static void
+set_empty_status(xmlNode *cib_xml)
+{
+    xmlNode *status = pcmk__xe_first_child(cib_xml, PCMK_XE_STATUS, NULL, NULL);
+
+    if (!stand_alone) {
+        g_clear_pointer(&status, pcmk__xml_free);
+    }
+
+    if (status == NULL) {
+        pcmk__xe_create(cib_xml, PCMK_XE_STATUS);
+    }
+}
+
+/*!
+ * \internal
  * \brief Set the given CIB version attribute to 0 if it's not already set
  *
  * \param[in,out] cib_xml       CIB XML
@@ -411,10 +437,7 @@ based_read_cib(void)
         PCMK_XA_NUM_UPDATES,
     };
 
-    xmlNode *cib_xml = NULL;
-    xmlNode *status = NULL;
-
-    cib_xml = read_current_cib();
+    xmlNode *cib_xml = read_current_cib();
 
     if (cib_xml == NULL) {
         cib_xml = read_backup_cib();
@@ -433,15 +456,7 @@ based_read_cib(void)
         pcmk__err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
-    status = pcmk__xe_first_child(cib_xml, PCMK_XE_STATUS, NULL, NULL);
-    if (!stand_alone && (status != NULL)) {
-        // Strip out the PCMK_XE_STATUS section if there is one
-        pcmk__xml_free(status);
-        status = NULL;
-    }
-    if (status == NULL) {
-        pcmk__xe_create(cib_xml, PCMK_XE_STATUS);
-    }
+    set_empty_status(cib_xml);
 
     /* Default the three version attributes to 0 if unset. The schema requires
      * them to be set, so:
