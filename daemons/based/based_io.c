@@ -310,8 +310,10 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
     xmlNode *status = NULL;
 
     sigfile = pcmk__assert_asprintf("%s.sig", file);
-    if (pcmk__daemon_can_write(dir, file) == FALSE
-            || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
+
+    if (!pcmk__daemon_can_write(dir, file)
+        || !pcmk__daemon_can_write(dir, sigfile)) {
+
         cib_status = EACCES;
         return NULL;
     }
