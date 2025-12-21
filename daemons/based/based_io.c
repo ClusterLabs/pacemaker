@@ -296,37 +296,37 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
 }
 
 xmlNode *
-readCibXmlFile(const char *dir, const char *file, bool discard_status)
+readCibXmlFile(const char *dir, const char *cibfile, bool discard_status)
 {
     struct dirent **namelist = NULL;
 
     int lpc = 0;
+    char *cibfile_path = NULL;
     char *sigfile = NULL;
-    char *sigfilepath = NULL;
-    char *filename = NULL;
+    char *sigfile_path = NULL;
     const char *name = NULL;
     const char *value = NULL;
 
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    sigfile = pcmk__assert_asprintf("%s.sig", file);
+    sigfile = pcmk__assert_asprintf("%s.sig", cibfile);
 
-    if (!pcmk__daemon_can_write(dir, file)
+    if (!pcmk__daemon_can_write(dir, cibfile)
         || !pcmk__daemon_can_write(dir, sigfile)) {
 
         cib_status = EACCES;
         return NULL;
     }
 
-    filename = pcmk__assert_asprintf("%s/%s", dir, file);
-    sigfilepath = pcmk__assert_asprintf("%s/%s", dir, sigfile);
+    cibfile_path = pcmk__assert_asprintf("%s/%s", dir, cibfile);
+    sigfile_path = pcmk__assert_asprintf("%s/%s", dir, sigfile);
     free(sigfile);
 
     cib_status = pcmk_rc_ok;
-    root = retrieveCib(filename, sigfilepath);
-    free(filename);
-    free(sigfilepath);
+    root = retrieveCib(cibfile_path, sigfile_path);
+    free(cibfile_path);
+    free(sigfile_path);
 
     if (root == NULL) {
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
@@ -341,24 +341,23 @@ readCibXmlFile(const char *dir, const char *file, bool discard_status)
 
         lpc--;
 
-        filename = pcmk__assert_asprintf("%s/%s", cib_root,
-                                         namelist[lpc]->d_name);
-        sigfile = pcmk__assert_asprintf("%s.sig", filename);
+        cibfile_path = pcmk__assert_asprintf("%s/%s", cib_root,
+                                             namelist[lpc]->d_name);
+        sigfile_path = pcmk__assert_asprintf("%s.sig", cibfile_path);
 
-        rc = cib_file_read_and_verify(filename, sigfile, &root);
+        rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &root);
         if (rc == pcmk_ok) {
             pcmk__notice("Loaded CIB from last valid backup %s (with digest "
-                         "%s)",
-                         filename, sigfile);
+                         "%s)", cibfile_path, sigfile_path);
         } else {
             pcmk__warn("Not using next most recent CIB backup from %s (with "
-                       "digest %s): %s",
-                       filename, sigfile, pcmk_strerror(rc));
+                       "digest %s): %s", cibfile_path, sigfile_path,
+                       pcmk_strerror(rc));
         }
 
         free(namelist[lpc]);
-        free(filename);
-        free(sigfile);
+        free(cibfile_path);
+        free(sigfile_path);
     }
     free(namelist);
 
