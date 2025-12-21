@@ -68,13 +68,13 @@ write_cib_contents(gpointer p)
 {
     int rc = pcmk_ok;
     pid_t pid = 0;
-    int bb_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
+    int blackbox_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
 
-    /* Turn it off before the fork() to avoid:
-     * - 2 processes writing to the same shared mem
-     * - the child needing to disable it
-     *   (which would close it from underneath the parent)
-     * This way, the shared mem files are already closed
+    /* Disable blackbox logging before the fork to avoid two processes writing
+     * to the same shared memory. The disable should not be done in the child,
+     * because this would close shared memory files in the parent.
+     *
+     * @TODO How? What is meant by this last sentence?
      */
     qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
 
@@ -87,10 +87,10 @@ write_cib_contents(gpointer p)
     }
 
     if (pid > 0) {
-        /* Parent */
+        // Parent
         mainloop_child_add(pid, 0, "disk-writer", NULL, cib_diskwrite_complete);
-        if (bb_state == QB_LOG_STATE_ENABLED) {
-            /* Re-enable now that it it safe */
+
+        if (blackbox_state == QB_LOG_STATE_ENABLED) {
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
         }
 
