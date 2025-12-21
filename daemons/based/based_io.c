@@ -66,7 +66,7 @@ cib_diskwrite_complete(mainloop_child_t * p, pid_t pid, int core, int signo, int
 static int
 write_cib_contents(gpointer p)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     pid_t pid = 0;
     int blackbox_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
 
@@ -101,6 +101,7 @@ write_cib_contents(gpointer p)
      * to exit. The parent's copy of the_cib won't be affected.
      */
     rc = cib_file_write_with_digest(the_cib, cib_root, "cib.xml");
+    rc = pcmk_legacy2rc(rc);
 
     pcmk_common_cleanup();
 
@@ -117,14 +118,14 @@ write_cib_contents(gpointer p)
      * stdio streams.
      */
     switch (rc) {
-        case pcmk_ok:
+        case pcmk_rc_ok:
             _exit(CRM_EX_OK);
 
-        case pcmk_err_cib_modified:
+        case pcmk_rc_cib_modified:
             _exit(CRM_EX_DIGEST);
 
-        case pcmk_err_cib_backup:
-        case pcmk_err_cib_save:
+        case pcmk_rc_cib_backup:
+        case pcmk_rc_cib_save:
             _exit(CRM_EX_CANTCREAT);
 
         default:
