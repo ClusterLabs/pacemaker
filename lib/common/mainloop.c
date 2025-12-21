@@ -23,19 +23,6 @@
 
 #include <qb/qbarray.h>
 
-struct mainloop_child_s {
-    pid_t pid;
-    char *desc;
-    unsigned timerid;
-    gboolean timeout;
-    void *privatedata;
-
-    enum mainloop_child_flags flags;
-
-    /* Called when a process dies */
-    void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode);
-};
-
 struct trigger_s {
     GSource source;
     gboolean running;
@@ -1172,7 +1159,7 @@ child_waitpid(mainloop_child_t *child, int flags)
     }
 
     if (callback_needed && child->callback) {
-        child->callback(child, child->pid, core, signo, exitcode);
+        child->callback(child, core, signo, exitcode);
     }
     return callback_needed;
 }
@@ -1265,7 +1252,8 @@ mainloop_child_kill(pid_t pid)
  */
 void
 mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *privatedata, enum mainloop_child_flags flags, 
-                   void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
+                              void (*callback)(mainloop_child_t *p, int core,
+                                               int signo, int exitcode))
 {
     static bool need_init = TRUE;
     mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
@@ -1296,7 +1284,8 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
 
 void
 mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
-                   void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode))
+                   void (*callback)(mainloop_child_t *p, int core, int signo,
+                                    int exitcode))
 {
     mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, callback);
 }

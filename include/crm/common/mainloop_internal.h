@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2026 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,9 @@
 #ifndef PCMK__CRM_COMMON_MAINLOOP_INTERNAL__H
 #define PCMK__CRM_COMMON_MAINLOOP_INTERNAL__H
 
-#include <glib.h>                   // guint
+#include <sys/types.h>              // pid_t
+
+#include <glib.h>                   // gboolean, guint
 
 #include <crm/common/ipc.h>         // crm_ipc_t
 #include <crm/common/mainloop.h>    // ipc_client_callbacks, mainloop_*
@@ -22,6 +24,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct mainloop_child_s {
+    pid_t pid;
+    char *desc;
+    unsigned timerid;
+    gboolean timeout;
+    void *privatedata;
+
+    enum mainloop_child_flags flags;
+
+    /* Called when a process dies */
+    void (*callback)(mainloop_child_t *p, int core, int signo, int exitcode);
+};
 
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
