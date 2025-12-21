@@ -224,7 +224,7 @@ read_current_cib(void)
     const char *sigfile = strrchr(sigfile_path, '/') + 1;
 
     xmlNode *cib_xml = NULL;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     if (!pcmk__daemon_can_write(cib_root, CIBFILE)
         || !pcmk__daemon_can_write(cib_root, sigfile)) {
@@ -236,16 +236,18 @@ read_current_cib(void)
     cib_status = pcmk_rc_ok;
 
     rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &cib_xml);
-    if (rc == pcmk_ok) {
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc == pcmk_rc_ok) {
         pcmk__info("Loaded CIB from %s (with digest %s)", cibfile_path,
                    sigfile_path);
         goto done;
     }
 
     pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
-               cibfile_path, sigfile_path, pcmk_strerror(rc));
+               cibfile_path, sigfile_path, pcmk_rc_str(rc));
 
-    if (rc == -pcmk_err_cib_modified) {
+    if (rc == pcmk_rc_cib_modified) {
         // Archive the original files so the contents are not lost
         cib_rename(cibfile_path);
         cib_rename(sigfile_path);
@@ -353,19 +355,21 @@ read_backup_cib(void)
 
         int rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &cib_xml);
 
-        if (rc == pcmk_ok) {
+        rc = pcmk_legacy2rc(rc);
+
+        if (rc == pcmk_rc_ok) {
             pcmk__notice("Loaded CIB from last valid backup %s (with digest "
                          "%s)", cibfile_path, sigfile_path);
         } else {
             pcmk__warn("Not using next most recent CIB backup from %s (with "
                        "digest %s): %s", cibfile_path, sigfile_path,
-                       pcmk_strerror(rc));
+                       pcmk_rc_str(rc));
         }
 
         free(cibfile_path);
         free(sigfile_path);
 
-        if (rc == pcmk_ok) {
+        if (rc == pcmk_rc_ok) {
             break;
         }
     }
