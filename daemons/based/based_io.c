@@ -216,14 +216,15 @@ retrieveCib(const char *filename, const char *sigfile)
 
     if (rc == pcmk_ok) {
         pcmk__info("Loaded CIB from %s (with digest %s)", filename, sigfile);
-    } else {
-        pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
-                   filename, sigfile, pcmk_strerror(rc));
-        if (rc == -pcmk_err_cib_modified) {
-            // Archive the original files so the contents are not lost
-            cib_rename(filename);
-            cib_rename(sigfile);
-        }
+        return root;
+    }
+
+    pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
+               filename, sigfile, pcmk_strerror(rc));
+    if (rc == -pcmk_err_cib_modified) {
+        // Archive the original files so the contents are not lost
+        cib_rename(filename);
+        cib_rename(sigfile);
     }
     return root;
 }
