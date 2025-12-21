@@ -209,24 +209,44 @@ cib_rename(const char *old)
  */
 
 static xmlNode *
-retrieveCib(const char *cibfile_path, const char *sigfile_path)
+retrieveCib(const char *dir, const char *cibfile)
 {
-    xmlNode *root = NULL;
-    int rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &root);
+    char *sigfile = pcmk__assert_asprintf("%s.sig", cibfile);
+    char *cibfile_path = pcmk__assert_asprintf("%s/%s", dir, cibfile);
+    char *sigfile_path = pcmk__assert_asprintf("%s/%s", dir, sigfile);
 
+    xmlNode *root = NULL;
+    int rc = pcmk_ok;
+
+    if (!pcmk__daemon_can_write(dir, cibfile)
+        || !pcmk__daemon_can_write(dir, sigfile)) {
+
+        cib_status = EACCES;
+        goto done;
+    }
+
+    cib_status = pcmk_rc_ok;
+
+    rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &root);
     if (rc == pcmk_ok) {
         pcmk__info("Loaded CIB from %s (with digest %s)", cibfile_path,
                    sigfile_path);
-        return root;
+        goto done;
     }
 
     pcmk__warn("Continuing but NOT using CIB from %s (with digest %s): %s",
                cibfile_path, sigfile_path, pcmk_strerror(rc));
+
     if (rc == -pcmk_err_cib_modified) {
         // Archive the original files so the contents are not lost
         cib_rename(cibfile_path);
         cib_rename(sigfile_path);
     }
+
+done:
+    free(sigfile);
+    free(cibfile_path);
+    free(sigfile_path);
     return root;
 }
 
@@ -302,32 +322,13 @@ readCibXmlFile(const char *dir, const char *cibfile, bool discard_status)
     struct dirent **namelist = NULL;
 
     int lpc = 0;
-    char *cibfile_path = NULL;
-    char *sigfile = NULL;
-    char *sigfile_path = NULL;
     const char *name = NULL;
     const char *value = NULL;
 
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    sigfile = pcmk__assert_asprintf("%s.sig", cibfile);
-
-    if (!pcmk__daemon_can_write(dir, cibfile)
-        || !pcmk__daemon_can_write(dir, sigfile)) {
-
-        cib_status = EACCES;
-        return NULL;
-    }
-
-    cibfile_path = pcmk__assert_asprintf("%s/%s", dir, cibfile);
-    sigfile_path = pcmk__assert_asprintf("%s/%s", dir, sigfile);
-    free(sigfile);
-
-    cib_status = pcmk_rc_ok;
-    root = retrieveCib(cibfile_path, sigfile_path);
-    free(cibfile_path);
-    free(sigfile_path);
+    root = retrieveCib(dir, cibfile);
 
     if (root == NULL) {
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
@@ -338,6 +339,8 @@ readCibXmlFile(const char *dir, const char *cibfile, bool discard_status)
     }
 
     while (root == NULL && lpc > 1) {
+        char *cibfile_path = NULL;
+        char *sigfile_path = NULL;
         int rc = pcmk_ok;
 
         lpc--;
