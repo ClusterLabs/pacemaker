@@ -41,7 +41,6 @@ GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
 static bool preserve_status = false;
 
-gboolean cib_writes_enabled = TRUE;
 gboolean stand_alone = FALSE;
 
 int remote_fd = 0;
@@ -54,13 +53,6 @@ void cib_shutdown(int nsig);
 static bool startCib(const char *filename);
 
 static crm_exit_t exit_code = CRM_EX_OK;
-
-static void
-cib_enable_writes(int nsig)
-{
-    pcmk__info("(Re)enabling disk writes");
-    cib_writes_enabled = TRUE;
-}
 
 /*!
  * \internal
@@ -78,7 +70,6 @@ setup_stand_alone(GError **error)
     int rc = pcmk_rc_ok;
 
     preserve_status = true;
-    cib_writes_enabled = FALSE;
 
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
@@ -136,12 +127,20 @@ based_metadata(pcmk__output_t *out)
                                  pcmk__opt_based);
 }
 
+static gboolean
+disk_writes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+               GError **error)
+{
+    based_enable_writes(0);
+    return TRUE;
+}
+
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
 
-    { "disk-writes", 'w', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &cib_writes_enabled,
+    { "disk-writes", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      disk_writes_cb,
       "(Advanced use only) Enable disk writes (enabled by default unless in "
       "stand-alone mode)", NULL },
 
@@ -207,7 +206,6 @@ main(int argc, char **argv)
     }
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
-    mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
     based_io_init();
 

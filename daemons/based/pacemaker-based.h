@@ -49,7 +49,6 @@ enum cib_client_flags {
 extern bool based_is_primary;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;
-extern gboolean cib_writes_enabled;
 
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;

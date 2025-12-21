@@ -11,5 +11,6 @@
 #define BASED_IO__H
 
 void based_io_init(void);
+void based_enable_writes(int nsig);
 
 #endif // BASED_IO__H
