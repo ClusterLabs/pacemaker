@@ -237,12 +237,20 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     uint32_t id = 0;
     uint32_t flags = 0;
     pcmk__client_t *client = pcmk__find_client(c);
-    pcmk__client_t *ipc_proxy = pcmk__find_client_by_id(client->userdata);
+    pcmk__client_t *ipc_proxy = NULL;
     xmlNode *wrapper = NULL;
     xmlNode *request = NULL;
     xmlNode *msg = NULL;
 
-    if (!ipc_proxy) {
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK(client != NULL, return 0);
+    if (data == NULL) {
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
+        return 0;
+    }
+
+    ipc_proxy = pcmk__find_client_by_id(client->userdata);
+    if (ipc_proxy == NULL) {
         qb_ipcs_disconnect(client->ipcs);
         return 0;
     }

@@ -369,6 +369,13 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     pcmk__client_t *client = pcmk__find_client(c);
     xmlNode *msg = NULL;
 
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK(client != NULL, return 0);
+    if (data == NULL) {
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
+        return 0;
+    }
+
     rc = pcmk__ipc_msg_append(&client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {

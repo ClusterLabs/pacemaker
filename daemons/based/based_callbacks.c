@@ -66,18 +66,12 @@ cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static int32_t
 cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
 {
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    pcmk__trace("%p message from %s", c, client->id);
     return cib_common_callback(c, data, size, true);
 }
 
 static int32_t
 cib_ipc_dispatch_ro(qb_ipcs_connection_t * c, void *data, size_t size)
 {
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    pcmk__trace("%p message from %s", c, client->id);
     return cib_common_callback(c, data, size, false);
 }
 
@@ -302,7 +296,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
     cib_process_request(op_request, privileged, cib_client);
 }
 
-int32_t
+static int32_t
 cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privileged)
 {
     int rc = pcmk_rc_ok;
@@ -312,10 +306,15 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privi
     pcmk__client_t *cib_client = pcmk__find_client(c);
     xmlNode *op_request = NULL;
 
-    if (cib_client == NULL) {
-        pcmk__trace("Invalid client %p", c);
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK(cib_client != NULL, return 0);
+    if (data == NULL) {
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
+
+    pcmk__trace("Dispatching %sprivileged request from client %s",
+                (privileged? "" : "un"), cib_client->id);
 
     rc = pcmk__ipc_msg_append(&cib_client->buffer, data);
 
