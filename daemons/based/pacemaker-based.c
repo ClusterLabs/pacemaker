@@ -50,7 +50,7 @@ GHashTable *config_hash = NULL;
 
 static void cib_init(void);
 void cib_shutdown(int nsig);
-static bool startCib(const char *filename);
+static bool startCib(void);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -383,7 +383,7 @@ cib_init(void)
 
     config_hash = pcmk__strkey_table(free, free);
 
-    if (!startCib("cib.xml")) {
+    if (!startCib()) {
         pcmk__crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
@@ -406,9 +406,9 @@ cib_init(void)
 }
 
 static bool
-startCib(const char *filename)
+startCib(void)
 {
-    xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
+    xmlNode *cib = readCibXmlFile(cib_root, "cib.xml", !preserve_status);
     int port = 0;
 
     if (activateCibXml(cib, true, "start") != 0) {
