@@ -191,28 +191,50 @@ based_io_init(void)
     write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Archive a CIB file or its saved digest file
+ *
+ * When a CIB file's calculated digest doesn't match its saved one, we archive
+ * both the CIB file and its digest (".sig") file. This way the contents can be
+ * inspected for troubleshooting purposes.
+ *
+ * The file is renamed with a unique name using the \c mkstemp() template
+ * \c "cib.auto.XXXXXX", in the same directory (\c cib_root).
+ *
+ * \param[in] old_file  Original file path
+ */
 static void
-cib_rename(const char *old)
+archive_unusable_file(const char *old_file)
 {
-    int new_fd;
-    char *new = pcmk__assert_asprintf("%s/cib.auto.XXXXXX", cib_root);
+    int fd = 0;
+    char *new_file = pcmk__assert_asprintf("%s/cib.auto.XXXXXX", cib_root);
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
-    new_fd = mkstemp(new);
+    fd = mkstemp(new_file);
 
-    if ((new_fd < 0) || (rename(old, new) < 0)) {
-        pcmk__err("Couldn't archive unusable file %s (disabling disk writes "
-                  "and continuing)",
-                  old);
+    if (fd < 0) {
+        pcmk__err("Failed to create a temp file to archive unusable file %s: "
+                  "%s. Disabling disk writes and continuing.", old_file,
+                  strerror(errno));
         writes_enabled = false;
-    } else {
-        pcmk__err("Archived unusable file %s as %s", old, new);
+        goto done;
     }
 
-    if (new_fd > 0) {
-        close(new_fd);
+    close(fd);
+
+    if (rename(old_file, new_file) < 0) {
+        pcmk__err("Failed to archive unusable file %s as %s: %s. Disabling "
+                  "disk writes and continuing.", old_file, new_file,
+                  strerror(errno));
+        writes_enabled = false;
+        goto done;
     }
-    free(new);
+
+    pcmk__err("Archived unusable file %s as %s", old_file, new_file);
+
+done:
+    free(new_file);
 }
 
 #define CIBFILE "cib.xml"
@@ -260,8 +282,8 @@ read_current_cib(void)
 
     if (rc == pcmk_rc_cib_modified) {
         // Archive the original files so the contents are not lost
-        cib_rename(cibfile_path);
-        cib_rename(sigfile_path);
+        archive_unusable_file(cibfile_path);
+        archive_unusable_file(sigfile_path);
     }
 
 done:
