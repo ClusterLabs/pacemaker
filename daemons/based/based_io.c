@@ -208,17 +208,19 @@ cib_rename(const char *old)
  * It is the callers responsibility to free the output of this function
  */
 
+#define CIBFILE "cib.xml"
+
 static xmlNode *
-retrieveCib(const char *dir, const char *cibfile)
+retrieveCib(const char *dir)
 {
-    char *sigfile = pcmk__assert_asprintf("%s.sig", cibfile);
-    char *cibfile_path = pcmk__assert_asprintf("%s/%s", dir, cibfile);
+    char *sigfile = pcmk__assert_asprintf("%s.sig", CIBFILE);
+    char *cibfile_path = pcmk__assert_asprintf("%s/%s", dir, CIBFILE);
     char *sigfile_path = pcmk__assert_asprintf("%s/%s", dir, sigfile);
 
     xmlNode *root = NULL;
     int rc = pcmk_ok;
 
-    if (!pcmk__daemon_can_write(dir, cibfile)
+    if (!pcmk__daemon_can_write(dir, CIBFILE)
         || !pcmk__daemon_can_write(dir, sigfile)) {
 
         cib_status = EACCES;
@@ -328,7 +330,7 @@ based_read_cib(const char *dir)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    root = retrieveCib(dir, "cib.xml");
+    root = retrieveCib(dir);
 
     if (root == NULL) {
         lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
