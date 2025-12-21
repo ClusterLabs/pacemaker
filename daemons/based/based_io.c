@@ -223,7 +223,7 @@ read_current_cib(void)
     char *sigfile_path = pcmk__assert_asprintf("%s.sig", cibfile_path);
     const char *sigfile = strrchr(sigfile_path, '/') + 1;
 
-    xmlNode *root = NULL;
+    xmlNode *cib_xml = NULL;
     int rc = pcmk_ok;
 
     if (!pcmk__daemon_can_write(cib_root, CIBFILE)
@@ -235,7 +235,7 @@ read_current_cib(void)
 
     cib_status = pcmk_rc_ok;
 
-    rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &root);
+    rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &cib_xml);
     if (rc == pcmk_ok) {
         pcmk__info("Loaded CIB from %s (with digest %s)", cibfile_path,
                    sigfile_path);
@@ -254,7 +254,7 @@ read_current_cib(void)
 done:
     free(cibfile_path);
     free(sigfile_path);
-    return root;
+    return cib_xml;
 }
 
 static int cib_archive_filter(const struct dirent * a)
@@ -385,17 +385,17 @@ based_read_cib(void)
     const char *name = NULL;
     const char *value = NULL;
 
-    xmlNode *root = NULL;
+    xmlNode *cib_xml = NULL;
     xmlNode *status = NULL;
 
-    root = read_current_cib();
+    cib_xml = read_current_cib();
 
-    if (root == NULL) {
-        root = read_backup_cib();
+    if (cib_xml == NULL) {
+        cib_xml = read_backup_cib();
     }
 
-    if (root == NULL) {
-        root = createEmptyCib(0);
+    if (cib_xml == NULL) {
+        cib_xml = createEmptyCib(0);
         pcmk__warn("Continuing with an empty configuration");
     }
 
@@ -407,50 +407,50 @@ based_read_cib(void)
         pcmk__err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
-    status = pcmk__xe_first_child(root, PCMK_XE_STATUS, NULL, NULL);
+    status = pcmk__xe_first_child(cib_xml, PCMK_XE_STATUS, NULL, NULL);
     if (!stand_alone && (status != NULL)) {
         // Strip out the PCMK_XE_STATUS section if there is one
         pcmk__xml_free(status);
         status = NULL;
     }
     if (status == NULL) {
-        pcmk__xe_create(root, PCMK_XE_STATUS);
+        pcmk__xe_create(cib_xml, PCMK_XE_STATUS);
     }
 
     /* Do this before schema validation happens */
 
     /* fill in some defaults */
-    value = pcmk__xe_get(root, PCMK_XA_ADMIN_EPOCH);
+    value = pcmk__xe_get(cib_xml, PCMK_XA_ADMIN_EPOCH);
     if (value == NULL) { // Not possible with schema validation enabled
         pcmk__warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
                    "cluster may get confused about which node's configuration "
                    "is most recent");
-        pcmk__xe_set_int(root, PCMK_XA_ADMIN_EPOCH, 0);
+        pcmk__xe_set_int(cib_xml, PCMK_XA_ADMIN_EPOCH, 0);
     }
 
     name = PCMK_XA_EPOCH;
-    value = pcmk__xe_get(root, name);
+    value = pcmk__xe_get(cib_xml, name);
     if (value == NULL) {
-        pcmk__xe_set_int(root, name, 0);
+        pcmk__xe_set_int(cib_xml, name, 0);
     }
 
     name = PCMK_XA_NUM_UPDATES;
-    value = pcmk__xe_get(root, name);
+    value = pcmk__xe_get(cib_xml, name);
     if (value == NULL) {
-        pcmk__xe_set_int(root, name, 0);
+        pcmk__xe_set_int(cib_xml, name, 0);
     }
 
     // Unset (DC should set appropriate value)
-    pcmk__xe_remove_attr(root, PCMK_XA_DC_UUID);
+    pcmk__xe_remove_attr(cib_xml, PCMK_XA_DC_UUID);
 
     if (!stand_alone) {
-        pcmk__log_xml_trace(root, "[on-disk]");
+        pcmk__log_xml_trace(cib_xml, "[on-disk]");
     }
 
-    if (!pcmk__configured_schema_validates(root)) {
+    if (!pcmk__configured_schema_validates(cib_xml)) {
         cib_status = pcmk_rc_schema_validation;
     }
-    return root;
+    return cib_xml;
 }
 
 void
