@@ -383,9 +383,34 @@ done:
     return cib_xml;
 }
 
+/*!
+ * \internal
+ * \brief Set the given CIB version attribute to 0 if it's not already set
+ *
+ * \param[in,out] cib_xml       CIB XML
+ * \param[in]     version_attr  Version attribute
+ */
+static void
+set_default_if_unset(xmlNode *cib_xml, const char *version_attr)
+{
+    if (pcmk__xe_get(cib_xml, version_attr) != NULL) {
+        return;
+    }
+
+    pcmk__warn("Defaulting missing %s to 0, but cluster may get confused about "
+               "which node's configuration is most recent", version_attr);
+    pcmk__xe_set_int(cib_xml, version_attr, 0);
+}
+
 xmlNode *
 based_read_cib(void)
 {
+    static const char *version_attrs[] = {
+        PCMK_XA_ADMIN_EPOCH,
+        PCMK_XA_EPOCH,
+        PCMK_XA_NUM_UPDATES,
+    };
+
     xmlNode *cib_xml = NULL;
     xmlNode *status = NULL;
 
@@ -425,26 +450,8 @@ based_read_cib(void)
      *   and then unmodified.
      * * We need to set these defaults before schema validation happens.
      */
-
-    if (pcmk__xe_get(cib_xml, PCMK_XA_ADMIN_EPOCH) == NULL) {
-        pcmk__warn("Defaulting missing " PCMK_XA_ADMIN_EPOCH " to 0, but "
-                   "cluster may get confused about which node's configuration "
-                   "is most recent");
-        pcmk__xe_set_int(cib_xml, PCMK_XA_ADMIN_EPOCH, 0);
-    }
-
-    if (pcmk__xe_get(cib_xml, PCMK_XA_EPOCH) == NULL) {
-        pcmk__warn("Defaulting missing " PCMK_XA_EPOCH " to 0, but cluster "
-                   "may get confused about which node's configuration is most "
-                   "recent");
-        pcmk__xe_set_int(cib_xml, PCMK_XA_EPOCH, 0);
-    }
-
-    if (pcmk__xe_get(cib_xml, PCMK_XA_NUM_UPDATES) == NULL) {
-        pcmk__warn("Defaulting missing " PCMK_XA_NUM_UPDATES " to 0, but "
-                   "cluster may get confused about which node's configuration "
-                   "is most recent");
-        pcmk__xe_set_int(cib_xml, PCMK_XA_NUM_UPDATES, 0);
+    for (int i = 0; i < PCMK__NELEM(version_attrs); i++) {
+        set_default_if_unset(cib_xml, version_attrs[i]);
     }
 
     // The DC should set appropriate value for PCMK_XA_DC_UUID
