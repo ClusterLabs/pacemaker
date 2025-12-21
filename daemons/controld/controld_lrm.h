@@ -9,6 +9,7 @@
 #ifndef CONTROLD_LRM__H
 #  define CONTROLD_LRM__H
 
+#include <stdbool.h>
 #include <stdint.h>                 // UINT32_C
 #include <crm/lrmd.h>               // lrmd_t
 

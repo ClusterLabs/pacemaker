@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>

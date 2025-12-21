@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_IPC__H
 #define PCMK__CRM_COMMON_IPC__H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/uio.h>
 

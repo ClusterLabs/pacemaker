@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>                         // uint32_t, etc.
 #include <stdio.h>                          // NULL
 

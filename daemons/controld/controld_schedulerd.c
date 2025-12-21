@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <unistd.h>  /* pid_t, sleep, ssize_t */
 
 #include <crm/cib.h>

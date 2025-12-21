@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <libxml/tree.h>
 
 #include <crm/crm.h>

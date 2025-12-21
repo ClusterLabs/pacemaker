@@ -11,8 +11,11 @@
 #  define PACEMAKER_ATTRD__H
 
 #include <regex.h>
+#include <stdbool.h>
 #include <stdint.h>
+
 #include <glib.h>
+
 #include <crm/crm.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>

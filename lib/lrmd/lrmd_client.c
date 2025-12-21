@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <unistd.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>         // uint32_t, uint64_t

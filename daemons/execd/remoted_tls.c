@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <glib.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #include <crm/crm.h>

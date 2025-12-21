@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <inttypes.h>   // PRIu32

@@ -9,7 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <libxml/tree.h>        // xmlNode
+
 #include <crm/common/nvpair.h>
 
 /*!

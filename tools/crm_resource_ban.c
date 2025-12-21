@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <glib.h>           // g_str_has_prefix()
 #include <libxml/tree.h>    // xmlNode
 #include <libxml/xpath.h>   // xmlXPathObject, etc.

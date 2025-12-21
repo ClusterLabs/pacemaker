@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+
 #include <crm/crm.h>
 #include <dbus/dbus.h>
 #include <pcmk-dbus.h>

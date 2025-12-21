@@ -11,6 +11,7 @@
 
 #include <regex.h>
 #include <stdarg.h>     // va_list, etc.
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

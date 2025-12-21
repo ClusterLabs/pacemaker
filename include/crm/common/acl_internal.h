@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_ACL_INTERNAL__H
 #define PCMK__CRM_COMMON_ACL_INTERNAL__H
 
+#include <stdbool.h>
 #include <string.h>         // strcmp()
 #include <libxml/tree.h>    // xmlNode
 

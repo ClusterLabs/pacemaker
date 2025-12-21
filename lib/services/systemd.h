@@ -10,6 +10,8 @@
 #ifndef PCMK__SERVICES_SYSTEMD__H
 #define PCMK__SERVICES_SYSTEMD__H
 
+#include <stdbool.h>
+
 #include <glib.h>
 #include "crm/services.h"
 

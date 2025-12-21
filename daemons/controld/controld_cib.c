@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <unistd.h>  /* sleep */
 
 #include <crm/common/alerts_internal.h>

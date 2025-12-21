@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>                    // UINT32_C
 
 #include <crm/crm.h>

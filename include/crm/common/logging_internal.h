@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 #define PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 
+#include <stdbool.h>
 #include <stdint.h>                     // UINT32_C
 
 #include <glib.h>

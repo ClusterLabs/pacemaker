@@ -8,9 +8,12 @@
  */
 
 #include <crm_internal.h>
+
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include <crm/crm.h>
 #include <crm/common/output.h>
 #include <crm/common/cmdline_internal.h>

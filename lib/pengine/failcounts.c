@@ -7,6 +7,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <sys/types.h>
 #include <regex.h>
 

@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <crm/common/unittest_internal.h>
 #include <crm/common/scheduler.h>
 #include <crm/common/xml.h>

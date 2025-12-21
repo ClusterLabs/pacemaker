@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_COMMON_TLS_INTERNAL__H
 #define PCMK__CRM_COMMON_TLS_INTERNAL__H
 
+#include <stdbool.h>
+
 #include <gnutls/gnutls.h>  // gnutls_session_t, gnutls_dh_params_t, etc.
 
 #include <crm/common/ipc_internal.h>        // pcmk__client_t

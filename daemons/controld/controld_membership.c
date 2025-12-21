@@ -10,6 +10,7 @@
 /* put these first so that uuid_t is defined without conflicts */
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>                     // uint32_t
 #include <string.h>
 
