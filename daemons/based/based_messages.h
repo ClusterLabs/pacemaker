@@ -27,6 +27,11 @@ int based_process_apply_patch(const char *op, int options, const char *section,
                               xmlNode *existing_cib, xmlNode **result_cib,
                               xmlNode **answer);
 
+int based_process_commit_transact(const char *op, int options,
+                                  const char *section, xmlNode *req,
+                                  xmlNode *input, xmlNode *existing_cib,
+                                  xmlNode **result_cib, xmlNode **answer);
+
 int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
                              xmlNode *existing_cib, xmlNode **result_cib,
@@ -60,11 +65,6 @@ int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode *req, xmlNode *input,
                                xmlNode *existing_cib, xmlNode **result_cib,
                                xmlNode **answer);
-
-int cib_process_commit_transaction(const char *op, int options,
-                                   const char *section, xmlNode *req,
-                                   xmlNode *input, xmlNode *existing_cib,
-                                   xmlNode **result_cib, xmlNode **answer);
 
 int cib_process_schemas(const char *op, int options, const char *section,
                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
