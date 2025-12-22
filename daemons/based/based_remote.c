@@ -67,7 +67,7 @@ remote_connection_destroy(gpointer user_data)
 }
 
 static int
-init_remote_listener(int port, bool encrypted)
+init_remote_listener(int port)
 {
     int rc;
     int *ssock = NULL;
@@ -79,17 +79,6 @@ init_remote_listener(int port, bool encrypted)
         .destroy = remote_connection_destroy,
     };
 
-    if (encrypted) {
-        pcmk__notice("Starting TLS listener on port %d", port);
-
-        // @TODO Implement pre-shared key authentication (see T961)
-        rc = pcmk__init_tls(&tls, true, false);
-        if (rc != pcmk_rc_ok) {
-            return -1;
-        }
-    } else {
-        pcmk__warn("Starting plain-text listener on port %d", port);
-    }
 #ifndef HAVE_PAM
     pcmk__warn("This build does not support remote administrators because PAM "
                "support is not available");
@@ -149,13 +138,26 @@ based_remote_init(void)
     port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        remote_tls_fd = init_remote_listener(port, true);
+        // @TODO Implement pre-shared key authentication (see T961)
+        int rc = pcmk__init_tls(&tls, true, false);
+
+        if (rc != pcmk_rc_ok) {
+            pcmk__err("Failed to initialize TLS: %s. Not starting TLS listener ",
+                      "on port %d", pcmk_rc_str(rc), port);
+            remote_tls_fd = -1;
+
+        } else {
+            pcmk__notice("Starting TLS listener on port %d", port);
+            remote_tls_fd = init_remote_listener(port);
+        }
     }
 
     port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        remote_fd = init_remote_listener(port, false);
+        pcmk__warn("Starting clear-text listener on port %d. This is insecure; "
+                   PCMK_XA_REMOTE_TLS_PORT " is recommended instead.", port);
+        remote_fd = init_remote_listener(port);
     }
 }
 
