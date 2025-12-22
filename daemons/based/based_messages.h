@@ -61,9 +61,10 @@ int based_process_shutdown(const char *op, int options, const char *section,
                            xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                            xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_sync(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                     xmlNode **result_cib, xmlNode **answer);
+int based_process_sync_to_all(const char *op, int options, const char *section,
+                              xmlNode *req, xmlNode *input,
+                              xmlNode *existing_cib, xmlNode **result_cib,
+                              xmlNode **answer);
 
 int cib_process_sync_one(const char *op, int options, const char *section,
                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
