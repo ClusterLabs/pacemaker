@@ -166,6 +166,29 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
 }
 
 int
+cib__process_apply_patch(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer)
+{
+    const bool force = pcmk__is_set(options, cib_force_diff);
+    const char *originator = NULL;
+
+    if (req != NULL) {
+        originator = pcmk__xe_get(req, PCMK__XA_SRC);
+    }
+
+    pcmk__trace("Processing \"%s\" event from %s%s", op, originator,
+                (force? " (global update)" : ""));
+
+    if (*result_cib != existing_cib) {
+        pcmk__xml_free(*result_cib);
+    }
+    *result_cib = pcmk__xml_copy(NULL, existing_cib);
+
+    return xml_apply_patchset(*result_cib, input, TRUE);
+}
+
+int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
@@ -636,28 +659,6 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     }
 
     return result;
-}
-
-int
-cib_process_diff(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    const bool force = pcmk__is_set(options, cib_force_diff);
-    const char *originator = NULL;
-
-    if (req != NULL) {
-        originator = pcmk__xe_get(req, PCMK__XA_SRC);
-    }
-
-    pcmk__trace("Processing \"%s\" event from %s%s", op, originator,
-                (force? " (global update)" : ""));
-
-    if (*result_cib != existing_cib) {
-        pcmk__xml_free(*result_cib);
-    }
-    *result_cib = pcmk__xml_copy(NULL, existing_cib);
-
-    return xml_apply_patchset(*result_cib, input, TRUE);
 }
 
 int

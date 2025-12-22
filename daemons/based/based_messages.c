@@ -98,7 +98,8 @@ based_process_apply_patch(const char *op, int options, const char *section,
         return -pcmk_err_diff_resync;
     }
 
-    rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
+    rc = cib__process_apply_patch(op, options, section, req, input,
+                                  existing_cib, result_cib, answer);
     pcmk__trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
                 (based_is_primary? "primary": "secondary"));
 
