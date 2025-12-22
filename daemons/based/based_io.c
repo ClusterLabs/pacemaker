@@ -588,22 +588,36 @@ based_read_cib(void)
     return cib_xml;
 }
 
-/*
- * This method will free the old CIB pointer on success and the new one
- * on failure.
+/*!
+ * \internal
+ * \brief Activate new CIB XML
+ *
+ * This function frees the existing \c the_cib and points it to \p new_cib.
+ *
+ * \param[in] new_cib  CIB XML to activate (must not be \c NULL or equal to
+ *                     \c the_cib)
+ * \param[in] to_disk  If \c true and if the CIB status is OK and writes are
+ *                     enabled, trigger the new CIB to be written to disk
+ * \param[in] op       Operation that triggered the activation (for logging
+ *                     only)
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note This function takes ownership of \p new_cib by assigning it to
+ *       \c the_cib. The caller should not free it.
  */
 int
-activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
+based_activate_cib(xmlNode *new_cib, bool to_disk, const char *op)
 {
-    xmlNode *saved_cib = the_cib;
-
     CRM_CHECK((new_cib != NULL) && (new_cib != the_cib), return ENODATA);
 
+    pcmk__xml_free(the_cib);
     the_cib = new_cib;
-    pcmk__xml_free(saved_cib);
+
     if (to_disk && writes_enabled && (cib_status == pcmk_rc_ok)) {
         pcmk__debug("Triggering CIB write for %s op", op);
         mainloop_set_trigger(write_trigger);
     }
+
     return pcmk_rc_ok;
 }

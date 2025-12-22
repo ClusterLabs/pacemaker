@@ -1127,7 +1127,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                         pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES),
                         (config_changed? " changed" : ""));
 
-            rc = activateCibXml(result_cib, config_changed, op);
+            rc = based_activate_cib(result_cib, config_changed, op);
             if (rc != pcmk_rc_ok) {
                 pcmk__err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
             }
