@@ -17,6 +17,11 @@
 extern bool based_is_primary;
 extern xmlNode *the_cib;
 
+int based_process_abs_delete(const char *op, int options, const char *section,
+                             xmlNode *req, xmlNode *input,
+                             xmlNode *existing_cib, xmlNode **result_cib,
+                             xmlNode **answer);
+
 int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
                              xmlNode *existing_cib, xmlNode **result_cib,
@@ -49,11 +54,6 @@ int cib_process_sync(const char *op, int options, const char *section,
 int cib_process_sync_one(const char *op, int options, const char *section,
                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                          xmlNode **result_cib, xmlNode **answer);
-
-int cib_process_delete_absolute(const char *op, int options,
-                                const char *section, xmlNode *req,
-                                xmlNode *input, xmlNode *existing_cib,
-                                xmlNode **result_cib, xmlNode **answer);
 
 int cib_process_upgrade_server(const char *op, int options, const char *section,
                                xmlNode *req, xmlNode *input,
