@@ -67,8 +67,8 @@ remote_connection_destroy(gpointer user_data)
     return;
 }
 
-int
-based_init_remote_listener(int port, bool encrypted)
+static int
+init_remote_listener(int port, bool encrypted)
 {
     int rc;
     int *ssock = NULL;
@@ -141,6 +141,26 @@ based_init_remote_listener(int port, bool encrypted)
     pcmk__debug("Started listener on port %d", port);
 
     return *ssock;
+}
+
+/*!
+ * \internal
+ * \brief Initialize remote listeners using ports configured in the CIB
+ */
+void
+based_remote_init(void)
+{
+    int port = 0;
+
+    pcmk__scan_port(pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT), &port);
+    if (port >= 0) {
+        remote_tls_fd = init_remote_listener(port, true);
+    }
+
+    pcmk__scan_port(pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
+    if (port >= 0) {
+        remote_fd = init_remote_listener(port, false);
+    }
 }
 
 static bool
