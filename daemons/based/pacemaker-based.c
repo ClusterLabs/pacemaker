@@ -50,7 +50,6 @@ GHashTable *config_hash = NULL;
 
 static void cib_init(void);
 void cib_shutdown(int nsig);
-static bool startCib(void);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -369,6 +368,18 @@ cib_peer_update_callback(enum pcmk__node_update type,
 static void
 cib_init(void)
 {
+    // based_read_cib() returns new, non-NULL XML, so this should always succeed
+    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
+        pcmk__crit("Bug: failed to activate CIB. Terminating %s.",
+                   pcmk__server_log_name(pcmk_ipc_based));
+        crm_exit(CRM_EX_SOFTWARE);
+    }
+
+    config_hash = pcmk__strkey_table(free, free);
+    cib_read_config(config_hash, the_cib);
+
+    based_remote_init();
+
     crm_cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
@@ -378,13 +389,6 @@ cib_init(void)
         pcmk_cpg_set_confchg_fn(crm_cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
-
-    config_hash = pcmk__strkey_table(free, free);
-
-    if (!startCib()) {
-        pcmk__crit("Cannot start CIB... terminating");
-        crm_exit(CRM_EX_NOINPUT);
-    }
 
     if (!stand_alone) {
         pcmk__cluster_set_status_callback(&cib_peer_update_callback);
@@ -401,17 +405,4 @@ cib_init(void)
     if (stand_alone) {
         based_is_primary = true;
     }
-}
-
-static bool
-startCib(void)
-{
-    // based_read_cib() returns new, non-NULL XML, so this should always succeed
-    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
-        return false;
-    }
-
-    cib_read_config(config_hash, the_cib);
-    based_remote_init();
-    return true;
 }
