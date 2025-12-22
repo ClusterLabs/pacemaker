@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <crm/stonith-ng.h>

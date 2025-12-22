@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <crm/cib.h>

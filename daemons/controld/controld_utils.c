@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>                 // uint64_t
 #include <inttypes.h>               // PRIx64

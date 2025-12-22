@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+
 #include <crm/cib/internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>

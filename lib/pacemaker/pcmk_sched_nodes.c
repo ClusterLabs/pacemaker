@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+
 #include <crm/common/xml.h>
 #include <crm/common/xml_internal.h>
 #include <pacemaker-internal.h>

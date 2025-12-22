@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>
+#include <stdbool.h>
 
 #include <crm/crm.h>
 #include <crm/common/iso8601.h>

@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>      // snprintf(), NULL
 #include <string.h>     // strcpy(), strdup()
 #include <sys/types.h>  // size_t

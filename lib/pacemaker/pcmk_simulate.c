@@ -15,6 +15,7 @@
 #include <pacemaker-internal.h>
 #include <pacemaker.h>
 
+#include <stdbool.h>
 #include <stdint.h>                 // uint32_t, uint64_t
 #include <sys/types.h>
 #include <sys/stat.h>

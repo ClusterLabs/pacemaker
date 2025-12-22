@@ -10,6 +10,8 @@
 #ifndef CRMD__H
 #  define CRMD__H
 
+#include <stdbool.h>
+
 #include <controld_alerts.h>
 #include <controld_callbacks.h>
 #include <controld_cib.h>

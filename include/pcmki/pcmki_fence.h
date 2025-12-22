@@ -9,6 +9,8 @@
 #ifndef PCMK__PCMKI_PCMKI_FENCE__H
 #define PCMK__PCMKI_PCMKI_FENCE__H
 
+#include <stdbool.h>
+
 #include <crm/stonith-ng.h>
 #include <crm/common/output_internal.h>
 

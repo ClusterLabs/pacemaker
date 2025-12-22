@@ -10,6 +10,7 @@
 #ifndef PCMK__PACEMAKER__H
 #  define PCMK__PACEMAKER__H
 
+#  include <stdbool.h>
 #  include <stdint.h>              // UINT32_C
 
 #  include <glib.h>

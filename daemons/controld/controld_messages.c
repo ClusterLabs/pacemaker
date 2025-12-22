@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <inttypes.h>                   // PRIx64
+#include <stdbool.h>
 #include <stdint.h>                     // uint64_t
 #include <string.h>
 #include <sys/param.h>

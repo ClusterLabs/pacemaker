@@ -16,6 +16,7 @@
 #include <sys/utsname.h>
 
 #include <inttypes.h>               // PRIu32
+#include <stdbool.h>
 #include <stdint.h>                 // uint32_t
 #include <stdio.h>
 #include <unistd.h>

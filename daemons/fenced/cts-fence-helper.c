@@ -8,6 +8,7 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <sys/types.h>

@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <sched.h>
+#include <stdbool.h>
 #include <sys/ioctl.h>
 #include <sys/reboot.h>
 

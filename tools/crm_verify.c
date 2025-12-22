@@ -12,6 +12,7 @@
 #include <crm/common/cmdline_internal.h>
 #include <crm/common/output_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

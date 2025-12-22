@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>      // NULL
 #include <glib.h>       // GList, TRUE, FALSE
 

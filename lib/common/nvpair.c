@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>         // UINT32_MAX
 #include <inttypes.h>       // PRIu32

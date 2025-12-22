@@ -11,6 +11,7 @@
 
 #include <glib.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <sys/types.h>
 
 #include <crm/crm.h>

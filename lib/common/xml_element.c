@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdarg.h>                     // va_start(), etc.
+#include <stdbool.h>
 #include <stdint.h>                     // uint32_t
 #include <stdio.h>                      // NULL, etc.
 #include <stdlib.h>                     // free(), etc.

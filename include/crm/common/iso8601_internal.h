@@ -11,6 +11,7 @@
 #define PCMK__CRM_COMMON_ISO8601_INTERNAL__H
 
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdint.h>             // uint8_t, uint32_t
 #include <sys/time.h>
 #include <time.h>

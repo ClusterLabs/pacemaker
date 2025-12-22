@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <regex.h>
+#include <stdbool.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>

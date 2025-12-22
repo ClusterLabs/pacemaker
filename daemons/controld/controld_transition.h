@@ -8,6 +8,8 @@
 #ifndef TENGINE__H
 #define TENGINE__H
 
+#include <stdbool.h>
+
 #include <glib.h>                   // gboolean
 #include <libxml/tree.h>            // xmlNode
 

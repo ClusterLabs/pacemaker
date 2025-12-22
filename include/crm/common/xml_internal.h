@@ -14,6 +14,7 @@
  * Internal-only wrappers for and extensions to libxml2 (libxslt)
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>   // uint32_t
 #include <stdio.h>

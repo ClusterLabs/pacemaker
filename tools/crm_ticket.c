@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>

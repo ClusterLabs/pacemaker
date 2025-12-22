@@ -10,9 +10,11 @@
 #include <crm_internal.h>
 
 #include <errno.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
-#include <stdlib.h>
 
 #include <crm/common/tls_internal.h>
 

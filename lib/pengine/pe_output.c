@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <glib.h>                           // g_strchomp()

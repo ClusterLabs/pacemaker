@@ -5,6 +5,7 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdbool.h>
 #include <stdint.h>                 // uint32_t, uint64_t
 #include <libxml/tree.h>            // xmlNode
 

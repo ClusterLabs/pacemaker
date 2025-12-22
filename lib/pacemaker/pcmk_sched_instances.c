@@ -13,7 +13,9 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>                 // UINT32_C
+
 #include <glib.h>                   // g_str_has_suffix()
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>

@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+
 #include <crm/common/unittest_internal.h>
 
 #include "mock_private.h"

@@ -10,6 +10,8 @@
 #include <crm_internal.h>
 
 #include <inttypes.h>   // PRIu32
+#include <stdbool.h>
+
 #include <glib.h>
 
 #include <crm/common/messages_internal.h>
