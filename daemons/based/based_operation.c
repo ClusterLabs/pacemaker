@@ -17,7 +17,7 @@
 #include "pacemaker-based.h"
 
 static const cib__op_fn_t op_functions[] = {
-    [cib__op_abs_delete]       = cib_process_delete_absolute,
+    [cib__op_abs_delete]       = based_process_abs_delete,
     [cib__op_apply_patch]      = cib_server_process_diff,
     [cib__op_bump]             = cib_process_bump,
     [cib__op_commit_transact]  = cib_process_commit_transaction,

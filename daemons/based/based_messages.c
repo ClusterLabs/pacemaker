@@ -36,6 +36,34 @@ bool based_is_primary = false;
 
 xmlNode *the_cib = NULL;
 
+/*!
+ * \internal
+ * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
+ *
+ * \param[in] op            Ignored
+ * \param[in] options       Ignored
+ * \param[in] section       Ignored
+ * \param[in] req           Ignored
+ * \param[in] input         Ignored
+ * \param[in] existing_cib  Ignored
+ * \param[in] result_cib    Ignored
+ * \param[in] answer        Ignored
+ *
+ * \return \c -EINVAL
+ *
+ * \note This is unimplemented and simply returns an error.
+ */
+int
+based_process_abs_delete(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer)
+{
+    /* @COMPAT Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed. Note that
+     * external clients with Pacemaker versions < 3.0.0 can send it.
+     */
+    return -EINVAL;
+}
+
 int
 cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
                          xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
@@ -349,17 +377,6 @@ cib_process_replace_svr(const char *op, int options, const char *section, xmlNod
         sync_in_progress = 0;
     }
     return rc;
-}
-
-/* @COMPAT: Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed
- * (At least external client code <3.0.0 can send it)
- */
-int
-cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,
-                            xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                            xmlNode ** answer)
-{
-    return -EINVAL;
 }
 
 static xmlNode *
