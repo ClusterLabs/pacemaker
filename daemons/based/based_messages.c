@@ -119,6 +119,33 @@ based_process_apply_patch(const char *op, int options, const char *section,
 }
 
 int
+based_process_commit_transact(const char *op, int options, const char *section,
+                              xmlNode *req, xmlNode *input,
+                              xmlNode *existing_cib, xmlNode **result_cib,
+                              xmlNode **answer)
+{
+    /* On success, our caller will activate *result_cib locally, trigger a
+     * replace notification if appropriate, and sync *result_cib to all nodes.
+     * On failure, our caller will free *result_cib.
+     */
+    int rc = pcmk_rc_ok;
+    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
+    const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
+    pcmk__client_t *client = pcmk__find_client_by_id(client_id);
+
+    rc = based_commit_transaction(input, client, origin, result_cib);
+
+    if (rc != pcmk_rc_ok) {
+        char *source = based_transaction_source_str(client, origin);
+
+        pcmk__err("Could not commit transaction for %s: %s", source,
+                  pcmk_rc_str(rc));
+        free(source);
+    }
+    return pcmk_rc2legacy(rc);
+}
+
+int
 cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
                          xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                          xmlNode ** answer)
@@ -458,33 +485,6 @@ sync_our_cib(xmlNode *request, bool all)
     pcmk__xml_free(replace_request);
     free(digest);
     return result;
-}
-
-int
-cib_process_commit_transaction(const char *op, int options, const char *section,
-                               xmlNode *req, xmlNode *input,
-                               xmlNode *existing_cib, xmlNode **result_cib,
-                               xmlNode **answer)
-{
-    /* On success, our caller will activate *result_cib locally, trigger a
-     * replace notification if appropriate, and sync *result_cib to all nodes.
-     * On failure, our caller will free *result_cib.
-     */
-    int rc = pcmk_rc_ok;
-    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
-    const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
-    pcmk__client_t *client = pcmk__find_client_by_id(client_id);
-
-    rc = based_commit_transaction(input, client, origin, result_cib);
-
-    if (rc != pcmk_rc_ok) {
-        char *source = based_transaction_source_str(client, origin);
-
-        pcmk__err("Could not commit transaction for %s: %s", source,
-                  pcmk_rc_str(rc));
-        free(source);
-    }
-    return pcmk_rc2legacy(rc);
 }
 
 int

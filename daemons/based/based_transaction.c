@@ -116,7 +116,7 @@ process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
  * \return Standard Pacemaker return code
  *
  * \note This function is expected to be called only by
- *       \p cib_process_commit_transaction().
+ *       \p based_process_commit_transact().
  * \note \p result_cib is expected to be a copy of the current CIB as created by
  *       \p cib_perform_op().
  * \note The caller is responsible for activating and syncing \p result_cib on
