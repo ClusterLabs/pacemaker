@@ -363,6 +363,48 @@ cib__process_create(const char *op, int options, const char *section,
     return result;
 }
 
+static int
+delete_child(xmlNode *child, void *userdata)
+{
+    xmlNode *obj_root = userdata;
+
+    if (pcmk__xe_delete_match(obj_root, child) != pcmk_rc_ok) {
+        pcmk__trace("No matching object to delete: %s=%s", child->name,
+                    pcmk__xe_id(child));
+    }
+
+    return pcmk_rc_ok;
+}
+
+int
+cib__process_delete(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *obj_root = NULL;
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (options & cib_xpath) {
+        return cib_process_xpath(op, options, section, req, input,
+                                 existing_cib, result_cib, answer);
+    }
+
+    if (input == NULL) {
+        pcmk__err("Cannot perform modification with no data");
+        return -EINVAL;
+    }
+
+    obj_root = pcmk_find_cib_element(*result_cib, section);
+    if (pcmk__xe_is(input, section)) {
+        pcmk__xe_foreach_child(input, NULL, delete_child, obj_root);
+    } else {
+        delete_child(input, obj_root);
+    }
+
+    return pcmk_ok;
+}
+
 int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
@@ -567,47 +609,6 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
     }
 
     return result;
-}
-
-static int
-delete_child(xmlNode *child, void *userdata)
-{
-    xmlNode *obj_root = userdata;
-
-    if (pcmk__xe_delete_match(obj_root, child) != pcmk_rc_ok) {
-        pcmk__trace("No matching object to delete: %s=%s", child->name,
-                    pcmk__xe_id(child));
-    }
-
-    return pcmk_rc_ok;
-}
-
-int
-cib_process_delete(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    xmlNode *obj_root = NULL;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (options & cib_xpath) {
-        return cib_process_xpath(op, options, section, req, input,
-                                 existing_cib, result_cib, answer);
-    }
-
-    if (input == NULL) {
-        pcmk__err("Cannot perform modification with no data");
-        return -EINVAL;
-    }
-
-    obj_root = pcmk_find_cib_element(*result_cib, section);
-    if (pcmk__xe_is(input, section)) {
-        pcmk__xe_foreach_child(input, NULL, delete_child, obj_root);
-    } else {
-        delete_child(input, obj_root);
-    }
-
-    return pcmk_ok;
 }
 
 int
