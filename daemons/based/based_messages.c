@@ -146,30 +146,6 @@ based_process_commit_transact(const char *op, int options, const char *section,
 }
 
 int
-cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
-                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                         xmlNode ** answer)
-{
-    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
-
-    *answer = NULL;
-
-    if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
-        pcmk__info("Peer %s is requesting to shut down", host);
-        return pcmk_ok;
-    }
-
-    if (!cib_shutdown_flag) {
-        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
-        return -EINVAL;
-    }
-
-    pcmk__info("Exiting after %s acknowledged our shutdown request", host);
-    terminate_cib(CRM_EX_OK);
-    return pcmk_ok;
-}
-
-int
 based_process_is_primary(const char *op, int options, const char *section,
                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                          xmlNode **result_cib, xmlNode **answer)
@@ -287,6 +263,30 @@ based_process_secondary(const char *op, int options, const char *section,
         pcmk__debug("We are still in R/O mode");
     }
 
+    return pcmk_ok;
+}
+
+int
+based_process_shutdown(const char *op, int options, const char *section,
+                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                       xmlNode **result_cib, xmlNode **answer)
+{
+    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
+
+    *answer = NULL;
+
+    if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
+        pcmk__info("Peer %s is requesting to shut down", host);
+        return pcmk_ok;
+    }
+
+    if (!cib_shutdown_flag) {
+        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
+        return -EINVAL;
+    }
+
+    pcmk__info("Exiting after %s acknowledged our shutdown request", host);
+    terminate_cib(CRM_EX_OK);
     return pcmk_ok;
 }
 
