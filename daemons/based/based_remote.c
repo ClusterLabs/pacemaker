@@ -79,11 +79,6 @@ init_remote_listener(int port, bool encrypted)
         .destroy = remote_connection_destroy,
     };
 
-    if (port <= 0) {
-        /* don't start it */
-        return 0;
-    }
-
     if (encrypted) {
         bool use_cert = pcmk__x509_enabled();
 
@@ -149,15 +144,18 @@ init_remote_listener(int port, bool encrypted)
 void
 based_remote_init(void)
 {
+    const char *port_s = NULL;
     int port = 0;
 
-    pcmk__scan_port(pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT), &port);
-    if (port >= 0) {
+    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
+
+    if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
         remote_tls_fd = init_remote_listener(port, true);
     }
 
-    pcmk__scan_port(pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
-    if (port >= 0) {
+    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
+
+    if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
         remote_fd = init_remote_listener(port, false);
     }
 }
