@@ -181,6 +181,17 @@ cib_process_noop(const char *op, int options, const char *section, xmlNode *req,
 }
 
 int
+based_process_is_primary(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+
+    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
+    return (based_is_primary? pcmk_ok : -EPERM);
+}
+
+int
 cib_process_readwrite(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer)
@@ -188,16 +199,6 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
     int result = pcmk_ok;
 
     pcmk__trace("Processing \"%s\" event", op);
-
-    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
-        if (based_is_primary) {
-            result = pcmk_ok;
-        } else {
-            result = -EPERM;
-        }
-        return result;
-    }
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
         if (!based_is_primary) {
