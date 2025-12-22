@@ -51,6 +51,14 @@ typedef struct {
     xmlNode *cib_xml;
 } file_opaque_t;
 
+/* backup_cib_file() and cib_file_write_with_digest() need to chown the
+ * written files only in limited circumstances, so these variables allow
+ * that to be indicated without affecting external callers
+ */
+static uid_t file_owner = 0;
+static uid_t file_group = 0;
+static bool do_chown = false;
+
 static cib__op_fn_t get_op_function(const cib__operation_t *operation);
 
 #define set_file_flags(cibfile, flags_to_set) do {                      \
@@ -348,14 +356,6 @@ static const cib__op_fn_t op_functions[] = {
     [cib__op_replace]          = cib_process_replace,
     [cib__op_upgrade]          = cib_process_upgrade,
 };
-
-/* backup_cib_file() and cib_file_write_with_digest() need to chown the
- * written files only in limited circumstances, so these variables allow
- * that to be indicated without affecting external callers
- */
-static uid_t file_owner = 0;
-static uid_t file_group = 0;
-static bool do_chown = false;
 
 /*!
  * \internal
