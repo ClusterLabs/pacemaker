@@ -290,6 +290,14 @@ based_process_shutdown(const char *op, int options, const char *section,
     return pcmk_ok;
 }
 
+int
+based_process_sync_to_all(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer)
+{
+    return sync_our_cib(req, true);
+}
+
 void
 send_sync_request(void)
 {
@@ -305,13 +313,6 @@ send_sync_request(void)
 
     pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
     pcmk__xml_free(sync_me);
-}
-
-int
-cib_process_sync(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    return sync_our_cib(req, true);
 }
 
 int
