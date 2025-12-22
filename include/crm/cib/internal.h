@@ -87,12 +87,12 @@ enum cib__op_type {
     cib__op_primary,
     cib__op_query,
     cib__op_replace,
+    cib__op_schemas,
     cib__op_secondary,
     cib__op_shutdown,
-    cib__op_sync_all,
-    cib__op_sync_one,
+    cib__op_sync_to_all,
+    cib__op_sync_to_one,
     cib__op_upgrade,
-    cib__op_schemas,
 };
 
 void cib_read_config(GHashTable *options, xmlNode *current_cib);
