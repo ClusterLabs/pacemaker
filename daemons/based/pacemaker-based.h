@@ -32,6 +32,7 @@
 
 #include "based_io.h"
 #include "based_operation.h"
+#include "based_notify.h"
 #include "based_transaction.h"
 
 #include <gnutls/gnutls.h>
@@ -118,10 +119,6 @@ int cib_process_schemas(const char *op, int options, const char *section,
 
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, bool all);
-
-void cib_diff_notify(const char *op, int result, const char *call_id,
-                     const char *client_id, const char *client_name,
-                     const char *origin, xmlNode *update, xmlNode *diff);
 
 static inline const char *
 cib_config_lookup(const char *opt)
