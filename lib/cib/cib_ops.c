@@ -320,8 +320,8 @@ cib__process_create(const char *op, int options, const char *section,
     }
 
     if (section == NULL) {
-        return cib_process_modify(op, options, section, req, input, existing_cib, result_cib,
-                                  answer);
+        return cib__process_modify(op, options, section, req, input,
+                                   existing_cib, result_cib, answer);
     }
 
     // @COMPAT Deprecated since 2.1.8
@@ -619,6 +619,60 @@ cib__process_erase(const char *op, int options, const char *section,
 }
 
 int
+cib__process_modify(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *obj_root = NULL;
+    uint32_t flags = pcmk__xaf_none;
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (options & cib_xpath) {
+        return process_xpath(op, options, section, req, input, existing_cib,
+                             result_cib, answer);
+    }
+
+    if (input == NULL) {
+        pcmk__err("Cannot perform modification with no data");
+        return -EINVAL;
+    }
+
+    obj_root = pcmk_find_cib_element(*result_cib, section);
+    if (obj_root == NULL) {
+        xmlNode *tmp_section = NULL;
+        const char *path = pcmk_cib_parent_name_for(section);
+
+        if (path == NULL) {
+            return -EINVAL;
+        }
+
+        tmp_section = pcmk__xe_create(NULL, section);
+        process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
+                      NULL, result_cib, answer);
+        pcmk__xml_free(tmp_section);
+
+        obj_root = pcmk_find_cib_element(*result_cib, section);
+    }
+
+    CRM_CHECK(obj_root != NULL, return -EINVAL);
+
+    if (pcmk__is_set(options, cib_score_update)) {
+        flags |= pcmk__xaf_score_update;
+    }
+
+    if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
+        if (options & cib_can_create) {
+            pcmk__xml_copy(obj_root, input);
+        } else {
+            return -ENXIO;
+        }
+    }
+
+    return pcmk_ok;
+}
+
+int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
@@ -803,57 +857,4 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
     }
 
     return result;
-}
-
-int
-cib_process_modify(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    xmlNode *obj_root = NULL;
-    uint32_t flags = pcmk__xaf_none;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (options & cib_xpath) {
-        return process_xpath(op, options, section, req, input, existing_cib,
-                             result_cib, answer);
-    }
-
-    if (input == NULL) {
-        pcmk__err("Cannot perform modification with no data");
-        return -EINVAL;
-    }
-
-    obj_root = pcmk_find_cib_element(*result_cib, section);
-    if (obj_root == NULL) {
-        xmlNode *tmp_section = NULL;
-        const char *path = pcmk_cib_parent_name_for(section);
-
-        if (path == NULL) {
-            return -EINVAL;
-        }
-
-        tmp_section = pcmk__xe_create(NULL, section);
-        process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
-                      NULL, result_cib, answer);
-        pcmk__xml_free(tmp_section);
-
-        obj_root = pcmk_find_cib_element(*result_cib, section);
-    }
-
-    CRM_CHECK(obj_root != NULL, return -EINVAL);
-
-    if (pcmk__is_set(options, cib_score_update)) {
-        flags |= pcmk__xaf_score_update;
-    }
-
-    if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
-        if (options & cib_can_create) {
-            pcmk__xml_copy(obj_root, input);
-        } else {
-            return -ENXIO;
-        }
-    }
-
-    return pcmk_ok;
 }
