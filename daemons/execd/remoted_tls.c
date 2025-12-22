@@ -362,7 +362,6 @@ lrmd_init_remote_tls_server(void)
     int port = crm_default_remote_port();
     struct addrinfo *res = NULL, *iter;
     const char *bind_name = pcmk__env_option(PCMK__ENV_REMOTE_ADDRESS);
-    bool use_cert = pcmk__x509_enabled();
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
@@ -374,12 +373,12 @@ lrmd_init_remote_tls_server(void)
     pcmk__debug("Starting TLS listener on %s port %d",
                 pcmk__s(bind_name, "all addresses on"), port);
 
-    rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
+    rc = pcmk__init_tls(&tls, true, true);
     if (rc != pcmk_rc_ok) {
         return -1;
     }
 
-    if (!use_cert) {
+    if (!pcmk__x509_enabled()) {
         gnutls_datum_t psk_key = { NULL, 0 };
 
         pcmk__tls_add_psk_callback(tls, lrmd_tls_server_key_cb);

@@ -80,11 +80,10 @@ init_remote_listener(int port, bool encrypted)
     };
 
     if (encrypted) {
-        bool use_cert = pcmk__x509_enabled();
-
         pcmk__notice("Starting TLS listener on port %d", port);
 
-        rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_ANON);
+        // @TODO Implement pre-shared key authentication (see T961)
+        rc = pcmk__init_tls(&tls, true, false);
         if (rc != pcmk_rc_ok) {
             return -1;
         }
