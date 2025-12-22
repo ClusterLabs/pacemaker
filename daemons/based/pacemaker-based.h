@@ -24,6 +24,7 @@
 #include "based_messages.h"
 #include "based_operation.h"
 #include "based_notify.h"
+#include "based_remote.h"
 #include "based_transaction.h"
 
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
@@ -51,8 +52,6 @@ extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
 extern qb_ipcs_service_t *ipcs_ro;
 extern qb_ipcs_service_t *ipcs_rw;
 extern qb_ipcs_service_t *ipcs_shm;
-
-int init_remote_listener(int port, bool encrypted);
 
 void cib_peer_callback(xmlNode *msg, void *private_data);
 void cib_common_callback_worker(uint32_t id, uint32_t flags,

@@ -67,7 +67,7 @@ remote_connection_destroy(gpointer user_data)
 }
 
 int
-init_remote_listener(int port, bool encrypted)
+based_init_remote_listener(int port, bool encrypted)
 {
     int rc;
     int *ssock = NULL;
