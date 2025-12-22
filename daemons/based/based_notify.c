@@ -154,13 +154,8 @@ based_diff_notify(const char *op, int result, const char *call_id,
                   const char *client_id, const char *client_name,
                   const char *origin, xmlNode *update, xmlNode *diff)
 {
-    int add_updates = 0;
-    int add_epoch = 0;
-    int add_admin_epoch = 0;
-
-    int del_updates = 0;
-    int del_epoch = 0;
-    int del_admin_epoch = 0;
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
     uint8_t log_level = LOG_TRACE;
 
@@ -175,31 +170,28 @@ based_diff_notify(const char *op, int result, const char *call_id,
         log_level = LOG_WARNING;
     }
 
-    cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
-                             &del_admin_epoch, &del_epoch, &del_updates);
+    /* @TODO Check return code? How should we handle an error? Are these log
+     * messages even useful?
+     */
+    pcmk__xml_patchset_versions(diff, source, target);
 
-    if ((add_admin_epoch != del_admin_epoch)
-        || (add_epoch != del_epoch)
-        || (add_updates != del_updates)) {
+    if ((source[0] != target[0])
+        || (source[1] != target[1])
+        || (source[2] != target[2])) {
 
         do_crm_log(log_level,
                    "Updated CIB generation %d.%d.%d to %d.%d.%d from client "
                    "%s%s%s (%s) (%s)",
-                   del_admin_epoch, del_epoch, del_updates,
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
+                   source[0], source[1], source[2],
+                   target[0], target[1], target[2], client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
 
-    } else if ((add_admin_epoch != 0)
-               || (add_epoch != 0)
-               || (add_updates != 0)) {
-
+    } else if ((target[0] != 0) || (target[1] != 0) || (target[2] != 0)) {
         do_crm_log(log_level,
                    "Local-only change to CIB generation %d.%d.%d from client "
                    "%s%s%s (%s) (%s)",
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
+                   target[0], target[1], target[2], client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }

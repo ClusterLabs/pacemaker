@@ -307,23 +307,16 @@ cib_server_process_diff(const char *op, int options, const char *section, xmlNod
 
     // The primary instance should never ignore a diff
     if (sync_in_progress && !based_is_primary) {
-        int diff_add_updates = 0;
-        int diff_add_epoch = 0;
-        int diff_add_admin_epoch = 0;
+        int source[] = { 0, 0, 0 };
+        int target[] = { 0, 0, 0 };
 
-        int diff_del_updates = 0;
-        int diff_del_epoch = 0;
-        int diff_del_admin_epoch = 0;
-
-        cib_diff_version_details(input,
-                                 &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates,
-                                 &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
+        pcmk__xml_patchset_versions(input, source, target);
 
         sync_in_progress++;
         pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
                      "progress)",
-                     diff_del_admin_epoch, diff_del_epoch, diff_del_updates,
-                     diff_add_admin_epoch, diff_add_epoch, diff_add_updates);
+                     source[0], source[1], source[2],
+                     target[0], target[1], target[2]);
         return -pcmk_err_diff_resync;
     }
 
