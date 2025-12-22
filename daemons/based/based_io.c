@@ -588,19 +588,6 @@ based_read_cib(void)
     return cib_xml;
 }
 
-void
-uninitializeCib(void)
-{
-    xmlNode *tmp_cib = the_cib;
-
-    if (tmp_cib == NULL) {
-        return;
-    }
-
-    the_cib = NULL;
-    pcmk__xml_free(tmp_cib);
-}
-
 /*
  * This method will free the old CIB pointer on success and the new one
  * on failure.

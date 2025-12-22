@@ -1363,7 +1363,7 @@ terminate_cib(int exit_status)
         remote_tls_fd = 0;
     }
 
-    uninitializeCib();
+    g_clear_pointer(&the_cib, pcmk__xml_free);
 
     // Exit immediately on error
     if (exit_status > CRM_EX_OK) {
