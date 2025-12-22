@@ -834,9 +834,9 @@ cib__process_replace(const char *op, int options, const char *section,
 }
 
 int
-cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
-                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                    xmlNode ** answer)
+cib__process_upgrade(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer)
 {
     int rc = 0;
     const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);

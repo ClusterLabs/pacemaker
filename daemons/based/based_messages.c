@@ -367,8 +367,8 @@ based_process_upgrade(const char *op, int options, const char *section,
          * re-broadcasts the request with PCMK__XA_CIB_SCHEMA_MAX, and each node
          * performs the upgrade (and notifies its local clients) here.
          */
-        return cib_process_upgrade(
-            op, options, section, req, input, existing_cib, result_cib, answer);
+        return cib__process_upgrade(op, options, section, req, input,
+                                    existing_cib, result_cib, answer);
 
     } else {
         xmlNode *scratch = pcmk__xml_copy(NULL, existing_cib);

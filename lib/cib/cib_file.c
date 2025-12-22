@@ -350,7 +350,7 @@ static const cib__op_fn_t op_functions[] = {
     [cib__op_modify]           = cib__process_modify,
     [cib__op_query]            = cib__process_query,
     [cib__op_replace]          = cib__process_replace,
-    [cib__op_upgrade]          = cib_process_upgrade,
+    [cib__op_upgrade]          = cib__process_upgrade,
 };
 
 /*!
