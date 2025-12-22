@@ -599,6 +599,26 @@ cib__process_delete(const char *op, int options, const char *section,
 }
 
 int
+cib__process_erase(const char *op, int options, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                   xmlNode **result_cib, xmlNode **answer)
+{
+    int result = pcmk_ok;
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (*result_cib != existing_cib) {
+        pcmk__xml_free(*result_cib);
+    }
+    *result_cib = createEmptyCib(0);
+    pcmk__xe_copy_attrs(*result_cib, existing_cib, pcmk__xaf_none);
+    update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
+    *answer = NULL;
+
+    return result;
+}
+
+int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
 {
@@ -640,25 +660,6 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
         pcmk__err("Error creating query response");
         result = -ENOMSG;
     }
-
-    return result;
-}
-
-int
-cib_process_erase(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    int result = pcmk_ok;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (*result_cib != existing_cib) {
-        pcmk__xml_free(*result_cib);
-    }
-    *result_cib = createEmptyCib(0);
-    pcmk__xe_copy_attrs(*result_cib, existing_cib, pcmk__xaf_none);
-    update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
-    *answer = NULL;
 
     return result;
 }
