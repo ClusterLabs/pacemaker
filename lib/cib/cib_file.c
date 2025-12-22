@@ -52,12 +52,10 @@ typedef struct cib_file_opaque_s {
     xmlNode *cib_xml;
 } cib_file_opaque_t;
 
-static int cib_file_process_commit_transaction(const char *op, int options,
-                                               const char *section,
-                                               xmlNode *req, xmlNode *input,
-                                               xmlNode *existing_cib,
-                                               xmlNode **result_cib,
-                                               xmlNode **answer);
+static int process_commit_transact(const char *op, int options,
+                                   const char *section, xmlNode *req,
+                                   xmlNode *input, xmlNode *existing_cib,
+                                   xmlNode **result_cib, xmlNode **answer);
 
 /*!
  * \internal
@@ -122,7 +120,7 @@ get_client(const char *client_id)
 static const cib__op_fn_t cib_op_functions[] = {
     [cib__op_apply_patch]      = cib__process_apply_patch,
     [cib__op_bump]             = cib__process_bump,
-    [cib__op_commit_transact]  = cib_file_process_commit_transaction,
+    [cib__op_commit_transact]  = process_commit_transact,
     [cib__op_create]           = cib_process_create,
     [cib__op_delete]           = cib_process_delete,
     [cib__op_erase]            = cib_process_erase,
@@ -132,7 +130,7 @@ static const cib__op_fn_t cib_op_functions[] = {
     [cib__op_upgrade]          = cib_process_upgrade,
 };
 
-/* cib_file_backup() and cib_file_write_with_digest() need to chown the
+/* backup_cib_file() and cib_file_write_with_digest() need to chown the
  * written files only in limited circumstances, so these variables allow
  * that to be indicated without affecting external callers
  */
@@ -188,7 +186,7 @@ file_get_op_function(const cib__operation_t *operation)
  * \return TRUE if file exists and its real path is same as live CIB's
  */
 static gboolean
-cib_file_is_live(const char *filename)
+is_live(const char *filename)
 {
     gboolean same = FALSE;
 
@@ -211,7 +209,7 @@ cib_file_is_live(const char *filename)
 }
 
 static int
-cib_file_process_request(cib_t *cib, xmlNode *request, xmlNode **output)
+process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 {
     int rc = pcmk_ok;
     const cib__operation_t *operation = NULL;
@@ -285,10 +283,10 @@ done:
 }
 
 static int
-cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
-                             const char *section, xmlNode *data,
-                             xmlNode **output_data, int call_options,
-                             const char *user_name)
+file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
+                         const char *section, xmlNode *data,
+                         xmlNode **output_data, int call_options,
+                         const char *user_name)
 {
     int rc = pcmk_ok;
     xmlNode *request = NULL;
@@ -337,7 +335,7 @@ cib_file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         goto done;
     }
 
-    rc = cib_file_process_request(cib, request, &output);
+    rc = process_request(cib, request, &output);
 
     if ((output_data != NULL) && (output != NULL)) {
         if (output->doc == private->cib_xml->doc) {
@@ -407,7 +405,7 @@ load_file_cib(const char *filename, xmlNode **output)
 }
 
 static int
-cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
+file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
@@ -444,7 +442,7 @@ cib_file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
  * \return Standard Pacemaker return code
  */
 static int
-cib_file_write_live(xmlNode *cib_root, char *path)
+write_live(xmlNode *cib_root, char *path)
 {
     uid_t euid = geteuid();
     uid_t daemon_uid = 0;
@@ -526,7 +524,7 @@ cib_file_write_live(xmlNode *cib_root, char *path)
  *       running.
  */
 static int
-cib_file_signoff(cib_t *cib)
+file_signoff(cib_t *cib)
 {
     int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
@@ -542,7 +540,7 @@ cib_file_signoff(cib_t *cib)
 
         /* If this is the live CIB, write it out with a digest */
         if (pcmk__is_set(private->flags, cib_file_flag_live)) {
-            rc = cib_file_write_live(private->cib_xml, private->filename);
+            rc = write_live(private->cib_xml, private->filename);
             rc = pcmk_rc2legacy(rc);
 
         /* Otherwise, it's a simple write */
@@ -570,12 +568,12 @@ cib_file_signoff(cib_t *cib)
 }
 
 static int
-cib_file_free(cib_t *cib)
+file_free(cib_t *cib)
 {
     int rc = pcmk_ok;
 
     if (cib->state != cib_disconnected) {
-        rc = cib_file_signoff(cib);
+        rc = file_signoff(cib);
     }
 
     if (rc == pcmk_ok) {
@@ -596,14 +594,13 @@ cib_file_free(cib_t *cib)
 }
 
 static int
-cib_file_register_notification(cib_t *cib, const char *callback, int enabled)
+file_register_notification(cib_t *cib, const char *callback, int enabled)
 {
     return -EPROTONOSUPPORT;
 }
 
 static int
-cib_file_set_connection_dnotify(cib_t *cib,
-                                void (*dnotify) (gpointer user_data))
+file_set_connection_dnotify(cib_t *cib, void (*dnotify)(gpointer user_data))
 {
     return -EPROTONOSUPPORT;
 }
@@ -622,8 +619,7 @@ cib_file_set_connection_dnotify(cib_t *cib,
  *       \p cib_api_operations_t:client_id().
  */
 static int
-cib_file_client_id(const cib_t *cib, const char **async_id,
-                   const char **sync_id)
+file_client_id(const cib_t *cib, const char **async_id, const char **sync_id)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
 
@@ -675,20 +671,20 @@ cib_file_new(const char *cib_location)
     cib->variant_opaque = private;
 
     private->flags = 0;
-    if (cib_file_is_live(cib_location)) {
+    if (is_live(cib_location)) {
         cib_set_file_flags(private, cib_file_flag_live);
         pcmk__trace("File %s detected as live CIB", cib_location);
     }
 
     /* assign variant specific ops */
-    cib->delegate_fn = cib_file_perform_op_delegate;
-    cib->cmds->signon = cib_file_signon;
-    cib->cmds->signoff = cib_file_signoff;
-    cib->cmds->free = cib_file_free;
-    cib->cmds->register_notification = cib_file_register_notification;
-    cib->cmds->set_connection_dnotify = cib_file_set_connection_dnotify;
+    cib->delegate_fn = file_perform_op_delegate;
+    cib->cmds->signon = file_signon;
+    cib->cmds->signoff = file_signoff;
+    cib->cmds->free = file_free;
+    cib->cmds->register_notification = file_register_notification;
+    cib->cmds->set_connection_dnotify = file_set_connection_dnotify;
 
-    cib->cmds->client_id = cib_file_client_id;
+    cib->cmds->client_id = file_client_id;
 
     return cib;
 }
@@ -703,7 +699,7 @@ cib_file_new(const char *cib_location)
  * \return TRUE if digests match or signature file does not exist, else FALSE
  */
 static gboolean
-cib_file_verify_digest(xmlNode *root, const char *sigfile)
+verify_digest(xmlNode *root, const char *sigfile)
 {
     gboolean passed = FALSE;
     char *expected;
@@ -785,7 +781,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
     }
 
     /* Verify that digests match */
-    if (cib_file_verify_digest(local_root, sigfile) == FALSE) {
+    if (!verify_digest(local_root, sigfile)) {
         free(local_sigfile);
         pcmk__xml_free(local_root);
         return -pcmk_err_cib_modified;
@@ -810,7 +806,7 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
  * \return 0 on success, -1 on error
  */
 static int
-cib_file_backup(const char *cib_dirname, const char *cib_filename)
+backup_cib_file(const char *cib_dirname, const char *cib_filename)
 {
     int rc = 0;
     unsigned int seq = 0U;
@@ -897,7 +893,7 @@ cib_file_backup(const char *cib_dirname, const char *cib_filename)
  * \return void
  */
 static void
-cib_file_prepare_xml(xmlNode *root)
+prepare_xml(xmlNode *root)
 {
     xmlNode *cib_status_root = NULL;
 
@@ -956,14 +952,14 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
     }
 
     /* Back up the existing CIB */
-    if (cib_file_backup(cib_dirname, cib_filename) < 0) {
+    if (backup_cib_file(cib_dirname, cib_filename) < 0) {
         exit_rc = pcmk_err_cib_backup;
         goto cleanup;
     }
 
     pcmk__debug("Writing CIB to disk");
     umask(S_IWGRP | S_IWOTH | S_IROTH);
-    cib_file_prepare_xml(cib_root);
+    prepare_xml(cib_root);
 
     /* Write the CIB to a temporary file, so we can deploy (near) atomically */
     fd = mkstemp(tmp_cib);
@@ -1068,7 +1064,7 @@ cib_file_write_with_digest(xmlNode *cib_root, const char *cib_dirname,
  * \return Standard Pacemaker return code
  */
 static int
-cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
+process_transaction_requests(cib_t *cib, xmlNode *transaction)
 {
     cib_file_opaque_t *private = cib->variant_opaque;
 
@@ -1081,7 +1077,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
         xmlNode *output = NULL;
         const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
 
-        int rc = cib_file_process_request(cib, request, &output);
+        int rc = process_request(cib, request, &output);
 
         rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
@@ -1116,8 +1112,7 @@ cib_file_process_transaction_requests(cib_t *cib, xmlNode *transaction)
  *       \p result_cib using \p pcmk__xml_free() on failure.
  */
 static int
-cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
-                            xmlNode **result_cib)
+commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 {
     int rc = pcmk_rc_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
@@ -1143,7 +1138,7 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
     // Apply all changes to a working copy of the CIB
     private->cib_xml = *result_cib;
 
-    rc = cib_file_process_transaction_requests(cib, transaction);
+    rc = process_transaction_requests(cib, transaction);
 
     pcmk__trace("Transaction commit %s for CIB file client (%s) on file '%s'",
                 ((rc == pcmk_rc_ok)? "succeeded" : "failed"),
@@ -1164,10 +1159,9 @@ cib_file_commit_transaction(cib_t *cib, xmlNode *transaction,
 }
 
 static int
-cib_file_process_commit_transaction(const char *op, int options,
-                                    const char *section, xmlNode *req,
-                                    xmlNode *input, xmlNode *existing_cib,
-                                    xmlNode **result_cib, xmlNode **answer)
+process_commit_transact(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
     const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
@@ -1178,7 +1172,7 @@ cib_file_process_commit_transaction(const char *op, int options,
     cib = get_client(client_id);
     CRM_CHECK(cib != NULL, return -EINVAL);
 
-    rc = cib_file_commit_transaction(cib, input, result_cib);
+    rc = commit_transaction(cib, input, result_cib);
     if (rc != pcmk_rc_ok) {
         cib_file_opaque_t *private = cib->variant_opaque;
 
