@@ -215,6 +215,10 @@ int cib__process_create(const char *op, int options, const char *section,
                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                         xmlNode **result_cib, xmlNode **answer);
 
+int cib__process_delete(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer);
+
 int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer);
@@ -228,10 +232,6 @@ int cib_process_replace(const char *op, int options, const char *section, xmlNod
                         xmlNode ** answer);
 
 int cib_process_modify(const char *op, int options, const char *section, xmlNode * req,
-                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                       xmlNode ** answer);
-
-int cib_process_delete(const char *op, int options, const char *section, xmlNode * req,
                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                        xmlNode ** answer);
 
