@@ -595,25 +595,15 @@ based_read_cib(void)
 int
 activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
 {
-    if (new_cib) {
-        xmlNode *saved_cib = the_cib;
+    xmlNode *saved_cib = the_cib;
 
-        pcmk__assert(new_cib != saved_cib);
-        the_cib = new_cib;
-        pcmk__xml_free(saved_cib);
-        if (to_disk && writes_enabled && (cib_status == pcmk_rc_ok)) {
-            pcmk__debug("Triggering CIB write for %s op", op);
-            mainloop_set_trigger(write_trigger);
-        }
-        return pcmk_rc_ok;
-    }
+    CRM_CHECK((new_cib != NULL) && (new_cib != the_cib), return ENODATA);
 
-    pcmk__err("Ignoring invalid CIB");
-    if (the_cib) {
-        pcmk__warn("Reverting to last known CIB");
-    } else {
-        pcmk__crit("Could not write out new CIB and no saved version to revert "
-                   "to");
+    the_cib = new_cib;
+    pcmk__xml_free(saved_cib);
+    if (to_disk && writes_enabled && (cib_status == pcmk_rc_ok)) {
+        pcmk__debug("Triggering CIB write for %s op", op);
+        mainloop_set_trigger(write_trigger);
     }
-    return ENODATA;
+    return pcmk_rc_ok;
 }
