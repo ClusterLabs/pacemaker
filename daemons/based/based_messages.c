@@ -241,6 +241,24 @@ based_process_ping(const char *op, int options, const char *section,
 }
 
 int
+based_process_primary(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode ** answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (!based_is_primary) {
+        pcmk__info("We are now in R/W mode");
+        based_is_primary = true;
+
+    } else {
+        pcmk__debug("We are still in R/W mode");
+    }
+
+    return pcmk_ok;
+}
+
+int
 cib_process_readwrite(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer)
@@ -250,12 +268,6 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
     pcmk__trace("Processing \"%s\" event", op);
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
-        if (!based_is_primary) {
-            pcmk__info("We are now in R/W mode");
-            based_is_primary = true;
-        } else {
-            pcmk__debug("We are still in R/W mode");
-        }
 
     } else if (based_is_primary) {
         pcmk__info("We are now in R/O mode");
