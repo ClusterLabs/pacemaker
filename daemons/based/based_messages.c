@@ -36,6 +36,11 @@ bool based_is_primary = false;
 
 xmlNode *the_cib = NULL;
 
+/* Set to 1 when a sync is requested, incremented when a diff is ignored,
+ * reset to 0 when a sync is received
+ */
+static int sync_in_progress = 0;
+
 /*!
  * \internal
  * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
@@ -62,6 +67,54 @@ based_process_abs_delete(const char *op, int options, const char *section,
      * external clients with Pacemaker versions < 3.0.0 can send it.
      */
     return -EINVAL;
+}
+
+int
+based_process_apply_patch(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer)
+{
+    int rc = pcmk_ok;
+
+    if (sync_in_progress > MAX_DIFF_RETRY) {
+        /* Don't ignore diffs forever; the last request may have been lost.
+         * If the diff fails, we'll ask for another full resync.
+         */
+        sync_in_progress = 0;
+    }
+
+    // The primary instance should never ignore a diff
+    if (sync_in_progress && !based_is_primary) {
+        int source[] = { 0, 0, 0 };
+        int target[] = { 0, 0, 0 };
+
+        pcmk__xml_patchset_versions(input, source, target);
+
+        sync_in_progress++;
+        pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
+                     "progress)",
+                     source[0], source[1], source[2],
+                     target[0], target[1], target[2]);
+        return -pcmk_err_diff_resync;
+    }
+
+    rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
+    pcmk__trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
+                (based_is_primary? "primary": "secondary"));
+
+    if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
+        pcmk__xml_free(*result_cib);
+        *result_cib = NULL;
+        send_sync_request(NULL);
+
+    } else if (rc == -pcmk_err_diff_resync) {
+        rc = -pcmk_err_diff_failed;
+        if (options & cib_force_diff) {
+            pcmk__warn("Not requesting full refresh in R/W mode");
+        }
+    }
+
+    return rc;
 }
 
 int
@@ -133,11 +186,6 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 
     return result;
 }
-
-/* Set to 1 when a sync is requested, incremented when a diff is ignored,
- * reset to 0 when a sync is received
- */
-static int sync_in_progress = 0;
 
 void
 send_sync_request(const char *host)
@@ -315,54 +363,6 @@ cib_process_sync_one(const char *op, int options, const char *section, xmlNode *
                      xmlNode ** answer)
 {
     return sync_our_cib(req, false);
-}
-
-int
-cib_server_process_diff(const char *op, int options, const char *section, xmlNode * req,
-                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                        xmlNode ** answer)
-{
-    int rc = pcmk_ok;
-
-    if (sync_in_progress > MAX_DIFF_RETRY) {
-        /* Don't ignore diffs forever; the last request may have been lost.
-         * If the diff fails, we'll ask for another full resync.
-         */
-        sync_in_progress = 0;
-    }
-
-    // The primary instance should never ignore a diff
-    if (sync_in_progress && !based_is_primary) {
-        int source[] = { 0, 0, 0 };
-        int target[] = { 0, 0, 0 };
-
-        pcmk__xml_patchset_versions(input, source, target);
-
-        sync_in_progress++;
-        pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
-                     "progress)",
-                     source[0], source[1], source[2],
-                     target[0], target[1], target[2]);
-        return -pcmk_err_diff_resync;
-    }
-
-    rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
-    pcmk__trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
-                (based_is_primary? "primary": "secondary"));
-
-    if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
-        pcmk__xml_free(*result_cib);
-        *result_cib = NULL;
-        send_sync_request(NULL);
-
-    } else if (rc == -pcmk_err_diff_resync) {
-        rc = -pcmk_err_diff_failed;
-        if (options & cib_force_diff) {
-            pcmk__warn("Not requesting full refresh in R/W mode");
-        }
-    }
-
-    return rc;
 }
 
 int
