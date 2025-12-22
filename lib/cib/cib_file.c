@@ -30,7 +30,7 @@
 
 #define CIB_SERIES "cib"
 #define CIB_SERIES_MAX 100
-#define CIB_SERIES_BZIP FALSE /* Must be false because archived copies are
+#define CIB_SERIES_BZIP false /* Must be false because archived copies are
                                  created with hard links
                                */
 
@@ -355,7 +355,7 @@ static const cib__op_fn_t op_functions[] = {
  */
 static uid_t file_owner = 0;
 static uid_t file_group = 0;
-static gboolean do_chown = FALSE;
+static bool do_chown = false;
 
 /*!
  * \internal
@@ -384,12 +384,13 @@ get_op_function(const cib__operation_t *operation)
  *
  * \param[in] filename Name of file to check
  *
- * \return TRUE if file exists and its real path is same as live CIB's
+ * \return \c true if file exists and its real path is same as the live CIB's,
+ *         or \c false otherwise
  */
-static gboolean
+static bool
 is_live(const char *filename)
 {
-    gboolean same = FALSE;
+    bool same = false;
 
     if (filename != NULL) {
         // Canonicalize file names for true comparison
@@ -617,7 +618,7 @@ write_live(xmlNode *cib_root, char *path)
     if (euid == 0) {
         file_owner = daemon_uid;
         file_group = daemon_gid;
-        do_chown = TRUE;
+        do_chown = true;
     }
 
     /* write the file */
@@ -626,7 +627,7 @@ write_live(xmlNode *cib_root, char *path)
 
     /* turn off file ownership changes, for other callers */
     if (euid == 0) {
-        do_chown = FALSE;
+        do_chown = false;
     }
 
     /* undo fancy stuff */
@@ -823,12 +824,13 @@ cib_file_new(const char *cib_location)
  * \param[in] root     Root of XML tree to compare
  * \param[in] sigfile  Name of signature file containing digest to compare
  *
- * \return TRUE if digests match or signature file does not exist, else FALSE
+ * \return \c true if digests match or signature file does not exist, or
+ *         \c false otherwise
  */
-static gboolean
+static bool
 verify_digest(xmlNode *root, const char *sigfile)
 {
-    gboolean passed = FALSE;
+    bool passed = false;
     char *expected;
     int rc = pcmk__file_contents(sigfile, &expected);
 
@@ -836,16 +838,16 @@ verify_digest(xmlNode *root, const char *sigfile)
         case pcmk_rc_ok:
             if (expected == NULL) {
                 pcmk__err("On-disk digest at %s is empty", sigfile);
-                return FALSE;
+                return false;
             }
             break;
         case ENOENT:
             pcmk__warn("No on-disk digest present at %s", sigfile);
-            return TRUE;
+            return true;
         default:
             pcmk__err("Could not read on-disk digest from %s: %s", sigfile,
                       pcmk_rc_str(rc));
-            return FALSE;
+            return false;
     }
     passed = pcmk__verify_digest(root, expected);
     free(expected);
