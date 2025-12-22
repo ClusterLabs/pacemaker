@@ -18,6 +18,7 @@ noinst_HEADERS	= based_io.h		\
 		  based_messages.h	\
 		  based_notify.h	\
 		  based_operation.h	\
+		  based_remote.h	\
 		  based_transaction.h	\
 		  pacemaker-based.h
 
