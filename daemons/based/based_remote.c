@@ -55,8 +55,6 @@ void cib_remote_connection_destroy(gpointer user_data);
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
-static int cib_remote_msg(gpointer data);
-
 static gboolean
 remote_auth_timeout_cb(gpointer data)
 {
@@ -72,178 +70,6 @@ remote_auth_timeout_cb(gpointer data)
     pcmk__err("Remote client authentication timed out");
 
     return FALSE;
-}
-
-static int
-cib_remote_listen(gpointer data)
-{
-    int csock = -1;
-    unsigned laddr;
-    struct sockaddr_storage addr;
-    char ipstr[INET6_ADDRSTRLEN];
-    int ssock = *(int *)data;
-    int rc;
-
-    pcmk__client_t *new_client = NULL;
-
-    static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
-        .dispatch = cib_remote_msg,
-        .destroy = cib_remote_connection_destroy,
-    };
-
-    /* accept the connection */
-    laddr = sizeof(addr);
-    memset(&addr, 0, sizeof(addr));
-    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    if (csock == -1) {
-        pcmk__warn("Could not accept remote connection: %s",
-                   pcmk_rc_str(errno));
-        return 0;
-    }
-
-    pcmk__sockaddr2str(&addr, ipstr);
-
-    rc = pcmk__set_nonblocking(csock);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Dropping remote connection from %s because it could not be "
-                   "set to non-blocking: %s",
-                   ipstr, pcmk_rc_str(rc));
-        close(csock);
-        return 0;
-    }
-
-    new_client = pcmk__new_unauth_client(NULL);
-    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
-
-    if (ssock == remote_tls_fd) {
-        pcmk__set_client_flags(new_client, pcmk__client_tls);
-
-        /* create gnutls session for the server socket */
-        new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
-        if (new_client->remote->tls_session == NULL) {
-            close(csock);
-            return 0;
-        }
-    } else {
-        pcmk__set_client_flags(new_client, pcmk__client_tcp);
-        new_client->remote->tcp_socket = csock;
-    }
-
-    // Require the client to authenticate within this time
-    new_client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
-                                                          remote_auth_timeout_cb,
-                                                          new_client);
-    pcmk__info("%s connection from %s pending authentication for client %s",
-               ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"), ipstr,
-               new_client->id);
-
-    new_client->remote->source =
-        mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
-                        &remote_client_fd_callbacks);
-
-    return 0;
-}
-
-static void
-remote_connection_destroy(gpointer user_data)
-{
-    pcmk__info("No longer listening for remote connections");
-    return;
-}
-
-static int
-init_remote_listener(int port)
-{
-    int rc;
-    int *ssock = NULL;
-    struct sockaddr_in saddr;
-    int optval;
-
-    static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
-        .dispatch = cib_remote_listen,
-        .destroy = remote_connection_destroy,
-    };
-
-#ifndef HAVE_PAM
-    pcmk__warn("This build does not support remote administrators because PAM "
-               "support is not available");
-#endif
-
-    /* create server socket */
-    ssock = pcmk__assert_alloc(1, sizeof(int));
-    *ssock = socket(AF_INET, SOCK_STREAM, 0);
-    if (*ssock == -1) {
-        pcmk__err("Listener socket creation failed: %s", pcmk_rc_str(errno));
-        free(ssock);
-        return -1;
-    }
-
-    /* reuse address */
-    optval = 1;
-    rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-    if (rc < 0) {
-        pcmk__err("Local address reuse not allowed on listener socket: %s",
-                  pcmk_rc_str(errno));
-    }
-
-    /* bind server socket */
-    memset(&saddr, '\0', sizeof(saddr));
-    saddr.sin_family = AF_INET;
-    saddr.sin_addr.s_addr = INADDR_ANY;
-    saddr.sin_port = htons(port);
-    if (bind(*ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-        pcmk__err("Cannot bind to listener socket: %s", pcmk_rc_str(errno));
-        close(*ssock);
-        free(ssock);
-        return -2;
-    }
-    if (listen(*ssock, 10) == -1) {
-        pcmk__err("Cannot listen on socket: %s", pcmk_rc_str(errno));
-        close(*ssock);
-        free(ssock);
-        return -3;
-    }
-
-    mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, *ssock, ssock, &remote_listen_fd_callbacks);
-    pcmk__debug("Started listener on port %d", port);
-
-    return *ssock;
-}
-
-/*!
- * \internal
- * \brief Initialize remote listeners using ports configured in the CIB
- */
-void
-based_remote_init(void)
-{
-    const char *port_s = NULL;
-    int port = 0;
-
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
-
-    if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        // @TODO Implement pre-shared key authentication (see T961)
-        int rc = pcmk__init_tls(&tls, true, false);
-
-        if (rc != pcmk_rc_ok) {
-            pcmk__err("Failed to initialize TLS: %s. Not starting TLS listener ",
-                      "on port %d", pcmk_rc_str(rc), port);
-            remote_tls_fd = -1;
-
-        } else {
-            pcmk__notice("Starting TLS listener on port %d", port);
-            remote_tls_fd = init_remote_listener(port);
-        }
-    }
-
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
-
-    if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        pcmk__warn("Starting clear-text listener on port %d. This is insecure; "
-                   PCMK_XA_REMOTE_TLS_PORT " is recommended instead.", port);
-        remote_fd = init_remote_listener(port);
-    }
 }
 
 static bool
@@ -484,55 +310,6 @@ cib_remote_auth(xmlNode * login)
     return is_daemon_group_member(user) && authenticate_user(user, pass);
 }
 
-void
-cib_remote_connection_destroy(gpointer user_data)
-{
-    pcmk__client_t *client = user_data;
-    int csock = -1;
-
-    if (client == NULL) {
-        return;
-    }
-
-    pcmk__trace("Cleaning up after client %s disconnect",
-                pcmk__client_name(client));
-
-    switch (PCMK__CLIENT_TYPE(client)) {
-        case pcmk__client_tcp:
-            csock = client->remote->tcp_socket;
-            break;
-        case pcmk__client_tls:
-            if (client->remote->tls_session) {
-                csock = pcmk__tls_get_client_sock(client->remote);
-
-                if (pcmk__is_set(client->flags,
-                                 pcmk__client_tls_handshake_complete)) {
-                    gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
-                }
-                gnutls_deinit(client->remote->tls_session);
-                client->remote->tls_session = NULL;
-            }
-            break;
-        default:
-            pcmk__warn("Unknown transport for client %s "
-                       QB_XS " flags=%#016" PRIx64,
-                       pcmk__client_name(client), client->flags);
-    }
-
-    if (csock >= 0) {
-        close(csock);
-    }
-
-    pcmk__free_client(client);
-
-    pcmk__trace("Freed the cib client");
-
-    if (cib_shutdown_flag) {
-        cib_shutdown(0);
-    }
-    return;
-}
-
 static void
 cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
@@ -675,4 +452,225 @@ cib_remote_msg(gpointer data)
     }
 
     return 0;
+}
+
+static int
+cib_remote_listen(gpointer data)
+{
+    int csock = -1;
+    unsigned laddr;
+    struct sockaddr_storage addr;
+    char ipstr[INET6_ADDRSTRLEN];
+    int ssock = *(int *)data;
+    int rc;
+
+    pcmk__client_t *new_client = NULL;
+
+    static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
+        .dispatch = cib_remote_msg,
+        .destroy = cib_remote_connection_destroy,
+    };
+
+    /* accept the connection */
+    laddr = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
+    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
+    if (csock == -1) {
+        pcmk__warn("Could not accept remote connection: %s",
+                   pcmk_rc_str(errno));
+        return 0;
+    }
+
+    pcmk__sockaddr2str(&addr, ipstr);
+
+    rc = pcmk__set_nonblocking(csock);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Dropping remote connection from %s because it could not be "
+                   "set to non-blocking: %s",
+                   ipstr, pcmk_rc_str(rc));
+        close(csock);
+        return 0;
+    }
+
+    new_client = pcmk__new_unauth_client(NULL);
+    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
+
+    if (ssock == remote_tls_fd) {
+        pcmk__set_client_flags(new_client, pcmk__client_tls);
+
+        /* create gnutls session for the server socket */
+        new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
+        if (new_client->remote->tls_session == NULL) {
+            close(csock);
+            return 0;
+        }
+    } else {
+        pcmk__set_client_flags(new_client, pcmk__client_tcp);
+        new_client->remote->tcp_socket = csock;
+    }
+
+    // Require the client to authenticate within this time
+    new_client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
+                                                          remote_auth_timeout_cb,
+                                                          new_client);
+    pcmk__info("%s connection from %s pending authentication for client %s",
+               ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"), ipstr,
+               new_client->id);
+
+    new_client->remote->source =
+        mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
+                        &remote_client_fd_callbacks);
+
+    return 0;
+}
+
+static void
+remote_connection_destroy(gpointer user_data)
+{
+    pcmk__info("No longer listening for remote connections");
+    return;
+}
+
+static int
+init_remote_listener(int port)
+{
+    int rc;
+    int *ssock = NULL;
+    struct sockaddr_in saddr;
+    int optval;
+
+    static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
+        .dispatch = cib_remote_listen,
+        .destroy = remote_connection_destroy,
+    };
+
+#ifndef HAVE_PAM
+    pcmk__warn("This build does not support remote administrators because PAM "
+               "support is not available");
+#endif
+
+    /* create server socket */
+    ssock = pcmk__assert_alloc(1, sizeof(int));
+    *ssock = socket(AF_INET, SOCK_STREAM, 0);
+    if (*ssock == -1) {
+        pcmk__err("Listener socket creation failed: %s", pcmk_rc_str(errno));
+        free(ssock);
+        return -1;
+    }
+
+    /* reuse address */
+    optval = 1;
+    rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    if (rc < 0) {
+        pcmk__err("Local address reuse not allowed on listener socket: %s",
+                  pcmk_rc_str(errno));
+    }
+
+    /* bind server socket */
+    memset(&saddr, '\0', sizeof(saddr));
+    saddr.sin_family = AF_INET;
+    saddr.sin_addr.s_addr = INADDR_ANY;
+    saddr.sin_port = htons(port);
+    if (bind(*ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
+        pcmk__err("Cannot bind to listener socket: %s", pcmk_rc_str(errno));
+        close(*ssock);
+        free(ssock);
+        return -2;
+    }
+    if (listen(*ssock, 10) == -1) {
+        pcmk__err("Cannot listen on socket: %s", pcmk_rc_str(errno));
+        close(*ssock);
+        free(ssock);
+        return -3;
+    }
+
+    mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, *ssock, ssock, &remote_listen_fd_callbacks);
+    pcmk__debug("Started listener on port %d", port);
+
+    return *ssock;
+}
+
+/*!
+ * \internal
+ * \brief Initialize remote listeners using ports configured in the CIB
+ */
+void
+based_remote_init(void)
+{
+    const char *port_s = NULL;
+    int port = 0;
+
+    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
+
+    if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
+        // @TODO Implement pre-shared key authentication (see T961)
+        int rc = pcmk__init_tls(&tls, true, false);
+
+        if (rc != pcmk_rc_ok) {
+            pcmk__err("Failed to initialize TLS: %s. Not starting TLS listener ",
+                      "on port %d", pcmk_rc_str(rc), port);
+            remote_tls_fd = -1;
+
+        } else {
+            pcmk__notice("Starting TLS listener on port %d", port);
+            remote_tls_fd = init_remote_listener(port);
+        }
+    }
+
+    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
+
+    if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
+        pcmk__warn("Starting clear-text listener on port %d. This is insecure; "
+                   PCMK_XA_REMOTE_TLS_PORT " is recommended instead.", port);
+        remote_fd = init_remote_listener(port);
+    }
+}
+
+void
+cib_remote_connection_destroy(gpointer user_data)
+{
+    pcmk__client_t *client = user_data;
+    int csock = -1;
+
+    if (client == NULL) {
+        return;
+    }
+
+    pcmk__trace("Cleaning up after client %s disconnect",
+                pcmk__client_name(client));
+
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_tcp:
+            csock = client->remote->tcp_socket;
+            break;
+        case pcmk__client_tls:
+            if (client->remote->tls_session) {
+                csock = pcmk__tls_get_client_sock(client->remote);
+
+                if (pcmk__is_set(client->flags,
+                                 pcmk__client_tls_handshake_complete)) {
+                    gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
+                }
+                gnutls_deinit(client->remote->tls_session);
+                client->remote->tls_session = NULL;
+            }
+            break;
+        default:
+            pcmk__warn("Unknown transport for client %s "
+                       QB_XS " flags=%#016" PRIx64,
+                       pcmk__client_name(client), client->flags);
+    }
+
+    if (csock >= 0) {
+        close(csock);
+    }
+
+    pcmk__free_client(client);
+
+    pcmk__trace("Freed the cib client");
+
+    if (cib_shutdown_flag) {
+        cib_shutdown(0);
+    }
+    return;
 }
