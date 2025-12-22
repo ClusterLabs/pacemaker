@@ -348,7 +348,7 @@ static const cib__op_fn_t op_functions[] = {
     [cib__op_delete]           = cib__process_delete,
     [cib__op_erase]            = cib__process_erase,
     [cib__op_modify]           = cib__process_modify,
-    [cib__op_query]            = cib_process_query,
+    [cib__op_query]            = cib__process_query,
     [cib__op_replace]          = cib_process_replace,
     [cib__op_upgrade]          = cib_process_upgrade,
 };
