@@ -55,7 +55,6 @@ void cib_remote_connection_destroy(gpointer user_data);
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
-int num_clients;
 static bool authenticate_user(const char *user, const char *passwd);
 static int cib_remote_listen(gpointer data);
 static int cib_remote_msg(gpointer data);
@@ -304,8 +303,6 @@ cib_remote_listen(gpointer data)
         return 0;
     }
 
-    num_clients++;
-
     new_client = pcmk__new_unauth_client(NULL);
     new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
@@ -350,9 +347,6 @@ cib_remote_connection_destroy(gpointer user_data)
 
     pcmk__trace("Cleaning up after client %s disconnect",
                 pcmk__client_name(client));
-
-    num_clients--;
-    pcmk__trace("Num unfree'd clients: %d", num_clients);
 
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_tcp:
