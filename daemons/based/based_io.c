@@ -605,7 +605,7 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
             pcmk__debug("Triggering CIB write for %s op", op);
             mainloop_set_trigger(write_trigger);
         }
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
     pcmk__err("Ignoring invalid CIB");
@@ -615,5 +615,5 @@ activateCibXml(xmlNode *new_cib, bool to_disk, const char *op)
         pcmk__crit("Could not write out new CIB and no saved version to revert "
                    "to");
     }
-    return -ENODATA;
+    return ENODATA;
 }

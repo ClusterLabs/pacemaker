@@ -406,7 +406,7 @@ startCib(void)
     xmlNode *cib = based_read_cib();
     int port = 0;
 
-    if (activateCibXml(cib, true, "start") != 0) {
+    if (activateCibXml(cib, true, "start") != pcmk_rc_ok) {
         return false;
     }
 
