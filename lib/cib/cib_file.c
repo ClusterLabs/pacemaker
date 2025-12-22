@@ -30,10 +30,6 @@
 
 #define CIB_SERIES "cib"
 #define CIB_SERIES_MAX 100
-#define CIB_SERIES_BZIP false /* Must be false because archived copies are
-                                 created with hard links
-                               */
-
 #define CIB_LIVE_NAME CIB_SERIES ".xml"
 
 // key: client ID (const char *) -> value: client (cib_t *)
@@ -950,8 +946,9 @@ backup_cib_file(const char *cib_dirname, const char *cib_filename)
         // @TODO maybe handle errors better ...
         seq = 0U;
     }
-    backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq,
-                                        CIB_SERIES_BZIP);
+
+    // Must pass false because archived copies are created with hard links
+    backup_path = pcmk__series_filename(cib_dirname, CIB_SERIES, seq, false);
     backup_digest = pcmk__assert_asprintf("%s.sig", backup_path);
 
     /* Remove the old backups if they exist */
