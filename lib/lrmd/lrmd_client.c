@@ -1518,7 +1518,6 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
     int tls_rc = GNUTLS_E_SUCCESS;
-    bool use_cert = pcmk__x509_enabled();
 
     native->async_timer = 0;
 
@@ -1536,7 +1535,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
     native->sock = sock;
 
     if (native->tls == NULL) {
-        rc = pcmk__init_tls(&native->tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
+        rc = pcmk__init_tls(&native->tls, false, true);
 
         if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
             lrmd_tls_connection_destroy(lrmd);
@@ -1545,7 +1544,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         }
     }
 
-    if (!use_cert) {
+    if (!pcmk__x509_enabled()) {
         gnutls_datum_t psk_key = { NULL, 0 };
 
         rc = lrmd__init_remote_key(&psk_key);
@@ -1621,7 +1620,6 @@ static int
 lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 {
     int rc = pcmk_rc_ok;
-    bool use_cert = pcmk__x509_enabled();
     lrmd_private_t *native = lrmd->lrmd_private;
 
     native->sock = -1;
@@ -1636,7 +1634,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     }
 
     if (native->tls == NULL) {
-        rc = pcmk__init_tls(&native->tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
+        rc = pcmk__init_tls(&native->tls, false, true);
 
         if (rc != pcmk_rc_ok) {
             lrmd_tls_connection_destroy(lrmd);
@@ -1644,7 +1642,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         }
     }
 
-    if (!use_cert) {
+    if (!pcmk__x509_enabled()) {
         gnutls_datum_t psk_key = { NULL, 0 };
 
         rc = lrmd__init_remote_key(&psk_key);

@@ -135,8 +135,35 @@ pcmk__free_tls(pcmk__tls_t *tls)
     tls = NULL;
 }
 
+/*!
+ * \internal
+ * \brief Initialize a new TLS object
+ *
+ * This function initializes \p tls as an environment for TLS connections. This
+ * is in contrast to \c pcmk__new_tls_session(), which initializes a single
+ * session within that environment.
+ *
+ * X.509 certificates are used if configured via environment variables.
+ * Otherwise, we fall back to either pre-shared keys (PSK) or anonymous
+ * authentication, depending on the value of \p have_psk.
+ *
+ * \param[out] tls       Where to store new TLS object
+ * \param[in]  server    Current process is a server if \c true or a client if
+ *                       \c false
+ * \param[in]  have_psk  If X.509 certificates are not enabled, then use
+ *                       \c GNUTLS_CRD_PSK (pre-shared keys) if this is \c true
+ *                       or \c GNUTLS_CRD_ANON (anonymous authentication) if
+ *                       this is \c false
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note CIB remote clients and the CIB manager's remote listener are the only
+ *       things that use anonymous authentication when X.509 is disabled. Task
+ *       T961 is open to implement PSK for those. The only other callers are
+ *       executor clients and listeners, which already use PSK.
+ */
 int
-pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_type)
+pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
 {
     int rc = pcmk_rc_ok;
 
@@ -160,10 +187,19 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         }
     }
 
-    (*tls)->cred_type = cred_type;
+    if (pcmk__x509_enabled()) {
+        (*tls)->cred_type = GNUTLS_CRD_CERTIFICATE;
+
+    } else if (have_psk) {
+        (*tls)->cred_type = GNUTLS_CRD_PSK;
+
+    } else {
+        (*tls)->cred_type = GNUTLS_CRD_ANON;
+    }
+
     (*tls)->server = server;
 
-    if (cred_type == GNUTLS_CRD_ANON) {
+    if ((*tls)->cred_type == GNUTLS_CRD_ANON) {
         if (server) {
             gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
             gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
@@ -171,7 +207,8 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         } else {
             gnutls_anon_allocate_client_credentials(&(*tls)->credentials.anon_c);
         }
-    } else if (cred_type == GNUTLS_CRD_CERTIFICATE) {
+
+    } else if ((*tls)->cred_type == GNUTLS_CRD_CERTIFICATE) {
         /* Try the PCMK_ version of each environment variable first, and if
          * it's not set then try the CIB_ version.
          */
@@ -209,7 +246,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
             *tls = NULL;
             return rc;
         }
-    } else if (cred_type == GNUTLS_CRD_PSK) {
+    } else {    // GNUTLS_CRD_PSK
         if (server) {
             gnutls_psk_allocate_server_credentials(&(*tls)->credentials.psk_s);
             gnutls_psk_set_server_dh_params((*tls)->credentials.psk_s,
