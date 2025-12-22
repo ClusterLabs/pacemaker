@@ -12,6 +12,9 @@
 
 #include <stdbool.h>
 
+extern int remote_fd;
+extern int remote_tls_fd;
+
 int based_init_remote_listener(int port, bool encrypted);
 
 #endif // BASED_REMOTE__H

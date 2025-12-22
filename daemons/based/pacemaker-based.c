@@ -47,9 +47,6 @@ gchar *cib_root = NULL;
 
 gboolean stand_alone = FALSE;
 
-int remote_fd = 0;
-int remote_tls_fd = 0;
-
 GHashTable *config_hash = NULL;
 
 static void cib_init(void);
