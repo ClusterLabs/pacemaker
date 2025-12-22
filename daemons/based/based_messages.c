@@ -273,22 +273,21 @@ based_process_replace(const char *op, int options, const char *section,
 }
 
 int
-cib_process_readwrite(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer)
+based_process_secondary(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer)
 {
-    int result = pcmk_ok;
-
     pcmk__trace("Processing \"%s\" event", op);
 
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
-
-    } else if (based_is_primary) {
+    if (based_is_primary) {
         pcmk__info("We are now in R/O mode");
         based_is_primary = false;
+
+    } else {
+        pcmk__debug("We are still in R/O mode");
     }
 
-    return result;
+    return pcmk_ok;
 }
 
 void
