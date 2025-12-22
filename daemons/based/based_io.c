@@ -193,51 +193,84 @@ based_io_init(void)
 
 /*!
  * \internal
- * \brief Archive a CIB file or its saved digest file
+ * \brief Rename a CIB or digest file after digest mismatch
+ *
+ * This is just a wrapper for logging an error. The caller should disable writes
+ * on error.
+ *
+ * \param[in] old_path  Original file path
+ * \param[in] new_path  New file path
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+rename_one(const char *old_path, const char *new_path)
+{
+    int rc = rename(old_path, new_path);
+
+    if (rc == 0) {
+        return pcmk_rc_ok;
+    }
+
+    rc = errno;
+    pcmk__err("Failed to rename %s to %s after digest mismatch: %s. Disabling "
+              "disk writes.", old_path, new_path, strerror(rc));
+    return rc;
+}
+
+#define CIBFILE "cib.xml"
+
+/*!
+ * \internal
+ * \brief Archive the current CIB file in \c cib_root with its saved digest file
  *
  * When a CIB file's calculated digest doesn't match its saved one, we archive
  * both the CIB file and its digest (".sig") file. This way the contents can be
  * inspected for troubleshooting purposes.
  *
- * The file is renamed with a unique name using the \c mkstemp() template
- * \c "cib.auto.XXXXXX", in the same directory (\c cib_root).
+ * A subdirectory with a unique name is created in \c cib_root, using the
+ * \c mkdtemp() template \c "cib.auto.XXXXXX". Then \c CIB_FILE and
+ * <tt>CIB_FILE ".sig"</tt> are moved to that directory.
  *
- * \param[in] old_file  Original file path
+ * \param[in] old_cibfile_path  Original path of CIB file
+ * \param[in] old_sigfile_path  Original path of digest file
  */
 static void
-archive_unusable_file(const char *old_file)
+archive_on_digest_mismatch(const char *old_cibfile_path,
+                           const char *old_sigfile_path)
 {
-    int fd = 0;
-    char *new_file = pcmk__assert_asprintf("%s/cib.auto.XXXXXX", cib_root);
+    char *new_dir = pcmk__assert_asprintf("%s/cib.auto.XXXXXX", cib_root);
+    char *new_cibfile_path = NULL;
+    char *new_sigfile_path = NULL;
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
-    fd = mkstemp(new_file);
 
-    if (fd < 0) {
-        pcmk__err("Failed to create a temp file to archive unusable file %s: "
-                  "%s. Disabling disk writes and continuing.", old_file,
-                  strerror(errno));
+    if (mkdtemp(new_dir) == NULL) {
+        pcmk__err("Failed to create directory to archive %s and %s after "
+                  "digest mismatch: %s. Disabling disk writes.",
+                  old_cibfile_path, old_sigfile_path, strerror(errno));
         writes_enabled = false;
         goto done;
     }
 
-    close(fd);
+    new_cibfile_path = pcmk__assert_asprintf("%s/%s", new_dir, CIBFILE);
+    new_sigfile_path = pcmk__assert_asprintf("%s.sig", new_cibfile_path);
 
-    if (rename(old_file, new_file) < 0) {
-        pcmk__err("Failed to archive unusable file %s as %s: %s. Disabling "
-                  "disk writes and continuing.", old_file, new_file,
-                  strerror(errno));
+    if ((rename_one(old_cibfile_path, new_cibfile_path) != pcmk_rc_ok)
+        || (rename_one(old_sigfile_path, new_sigfile_path) != pcmk_rc_ok)) {
+
         writes_enabled = false;
         goto done;
     }
 
-    pcmk__err("Archived unusable file %s as %s", old_file, new_file);
+    pcmk__err("Archived %s and %s in %s after digest mismatch",
+              old_cibfile_path, old_sigfile_path, new_dir);
 
 done:
-    free(new_file);
+    free(new_dir);
+    free(new_cibfile_path);
+    free(new_sigfile_path);
 }
-
-#define CIBFILE "cib.xml"
 
 /*!
  * \internal
@@ -282,8 +315,7 @@ read_current_cib(void)
 
     if (rc == pcmk_rc_cib_modified) {
         // Archive the original files so the contents are not lost
-        archive_unusable_file(cibfile_path);
-        archive_unusable_file(sigfile_path);
+        archive_on_digest_mismatch(cibfile_path, sigfile_path);
     }
 
 done:
