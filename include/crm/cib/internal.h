@@ -236,32 +236,6 @@ int cib_process_upgrade(const char *op, int options, const char *section, xmlNod
                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                         xmlNode ** answer);
 
-/*!
- * \internal
- * \brief Query or modify a CIB
- *
- * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
- * \param[in]     options       Flag set of \c cib_call_options
- * \param[in]     section       XPath to query or modify
- * \param[in]     req           unused
- * \param[in]     input         Portion of CIB to modify (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[in,out] existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
- * \param[in,out] result_cib    CIB copy to make changes in (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY,
- *                              PCMK__CIB_REQUEST_DELETE, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
- *
- * \return Legacy Pacemaker return code
- */
-int cib_process_xpath(const char *op, int options, const char *section,
-                      const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                      xmlNode **result_cib, xmlNode ** answer);
-
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,
                     xmlNode ** output_data, int call_options, const char *user_name);
