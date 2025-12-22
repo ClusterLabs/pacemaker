@@ -95,7 +95,7 @@ enum cib__op_type {
     cib__op_schemas,
 };
 
-gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
+void cib_read_config(GHashTable *options, xmlNode *current_cib);
 
 typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
                             xmlNode *, xmlNode *, xmlNode **, xmlNode **);

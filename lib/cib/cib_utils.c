@@ -730,14 +730,14 @@ cib_native_notify(gpointer data, gpointer user_data)
     pcmk__trace("Callback invoked...");
 }
 
-gboolean
+void
 cib_read_config(GHashTable * options, xmlNode * current_cib)
 {
     xmlNode *config = NULL;
     crm_time_t *now = NULL;
 
     if (options == NULL || current_cib == NULL) {
-        return FALSE;
+        return;
     }
 
     now = crm_time_new(NULL);
@@ -758,8 +758,6 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     pcmk__validate_cluster_options(options);
 
     crm_time_free(now);
-
-    return TRUE;
 }
 
 int
