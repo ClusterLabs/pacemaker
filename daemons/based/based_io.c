@@ -306,10 +306,12 @@ static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
     free(a_path);
     free(b_path);
 
-    if(a_age > b_age) {
-        rc = 1;
-    } else if(a_age < b_age) {
+    if (a_age > b_age) {
+        // a newer than b
         rc = -1;
+    } else if (a_age < b_age) {
+        // a older than b
+        rc = 1;
     }
 
     pcmk__trace("%s (%lu) vs. %s (%lu) : %d",
@@ -323,7 +325,7 @@ based_read_cib(void)
 {
     struct dirent **namelist = NULL;
 
-    int lpc = 0;
+    int num_files = 0;
     const char *name = NULL;
     const char *value = NULL;
 
@@ -333,22 +335,21 @@ based_read_cib(void)
     root = retrieveCib();
 
     if (root == NULL) {
-        lpc = scandir(cib_root, &namelist, cib_archive_filter, cib_archive_sort);
-        if (lpc < 0) {
+        num_files = scandir(cib_root, &namelist, cib_archive_filter,
+                            cib_archive_sort);
+        if (num_files < 0) {
             pcmk__err("Could not check for CIB backups in %s: %s", cib_root,
                       pcmk_rc_str(errno));
         }
     }
 
-    while (root == NULL && lpc > 1) {
+    for (int i = 0; i < num_files; i++) {
         char *cibfile_path = NULL;
         char *sigfile_path = NULL;
         int rc = pcmk_ok;
 
-        lpc--;
-
         cibfile_path = pcmk__assert_asprintf("%s/%s", cib_root,
-                                             namelist[lpc]->d_name);
+                                             namelist[i]->d_name);
         sigfile_path = pcmk__assert_asprintf("%s.sig", cibfile_path);
 
         rc = cib_file_read_and_verify(cibfile_path, sigfile_path, &root);
@@ -361,9 +362,13 @@ based_read_cib(void)
                        pcmk_strerror(rc));
         }
 
-        free(namelist[lpc]);
+        free(namelist[i]);
         free(cibfile_path);
         free(sigfile_path);
+
+        if (rc == pcmk_ok) {
+            break;
+        }
     }
     free(namelist);
 
