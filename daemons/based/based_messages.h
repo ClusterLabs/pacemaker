@@ -22,6 +22,11 @@ int based_process_abs_delete(const char *op, int options, const char *section,
                              xmlNode *existing_cib, xmlNode **result_cib,
                              xmlNode **answer);
 
+int based_process_apply_patch(const char *op, int options, const char *section,
+                              xmlNode *req, xmlNode *input,
+                              xmlNode *existing_cib, xmlNode **result_cib,
+                              xmlNode **answer);
+
 int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
                              xmlNode *existing_cib, xmlNode **result_cib,
@@ -40,10 +45,6 @@ int cib_process_readwrite(const char *op, int options, const char *section,
                           xmlNode **result_cib, xmlNode **answer);
 
 int cib_process_replace_svr(const char *op, int options, const char *section,
-                            xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                            xmlNode **result_cib, xmlNode **answer);
-
-int cib_server_process_diff(const char *op, int options, const char *section,
                             xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                             xmlNode **result_cib, xmlNode **answer);
 
