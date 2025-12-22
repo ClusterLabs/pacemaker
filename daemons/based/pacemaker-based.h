@@ -74,7 +74,6 @@ int cib_process_request(xmlNode *request, bool privileged,
 void cib_shutdown(int nsig);
 void terminate_cib(int exit_status);
 
-void uninitializeCib(void);
 int activateCibXml(xmlNode *doc, bool to_disk, const char *op);
 
 int cib_process_shutdown_req(const char *op, int options, const char *section,
