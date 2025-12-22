@@ -1350,9 +1350,6 @@ cib_shutdown(int nsig)
     }
 }
 
-extern int remote_fd;
-extern int remote_tls_fd;
-
 /*!
  * \internal
  * \brief Close remote sockets, free the global CIB and quit

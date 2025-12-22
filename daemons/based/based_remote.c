@@ -47,7 +47,8 @@
 
 static pcmk__tls_t *tls = NULL;
 
-extern int remote_tls_fd;
+int remote_fd = 0;
+int remote_tls_fd = 0;
 
 void cib_remote_connection_destroy(gpointer user_data);
 
