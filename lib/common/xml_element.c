@@ -833,7 +833,7 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
 {
     /* @COMPAT Some of this behavior (like not matching the tree root, which is
      * allowed by pcmk__xe_update_match()) is questionable for general use but
-     * required for backward compatibility by cib_process_replace() and
+     * required for backward compatibility by cib__process_replace() and
      * cib__process_delete(). Behavior can change at a major version release if
      * desired.
      */

@@ -239,8 +239,8 @@ based_process_replace(const char *op, int options, const char *section,
                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                       xmlNode **result_cib, xmlNode **answer)
 {
-    int rc =
-        cib_process_replace(op, options, section, req, input, existing_cib, result_cib, answer);
+    int rc = cib__process_replace(op, options, section, req, input,
+                                  existing_cib, result_cib, answer);
 
     if ((rc == pcmk_ok) && pcmk__xe_is(input, PCMK_XE_CIB)) {
         sync_in_progress = 0;

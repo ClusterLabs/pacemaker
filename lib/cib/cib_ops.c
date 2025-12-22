@@ -722,38 +722,9 @@ cib__process_query(const char *op, int options, const char *section,
 }
 
 int
-cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
-                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                    xmlNode ** answer)
-{
-    int rc = 0;
-    const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
-    const char *original_schema = NULL;
-    const char *new_schema = NULL;
-
-    *answer = NULL;
-    pcmk__trace("Processing \"%s\" event with max=%s", op, max_schema);
-
-    original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
-    rc = pcmk__update_schema(result_cib, max_schema, true,
-                             !pcmk__is_set(options, cib_verbose));
-    rc = pcmk_rc2legacy(rc);
-    new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
-
-    if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
-        update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
-        update_counter(*result_cib, PCMK_XA_EPOCH, true);
-        update_counter(*result_cib, PCMK_XA_NUM_UPDATES, true);
-        return pcmk_ok;
-    }
-
-    return rc;
-}
-
-int
-cib_process_replace(const char *op, int options, const char *section, xmlNode * req,
-                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                    xmlNode ** answer)
+cib__process_replace(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer)
 {
     int result = pcmk_ok;
 
@@ -860,4 +831,33 @@ cib_process_replace(const char *op, int options, const char *section, xmlNode * 
     }
 
     return result;
+}
+
+int
+cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
+                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
+                    xmlNode ** answer)
+{
+    int rc = 0;
+    const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
+    const char *original_schema = NULL;
+    const char *new_schema = NULL;
+
+    *answer = NULL;
+    pcmk__trace("Processing \"%s\" event with max=%s", op, max_schema);
+
+    original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
+    rc = pcmk__update_schema(result_cib, max_schema, true,
+                             !pcmk__is_set(options, cib_verbose));
+    rc = pcmk_rc2legacy(rc);
+    new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
+
+    if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
+        update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
+        update_counter(*result_cib, PCMK_XA_EPOCH, true);
+        update_counter(*result_cib, PCMK_XA_NUM_UPDATES, true);
+        return pcmk_ok;
+    }
+
+    return rc;
 }
