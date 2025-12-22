@@ -25,6 +25,7 @@
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
+#include <crm/common/ipc_internal.h>
 #include <crm/common/io_internal.h>
 #include <crm/common/iso8601_internal.h>
 #include <crm/common/mainloop_internal.h>
