@@ -169,17 +169,6 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
     return pcmk_ok;
 }
 
-// @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
-int
-cib_process_noop(const char *op, int options, const char *section, xmlNode *req,
-                 xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
-                 xmlNode **answer)
-{
-    pcmk__trace("Processing \"%s\" event", op);
-    *answer = NULL;
-    return pcmk_ok;
-}
-
 int
 based_process_is_primary(const char *op, int options, const char *section,
                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
@@ -189,6 +178,17 @@ based_process_is_primary(const char *op, int options, const char *section,
 
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
     return (based_is_primary? pcmk_ok : -EPERM);
+}
+
+// @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
+int
+based_process_noop(const char *op, int options, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                   xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+    *answer = NULL;
+    return pcmk_ok;
 }
 
 int
