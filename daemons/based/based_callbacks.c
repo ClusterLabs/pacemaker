@@ -1182,8 +1182,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                              cib_dryrun|cib_inhibit_notify|cib_transaction)) {
         pcmk__trace("Sending notifications %d",
                     pcmk__is_set(call_options, cib_dryrun));
-        cib_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id, client_name,
-                        originator, input, cib_diff);
+        based_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id,
+                          client_name, originator, input, cib_diff);
     }
 
     pcmk__log_xml_patchset(LOG_TRACE, cib_diff);
