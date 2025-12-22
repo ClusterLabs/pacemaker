@@ -15,6 +15,6 @@
 extern int remote_fd;
 extern int remote_tls_fd;
 
-int based_init_remote_listener(int port, bool encrypted);
+void based_remote_init(void);
 
 #endif // BASED_REMOTE__H

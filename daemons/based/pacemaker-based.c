@@ -31,7 +31,6 @@
 #include <crm/common/logging.h>     // crm_log_*
 #include <crm/common/mainloop.h>    // mainloop_add_signal
 #include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
-#include <crm/common/xml.h>         // PCMK_XA_REMOTE_*_PORT
 
 #include "pacemaker-based.h"
 
@@ -408,23 +407,12 @@ static bool
 startCib(void)
 {
     xmlNode *cib = based_read_cib();
-    int port = 0;
 
     if (based_activate_cib(cib, true, "start") != pcmk_rc_ok) {
         return false;
     }
 
     cib_read_config(config_hash, cib);
-
-    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
-    if (port >= 0) {
-        remote_tls_fd = based_init_remote_listener(port, true);
-    }
-
-    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
-    if (port >= 0) {
-        remote_fd = based_init_remote_listener(port, false);
-    }
-
+    based_remote_init();
     return true;
 }
