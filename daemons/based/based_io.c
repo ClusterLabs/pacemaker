@@ -324,36 +324,34 @@ done:
     return cib_xml;
 }
 
-static int cib_archive_filter(const struct dirent * a)
+/*!
+ * \internal
+ * \brief \c scandir() filter for backup CIB files in \c cib_root
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if the entry is a regular file whose name begins with \c "cib-" and
+ *           does not end with ".sig"
+ * \retval 0 otherwise
+ */
+static int
+backup_cib_filter(const struct dirent *entry)
 {
-    int rc = 0;
-    // Looking for regular files starting with "cib-" and not ending in .sig
-    struct stat s;
-    char *a_path = pcmk__assert_asprintf("%s/%s", cib_root, a->d_name);
+    char *path = pcmk__assert_asprintf("%s/%s", cib_root, entry->d_name);
+    struct stat sb;
+    int rc = stat(path, &sb);
 
-    if(stat(a_path, &s) != 0) {
-        rc = errno;
-        pcmk__trace("%s - stat failed: %s (%d)", a->d_name, pcmk_rc_str(rc),
-                    rc);
-        rc = 0;
+    free(path);
 
-    } else if (!S_ISREG(s.st_mode)) {
-        pcmk__trace("%s - wrong type (%#o)", a->d_name,
-                    (unsigned int) (s.st_mode & S_IFMT));
-
-    } else if (!g_str_has_prefix(a->d_name, "cib-")) {
-        pcmk__trace("%s - wrong prefix", a->d_name);
-
-    } else if (g_str_has_suffix(a->d_name, ".sig")) {
-        pcmk__trace("%s - wrong suffix", a->d_name);
-
-    } else {
-        pcmk__debug("%s - candidate", a->d_name);
-        rc = 1;
+    if (rc != 0) {
+        pcmk__warn("Filtering %s/%s during scan for backup CIB: stat() failed: "
+                   "%s", cib_root, entry->d_name, strerror(errno));
+        return 0;
     }
 
-    free(a_path);
-    return rc;
+    return S_ISREG(sb.st_mode)
+           && g_str_has_prefix(entry->d_name, "cib-")
+           && !g_str_has_suffix(entry->d_name, ".sig");
 }
 
 static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
@@ -404,7 +402,7 @@ read_backup_cib(void)
 {
     xmlNode *cib_xml = NULL;
     struct dirent **namelist = NULL;
-    int num_files = scandir(cib_root, &namelist, cib_archive_filter,
+    int num_files = scandir(cib_root, &namelist, backup_cib_filter,
                             cib_archive_sort);
 
     if (num_files < 0) {
