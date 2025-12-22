@@ -53,6 +53,21 @@ int remote_tls_fd = 0;
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
+/*!
+ * \internal
+ * \brief Destroy a client if not authenticated after the timeout has expired
+ *
+ * This is used as a callback that runs \c REMOTE_AUTH_TIMEOUT milliseconds
+ * after a new remote CIB client connects.
+ *
+ * If the client is not authenticated, drop it by removing its source from the
+ * mainloop. It will be freed by \c based_remote_client_destroy() via
+ * \c remote_client_fd_callbacks.
+ *
+ * \param[in,out] data  Remote CIB client (\c pcmk__client_t)
+ *
+ * \return \c G_SOURCE_REMOVE (to destroy the timeout)
+ */
 static gboolean
 remote_auth_timeout_cb(gpointer data)
 {
@@ -61,13 +76,12 @@ remote_auth_timeout_cb(gpointer data)
     client->remote->auth_timeout = 0;
 
     if (pcmk__is_set(client->flags, pcmk__client_authenticated)) {
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     mainloop_del_fd(client->remote->source);
     pcmk__err("Remote client authentication timed out");
-
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static bool
