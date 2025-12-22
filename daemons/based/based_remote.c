@@ -55,7 +55,6 @@ void cib_remote_connection_destroy(gpointer user_data);
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
-static bool authenticate_user(const char *user, const char *passwd);
 static int cib_remote_listen(gpointer data);
 static int cib_remote_msg(gpointer data);
 
@@ -203,6 +202,158 @@ is_daemon_group_member(const char *usr)
     pcmk__notice("Rejecting remote client: User %s is not a member of group "
                  CRM_DAEMON_GROUP, usr);
     return false;
+}
+
+#ifdef HAVE_PAM
+/*!
+ * \internal
+ * \brief Pass remote user's password to PAM
+ *
+ * \param[in]  num_msg   Number of entries in \p msg
+ * \param[in]  msg       Array of PAM messages
+ * \param[out] response  Where to set response to PAM
+ * \param[in]  data      User data (the password string)
+ *
+ * \return PAM return code (PAM_BUF_ERR for memory errors, PAM_CONV_ERR for all
+ *         other errors, or PAM_SUCCESS on success)
+ * \note See pam_conv(3) for more explanation
+ */
+static int
+construct_pam_passwd(int num_msg, const struct pam_message **msg,
+                     struct pam_response **response, void *data)
+{
+    /* In theory, multiple messages are allowed, but due to OS compatibility
+     * issues, PAM implementations are recommended to only send one message at a
+     * time. We can require that here for simplicity.
+     */
+    CRM_CHECK((num_msg == 1) && (msg != NULL) && (response != NULL)
+              && (data != NULL), return PAM_CONV_ERR);
+
+    switch (msg[0]->msg_style) {
+        case PAM_PROMPT_ECHO_OFF:
+        case PAM_PROMPT_ECHO_ON:
+            // Password requested
+            break;
+        case PAM_TEXT_INFO:
+            pcmk__info("PAM: %s", msg[0]->msg);
+            data = NULL;
+            break;
+        case PAM_ERROR_MSG:
+            /* In theory we should show msg[0]->msg, but that might
+             * contain the password, which we don't want in the logs
+             */
+            pcmk__err("PAM reported an error");
+            data = NULL;
+            break;
+        default:
+            pcmk__warn("Ignoring PAM message of unrecognized type %d",
+                       msg[0]->msg_style);
+            return PAM_CONV_ERR;
+    }
+
+    *response = calloc(1, sizeof(struct pam_response));
+    if (*response == NULL) {
+        return PAM_BUF_ERR;
+    }
+    (*response)->resp_retcode = 0;
+    (*response)->resp = pcmk__str_copy((const char *) data); // Caller will free
+    return PAM_SUCCESS;
+}
+#endif
+
+/*!
+ * \internal
+ * \brief Verify the username and password passed for a remote CIB connection
+ *
+ * \param[in] user    Username passed for remote CIB connection
+ * \param[in] passwd  Password passed for remote CIB connection
+ *
+ * \return \c true if the username and password are accepted, otherwise \c false
+ * \note This function rejects all credentials when built without PAM support.
+ */
+static bool
+authenticate_user(const char *user, const char *passwd)
+{
+#ifdef HAVE_PAM
+    int rc = 0;
+    bool pass = false;
+    const void *p_user = NULL;
+    struct pam_conv p_conv;
+    struct pam_handle *pam_h = NULL;
+
+    static const char *pam_name = NULL;
+
+    if (pam_name == NULL) {
+        pam_name = getenv("CIB_pam_service");
+        if (pam_name == NULL) {
+            pam_name = "login";
+        }
+    }
+
+    p_conv.conv = construct_pam_passwd;
+    p_conv.appdata_ptr = (void *) passwd;
+
+    rc = pam_start(pam_name, user, &p_conv, &pam_h);
+    if (rc != PAM_SUCCESS) {
+        pcmk__warn("Rejecting remote client for user %s because PAM "
+                   "initialization failed: %s",
+                   user, pam_strerror(pam_h, rc));
+        goto bail;
+    }
+
+    // Check user credentials
+    rc = pam_authenticate(pam_h, PAM_SILENT);
+    if (rc != PAM_SUCCESS) {
+        pcmk__notice("Access for remote user %s denied: %s", user,
+                     pam_strerror(pam_h, rc));
+        goto bail;
+    }
+
+    /* Get the authenticated user name (PAM modules can map the original name to
+     * something else). Since the CIB manager runs as the daemon user (not
+     * root), that is the only user that can be successfully authenticated.
+     */
+    rc = pam_get_item(pam_h, PAM_USER, &p_user);
+    if (rc != PAM_SUCCESS) {
+        pcmk__warn("Rejecting remote client for user %s because PAM failed to "
+                   "return final user name: %s",
+                   user, pam_strerror(pam_h, rc));
+        goto bail;
+    }
+    if (p_user == NULL) {
+        pcmk__warn("Rejecting remote client for user %s because PAM returned "
+                   "no final user name",
+                   user);
+        goto bail;
+    }
+
+    // @TODO Why do we require these to match?
+    if (!pcmk__str_eq(p_user, user, pcmk__str_none)) {
+        pcmk__warn("Rejecting remote client for user %s because PAM returned "
+                   "different final user name %s",
+                   user, p_user);
+        goto bail;
+    }
+
+    // Check user account restrictions (expiration, etc.)
+    rc = pam_acct_mgmt(pam_h, PAM_SILENT);
+    if (rc != PAM_SUCCESS) {
+        pcmk__notice("Access for remote user %s denied: %s", user,
+                     pam_strerror(pam_h, rc));
+        goto bail;
+    }
+    pass = true;
+
+bail:
+    pam_end(pam_h, rc);
+    return pass;
+#else
+    // @TODO Implement for non-PAM environments
+    pcmk__warn("Rejecting remote user %s because this build does not have PAM "
+               "support",
+               user);
+    return false;
+#endif
 }
 
 static bool
@@ -525,156 +676,4 @@ cib_remote_msg(gpointer data)
     }
 
     return 0;
-}
-
-#ifdef HAVE_PAM
-/*!
- * \internal
- * \brief Pass remote user's password to PAM
- *
- * \param[in]  num_msg   Number of entries in \p msg
- * \param[in]  msg       Array of PAM messages
- * \param[out] response  Where to set response to PAM
- * \param[in]  data      User data (the password string)
- *
- * \return PAM return code (PAM_BUF_ERR for memory errors, PAM_CONV_ERR for all
- *         other errors, or PAM_SUCCESS on success)
- * \note See pam_conv(3) for more explanation
- */
-static int
-construct_pam_passwd(int num_msg, const struct pam_message **msg,
-                     struct pam_response **response, void *data)
-{
-    /* In theory, multiple messages are allowed, but due to OS compatibility
-     * issues, PAM implementations are recommended to only send one message at a
-     * time. We can require that here for simplicity.
-     */
-    CRM_CHECK((num_msg == 1) && (msg != NULL) && (response != NULL)
-              && (data != NULL), return PAM_CONV_ERR);
-
-    switch (msg[0]->msg_style) {
-        case PAM_PROMPT_ECHO_OFF:
-        case PAM_PROMPT_ECHO_ON:
-            // Password requested
-            break;
-        case PAM_TEXT_INFO:
-            pcmk__info("PAM: %s", msg[0]->msg);
-            data = NULL;
-            break;
-        case PAM_ERROR_MSG:
-            /* In theory we should show msg[0]->msg, but that might
-             * contain the password, which we don't want in the logs
-             */
-            pcmk__err("PAM reported an error");
-            data = NULL;
-            break;
-        default:
-            pcmk__warn("Ignoring PAM message of unrecognized type %d",
-                       msg[0]->msg_style);
-            return PAM_CONV_ERR;
-    }
-
-    *response = calloc(1, sizeof(struct pam_response));
-    if (*response == NULL) {
-        return PAM_BUF_ERR;
-    }
-    (*response)->resp_retcode = 0;
-    (*response)->resp = pcmk__str_copy((const char *) data); // Caller will free
-    return PAM_SUCCESS;
-}
-#endif
-
-/*!
- * \internal
- * \brief Verify the username and password passed for a remote CIB connection
- *
- * \param[in] user    Username passed for remote CIB connection
- * \param[in] passwd  Password passed for remote CIB connection
- *
- * \return \c true if the username and password are accepted, otherwise \c false
- * \note This function rejects all credentials when built without PAM support.
- */
-static bool
-authenticate_user(const char *user, const char *passwd)
-{
-#ifdef HAVE_PAM
-    int rc = 0;
-    bool pass = false;
-    const void *p_user = NULL;
-    struct pam_conv p_conv;
-    struct pam_handle *pam_h = NULL;
-
-    static const char *pam_name = NULL;
-
-    if (pam_name == NULL) {
-        pam_name = getenv("CIB_pam_service");
-        if (pam_name == NULL) {
-            pam_name = "login";
-        }
-    }
-
-    p_conv.conv = construct_pam_passwd;
-    p_conv.appdata_ptr = (void *) passwd;
-
-    rc = pam_start(pam_name, user, &p_conv, &pam_h);
-    if (rc != PAM_SUCCESS) {
-        pcmk__warn("Rejecting remote client for user %s because PAM "
-                   "initialization failed: %s",
-                   user, pam_strerror(pam_h, rc));
-        goto bail;
-    }
-
-    // Check user credentials
-    rc = pam_authenticate(pam_h, PAM_SILENT);
-    if (rc != PAM_SUCCESS) {
-        pcmk__notice("Access for remote user %s denied: %s", user,
-                     pam_strerror(pam_h, rc));
-        goto bail;
-    }
-
-    /* Get the authenticated user name (PAM modules can map the original name to
-     * something else). Since the CIB manager runs as the daemon user (not
-     * root), that is the only user that can be successfully authenticated.
-     */
-    rc = pam_get_item(pam_h, PAM_USER, &p_user);
-    if (rc != PAM_SUCCESS) {
-        pcmk__warn("Rejecting remote client for user %s because PAM failed to "
-                   "return final user name: %s",
-                   user, pam_strerror(pam_h, rc));
-        goto bail;
-    }
-    if (p_user == NULL) {
-        pcmk__warn("Rejecting remote client for user %s because PAM returned "
-                   "no final user name",
-                   user);
-        goto bail;
-    }
-
-    // @TODO Why do we require these to match?
-    if (!pcmk__str_eq(p_user, user, pcmk__str_none)) {
-        pcmk__warn("Rejecting remote client for user %s because PAM returned "
-                   "different final user name %s",
-                   user, p_user);
-        goto bail;
-    }
-
-    // Check user account restrictions (expiration, etc.)
-    rc = pam_acct_mgmt(pam_h, PAM_SILENT);
-    if (rc != PAM_SUCCESS) {
-        pcmk__notice("Access for remote user %s denied: %s", user,
-                     pam_strerror(pam_h, rc));
-        goto bail;
-    }
-    pass = true;
-
-bail:
-    pam_end(pam_h, rc);
-    return pass;
-#else
-    // @TODO Implement for non-PAM environments
-    pcmk__warn("Rejecting remote user %s because this build does not have PAM "
-               "support",
-               user);
-    return false;
-#endif
 }
