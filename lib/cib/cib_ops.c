@@ -188,6 +188,49 @@ cib__process_apply_patch(const char *op, int options, const char *section,
     return xml_apply_patchset(*result_cib, input, TRUE);
 }
 
+static int
+update_counter(xmlNode *xml_obj, const char *field, bool reset)
+{
+    char *new_value = NULL;
+    char *old_value = NULL;
+    int int_value = -1;
+
+    if (!reset && pcmk__xe_get(xml_obj, field) != NULL) {
+        old_value = pcmk__xe_get_copy(xml_obj, field);
+    }
+    if (old_value != NULL) {
+        int_value = atoi(old_value);
+        new_value = pcmk__itoa(++int_value);
+    } else {
+        new_value = pcmk__str_copy("1");
+    }
+
+    pcmk__trace("Update %s from %s to %s", field, pcmk__s(old_value, "unset"),
+                new_value);
+    pcmk__xe_set(xml_obj, field, new_value);
+
+    free(new_value);
+    free(old_value);
+
+    return pcmk_ok;
+}
+
+int
+cib__process_bump(const char *op, int options, const char *section,
+                  xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                  xmlNode **result_cib, xmlNode **answer)
+{
+    int result = pcmk_ok;
+
+    pcmk__trace("Processing %s for epoch='%s'", op,
+                pcmk__s(pcmk__xe_get(existing_cib, PCMK_XA_EPOCH), ""));
+
+    *answer = NULL;
+    update_counter(*result_cib, PCMK_XA_EPOCH, false);
+
+    return result;
+}
+
 int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
@@ -232,33 +275,6 @@ cib_process_query(const char *op, int options, const char *section, xmlNode * re
     }
 
     return result;
-}
-
-static int
-update_counter(xmlNode *xml_obj, const char *field, bool reset)
-{
-    char *new_value = NULL;
-    char *old_value = NULL;
-    int int_value = -1;
-
-    if (!reset && pcmk__xe_get(xml_obj, field) != NULL) {
-        old_value = pcmk__xe_get_copy(xml_obj, field);
-    }
-    if (old_value != NULL) {
-        int_value = atoi(old_value);
-        new_value = pcmk__itoa(++int_value);
-    } else {
-        new_value = pcmk__str_copy("1");
-    }
-
-    pcmk__trace("Update %s from %s to %s", field, pcmk__s(old_value, "unset"),
-                new_value);
-    pcmk__xe_set(xml_obj, field, new_value);
-
-    free(new_value);
-    free(old_value);
-
-    return pcmk_ok;
 }
 
 int
@@ -307,21 +323,6 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
     }
 
     return rc;
-}
-
-int
-cib_process_bump(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    int result = pcmk_ok;
-
-    pcmk__trace("Processing %s for epoch='%s'", op,
-                pcmk__s(pcmk__xe_get(existing_cib, PCMK_XA_EPOCH), ""));
-
-    *answer = NULL;
-    update_counter(*result_cib, PCMK_XA_EPOCH, false);
-
-    return result;
 }
 
 int

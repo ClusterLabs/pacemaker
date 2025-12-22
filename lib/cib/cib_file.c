@@ -120,7 +120,7 @@ get_client(const char *client_id)
 
 static const cib__op_fn_t cib_op_functions[] = {
     [cib__op_apply_patch]      = cib__process_apply_patch,
-    [cib__op_bump]             = cib_process_bump,
+    [cib__op_bump]             = cib__process_bump,
     [cib__op_commit_transact]  = cib_file_process_commit_transaction,
     [cib__op_create]           = cib_process_create,
     [cib__op_delete]           = cib_process_delete,
