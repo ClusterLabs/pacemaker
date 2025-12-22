@@ -231,6 +231,138 @@ cib__process_bump(const char *op, int options, const char *section,
     return result;
 }
 
+static int
+add_cib_object(xmlNode *parent, xmlNode *new_obj)
+{
+    const char *object_name = NULL;
+    const char *object_id = NULL;
+
+    if ((parent == NULL) || (new_obj == NULL)) {
+        return -EINVAL;
+    }
+
+    object_name = (const char *) new_obj->name;
+    if (object_name == NULL) {
+        return -EINVAL;
+    }
+
+    object_id = pcmk__xe_id(new_obj);
+    if (pcmk__xe_first_child(parent, object_name,
+                             ((object_id != NULL)? PCMK_XA_ID : NULL),
+                             object_id)) {
+        return -EEXIST;
+    }
+
+    if (object_id != NULL) {
+        pcmk__trace("Processing creation of <%s " PCMK_XA_ID "='%s'>",
+                    object_name, object_id);
+    } else {
+        pcmk__trace("Processing creation of <%s>", object_name);
+    }
+
+    /* @COMPAT PCMK__XA_REPLACE is deprecated since 2.1.6. Due to a legacy use
+     * case, PCMK__XA_REPLACE has special meaning and should not be included in
+     * the newly created object until we can break behavioral backward
+     * compatibility.
+     *
+     * At a compatibility break, drop this and drop the definition of
+     * PCMK__XA_REPLACE. Treat it like any other attribute.
+     */
+    pcmk__xml_tree_foreach(new_obj, pcmk__xe_remove_attr_cb,
+                           (void *) PCMK__XA_REPLACE);
+
+    pcmk__xml_copy(parent, new_obj);
+    return pcmk_ok;
+}
+
+static void
+update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
+{
+    xmlNode *failed_update = pcmk__xe_create(failed, PCMK__XE_FAILED_UPDATE);
+
+    pcmk__xml_copy(failed_update, target);
+
+    pcmk__xe_set(failed_update, PCMK_XA_ID, pcmk__xe_id(target));
+    pcmk__xe_set(failed_update, PCMK_XA_OBJECT_TYPE,
+                 (const char *) target->name);
+    pcmk__xe_set(failed_update, PCMK_XA_OPERATION, operation);
+    pcmk__xe_set(failed_update, PCMK_XA_REASON, pcmk_rc_str(rc));
+
+    pcmk__warn("Action %s failed: %s", operation, pcmk_rc_str(rc));
+}
+
+int
+cib__process_create(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *failed = NULL;
+    int result = pcmk_ok;
+    xmlNode *update_section = NULL;
+
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
+        section = NULL;
+
+    } else if (pcmk__str_eq(section, PCMK_XE_CIB, pcmk__str_casei)) {
+        section = NULL;
+
+    } else if (pcmk__xe_is(input, PCMK_XE_CIB)) {
+        section = NULL;
+    }
+
+    CRM_CHECK(strcmp(op, PCMK__CIB_REQUEST_CREATE) == 0, return -EINVAL);
+
+    if (input == NULL) {
+        pcmk__err("Cannot perform modification with no data");
+        return -EINVAL;
+    }
+
+    if (section == NULL) {
+        return cib_process_modify(op, options, section, req, input, existing_cib, result_cib,
+                                  answer);
+    }
+
+    // @COMPAT Deprecated since 2.1.8
+    failed = pcmk__xe_create(NULL, PCMK__XE_FAILED);
+
+    update_section = pcmk_find_cib_element(*result_cib, section);
+    if (pcmk__xe_is(input, section)) {
+        xmlNode *a_child = NULL;
+
+        for (a_child = pcmk__xml_first_child(input); a_child != NULL;
+             a_child = pcmk__xml_next(a_child)) {
+
+            result = add_cib_object(update_section, a_child);
+            if (result != pcmk_ok) {
+                update_results(failed, a_child, op, pcmk_legacy2rc(result));
+                break;
+            }
+        }
+
+    } else {
+        result = add_cib_object(update_section, input);
+        if (result != pcmk_ok) {
+            update_results(failed, input, op, pcmk_legacy2rc(result));
+        }
+    }
+
+    if ((result == pcmk_ok) && (failed->children != NULL)) {
+        result = -EINVAL;
+    }
+
+    if (result != pcmk_ok) {
+        pcmk__log_xml_err(failed, "CIB Update failures");
+        *answer = failed;
+
+    } else {
+        pcmk__xml_free(failed);
+    }
+
+    return result;
+}
+
 int
 cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
@@ -529,137 +661,6 @@ cib_process_modify(const char *op, int options, const char *section, xmlNode * r
     }
 
     return pcmk_ok;
-}
-
-static int
-add_cib_object(xmlNode * parent, xmlNode * new_obj)
-{
-    const char *object_name = NULL;
-    const char *object_id = NULL;
-
-    if ((parent == NULL) || (new_obj == NULL)) {
-        return -EINVAL;
-    }
-
-    object_name = (const char *) new_obj->name;
-    if (object_name == NULL) {
-        return -EINVAL;
-    }
-
-    object_id = pcmk__xe_id(new_obj);
-    if (pcmk__xe_first_child(parent, object_name,
-                             ((object_id != NULL)? PCMK_XA_ID : NULL),
-                             object_id)) {
-        return -EEXIST;
-    }
-
-    if (object_id != NULL) {
-        pcmk__trace("Processing creation of <%s " PCMK_XA_ID "='%s'>",
-                    object_name, object_id);
-    } else {
-        pcmk__trace("Processing creation of <%s>", object_name);
-    }
-
-    /* @COMPAT PCMK__XA_REPLACE is deprecated since 2.1.6. Due to a legacy use
-     * case, PCMK__XA_REPLACE has special meaning and should not be included in
-     * the newly created object until we can break behavioral backward
-     * compatibility.
-     *
-     * At a compatibility break, drop this and drop the definition of
-     * PCMK__XA_REPLACE. Treat it like any other attribute.
-     */
-    pcmk__xml_tree_foreach(new_obj, pcmk__xe_remove_attr_cb,
-                           (void *) PCMK__XA_REPLACE);
-
-    pcmk__xml_copy(parent, new_obj);
-    return pcmk_ok;
-}
-
-static void
-update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
-{
-    xmlNode *failed_update = pcmk__xe_create(failed, PCMK__XE_FAILED_UPDATE);
-
-    pcmk__xml_copy(failed_update, target);
-
-    pcmk__xe_set(failed_update, PCMK_XA_ID, pcmk__xe_id(target));
-    pcmk__xe_set(failed_update, PCMK_XA_OBJECT_TYPE,
-                 (const char *) target->name);
-    pcmk__xe_set(failed_update, PCMK_XA_OPERATION, operation);
-    pcmk__xe_set(failed_update, PCMK_XA_REASON, pcmk_rc_str(rc));
-
-    pcmk__warn("Action %s failed: %s", operation, pcmk_rc_str(rc));
-}
-
-int
-cib_process_create(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    xmlNode *failed = NULL;
-    int result = pcmk_ok;
-    xmlNode *update_section = NULL;
-
-    pcmk__trace("Processing %s for %s section", op,
-                pcmk__s(section, "unspecified"));
-    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__str_eq(section, PCMK_XE_CIB, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__xe_is(input, PCMK_XE_CIB)) {
-        section = NULL;
-    }
-
-    CRM_CHECK(strcmp(op, PCMK__CIB_REQUEST_CREATE) == 0, return -EINVAL);
-
-    if (input == NULL) {
-        pcmk__err("Cannot perform modification with no data");
-        return -EINVAL;
-    }
-
-    if (section == NULL) {
-        return cib_process_modify(op, options, section, req, input, existing_cib, result_cib,
-                                  answer);
-    }
-
-    // @COMPAT Deprecated since 2.1.8
-    failed = pcmk__xe_create(NULL, PCMK__XE_FAILED);
-
-    update_section = pcmk_find_cib_element(*result_cib, section);
-    if (pcmk__xe_is(input, section)) {
-        xmlNode *a_child = NULL;
-
-        for (a_child = pcmk__xml_first_child(input); a_child != NULL;
-             a_child = pcmk__xml_next(a_child)) {
-
-            result = add_cib_object(update_section, a_child);
-            if (result != pcmk_ok) {
-                update_results(failed, a_child, op, pcmk_legacy2rc(result));
-                break;
-            }
-        }
-
-    } else {
-        result = add_cib_object(update_section, input);
-        if (result != pcmk_ok) {
-            update_results(failed, input, op, pcmk_legacy2rc(result));
-        }
-    }
-
-    if ((result == pcmk_ok) && (failed->children != NULL)) {
-        result = -EINVAL;
-    }
-
-    if (result != pcmk_ok) {
-        pcmk__log_xml_err(failed, "CIB Update failures");
-        *answer = failed;
-
-    } else {
-        pcmk__xml_free(failed);
-    }
-
-    return result;
 }
 
 int
