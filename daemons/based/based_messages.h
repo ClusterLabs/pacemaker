@@ -53,6 +53,10 @@ int based_process_replace(const char *op, int options, const char *section,
                           xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                           xmlNode **result_cib, xmlNode **answer);
 
+int based_process_schemas(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer);
+
 int based_process_secondary(const char *op, int options, const char *section,
                             xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                             xmlNode **result_cib, xmlNode **answer);
@@ -74,10 +78,6 @@ int based_process_sync_to_one(const char *op, int options, const char *section,
 int based_process_upgrade(const char *op, int options, const char *section,
                           xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                           xmlNode **result_cib, xmlNode **answer);
-
-int cib_process_schemas(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer);
 
 void send_sync_request(void);
 int sync_our_cib(xmlNode *request, bool all);

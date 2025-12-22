@@ -249,6 +249,52 @@ based_process_replace(const char *op, int options, const char *section,
 }
 
 int
+based_process_schemas(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *wrapper = NULL;
+    xmlNode *data = NULL;
+
+    const char *after_ver = NULL;
+    GList *schemas = NULL;
+    GList *already_included = NULL;
+
+    *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
+
+    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
+    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    if (data == NULL) {
+        pcmk__warn("No data specified in request");
+        return -EPROTO;
+    }
+
+    after_ver = pcmk__xe_get(data, PCMK_XA_VERSION);
+    if (after_ver == NULL) {
+        pcmk__warn("No version specified in request");
+        return -EPROTO;
+    }
+
+    /* The client requested all schemas after the latest one we know about, which
+     * means the client is fully up-to-date.  Return a properly formatted reply
+     * with no schemas.
+     */
+    if (pcmk__str_eq(after_ver, pcmk__highest_schema_name(), pcmk__str_none)) {
+        return pcmk_ok;
+    }
+
+    schemas = pcmk__schema_files_later_than(after_ver);
+
+    for (GList *iter = schemas; iter != NULL; iter = iter->next) {
+        pcmk__build_schema_xml_node(*answer, iter->data, &already_included);
+    }
+
+    g_list_free_full(schemas, free);
+    g_list_free_full(already_included, free);
+    return pcmk_ok;
+}
+
+int
 based_process_secondary(const char *op, int options, const char *section,
                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                         xmlNode **result_cib, xmlNode **answer)
@@ -500,50 +546,4 @@ sync_our_cib(xmlNode *request, bool all)
     pcmk__xml_free(replace_request);
     free(digest);
     return result;
-}
-
-int
-cib_process_schemas(const char *op, int options, const char *section, xmlNode *req,
-                    xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
-                    xmlNode **answer)
-{
-    xmlNode *wrapper = NULL;
-    xmlNode *data = NULL;
-
-    const char *after_ver = NULL;
-    GList *schemas = NULL;
-    GList *already_included = NULL;
-
-    *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
-
-    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
-    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-    if (data == NULL) {
-        pcmk__warn("No data specified in request");
-        return -EPROTO;
-    }
-
-    after_ver = pcmk__xe_get(data, PCMK_XA_VERSION);
-    if (after_ver == NULL) {
-        pcmk__warn("No version specified in request");
-        return -EPROTO;
-    }
-
-    /* The client requested all schemas after the latest one we know about, which
-     * means the client is fully up-to-date.  Return a properly formatted reply
-     * with no schemas.
-     */
-    if (pcmk__str_eq(after_ver, pcmk__highest_schema_name(), pcmk__str_none)) {
-        return pcmk_ok;
-    }
-
-    schemas = pcmk__schema_files_later_than(after_ver);
-
-    for (GList *iter = schemas; iter != NULL; iter = iter->next) {
-        pcmk__build_schema_xml_node(*answer, iter->data, &already_included);
-    }
-
-    g_list_free_full(schemas, free);
-    g_list_free_full(already_included, free);
-    return pcmk_ok;
 }
