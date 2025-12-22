@@ -298,6 +298,14 @@ based_process_sync_to_all(const char *op, int options, const char *section,
     return sync_our_cib(req, true);
 }
 
+int
+based_process_sync_to_one(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer)
+{
+    return sync_our_cib(req, false);
+}
+
 void
 send_sync_request(void)
 {
@@ -408,14 +416,6 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         pcmk__xml_free(scratch);
     }
     return rc;
-}
-
-int
-cib_process_sync_one(const char *op, int options, const char *section, xmlNode * req,
-                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                     xmlNode ** answer)
-{
-    return sync_our_cib(req, false);
 }
 
 static xmlNode *
