@@ -11,8 +11,7 @@
 
 #include <stdbool.h>
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>            // xmlNode
 
 #include "pacemaker-based.h"
 
@@ -54,8 +53,8 @@ based_transaction_source_str(const pcmk__client_t *client, const char *origin)
  * \return Standard Pacemaker return code
  */
 static int
-process_transaction_requests(xmlNodePtr transaction,
-                             const pcmk__client_t *client, const char *source)
+process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
+                             const char *source)
 {
     for (xmlNode *request = pcmk__xe_first_child(transaction,
                                                  PCMK__XE_CIB_COMMAND, NULL,
@@ -116,10 +115,10 @@ process_transaction_requests(xmlNodePtr transaction,
  *       success, and for freeing it on failure.
  */
 int
-based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
-                         const char *origin, xmlNodePtr *result_cib)
+based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
+                         const char *origin, xmlNode **result_cib)
 {
-    xmlNodePtr saved_cib = the_cib;
+    xmlNode *saved_cib = the_cib;
     int rc = pcmk_rc_ok;
     char *source = NULL;
 
