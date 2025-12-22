@@ -55,8 +55,94 @@ void cib_remote_connection_destroy(gpointer user_data);
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
-static int cib_remote_listen(gpointer data);
 static int cib_remote_msg(gpointer data);
+
+static gboolean
+remote_auth_timeout_cb(gpointer data)
+{
+    pcmk__client_t *client = data;
+
+    client->remote->auth_timeout = 0;
+
+    if (pcmk__is_set(client->flags, pcmk__client_authenticated)) {
+        return FALSE;
+    }
+
+    mainloop_del_fd(client->remote->source);
+    pcmk__err("Remote client authentication timed out");
+
+    return FALSE;
+}
+
+static int
+cib_remote_listen(gpointer data)
+{
+    int csock = -1;
+    unsigned laddr;
+    struct sockaddr_storage addr;
+    char ipstr[INET6_ADDRSTRLEN];
+    int ssock = *(int *)data;
+    int rc;
+
+    pcmk__client_t *new_client = NULL;
+
+    static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
+        .dispatch = cib_remote_msg,
+        .destroy = cib_remote_connection_destroy,
+    };
+
+    /* accept the connection */
+    laddr = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
+    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
+    if (csock == -1) {
+        pcmk__warn("Could not accept remote connection: %s",
+                   pcmk_rc_str(errno));
+        return 0;
+    }
+
+    pcmk__sockaddr2str(&addr, ipstr);
+
+    rc = pcmk__set_nonblocking(csock);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Dropping remote connection from %s because it could not be "
+                   "set to non-blocking: %s",
+                   ipstr, pcmk_rc_str(rc));
+        close(csock);
+        return 0;
+    }
+
+    new_client = pcmk__new_unauth_client(NULL);
+    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
+
+    if (ssock == remote_tls_fd) {
+        pcmk__set_client_flags(new_client, pcmk__client_tls);
+
+        /* create gnutls session for the server socket */
+        new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
+        if (new_client->remote->tls_session == NULL) {
+            close(csock);
+            return 0;
+        }
+    } else {
+        pcmk__set_client_flags(new_client, pcmk__client_tcp);
+        new_client->remote->tcp_socket = csock;
+    }
+
+    // Require the client to authenticate within this time
+    new_client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
+                                                          remote_auth_timeout_cb,
+                                                          new_client);
+    pcmk__info("%s connection from %s pending authentication for client %s",
+               ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"), ipstr,
+               new_client->id);
+
+    new_client->remote->source =
+        mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
+                        &remote_client_fd_callbacks);
+
+    return 0;
+}
 
 static void
 remote_connection_destroy(gpointer user_data)
@@ -396,93 +482,6 @@ cib_remote_auth(xmlNode * login)
     pcmk__log_xml_debug(login, "auth");
 
     return is_daemon_group_member(user) && authenticate_user(user, pass);
-}
-
-static gboolean
-remote_auth_timeout_cb(gpointer data)
-{
-    pcmk__client_t *client = data;
-
-    client->remote->auth_timeout = 0;
-
-    if (pcmk__is_set(client->flags, pcmk__client_authenticated)) {
-        return FALSE;
-    }
-
-    mainloop_del_fd(client->remote->source);
-    pcmk__err("Remote client authentication timed out");
-
-    return FALSE;
-}
-
-static int
-cib_remote_listen(gpointer data)
-{
-    int csock = -1;
-    unsigned laddr;
-    struct sockaddr_storage addr;
-    char ipstr[INET6_ADDRSTRLEN];
-    int ssock = *(int *)data;
-    int rc;
-
-    pcmk__client_t *new_client = NULL;
-
-    static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
-        .dispatch = cib_remote_msg,
-        .destroy = cib_remote_connection_destroy,
-    };
-
-    /* accept the connection */
-    laddr = sizeof(addr);
-    memset(&addr, 0, sizeof(addr));
-    csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
-    if (csock == -1) {
-        pcmk__warn("Could not accept remote connection: %s",
-                   pcmk_rc_str(errno));
-        return 0;
-    }
-
-    pcmk__sockaddr2str(&addr, ipstr);
-
-    rc = pcmk__set_nonblocking(csock);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Dropping remote connection from %s because it could not be "
-                   "set to non-blocking: %s",
-                   ipstr, pcmk_rc_str(rc));
-        close(csock);
-        return 0;
-    }
-
-    new_client = pcmk__new_unauth_client(NULL);
-    new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
-
-    if (ssock == remote_tls_fd) {
-        pcmk__set_client_flags(new_client, pcmk__client_tls);
-
-        /* create gnutls session for the server socket */
-        new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
-        if (new_client->remote->tls_session == NULL) {
-            close(csock);
-            return 0;
-        }
-    } else {
-        pcmk__set_client_flags(new_client, pcmk__client_tcp);
-        new_client->remote->tcp_socket = csock;
-    }
-
-    // Require the client to authenticate within this time
-    new_client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
-                                                          remote_auth_timeout_cb,
-                                                          new_client);
-    pcmk__info("%s connection from %s pending authentication for client %s",
-               ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"), ipstr,
-               new_client->id);
-
-    new_client->remote->source =
-        mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
-                        &remote_client_fd_callbacks);
-
-    return 0;
 }
 
 void
