@@ -105,7 +105,7 @@ based_process_apply_patch(const char *op, int options, const char *section,
     if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
         pcmk__xml_free(*result_cib);
         *result_cib = NULL;
-        send_sync_request(NULL);
+        send_sync_request();
 
     } else if (rc == -pcmk_err_diff_resync) {
         rc = -pcmk_err_diff_failed;
@@ -188,21 +188,18 @@ cib_process_readwrite(const char *op, int options, const char *section, xmlNode 
 }
 
 void
-send_sync_request(const char *host)
+send_sync_request(void)
 {
     xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
     pcmk__node_status_t *peer = NULL;
 
-    pcmk__info("Requesting re-sync from %s", (host? host : "all peers"));
+    pcmk__info("Requesting re-sync from all peers");
     sync_in_progress = 1;
 
     pcmk__xe_set(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
     pcmk__xe_set(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
     pcmk__xe_set(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
-    if (host != NULL) {
-        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
-    }
     pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
     pcmk__xml_free(sync_me);
 }

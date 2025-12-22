@@ -70,7 +70,7 @@ int cib_process_schemas(const char *op, int options, const char *section,
                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                         xmlNode **result_cib, xmlNode **answer);
 
-void send_sync_request(const char *host);
+void send_sync_request(void);
 int sync_our_cib(xmlNode *request, bool all);
 
 #endif // BASED_MESSAGES__H
