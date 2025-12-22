@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 the Pacemaker project contributors
+ * Copyright 2025-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,11 +10,9 @@
 #ifndef BASED_REMOTE__H
 #define BASED_REMOTE__H
 
-#include <stdbool.h>
-
 extern int remote_fd;
 extern int remote_tls_fd;
 
-int based_init_remote_listener(int port, bool encrypted);
+void based_remote_init(void);
 
 #endif // BASED_REMOTE__H
