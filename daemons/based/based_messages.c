@@ -306,26 +306,10 @@ based_process_sync_to_one(const char *op, int options, const char *section,
     return sync_our_cib(req, false);
 }
 
-void
-send_sync_request(void)
-{
-    xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
-    pcmk__node_status_t *peer = NULL;
-
-    pcmk__info("Requesting re-sync from all peers");
-    sync_in_progress = 1;
-
-    pcmk__xe_set(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    pcmk__xe_set(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
-
-    pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
-    pcmk__xml_free(sync_me);
-}
-
 int
-cib_process_upgrade_server(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                           xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+based_process_upgrade(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode **answer)
 {
     int rc = pcmk_ok;
 
@@ -416,6 +400,23 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         pcmk__xml_free(scratch);
     }
     return rc;
+}
+
+void
+send_sync_request(void)
+{
+    xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
+    pcmk__node_status_t *peer = NULL;
+
+    pcmk__info("Requesting re-sync from all peers");
+    sync_in_progress = 1;
+
+    pcmk__xe_set(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
+    pcmk__xe_set(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
+
+    pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
+    pcmk__xml_free(sync_me);
 }
 
 static xmlNode *
