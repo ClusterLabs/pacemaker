@@ -13,5 +13,6 @@
 void based_io_init(void);
 void based_enable_writes(int nsig);
 xmlNode *based_read_cib(void);
+int based_activate_cib(xmlNode *new_cib, bool to_disk, const char *op);
 
 #endif // BASED_IO__H
