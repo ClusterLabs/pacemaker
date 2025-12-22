@@ -354,40 +354,71 @@ backup_cib_filter(const struct dirent *entry)
            && !g_str_has_suffix(entry->d_name, ".sig");
 }
 
-static int cib_archive_sort(const struct dirent ** a, const struct dirent **b)
+/*!
+ * \internal
+ * \brief Get a file's last change time (\c ctime)
+ *
+ * The file is assumed to be a backup CIB file in the \c cib_root directory.
+ *
+ * \param[in] file  Base name of file
+ *
+ * \return Last change time of \p file, or 0 on \c stat() failure
+ */
+static time_t
+get_backup_cib_ctime(const char *file)
 {
-    /* Order by creation date - most recently created file first */
-    int rc = 0;
-    struct stat buf;
+    char *path = pcmk__assert_asprintf("%s/%s", cib_root, file);
+    struct stat sb;
+    int rc = stat(path, &sb);
 
-    time_t a_age = 0;
-    time_t b_age = 0;
+    free(path);
 
-    char *a_path = pcmk__assert_asprintf("%s/%s", cib_root, a[0]->d_name);
-    char *b_path = pcmk__assert_asprintf("%s/%s", cib_root, b[0]->d_name);
-
-    if(stat(a_path, &buf) == 0) {
-        a_age = buf.st_ctime;
-    }
-    if(stat(b_path, &buf) == 0) {
-        b_age = buf.st_ctime;
+    if (rc != 0) {
+        pcmk__warn("Failed to stat() %s/%s while sorting backup CIBs: %s",
+                   cib_root, file, strerror(errno));
+        return 0;
     }
 
-    free(a_path);
-    free(b_path);
+    return sb.st_ctime;
+}
 
-    if (a_age > b_age) {
-        // a newer than b
-        rc = -1;
-    } else if (a_age < b_age) {
-        // a older than b
-        rc = 1;
+/*!
+ * \internal
+ * \brief Compare directory entries based on their last change times
+ *
+ * The entries are assumed to be CIB files in the \c cib_root directory.
+ *
+ * \param[in] entry1  First directory entry to compare
+ * \param[in] entry2  Second directory entry to compare
+ *
+ * \retval -1 if \p entry1 was changed more recently than \p entry2
+ * \retval  0 if \p entry1 was last changed at the same timestamp as \p entry2
+ * \retval  1 if \p entry1 was changed less recently than \p entry2
+ */
+static int
+compare_backup_cibs(const struct dirent **entry1, const struct dirent **entry2)
+{
+    time_t ctime1 = get_backup_cib_ctime((*entry1)->d_name);
+    time_t ctime2 = get_backup_cib_ctime((*entry2)->d_name);
+
+    if (ctime1 > ctime2) {
+        pcmk__trace("%s/%s (%lld) newer than %s/%s (%lld)",
+                    cib_root, (*entry1)->d_name, (long long) ctime1,
+                    cib_root, (*entry2)->d_name, (long long) ctime2);
+        return -1;
     }
 
-    pcmk__trace("%s (%lu) vs. %s (%lu) : %d",
-	a[0]->d_name, (unsigned long)a_age,
-	b[0]->d_name, (unsigned long)b_age, rc);
-    return rc;
+    if (ctime1 < ctime2) {
+        pcmk__trace("%s/%s (%lld) older than %s/%s (%lld)",
+                    cib_root, (*entry1)->d_name, (long long) ctime1,
+                    cib_root, (*entry2)->d_name, (long long) ctime2);
+        return 1;
+    }
+
+    pcmk__trace("%s/%s (%lld) same age as %s/%s (%lld)",
+                cib_root, (*entry1)->d_name, (long long) ctime1,
+                cib_root, (*entry2)->d_name, (long long) ctime2);
+    return 0;
 }
 
 /*!
@@ -403,7 +434,7 @@ read_backup_cib(void)
     xmlNode *cib_xml = NULL;
     struct dirent **namelist = NULL;
     int num_files = scandir(cib_root, &namelist, backup_cib_filter,
-                            cib_archive_sort);
+                            compare_backup_cibs);
 
     if (num_files < 0) {
         pcmk__err("Could not check for CIB backups in %s: %s", cib_root,
