@@ -522,6 +522,25 @@ set_default_if_unset(xmlNode *cib_xml, const char *version_attr)
     pcmk__xe_set_int(cib_xml, version_attr, 0);
 }
 
+/*!
+ * \internal
+ * \brief Read the most recent CIB from a file in \c cib_root
+ *
+ * This function first tries to read the CIB from a file called \c "cib.xml" in
+ * the \c cib_root directory.
+ *
+ * If that fails or there is a digest mismatch, it tries all the backup CIB
+ * files in \c cib_root, in order from most recently changed to least, moving to
+ * the next backup file on failure or digest mismatch.
+ *
+ * If no valid CIB file is found, this function generates an empty CIB.
+ *
+ * \return The most current CIB XML available, or an empty CIB if none is
+ *         available (guaranteed not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
 xmlNode *
 based_read_cib(void)
 {
