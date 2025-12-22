@@ -406,13 +406,12 @@ cib_init(void)
 static bool
 startCib(void)
 {
-    xmlNode *cib = based_read_cib();
-
-    if (based_activate_cib(cib, true, "start") != pcmk_rc_ok) {
+    // based_read_cib() returns new, non-NULL XML, so this should always succeed
+    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
         return false;
     }
 
-    cib_read_config(config_hash, cib);
+    cib_read_config(config_hash, the_cib);
     based_remote_init();
     return true;
 }
