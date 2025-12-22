@@ -54,8 +54,6 @@ static pcmk__tls_t *tls = NULL;
 int remote_fd = 0;
 int remote_tls_fd = 0;
 
-void cib_remote_connection_destroy(gpointer user_data);
-
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
 
@@ -458,6 +456,54 @@ cib_remote_msg(gpointer data)
     return 0;
 }
 
+static void
+based_remote_client_destroy(gpointer user_data)
+{
+    pcmk__client_t *client = user_data;
+    int csock = -1;
+
+    if (client == NULL) {
+        return;
+    }
+
+    pcmk__trace("Cleaning up after client %s disconnect",
+                pcmk__client_name(client));
+
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_tcp:
+            csock = client->remote->tcp_socket;
+            break;
+        case pcmk__client_tls:
+            if (client->remote->tls_session) {
+                csock = pcmk__tls_get_client_sock(client->remote);
+
+                if (pcmk__is_set(client->flags,
+                                 pcmk__client_tls_handshake_complete)) {
+                    gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
+                }
+                gnutls_deinit(client->remote->tls_session);
+                client->remote->tls_session = NULL;
+            }
+            break;
+        default:
+            pcmk__warn("Unknown transport for client %s "
+                       QB_XS " flags=%#016" PRIx64,
+                       pcmk__client_name(client), client->flags);
+    }
+
+    if (csock >= 0) {
+        close(csock);
+    }
+
+    pcmk__free_client(client);
+
+    pcmk__trace("Freed the cib client");
+
+    if (cib_shutdown_flag) {
+        cib_shutdown(0);
+    }
+}
+
 static int
 cib_remote_listen(gpointer data)
 {
@@ -472,7 +518,7 @@ cib_remote_listen(gpointer data)
 
     static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
         .dispatch = cib_remote_msg,
-        .destroy = cib_remote_connection_destroy,
+        .destroy = based_remote_client_destroy,
     };
 
     /* accept the connection */
@@ -529,10 +575,9 @@ cib_remote_listen(gpointer data)
 }
 
 static void
-remote_connection_destroy(gpointer user_data)
+based_remote_listener_destroy(gpointer user_data)
 {
     pcmk__info("No longer listening for remote connections");
-    return;
 }
 
 static int
@@ -545,7 +590,7 @@ init_remote_listener(int port)
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = cib_remote_listen,
-        .destroy = remote_connection_destroy,
+        .destroy = based_remote_listener_destroy,
     };
 
 #ifndef HAVE_PAM
@@ -628,53 +673,4 @@ based_remote_init(void)
                    PCMK_XA_REMOTE_TLS_PORT " is recommended instead.", port);
         remote_fd = init_remote_listener(port);
     }
-}
-
-void
-cib_remote_connection_destroy(gpointer user_data)
-{
-    pcmk__client_t *client = user_data;
-    int csock = -1;
-
-    if (client == NULL) {
-        return;
-    }
-
-    pcmk__trace("Cleaning up after client %s disconnect",
-                pcmk__client_name(client));
-
-    switch (PCMK__CLIENT_TYPE(client)) {
-        case pcmk__client_tcp:
-            csock = client->remote->tcp_socket;
-            break;
-        case pcmk__client_tls:
-            if (client->remote->tls_session) {
-                csock = pcmk__tls_get_client_sock(client->remote);
-
-                if (pcmk__is_set(client->flags,
-                                 pcmk__client_tls_handshake_complete)) {
-                    gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
-                }
-                gnutls_deinit(client->remote->tls_session);
-                client->remote->tls_session = NULL;
-            }
-            break;
-        default:
-            pcmk__warn("Unknown transport for client %s "
-                       QB_XS " flags=%#016" PRIx64,
-                       pcmk__client_name(client), client->flags);
-    }
-
-    if (csock >= 0) {
-        close(csock);
-    }
-
-    pcmk__free_client(client);
-
-    pcmk__trace("Freed the cib client");
-
-    if (cib_shutdown_flag) {
-        cib_shutdown(0);
-    }
-    return;
 }
