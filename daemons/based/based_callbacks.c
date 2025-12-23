@@ -1008,24 +1008,23 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     return input;
 }
 
-#define XPATH_CONFIG_CHANGE         \
-    "//" PCMK_XE_CHANGE             \
-    "[contains(@" PCMK_XA_PATH ",'/" PCMK_XE_CRM_CONFIG "/')]"
-
 static bool
 contains_config_change(xmlNode *diff)
 {
+    xmlXPathObject *xpath_obj = NULL;
     bool changed = false;
 
-    if (diff) {
-        xmlXPathObject *xpathObj = pcmk__xpath_search(diff->doc,
-                                                      XPATH_CONFIG_CHANGE);
-
-        if (pcmk__xpath_num_results(xpathObj) > 0) {
-            changed = true;
-        }
-        xmlXPathFreeObject(xpathObj);
+    if (diff == NULL) {
+        return false;
     }
+
+    xpath_obj = pcmk__xpath_search(diff->doc,
+                                   "//" PCMK_XE_CHANGE
+                                   "[contains(@" PCMK_XA_PATH ", "
+                                              "'/" PCMK_XE_CRM_CONFIG "/')]");
+
+    changed = (pcmk__xpath_num_results(xpath_obj) > 0);
+    xmlXPathFreeObject(xpath_obj);
     return changed;
 }
 
