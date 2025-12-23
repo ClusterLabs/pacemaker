@@ -60,10 +60,4 @@ extern bool cib_shutdown_flag;
 extern gchar *cib_root;
 extern int cib_status;
 
-static inline const char *
-cib_config_lookup(const char *opt)
-{
-    return g_hash_table_lookup(config_hash, opt);
-}
-
 #endif // PACEMAKER_BASED__H
