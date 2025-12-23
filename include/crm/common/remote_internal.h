@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,25 @@ extern "C" {
 
 // internal functions from remote.c
 
-typedef struct pcmk__remote_s pcmk__remote_t;
+typedef struct {
+    // Shared
+    char *buffer;
+    size_t buffer_size;
+    size_t buffer_offset;
+    int auth_timeout;
+    int tcp_socket;
+    mainloop_io_t *source;
+    time_t uptime;
+    char *start_state;
+
+    // CIB-only
+    char *token;
+
+    // TLS-only
+
+    // Must be created by pcmk__new_tls_session()
+    gnutls_session_t tls_session;
+} pcmk__remote_t;
 
 int pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg);
 int pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms);

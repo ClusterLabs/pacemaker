@@ -31,6 +31,7 @@
 #include <crm/common/mainloop_internal.h>
 #include <crm/common/messages_internal.h>
 #include <crm/common/nvpair_internal.h>
+#include <crm/common/remote_internal.h>
 #include <crm/common/results_internal.h>
 #include <crm/common/scores_internal.h>
 #include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
