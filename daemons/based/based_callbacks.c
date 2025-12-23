@@ -388,7 +388,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         return;
     }
 
-    cib_process_request(op_request, privileged, cib_client);
+    based_process_request(op_request, privileged, cib_client);
 }
 
 static uint64_t ping_seq = 0;
@@ -527,8 +527,8 @@ parse_local_options(const pcmk__client_t *cib_client,
         /* Always process locally if cib__op_attr_local is set.
          *
          * @COMPAT: Currently host is ignored. At a compatibility break, throw
-         * an error (from cib_process_request() or earlier) if host is not NULL or
-         * OUR_NODENAME.
+         * an error (from based_process_request() or earlier) if host is not
+         * NULL or OUR_NODENAME.
          */
         pcmk__trace("Processing always-local %s op from client %s", op,
                     pcmk__client_name(cib_client));
@@ -1019,8 +1019,8 @@ send_peer_reply(xmlNode *msg, const char *originator)
  * \return Standard Pacemaker return code
  */
 int
-cib_process_request(xmlNode *request, bool privileged,
-                    const pcmk__client_t *client)
+based_process_request(xmlNode *request, bool privileged,
+                      const pcmk__client_t *client)
 {
     // @TODO: Break into multiple smaller functions
     uint32_t call_options = cib_none;
@@ -1219,7 +1219,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
         pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
     }
 
-    cib_process_request(msg, true, NULL);
+    based_process_request(msg, true, NULL);
     return;
 
   bail:
