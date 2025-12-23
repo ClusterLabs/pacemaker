@@ -372,6 +372,11 @@ pcmk__sleep_ms(unsigned int ms)
  * \param[in] data        Data to be passed to fn (can be NULL)
  *
  * \return The ID of the event source
+ *
+ * \note If \c fn returns \c G_SOURCE_CONTINUE, then it will be called again
+ *       after \p interval_ms. If \c fn returns \c G_SOURCE_REMOVE, then the
+ *       timeout is destroyed and \c fn will not be called again. Note that no
+ *       \c GDestroyNotify function is set, so only the timeout is destroyed.
  */
 guint
 pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data)
