@@ -22,6 +22,7 @@
 
 #include <crm/common/logging.h>  // do_crm_log_unlikely(), etc.
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
+#include <crm/common/acl_internal.h>
 #include <crm/common/actions_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
@@ -34,8 +35,8 @@
 #include <crm/common/remote_internal.h>
 #include <crm/common/results_internal.h>
 #include <crm/common/scores_internal.h>
-#include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
-#include <crm/common/acl_internal.h>
+#include <crm/common/strings_internal.h>
+#include <crm/common/tls_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

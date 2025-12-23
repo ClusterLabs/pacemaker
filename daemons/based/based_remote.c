@@ -8,45 +8,34 @@
  */
 
 #include <crm_internal.h>
-#include <crm/crm.h>
 
-#include <sys/param.h>
+#include <arpa/inet.h>              // htons()
+#include <errno.h>                  // EAGAIN
+#include <grp.h>                    // getgrnam(), struct group:gr_mem
+#include <inttypes.h>               // PRIx64
+#include <netinet/in.h>             // INADDR_ANY, INET6_ADDRSTRLEN
 #include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <inttypes.h>           // PRIx64
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc(), free()
+#include <string.h>                 // memset()
+#include <sys/socket.h>             // accept(), AF_*, bind(), sock*, etc.
+#include <unistd.h>                 // close()
 
-#include <netinet/ip.h>
+#include <glib.h>                   // gboolean, gpointer, g_*, G_*
+#include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_*
+#include <libxml/tree.h>            // xmlNode
 
-#include <stdlib.h>
-#include <errno.h>
-
-#include <glib.h>
-#include <libxml/tree.h>
-
-#include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/xml.h>
-#include <crm/common/remote_internal.h>
-#include <crm/common/tls_internal.h>
-#include <crm/cib/internal.h>
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_*
 
 #include "pacemaker-based.h"
 
-#include <gnutls/gnutls.h>
-
-#include <pwd.h>
-#include <grp.h>
 #if HAVE_SECURITY_PAM_APPL_H
-#  include <security/pam_appl.h>
-#  define HAVE_PAM 1
+#include <security/pam_appl.h>      // pam_*, PAM_*
+#define HAVE_PAM 1
 #elif HAVE_PAM_PAM_APPL_H
-#  include <pam/pam_appl.h>
-#  define HAVE_PAM 1
+#include <pam/pam_appl.h>           // pam_*, PAM_*
+#define HAVE_PAM 1
 #endif
 
 static pcmk__tls_t *tls = NULL;
