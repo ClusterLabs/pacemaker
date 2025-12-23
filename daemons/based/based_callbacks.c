@@ -1010,16 +1010,17 @@ send_peer_reply(xmlNode *msg, const char *originator)
  * \internal
  * \brief Handle an IPC or CPG message containing a request
  *
- * \param[in,out] request        Request XML
- * \param[in] privileged         Whether privileged commands may be run
- *                               (see cib_server_ops[] definition)
- * \param[in] cib_client         IPC client that sent request (or NULL if CPG)
+ * \param[in,out] request     Request XML
+ * \param[in]     privileged  If \c true, operations with
+ *                            \c cib__op_attr_privileged can be run
+ * \param[in]     client      IPC client that sent request (\c NULL if request
+ *                            came from CPG)
  *
  * \return Standard Pacemaker return code
  */
 int
 cib_process_request(xmlNode *request, bool privileged,
-                    const pcmk__client_t *cib_client)
+                    const pcmk__client_t *client)
 {
     // @TODO: Break into multiple smaller functions
     uint32_t call_options = cib_none;
@@ -1054,7 +1055,7 @@ cib_process_request(xmlNode *request, bool privileged,
         host = NULL;
     }
 
-    if (cib_client == NULL) {
+    if (client == NULL) {
         pcmk__trace("Processing peer %s operation from %s/%s on %s intended "
                     "for %s (reply=%s)", op, client_name, call_id, originator,
                     pcmk__s(host, "all"), reply_to);
@@ -1077,10 +1078,9 @@ cib_process_request(xmlNode *request, bool privileged,
         return EOPNOTSUPP;
     }
 
-    if (cib_client != NULL) {
-        parse_local_options(cib_client, operation, host, op,
-                            &local_notify, &needs_reply, &process,
-                            &needs_forward);
+    if (client != NULL) {
+        parse_local_options(client, operation, host, op, &local_notify,
+                            &needs_reply, &process, &needs_forward);
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
@@ -1188,7 +1188,7 @@ cib_process_request(xmlNode *request, bool privileged,
                     pcmk__s(originator, "local"), client_name, call_id,
                     (local_notify? " with local notification" : ""));
 
-    } else if (needs_reply && !stand_alone && (cib_client == NULL)
+    } else if (needs_reply && !stand_alone && (client == NULL)
                && !pcmk__is_set(call_options, cib_discard_reply)) {
         send_peer_reply(op_reply, originator);
     }
@@ -1196,7 +1196,7 @@ cib_process_request(xmlNode *request, bool privileged,
     if (local_notify && client_id) {
         do_local_notify(process ? op_reply : request, client_id,
                         pcmk__is_set(call_options, cib_sync_call),
-                        (cib_client == NULL));
+                        (client == NULL));
     }
 
 done:
