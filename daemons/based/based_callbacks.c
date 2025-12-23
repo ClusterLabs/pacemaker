@@ -190,7 +190,7 @@ cib_ipc_destroy(qb_ipcs_connection_t * c)
     pcmk__trace("Connection %p", c);
     cib_ipc_closed(c);
     if (cib_shutdown_flag) {
-        cib_shutdown(0);
+        based_shutdown(0);
     }
 }
 
@@ -1275,7 +1275,7 @@ initiate_exit(void)
 }
 
 void
-cib_shutdown(int nsig)
+based_shutdown(int nsig)
 {
     struct qb_ipcs_stats srv_stats;
 
