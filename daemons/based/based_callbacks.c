@@ -152,7 +152,7 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privi
     CRM_LOG_ASSERT(cib_client->user != NULL);
     pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
 
-    cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
+    based_common_callback_worker(id, flags, op_request, cib_client, privileged);
     pcmk__xml_free(op_request);
 
     return 0;
@@ -313,8 +313,8 @@ do_local_notify(const xmlNode *notify_src, const char *client_id,
 }
 
 void
-cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
-                           pcmk__client_t *cib_client, bool privileged)
+based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
+                             pcmk__client_t *cib_client, bool privileged)
 {
     const char *op = pcmk__xe_get(op_request, PCMK__XA_CIB_OP);
     uint32_t call_options = cib_none;
