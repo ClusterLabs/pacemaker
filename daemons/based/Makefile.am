@@ -14,7 +14,8 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-based
 
-noinst_HEADERS = based_io.h
+noinst_HEADERS = based_callbacks.h
+noinst_HEADERS += based_io.h
 noinst_HEADERS += based_messages.h
 noinst_HEADERS += based_notify.h
 noinst_HEADERS += based_operation.h
