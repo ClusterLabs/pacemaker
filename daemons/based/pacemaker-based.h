@@ -8,18 +8,15 @@
  */
 
 #ifndef PACEMAKER_BASED__H
-#  define PACEMAKER_BASED__H
+#define PACEMAKER_BASED__H
 
 #include <stdbool.h>
-#include <stdint.h>                 // uint32_t, UINT64_C
 
-#include <glib.h>                   // GHashTable, g_hash_table_lookup
-#include <libxml/tree.h>            // xmlNode
-#include <qb/qbipcs.h>              // qb_ipcs_service_t
+#include <glib.h>                   // gboolean, gchar, GHashTable, etc.
 
 #include <crm/cluster.h>            // pcmk_cluster_t
-#include <crm/common/internal.h>    // pcmk__client_t
 
+#include "based_callbacks.h"
 #include "based_io.h"
 #include "based_messages.h"
 #include "based_operation.h"
@@ -46,21 +43,6 @@ extern gboolean stand_alone;
 extern bool cib_shutdown_flag;
 extern gchar *cib_root;
 extern int cib_status;
-
-extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
-extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
-extern qb_ipcs_service_t *ipcs_ro;
-extern qb_ipcs_service_t *ipcs_rw;
-extern qb_ipcs_service_t *ipcs_shm;
-
-void based_peer_callback(xmlNode *msg, void *private_data);
-void based_common_callback_worker(uint32_t id, uint32_t flags,
-                                  xmlNode *op_request,
-                                  pcmk__client_t *cib_client, bool privileged);
-int based_process_request(xmlNode *request, bool privileged,
-                          const pcmk__client_t *client);
-void based_shutdown(int nsig);
-void based_terminate(int exit_status);
 
 static inline const char *
 cib_config_lookup(const char *opt)
