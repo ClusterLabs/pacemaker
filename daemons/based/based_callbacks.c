@@ -49,9 +49,6 @@ qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
-static int32_t cib_common_callback(qb_ipcs_connection_t *c, void *data,
-                                   size_t size, bool privileged);
-
 static int32_t
 cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
@@ -64,6 +61,100 @@ cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
+    return 0;
+}
+
+static int32_t
+cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privileged)
+{
+    int rc = pcmk_rc_ok;
+    uint32_t id = 0;
+    uint32_t flags = 0;
+    uint32_t call_options = cib_none;
+    pcmk__client_t *cib_client = pcmk__find_client(c);
+    xmlNode *op_request = NULL;
+
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK(cib_client != NULL, return 0);
+    if (data == NULL) {
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
+        return 0;
+    }
+
+    pcmk__trace("Dispatching %sprivileged request from client %s",
+                (privileged? "" : "un"), cib_client->id);
+
+    rc = pcmk__ipc_msg_append(&cib_client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return 0;
+
+    } else if (rc == pcmk_rc_ok) {
+        /* We've read the complete message and there's already a header on
+         * the front.  Pass it off for processing.
+         */
+        op_request = pcmk__client_data2xml(cib_client, &id, &flags);
+        g_byte_array_free(cib_client->buffer, TRUE);
+        cib_client->buffer = NULL;
+
+    } else {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (cib_client->buffer != NULL) {
+            g_byte_array_free(cib_client->buffer, TRUE);
+            cib_client->buffer = NULL;
+        }
+
+        return 0;
+    }
+
+    if (op_request) {
+        int rc = pcmk_rc_ok;
+
+        rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
+                                cib_none);
+        if (rc != pcmk_rc_ok) {
+            pcmk__warn("Couldn't parse options from request: %s",
+                       pcmk_rc_str(rc));
+        }
+    }
+
+    if (op_request == NULL) {
+        pcmk__trace("Invalid message from %p", c);
+        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_NACK, NULL,
+                           CRM_EX_PROTOCOL);
+        return 0;
+    }
+
+    if (pcmk__is_set(call_options, cib_sync_call)) {
+        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
+        CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
+        cib_client->request_id = id;    /* Reply only to the last one */
+    }
+
+    if (cib_client->name == NULL) {
+        const char *value = pcmk__xe_get(op_request, PCMK__XA_CIB_CLIENTNAME);
+
+        if (value == NULL) {
+            cib_client->name = pcmk__itoa(cib_client->pid);
+        } else {
+            cib_client->name = pcmk__str_copy(value);
+        }
+    }
+
+    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
+    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
+
+    CRM_LOG_ASSERT(cib_client->user != NULL);
+    pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
+
+    cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
+    pcmk__xml_free(op_request);
+
     return 0;
 }
 
@@ -298,100 +389,6 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
     }
 
     cib_process_request(op_request, privileged, cib_client);
-}
-
-static int32_t
-cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privileged)
-{
-    int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    uint32_t call_options = cib_none;
-    pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = NULL;
-
-    // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(cib_client != NULL, return 0);
-    if (data == NULL) {
-        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-
-    pcmk__trace("Dispatching %sprivileged request from client %s",
-                (privileged? "" : "un"), cib_client->id);
-
-    rc = pcmk__ipc_msg_append(&cib_client->buffer, data);
-
-    if (rc == pcmk_rc_ipc_more) {
-        /* We haven't read the complete message yet, so just return. */
-        return 0;
-
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        op_request = pcmk__client_data2xml(cib_client, &id, &flags);
-        g_byte_array_free(cib_client->buffer, TRUE);
-        cib_client->buffer = NULL;
-
-    } else {
-        /* Some sort of error occurred reassembling the message.  All we can
-         * do is clean up, log an error and return.
-         */
-        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
-
-        if (cib_client->buffer != NULL) {
-            g_byte_array_free(cib_client->buffer, TRUE);
-            cib_client->buffer = NULL;
-        }
-
-        return 0;
-    }
-
-    if (op_request) {
-        int rc = pcmk_rc_ok;
-
-        rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
-                                cib_none);
-        if (rc != pcmk_rc_ok) {
-            pcmk__warn("Couldn't parse options from request: %s",
-                       pcmk_rc_str(rc));
-        }
-    }
-
-    if (op_request == NULL) {
-        pcmk__trace("Invalid message from %p", c);
-        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_NACK, NULL,
-                           CRM_EX_PROTOCOL);
-        return 0;
-    }
-
-    if (pcmk__is_set(call_options, cib_sync_call)) {
-        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
-        CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
-        cib_client->request_id = id;    /* Reply only to the last one */
-    }
-
-    if (cib_client->name == NULL) {
-        const char *value = pcmk__xe_get(op_request, PCMK__XA_CIB_CLIENTNAME);
-
-        if (value == NULL) {
-            cib_client->name = pcmk__itoa(cib_client->pid);
-        } else {
-            cib_client->name = pcmk__str_copy(value);
-        }
-    }
-
-    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
-    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
-
-    CRM_LOG_ASSERT(cib_client->user != NULL);
-    pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
-
-    cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
-    pcmk__xml_free(op_request);
-
-    return 0;
 }
 
 static uint64_t ping_seq = 0;
