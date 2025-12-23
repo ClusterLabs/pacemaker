@@ -498,7 +498,7 @@ based_remote_client_destroy(gpointer user_data)
     pcmk__trace("Freed the cib client");
 
     if (cib_shutdown_flag) {
-        cib_shutdown(0);
+        based_shutdown(0);
     }
 }
 

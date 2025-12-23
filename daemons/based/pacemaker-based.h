@@ -59,7 +59,7 @@ void based_common_callback_worker(uint32_t id, uint32_t flags,
                                   pcmk__client_t *cib_client, bool privileged);
 int based_process_request(xmlNode *request, bool privileged,
                           const pcmk__client_t *client);
-void cib_shutdown(int nsig);
+void based_shutdown(int nsig);
 void terminate_cib(int exit_status);
 
 static inline const char *
