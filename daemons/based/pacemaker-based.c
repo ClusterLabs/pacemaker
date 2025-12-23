@@ -276,7 +276,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
-     * terminate_cib(-1) was called.
+     * based_terminate(-1) was called.
      */
     pcmk_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
@@ -339,7 +339,7 @@ cib_cs_destroy(gpointer user_data)
     } else {
         pcmk__crit("Exiting immediately after losing connection to cluster "
                    "layer");
-        terminate_cib(CRM_EX_DISCONNECT);
+        based_terminate(CRM_EX_DISCONNECT);
     }
 }
 #endif
@@ -355,7 +355,7 @@ cib_peer_update_callback(enum pcmk__node_update type,
                 && (pcmk__ipc_client_count() == 0)) {
 
                 pcmk__info("Exiting after no more peers or clients remain");
-                terminate_cib(-1);
+                based_terminate(-1);
             }
             break;
 

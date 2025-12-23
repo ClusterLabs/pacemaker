@@ -1235,7 +1235,7 @@ cib_force_exit(gpointer data)
 {
     pcmk__notice("Exiting immediately after %s without shutdown acknowledgment",
                  pcmk__readable_interval(EXIT_ESCALATION_MS));
-    terminate_cib(CRM_EX_ERROR);
+    based_terminate(CRM_EX_ERROR);
     return FALSE;
 }
 
@@ -1258,7 +1258,7 @@ initiate_exit(void)
     if (active < 2) { // This is the last active node
         pcmk__info("Exiting without sending shutdown request (no active "
                    "peers)");
-        terminate_cib(CRM_EX_OK);
+        based_terminate(CRM_EX_OK);
         return;
     }
 
@@ -1349,7 +1349,7 @@ based_shutdown(int nsig)
  *                         skip disconnecting from the cluster layer)
  */
 void
-terminate_cib(int exit_status)
+based_terminate(int exit_status)
 {
     if (remote_fd > 0) {
         close(remote_fd);
