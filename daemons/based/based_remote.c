@@ -19,7 +19,6 @@
 #include <stdlib.h>                 // calloc, free, getenv
 #include <string.h>                 // memset
 #include <sys/socket.h>             // sockaddr{,_storage}, AF_INET, etc.
-#include <sys/types.h>              // gid_t
 #include <unistd.h>                 // close
 
 #include <glib.h>                   // gboolean, gpointer, g_source_remove, etc.
@@ -84,47 +83,36 @@ remote_auth_timeout_cb(gpointer data)
     return G_SOURCE_REMOVE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a given user is a member of \c CRM_DAEMON_GROUP
+ *
+ * \param[in] user  User name
+ *
+ * \return \c true if \p user is a member of \c CRM_DAEMON_GROUP, or \c false
+ *         otherwise
+ */
 static bool
-is_daemon_group_member(const char *usr)
+is_daemon_group_member(const char *user)
 {
-    int index = 0;
-    gid_t gid = 0;
-    struct group *group = NULL;
-    int rc = pcmk_rc_ok;
+    const struct group *group = getgrnam(CRM_DAEMON_GROUP);
 
-    rc = pcmk__lookup_user(usr, NULL, &gid);
-    if (rc != pcmk_rc_ok) {
-        pcmk__notice("Rejecting remote client: could not find user '%s': %s",
-                     usr, pcmk_rc_str(rc));
-        return false;
-    }
-
-    group = getgrgid(gid);
-    if ((group != NULL)
-        && pcmk__str_eq(group->gr_name, CRM_DAEMON_GROUP, pcmk__str_none)) {
-        return true;
-    }
-
-    group = getgrnam(CRM_DAEMON_GROUP);
     if (group == NULL) {
         pcmk__err("Rejecting remote client: " CRM_DAEMON_GROUP " is not a "
                   "valid group");
         return false;
     }
 
-    while (true) {
-        char *member = group->gr_mem[index++];
+    for (const char *const *member = (const char *const *) group->gr_mem;
+         *member != NULL; member++) {
 
-        if (member == NULL) {
-            break;
-
-        } else if (pcmk__str_eq(usr, member, pcmk__str_none)) {
+        if (pcmk__str_eq(user, *member, pcmk__str_none)) {
             return true;
         }
     }
 
-    pcmk__notice("Rejecting remote client: User %s is not a member of group "
-                 CRM_DAEMON_GROUP, usr);
+    pcmk__notice("Rejecting remote client: User %s is not a member of group %s",
+                 user, CRM_DAEMON_GROUP);
     return false;
 }
 
