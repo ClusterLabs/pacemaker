@@ -32,7 +32,7 @@ qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
 static int32_t
-cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     if (cib_shutdown_flag) {
         pcmk__info("Ignoring new IPC client [%d] during shutdown",
@@ -47,7 +47,7 @@ cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 }
 
 static int32_t
-cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privileged)
+dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
@@ -141,20 +141,20 @@ cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privi
 }
 
 static int32_t
-cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
+based_ipc_dispatch_rw(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    return cib_common_callback(c, data, size, true);
+    return dispatch_common(c, data, true);
 }
 
 static int32_t
-cib_ipc_dispatch_ro(qb_ipcs_connection_t * c, void *data, size_t size)
+based_ipc_dispatch_ro(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    return cib_common_callback(c, data, size, false);
+    return dispatch_common(c, data, false);
 }
 
 /* Error code means? */
 static int32_t
-cib_ipc_closed(qb_ipcs_connection_t * c)
+based_ipc_closed(qb_ipcs_connection_t *c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
 
@@ -167,27 +167,27 @@ cib_ipc_closed(qb_ipcs_connection_t * c)
 }
 
 static void
-cib_ipc_destroy(qb_ipcs_connection_t * c)
+based_ipc_destroy(qb_ipcs_connection_t *c)
 {
     pcmk__trace("Connection %p", c);
-    cib_ipc_closed(c);
+    based_ipc_closed(c);
     if (cib_shutdown_flag) {
         based_shutdown(0);
     }
 }
 
 struct qb_ipcs_service_handlers ipc_ro_callbacks = {
-    .connection_accept = cib_ipc_accept,
+    .connection_accept = based_ipc_accept,
     .connection_created = NULL,
-    .msg_process = cib_ipc_dispatch_ro,
-    .connection_closed = cib_ipc_closed,
-    .connection_destroyed = cib_ipc_destroy
+    .msg_process = based_ipc_dispatch_ro,
+    .connection_closed = based_ipc_closed,
+    .connection_destroyed = based_ipc_destroy,
 };
 
 struct qb_ipcs_service_handlers ipc_rw_callbacks = {
-    .connection_accept = cib_ipc_accept,
+    .connection_accept = based_ipc_accept,
     .connection_created = NULL,
-    .msg_process = cib_ipc_dispatch_rw,
-    .connection_closed = cib_ipc_closed,
-    .connection_destroyed = cib_ipc_destroy
+    .msg_process = based_ipc_dispatch_rw,
+    .connection_closed = based_ipc_closed,
+    .connection_destroyed = based_ipc_destroy,
 };
