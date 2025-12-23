@@ -1099,7 +1099,7 @@ based_process_request(xmlNode *request, bool privileged,
     bool local_notify = false;  // Whether to notify (local) requester
     bool needs_forward = false; // Whether to forward request somewhere else
 
-    xmlNode *op_reply = NULL;
+    xmlNode *reply = NULL;
 
     int rc = pcmk_rc_ok;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
@@ -1120,7 +1120,7 @@ based_process_request(xmlNode *request, bool privileged,
         pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    if ((host != NULL) && (*host == '\0')) {
+    if (pcmk__str_empty(host)) {
         host = NULL;
     }
 
@@ -1189,17 +1189,17 @@ based_process_request(xmlNode *request, bool privileged,
         rc = cib_status;
         pcmk__err("Ignoring request because cluster configuration is invalid "
                   "(please repair and restart): %s", pcmk_rc_str(rc));
-        op_reply = create_cib_reply(op, call_id, client_id, call_options,
-                                    pcmk_rc2legacy(rc), the_cib);
+        reply = create_cib_reply(op, call_id, client_id, call_options,
+                                 pcmk_rc2legacy(rc), the_cib);
 
     } else if (process) {
         time_t start_time = time(NULL);
 
-        rc = cib_process_command(request, operation, op_function, &op_reply,
+        rc = cib_process_command(request, operation, op_function, &reply,
                                  privileged);
         log_op_result(request, operation, rc, (time(NULL) - start_time));
 
-        if ((op_reply == NULL) && (needs_reply || local_notify)) {
+        if ((reply == NULL) && (needs_reply || local_notify)) {
             pcmk__err("Unexpected NULL reply to message");
             pcmk__log_xml_err(request, "null reply");
             goto done;
@@ -1213,17 +1213,17 @@ based_process_request(xmlNode *request, bool privileged,
 
     } else if (needs_reply && !stand_alone && (client == NULL)
                && !pcmk__is_set(call_options, cib_discard_reply)) {
-        send_peer_reply(op_reply, originator);
+        send_peer_reply(reply, originator);
     }
 
-    if (local_notify && client_id) {
-        do_local_notify(process ? op_reply : request, client_id,
+    if (local_notify && (client_id != NULL)) {
+        do_local_notify((process? reply : request), client_id,
                         pcmk__is_set(call_options, cib_sync_call),
                         (client == NULL));
     }
 
 done:
-    pcmk__xml_free(op_reply);
+    pcmk__xml_free(reply);
     return rc;
 }
 
