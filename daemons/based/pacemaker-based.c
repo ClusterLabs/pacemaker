@@ -45,7 +45,6 @@ gboolean stand_alone = FALSE;
 GHashTable *config_hash = NULL;
 
 static void cib_init(void);
-void cib_shutdown(int nsig);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -198,7 +197,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    mainloop_add_signal(SIGTERM, cib_shutdown);
+    mainloop_add_signal(SIGTERM, based_shutdown);
 
     based_io_init();
 
