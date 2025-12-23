@@ -251,63 +251,66 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
 }
 
 static void
-do_local_notify(const xmlNode *notify_src, const char *client_id,
-                bool sync_reply, bool from_peer)
+do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
+                bool from_peer)
 {
-    int msg_id = 0;
+    int call_id = 0;
     int rc = pcmk_rc_ok;
-    pcmk__client_t *client_obj = NULL;
+    pcmk__client_t *client = NULL;
     uint32_t flags = crm_ipc_server_event;
+    const char *client_type = NULL;
+    const char *client_name = NULL;
+    const char *client_desc = "";
+    const char *sync_s = (sync_reply? "synchronously" : "asynchronously");
 
-    CRM_CHECK((notify_src != NULL) && (client_id != NULL), return);
+    CRM_CHECK((xml != NULL) && (client_id != NULL), return);
 
-    pcmk__trace("Performing local %ssync notification for %s",
-                sync_reply ? "" : "a", client_id);
+    if (from_peer) {
+        client_desc = " (originator of delegated_request)";
+    }
 
-    pcmk__xe_get_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
+    pcmk__trace("Performing local %s notification for %s", sync_s, client_id);
 
-    client_obj = pcmk__find_client_by_id(client_id);
-    if (client_obj == NULL) {
-        pcmk__debug("Could not notify client %s%s %s of call %d result: "
-                    "client no longer exists",
-                    client_id,
-                    (from_peer? " (originator of delegated request)" : ""),
-                    (sync_reply? "synchronously" : "asynchronously"), msg_id);
+    pcmk__xe_get_int(xml, PCMK__XA_CIB_CALLID, &call_id);
+
+    client = pcmk__find_client_by_id(client_id);
+    if (client == NULL) {
+        pcmk__debug("Could not notify client %s%s %s of call %d result: client "
+                    "no longer exists", client_id, client_desc, sync_s,
+                    call_id);
         return;
     }
 
+    client_type = pcmk__client_type_str(PCMK__CLIENT_TYPE(client));
+    client_name = pcmk__client_name(client);
+
     if (sync_reply) {
         flags = crm_ipc_flags_none;
-        if (client_obj->ipcs != NULL) {
-            msg_id = client_obj->request_id;
-            client_obj->request_id = 0;
+        if (client->ipcs != NULL) {
+            call_id = client->request_id;
+            client->request_id = 0;
         }
     }
 
-    switch (PCMK__CLIENT_TYPE(client_obj)) {
+    switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
-            rc = pcmk__ipc_send_xml(client_obj, msg_id, notify_src, flags);
+            rc = pcmk__ipc_send_xml(client, call_id, xml, flags);
             break;
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            rc = pcmk__remote_send_xml(client_obj->remote, notify_src);
+            rc = pcmk__remote_send_xml(client->remote, xml);
             break;
         default:
             rc = EPROTONOSUPPORT;
             break;
     }
+
     if (rc == pcmk_rc_ok) {
         pcmk__trace("Notified %s client %s%s %s of call %d result",
-                    pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
-                    pcmk__client_name(client_obj),
-                    (from_peer? " (originator of delegated request)" : ""),
-                    (sync_reply? "synchronously" : "asynchronously"), msg_id);
+                    client_type, client_name, client_desc, sync_s, call_id);
     } else {
         pcmk__warn("Could not notify %s client %s%s %s of call %d result: %s",
-                   pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
-                   pcmk__client_name(client_obj),
-                   (from_peer? " (originator of delegated request)" : ""),
-                   (sync_reply? "synchronously" : "asynchronously"), msg_id,
+                   client_type, client_name, client_desc, sync_s, call_id,
                    pcmk_rc_str(rc));
     }
 }
