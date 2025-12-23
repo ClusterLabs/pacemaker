@@ -102,8 +102,6 @@ int pcmk__connect_ipc_retry_conrefused(pcmk_ipc_api_t *api,
  * Server-related
  */
 
-typedef struct pcmk__client_s pcmk__client_t;
-
 enum pcmk__client_flags {
     // Lower 32 bits are reserved for server (not library) use
 
@@ -142,7 +140,7 @@ enum pcmk__client_flags {
 
 #define PCMK__CLIENT_TYPE(client) ((client)->flags & UINT64_C(0xff00000000))
 
-struct pcmk__client_s {
+typedef struct {
     unsigned int pid;
 
     char *id;
@@ -171,7 +169,7 @@ struct pcmk__client_s {
 
     unsigned int queue_backlog; /* IPC queue length after last flush */
     unsigned int queue_max;     /* Evict client whose queue grows this big */
-};
+} pcmk__client_t;
 
 #define pcmk__set_client_flags(client, flags_to_set) do {               \
         (client)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
