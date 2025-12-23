@@ -8,27 +8,14 @@
  */
 
 #ifndef PACEMAKER_BASED__H
-#  define PACEMAKER_BASED__H
+#define PACEMAKER_BASED__H
 
 #include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <glib.h>
-#include <errno.h>
-#include <fcntl.h>
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <glib.h>                   // GHashTable, GMainLoop, gboolean, gchar
 
-#include <crm/crm.h>
-#include <crm/cib.h>
-#include <crm/common/xml.h>
-#include <crm/cluster.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/cib/internal.h>
+#include <crm/cluster.h>            // pcmk_cluster_t
+#include <crm/cluster/internal.h>   // pcmk__cluster_private_t:node_name
 
 #include "based_callbacks.h"
 #include "based_io.h"
@@ -37,8 +24,6 @@
 #include "based_notify.h"
 #include "based_remote.h"
 #include "based_transaction.h"
-
-#include <gnutls/gnutls.h>
 
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
 
@@ -52,7 +37,6 @@ enum cib_client_flags {
 };
 
 extern GHashTable *config_hash;
-
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
 extern gboolean stand_alone;
