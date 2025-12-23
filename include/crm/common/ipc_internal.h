@@ -19,8 +19,6 @@
 #include <sys/uio.h>                // struct iovec
 #include <sys/types.h>              // uid_t, gid_t, pid_t, size_t
 
-#include <gnutls/gnutls.h>        // gnutls_session_t
-
 #include <glib.h>                   // guint, gpointer, GQueue, ...
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t, ...
@@ -30,7 +28,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_controld.h>    // pcmk_controld_api_reply
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_{api_reply,state}
-#include <crm/common/mainloop.h>    // mainloop_io_t
+#include <crm/common/remote_internal.h> // pcmk__remote_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,26 +104,6 @@ int pcmk__connect_ipc_retry_conrefused(pcmk_ipc_api_t *api,
 
 typedef struct pcmk__client_s pcmk__client_t;
 
-struct pcmk__remote_s {
-    /* Shared */
-    char *buffer;
-    size_t buffer_size;
-    size_t buffer_offset;
-    int auth_timeout;
-    int tcp_socket;
-    mainloop_io_t *source;
-    time_t uptime;
-    char *start_state;
-
-    /* CIB-only */
-    char *token;
-
-    /* TLS only */
-
-    // Must be created by pcmk__new_tls_session()
-    gnutls_session_t tls_session;
-};
-
 enum pcmk__client_flags {
     // Lower 32 bits are reserved for server (not library) use
 
@@ -189,7 +167,7 @@ struct pcmk__client_s {
 
     qb_ipcs_connection_t *ipcs; /* IPC */
 
-    struct pcmk__remote_s *remote;        /* TCP/TLS */
+    pcmk__remote_t *remote;     /* TCP/TLS */
 
     unsigned int queue_backlog; /* IPC queue length after last flush */
     unsigned int queue_max;     /* Evict client whose queue grows this big */
