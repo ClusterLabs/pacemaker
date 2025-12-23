@@ -31,6 +31,16 @@ qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
+/*!
+ * \internal
+ * \brief Accept a new client IPC connection
+ *
+ * \param[in,out] c    New connection
+ * \param[in]     uid  Client user id
+ * \param[in]     gid  Client group id
+ *
+ * \return 0 on success, \c -errno otherwise
+ */
 static int32_t
 based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
@@ -40,12 +50,26 @@ based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
         return -ECONNREFUSED;
     }
 
+    pcmk__trace("New client connection %p", c);
     if (pcmk__new_client(c, uid, gid) == NULL) {
         return -ENOMEM;
     }
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Handle a message from an IPC connection
+ *
+ * \param[in,out] c           Established IPC connection
+ * \param[in]     data        The message data read from the connection - this
+ *                            can be a complete IPC message or just a part of
+ *                            one if it's very large
+ * \param[in]     privileged  If \c true, operations with
+ *                            \c cib__op_attr_privileged can be run
+ *
+ * \return 0 in all cases
+ */
 static int32_t
 dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
 {
@@ -53,20 +77,20 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
     uint32_t id = 0;
     uint32_t flags = 0;
     uint32_t call_options = cib_none;
-    pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = NULL;
+    xmlNode *msg = NULL;
+    pcmk__client_t *client = pcmk__find_client(c);
 
     // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(cib_client != NULL, return 0);
+    CRM_CHECK(client != NULL, return 0);
     if (data == NULL) {
         pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
     pcmk__trace("Dispatching %sprivileged request from client %s",
-                (privileged? "" : "un"), cib_client->id);
+                (privileged? "" : "un"), client->id);
 
-    rc = pcmk__ipc_msg_append(&cib_client->buffer, data);
+    rc = pcmk__ipc_msg_append(&client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {
         /* We haven't read the complete message yet, so just return. */
@@ -76,9 +100,9 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        op_request = pcmk__client_data2xml(cib_client, &id, &flags);
-        g_byte_array_free(cib_client->buffer, TRUE);
-        cib_client->buffer = NULL;
+        msg = pcmk__client_data2xml(client, &id, &flags);
+        g_byte_array_free(client->buffer, TRUE);
+        client->buffer = NULL;
 
     } else {
         /* Some sort of error occurred reassembling the message.  All we can
@@ -86,91 +110,134 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
          */
         pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
-        if (cib_client->buffer != NULL) {
-            g_byte_array_free(cib_client->buffer, TRUE);
-            cib_client->buffer = NULL;
+        if (client->buffer != NULL) {
+            g_byte_array_free(client->buffer, TRUE);
+            client->buffer = NULL;
         }
 
         return 0;
     }
 
-    if (op_request) {
-        int rc = pcmk_rc_ok;
-
-        rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
-                                cib_none);
-        if (rc != pcmk_rc_ok) {
-            pcmk__warn("Couldn't parse options from request: %s",
-                       pcmk_rc_str(rc));
-        }
-    }
-
-    if (op_request == NULL) {
-        pcmk__trace("Invalid message from %p", c);
-        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_NACK, NULL,
+    if (msg == NULL) {
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL,
                            CRM_EX_PROTOCOL);
         return 0;
     }
 
-    if (pcmk__is_set(call_options, cib_sync_call)) {
-        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
-        CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
-        cib_client->request_id = id;    /* Reply only to the last one */
+    rc = pcmk__xe_get_flags(msg, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    if (cib_client->name == NULL) {
-        const char *value = pcmk__xe_get(op_request, PCMK__XA_CIB_CLIENTNAME);
+    if (pcmk__is_set(call_options, cib_sync_call)) {
+        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
+
+        // If false, the client has two synchronous events in flight
+        CRM_LOG_ASSERT(client->request_id == 0);
+
+        // Reply only to the last one
+        client->request_id = id;
+    }
+
+    if (client->name == NULL) {
+        const char *value = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
 
         if (value == NULL) {
-            cib_client->name = pcmk__itoa(cib_client->pid);
+            client->name = pcmk__itoa(client->pid);
         } else {
-            cib_client->name = pcmk__str_copy(value);
+            client->name = pcmk__str_copy(value);
         }
     }
 
-    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
-    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
+    pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTID, client->id);
+    pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, client->name);
 
-    CRM_LOG_ASSERT(cib_client->user != NULL);
-    pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
+    CRM_LOG_ASSERT(client->user != NULL);
+    pcmk__update_acl_user(msg, PCMK__XA_CIB_USER, client->user);
 
-    based_common_callback_worker(id, flags, op_request, cib_client, privileged);
-    pcmk__xml_free(op_request);
+    based_common_callback_worker(id, flags, msg, client, privileged);
+    pcmk__xml_free(msg);
 
     return 0;
 }
 
-static int32_t
-based_ipc_dispatch_rw(qb_ipcs_connection_t *c, void *data, size_t size)
-{
-    return dispatch_common(c, data, true);
-}
-
+/*!
+ * \internal
+ * \brief Handle a message from a read-only IPC connection
+ *
+ * \param[in,out] c     Established IPC connection
+ * \param[in]     data  The message data read from the connection - this can be
+ *                      a complete IPC message or just a part of one if it's
+ *                      very large
+ * \param[in]     size  Unused
+ *
+ * \return 0 in all cases
+ */
 static int32_t
 based_ipc_dispatch_ro(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     return dispatch_common(c, data, false);
 }
 
-/* Error code means? */
+/*!
+ * \internal
+ * \brief Handle a message from a read/write IPC connection
+ *
+ * \param[in,out] c     Established IPC connection
+ * \param[in]     data  The message data read from the connection - this can be
+ *                      a complete IPC message or just a part of one if it's
+ *                      very large
+ * \param[in]     size  Unused
+ *
+ * \return 0 in all cases
+ */
+static int32_t
+based_ipc_dispatch_rw(qb_ipcs_connection_t *c, void *data, size_t size)
+{
+    return dispatch_common(c, data, true);
+}
+
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ *
+ * \return 0 (do not re-run this callback)
+ */
 static int32_t
 based_ipc_closed(qb_ipcs_connection_t *c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
 
     if (client == NULL) {
-        return 0;
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
+    } else {
+        pcmk__trace("Cleaning up closed client connection %p", c);
+        pcmk__free_client(client);
     }
-    pcmk__trace("Connection %p", c);
-    pcmk__free_client(client);
+
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ */
 static void
 based_ipc_destroy(qb_ipcs_connection_t *c)
 {
-    pcmk__trace("Connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     based_ipc_closed(c);
+
+    /* Shut down if this was the last client to leave.
+     *
+     * @TODO Is it correct to do this for destroy but not for closed? Other
+     * daemons handle closed and destroyed connections in the same way.
+     */
     if (cib_shutdown_flag) {
         based_shutdown(0);
     }
