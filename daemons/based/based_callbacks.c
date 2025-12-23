@@ -988,6 +988,80 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Log the result of processing a CIB request locally
+ *
+ * \param[in] request    Request XML
+ * \param[in] operation  Operation info
+ * \param[in] rc         Return code from processing the request
+ * \param[in] elapsed    How long processing took in seconds
+ */
+static void
+log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
+              double elapsed)
+{
+    int level = LOG_INFO;
+
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
+    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
+
+    int admin_epoch = 0;
+    int epoch = 0;
+    int num_updates = 0;
+
+    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+        level = LOG_TRACE;
+
+    } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
+        switch (rc) {
+            case pcmk_rc_ok:
+                level = LOG_INFO;
+                break;
+
+            case pcmk_rc_old_data:
+            case pcmk_rc_diff_resync:
+            case pcmk_rc_diff_failed:
+                level = LOG_TRACE;
+                break;
+
+            default:
+                level = LOG_ERR;
+        }
+
+    } else if (rc != pcmk_rc_ok) {
+        level = LOG_WARNING;
+    }
+
+    section = pcmk__s(section, "'all'");
+    originator = pcmk__s(originator, "local");
+    client_name = pcmk__s(client_name, "client");
+
+    /* @FIXME the_cib should always be non-NULL, but that's currently not the
+     * case during shutdown
+     */
+    if (the_cib != NULL) {
+        pcmk__xe_get_int(the_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
+        pcmk__xe_get_int(the_cib, PCMK_XA_EPOCH, &epoch);
+        pcmk__xe_get_int(the_cib, PCMK_XA_NUM_UPDATES, &num_updates);
+    }
+
+    do_crm_log(level,
+               "Completed %s operation for section %s: %s (rc=%d, "
+               "origin=%s/%s/%s, version=%d.%d.%d)",
+               op, section, pcmk_rc_str(rc), rc,
+               originator, client_name, call_id,
+               admin_epoch, epoch, num_updates);
+
+    if (elapsed > 3) {
+        pcmk__trace("%s operation took %.2fs to complete", op, elapsed);
+        crm_write_blackbox(0, NULL);
+    }
+}
+
 static void
 send_peer_reply(xmlNode *msg, const char *originator)
 {
@@ -1124,59 +1198,13 @@ based_process_request(xmlNode *request, bool privileged,
                                     pcmk_rc2legacy(rc), the_cib);
 
     } else if (process) {
-        time_t finished = 0;
-        time_t now = time(NULL);
-        int level = LOG_INFO;
-        const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-        const char *admin_epoch_s = NULL;
-        const char *epoch_s = NULL;
-        const char *num_updates_s = NULL;
+        time_t start_time = time(NULL);
 
         rc = cib_process_command(request, operation, op_function, &op_reply,
                                  privileged);
+        log_op_result(request, operation, rc, difftime(time(NULL), start_time));
 
-        if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-            level = LOG_TRACE;
-
-        } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-            switch (rc) {
-                case pcmk_rc_ok:
-                    level = LOG_INFO;
-                    break;
-                case pcmk_rc_old_data:
-                case pcmk_rc_diff_resync:
-                case pcmk_rc_diff_failed:
-                    level = LOG_TRACE;
-                    break;
-                default:
-                    level = LOG_ERR;
-            }
-
-        } else if (rc != pcmk_rc_ok) {
-            level = LOG_WARNING;
-        }
-
-        if (the_cib != NULL) {
-            admin_epoch_s = pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH);
-            epoch_s = pcmk__xe_get(the_cib, PCMK_XA_EPOCH);
-            num_updates_s = pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES);
-        }
-
-        do_crm_log(level,
-                   "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
-                   op, pcmk__s(section, "'all'"), pcmk_rc_str(rc), rc,
-                   pcmk__s(originator, "local"), client_name, call_id,
-                   pcmk__s(admin_epoch_s, "0"), pcmk__s(epoch_s, "0"),
-                   pcmk__s(num_updates_s, "0"));
-
-        finished = time(NULL);
-        if ((finished - now) > 3) {
-            pcmk__trace("%s operation took %llds to complete", op,
-                        (long long) (finished - now));
-            crm_write_blackbox(0, NULL);
-        }
-
-        if (op_reply == NULL && (needs_reply || local_notify)) {
+        if ((op_reply == NULL) && (needs_reply || local_notify)) {
             pcmk__err("Unexpected NULL reply to message");
             pcmk__log_xml_err(request, "null reply");
             goto done;
