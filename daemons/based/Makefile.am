@@ -34,6 +34,7 @@ pacemaker_based_LDADD += $(CLUSTERLIBS) $(PAM_LIBS)
 pacemaker_based_SOURCES	= pacemaker-based.c 	\
 			  based_callbacks.c 	\
 			  based_io.c 		\
+			  based_ipc.c 		\
 			  based_messages.c 	\
 			  based_notify.c 	\
 			  based_operation.c 	\
