@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -372,6 +372,13 @@ pcmk__sleep_ms(unsigned int ms)
  * \param[in] data        Data to be passed to fn (can be NULL)
  *
  * \return The ID of the event source
+ *
+ * \note If \p fn returns \c G_SOURCE_CONTINUE, then it will be called again
+ *       after \p interval_ms. If \p fn returns \c G_SOURCE_REMOVE, then the
+ *       timeout is destroyed and \c fn will not be called again. Note that no
+ *       \c GDestroyNotify function is set (see \c g_timeout_add_full() and
+ *       \c g_timeout_add_seconds_full()), so only the timeout is destroyed.
+ *       \p data is left intact.
  */
 guint
 pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data)
