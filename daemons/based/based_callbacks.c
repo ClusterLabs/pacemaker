@@ -1196,7 +1196,7 @@ done:
 }
 
 void
-cib_peer_callback(xmlNode * msg, void *private_data)
+based_peer_callback(xmlNode *msg, void *private_data)
 {
     const char *reason = NULL;
     const char *originator = pcmk__xe_get(msg, PCMK__XA_SRC);
