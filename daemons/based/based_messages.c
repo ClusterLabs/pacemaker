@@ -332,7 +332,7 @@ based_process_shutdown(const char *op, int options, const char *section,
     }
 
     pcmk__info("Exiting after %s acknowledged our shutdown request", host);
-    terminate_cib(CRM_EX_OK);
+    based_terminate(CRM_EX_OK);
     return pcmk_ok;
 }
 
