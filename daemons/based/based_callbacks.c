@@ -194,19 +194,7 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
         pcmk__debug("Setting %s callbacks %s for client %s", type,
                     (on_off? "on" : "off"), pcmk__client_name(cib_client));
 
-        if (pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY, pcmk__str_none)) {
-            bit = cib_notify_post;
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
-                                pcmk__str_none)) {
-            bit = cib_notify_pre;
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
-                                pcmk__str_none)) {
-            bit = cib_notify_confirm;
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY,
-                                pcmk__str_none)) {
+        if (pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
             bit = cib_notify_diff;
 
         } else {

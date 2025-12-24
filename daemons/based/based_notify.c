@@ -37,7 +37,6 @@ static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
-    bool do_send = false;
     int rc = pcmk_rc_ok;
 
     pcmk__client_t *client = value;
@@ -51,28 +50,9 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     type = pcmk__xe_get(update->msg, PCMK__XA_SUBT);
     CRM_LOG_ASSERT(type != NULL);
 
-    if (pcmk__is_set(client->flags, cib_notify_diff)
-        && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
+    if (!pcmk__is_set(client->flags, cib_notify_diff)
+        || !pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_confirm)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
-                               pcmk__str_none)) {
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_pre)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
-                               pcmk__str_none)) {
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_post)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY,
-                               pcmk__str_none)) {
-        do_send = true;
-    }
-
-    if (!do_send) {
         return;
     }
 

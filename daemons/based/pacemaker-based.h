@@ -29,9 +29,6 @@
 // CIB-specific client flags
 enum cib_client_flags {
     // Notifications
-    cib_notify_pre     = (UINT64_C(1) << 0),
-    cib_notify_post    = (UINT64_C(1) << 1),
-    cib_notify_confirm = (UINT64_C(1) << 3),
     cib_notify_diff    = (UINT64_C(1) << 4),
 };
 
