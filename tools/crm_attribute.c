@@ -320,10 +320,6 @@ static GOptionEntry addl_entries[] = {
 };
 
 static GOptionEntry deprecated_entries[] = {
-    { "attr-id", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_id,
-      NULL, NULL
-    },
-
     // NOTE: resource-agents <4.2.0 (2018-10-24) uses this option
     { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, attr_name_cb,
       NULL, NULL
