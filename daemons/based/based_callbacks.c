@@ -589,7 +589,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     uint32_t call_options = cib_none;
 
-    const char *op = NULL;
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *section = NULL;
     const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
@@ -613,7 +613,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     *reply = NULL;
 
     /* Start processing the request... */
-    op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
@@ -622,8 +621,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     if (!privileged
         && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
+
         rc = EACCES;
-        pcmk__trace("Failed due to lack of privileges: %s", pcmk_rc_str(rc));
         goto done;
     }
 
@@ -647,12 +646,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      */
     if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         manage_counters = false;
-        pcmk__trace("Global update detected");
-
-        CRM_LOG_ASSERT(pcmk__str_any_of(op,
-                                        PCMK__CIB_REQUEST_APPLY_PATCH,
-                                        PCMK__CIB_REQUEST_REPLACE,
-                                        NULL));
+        CRM_LOG_ASSERT(pcmk__str_any_of(op, PCMK__CIB_REQUEST_APPLY_PATCH,
+                                        PCMK__CIB_REQUEST_REPLACE, NULL));
     }
 
     ping_modified_since = true;
@@ -679,15 +674,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                 config_changed = true;
             }
 
-            pcmk__trace("Activating %s->%s%s",
-                        pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                        pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES),
-                        (config_changed? " changed" : ""));
-
             rc = based_activate_cib(result_cib, config_changed, op);
-            if (rc != pcmk_rc_ok) {
-                pcmk__err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
-            }
         }
 
         if ((rc == pcmk_rc_ok) && contains_config_change(cib_diff)) {
@@ -724,14 +711,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
         output = result_cib;
 
-    } else {
-        pcmk__trace("Not activating %d %d %s", rc,
-                    pcmk__is_set(call_options, cib_dryrun),
-                    pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES));
-
-        if (result_cib != the_cib) {
-            pcmk__xml_free(result_cib);
-        }
+    } else if (result_cib != the_cib) {
+        pcmk__xml_free(result_cib);
     }
 
     if (!pcmk__any_flags_set(call_options,
