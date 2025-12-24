@@ -608,9 +608,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     input = prepare_input(request, operation->type, &section);
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib_perform_op(NULL, op, call_options, op_function, true, section,
-                            request, input, false, &config_changed, &the_cib,
-                            &result_cib, NULL, &output);
+        rc = cib__perform_query(op, call_options, op_function, section, request,
+                                input, &the_cib, &result_cib, &output);
 
         CRM_CHECK(result_cib == NULL, pcmk__xml_free(result_cib));
         goto done;
@@ -632,9 +631,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     ping_modified_since = true;
 
     // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(NULL, op, call_options, op_function, false, section,
-                        request, input, manage_counters, &config_changed,
-                        &the_cib, &result_cib, &cib_diff, &output);
+    rc = cib_perform_op(NULL, op, call_options, op_function, section, request,
+                        input, manage_counters, &config_changed, &the_cib,
+                        &result_cib, &cib_diff, &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
