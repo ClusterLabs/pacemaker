@@ -156,28 +156,32 @@ static bool ping_modified_since = false;
 static gboolean
 cib_digester_cb(gpointer data)
 {
-    if (based_is_primary) {
-        char buffer[32];
-        xmlNode *ping = pcmk__xe_create(NULL, PCMK__XE_PING);
+    char buffer[32] = { '\0' };
+    xmlNode *ping = NULL;
 
-        ping_seq++;
-        free(ping_digest);
-        ping_digest = NULL;
-        ping_modified_since = false;
-        pcmk__assert(snprintf(buffer, 32, "%" PRIu64, ping_seq) >= 0);
-
-        pcmk__trace("Requesting peer digests (%s)", buffer);
-
-        pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
-        pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
-        pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buffer);
-
-        pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
-
-        pcmk__xml_free(ping);
+    if (!based_is_primary) {
+        return G_SOURCE_REMOVE;
     }
-    return FALSE;
+
+    ping = pcmk__xe_create(NULL, PCMK__XE_PING);
+
+    ping_seq++;
+    free(ping_digest);
+    ping_digest = NULL;
+    ping_modified_since = false;
+    pcmk__assert(snprintf(buffer, 32, "%" PRIu64, ping_seq) >= 0);
+
+    pcmk__trace("Requesting peer digests (%s)", buffer);
+
+    pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
+    pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buffer);
+
+    pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
+
+    pcmk__xml_free(ping);
+    return G_SOURCE_REMOVE;
 }
 
 static void
