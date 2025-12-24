@@ -21,7 +21,6 @@
 
 #include <glib.h>                   // gboolean, gpointer, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
-#include <libxml/xpath.h>           // xmlXPath*
 #include <qb/qbdefs.h>              // QB_FALSE
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t
 #include <qb/qblog.h>               // LOG_TRACE
@@ -558,26 +557,6 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     return input;
 }
 
-static bool
-contains_config_change(xmlNode *diff)
-{
-    xmlXPathObject *xpath_obj = NULL;
-    bool changed = false;
-
-    if (diff == NULL) {
-        return false;
-    }
-
-    xpath_obj = pcmk__xpath_search(diff->doc,
-                                   "//" PCMK_XE_CHANGE
-                                   "[contains(@" PCMK_XA_PATH ", "
-                                              "'/" PCMK_XE_CRM_CONFIG "/')]");
-
-    changed = (pcmk__xpath_num_results(xpath_obj) > 0);
-    xmlXPathFreeObject(xpath_obj);
-    return changed;
-}
-
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **reply, bool privileged)
@@ -675,10 +654,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             }
 
             rc = based_activate_cib(result_cib, config_changed, op);
-        }
-
-        if ((rc == pcmk_rc_ok) && contains_config_change(cib_diff)) {
-            cib_read_config(config_hash, result_cib);
         }
 
         /* @COMPAT Nodes older than feature set 3.19.0 don't support
