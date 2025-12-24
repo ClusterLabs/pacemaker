@@ -182,8 +182,7 @@ int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
 
 int cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
                        const char *section, xmlNode *req, xmlNode *input,
-                       xmlNode **current_cib, xmlNode **result_cib,
-                       xmlNode **output);
+                       xmlNode **current_cib, xmlNode **output);
 
 int cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                    cib__op_fn_t fn, const char *section, xmlNode *req,
