@@ -27,7 +27,6 @@
 
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
 
-extern GHashTable *config_hash;
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
 extern gboolean stand_alone;

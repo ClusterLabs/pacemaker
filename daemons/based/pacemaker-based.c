@@ -42,8 +42,6 @@ gchar *cib_root = NULL;
 
 gboolean stand_alone = FALSE;
 
-GHashTable *config_hash = NULL;
-
 static void cib_init(void);
 
 static crm_exit_t exit_code = CRM_EX_OK;
@@ -282,10 +280,6 @@ done:
     pcmk__free_arg_context(context);
 
     pcmk__cluster_destroy_node_caches();
-
-    if (config_hash != NULL) {
-        g_hash_table_destroy(config_hash);
-    }
     pcmk__client_cleanup();
     pcmk_cluster_free(crm_cluster);
     g_free(cib_root);
@@ -370,11 +364,7 @@ cib_init(void)
         crm_exit(CRM_EX_SOFTWARE);
     }
 
-    config_hash = pcmk__strkey_table(free, free);
-    cib_read_config(config_hash, the_cib);
-
     based_remote_init();
-
     crm_cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
