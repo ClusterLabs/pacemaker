@@ -170,10 +170,10 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
         return;
     }
 
-    if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        if ((PCMK__CLIENT_TYPE(client) == pcmk__client_ipc)
-            && pcmk__is_set(flags, crm_ipc_client_response)) {
+    if ((PCMK__CLIENT_TYPE(client) == pcmk__client_ipc)
+        && pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
 
+        if (pcmk__is_set(flags, crm_ipc_client_response)) {
             xmlNode *ack = pcmk__xe_create(NULL, __func__);
 
             pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
