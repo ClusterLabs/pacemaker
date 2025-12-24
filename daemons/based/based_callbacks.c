@@ -171,7 +171,9 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
     }
 
     if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        if (flags & crm_ipc_client_response) {
+        if ((PCMK__CLIENT_TYPE(cib_client) == pcmk__client_ipc)
+            && pcmk__is_set(flags, crm_ipc_client_response)) {
+
             xmlNode *ack = pcmk__xe_create(NULL, __func__);
 
             pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
@@ -187,13 +189,15 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
         crm_exit_t status = CRM_EX_OK;
 
         rc = based_update_notify_flags(op_request, cib_client);
+
+        if (PCMK__CLIENT_TYPE(cib_client) != pcmk__client_ipc) {
+            return;
+        }
+
         if (rc != pcmk_rc_ok) {
             status = CRM_EX_INVALID_PARAM;
         }
 
-        /* This is a no-op if crm_ipc_client_response is not set, so it's OK for
-         * remote clients. This could be much clearer, however.
-         */
         pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_ACK, NULL, status);
         return;
     }
