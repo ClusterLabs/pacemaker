@@ -129,6 +129,36 @@ createEmptyCib(int cib_epoch)
     return cib_root;
 }
 
+static void
+read_config(GHashTable *options, xmlNode *current_cib)
+{
+    xmlNode *config = NULL;
+    crm_time_t *now = NULL;
+
+    if (options == NULL || current_cib == NULL) {
+        return;
+    }
+
+    now = crm_time_new(NULL);
+
+    g_hash_table_remove_all(options);
+
+    config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
+    if (config) {
+        pcmk_rule_input_t rule_input = {
+            .now = now,
+        };
+
+        pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                                  options, NULL);
+    }
+
+    pcmk__validate_cluster_options(options);
+
+    crm_time_free(now);
+}
+
 static bool
 cib_acl_enabled(xmlNode *xml, const char *user)
 {
@@ -138,7 +168,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
         const char *value = NULL;
         GHashTable *options = pcmk__strkey_table(free, free);
 
-        cib_read_config(options, xml);
+        read_config(options, xml);
         value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
         rc = pcmk__is_true(value);
         g_hash_table_destroy(options);
@@ -729,36 +759,6 @@ cib_native_notify(gpointer data, gpointer user_data)
     pcmk__trace("Invoking callback for %p/%s event...", entry, event);
     entry->callback(event, msg);
     pcmk__trace("Callback invoked...");
-}
-
-void
-cib_read_config(GHashTable * options, xmlNode * current_cib)
-{
-    xmlNode *config = NULL;
-    crm_time_t *now = NULL;
-
-    if (options == NULL || current_cib == NULL) {
-        return;
-    }
-
-    now = crm_time_new(NULL);
-
-    g_hash_table_remove_all(options);
-
-    config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
-    if (config) {
-        pcmk_rule_input_t rule_input = {
-            .now = now,
-        };
-
-        pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
-                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                                  options, NULL);
-    }
-
-    pcmk__validate_cluster_options(options);
-
-    crm_time_free(now);
 }
 
 int
