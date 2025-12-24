@@ -640,14 +640,13 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     /* @COMPAT: Handle a valid write action (legacy)
      *
-     * @TODO: Re-evaluate whether this is all truly legacy. The cib_force_diff
-     * portion is. However, PCMK__XA_CIB_UPDATE may be set by a sync operation
-     * even in non-legacy mode, and manage_counters tells xml_create_patchset()
-     * whether to update version/epoch info.
+     * @TODO: Re-evaluate whether this is all truly legacy. PCMK__XA_CIB_UPDATE
+     * may be set by a sync operation even in non-legacy mode, and
+     * manage_counters tells xml_create_patchset() whether to update
+     * version/epoch info.
      */
     if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         manage_counters = false;
-        cib__set_call_options(call_options, "call", cib_force_diff);
         pcmk__trace("Global update detected");
 
         CRM_LOG_ASSERT(pcmk__str_any_of(op,
