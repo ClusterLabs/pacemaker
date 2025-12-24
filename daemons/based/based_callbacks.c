@@ -151,7 +151,7 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
 
 void
 based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
-                             pcmk__client_t *cib_client, bool privileged)
+                             pcmk__client_t *client, bool privileged)
 {
     const char *op = pcmk__xe_get(op_request, PCMK__XA_CIB_OP);
     uint32_t call_options = cib_none;
@@ -171,15 +171,15 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
     }
 
     if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        if ((PCMK__CLIENT_TYPE(cib_client) == pcmk__client_ipc)
+        if ((PCMK__CLIENT_TYPE(client) == pcmk__client_ipc)
             && pcmk__is_set(flags, crm_ipc_client_response)) {
 
             xmlNode *ack = pcmk__xe_create(NULL, __func__);
 
             pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-            pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
-            pcmk__ipc_send_xml(cib_client, id, ack, flags);
-            cib_client->request_id = 0;
+            pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, client->id);
+            pcmk__ipc_send_xml(client, id, ack, flags);
+            client->request_id = 0;
             pcmk__xml_free(ack);
         }
         return;
@@ -188,9 +188,9 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
     if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
         crm_exit_t status = CRM_EX_OK;
 
-        rc = based_update_notify_flags(op_request, cib_client);
+        rc = based_update_notify_flags(op_request, client);
 
-        if (PCMK__CLIENT_TYPE(cib_client) != pcmk__client_ipc) {
+        if (PCMK__CLIENT_TYPE(client) != pcmk__client_ipc) {
             return;
         }
 
@@ -198,11 +198,11 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
             status = CRM_EX_INVALID_PARAM;
         }
 
-        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_ACK, NULL, status);
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL, status);
         return;
     }
 
-    based_process_request(op_request, privileged, cib_client);
+    based_process_request(op_request, privileged, client);
 }
 
 static uint64_t ping_seq = 0;
@@ -326,7 +326,7 @@ process_ping_reply(xmlNode *reply)
 }
 
 static void
-parse_local_options(const pcmk__client_t *cib_client,
+parse_local_options(const pcmk__client_t *client,
                     const cib__operation_t *operation,
                     const char *host, const char *op, bool *local_notify,
                     bool *needs_reply, bool *process, bool *needs_forward)
@@ -345,7 +345,7 @@ parse_local_options(const pcmk__client_t *cib_client,
          * NULL or OUR_NODENAME.
          */
         pcmk__trace("Processing always-local %s op from client %s", op,
-                    pcmk__client_name(cib_client));
+                    pcmk__client_name(client));
 
         if (!pcmk__str_eq(host, OUR_NODENAME,
                           pcmk__str_casei|pcmk__str_null_matches)) {
@@ -368,18 +368,18 @@ parse_local_options(const pcmk__client_t *cib_client,
         *needs_forward = true;
 
         pcmk__trace("%s op from %s needs to be forwarded to %s", op,
-                    pcmk__client_name(cib_client), pcmk__s(host, "all nodes"));
+                    pcmk__client_name(client), pcmk__s(host, "all nodes"));
         return;
     }
 
     if (stand_alone) {
         pcmk__trace("Processing %s op from client %s (stand-alone)", op,
-                    pcmk__client_name(cib_client));
+                    pcmk__client_name(client));
 
     } else {
         pcmk__trace("Processing %saddressed %s op from client %s",
                     ((host != NULL)? "locally " : "un"), op,
-                    pcmk__client_name(cib_client));
+                    pcmk__client_name(client));
     }
 }
 
