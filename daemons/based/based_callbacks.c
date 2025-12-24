@@ -149,42 +149,6 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
     }
 }
 
-void
-based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
-                             pcmk__client_t *client, bool privileged)
-{
-    const char *op = pcmk__xe_get(op_request, PCMK__XA_CIB_OP);
-
-    if ((PCMK__CLIENT_TYPE(client) == pcmk__client_ipc)
-        && pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-
-        if (pcmk__is_set(flags, crm_ipc_client_response)) {
-            xmlNode *ack = pcmk__xe_create(NULL, __func__);
-
-            pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-            pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, client->id);
-            pcmk__ipc_send_xml(client, id, ack, flags);
-            client->request_id = 0;
-            pcmk__xml_free(ack);
-        }
-        return;
-    }
-
-    if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
-        crm_exit_t status = CRM_EX_OK;
-        int rc = based_update_notify_flags(op_request, client);
-
-        if (rc != pcmk_rc_ok) {
-            status = CRM_EX_INVALID_PARAM;
-        }
-
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL, status);
-        return;
-    }
-
-    based_process_request(op_request, privileged, client);
-}
-
 static uint64_t ping_seq = 0;
 static char *ping_digest = NULL;
 static bool ping_modified_since = false;

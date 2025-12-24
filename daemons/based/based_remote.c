@@ -315,6 +315,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
     int rc = pcmk_rc_ok;
     uint32_t call_options = cib_none;
+    const char *op = pcmk__xe_get(command, PCMK__XA_CIB_OP);
 
     if (!pcmk__xe_is(command, PCMK__XE_CIB_COMMAND)) {
         pcmk__log_xml_trace(command, "bad");
@@ -363,7 +364,12 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
     }
 
     pcmk__log_xml_trace(command, "remote-request");
-    based_common_callback_worker(0, 0, command, client, true);
+
+    if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
+        based_update_notify_flags(command, client);
+    }
+
+    based_process_request(command, true, client);
 }
 
 static int

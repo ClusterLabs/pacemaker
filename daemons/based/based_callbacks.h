@@ -11,7 +11,6 @@
 #define BASED_CALLBACKS__H
 
 #include <stdbool.h>
-#include <stdint.h>                     // uint32_t
 
 #include <libxml/tree.h>                // xmlNode
 #include <qb/qbipcs.h>                  // qb_*
@@ -26,9 +25,6 @@ extern qb_ipcs_service_t *ipcs_rw;
 extern qb_ipcs_service_t *ipcs_shm;
 
 void based_peer_callback(xmlNode *msg, void *private_data);
-void based_common_callback_worker(uint32_t id, uint32_t flags,
-                                  xmlNode *op_request, pcmk__client_t *client,
-                                  bool privileged);
 int based_process_request(xmlNode *request, bool privileged,
                           const pcmk__client_t *client);
 void based_shutdown(int nsig);
