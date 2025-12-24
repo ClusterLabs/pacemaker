@@ -176,24 +176,18 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
                    xmlNode **output)
 {
     int rc = pcmk_rc_ok;
-    const char *user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+    const char *user = NULL;
 
-    xmlNode *cib_ro = *current_cib;
+    xmlNode *cib_ro = NULL;
     xmlNode *cib_filtered = NULL;
 
-    CRM_CHECK(output != NULL, return ENOMSG);
-    CRM_CHECK(current_cib != NULL, return ENOMSG);
-    CRM_CHECK(result_cib != NULL, return ENOMSG);
+    pcmk__assert((fn != NULL) && (req != NULL)
+                 && (current_cib != NULL) && (*current_cib != NULL)
+                 && (result_cib != NULL) && (*result_cib == NULL)
+                 && (output != NULL) && (*output == NULL));
 
-    if (output != NULL) {
-        *output = NULL;
-    }
-
-    *result_cib = NULL;
-
-    if (fn == NULL) {
-        return EINVAL;
-    }
+    user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+    cib_ro = *current_cib;
 
     if (cib_acl_enabled(*current_cib, user)
         && xml_acl_filtered_copy(user, *current_cib, *current_cib,
@@ -210,7 +204,7 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
     rc = fn(op, call_options, section, req, input, cib_ro, result_cib, output);
     rc = pcmk_legacy2rc(rc);
 
-    if ((output == NULL) || (*output == NULL)) {
+    if (*output == NULL) {
         // Do nothing
 
     } else if (cib_filtered == *output) {
@@ -297,25 +291,18 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
-    const char *user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
-    const bool enable_acl = cib_acl_enabled(*current_cib, user);
+    const char *user = NULL;
+    bool enable_acl = false;
     bool with_digest = false;
 
-    CRM_CHECK(output != NULL, return ENOMSG);
-    CRM_CHECK(current_cib != NULL, return ENOMSG);
-    CRM_CHECK(result_cib != NULL, return ENOMSG);
-    CRM_CHECK(config_changed != NULL, return ENOMSG);
+    pcmk__assert((fn != NULL) && (req != NULL)
+                 && (config_changed != NULL) && (!*config_changed)
+                 && (current_cib != NULL) && (*current_cib != NULL)
+                 && (result_cib != NULL) && (*result_cib == NULL)
+                 && (output != NULL) && (*output == NULL));
 
-    if(output) {
-        *output = NULL;
-    }
-
-    *result_cib = NULL;
-    *config_changed = false;
-
-    if (fn == NULL) {
-        return EINVAL;
-    }
+    user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+    enable_acl = cib_acl_enabled(*current_cib, user);
 
     make_copy = should_copy_cib(op, section, call_options);
 
