@@ -187,11 +187,11 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         goto done;
     }
 
-    if (rc == -pcmk_err_schema_validation) {
+    if (rc == pcmk_rc_schema_validation) {
         // Show validation errors to stderr
         pcmk__validate_xml(result_cib, NULL, NULL, NULL);
 
-    } else if ((rc == pcmk_ok) && !read_only) {
+    } else if ((rc == pcmk_rc_ok) && !read_only) {
         pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
 
         if (result_cib != private->cib_xml) {
@@ -206,7 +206,7 @@ done:
         pcmk__xml_free(result_cib);
     }
     pcmk__xml_free(cib_diff);
-    return rc;
+    return pcmk_rc2legacy(rc);
 }
 
 /*!
