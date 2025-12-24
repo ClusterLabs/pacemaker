@@ -125,9 +125,21 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         return 0;
     }
 
+    if (client->name == NULL) {
+        const char *value = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
+
+        if (value == NULL) {
+            client->name = pcmk__itoa(client->pid);
+        } else {
+            client->name = pcmk__str_copy(value);
+        }
+    }
+
     rc = pcmk__xe_get_flags(msg, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
     if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+        pcmk__warn("Couldn't parse options from request from IPC client %s: %s",
+                   client->name, pcmk_rc_str(rc));
+        pcmk__log_xml_info(msg, "bad-call-opts");
     }
 
     if (pcmk__is_set(call_options, cib_sync_call)) {
@@ -138,16 +150,6 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
 
         // Reply only to the last one
         client->request_id = id;
-    }
-
-    if (client->name == NULL) {
-        const char *value = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
-
-        if (value == NULL) {
-            client->name = pcmk__itoa(client->pid);
-        } else {
-            client->name = pcmk__str_copy(value);
-        }
     }
 
     pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTID, client->id);
