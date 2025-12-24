@@ -313,6 +313,9 @@ cib_remote_auth(xmlNode * login)
 static void
 cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 {
+    int rc = pcmk_rc_ok;
+    uint32_t call_options = cib_none;
+
     if (!pcmk__xe_is(command, PCMK__XE_CIB_COMMAND)) {
         pcmk__log_xml_trace(command, "bad");
         return;
@@ -340,11 +343,26 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
         free(call_uuid);
     }
 
-    if (pcmk__xe_get(command, PCMK__XA_CIB_CALLOPT) == NULL) {
-        pcmk__xe_set_int(command, PCMK__XA_CIB_CALLOPT, 0);
+    rc = pcmk__xe_get_flags(command, PCMK__XA_CIB_CALLOPT, &call_options,
+                            cib_none);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Couldn't parse options from request from remote client %s: "
+                   "%s", client->name, pcmk_rc_str(rc));
+        pcmk__log_xml_info(command, "bad-call-opts");
     }
 
-    pcmk__log_xml_trace(command, "Remote command: ");
+    /* Requests with cib_transaction set should not be sent to based directly
+     * (that is, outside of a commit-transaction request)
+     */
+    if (pcmk__is_set(call_options, cib_transaction)) {
+        pcmk__warn("Ignoring CIB request from remote client %s with "
+                   "cib_transaction flag set outside of any transaction",
+                   client->name);
+        pcmk__log_xml_info(command, "no-transaction");
+        return;
+    }
+
+    pcmk__log_xml_trace(command, "remote-request");
     based_common_callback_worker(0, 0, command, client, true);
 }
 
