@@ -162,19 +162,20 @@ read_config(GHashTable *options, xmlNode *current_cib)
 static bool
 cib_acl_enabled(xmlNode *xml, const char *user)
 {
+    const char *value = NULL;
+    GHashTable *options = NULL;
     bool rc = false;
 
-    if(pcmk_acl_required(user)) {
-        const char *value = NULL;
-        GHashTable *options = pcmk__strkey_table(free, free);
-
-        read_config(options, xml);
-        value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
-        rc = pcmk__is_true(value);
-        g_hash_table_destroy(options);
+    if ((xml == NULL) || !pcmk_acl_required(user)) {
+        return false;
     }
 
-    pcmk__trace("CIB ACL is %s", (rc? "enabled" : "disabled"));
+    options = pcmk__strkey_table(free, free);
+    read_config(options, xml);
+    value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
+
+    rc = pcmk__is_true(value);
+    g_hash_table_destroy(options);
     return rc;
 }
 
