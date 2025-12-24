@@ -13,7 +13,7 @@
 #include <inttypes.h>               // PRIx64
 #include <stdbool.h>
 #include <stddef.h>                 // NULL
-#include <stdint.h>                 // int32_t, uint16_t
+#include <stdint.h>                 // int32_t, uint16_t, UINT64_C
 #include <sys/types.h>              // ssize_t
 
 #include <glib.h>                   // gpointer, g_string_free
@@ -35,13 +35,27 @@ struct cib_notification_s {
 
 /*!
  * \internal
+ * \brief Flags for CIB manager client notification types
+ *
+ * These are used for setting the \c flags field of a \c pcmk__client_t.
+ */
+enum based_notify_flags {
+    //! This flag has no effect
+    based_nf_none = UINT64_C(0),
+
+    //! Notify when the CIB changes
+    based_nf_diff = (UINT64_C(1) << 0),
+};
+
+/*!
+ * \internal
  * \brief Parse a CIB manager client notification type string to a flag
  *
  * \param[in] text  Notification type string
  *
  * \return Flag corresponding to \p text, or \c based_nf_none if none exists
  */
-enum based_notify_flags
+static enum based_notify_flags
 based_parse_notify_flag(const char *text)
 {
     if (pcmk__str_eq(text, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
@@ -49,6 +63,47 @@ based_parse_notify_flag(const char *text)
     }
 
     return based_nf_none;
+}
+
+/*!
+ * \internal
+ * \brief Set or clear a notify flag in a client based on request XML
+ *
+ * \param[in]     xml     Request XML
+ * \param[in,out] client  Client
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client)
+{
+    int rc = pcmk_rc_ok;
+    bool enable = false;
+    enum based_notify_flags notify_flag = based_nf_none;
+    const char *type = pcmk__xe_get(xml, PCMK__XA_CIB_NOTIFY_TYPE);
+
+    rc = pcmk__xe_get_bool(xml, PCMK__XA_CIB_NOTIFY_ACTIVATE, &enable);
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc_bad_input;
+    }
+
+    notify_flag = based_parse_notify_flag(type);
+    if (notify_flag == based_nf_none) {
+        return pcmk_rc_bad_input;
+    }
+
+    if (enable) {
+        pcmk__debug("Enabling %s callbacks for client %s", type,
+                    pcmk__client_name(client));
+        pcmk__set_client_flags(client, notify_flag);
+
+    } else {
+        pcmk__debug("Disabling %s callbacks for client %s", type,
+                    pcmk__client_name(client));
+        pcmk__clear_client_flags(client, notify_flag);
+    }
+
+    return pcmk_rc_ok;
 }
 
 static void
