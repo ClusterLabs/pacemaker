@@ -13,7 +13,7 @@
 #include <inttypes.h>               // PRIu64
 #include <stdbool.h>
 #include <stddef.h>                 // NULL, size_t
-#include <stdint.h>                 // u?int*_t, UINT64_C
+#include <stdint.h>                 // uint32_t, uint64_t
 #include <stdio.h>                  // snprintf
 #include <stdlib.h>                 // free
 #include <syslog.h>                 // LOG_INFO, LOG_DEBUG
@@ -186,27 +186,27 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
         /* Update the notify filters for this client */
         int on_off = 0;
         crm_exit_t status = CRM_EX_OK;
-        uint64_t bit = UINT64_C(0);
         const char *type = pcmk__xe_get(op_request, PCMK__XA_CIB_NOTIFY_TYPE);
+        enum based_notify_flags notify_flag = based_parse_notify_flag(type);
 
         pcmk__xe_get_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE, &on_off);
 
         pcmk__debug("Setting %s callbacks %s for client %s", type,
                     (on_off? "on" : "off"), pcmk__client_name(cib_client));
 
-        if (pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
-            bit = based_nf_diff;
+        if (notify_flag == based_nf_none) {
+            /* Don't log an assertion. Technically this could come from an
+             * external client.
+             */
+            pcmk__err("Ignoring unknown CIB manager event notification type %s",
+                      type);
+            status = CRM_EX_INVALID_PARAM;
+
+        } else if (on_off) {
+            pcmk__set_client_flags(cib_client, notify_flag);
 
         } else {
-            status = CRM_EX_INVALID_PARAM;
-        }
-
-        if (bit != 0) {
-            if (on_off) {
-                pcmk__set_client_flags(cib_client, bit);
-            } else {
-                pcmk__clear_client_flags(cib_client, bit);
-            }
+            pcmk__clear_client_flags(cib_client, notify_flag);
         }
 
         pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_ACK, NULL, status);

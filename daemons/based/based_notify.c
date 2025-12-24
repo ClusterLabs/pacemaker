@@ -33,6 +33,24 @@ struct cib_notification_s {
     int32_t iov_size;
 };
 
+/*!
+ * \internal
+ * \brief Parse a CIB manager client notification type string to a flag
+ *
+ * \param[in] text  Notification type string
+ *
+ * \return Flag corresponding to \p text, or \c based_nf_none if none exists
+ */
+enum based_notify_flags
+based_parse_notify_flag(const char *text)
+{
+    if (pcmk__str_eq(text, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
+        return based_nf_diff;
+    }
+
+    return based_nf_none;
+}
+
 static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
