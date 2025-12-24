@@ -70,7 +70,6 @@ struct {
     char *attr_value;
     char *dest_node;
     gchar *dest_uname;
-    gboolean inhibit;
     gchar *set_name;
     char *set_type;
     gchar *type;
@@ -314,10 +313,6 @@ static GOptionEntry addl_entries[] = {
     { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, utilization_cb,
       "Set an utilization attribute for the node.",
       NULL
-    },
-
-    { "inhibit-policy-engine", '!', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.inhibit,
-      NULL, NULL
     },
 
     { NULL }
@@ -802,11 +797,6 @@ main(int argc, char **argv)
                     "-p/--promotion must be called from an OCF resource agent "
                     "or with a resource ID specified");
         goto done;
-    }
-
-    if (options.inhibit) {
-        pcmk__warn("Inhibiting notifications for this update");
-        cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
     rc = cib__create_signon(&the_cib);
