@@ -14,7 +14,6 @@
 #include <stdbool.h>
 #include <stddef.h>                 // NULL, size_t
 #include <stdint.h>                 // uint32_t, uint64_t
-#include <stdio.h>                  // snprintf
 #include <stdlib.h>                 // free
 #include <syslog.h>                 // LOG_INFO, LOG_DEBUG
 #include <time.h>                   // time_t
@@ -43,6 +42,10 @@
 #include "pacemaker-based.h"
 
 #define EXIT_ESCALATION_MS 10000
+
+static uint64_t ping_seq = 0;
+static char *ping_digest = NULL;
+static bool ping_modified_since = false;
 
 /*!
  * \internal
@@ -149,37 +152,46 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
     }
 }
 
-static uint64_t ping_seq = 0;
-static char *ping_digest = NULL;
-static bool ping_modified_since = false;
-
+/*!
+ * \internal
+ * \brief Request CIB digests from all peer nodes
+ *
+ * This is used as a callback that runs 5 seconds after we modify the CIB. It
+ * sends a ping request to all cluster nodes. They will respond by sending their
+ * current digests and version info, which we will validate in
+ * process_ping_reply(). This serves as a check of consistency across the
+ * cluster after a CIB update.
+ *
+ * \param[in] data  Ignored
+ *
+ * \return \c G_SOURCE_REMOVE (to destroy the timeout)
+ */
 static gboolean
-cib_digester_cb(gpointer data)
+digest_timer_cb(gpointer data)
 {
-    char buffer[32] = { '\0' };
+    char *buf = NULL;
     xmlNode *ping = NULL;
 
     if (!based_is_primary) {
         return G_SOURCE_REMOVE;
     }
 
-    ping = pcmk__xe_create(NULL, PCMK__XE_PING);
-
     ping_seq++;
-    free(ping_digest);
-    ping_digest = NULL;
+    g_clear_pointer(&ping_digest, free);
     ping_modified_since = false;
-    pcmk__assert(snprintf(buffer, 32, "%" PRIu64, ping_seq) >= 0);
 
-    pcmk__trace("Requesting peer digests (%s)", buffer);
+    buf = pcmk__assert_asprintf("%" PRIu64, ping_seq);
 
+    ping = pcmk__xe_create(NULL, PCMK__XE_PING);
     pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
     pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
-    pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buffer);
-
+    pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buf);
     pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+
+    pcmk__trace("Requesting peer digests (%s)", buf);
     pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
 
+    free(buf);
     pcmk__xml_free(ping);
     return G_SOURCE_REMOVE;
 }
@@ -593,8 +605,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     pcmk__assert(cib_status == pcmk_rc_ok);
 
-    if(digest_timer == NULL) {
-        digest_timer = mainloop_timer_add("digester", 5000, FALSE, cib_digester_cb, NULL);
+    if (digest_timer == NULL) {
+        digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
+                                          digest_timer_cb, NULL);
     }
 
     *reply = NULL;
@@ -702,7 +715,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
             sync_our_cib(request, true);
         }
 
-        mainloop_timer_stop(digest_timer);
         mainloop_timer_start(digest_timer);
 
     } else if (rc == pcmk_rc_schema_validation) {
