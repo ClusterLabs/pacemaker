@@ -169,6 +169,71 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     return rc;
 }
 
+int
+cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
+                   const char *section, xmlNode *req, xmlNode *input,
+                   xmlNode **current_cib, xmlNode **result_cib,
+                   xmlNode **output)
+{
+    int rc = pcmk_rc_ok;
+    const char *user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+
+    xmlNode *cib_ro = *current_cib;
+    xmlNode *cib_filtered = NULL;
+
+    CRM_CHECK(output != NULL, return ENOMSG);
+    CRM_CHECK(current_cib != NULL, return ENOMSG);
+    CRM_CHECK(result_cib != NULL, return ENOMSG);
+
+    if (output != NULL) {
+        *output = NULL;
+    }
+
+    *result_cib = NULL;
+
+    if (fn == NULL) {
+        return EINVAL;
+    }
+
+    if (cib_acl_enabled(*current_cib, user)
+        && xml_acl_filtered_copy(user, *current_cib, *current_cib,
+                                 &cib_filtered)) {
+
+        if (cib_filtered == NULL) {
+            pcmk__debug("Pre-filtered the entire cib");
+            return EACCES;
+        }
+        cib_ro = cib_filtered;
+        pcmk__log_xml_trace(cib_ro, "filtered");
+    }
+
+    rc = fn(op, call_options, section, req, input, cib_ro, result_cib, output);
+    rc = pcmk_legacy2rc(rc);
+
+    if ((output == NULL) || (*output == NULL)) {
+        // Do nothing
+
+    } else if (cib_filtered == *output) {
+        // Let them have this copy
+        cib_filtered = NULL;
+
+    } else if (*output == *current_cib) {
+        // They already know not to free it
+
+    } else if ((cib_filtered != NULL)
+               && ((*output)->doc == cib_filtered->doc)) {
+        // We're about to free the document of which *output is a part
+        *output = pcmk__xml_copy(NULL, *output);
+
+    } else if ((*output)->doc == (*current_cib)->doc) {
+        // Give them a copy they can free
+        *output = pcmk__xml_copy(NULL, *output);
+    }
+
+    pcmk__xml_free(cib_filtered);
+    return rc;
+}
+
 /*!
  * \internal
  * \brief Determine whether to perform operations on a scratch copy of the CIB
@@ -219,12 +284,11 @@ should_copy_cib(const char *op, const char *section, int call_options)
 
 int
 cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
-               cib__op_fn_t fn, bool is_query, const char *section,
-               xmlNode *req, xmlNode *input, bool manage_counters,
-               bool *config_changed, xmlNode **current_cib,
-               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
+               cib__op_fn_t fn, const char *section, xmlNode *req,
+               xmlNode *input, bool manage_counters, bool *config_changed,
+               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
+               xmlNode **output)
 {
-    const bool dry_run = pcmk__is_set(call_options, cib_dryrun);
     int rc = pcmk_rc_ok;
     bool check_schema = true;
     bool make_copy = true;
@@ -236,9 +300,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     const char *user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     const bool enable_acl = cib_acl_enabled(*current_cib, user);
     bool with_digest = false;
-
-    pcmk__trace("Begin %s%s%s op", (dry_run? "dry run of " : ""),
-                (is_query? "read-only " : ""), op);
 
     CRM_CHECK(output != NULL, return ENOMSG);
     CRM_CHECK(current_cib != NULL, return ENOMSG);
@@ -254,47 +315,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
     if (fn == NULL) {
         return EINVAL;
-    }
-
-    if (is_query) {
-        xmlNode *cib_ro = *current_cib;
-        xmlNode *cib_filtered = NULL;
-
-        if (enable_acl
-            && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                     &cib_filtered)) {
-
-            if (cib_filtered == NULL) {
-                pcmk__debug("Pre-filtered the entire cib");
-                return EACCES;
-            }
-            cib_ro = cib_filtered;
-            pcmk__log_xml_trace(cib_ro, "filtered");
-        }
-
-        rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
-        rc = pcmk_legacy2rc(rc);
-
-        if(output == NULL || *output == NULL) {
-            /* nothing */
-
-        } else if(cib_filtered == *output) {
-            cib_filtered = NULL; /* Let them have this copy */
-
-        } else if (*output == *current_cib) {
-            /* They already know not to free it */
-
-        } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
-            /* We're about to free the document of which *output is a part */
-            *output = pcmk__xml_copy(NULL, *output);
-
-        } else if ((*output)->doc == (*current_cib)->doc) {
-            /* Give them a copy they can free */
-            *output = pcmk__xml_copy(NULL, *output);
-        }
-
-        pcmk__xml_free(cib_filtered);
-        return rc;
     }
 
     make_copy = should_copy_cib(op, section, call_options);
