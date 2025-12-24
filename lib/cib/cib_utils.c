@@ -132,30 +132,20 @@ createEmptyCib(int cib_epoch)
 static void
 read_config(GHashTable *options, xmlNode *current_cib)
 {
-    xmlNode *config = NULL;
     crm_time_t *now = NULL;
+    pcmk_rule_input_t rule_input = { 0, };
+    xmlNode *config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
 
-    if (options == NULL || current_cib == NULL) {
+    if (config == NULL) {
         return;
     }
 
     now = crm_time_new(NULL);
+    rule_input.now = now;
 
-    g_hash_table_remove_all(options);
-
-    config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
-    if (config) {
-        pcmk_rule_input_t rule_input = {
-            .now = now,
-        };
-
-        pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
-                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                                  options, NULL);
-    }
-
-    pcmk__validate_cluster_options(options);
-
+    pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                              PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                              options, NULL);
     crm_time_free(now);
 }
 
