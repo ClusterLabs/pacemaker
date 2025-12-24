@@ -110,9 +110,6 @@ based_process_apply_patch(const char *op, int options, const char *section,
 
     } else if (rc == -pcmk_err_diff_resync) {
         rc = -pcmk_err_diff_failed;
-        if (options & cib_force_diff) {
-            pcmk__warn("Not requesting full refresh in R/W mode");
-        }
     }
 
     return rc;

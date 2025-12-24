@@ -172,15 +172,13 @@ cib__process_apply_patch(const char *op, int options, const char *section,
                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                          xmlNode **result_cib, xmlNode **answer)
 {
-    const bool force = pcmk__is_set(options, cib_force_diff);
     const char *originator = NULL;
 
     if (req != NULL) {
         originator = pcmk__xe_get(req, PCMK__XA_SRC);
     }
 
-    pcmk__trace("Processing \"%s\" event from %s%s", op, originator,
-                (force? " (global update)" : ""));
+    pcmk__trace("Processing %s event from %s", op, originator);
 
     if (*result_cib != existing_cib) {
         pcmk__xml_free(*result_cib);
