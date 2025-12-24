@@ -24,6 +24,7 @@
 #include <crm/common/ipc.h>             // crm_ipc_client_response
 #include <crm/common/logging.h>         // CRM_CHECK(), CRM_LOG_ASSERT()
 #include <crm/common/results.h>         // CRM_EX_PROTOCOL, pcmk_rc_*
+#include <crm/crm.h>                    // CRM_OP_REGISTER
 
 #include "pacemaker-based.h"
 
@@ -79,6 +80,7 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
     uint32_t call_options = cib_none;
     xmlNode *msg = NULL;
     pcmk__client_t *client = pcmk__find_client(c);
+    const char *op = NULL;
 
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
@@ -171,9 +173,39 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
 
     pcmk__log_xml_trace(msg, "ipc-request");
 
-    based_common_callback_worker(id, flags, msg, client, privileged);
-    pcmk__xml_free(msg);
+    op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
+    if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
+        xmlNode *ack = NULL;
+
+        if (!pcmk__is_set(flags, crm_ipc_client_response)) {
+            return 0;
+        }
+
+        ack = pcmk__xe_create(NULL, __func__);
+        pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+        pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, client->id);
+        pcmk__ipc_send_xml(client, id, ack, flags);
+
+        client->request_id = 0;
+        pcmk__xml_free(ack);
+        return 0;
+    }
+
+    if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
+        crm_exit_t status = CRM_EX_OK;
+        int rc = based_update_notify_flags(msg, client);
+
+        if (rc != pcmk_rc_ok) {
+            status = CRM_EX_INVALID_PARAM;
+        }
+
+        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL, status);
+        return 0;
+    }
+
+    based_process_request(msg, privileged, client);
+    pcmk__xml_free(msg);
     return 0;
 }
 
