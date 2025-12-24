@@ -50,7 +50,7 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     type = pcmk__xe_get(update->msg, PCMK__XA_SUBT);
     CRM_LOG_ASSERT(type != NULL);
 
-    if (!pcmk__is_set(client->flags, cib_notify_diff)
+    if (!pcmk__is_set(client->flags, based_nf_diff)
         || !pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
         return;

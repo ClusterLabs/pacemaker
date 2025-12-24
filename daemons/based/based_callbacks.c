@@ -195,7 +195,7 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
                     (on_off? "on" : "off"), pcmk__client_name(cib_client));
 
         if (pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
-            bit = cib_notify_diff;
+            bit = based_nf_diff;
 
         } else {
             status = CRM_EX_INVALID_PARAM;
