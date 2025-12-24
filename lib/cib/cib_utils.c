@@ -509,7 +509,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         }
     }
 
-    pcmk__trace("Perform validation: %s", pcmk__btoa(check_schema));
     if ((rc == pcmk_rc_ok) && check_schema
         && !pcmk__configured_schema_validates(scratch)) {
         rc = pcmk_rc_schema_validation;
