@@ -489,16 +489,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         check_schema = false;
     }
 
-    /* === scratch must not be modified after this point ===
-     * Exceptions, anything in:
-
-     static filter_t filter[] = {
-     { 0, PCMK_XA_CRM_DEBUG_ORIGIN },
-     { 0, PCMK_XA_CIB_LAST_WRITTEN },
-     { 0, PCMK_XA_UPDATE_ORIGIN },
-     { 0, PCMK_XA_UPDATE_CLIENT },
-     { 0, PCMK_XA_UPDATE_USER },
-     };
+    /* scratch must not be modified after this point, except for the attributes
+     * for which pcmk__xa_filterable() returns true
      */
 
     if (*config_changed && !pcmk__is_set(call_options, cib_no_mtime)) {
