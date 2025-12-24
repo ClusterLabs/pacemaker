@@ -609,9 +609,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         rc = cib__perform_query(op, call_options, op_function, section, request,
-                                input, &the_cib, &result_cib, &output);
-
-        CRM_CHECK(result_cib == NULL, pcmk__xml_free(result_cib));
+                                input, &the_cib, &output);
         goto done;
     }
 
