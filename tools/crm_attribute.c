@@ -325,14 +325,6 @@ static GOptionEntry deprecated_entries[] = {
       NULL, NULL
     },
 
-    { "attr-value", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, update_cb,
-      NULL, NULL
-    },
-
-    { "delete-attr", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, delete_cb,
-      NULL, NULL
-    },
-
     // NOTE: resource-agents <4.2.0 (2018-10-24) uses this option
     { "get-value", 0, G_OPTION_FLAG_HIDDEN|G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, value_cb,
       NULL, NULL
