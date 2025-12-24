@@ -142,6 +142,17 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         pcmk__log_xml_info(msg, "bad-call-opts");
     }
 
+    /* Requests with cib_transaction set should not be sent to based directly
+     * (that is, outside of a commit-transaction request)
+     */
+    if (pcmk__is_set(call_options, cib_transaction)) {
+        pcmk__warn("Ignoring CIB request from IPC client %s with "
+                   "cib_transaction flag set outside of any transaction",
+                   client->name);
+        pcmk__log_xml_info(msg, "no-transaction");
+        return 0;
+    }
+
     if (pcmk__is_set(call_options, cib_sync_call)) {
         CRM_LOG_ASSERT(flags & crm_ipc_client_response);
 
@@ -157,6 +168,8 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
 
     CRM_LOG_ASSERT(client->user != NULL);
     pcmk__update_acl_user(msg, PCMK__XA_CIB_USER, client->user);
+
+    pcmk__log_xml_trace(msg, "ipc-request");
 
     based_common_callback_worker(id, flags, msg, client, privileged);
     pcmk__xml_free(msg);

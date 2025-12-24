@@ -154,21 +154,6 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
                              pcmk__client_t *client, bool privileged)
 {
     const char *op = pcmk__xe_get(op_request, PCMK__XA_CIB_OP);
-    uint32_t call_options = cib_none;
-    int rc = pcmk_rc_ok;
-
-    rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
-                            cib_none);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
-    }
-
-    /* Requests with cib_transaction set should not be sent to based directly
-     * (outside of a commit-transaction request)
-     */
-    if (pcmk__is_set(call_options, cib_transaction)) {
-        return;
-    }
 
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_ipc)
         && pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
@@ -187,12 +172,7 @@ based_common_callback_worker(uint32_t id, uint32_t flags, xmlNode *op_request,
 
     if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
         crm_exit_t status = CRM_EX_OK;
-
-        rc = based_update_notify_flags(op_request, client);
-
-        if (PCMK__CLIENT_TYPE(client) != pcmk__client_ipc) {
-            return;
-        }
+        int rc = based_update_notify_flags(op_request, client);
 
         if (rc != pcmk_rc_ok) {
             status = CRM_EX_INVALID_PARAM;
