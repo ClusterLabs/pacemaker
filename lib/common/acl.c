@@ -47,6 +47,32 @@ pcmk__free_acls(GList *acls)
     g_list_free_full(acls, free_acl);
 }
 
+/*!
+ * \internal
+ * \brief Parse an ACL mode from a string
+ *
+ * \param[in] text  String to parse
+ *
+ * \return ACL mode corresponding to \p text
+ */
+static enum pcmk__xml_flags
+parse_acl_mode(const char *text)
+{
+    if (pcmk__str_eq(text, PCMK_VALUE_READ, pcmk__str_none)) {
+        return pcmk__xf_acl_read;
+    }
+
+    if (pcmk__str_eq(text, PCMK_VALUE_WRITE, pcmk__str_none)) {
+        return pcmk__xf_acl_write;
+    }
+
+    if (pcmk__str_eq(text, PCMK_VALUE_DENY, pcmk__str_none)) {
+        return pcmk__xf_acl_deny;
+    }
+
+    return pcmk__xf_none;
+}
+
 static GList *
 create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 {
@@ -103,6 +129,51 @@ create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 
 /*!
  * \internal
+ * \brief Unpack a \c PCMK_XE_ACL_PERMISSION element to an \c xml_acl_t
+ *
+ * Append the new \c xml_acl_t object to a list.
+ *
+ * \param[in]     xml   Permission element to unpack
+ * \param[in,out] acls  List of ACLs to append to (\c NULL to start a new list)
+ *
+ * \return On success, \p acls with the new item appended, or a new list
+ *         containing only the new item if \p acls is \c NULL. On failure,
+ *         \p acls (unmodified).
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__free_acls().
+ */
+static GList *
+unpack_acl_permission(const xmlNode *xml, GList *acls)
+{
+    // ID unset is not possible with schema validation enabled
+    const char *id = pcmk__s(pcmk__xe_id(xml), "(no ID)");
+    const char *type = (const char *) xml->name;
+    const char *kind_s = pcmk__xe_get(xml, PCMK_XA_KIND);
+    enum pcmk__xml_flags kind = pcmk__xf_none;
+
+    if (kind_s == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__warn("Ignoring <%s> element %s with no " PCMK_XA_KIND " "
+                   "attribute", type, id);
+        return acls;
+    }
+
+    kind = parse_acl_mode(kind_s);
+    if (kind == pcmk__xf_none) {
+        pcmk__warn("Ignoring <%s> element %s with unknown ACL kind '%s'", type,
+                   id, kind_s);
+        return acls;
+    }
+
+    pcmk__trace("Unpacking <%s> element %s with " PCMK_XA_KIND "='%s'", type,
+                id, kind_s);
+
+    return create_acl(xml, acls, kind);
+}
+
+/*!
+ * \internal
  * \brief Unpack a user, group, or role subtree of the ACLs section
  *
  * \param[in]     acl_top    XML of entire ACLs section
@@ -121,25 +192,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
          child != NULL; child = pcmk__xe_next(child, NULL)) {
 
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
-            const char *kind = pcmk__xe_get(child, PCMK_XA_KIND);
-
-            pcmk__assert(kind != NULL);
-            pcmk__trace("Unpacking <" PCMK_XE_ACL_PERMISSION "> element of "
-                        "kind '%s'",
-                        kind);
-
-            if (pcmk__str_eq(kind, PCMK_VALUE_READ, pcmk__str_none)) {
-                acls = create_acl(child, acls, pcmk__xf_acl_read);
-
-            } else if (pcmk__str_eq(kind, PCMK_VALUE_WRITE, pcmk__str_none)) {
-                acls = create_acl(child, acls, pcmk__xf_acl_write);
-
-            } else if (pcmk__str_eq(kind, PCMK_VALUE_DENY, pcmk__str_none)) {
-                acls = create_acl(child, acls, pcmk__xf_acl_deny);
-
-            } else {
-                pcmk__warn("Ignoring unknown ACL kind '%s'", kind);
-            }
+            acls = unpack_acl_permission(child, acls);
 
         } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
             const char *ref_role = pcmk__xe_get(child, PCMK_XA_ID);
@@ -526,8 +579,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         return true;
     }
 
-    g_list_free_full(docpriv->acls, free_acl);
-    docpriv->acls = NULL;
+    g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
     if (target != NULL) {
         *result = target;
