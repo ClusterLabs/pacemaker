@@ -301,60 +301,51 @@ void
 pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
 {
     xml_doc_private_t *docpriv = NULL;
+    xmlNode *acls = NULL;
 
     pcmk__assert(target != NULL);
 
     docpriv = target->doc->_private;
-    if (!pcmk_acl_required(user)) {
-        pcmk__trace("Not unpacking ACLs because not required for user '%s'",
-                    user);
+    if (!pcmk_acl_required(user) || (docpriv->acls != NULL)) {
+        return;
+    }
 
-    } else if (docpriv->acls == NULL) {
-        xmlNode *acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
-                                             PCMK__LOG_NEVER);
+    pcmk__str_update(&docpriv->acl_user, user);
 
-        pcmk__str_update(&(docpriv->acl_user), user);
+    acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
+                                PCMK__LOG_NEVER);
 
-        if (acls == NULL) {
-            return;
+    for (xmlNode *child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child, NULL)) {
+
+        const bool is_target = pcmk__xe_is(child, PCMK_XE_ACL_TARGET);
+        const bool is_group = pcmk__xe_is(child, PCMK_XE_ACL_GROUP);
+        const char *id = NULL;
+
+        if (!is_target && !is_group) {
+            continue;
         }
 
-        for (xmlNode *child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
-             child != NULL; child = pcmk__xe_next(child, NULL)) {
-
-            const bool is_target = pcmk__xe_is(child, PCMK_XE_ACL_TARGET);
-            const bool is_group = pcmk__xe_is(child, PCMK_XE_ACL_GROUP);
-            const char *id = NULL;
-
-            if (!is_target && !is_group) {
-                continue;
-            }
-
-            id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME),
-                         pcmk__xe_id(child));
-            if (id == NULL) {
-                // Not possible with schema validation enabled
-                continue;
-            }
-
-            if (is_target) {
-                if (!pcmk__str_eq(id, user, pcmk__str_none)) {
-                    continue;
-                }
-
-                pcmk__debug("Unpacking ACLs for user '%s'", id);
-
-            } else {
-                if (!pcmk__is_user_in_group(user, id)) {
-                    continue;
-                }
-
-                pcmk__debug("Unpacking ACLs for group '%s' (user '%s')", id,
-                            user);
-            }
-
-            docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
+        id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME), pcmk__xe_id(child));
+        if (id == NULL) {
+            // Not possible with schema validation enabled
+            continue;
         }
+
+        if (is_target) {
+            if (!pcmk__str_eq(id, user, pcmk__str_none)) {
+                continue;
+            }
+            pcmk__debug("Unpacking ACLs for user '%s'", id);
+
+        } else {
+            if (!pcmk__is_user_in_group(user, id)) {
+                continue;
+            }
+            pcmk__debug("Unpacking ACLs for group '%s' (user '%s')", id, user);
+        }
+
+        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
     }
 }
 
