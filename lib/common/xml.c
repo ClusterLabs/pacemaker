@@ -1331,7 +1331,7 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     pcmk__xml_tree_foreach(candidate, pcmk__xml_reset_node_flags, NULL);
 
     // free_xml_with_position() will check whether ACLs allow the deletion
-    pcmk__apply_acls(xmlDocGetRootElement(candidate->doc));
+    pcmk__apply_acls(candidate->doc);
 
     /* Try to remove the child again (which will track it in document's
      * deleted_objs on success)
@@ -1812,7 +1812,7 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
         }
         pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
         pcmk__unpack_acl(acl_source, xml, user);
-        pcmk__apply_acls(xml);
+        pcmk__apply_acls(xml->doc);
     }
 }
 
