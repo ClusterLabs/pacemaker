@@ -281,21 +281,21 @@ apply_acl(xmlDoc *doc, const xml_acl_t *acl)
 }
 
 void
-pcmk__apply_acls(xmlNode *xml)
+pcmk__apply_acls(xmlDoc *doc)
 {
     xml_doc_private_t *docpriv = NULL;
 
-    pcmk__assert(xml != NULL);
-    docpriv = xml->doc->_private;
+    pcmk__assert(doc != NULL);
+    docpriv = doc->_private;
 
-    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
+    if (!pcmk__xml_doc_all_flags_set(doc, pcmk__xf_acl_enabled)) {
         return;
     }
 
     for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
         const xml_acl_t *acl = iter->data;
 
-        apply_acl(xml->doc, acl);
+        apply_acl(doc, acl);
     }
 }
 
@@ -383,7 +383,7 @@ pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
     }
     pcmk__unpack_acl(acl_source, target, user);
     pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
-    pcmk__apply_acls(target);
+    pcmk__apply_acls(target->doc);
 }
 
 static inline bool
@@ -688,7 +688,7 @@ xml_acl_disable(xmlNode *xml)
         xml_doc_private_t *docpriv = xml->doc->_private;
 
         /* Catch anything that was created but shouldn't have been */
-        pcmk__apply_acls(xml);
+        pcmk__apply_acls(xml->doc);
         pcmk__apply_creation_acl(xml, false);
         pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
     }
