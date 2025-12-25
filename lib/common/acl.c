@@ -500,44 +500,41 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
     docpriv = target->doc->_private;
     for(aIter = docpriv->acls; aIter != NULL && target; aIter = aIter->next) {
-        int max = 0;
         xml_acl_t *acl = aIter->data;
+        xmlXPathObject *xpathObj = NULL;
+        int max = 0;
+        int lpc = 0;
 
-        if (acl->mode != pcmk__xf_acl_deny) {
-            /* Nothing to do */
-
-        } else if (acl->xpath) {
-            int lpc = 0;
-            xmlXPathObject *xpathObj = pcmk__xpath_search(target->doc,
-                                                          acl->xpath);
-
-            max = pcmk__xpath_num_results(xpathObj);
-            for(lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
-
-                if (match == NULL) {
-                    continue;
-                }
-
-                // @COMPAT See COMPAT comment in pcmk__apply_acl()
-                match = pcmk__xpath_match_element(match);
-                if (match == NULL) {
-                    continue;
-                }
-
-                if (!purge_xml_attributes(match) && (match == target)) {
-                    pcmk__trace("ACLs deny user '%s' access to entire XML "
-                                "document",
-                                user);
-                    xmlXPathFreeObject(xpathObj);
-                    return true;
-                }
-            }
-            pcmk__trace("ACLs deny user '%s' access to %s (%d %s)", user,
-                        acl->xpath, max,
-                        pcmk__plural_alt(max, "match", "matches"));
-            xmlXPathFreeObject(xpathObj);
+        if ((acl->mode != pcmk__xf_acl_deny) || (acl->xpath == NULL)) {
+            continue;
         }
+
+        xpathObj = pcmk__xpath_search(target->doc, acl->xpath);
+        max = pcmk__xpath_num_results(xpathObj);
+
+        for(lpc = 0; lpc < max; lpc++) {
+            xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
+
+            if (match == NULL) {
+                continue;
+            }
+
+            // @COMPAT See COMPAT comment in pcmk__apply_acl()
+            match = pcmk__xpath_match_element(match);
+            if (match == NULL) {
+                continue;
+            }
+
+            if (!purge_xml_attributes(match) && (match == target)) {
+                pcmk__trace("ACLs deny user '%s' access to entire XML document",
+                            user);
+                xmlXPathFreeObject(xpathObj);
+                return true;
+            }
+        }
+        pcmk__trace("ACLs deny user '%s' access to %s (%d %s)", user,
+                    acl->xpath, max, pcmk__plural_alt(max, "match", "matches"));
+        xmlXPathFreeObject(xpathObj);
     }
 
     if (!purge_xml_attributes(target)) {
