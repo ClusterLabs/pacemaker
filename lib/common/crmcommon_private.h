@@ -150,7 +150,7 @@ G_GNUC_INTERNAL
 bool pcmk__is_user_in_group(const char *user, const char *group);
 
 G_GNUC_INTERNAL
-void pcmk__apply_acl(xmlNode *xml);
+void pcmk__apply_acls(xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
