@@ -321,24 +321,16 @@ pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
             for (child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
                  child != NULL; child = pcmk__xe_next(child, NULL)) {
 
+                const char *id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME),
+                                         pcmk__xe_id(child));
+
                 if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)) {
-                    const char *id = pcmk__xe_get(child, PCMK_XA_NAME);
-
-                    if (id == NULL) {
-                        id = pcmk__xe_get(child, PCMK_XA_ID);
-                    }
-
                     if (id && strcmp(id, user) == 0) {
                         pcmk__debug("Unpacking ACLs for user '%s'", id);
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
+
                 } else if (pcmk__xe_is(child, PCMK_XE_ACL_GROUP)) {
-                    const char *id = pcmk__xe_get(child, PCMK_XA_NAME);
-
-                    if (id == NULL) {
-                        id = pcmk__xe_get(child, PCMK_XA_ID);
-                    }
-
                     if (id && pcmk__is_user_in_group(user,id)) {
                         pcmk__debug("Unpacking ACLs for group '%s'", id);
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
