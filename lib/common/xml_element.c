@@ -758,7 +758,7 @@ replace_node(xmlNode *old, xmlNode *new)
 
     if (pcmk__xml_doc_all_flags_set(new->doc, pcmk__xf_tracking)) {
         // Replaced sections may have included relevant ACLs
-        pcmk__apply_acls(new);
+        pcmk__apply_acls(new->doc);
     }
     pcmk__xml_mark_changes(old, new);
     pcmk__xml_free_node(old);
