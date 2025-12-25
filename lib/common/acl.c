@@ -30,6 +30,9 @@ typedef struct xml_acl_s {
     gchar *xpath;
 } xml_acl_t;
 
+static GList *parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry,
+                              GList *acls);
+
 static void
 free_acl(void *data)
 {
@@ -188,6 +191,71 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
 
 /*!
  * \internal
+ * \brief Unpack an ACL role reference to a list of \c xml_acl_t
+ *
+ * Unpack a \c PCMK_XE_ROLE element within a \c PCMK_XE_ACL_TARGET or
+ * \c PCMK_XE_ACL_GROUP element. This element is a role reference. Its
+ * \c PCMK_XA_ID attribute is an IDREF; it must match the ID of a
+ * \c PCMK_XE_ACL_ROLE child of the \c PCMK_XE_ACLS element.
+ *
+ * The referenced \c PCMK_XE_ACL_ROLE contains zero or more
+ * \c PCMK_XE_ACL_PERMISSION children. Unpack those children to \c xml_acl_t
+ * objects and append them to a list.
+ *
+ * \param[in]     xml      Role reference element to unpack
+ * \param[in]     acl_top  \c PCMK_XE_ACLS element to search
+ * \param[in,out] acls     List of ACLs to append to (\c NULL to start a new
+ *                         list)
+ *
+ * \return On success, \p acls with the new items appended, or a new list
+ *         containing only the new items if \p acls is \c NULL. On failure,
+ *         \p acls (unmodified).
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__free_acls().
+ */
+static GList *
+unpack_acl_role_ref(const xmlNode *xml, const xmlNode *acl_top, GList *acls)
+{
+    const char *ref_id = pcmk__xe_id(xml);
+    const char *type = (const char *) xml->name;
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
+    if (ref_id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <%s> element in <%s> %s with no "
+                         PCMK_XA_ID " attribute", type, parent_type, parent_id);
+
+        // There is no reference role ID to match and unpack
+        return acls;
+    }
+
+    // Find the referenced role and unpack it
+    for (const xmlNode *role = pcmk__xe_first_child(acl_top, PCMK_XE_ACL_ROLE,
+                                                    NULL, NULL);
+         role != NULL; role = pcmk__xe_next(role, PCMK_XE_ACL_ROLE)) {
+
+        const char *role_id = pcmk__xe_id(role);
+
+        if (!pcmk__str_eq(ref_id, role_id, pcmk__str_none)) {
+            continue;
+        }
+
+        pcmk__trace("Unpacking role '%s' referenced in <%s> element %s",
+                    role_id, parent_type, parent_id);
+        return parse_acl_entry(acl_top, role, acls);
+    }
+
+    // Not possible with schema validation enabled
+    pcmk__config_err("Ignoring <%s> element %s in <%s> %s: no <%s> with "
+                     "matching " PCMK_XA_ID " found", type, ref_id, parent_type,
+                     parent_id, PCMK_XE_ACL_ROLE);
+    return acls;
+}
+
+/*!
+ * \internal
  * \brief Unpack a user, group, or role subtree of the ACLs section
  *
  * \param[in]     acl_top    XML of entire ACLs section
@@ -209,30 +277,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
             acls = unpack_acl_permission(child, acls);
 
         } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
-            const char *ref_role = pcmk__xe_get(child, PCMK_XA_ID);
-
-            pcmk__trace("Unpacking <" PCMK_XE_ROLE "> element");
-
-            if (ref_role == NULL) {
-                continue;
-            }
-
-            for (const xmlNode *role = pcmk__xe_first_child(acl_top,
-                                                            PCMK_XE_ACL_ROLE,
-                                                            NULL, NULL);
-                 role != NULL; role = pcmk__xe_next(role, PCMK_XE_ACL_ROLE)) {
-
-                const char *role_id = pcmk__xe_id(role);
-
-                if (!pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
-                    continue;
-                }
-
-                pcmk__trace("Unpacking referenced role '%s' in <%s> element",
-                            role_id, acl_entry->name);
-                acls = parse_acl_entry(acl_top, role, acls);
-                break;
-            }
+            acls = unpack_acl_role_ref(child, acl_top, acls);
         }
     }
 
