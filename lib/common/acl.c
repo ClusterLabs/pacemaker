@@ -222,6 +222,7 @@ apply_acl(xmlDoc *doc, const xml_acl_t *acl)
     int num_results = pcmk__xpath_num_results(xpath_obj);
 
     for (int i = 0; i < num_results; i++) {
+        GString *path = NULL;
         xmlNode *match = pcmk__xpath_result(xpath_obj, i);
 
         if (match == NULL) {
@@ -267,16 +268,10 @@ apply_acl(xmlDoc *doc, const xml_acl_t *acl)
         nodepriv = match->_private;
         pcmk__set_xml_flags(nodepriv, acl->mode);
 
-        // Build a GString only if tracing is enabled
-        pcmk__if_tracing(
-            {
-                GString *path = pcmk__element_xpath(match);
-                pcmk__trace("Applying %s ACL to %s matched by %s",
-                            acl_to_text(acl->mode), path->str, acl->xpath);
-                g_string_free(path, TRUE);
-            },
-            {}
-        );
+        path = pcmk__element_xpath(match);
+        pcmk__trace("Applying %s ACL to %s matched by %s",
+                    acl_to_text(acl->mode), path->str, acl->xpath);
+        g_string_free(path, TRUE);
     }
 
     pcmk__trace("Applied %s ACL %s (%d match%s)", acl_to_text(acl->mode),
