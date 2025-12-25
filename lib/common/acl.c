@@ -150,25 +150,20 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                 continue;
             }
 
-            for (xmlNode *role = pcmk__xe_first_child(acl_top, NULL, NULL,
-                                                      NULL);
-                 role != NULL; role = pcmk__xe_next(role, NULL)) {
+            for (xmlNode *role = pcmk__xe_first_child(acl_top, PCMK_XE_ACL_ROLE,
+                                                      NULL, NULL);
+                 role != NULL; role = pcmk__xe_next(role, PCMK_XE_ACL_ROLE)) {
 
-                const char *role_id = NULL;
+                const char *role_id = pcmk__xe_id(role);
 
-                if (!pcmk__xe_is(role, PCMK_XE_ACL_ROLE)) {
+                if (!pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
                     continue;
                 }
 
-                role_id = pcmk__xe_get(role, PCMK_XA_ID);
-
-                if (pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
-                    pcmk__trace("Unpacking referenced role '%s' in <%s> "
-                                "element",
-                                role_id, acl_entry->name);
-                    acls = parse_acl_entry(acl_top, role, acls);
-                    break;
-                }
+                pcmk__trace("Unpacking referenced role '%s' in <%s> element",
+                            role_id, acl_entry->name);
+                acls = parse_acl_entry(acl_top, role, acls);
+                break;
             }
         }
     }
