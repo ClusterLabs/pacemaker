@@ -494,9 +494,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
 
-    for (const GList *iter = docpriv->acls; (iter != NULL) && (target != NULL);
-         iter = iter->next) {
-
+    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
         const xml_acl_t *acl = iter->data;
         xmlXPathObject *xpath_obj = NULL;
         int num_results = 0;
