@@ -413,6 +413,24 @@ test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
 
 /*!
  * \internal
+ * \brief Check whether an XML attribute's name is not \c PCMK_XA_ID
+ *
+ * \param[in] attr       Attribute to check
+ * \param[in] user_data  Ignored
+ *
+ * \return \c true if the attribute's name is not \c PCMK_XA_ID, or \c false
+ *         otherwise
+ *
+ * \note This is compatible with \c pcmk__xe_remove_matching_attrs().
+ */
+static bool
+attr_is_not_id(xmlAttr *attr, void *user_data)
+{
+    return !pcmk__str_eq((const char *) attr->name, PCMK_XA_ID, pcmk__str_none);
+}
+
+/*!
+ * \internal
  * \brief Rid XML tree of all unreadable nodes and node properties
  *
  * \param[in,out] xml   Root XML node to be purged of attributes
@@ -426,7 +444,6 @@ static bool
 purge_xml_attributes(xmlNode *xml)
 {
     xmlNode *child = NULL;
-    xmlAttr *xIter = NULL;
     bool readable_children = false;
     xml_node_private_t *nodepriv = xml->_private;
 
@@ -436,18 +453,7 @@ purge_xml_attributes(xmlNode *xml)
         return true;
     }
 
-    xIter = xml->properties;
-    while (xIter != NULL) {
-        xmlAttr *tmp = xIter;
-        const char *prop_name = (const char *)xIter->name;
-
-        xIter = xIter->next;
-        if (strcmp(prop_name, PCMK_XA_ID) == 0) {
-            continue;
-        }
-
-        pcmk__xa_remove(tmp, true);
-    }
+    pcmk__xe_remove_matching_attrs(xml, true, attr_is_not_id, NULL);
 
     child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
     while (child != NULL) {
