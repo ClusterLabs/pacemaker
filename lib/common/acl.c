@@ -215,69 +215,54 @@ acl_to_text(enum pcmk__xml_flags flags)
 }
 
 static void
-apply_acl(xmlDoc *doc, const xml_acl_t *acl)
+apply_acl(xmlNode *match, void *user_data)
 {
+    const xml_acl_t *acl = user_data;
     xml_node_private_t *nodepriv = NULL;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(doc, acl->xpath);
-    int num_results = pcmk__xpath_num_results(xpath_obj);
+    GString *path = NULL;
 
-    for (int i = 0; i < num_results; i++) {
-        GString *path = NULL;
-        xmlNode *match = pcmk__xpath_result(xpath_obj, i);
-
-        if (match == NULL) {
-            continue;
-        }
-
-        /* @COMPAT If the ACL's XPath matches a node that is neither an element
-         * nor a document, we apply the ACL to the parent element rather than to
-         * the matched node. For example, if the XPath matches a "score"
-         * attribute, then it applies to every element that contains a "score"
-         * attribute. That is, the XPath expression "//@score" matches all
-         * attributes named "score", but we apply the ACL to all elements
-         * containing such an attribute.
-         *
-         * This behavior is incorrect from an XPath standpoint and is thus
-         * confusing and counterintuitive. The correct way to match all elements
-         * containing a "score" attribute is to use an XPath predicate:
-         * "// *[@score]". (Space inserted after slashes so that GCC doesn't
-         * throw an error about nested comments.)
-         *
-         * Additionally, if an XPath expression matches the entire document (for
-         * example, "/"), then the ACL applies to the document's root element if
-         * it exists.
-         *
-         * These behaviors should be changed so that the ACL applies to the
-         * nodes matched by the XPath expression, or so that it doesn't apply at
-         * all if applying an ACL to an attribute doesn't make sense.
-         *
-         * Unfortunately, we document in Pacemaker Explained that matching
-         * attributes is a valid way to match elements: "Attributes may be
-         * specified in the XPath to select particular elements, but the
-         * permissions apply to the entire element."
-         *
-         * So we have to keep this behavior at least until a compatibility
-         * break. Even then, it's not feasible in the general case to transform
-         * such XPath expressions using XSLT.
-         */
-        match = pcmk__xpath_match_element(match);
-        if (match == NULL) {
-            continue;
-        }
-
-        nodepriv = match->_private;
-        pcmk__set_xml_flags(nodepriv, acl->mode);
-
-        path = pcmk__element_xpath(match);
-        pcmk__trace("Applying %s ACL to %s matched by %s",
-                    acl_to_text(acl->mode), path->str, acl->xpath);
-        g_string_free(path, TRUE);
+    /* @COMPAT If the ACL's XPath matches a node that is neither an element nor
+     * a document, we apply the ACL to the parent element rather than to the
+     * matched node. For example, if the XPath matches a "score" attribute, then
+     * it applies to every element that contains a "score" attribute. That is,
+     * the XPath expression "//@score" matches all attributes named "score", but
+     * we apply the ACL to all elements containing such an attribute.
+     *
+     * This behavior is incorrect from an XPath standpoint and is thus confusing
+     * and counterintuitive. The correct way to match all elements containing a
+     * "score" attribute is to use an XPath predicate: "// *[@score]". (Space
+     * inserted after slashes so that GCC doesn't throw an error about nested
+     * comments.)
+     *
+     * Additionally, if an XPath expression matches the entire document (for
+     * example, "/"), then the ACL applies to the document's root element if it
+     * exists.
+     *
+     * These behaviors should be changed so that the ACL applies to the nodes
+     * matched by the XPath expression, or so that it doesn't apply at all if
+     * applying an ACL to an attribute doesn't make sense.
+     *
+     * Unfortunately, we document in Pacemaker Explained that matching
+     * attributes is a valid way to match elements: "Attributes may be specified
+     * in the XPath to select particular elements, but the permissions apply to
+     * the entire element."
+     *
+     * So we have to keep this behavior at least until a compatibility break.
+     * Even then, it's not feasible in the general case to transform such XPath
+     * expressions using XSLT.
+     */
+    match = pcmk__xpath_match_element(match);
+    if (match == NULL) {
+        return;
     }
 
-    pcmk__trace("Applied %s ACL %s (%d match%s)", acl_to_text(acl->mode),
-                acl->xpath, num_results,
-                pcmk__plural_alt(num_results, "", "es"));
-    xmlXPathFreeObject(xpath_obj);
+    nodepriv = match->_private;
+    pcmk__set_xml_flags(nodepriv, acl->mode);
+
+    path = pcmk__element_xpath(match);
+    pcmk__trace("Applied %s ACL to %s matched by %s", acl_to_text(acl->mode),
+                path->str, acl->xpath);
+    g_string_free(path, TRUE);
 }
 
 void
@@ -295,7 +280,7 @@ pcmk__apply_acls(xmlDoc *doc)
     for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
         const xml_acl_t *acl = iter->data;
 
-        apply_acl(doc, acl);
+        pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl, (void *) acl);
     }
 }
 
