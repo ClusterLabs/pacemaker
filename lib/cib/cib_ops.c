@@ -108,6 +108,9 @@ static const cib__operation_t cib_ops[] = {
         |cib__op_attr_transaction
     },
     {
+        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_local
+    },
+    {
         PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary,
         cib__op_attr_privileged|cib__op_attr_local
     },
@@ -129,9 +132,6 @@ static const cib__operation_t cib_ops[] = {
         |cib__op_attr_writes_through
         |cib__op_attr_transaction
     },
-    {
-        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_local
-    }
 };
 
 /*!
