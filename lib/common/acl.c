@@ -283,21 +283,17 @@ apply_acl(xmlDoc *doc, const xml_acl_t *acl)
 void
 pcmk__apply_acls(xmlNode *xml)
 {
-    GList *aIter = NULL;
     xml_doc_private_t *docpriv = NULL;
 
     pcmk__assert(xml != NULL);
-
     docpriv = xml->doc->_private;
 
     if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
-        pcmk__trace("Skipping ACLs for user '%s' because not enabled for this "
-                    "XML", pcmk__s(docpriv->acl_user, "(unknown)"));
         return;
     }
 
-    for (aIter = docpriv->acls; aIter != NULL; aIter = aIter->next) {
-        xml_acl_t *acl = aIter->data;
+    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
+        const xml_acl_t *acl = iter->data;
 
         apply_acl(xml->doc, acl);
     }
