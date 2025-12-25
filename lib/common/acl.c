@@ -298,14 +298,11 @@ pcmk__apply_acls(xmlDoc *doc)
  * \param[in]     user    Username whose ACLs need to be unpacked
  */
 void
-pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
+pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
 {
     xml_doc_private_t *docpriv = NULL;
 
-    if ((target == NULL) || (target->doc == NULL)
-        || (target->doc->_private == NULL)) {
-        return;
-    }
+    pcmk__assert(target != NULL);
 
     docpriv = target->doc->_private;
     if (!pcmk_acl_required(user)) {
@@ -366,7 +363,7 @@ pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
     if (target == NULL) {
         return;
     }
-    pcmk__unpack_acl(acl_source, target, user);
+    pcmk__unpack_acls(acl_source, target, user);
     pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
     pcmk__apply_acls(target->doc);
 }
