@@ -1811,7 +1811,7 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
             acl_source = xml;
         }
         pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
-        pcmk__unpack_acl(acl_source, xml, user);
+        pcmk__unpack_acls(acl_source, xml, user);
         pcmk__apply_acls(xml->doc);
     }
 }
