@@ -191,6 +191,62 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
 
 /*!
  * \internal
+ * \brief Get the ACL role whose ID matches a role reference
+ *
+ * If there are multiple matches (not allowed by the schema), return the first
+ * one for backward compatibility and set a config warning.
+ *
+ * \param[in] xml  \c PCMK_XE_ROLE element (an ACL role reference)
+ *
+ * \return \c PCMK_XE_ACL_ROLE element whose \c PCMK_XA_ID attribute matches
+ *         that of \p xml, or \c NULL if none is found
+ */
+static xmlNode *
+resolve_acl_role_ref(xmlNode *xml)
+{
+    const char *id = pcmk__xe_id(xml);
+    const char *type = (const char *) xml->name;
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
+    xmlNode *result = NULL;
+    char *xpath = pcmk__assert_asprintf("//" PCMK_XE_ACL_ROLE
+                                        "[@" PCMK_XA_ID "='%s']", id);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(xml->doc, xpath);
+    const int num_results = pcmk__xpath_num_results(xpath_obj);
+
+    switch (num_results) {
+        case 0:
+            // Caller calls pcmk__config_err()
+            break;
+
+        case 1:
+            // Success
+            result = pcmk__xpath_result(xpath_obj, 0);
+            break;
+
+        default:
+            /* Not possible with schema validation enabled.
+             *
+             * @COMPAT At a compatibility break, use pcmk__xpath_find_one(),
+             * treat this as an error, and return NULL. For now, return the
+             * first match.
+             */
+            result = pcmk__xpath_result(xpath_obj, 0);
+            pcmk__config_warn("Multiple <%s> elements have "
+                              PCMK_XA_ID "='%s'. Returning the first one for "
+                              "<%s> in <%s> %s.", PCMK_XE_ACL_ROLE, id, type,
+                              parent_type, parent_id);
+            break;
+    }
+
+    free(xpath);
+    xmlXPathFreeObject(xpath_obj);
+    return result;
+}
+
+/*!
+ * \internal
  * \brief Unpack an ACL role reference to a list of \c xml_acl_t
  *
  * Unpack a \c PCMK_XE_ROLE element within a \c PCMK_XE_ACL_TARGET or
@@ -215,14 +271,16 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
  *       \c pcmk__free_acls().
  */
 static GList *
-unpack_acl_role_ref(const xmlNode *xml, const xmlNode *acl_top, GList *acls)
+unpack_acl_role_ref(xmlNode *xml, const xmlNode *acl_top, GList *acls)
 {
-    const char *ref_id = pcmk__xe_id(xml);
+    const char *id = pcmk__xe_id(xml);
     const char *type = (const char *) xml->name;
     const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
     const char *parent_type = (const char *) xml->parent->name;
 
-    if (ref_id == NULL) {
+    xmlNode *role = NULL;
+
+    if (id == NULL) {
         // Not possible with schema validation enabled
         pcmk__config_err("Ignoring <%s> element in <%s> %s with no "
                          PCMK_XA_ID " attribute", type, parent_type, parent_id);
@@ -231,27 +289,18 @@ unpack_acl_role_ref(const xmlNode *xml, const xmlNode *acl_top, GList *acls)
         return acls;
     }
 
-    // Find the referenced role and unpack it
-    for (xmlNode *role = pcmk__xe_first_child(acl_top, PCMK_XE_ACL_ROLE, NULL,
-                                              NULL);
-         role != NULL; role = pcmk__xe_next(role, PCMK_XE_ACL_ROLE)) {
-
-        const char *role_id = pcmk__xe_id(role);
-
-        if (!pcmk__str_eq(ref_id, role_id, pcmk__str_none)) {
-            continue;
-        }
-
-        pcmk__trace("Unpacking role '%s' referenced in <%s> element %s",
-                    role_id, parent_type, parent_id);
-        return parse_acl_entry(acl_top, role, acls);
+    role = resolve_acl_role_ref(xml);
+    if (role == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <%s> element %s in <%s> %s: no <%s> with "
+                         "matching " PCMK_XA_ID " found", type, id, parent_type,
+                         parent_id, PCMK_XE_ACL_ROLE);
+        return acls;
     }
 
-    // Not possible with schema validation enabled
-    pcmk__config_err("Ignoring <%s> element %s in <%s> %s: no <%s> with "
-                     "matching " PCMK_XA_ID " found", type, ref_id, parent_type,
-                     parent_id, PCMK_XE_ACL_ROLE);
-    return acls;
+    pcmk__trace("Unpacking role '%s' referenced in <%s> element %s", id,
+                parent_type, parent_id);
+    return parse_acl_entry(acl_top, role, acls);
 }
 
 /*!
@@ -269,8 +318,7 @@ unpack_acl_role_ref(const xmlNode *xml, const xmlNode *acl_top, GList *acls)
 static GList *
 parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
 {
-    for (const xmlNode *child = pcmk__xe_first_child(acl_entry, NULL, NULL,
-                                                     NULL);
+    for (xmlNode *child = pcmk__xe_first_child(acl_entry, NULL, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, NULL)) {
 
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
