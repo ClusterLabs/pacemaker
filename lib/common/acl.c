@@ -324,14 +324,18 @@ pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
                 const char *id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME),
                                          pcmk__xe_id(child));
 
+                if (id == NULL) {
+                    continue;
+                }
+
                 if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)) {
-                    if (id && strcmp(id, user) == 0) {
+                    if (pcmk__str_eq(id, user, pcmk__str_none)) {
                         pcmk__debug("Unpacking ACLs for user '%s'", id);
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
 
                 } else if (pcmk__xe_is(child, PCMK_XE_ACL_GROUP)) {
-                    if (id && pcmk__is_user_in_group(user,id)) {
+                    if (pcmk__is_user_in_group(user, id)) {
                         pcmk__debug("Unpacking ACLs for group '%s'", id);
                         docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
                     }
