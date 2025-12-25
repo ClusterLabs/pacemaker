@@ -146,28 +146,42 @@ create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 static GList *
 unpack_acl_permission(const xmlNode *xml, GList *acls)
 {
-    // ID unset is not possible with schema validation enabled
-    const char *id = pcmk__s(pcmk__xe_id(xml), "(no ID)");
+    const char *id = pcmk__xe_id(xml);
     const char *type = (const char *) xml->name;
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
     const char *kind_s = pcmk__xe_get(xml, PCMK_XA_KIND);
     enum pcmk__xml_flags kind = pcmk__xf_none;
 
+    if (id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_warn("<%s> element in <%s> %s has no " PCMK_XA_ID " "
+                          "attribute", type, parent_type, parent_id);
+
+        // Set a value to use for logging and continue unpacking
+        id = "without ID";
+    }
+
     if (kind_s == NULL) {
         // Not possible with schema validation enabled
-        pcmk__warn("Ignoring <%s> element %s with no " PCMK_XA_KIND " "
-                   "attribute", type, id);
+        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with no "
+                         PCMK_XA_KIND " attribute", type, id, parent_type,
+                         parent_id);
         return acls;
     }
 
     kind = parse_acl_mode(kind_s);
     if (kind == pcmk__xf_none) {
-        pcmk__warn("Ignoring <%s> element %s with unknown ACL kind '%s'", type,
-                   id, kind_s);
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with unknown "
+                         "ACL kind '%s'", type, id, parent_type, parent_id,
+                         kind_s);
         return acls;
     }
 
-    pcmk__trace("Unpacking <%s> element %s with " PCMK_XA_KIND "='%s'", type,
-                id, kind_s);
+    pcmk__trace("Unpacking <%s> element %s (in <%s> %s) with "
+                PCMK_XA_KIND "='%s'", type, id, parent_type, parent_id, kind_s);
 
     return create_acl(xml, acls, kind);
 }
