@@ -446,6 +446,9 @@ purge_xml_attributes(xmlNode *xml)
     bool readable_children = false;
     xml_node_private_t *nodepriv = xml->_private;
 
+    /* @FIXME Shouldn't we purge attributes in descendants of a readable node?
+     * One of them might have pcmk__xf_acl_deny set.
+     */
     if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
         pcmk__trace("%s[@" PCMK_XA_ID "=%s] is readable", xml->name,
                     pcmk__xe_id(xml));
