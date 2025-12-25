@@ -479,7 +479,6 @@ bool
 xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                       xmlNode **result)
 {
-    GList *aIter = NULL;
     xmlNode *target = NULL;
     xml_doc_private_t *docpriv = NULL;
 
@@ -499,21 +498,22 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     pcmk__enable_acl(acl_source, target, user);
 
     docpriv = target->doc->_private;
-    for(aIter = docpriv->acls; aIter != NULL && target; aIter = aIter->next) {
-        xml_acl_t *acl = aIter->data;
-        xmlXPathObject *xpathObj = NULL;
-        int max = 0;
-        int lpc = 0;
+    for (const GList *iter = docpriv->acls; (iter != NULL) && (target != NULL);
+         iter = iter->next) {
+
+        const xml_acl_t *acl = iter->data;
+        xmlXPathObject *xpath_obj = NULL;
+        int num_results = 0;
 
         if ((acl->mode != pcmk__xf_acl_deny) || (acl->xpath == NULL)) {
             continue;
         }
 
-        xpathObj = pcmk__xpath_search(target->doc, acl->xpath);
-        max = pcmk__xpath_num_results(xpathObj);
+        xpath_obj = pcmk__xpath_search(target->doc, acl->xpath);
+        num_results = pcmk__xpath_num_results(xpath_obj);
 
-        for(lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
+        for (int i = 0; i < num_results; i++) {
+            xmlNode *match = pcmk__xpath_result(xpath_obj, i);
 
             if (match == NULL) {
                 continue;
@@ -528,13 +528,14 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
             if (!purge_xml_attributes(match) && (match == target)) {
                 pcmk__trace("ACLs deny user '%s' access to entire XML document",
                             user);
-                xmlXPathFreeObject(xpathObj);
+                xmlXPathFreeObject(xpath_obj);
                 return true;
             }
         }
-        pcmk__trace("ACLs deny user '%s' access to %s (%d %s)", user,
-                    acl->xpath, max, pcmk__plural_alt(max, "match", "matches"));
-        xmlXPathFreeObject(xpathObj);
+        pcmk__trace("ACLs deny user '%s' access to %s (%d match%s)", user,
+                    acl->xpath, num_results,
+                    pcmk__plural_alt(num_results, "", "es"));
+        xmlXPathFreeObject(xpath_obj);
     }
 
     if (!purge_xml_attributes(target)) {
