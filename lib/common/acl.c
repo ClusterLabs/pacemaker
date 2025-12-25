@@ -449,12 +449,15 @@ purge_xml_attributes(xmlNode *xml)
         pcmk__xa_remove(tmp, true);
     }
 
-    child = pcmk__xml_first_child(xml);
-    while ( child != NULL ) {
+    child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
+    while (child != NULL) {
         xmlNode *tmp = child;
 
-        child = pcmk__xml_next(child);
-        readable_children |= purge_xml_attributes(tmp);
+        child = pcmk__xe_next(child, NULL);
+
+        if (purge_xml_attributes(tmp)) {
+            readable_children = true;
+        }
     }
 
     if (!readable_children) {
