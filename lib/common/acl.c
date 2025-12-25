@@ -238,6 +238,71 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
     return acls;
 }
 
+/*!
+ * \internal
+ * \brief Unpack ACLs for a given user into the
+ * metadata of the target XML tree
+ *
+ * Taking the description of ACLs from the source XML tree and
+ * marking up the target XML tree with access information for the
+ * given user by tacking it onto the relevant nodes
+ *
+ * \param[in]     source  XML with ACL definitions
+ * \param[in,out] target  XML that ACLs will be applied to
+ * \param[in]     user    Username whose ACLs need to be unpacked
+ */
+void
+pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
+{
+    xml_doc_private_t *docpriv = NULL;
+    xmlNode *acls = NULL;
+
+    pcmk__assert(target != NULL);
+
+    docpriv = target->doc->_private;
+    if (!pcmk_acl_required(user) || (docpriv->acls != NULL)) {
+        return;
+    }
+
+    pcmk__str_update(&docpriv->acl_user, user);
+
+    acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
+                                PCMK__LOG_NEVER);
+
+    for (xmlNode *child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child, NULL)) {
+
+        const bool is_target = pcmk__xe_is(child, PCMK_XE_ACL_TARGET);
+        const bool is_group = pcmk__xe_is(child, PCMK_XE_ACL_GROUP);
+        const char *id = NULL;
+
+        if (!is_target && !is_group) {
+            continue;
+        }
+
+        id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME), pcmk__xe_id(child));
+        if (id == NULL) {
+            // Not possible with schema validation enabled
+            continue;
+        }
+
+        if (is_target) {
+            if (!pcmk__str_eq(id, user, pcmk__str_none)) {
+                continue;
+            }
+            pcmk__debug("Unpacking ACLs for user '%s'", id);
+
+        } else {
+            if (!pcmk__is_user_in_group(user, id)) {
+                continue;
+            }
+            pcmk__debug("Unpacking ACLs for group '%s' (user '%s')", id, user);
+        }
+
+        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
+    }
+}
+
 /*
     <acls>
       <acl_target id="l33t-haxor"><role id="auto-l33t-haxor"/></acl_target>
@@ -343,71 +408,6 @@ pcmk__apply_acls(xmlDoc *doc)
         const xml_acl_t *acl = iter->data;
 
         pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl, (void *) acl);
-    }
-}
-
-/*!
- * \internal
- * \brief Unpack ACLs for a given user into the
- * metadata of the target XML tree
- *
- * Taking the description of ACLs from the source XML tree and
- * marking up the target XML tree with access information for the
- * given user by tacking it onto the relevant nodes
- *
- * \param[in]     source  XML with ACL definitions
- * \param[in,out] target  XML that ACLs will be applied to
- * \param[in]     user    Username whose ACLs need to be unpacked
- */
-void
-pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
-{
-    xml_doc_private_t *docpriv = NULL;
-    xmlNode *acls = NULL;
-
-    pcmk__assert(target != NULL);
-
-    docpriv = target->doc->_private;
-    if (!pcmk_acl_required(user) || (docpriv->acls != NULL)) {
-        return;
-    }
-
-    pcmk__str_update(&docpriv->acl_user, user);
-
-    acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
-                                PCMK__LOG_NEVER);
-
-    for (xmlNode *child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
-         child != NULL; child = pcmk__xe_next(child, NULL)) {
-
-        const bool is_target = pcmk__xe_is(child, PCMK_XE_ACL_TARGET);
-        const bool is_group = pcmk__xe_is(child, PCMK_XE_ACL_GROUP);
-        const char *id = NULL;
-
-        if (!is_target && !is_group) {
-            continue;
-        }
-
-        id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME), pcmk__xe_id(child));
-        if (id == NULL) {
-            // Not possible with schema validation enabled
-            continue;
-        }
-
-        if (is_target) {
-            if (!pcmk__str_eq(id, user, pcmk__str_none)) {
-                continue;
-            }
-            pcmk__debug("Unpacking ACLs for user '%s'", id);
-
-        } else {
-            if (!pcmk__is_user_in_group(user, id)) {
-                continue;
-            }
-            pcmk__debug("Unpacking ACLs for group '%s' (user '%s')", id, user);
-        }
-
-        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
     }
 }
 
