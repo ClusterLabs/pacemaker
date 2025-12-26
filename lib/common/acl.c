@@ -25,7 +25,7 @@
 #include <crm/common/xml.h>
 #include "crmcommon_private.h"
 
-typedef struct xml_acl_s {
+typedef struct {
     enum pcmk__xml_flags mode;
     gchar *xpath;
 } xml_acl_t;
@@ -89,6 +89,92 @@ parse_acl_mode(const char *text)
     return pcmk__xf_none;
 }
 
+/*!
+ * \internal
+ * \brief Set a config warning if ACL permission specifiers are mismatched
+ *
+ * The schema requires exactly one of \c PCMK_XA_XPATH, \c PCMK_XA_REFERENCE,
+ * or \c PCMK_XA_OBJECT_TYPE. Additionally, \c PCMK_XA_ATTRIBUTE may be used
+ * only with \c PCMK_XA_OBJECT_TYPE.
+ *
+ * We've handled these in a very permissive and inconsistent manner thus far. To
+ * avoid breaking backward compatibility, the best we can do for now is to set
+ * configuration warnings and log how we will behave if the specifiers are set
+ * incorrectly.
+ *
+ * The caller has already ensured that at least one of \c PCMK_XA_XPATH,
+ * \c PCMK_XA_REFERENCE, or \c PCMK_XA_OBJECT_TYPE is set.
+ */
+static void
+warn_on_specifier_mismatch(const xmlNode *xml, const char *xpath,
+                           const char *ref, const char *tag, const char *attr)
+{
+    // @COMPAT Let's be more strict at a compatibility break... please...
+
+    const char *id = pcmk__s(pcmk__xe_id(xml), "without ID");
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
+    if ((xpath != NULL) && (ref == NULL) && (tag == NULL) && (attr == NULL)) {
+        return;
+    }
+
+    if ((xpath == NULL) && (ref != NULL) && (tag == NULL) && (attr == NULL)) {
+        return;
+    }
+
+    if ((xpath == NULL) && (ref == NULL) && (tag != NULL)) {
+        return;
+    }
+
+    // Remaining cases are not possible with schema validation enabled
+
+    if (xpath != NULL) {
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s "
+                          "(in <%s> %s) has " PCMK_XA_XPATH " set along with "
+                          PCMK_XA_REFERENCE ", " PCMK_XA_OBJECT_TYPE ", or "
+                          PCMK_XA_ATTRIBUTE ". Using " PCMK_XA_XPATH " and "
+                          "ignoring the rest.", id, parent_type, parent_id);
+        return;
+    }
+
+    // Log both of the below if appropriate
+
+    if ((tag == NULL) && (attr != NULL)) {
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s "
+                          "(in <%s> %s) has " PCMK_XA_ATTRIBUTE " set without "
+                          PCMK_XA_OBJECT_TYPE ". Using '*' for "
+                          PCMK_XA_OBJECT_TYPE ".", id, parent_type, parent_id);
+    }
+
+    if (ref != NULL) {
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s "
+                          "(in <%s> %s) has " PCMK_XA_REFERENCE " set along "
+                          "with " PCMK_XA_OBJECT_TYPE " or "
+                          PCMK_XA_ATTRIBUTE ". Using all of these criteria "
+                          "together, but support may be removed in a future "
+                          "release.", id, parent_type, parent_id);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create an ACL based on an ACL permission XML element
+ *
+ * The \c PCMK_XE_ACL_PERMISSION element should have already been validated for
+ * unrecoverable schema violations when this function is called. There may be
+ * recoverable violations, but the element should be well-formed enough to
+ * create an \c xml_acl_t.
+ *
+ * \param[in] xml   \c PCMK_XE_ACL_PERMISSION element
+ * \param[in] mode  One of \c pcmk__xf_acl_read, \c pcmk__xf_acl_write, or
+ *                  \c pcmk__xf_acl_deny
+ *
+ * \return Newly allocated ACL object (guaranteed not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c free_acl().
+ */
 static xml_acl_t *
 create_acl(const xmlNode *xml, enum pcmk__xml_flags mode)
 {
@@ -99,6 +185,8 @@ create_acl(const xmlNode *xml, enum pcmk__xml_flags mode)
 
     GString *buf = NULL;
     xml_acl_t *acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
+
+    warn_on_specifier_mismatch(xml, xpath, ref, tag, attr);
 
     acl->mode = mode;
 
