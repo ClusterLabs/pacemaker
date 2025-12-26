@@ -65,6 +65,35 @@ pcmk__free_acls(GList *acls)
 
 /*!
  * \internal
+ * \brief Get readable description of an ACL mode
+ *
+ * \param[in] mode  ACL mode (one of \c pcmk__xf_acl_read,
+ *                  \c pcmk__xf_acl_write, \c pcmk__xf_acl_deny, or
+ *                  \c pcmk__xf_acl_create
+ *
+ * \return Static string describing \p mode, or \c "none" if \p mode is invalid
+ */
+static const char *
+acl_mode_text(enum pcmk__xml_flags mode)
+{
+    switch (mode) {
+        case pcmk__xf_acl_read:
+            return "read";
+
+        case pcmk__xf_acl_create:
+        case pcmk__xf_acl_write:
+            return "read/write";
+
+        case pcmk__xf_acl_deny:
+            return "deny";
+
+        default:
+            return "none";
+    }
+}
+
+/*!
+ * \internal
  * \brief Parse an ACL mode from a string
  *
  * \param[in] text  String to parse
@@ -577,22 +606,6 @@ pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
     pcmk__xe_foreach_child(acls, NULL, unpack_acl_target_or_group, target);
 }
 
-static const char *
-acl_to_text(enum pcmk__xml_flags flags)
-{
-    if (pcmk__is_set(flags, pcmk__xf_acl_deny)) {
-        return "deny";
-
-    } else if (pcmk__any_flags_set(flags,
-                                   pcmk__xf_acl_write|pcmk__xf_acl_create)) {
-        return "read/write";
-
-    } else if (pcmk__is_set(flags, pcmk__xf_acl_read)) {
-        return "read";
-    }
-    return "none";
-}
-
 static void
 apply_acl_to_match(xmlNode *match, void *user_data)
 {
@@ -639,7 +652,7 @@ apply_acl_to_match(xmlNode *match, void *user_data)
     pcmk__set_xml_flags(nodepriv, acl->mode);
 
     path = pcmk__element_xpath(match);
-    pcmk__trace("Applied %s ACL to %s matched by %s", acl_to_text(acl->mode),
+    pcmk__trace("Applied %s ACL to %s matched by %s", acl_mode_text(acl->mode),
                 path->str, acl->xpath);
     g_string_free(path, TRUE);
 }
@@ -1035,12 +1048,13 @@ xml_acl_disable(xmlNode *xml)
                                             "access to %s",                 \
                                             LOG_TRACE, __LINE__, 0 ,        \
                                             prefix, user,                   \
-                                            acl_to_text(mode), xpath->str); \
+                                            acl_mode_text(mode),            \
+                                            xpath->str);                    \
                 g_string_free(xpath, TRUE);                                 \
             },                                                              \
             {}                                                              \
         );                                                                  \
-    } while (false);
+    } while (0)
 
 bool
 pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
