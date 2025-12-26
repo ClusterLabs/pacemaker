@@ -11,8 +11,7 @@
 
 #include <stdbool.h>
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>            // xmlNode
 
 #include "pacemaker-based.h"
 
@@ -54,8 +53,8 @@ based_transaction_source_str(const pcmk__client_t *client, const char *origin)
  * \return Standard Pacemaker return code
  */
 static int
-process_transaction_requests(xmlNodePtr transaction,
-                             const pcmk__client_t *client, const char *source)
+process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
+                             const char *source)
 {
     for (xmlNode *request = pcmk__xe_first_child(transaction,
                                                  PCMK__XE_CIB_COMMAND, NULL,
@@ -77,7 +76,7 @@ process_transaction_requests(xmlNodePtr transaction,
                 /* Commit-transaction is a privileged operation. If we reached
                  * this point, the request came from a privileged connection.
                  */
-                rc = cib_process_request(request, true, client);
+                rc = based_process_request(request, true, client);
             }
         }
 
@@ -109,17 +108,17 @@ process_transaction_requests(xmlNodePtr transaction,
  * \return Standard Pacemaker return code
  *
  * \note This function is expected to be called only by
- *       \p cib_process_commit_transaction().
+ *       \p based_process_commit_transact().
  * \note \p result_cib is expected to be a copy of the current CIB as created by
  *       \p cib_perform_op().
  * \note The caller is responsible for activating and syncing \p result_cib on
  *       success, and for freeing it on failure.
  */
 int
-based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
-                         const char *origin, xmlNodePtr *result_cib)
+based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
+                         const char *origin, xmlNode **result_cib)
 {
-    xmlNodePtr saved_cib = the_cib;
+    xmlNode *saved_cib = the_cib;
     int rc = pcmk_rc_ok;
     char *source = NULL;
 

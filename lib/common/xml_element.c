@@ -833,8 +833,8 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
 {
     /* @COMPAT Some of this behavior (like not matching the tree root, which is
      * allowed by pcmk__xe_update_match()) is questionable for general use but
-     * required for backward compatibility by cib_process_replace() and
-     * cib_process_delete(). Behavior can change at a major version release if
+     * required for backward compatibility by cib__process_replace() and
+     * cib__process_delete(). Behavior can change at a major version release if
      * desired.
      */
     CRM_CHECK((xml != NULL) && (replace != NULL), return EINVAL);
@@ -1530,17 +1530,17 @@ pcmk__xe_set_bool(xmlNode *xml, const char *attr, bool value)
  * \param[in] node XML node to get attribute from
  * \param[in] name XML attribute to get
  *
- * \return True if the given \p name is an attribute on \p node and has
- *         the value \c PCMK_VALUE_TRUE, False in all other cases
+ * \return \c true if the given \p name is an attribute on \p node whose value
+ *         parses to \c true (see \c pcmk__parse_bool()), or \c false otherwise
  */
 bool
 pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 {
     bool value = false;
-    int rc;
 
-    rc = pcmk__xe_get_bool(node, name, &value);
-    return rc == pcmk_rc_ok && value == true;
+    // value remains false on error, so don't check return value
+    pcmk__xe_get_bool(node, name, &value);
+    return value;
 }
 
 // Deprecated functions kept only for backward API compatibility

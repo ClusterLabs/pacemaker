@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,13 +10,17 @@
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/man.mk
 
-EXTRA_DIST	= cib.pam
-
 halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-based
 
-noinst_HEADERS	= based_transaction.h \
+noinst_HEADERS	= based_callbacks.h	\
+		  based_io.h		\
+		  based_messages.h	\
+		  based_notify.h	\
+		  based_operation.h	\
+		  based_remote.h	\
+		  based_transaction.h	\
 		  pacemaker-based.h
 
 pacemaker_based_CFLAGS	= $(CFLAGS_HARDENED_EXE)
@@ -30,6 +34,7 @@ pacemaker_based_LDADD += $(CLUSTERLIBS) $(PAM_LIBS)
 pacemaker_based_SOURCES	= pacemaker-based.c 	\
 			  based_callbacks.c 	\
 			  based_io.c 		\
+			  based_ipc.c 		\
 			  based_messages.c 	\
 			  based_notify.c 	\
 			  based_operation.c 	\

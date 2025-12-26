@@ -38,11 +38,83 @@ struct cib_notification_s {
     int32_t iov_size;
 };
 
+/*!
+ * \internal
+ * \brief Flags for CIB manager client notification types
+ *
+ * These are used for setting the \c flags field of a \c pcmk__client_t.
+ */
+enum based_notify_flags {
+    //! This flag has no effect
+    based_nf_none = UINT64_C(0),
+
+    //! Notify when the CIB changes
+    based_nf_diff = (UINT64_C(1) << 0),
+};
+
+/*!
+ * \internal
+ * \brief Parse a CIB manager client notification type string to a flag
+ *
+ * \param[in] text  Notification type string
+ *
+ * \return Flag corresponding to \p text, or \c based_nf_none if none exists
+ */
+static enum based_notify_flags
+based_parse_notify_flag(const char *text)
+{
+    if (pcmk__str_eq(text, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
+        return based_nf_diff;
+    }
+
+    return based_nf_none;
+}
+
+/*!
+ * \internal
+ * \brief Set or clear a notify flag in a client based on request XML
+ *
+ * \param[in]     xml     Request XML
+ * \param[in,out] client  Client
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client)
+{
+    int rc = pcmk_rc_ok;
+    bool enable = false;
+    enum based_notify_flags notify_flag = based_nf_none;
+    const char *type = pcmk__xe_get(xml, PCMK__XA_CIB_NOTIFY_TYPE);
+
+    rc = pcmk__xe_get_bool(xml, PCMK__XA_CIB_NOTIFY_ACTIVATE, &enable);
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc_bad_input;
+    }
+
+    notify_flag = based_parse_notify_flag(type);
+    if (notify_flag == based_nf_none) {
+        return pcmk_rc_bad_input;
+    }
+
+    if (enable) {
+        pcmk__debug("Enabling %s callbacks for client %s", type,
+                    pcmk__client_name(client));
+        pcmk__set_client_flags(client, notify_flag);
+
+    } else {
+        pcmk__debug("Disabling %s callbacks for client %s", type,
+                    pcmk__client_name(client));
+        pcmk__clear_client_flags(client, notify_flag);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
-    bool do_send = false;
     int rc = pcmk_rc_ok;
 
     pcmk__client_t *client = value;
@@ -56,28 +128,9 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     type = pcmk__xe_get(update->msg, PCMK__XA_SUBT);
     CRM_LOG_ASSERT(type != NULL);
 
-    if (pcmk__is_set(client->flags, cib_notify_diff)
-        && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
+    if (!pcmk__is_set(client->flags, based_nf_diff)
+        || !pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_confirm)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
-                               pcmk__str_none)) {
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_pre)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
-                               pcmk__str_none)) {
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_post)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY,
-                               pcmk__str_none)) {
-        do_send = true;
-    }
-
-    if (!do_send) {
         return;
     }
 
@@ -151,17 +204,12 @@ cib_notify_send(const xmlNode *xml)
 }
 
 void
-cib_diff_notify(const char *op, int result, const char *call_id,
-                const char *client_id, const char *client_name,
-                const char *origin, xmlNode *update, xmlNode *diff)
+based_diff_notify(const char *op, int result, const char *call_id,
+                  const char *client_id, const char *client_name,
+                  const char *origin, xmlNode *update, xmlNode *diff)
 {
-    int add_updates = 0;
-    int add_epoch = 0;
-    int add_admin_epoch = 0;
-
-    int del_updates = 0;
-    int del_epoch = 0;
-    int del_admin_epoch = 0;
+    int source[] = { 0, 0, 0 };
+    int target[] = { 0, 0, 0 };
 
     uint8_t log_level = LOG_TRACE;
 
@@ -176,31 +224,28 @@ cib_diff_notify(const char *op, int result, const char *call_id,
         log_level = LOG_WARNING;
     }
 
-    cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
-                             &del_admin_epoch, &del_epoch, &del_updates);
+    /* @TODO Check return code? How should we handle an error? Are these log
+     * messages even useful?
+     */
+    pcmk__xml_patchset_versions(diff, source, target);
 
-    if ((add_admin_epoch != del_admin_epoch)
-        || (add_epoch != del_epoch)
-        || (add_updates != del_updates)) {
+    if ((source[0] != target[0])
+        || (source[1] != target[1])
+        || (source[2] != target[2])) {
 
         do_crm_log(log_level,
                    "Updated CIB generation %d.%d.%d to %d.%d.%d from client "
                    "%s%s%s (%s) (%s)",
-                   del_admin_epoch, del_epoch, del_updates,
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
+                   source[0], source[1], source[2],
+                   target[0], target[1], target[2], client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
 
-    } else if ((add_admin_epoch != 0)
-               || (add_epoch != 0)
-               || (add_updates != 0)) {
-
+    } else if ((target[0] != 0) || (target[1] != 0) || (target[2] != 0)) {
         do_crm_log(log_level,
                    "Local-only change to CIB generation %d.%d.%d from client "
                    "%s%s%s (%s) (%s)",
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
+                   target[0], target[1], target[2], client_name,
                    ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
                    pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }
