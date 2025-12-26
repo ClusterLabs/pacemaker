@@ -1747,8 +1747,9 @@ pcmk__ipc_is_authentic_process_active(const char *name, uid_t refuid,
     }
 
     rc = pcmk_rc_ok;
-    if ((found_uid != refuid || found_gid != refgid)
-            && strncmp(last_asked_name, name, sizeof(last_asked_name))) {
+    if (((found_uid != refuid) || (found_gid != refgid))
+        && !pcmk__str_eq(name, last_asked_name, pcmk__str_none)) {
+
         if ((found_uid == 0) && (refuid != 0)) {
             pcmk__warn("Daemon (IPC %s) runs as root, whereas the expected "
                        "credentials are %lld:%lld, hazard of violating the "

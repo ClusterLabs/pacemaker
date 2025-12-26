@@ -246,7 +246,7 @@ pe_base_name_eq(const pcmk_resource_t *rsc, const char *id)
         // Number of characters in rsc->id before any clone suffix
         size_t base_len = pe_base_name_end(rsc->id) - rsc->id + 1;
 
-        return (strlen(id) == base_len) && !strncmp(id, rsc->id, base_len);
+        return (strlen(id) == base_len) && g_str_has_prefix(rsc->id, id);
     }
     return false;
 }
