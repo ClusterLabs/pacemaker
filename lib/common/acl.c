@@ -30,9 +30,6 @@ typedef struct xml_acl_s {
     gchar *xpath;
 } xml_acl_t;
 
-static GList *parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry,
-                              GList *acls);
-
 static void
 free_acl(void *data)
 {
@@ -258,10 +255,8 @@ resolve_acl_role_ref(xmlNode *xml)
  * \c PCMK_XE_ACL_PERMISSION children. Unpack those children to \c xml_acl_t
  * objects and append them to a list.
  *
- * \param[in]     xml      Role reference element to unpack
- * \param[in]     acl_top  \c PCMK_XE_ACLS element to search
- * \param[in,out] acls     List of ACLs to append to (\c NULL to start a new
- *                         list)
+ * \param[in]     xml   Role reference element to unpack
+ * \param[in,out] acls  List of ACLs to append to (\c NULL to start a new list)
  *
  * \return On success, \p acls with the new items appended, or a new list
  *         containing only the new items if \p acls is \c NULL. On failure,
@@ -271,7 +266,7 @@ resolve_acl_role_ref(xmlNode *xml)
  *       \c pcmk__free_acls().
  */
 static GList *
-unpack_acl_role_ref(xmlNode *xml, const xmlNode *acl_top, GList *acls)
+unpack_acl_role_ref(xmlNode *xml, GList *acls)
 {
     const char *id = pcmk__xe_id(xml);
     const char *type = (const char *) xml->name;
@@ -300,32 +295,58 @@ unpack_acl_role_ref(xmlNode *xml, const xmlNode *acl_top, GList *acls)
 
     pcmk__trace("Unpacking role '%s' referenced in <%s> element %s", id,
                 parent_type, parent_id);
-    return parse_acl_entry(acl_top, role, acls);
+
+    for (const xmlNode *perm = pcmk__xe_first_child(role,
+                                                    PCMK_XE_ACL_PERMISSION,
+                                                    NULL, NULL);
+         perm != NULL; perm = pcmk__xe_next(perm, PCMK_XE_ACL_PERMISSION)) {
+
+        acls = unpack_acl_permission(perm, acls);
+    }
+    return acls;
 }
 
 /*!
  * \internal
- * \brief Unpack a user, group, or role subtree of the ACLs section
+ * \brief Unpack an ACL target (user) or group to a list of \c xml_acl_t
  *
- * \param[in]     acl_top    XML of entire ACLs section
- * \param[in]     acl_entry  XML of ACL element being unpacked
- * \param[in,out] acls       List of ACLs unpacked so far
+ * \param[in]     xml   Element to unpack (\c PCMK_XE_ACL_TARGET
+ *                      or \c PCMK_XE_ACL_GROUP)
+ * \param[in,out] acls  List of ACLs to append to (\c NULL to start a new list)
  *
- * \return New head of (possibly modified) acls
+ * \return On success, \p acls with the new items appended, or a new list
+ *         containing only the new items if \p acls is \c NULL. On failure,
+ *         \p acls (unmodified).
  *
- * \note This function is recursive
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__free_acls().
  */
 static GList *
-parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
+unpack_acl_target(const xmlNode *xml, GList *acls)
 {
-    for (xmlNode *child = pcmk__xe_first_child(acl_entry, NULL, NULL, NULL);
+    for (xmlNode *child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, NULL)) {
 
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
+            /* Not possible with schema validation enabled.
+             *
+             * @COMPAT Drop this support at a compatibility break. A
+             * PCMK_XE_ACL_TARGET or PCMK_XE_ACL_GROUP element should contain
+             * only role elements as children.
+             */
+            const char *id = pcmk__s(pcmk__xe_id(child), "without ID");
+            const char *parent_id = pcmk__s(pcmk__xe_id(xml), "without ID");
+            const char *parent_type = (const char *) xml->name;
+
+            pcmk__config_warn("<%s> element %s is a child of <%s> %s. It "
+                              "should be a child of a role, and the parent "
+                              "should reference that role.",
+                              PCMK_XE_ACL_PERMISSION, id, parent_type,
+                              parent_id);
             acls = unpack_acl_permission(child, acls);
 
         } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
-            acls = unpack_acl_role_ref(child, acl_top, acls);
+            acls = unpack_acl_role_ref(child, acls);
         }
     }
 
@@ -393,7 +414,7 @@ pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
             pcmk__debug("Unpacking ACLs for group '%s' (user '%s')", id, user);
         }
 
-        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
+        docpriv->acls = unpack_acl_target(child, docpriv->acls);
     }
 }
 
