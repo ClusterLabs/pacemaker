@@ -587,21 +587,25 @@ pcmk__apply_acls(xmlDoc *doc)
 
 /*!
  * \internal
- * \brief Copy source to target and set xf_acl_enabled flag in target
+ * \brief Fetch a user's ACLs from a source document and apply them to a target
  *
- * \param[in]     acl_source    XML with ACL definitions
- * \param[in,out] target        XML that ACLs will be applied to
- * \param[in]     user          Username whose ACLs need to be set
+ * Unpack the given user's ACLs from the \c PCMK_XE_ACLS element in the source
+ * document to the \c acls list in the target document. Then set the target
+ * document's \c pcmk__xf_acl_enabled flag and apply the unpacked ACLs.
+ *
+ * \param[in]     source  XML document whose ACL definitions to use
+ * \param[in,out] target  XML document to apply ACLs to
+ * \param[in]     user    User whose ACLs to apply
  */
 void
-pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
+pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user)
 {
     if (target == NULL) {
         return;
     }
-    pcmk__unpack_acls(acl_source->doc, target->doc->_private, user);
-    pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
-    pcmk__apply_acls(target->doc);
+    pcmk__unpack_acls(source, target->_private, user);
+    pcmk__xml_doc_set_flags(target, pcmk__xf_acl_enabled);
+    pcmk__apply_acls(target);
 }
 
 static inline bool
@@ -717,7 +721,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     target = pcmk__xml_copy(NULL, xml);
     docpriv = target->doc->_private;
 
-    pcmk__enable_acl(acl_source, target->doc, user);
+    pcmk__enable_acls(acl_source->doc, target->doc, user);
 
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
 
