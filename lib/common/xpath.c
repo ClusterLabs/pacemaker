@@ -272,10 +272,11 @@ done:
  *
  * \param[in] xml  The XML element for which to build an XPath string
  *
- * \return A \p GString that matches \p xml, or \p NULL if \p xml is \p NULL.
+ * \return \c GString that matches \p xml, or \c NULL if \p xml is \c NULL
+ *         (guaranteed not to be \c NULL if \p xml is not \c NULL)
  *
  * \note The caller is responsible for freeing the string using
- *       \p g_string_free().
+ *       \c g_string_free().
  */
 GString *
 pcmk__element_xpath(const xmlNode *xml)
