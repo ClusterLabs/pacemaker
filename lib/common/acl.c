@@ -89,8 +89,8 @@ parse_acl_mode(const char *text)
     return pcmk__xf_none;
 }
 
-static GList *
-create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
+static xml_acl_t *
+create_acl(const xmlNode *xml, enum pcmk__xml_flags mode)
 {
     const char *tag = pcmk__xe_get(xml, PCMK_XA_OBJECT_TYPE);
     const char *ref = pcmk__xe_get(xml, PCMK_XA_REFERENCE);
@@ -102,8 +102,6 @@ create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 
     if (xpath) {
         acl->xpath = g_strdup(xpath);
-        pcmk__trace("Unpacked ACL <%s> element using xpath: %s", xml->name,
-                    acl->xpath);
 
     } else {
         GString *buf = g_string_sized_new(128);
@@ -127,11 +125,9 @@ create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
         acl->xpath = buf->str;
 
         g_string_free(buf, FALSE);
-        pcmk__trace("Unpacked ACL <%s> element as xpath: %s", xml->name,
-                    acl->xpath);
     }
 
-    return g_list_append(acls, acl);
+    return acl;
 }
 
 /*!
@@ -159,6 +155,7 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
 
     const char *kind_s = pcmk__xe_get(xml, PCMK_XA_KIND);
     enum pcmk__xml_flags kind = pcmk__xf_none;
+    xml_acl_t *acl = NULL;
 
     if (id == NULL) {
         // Not possible with schema validation enabled
@@ -200,11 +197,13 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
         return acls;
     }
 
-    pcmk__trace("Unpacking <" PCMK_XE_ACL_PERMISSION "> element %s "
-                "(in <%s> %s) with " PCMK_XA_KIND "='%s'", id, parent_type,
-                parent_id, kind_s);
+    acl = create_acl(xml, kind);
 
-    return create_acl(xml, acls, kind);
+    pcmk__trace("Unpacked <" PCMK_XE_ACL_PERMISSION "> element %s "
+                "(in <%s> %s) with " PCMK_XA_KIND "='%s' as XPath '%s'", id,
+                parent_type, parent_id, kind_s, acl->xpath);
+
+    return g_list_append(acls, acl);
 }
 
 /*!
