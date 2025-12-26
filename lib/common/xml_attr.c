@@ -59,7 +59,7 @@ pcmk__xa_remove(xmlAttr *attr, bool force)
         return EPERM;
     }
 
-    if (!force && (element != NULL)
+    if (!force
         && pcmk__xml_doc_all_flags_set(element->doc, pcmk__xf_tracking)) {
 
         // Leave in place (marked for removal) until after diff is calculated
