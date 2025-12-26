@@ -993,76 +993,60 @@ implicitly_allowed(const xmlNode *xml)
     return true;
 }
 
-#define display_id(xml) pcmk__s(pcmk__xe_id(xml), "<unset>")
-
 /*!
  * \internal
- * \brief Drop XML nodes created in violation of ACLs
+ * \brief Check whether ACLs allow creation of an XML node
  *
- * Given an XML element, free all of its descendant nodes created in violation
- * of ACLs, with the exception of allowing "scaffolding" elements (i.e. those
- * that aren't in the ACL section and don't have any attributes other than
- * \c PCMK_XA_ID).
+ * "Scaffolding" elements (those that aren't in the ACLs section and don't have
+ * any attributes other than \c PCMK_XA_ID) are always allowed.
  *
- * \param[in,out] xml        XML to check
- * \param[in]     check_top  Whether to apply checks to argument itself
- *                           (if true, xml might get freed)
+ * \param[in,out] xml  XML node
  *
- * \note This function is recursive
+ * \return \c true \p xml is newly created and ACLs disallow its creation, or
+ *         \c false otherwise
  */
-void
-pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
+static bool
+check_creation_disallowed(xmlNode *xml)
 {
-    bool is_root = (xml == xmlDocGetRootElement(xml->doc));
+    const char *type = (const char *) xml->name;
+    const char *id = pcmk__s(pcmk__xe_id(xml), "<unset>");
     xml_node_private_t *nodepriv = xml->_private;
 
     if (!pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-        goto recurse;
+        return false;
     }
 
     if (implicitly_allowed(xml)) {
         pcmk__trace("Creation of <%s> scaffolding with " PCMK_XA_ID "=\"%s\" "
-                    "is implicitly allowed", xml->name, display_id(xml));
-        goto recurse;
+                    "is implicitly allowed", type, id);
+        return false;
     }
 
     if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
         pcmk__trace("ACLs allow creation of <%s> with " PCMK_XA_ID "=\"%s\"",
-                    xml->name, display_id(xml));
-        goto recurse;
+                    type, id);
+        return false;
     }
 
-    if (check_top) {
-        xml_doc_private_t *docpriv = xml->doc->_private;
+    pcmk__trace("ACLs disallow creation of <%s> with " PCMK_XA_ID "=\"%s\"",
+                type, id);
+    return true;
+}
 
-        pcmk__trace("ACLs disallow creation of %s<%s> with "
-                    PCMK_XA_ID "=\"%s\"", (is_root? "root element " : ""),
-                    xml->name, display_id(xml));
-
-        // pcmk__xml_free() checks ACLs if enabled, which would fail
-        pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
-        pcmk__xml_free(xml);
-
-        /* is_root=true should be impossible with check_top=true, but check for
-         * sanity
-         */
-        if (!is_root) {
-            // If root, the document was freed. Otherwise re-enable ACLs.
-            pcmk__set_xml_flags(docpriv, pcmk__xf_acl_enabled);
-        }
-        return;
-    }
-
-    pcmk__notice("ACLs would disallow creation of %s<%s> with "
-                 PCMK_XA_ID "=\"%s\"", (is_root? "root element " : ""),
-                 xml->name, display_id(xml));
-
-recurse:
-    for (xmlNode *cIter = pcmk__xml_first_child(xml); cIter != NULL; ) {
-        xmlNode *child = cIter;
-        cIter = pcmk__xml_next(cIter); /* In case it is free'd */
-        pcmk__apply_creation_acl(child, true);
-    }
+/*!
+ * \internal
+ * \brief Remove XML nodes created in violation of ACLs
+ *
+ * Given an XML tree, free all nodes created in violation of ACLs, with the
+ * exception of allowing "scaffolding" elements (those that aren't in the ACLs
+ * section and don't have any attributes other than \c PCMK_XA_ID).
+ *
+ * \param[in,out] xml  XML tree
+ */
+void
+pcmk__check_creation_acls(xmlNode *xml)
+{
+    pcmk__xml_tree_foreach_remove(xml, check_creation_disallowed);
 }
 
 /*!
@@ -1093,7 +1077,20 @@ xml_acl_disable(xmlNode *xml)
 
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acls(xml->doc);
-        pcmk__apply_creation_acl(xml, false);
+
+        /* Be sure not to free xml itself.
+         *
+         * @TODO Maybe we should free xml if it's newly created and the creation
+         * is disallowed, but we would need a way to inform the caller. This is
+         * public API.
+         */
+        xml = pcmk__xml_first_child(xml);
+        while (xml != NULL) {
+            xmlNode *next = pcmk__xml_next(xml);
+
+            pcmk__check_creation_acls(xml);
+            xml = next;
+        }
         pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
     }
 }
