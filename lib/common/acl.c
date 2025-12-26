@@ -1013,51 +1013,51 @@ implicitly_allowed(const xmlNode *xml)
 void
 pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
 {
+    bool is_root = (xml == xmlDocGetRootElement(xml->doc));
     xml_node_private_t *nodepriv = xml->_private;
 
-    if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-        if (implicitly_allowed(xml)) {
-            pcmk__trace("Creation of <%s> scaffolding with "
-                        PCMK_XA_ID "=\"%s\" is implicitly allowed",
-                        xml->name, display_id(xml));
-
-        } else if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
-            pcmk__trace("ACLs allow creation of <%s> with "
-                        PCMK_XA_ID "=\"%s\"",
-                        xml->name, display_id(xml));
-
-        } else if (check_top) {
-            /* is_root=true should be impossible with check_top=true, but check
-             * for sanity
-             */
-            bool is_root = (xmlDocGetRootElement(xml->doc) == xml);
-            xml_doc_private_t *docpriv = xml->doc->_private;
-
-            pcmk__trace("ACLs disallow creation of %s<%s> with "
-                        PCMK_XA_ID "=\"%s\"",
-                        (is_root? "root element " : ""), xml->name,
-                        display_id(xml));
-
-            // pcmk__xml_free() checks ACLs if enabled, which would fail
-            pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
-            pcmk__xml_free(xml);
-
-            if (!is_root) {
-                // If root, the document was freed. Otherwise re-enable ACLs.
-                pcmk__set_xml_flags(docpriv, pcmk__xf_acl_enabled);
-            }
-            return;
-
-        } else {
-            const bool is_root = (xml == xmlDocGetRootElement(xml->doc));
-
-            pcmk__notice("ACLs would disallow creation of %s<%s> with "
-                         PCMK_XA_ID "=\"%s\"",
-                         (is_root? "root element " : ""), xml->name,
-                         display_id(xml));
-        }
+    if (!pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+        goto recurse;
     }
 
+    if (implicitly_allowed(xml)) {
+        pcmk__trace("Creation of <%s> scaffolding with " PCMK_XA_ID "=\"%s\" "
+                    "is implicitly allowed", xml->name, display_id(xml));
+        goto recurse;
+    }
+
+    if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
+        pcmk__trace("ACLs allow creation of <%s> with " PCMK_XA_ID "=\"%s\"",
+                    xml->name, display_id(xml));
+        goto recurse;
+    }
+
+    if (check_top) {
+        xml_doc_private_t *docpriv = xml->doc->_private;
+
+        pcmk__trace("ACLs disallow creation of %s<%s> with "
+                    PCMK_XA_ID "=\"%s\"", (is_root? "root element " : ""),
+                    xml->name, display_id(xml));
+
+        // pcmk__xml_free() checks ACLs if enabled, which would fail
+        pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
+        pcmk__xml_free(xml);
+
+        /* is_root=true should be impossible with check_top=true, but check for
+         * sanity
+         */
+        if (!is_root) {
+            // If root, the document was freed. Otherwise re-enable ACLs.
+            pcmk__set_xml_flags(docpriv, pcmk__xf_acl_enabled);
+        }
+        return;
+    }
+
+    pcmk__notice("ACLs would disallow creation of %s<%s> with "
+                 PCMK_XA_ID "=\"%s\"", (is_root? "root element " : ""),
+                 xml->name, display_id(xml));
+
+recurse:
     for (xmlNode *cIter = pcmk__xml_first_child(xml); cIter != NULL; ) {
         xmlNode *child = cIter;
         cIter = pcmk__xml_next(cIter); /* In case it is free'd */
