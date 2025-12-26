@@ -606,6 +606,18 @@ pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
     pcmk__xe_foreach_child(acls, NULL, unpack_acl_target_or_group, target);
 }
 
+/*!
+ * \internal
+ * \brief Set an ACL's mode on a node that matches its XPath expression
+ *
+ * Given a node that matches an ACL's XPath expression, get the corresponding
+ * XML element. Then set the ACL's mode flag in the private data of that
+ * element. For details, see comment in the body below, as well as the doc
+ * comment for \c pcmk__xpath_match_element().
+ *
+ * \param[in,out] match      Node matched by the ACL's XPath expression
+ * \param[in]     user_data  ACL object (<tt>xml_acl_t *</tt>)
+ */
 static void
 apply_acl_to_match(xmlNode *match, void *user_data)
 {
@@ -657,6 +669,15 @@ apply_acl_to_match(xmlNode *match, void *user_data)
     g_string_free(path, TRUE);
 }
 
+/*!
+ * \internal
+ * \brief Apply an ACL to each matching node in an XML document
+ *
+ * See \c apply_acl_to_match() for details on applying the ACL.
+ *
+ * \param[in,out] data       ACL object to apply (<tt>xml_acl_t *</tt>)
+ * \param[in,out] user_data  XML document to match against (<tt>xmlDoc *</tt>)
+ */
 static void
 apply_acl_to_doc(gpointer data, gpointer user_data)
 {
@@ -666,6 +687,18 @@ apply_acl_to_doc(gpointer data, gpointer user_data)
     pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl_to_match, acl);
 }
 
+/*!
+ * \internal
+ * \brief Apply all of an XML document's ACLs
+ *
+ * For each ACL in the document's \c acls list, search the document for nodes
+ * that match the ACL's XPath expression. Then apply the ACL to each matching
+ * node.
+ *
+ * See \c apply_acl_to_doc() and \c apply_acl_to_match() for details.
+ *
+ * \param[in,out] doc  XML document
+ */
 void
 pcmk__apply_acls(xmlDoc *doc)
 {
