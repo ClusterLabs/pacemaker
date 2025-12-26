@@ -697,7 +697,9 @@ purge_xml_attributes(xmlNode *xml)
  * \param[in]  xml         XML to be copied
  * \param[out] result      Copy of XML portions readable via ACLs
  *
- * \return true if xml exists and ACLs are required for user, false otherwise
+ * \return \c true if \p acl_source and \p xml are non-<tt>NULL</tt> and ACLs
+ *         are required for \p user, or \c false otherwise
+ *
  * \note If this returns true, caller should use \p result rather than \p xml
  */
 bool
@@ -708,14 +710,14 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     xml_doc_private_t *docpriv = NULL;
 
     *result = NULL;
-    if ((xml == NULL) || !pcmk_acl_required(user)) {
+    if ((acl_source == NULL) || (xml == NULL) || !pcmk_acl_required(user)) {
         return false;
     }
 
     target = pcmk__xml_copy(NULL, xml);
     docpriv = target->doc->_private;
 
-    pcmk__enable_acl(acl_source, target, user);
+    pcmk__enable_acl(acl_source, target->doc, user);
 
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
 
