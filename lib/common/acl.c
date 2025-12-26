@@ -991,65 +991,57 @@ implicitly_allowed(xmlNode *xml)
  * \c PCMK_XA_ID).
  *
  * \param[in,out] xml        XML to check
- * \param[in]     check_top  Whether to apply checks to argument itself
- *                           (if true, xml might get freed)
- *
- * \note This function is recursive
+ * \param[in]     user_data  Ignored
  */
-void
-pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
+//static bool
+//apply_creation_acl_node(xmlNode *xml, void *user_data)
+bool
+pcmk__apply_creation_acl(xmlNode *xml, void *user_data)
 {
     bool is_root = (xml == xmlDocGetRootElement(xml->doc));
     xml_node_private_t *nodepriv = xml->_private;
+    xml_doc_private_t *docpriv = xml->doc->_private;
 
     if (!pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-        goto recurse;
+        return true;
     }
 
     if (implicitly_allowed(xml)) {
         pcmk__trace("Creation of <%s> scaffolding with " PCMK_XA_ID "=\"%s\" "
                     "is implicitly allowed", xml->name, display_id(xml));
-        goto recurse;
+        return true;
     }
 
     if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
         pcmk__trace("ACLs allow creation of <%s> with " PCMK_XA_ID "=\"%s\"",
                     xml->name, display_id(xml));
-        goto recurse;
+        return true;
     }
 
-    if (check_top) {
-        xml_doc_private_t *docpriv = xml->doc->_private;
+    // @FIXME Need to stop going down branch but continue on rest of tree
+    pcmk__trace("ACLs disallow creation of %s<%s> with " PCMK_XA_ID "=\"%s\"",
+                (is_root? "root element " : ""), xml->name, display_id(xml));
 
-        pcmk__trace("ACLs disallow creation of %s<%s> with "
-                    PCMK_XA_ID "=\"%s\"", (is_root? "root element " : ""),
-                    xml->name, display_id(xml));
+    // pcmk__xml_free() checks ACLs if enabled, which would fail
+    pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
+    pcmk__xml_free(xml);
 
-        // pcmk__xml_free() checks ACLs if enabled, which would fail
-        pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
-        pcmk__xml_free(xml);
-
-        /* is_root=true should be impossible with check_top=true, but check for
-         * sanity
-         */
-        if (!is_root) {
-            // If root, the document was freed. Otherwise re-enable ACLs.
-            pcmk__set_xml_flags(docpriv, pcmk__xf_acl_enabled);
-        }
-        return;
+    // is_root=true should be impossible, but check for sanity
+    if (!is_root) {
+        // If root, the document was freed. Otherwise re-enable ACLs.
+        pcmk__set_xml_flags(docpriv, pcmk__xf_acl_enabled);
     }
 
-    pcmk__notice("ACLs would disallow creation of %s<%s> with "
-                 PCMK_XA_ID "=\"%s\"", (is_root? "root element " : ""),
-                 xml->name, display_id(xml));
-
-recurse:
-    for (xmlNode *cIter = pcmk__xml_first_child(xml); cIter != NULL; ) {
-        xmlNode *child = cIter;
-        cIter = pcmk__xml_next(cIter); /* In case it is free'd */
-        pcmk__apply_creation_acl(child, true);
-    }
+    return true;
 }
+
+/*
+void
+pcmk__apply_creation_acl(xmlNode *xml)
+{
+    pcmk__xml_tree_foreach(xml, apply_creation_acl_node, NULL);
+}
+*/
 
 /*!
  * \brief Check whether or not an XML node is ACL-denied
@@ -1079,7 +1071,16 @@ xml_acl_disable(xmlNode *xml)
 
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acls(xml->doc);
-        pcmk__apply_creation_acl(xml, false);
+
+        xml = pcmk__xml_first_child(xml);
+
+        while (xml != NULL) {
+            xmlNode *next = pcmk__xml_next(xml);
+
+            //pcmk__apply_creation_acl(xml);
+            pcmk__xml_tree_foreach(xml, pcmk__apply_creation_acl, NULL);
+            xml = next;
+        }
         pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
     }
 }

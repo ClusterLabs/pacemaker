@@ -158,7 +158,8 @@ G_GNUC_INTERNAL
 void pcmk__apply_acls(xmlDoc *doc);
 
 G_GNUC_INTERNAL
-void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
+//void pcmk__apply_creation_acl(xmlNode *xml);
+bool pcmk__apply_creation_acl(xmlNode *xml, void *user_data);
 
 G_GNUC_INTERNAL
 int pcmk__xa_remove(xmlAttr *attr, bool force);
