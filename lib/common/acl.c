@@ -109,26 +109,21 @@ create_acl(const xmlNode *xml, enum pcmk__xml_flags mode)
 
     buf = g_string_sized_new(128);
 
+    g_string_append_printf(buf, "//%s", pcmk__s(tag, "*"));
+
     if ((ref != NULL) && (attr != NULL)) {
-        // NOTE: schema currently does not allow this
-        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"),
-                       "[@" PCMK_XA_ID "='", ref, "' and @", attr, "]", NULL);
+        // Not possible with schema validation enabled
+        g_string_append_printf(buf, "[@" PCMK_XA_ID "='%s' and @%s]", ref,
+                               attr);
 
     } else if (ref != NULL) {
-        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"),
-                       "[@" PCMK_XA_ID "='", ref, "']", NULL);
+        g_string_append_printf(buf, "[@" PCMK_XA_ID "='%s']", ref);
 
     } else if (attr != NULL) {
-        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@", attr, "]", NULL);
-
-    } else {
-        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), NULL);
+        g_string_append_printf(buf, "[@%s]", attr);
     }
 
-    acl->xpath = buf->str;
-
-    g_string_free(buf, FALSE);
-
+    acl->xpath = g_string_free(buf, FALSE);
     return acl;
 }
 
