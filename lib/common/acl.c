@@ -92,23 +92,14 @@ parse_acl_mode(const char *text)
 static GList *
 create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 {
-    xml_acl_t *acl = NULL;
-
     const char *tag = pcmk__xe_get(xml, PCMK_XA_OBJECT_TYPE);
     const char *ref = pcmk__xe_get(xml, PCMK_XA_REFERENCE);
     const char *xpath = pcmk__xe_get(xml, PCMK_XA_XPATH);
     const char *attr = pcmk__xe_get(xml, PCMK_XA_ATTRIBUTE);
-
-    if ((tag == NULL) && (ref == NULL) && (xpath == NULL)) {
-        // Schema should prevent this, but to be safe ...
-        pcmk__trace("Ignoring ACL <%s> element without selection criteria",
-                    xml->name);
-        return NULL;
-    }
-
-    acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
+    xml_acl_t *acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
 
     acl->mode = mode;
+
     if (xpath) {
         acl->xpath = g_strdup(xpath);
         pcmk__trace("Unpacked ACL <%s> element using xpath: %s", xml->name,
@@ -193,6 +184,19 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
         pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
                          "(in <%s> %s) with unknown ACL kind '%s'", id,
                          parent_type, parent_id, kind_s);
+        return acls;
+    }
+
+    if ((pcmk__xe_get(xml, PCMK_XA_OBJECT_TYPE) == NULL)
+        && (pcmk__xe_get(xml, PCMK_XA_REFERENCE) == NULL)
+        && (pcmk__xe_get(xml, PCMK_XA_XPATH) == NULL)) {
+
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
+                         "(in <%s> %s) without selection criteria. Exactly one "
+                         "of the following attributes is required: "
+                         PCMK_XA_OBJECT_TYPE ", " PCMK_XA_REFERENCE ", "
+                         PCMK_XA_XPATH ".", id, parent_type, parent_id);
         return acls;
     }
 
