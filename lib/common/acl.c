@@ -448,35 +448,33 @@ unpack_acl_target_or_group(xmlNode *xml, void *user_data)
 
 /*!
  * \internal
- * \brief Unpack ACLs for a given user into the
- * metadata of the target XML tree
+ * \brief Add a user's ACLs to a target XML document's private data
  *
- * Taking the description of ACLs from the source XML tree and
- * marking up the target XML tree with access information for the
- * given user by tacking it onto the relevant nodes
+ * Unpack the ACLs that apply to the user from the \c PCMK_XE_ACLS element in
+ * the source document to the \c acls list in the target document. If that list
+ * is already non-empty or if the user doesn't require ACLs, do nothing.
  *
- * \param[in]     source  XML with ACL definitions
- * \param[in,out] target  XML that ACLs will be applied to
- * \param[in]     user    Username whose ACLs need to be unpacked
+ * Also set the target document's \c acl_user field to the given user.
+ *
+ * \param[in]     source  XML document whose ACL definitions to use
+ * \param[in,out] target  XML document private data whose \c acls field to set
+ * \param[in]     user    User whose ACLs to unpack
  */
 void
-pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
+pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
 {
-    xml_doc_private_t *docpriv = NULL;
     xmlNode *acls = NULL;
 
     pcmk__assert(target != NULL);
 
-    docpriv = target->doc->_private;
-    if (!pcmk_acl_required(user) || (docpriv->acls != NULL)) {
+    if ((target->acls != NULL) || !pcmk_acl_required(user)) {
         return;
     }
 
-    pcmk__str_update(&docpriv->acl_user, user);
+    pcmk__str_update(&target->acl_user, user);
 
-    acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
-                                PCMK__LOG_NEVER);
-    pcmk__xe_foreach_child(acls, NULL, unpack_acl_target_or_group, docpriv);
+    acls = pcmk__xpath_find_one(source, "//" PCMK_XE_ACLS, PCMK__LOG_NEVER);
+    pcmk__xe_foreach_child(acls, NULL, unpack_acl_target_or_group, target);
 }
 
 /*
@@ -601,7 +599,7 @@ pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
     if (target == NULL) {
         return;
     }
-    pcmk__unpack_acls(acl_source, target, user);
+    pcmk__unpack_acls(acl_source->doc, target->doc->_private, user);
     pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
     pcmk__apply_acls(target->doc);
 }
