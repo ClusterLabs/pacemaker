@@ -252,12 +252,8 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
     if (docpriv != NULL) {
         pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
-        pcmk__str_update(&(docpriv->acl_user), NULL);
-
-        if (docpriv->acls != NULL) {
-            pcmk__free_acls(docpriv->acls);
-            docpriv->acls = NULL;
-        }
+        g_clear_pointer(&docpriv->acl_user, free);
+        g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
         if(docpriv->deleted_objs) {
             g_list_free_full(docpriv->deleted_objs, free_deleted_object);

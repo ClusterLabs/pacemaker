@@ -30,17 +30,33 @@ typedef struct xml_acl_s {
     gchar *xpath;
 } xml_acl_t;
 
+/*!
+ * \internal
+ * \brief Free an \c xml_acl_t object
+ *
+ * \param[in,out] data  \c xml_acl_t object to free
+ *
+ * \note This is a \c GDestroyNotify function.
+ */
 static void
 free_acl(void *data)
 {
-    if (data) {
-        xml_acl_t *acl = data;
+    xml_acl_t *acl = data;
 
-        g_free(acl->xpath);
-        free(acl);
+    if (acl == NULL) {
+        return;
     }
+
+    g_free(acl->xpath);
+    free(acl);
 }
 
+/*!
+ * \internal
+ * \brief Free a list of \c xml_acl_t objects
+ *
+ * \param[in,out] acls  List of \c xml_acl_t objects
+ */
 void
 pcmk__free_acls(GList *acls)
 {
