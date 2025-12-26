@@ -96,36 +96,38 @@ create_acl(const xmlNode *xml, enum pcmk__xml_flags mode)
     const char *ref = pcmk__xe_get(xml, PCMK_XA_REFERENCE);
     const char *xpath = pcmk__xe_get(xml, PCMK_XA_XPATH);
     const char *attr = pcmk__xe_get(xml, PCMK_XA_ATTRIBUTE);
+
+    GString *buf = NULL;
     xml_acl_t *acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
 
     acl->mode = mode;
 
-    if (xpath) {
+    if (xpath != NULL) {
         acl->xpath = g_strdup(xpath);
+        return acl;
+    }
+
+    buf = g_string_sized_new(128);
+
+    if ((ref != NULL) && (attr != NULL)) {
+        // NOTE: schema currently does not allow this
+        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"),
+                       "[@" PCMK_XA_ID "='", ref, "' and @", attr, "]", NULL);
+
+    } else if (ref != NULL) {
+        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"),
+                       "[@" PCMK_XA_ID "='", ref, "']", NULL);
+
+    } else if (attr != NULL) {
+        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@", attr, "]", NULL);
 
     } else {
-        GString *buf = g_string_sized_new(128);
-
-        if ((ref != NULL) && (attr != NULL)) {
-            // NOTE: schema currently does not allow this
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" PCMK_XA_ID "='",
-                           ref, "' and @", attr, "]", NULL);
-
-        } else if (ref != NULL) {
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" PCMK_XA_ID "='",
-                           ref, "']", NULL);
-
-        } else if (attr != NULL) {
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@", attr, "]", NULL);
-
-        } else {
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), NULL);
-        }
-
-        acl->xpath = buf->str;
-
-        g_string_free(buf, FALSE);
+        pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), NULL);
     }
+
+    acl->xpath = buf->str;
+
+    g_string_free(buf, FALSE);
 
     return acl;
 }
