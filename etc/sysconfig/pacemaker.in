@@ -261,7 +261,7 @@
 # PCMK_key_file
 #
 # The location of a file containing the private key for the matching PCMK_cert_file,
-# in PEM format. This file must be readble by Pacemaker daemons (that is, it
+# in PEM format. This file must be readable by Pacemaker daemons (that is, it
 # must allow read permissions to either the @CRM_DAEMON_USER@ user or the
 # @CRM_DAEMON_GROUP@ group). If set, along with PCMK_ca_file and PCMK_cert_file,
 # X509 authentication will be enabled for Pacemaker Remote and remote CIB
