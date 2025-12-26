@@ -764,30 +764,28 @@ is_mode_allowed(uint32_t flags, enum pcmk__xml_flags mode)
         return false;
     }
 
-    if (pcmk__is_set(flags, mode)) {
-        // The access we requested is explicitly allowed
-        return true;
+    switch (mode) {
+        case pcmk__xf_acl_read:
+            // Write access provides read access
+            return pcmk__any_flags_set(flags,
+                                       pcmk__xf_acl_read|pcmk__xf_acl_write);
+
+        case pcmk__xf_acl_write:
+            return pcmk__is_set(flags, pcmk__xf_acl_write);
+
+        case pcmk__xf_acl_create:
+            /* Write access provides create access.
+             *
+             * @TODO Why does the \c pcmk__xf_created flag provide create
+             * access? This was introduced by commit e2ed85fe.
+             */
+            return pcmk__any_flags_set(flags,
+                                       pcmk__xf_acl_write|pcmk__xf_created);
+
+        default:
+            // Invalid mode
+            return false;
     }
-
-    if ((mode == pcmk__xf_acl_read)
-        && pcmk__is_set(flags, pcmk__xf_acl_write)) {
-
-        // Write access provides read access
-        return true;
-    }
-
-    if ((mode == pcmk__xf_acl_create)
-        && pcmk__any_flags_set(flags, pcmk__xf_acl_write|pcmk__xf_created)) {
-
-        /* Write access provides create access.
-         *
-         * @TODO Why does the \c pcmk__xf_created flag provide create access?
-         * This was introduced by commit e2ed85fe.
-         */
-        return true;
-    }
-
-    return false;
 }
 
 /*!
