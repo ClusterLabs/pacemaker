@@ -249,6 +249,7 @@ def sanitize_output(s):
         (r'(<change-attr name="crm_feature_set" .* value=")[0-9.]*"', r'\1"'),
         (r'(<change-attr name="validate-with" .* value="pacemaker-)[0-9.]+"', r'\1X"'),
         (r'(<cib.*) cib-last-written="[^"]*"', r'\1'),
+        (r'\((check_creation_disallowed.*)@.*\.c:[0-9]+\)', r'\1'),
         (r'crm_feature_set="[^"]*" ', r''),
         (r'@crm_feature_set=[0-9.]+, ', r''),
         (r'\(crm_time_parse_duration@.*\.c:[0-9]+\)', r'crm_time_parse_duration'),
@@ -2942,7 +2943,7 @@ class AclsRegressionTest(RegressionTest):
         return [
             ShadowTestGroup(basic_tests + [
                             TestGroup(loop_tests,
-                                      env={"PCMK_trace_functions": "pcmk__check_acl,pcmk__apply_creation_acl"})]),
+                                      env={"PCMK_trace_functions": "pcmk__check_acl,check_creation_disallowed"})]),
         ]
 
 
