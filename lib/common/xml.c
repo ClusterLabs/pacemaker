@@ -264,6 +264,62 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
 
 /*!
  * \internal
+ * \brief Allocate and initialize private data for an XML document
+ *
+ * \param[in,out] doc  XML document
+ */
+static void
+new_doc_private_data(xmlDoc *doc)
+{
+    xml_doc_private_t *priv = pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
+
+    priv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
+    doc->_private = priv;
+}
+
+/*!
+ * \internal
+ * \brief Allocate and initialize private data for a non-document XML node
+ *
+ * \param[in,out] xml  XML node
+ */
+static void
+new_node_private_data(xmlNode *xml)
+{
+    const bool tracking = pcmk__xml_doc_all_flags_set(xml->doc,
+                                                      pcmk__xf_tracking);
+    xml_node_private_t *priv = pcmk__assert_alloc(1,
+                                                  sizeof(xml_node_private_t));
+
+    priv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
+    xml->_private = priv;
+
+    if (tracking) {
+        pcmk__set_xml_flags(priv, pcmk__xf_created);
+        pcmk__mark_xml_node_dirty(xml);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Allocate and initialize private data for an XML element
+ *
+ * \param[in,out] xml  XML element
+ */
+static void
+new_element_private_data(xmlNode *xml)
+{
+    new_node_private_data(xml);
+
+    for (xmlAttr *iter = pcmk__xe_first_attr(xml); iter != NULL;
+         iter = iter->next) {
+
+        new_node_private_data((xmlNode *) iter);
+    }
+}
+
+/*!
+ * \internal
  * \brief Allocate and initialize private data for an XML node
  *
  * \param[in,out] node       XML node whose private data to initialize
@@ -276,47 +332,25 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
 static bool
 new_private_data(xmlNode *node, void *user_data)
 {
-    bool tracking = false;
-
     CRM_CHECK(node != NULL, return true);
 
     if (node->_private != NULL) {
         return true;
     }
 
-    tracking = pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking);
-
     switch (node->type) {
         case XML_DOCUMENT_NODE:
-            {
-                xml_doc_private_t *docpriv =
-                    pcmk__assert_alloc(1, sizeof(xml_doc_private_t));
+            new_doc_private_data((xmlDoc *) node);
+            return true;
 
-                docpriv->check = PCMK__XML_DOC_PRIVATE_MAGIC;
-                node->_private = docpriv;
-            }
-            break;
-
-        case XML_ELEMENT_NODE:
         case XML_ATTRIBUTE_NODE:
         case XML_COMMENT_NODE:
-            {
-                xml_node_private_t *nodepriv =
-                    pcmk__assert_alloc(1, sizeof(xml_node_private_t));
+            new_node_private_data(node);
+            return true;
 
-                nodepriv->check = PCMK__XML_NODE_PRIVATE_MAGIC;
-                node->_private = nodepriv;
-                if (tracking) {
-                    pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
-                }
-
-                for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
-                     iter = iter->next) {
-
-                    new_private_data((xmlNode *) iter, user_data);
-                }
-            }
-            break;
+        case XML_ELEMENT_NODE:
+            new_element_private_data(node);
+            return true;
 
         case XML_TEXT_NODE:
         case XML_DTD_NODE:
@@ -327,11 +361,6 @@ new_private_data(xmlNode *node, void *user_data)
             CRM_LOG_ASSERT(node->type == XML_ELEMENT_NODE);
             return true;
     }
-
-    if (tracking) {
-        pcmk__mark_xml_node_dirty(node);
-    }
-    return true;
 }
 
 /*!
