@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,21 +33,20 @@ teardown(void **state)
     return 0;
 }
 
-static void
-assert_schema_0(int schema_index, const char *schema_name)
-{
-    GList *entry = NULL;
-    pcmk__schema_t *schema = NULL;
-
-    entry = pcmk__find_x_0_schema();
-    assert_non_null(entry);
-
-    schema = entry->data;
-    assert_non_null(schema);
-
-    assert_int_equal(schema->schema_index, schema_index);
-    assert_string_equal(schema->name, schema_name);
-}
+#define assert_schema_0(schema_idx, schema_name)                \
+    do {                                                        \
+        GList *entry = NULL;                                    \
+        pcmk__schema_t *schema = NULL;                          \
+                                                                \
+        entry = pcmk__find_x_0_schema();                        \
+        assert_non_null(entry);                                 \
+                                                                \
+        schema = entry->data;                                   \
+        assert_non_null(schema);                                \
+                                                                \
+        assert_int_equal(schema->schema_index, schema_idx);     \
+        assert_string_equal(schema->name, schema_name);         \
+    } while (0)
 
 static void
 last_is_0(void **state)

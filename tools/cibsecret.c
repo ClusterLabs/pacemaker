@@ -62,7 +62,8 @@ static GOptionEntry entries[] = {
  *
  * \note On error, \p out->err() will be called to record stderr of the process
  */
-typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline);
+typedef int (*rsh_fn_t)(pcmk__output_t *out, const char *const *nodes,
+                        const char *cmdline);
 
 /*!
  * \internal
@@ -82,8 +83,8 @@ typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline)
  *
  * \note On error, \p out->err() will be called to record stderr of the process
  */
-typedef int (*rcp_fn_t)(pcmk__output_t *out, gchar **nodes, const char *to,
-                        const char *from);
+typedef int (*rcp_fn_t)(pcmk__output_t *out, const char *const *nodes,
+                        const char *to, const char *from);
 
 struct subcommand_entry {
     const char *name;
@@ -150,11 +151,11 @@ done:
 }
 
 static int
-pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+pssh(pcmk__output_t *out, const char *const *nodes, const char *cmdline)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
-    gchar *hosts = g_strjoinv(" ", nodes);
+    gchar *hosts = g_strjoinv(" ", (gchar **) nodes);
 
     s = pcmk__assert_asprintf("pssh -i -H \"%s\" -x \"" SSH_OPTS "\" -- \"%s\"",
                               hosts, cmdline);
@@ -166,11 +167,11 @@ pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 }
 
 static int
-pdsh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+pdsh(pcmk__output_t *out, const char *const *nodes, const char *cmdline)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
-    gchar *hosts = g_strjoinv(",", nodes);
+    gchar *hosts = g_strjoinv(",", (gchar **) nodes);
 
     s = pcmk__assert_asprintf("pdsh -w \"%s\" -- \"%s\"", hosts, cmdline);
     setenv("PDSH_SSH_ARGS_APPEND", SSH_OPTS, 1);
@@ -183,11 +184,11 @@ pdsh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 }
 
 static int
-ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+ssh(pcmk__output_t *out, const char *const *nodes, const char *cmdline)
 {
     int rc = pcmk_rc_ok;
 
-    for (gchar **node = nodes; *node != NULL; node++) {
+    for (const char *const *node = nodes; *node != NULL; node++) {
         char *s = pcmk__assert_asprintf("ssh " SSH_OPTS " \"%s\" -- \"%s\"",
                                         *node, cmdline);
 
@@ -204,11 +205,12 @@ ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 }
 
 static int
-pscp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+pscp(pcmk__output_t *out, const char *const *nodes, const char *to,
+     const char *from)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
-    gchar *hosts = g_strjoinv(" ", nodes);
+    gchar *hosts = g_strjoinv(" ", (gchar **) nodes);
 
     s = pcmk__assert_asprintf("pscp.pssh -H \"%s\" -x \"-pr\" "
                               "-x \"" SSH_OPTS "\" -- \"%s\" \"%s\"",
@@ -221,11 +223,12 @@ pscp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 }
 
 static int
-pdcp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+pdcp(pcmk__output_t *out, const char *const *nodes, const char *to,
+     const char *from)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
-    gchar *hosts = g_strjoinv(",", nodes);
+    gchar *hosts = g_strjoinv(",", (gchar **) nodes);
 
     s = pcmk__assert_asprintf("pdcp -pr -w \"%s\" -- \"%s\" \"%s\"", hosts,
                               from, to);
@@ -239,11 +242,12 @@ pdcp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 }
 
 static int
-scp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+scp(pcmk__output_t *out, const char *const *nodes, const char *to,
+    const char *from)
 {
     int rc = pcmk_rc_ok;
 
-    for (gchar **node = nodes; *node != NULL; node++) {
+    for (const char *const *node = nodes; *node != NULL; node++) {
         char *s = pcmk__assert_asprintf("scp -pqr " SSH_OPTS " \"%s\" "
                                         "\"%s:%s\"",
                                         from, *node, to);
@@ -299,7 +303,9 @@ reachable_hosts(pcmk__output_t *out, GList *all)
         run_cmdline(out, cmdline, &standard_out);
 
         parts = g_strsplit(standard_out, "\n", 0);
-        for (gchar **p = parts; *p != NULL; p++) {
+        for (const char *const *p = (const char *const *) parts; *p != NULL;
+             p++) {
+
             if (pcmk__str_empty(*p)) {
                 continue;
             }
@@ -315,7 +321,7 @@ reachable_hosts(pcmk__output_t *out, GList *all)
 
     g_free(path);
     g_ptr_array_add(reachable, NULL);
-    return (char **) g_ptr_array_free(reachable, FALSE);
+    return (gchar **) g_ptr_array_free(reachable, FALSE);
 }
 
 struct node_data {
@@ -395,7 +401,8 @@ get_live_peers(pcmk__output_t *out)
     for (const GList *iter = nd.all_nodes; iter != NULL; iter = iter->next) {
         const char *node_name = iter->data;
 
-        if (!pcmk__g_strv_contains(reachable, node_name)) {
+        if (!pcmk__g_strv_contains((const gchar *const *) reachable,
+                                   node_name)) {
             out->info(out, "Node %s is down - you'll need to update it "
                       "with `cibsecret sync` later", node_name);
         }
@@ -439,7 +446,7 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     dirname = g_path_get_dirname(path);
 
     cmdline = pcmk__assert_asprintf("mkdir -p %s", dirname);
-    rc = rsh_fn(out, peers, cmdline);
+    rc = rsh_fn(out, (const char *const *) peers, cmdline);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
@@ -447,19 +454,19 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     if (g_file_test(path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR)) {
         char *sign_path = NULL;
 
-        rc = rcp_fn(out, peers, dirname, path);
+        rc = rcp_fn(out, (const char *const *) peers, dirname, path);
         if (rc != pcmk_rc_ok) {
             goto done;
         }
 
         sign_path = pcmk__assert_asprintf("%s.sign", path);
-        rc = rcp_fn(out, peers, dirname, sign_path);
+        rc = rcp_fn(out, (const char *const *) peers, dirname, sign_path);
         free(sign_path);
 
     } else {
         free(cmdline);
         cmdline = pcmk__assert_asprintf("rm -f %s %s.sign", path, path);
-        rc = rsh_fn(out, peers, cmdline);
+        rc = rsh_fn(out, (const char *const *) peers, cmdline);
     }
 
 done:
@@ -892,20 +899,22 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 
     dirname = g_path_get_dirname(PCMK__CIB_SECRETS_DIR);
 
-    rc = rsh_fn(out, peers, "rm -rf " PCMK__CIB_SECRETS_DIR);
+    rc = rsh_fn(out, (const char *const *) peers,
+                "rm -rf " PCMK__CIB_SECRETS_DIR);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
 
     cmdline = pcmk__assert_asprintf("mkdir -p %s", dirname);
-    rc = rsh_fn(out, peers, cmdline);
+    rc = rsh_fn(out, (const char *const *) peers, cmdline);
     free(cmdline);
 
     if (rc != pcmk_rc_ok) {
         goto done;
     }
 
-    rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
+    rc = rcp_fn(out, (const char *const *) peers, dirname,
+                PCMK__CIB_SECRETS_DIR);
 
 done:
     g_strfreev(peers);
@@ -1115,7 +1124,8 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("cibsecret", args->verbosity);
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest,
+                          (const char *const *) argv);
     if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,

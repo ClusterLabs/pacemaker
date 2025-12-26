@@ -1454,7 +1454,9 @@ get_directory_list(const char *root, gboolean files, gboolean executable)
 
     dir_paths = g_strsplit(root, ":", 0);
 
-    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
+    for (const char *const *dir = (const char *const *) dir_paths;
+         *dir != NULL; dir++) {
+
         list = g_list_concat(list, gdl_helper(*dir, files, executable));
     }
 
