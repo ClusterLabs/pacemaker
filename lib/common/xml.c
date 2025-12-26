@@ -72,16 +72,19 @@ pcmk__xml_element_type_text(xmlElementType type)
 
 /*!
  * \internal
- * \brief Apply a function to each XML node in a tree (pre-order, depth-first)
+ * \brief Call a function for each XML node in a tree (pre-order, depth-first)
  *
  * \param[in,out] xml        XML tree to traverse
- * \param[in,out] fn         Function to call for each node (returns \c true to
+ * \param[in]     fn         Function to call for each node (returns \c true to
  *                           continue traversing the tree or \c false to stop)
  * \param[in,out] user_data  Argument to \p fn
  *
  * \return \c false if any \p fn call returned \c false, or \c true otherwise
  *
  * \note This function is recursive.
+ * \note \c fn may not free or unlink its XML argument or any of that node's
+ *       ancestors. \c fn may unlink the descendants of that node, and it may
+ *       free them as long as it also unlinks them.
  */
 bool
 pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
@@ -103,6 +106,50 @@ pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
         }
     }
     return true;
+}
+
+/*!
+ * \internal
+ * \brief Remove XML nodes for which a given function returns \c true
+ *
+ * Call a function for each XML node in a tree (pre-order, depth-first). If the
+ * function returns true, remove the node. This means to free the entire
+ * document if the node is the document root, or to unlink and free the node and
+ * its subtree otherwise. ACLs and change tracking are ignored.
+ *
+ * \param[in,out] xml  XML tree to traverse
+ * \param[in]     fn   Function to call for each node (returns \c true to remove
+ *                     its argument or \c false to recurse down its argument's
+ *                     subtree)
+ *
+ * \note This function is recursive.
+ */
+void
+pcmk__xml_tree_foreach_remove(xmlNode *xml, bool (*fn)(xmlNode *))
+{
+    if (xml == NULL) {
+        return;
+    }
+
+    if (fn(xml)) {
+        if (xml == xmlDocGetRootElement(xml->doc)) {
+            pcmk__xml_free_doc(xml->doc);
+
+        } else {
+            pcmk__xml_free_node(xml);
+        }
+
+        return;
+    }
+
+    xml = pcmk__xml_first_child(xml);
+
+    while (xml != NULL) {
+        xmlNode *next = pcmk__xml_next(xml);
+
+        pcmk__xml_tree_foreach_remove(xml, fn);
+        xml = next;
+    }
 }
 
 void
