@@ -354,6 +354,69 @@ unpack_acl_role_ref_or_perm(xmlNode *xml, void *user_data)
 
 /*!
  * \internal
+ * \brief Unpack an ACL target (user) element to a list of \c xml_acl_t
+ *
+ * \param[in]     xml      \c PCMK_XE_ACL_TARGET element to unpack
+ * \param[in,out] docpriv  XML document private data whose \c acls field to
+ *                         append to
+ */
+static void
+unpack_acl_target(xmlNode *xml, xml_doc_private_t *docpriv)
+{
+    const char *id = pcmk__s(pcmk__xe_get(xml, PCMK_XA_NAME), pcmk__xe_id(xml));
+
+    if (id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <%s> element with no " PCMK_XA_NAME " or "
+                         PCMK_XA_ID " attribute", PCMK_XE_ACL_TARGET);
+
+        // There is no user ID for the current ACL user to match
+        return;
+    }
+
+    if (!pcmk__str_eq(id, docpriv->acl_user, pcmk__str_none)) {
+        return;
+    }
+
+    pcmk__trace("Unpacking ACLs for user '%s'", id);
+    pcmk__xe_foreach_child(xml, NULL, unpack_acl_role_ref_or_perm,
+                           &docpriv->acls);
+}
+
+/*!
+ * \internal
+ * \brief Unpack an ACL group element to a list of \c xml_acl_t
+ *
+ * \param[in]     xml      \c PCMK_XE_ACL_TARGET element to unpack
+ * \param[in,out] docpriv  XML document private data whose \c acls field to
+ *                         append to
+ */
+static void
+unpack_acl_group(xmlNode *xml, xml_doc_private_t *docpriv)
+{
+    const char *id = pcmk__s(pcmk__xe_get(xml, PCMK_XA_NAME), pcmk__xe_id(xml));
+
+    if (id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <%s> element with no " PCMK_XA_NAME " or "
+                         PCMK_XA_ID " attribute", PCMK_XE_ACL_GROUP);
+
+        // There is no group ID for the current ACL user to match
+        return;
+    }
+
+    if (!pcmk__is_user_in_group(docpriv->acl_user, id)) {
+        return;
+    }
+
+    pcmk__trace("Unpacking ACLs for group '%s' (user '%s')", id,
+                docpriv->acl_user);
+    pcmk__xe_foreach_child(xml, NULL, unpack_acl_role_ref_or_perm,
+                           &docpriv->acls);
+}
+
+/*!
+ * \internal
  * \brief Unpack an ACL target (user) or group element to a list of \c xml_acl_t
  *
  * \param[in]     xml        Element to unpack (\c PCMK_XE_ACL_TARGET
@@ -370,40 +433,16 @@ unpack_acl_role_ref_or_perm(xmlNode *xml, void *user_data)
 static int
 unpack_acl_target_or_group(xmlNode *xml, void *user_data)
 {
-    xml_doc_private_t *docpriv = user_data;
-
-    const char *id = pcmk__s(pcmk__xe_get(xml, PCMK_XA_NAME), pcmk__xe_id(xml));
-
-    if (id == NULL) {
-        // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element with no " PCMK_XA_NAME " or "
-                         PCMK_XA_ID " attribute", (const char *) xml->name);
-
-        // There is no user or group ID for the current ACL user to match
-        return pcmk_rc_ok;
-    }
-
     if (pcmk__xe_is(xml, PCMK_XE_ACL_TARGET)) {
-        if (!pcmk__str_eq(id, docpriv->acl_user, pcmk__str_none)) {
-            return pcmk_rc_ok;
-        }
-
-        pcmk__trace("Unpacking ACLs for user '%s'", id);
-
-    } else if (pcmk__xe_is(xml, PCMK_XE_ACL_GROUP)) {
-        if (!pcmk__is_user_in_group(docpriv->acl_user, id)) {
-            return pcmk_rc_ok;
-        }
-
-        pcmk__trace("Unpacking ACLs for group '%s' (user '%s')", id,
-                    docpriv->acl_user);
-
-    } else {
+        unpack_acl_target(xml, user_data);
         return pcmk_rc_ok;
     }
 
-    pcmk__xe_foreach_child(xml, NULL, unpack_acl_role_ref_or_perm,
-                           &docpriv->acls);
+    if (pcmk__xe_is(xml, PCMK_XE_ACL_GROUP)) {
+        unpack_acl_group(xml, user_data);
+        return pcmk_rc_ok;
+    }
+
     return pcmk_rc_ok;
 }
 
