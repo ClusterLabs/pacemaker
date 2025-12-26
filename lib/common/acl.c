@@ -147,7 +147,6 @@ static GList *
 unpack_acl_permission(const xmlNode *xml, GList *acls)
 {
     const char *id = pcmk__xe_id(xml);
-    const char *type = (const char *) xml->name;
     const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
     const char *parent_type = (const char *) xml->parent->name;
 
@@ -156,8 +155,9 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
 
     if (id == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_warn("<%s> element in <%s> %s has no " PCMK_XA_ID " "
-                          "attribute", type, parent_type, parent_id);
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element in <%s> %s has "
+                          "no " PCMK_XA_ID " attribute", parent_type,
+                          parent_id);
 
         // Set a value to use for logging and continue unpacking
         id = "without ID";
@@ -165,23 +165,24 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
 
     if (kind_s == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with no "
-                         PCMK_XA_KIND " attribute", type, id, parent_type,
-                         parent_id);
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
+                         "(in <%s> %s) with no " PCMK_XA_KIND " attribute", id,
+                         parent_type, parent_id);
         return acls;
     }
 
     kind = parse_acl_mode(kind_s);
     if (kind == pcmk__xf_none) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with unknown "
-                         "ACL kind '%s'", type, id, parent_type, parent_id,
-                         kind_s);
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
+                         "(in <%s> %s) with unknown ACL kind '%s'", id,
+                         parent_type, parent_id, kind_s);
         return acls;
     }
 
-    pcmk__trace("Unpacking <%s> element %s (in <%s> %s) with "
-                PCMK_XA_KIND "='%s'", type, id, parent_type, parent_id, kind_s);
+    pcmk__trace("Unpacking <" PCMK_XE_ACL_PERMISSION "> element %s "
+                "(in <%s> %s) with " PCMK_XA_KIND "='%s'", id, parent_type,
+                parent_id, kind_s);
 
     return create_acl(xml, acls, kind);
 }
@@ -202,7 +203,6 @@ static xmlNode *
 resolve_acl_role_ref(xmlNode *xml)
 {
     const char *id = pcmk__xe_id(xml);
-    const char *type = (const char *) xml->name;
     const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
     const char *parent_type = (const char *) xml->parent->name;
 
@@ -230,10 +230,10 @@ resolve_acl_role_ref(xmlNode *xml)
              * first match.
              */
             result = pcmk__xpath_result(xpath_obj, 0);
-            pcmk__config_warn("Multiple <%s> elements have "
+            pcmk__config_warn("Multiple <" PCMK_XE_ACL_ROLE "> elements have "
                               PCMK_XA_ID "='%s'. Returning the first one for "
-                              "<%s> in <%s> %s.", PCMK_XE_ACL_ROLE, id, type,
-                              parent_type, parent_id);
+                              "<" PCMK_XE_ROLE "> in <%s> %s.", id, parent_type,
+                              parent_id);
             break;
     }
 
@@ -269,7 +269,6 @@ static GList *
 unpack_acl_role_ref(xmlNode *xml, GList *acls)
 {
     const char *id = pcmk__xe_id(xml);
-    const char *type = (const char *) xml->name;
     const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
     const char *parent_type = (const char *) xml->parent->name;
 
@@ -277,8 +276,8 @@ unpack_acl_role_ref(xmlNode *xml, GList *acls)
 
     if (id == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element in <%s> %s with no "
-                         PCMK_XA_ID " attribute", type, parent_type, parent_id);
+        pcmk__config_err("Ignoring <" PCMK_XE_ROLE "> element in <%s> %s with "
+                         "no " PCMK_XA_ID " attribute", parent_type, parent_id);
 
         // There is no reference role ID to match and unpack
         return acls;
@@ -287,9 +286,9 @@ unpack_acl_role_ref(xmlNode *xml, GList *acls)
     role = resolve_acl_role_ref(xml);
     if (role == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element %s in <%s> %s: no <%s> with "
-                         "matching " PCMK_XA_ID " found", type, id, parent_type,
-                         parent_id, PCMK_XE_ACL_ROLE);
+        pcmk__config_err("Ignoring <" PCMK_XE_ROLE "> element %s in <%s> %s: "
+                         "no <" PCMK_XE_ACL_ROLE "> with matching "
+                         PCMK_XA_ID " found", id, parent_type, parent_id);
         return acls;
     }
 
@@ -343,10 +342,11 @@ unpack_acl_role_ref_or_perm(xmlNode *xml, void *user_data)
      * or PCMK_XE_ACL_GROUP element should contain only PCMK_XE_ROLE elements as
      * children.
      */
-    pcmk__config_warn("<%s> element %s is a child of <%s> %s. It should be a "
-                      "child of an <%s>, and the parent should reference that "
-                      "<%s>.", PCMK_XE_ACL_PERMISSION, id, parent_type,
-                      parent_id, PCMK_XE_ACL_ROLE, PCMK_XE_ACL_ROLE);
+    pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s is a child of "
+                      "<%s> %s. It should be a child of an "
+                      "<" PCMK_XE_ACL_ROLE ">, and the parent should reference "
+                      "that <" PCMK_XE_ACL_ROLE ">.", id, parent_type,
+                      parent_id);
 
     *acls = unpack_acl_permission(xml, *acls);
     return pcmk_rc_ok;
@@ -367,8 +367,8 @@ unpack_acl_target(xmlNode *xml, xml_doc_private_t *docpriv)
 
     if (id == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element with no " PCMK_XA_NAME " or "
-                         PCMK_XA_ID " attribute", PCMK_XE_ACL_TARGET);
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_TARGET "> element with no "
+                         PCMK_XA_NAME " or " PCMK_XA_ID " attribute");
 
         // There is no user ID for the current ACL user to match
         return;
@@ -398,8 +398,8 @@ unpack_acl_group(xmlNode *xml, xml_doc_private_t *docpriv)
 
     if (id == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element with no " PCMK_XA_NAME " or "
-                         PCMK_XA_ID " attribute", PCMK_XE_ACL_GROUP);
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_GROUP "> element with no "
+                         PCMK_XA_NAME " or " PCMK_XA_ID " attribute");
 
         // There is no group ID for the current ACL user to match
         return;
