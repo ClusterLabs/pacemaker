@@ -115,6 +115,10 @@ G_GNUC_INTERNAL
 const char *pcmk__xml_element_type_text(xmlElementType type);
 
 G_GNUC_INTERNAL
+void pcmk__xe_foreach_attr(xmlNode *xml, void (*fn)(xmlAttr *, void *),
+                           void *user_data);
+
+G_GNUC_INTERNAL
 bool pcmk__xml_reset_node_flags(xmlNode *xml, void *user_data);
 
 G_GNUC_INTERNAL
@@ -140,10 +144,6 @@ bool pcmk__xc_matches(const xmlNode *comment1, const xmlNode *comment2);
 
 G_GNUC_INTERNAL
 void pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update);
-
-G_GNUC_INTERNAL
-void pcmk__xe_foreach_attr(xmlNode *xml, void (*fn)(xmlAttr *, void *),
-                           void *user_data);
 
 G_GNUC_INTERNAL
 void pcmk__free_acls(GList *acls);

@@ -303,6 +303,21 @@ new_node_private_data(xmlNode *xml)
 
 /*!
  * \internal
+ * \brief Allocate and initialize private data for an XML attribute
+ *
+ * \param[in,out] attr       XML attribute
+ * \param[in]     user_data  Ignored
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static void
+new_attr_private_data(xmlAttr *attr, void *user_data)
+{
+    new_node_private_data((xmlNode *) attr);
+}
+
+/*!
+ * \internal
  * \brief Allocate and initialize private data for an XML element
  *
  * \param[in,out] xml  XML element
@@ -311,12 +326,7 @@ static void
 new_element_private_data(xmlNode *xml)
 {
     new_node_private_data(xml);
-
-    for (xmlAttr *iter = pcmk__xe_first_attr(xml); iter != NULL;
-         iter = iter->next) {
-
-        new_node_private_data((xmlNode *) iter);
-    }
+    pcmk__xe_foreach_attr(xml, new_attr_private_data, NULL);
 }
 
 /*!
