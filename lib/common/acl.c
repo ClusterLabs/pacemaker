@@ -581,28 +581,6 @@ pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
     pcmk__xe_foreach_child(acls, NULL, unpack_acl_target_or_group, target);
 }
 
-/*
-    <acls>
-      <acl_target id="l33t-haxor"><role id="auto-l33t-haxor"/></acl_target>
-      <acl_role id="auto-l33t-haxor">
-        <acl_permission id="crook-nothing" kind="deny" xpath="/cib"/>
-      </acl_role>
-      <acl_target id="niceguy">
-        <role id="observer"/>
-      </acl_target>
-      <acl_role id="observer">
-        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
-      </acl_role>
-      <acl_target id="badidea"><role id="auto-badidea"/></acl_target>
-      <acl_role id="auto-badidea">
-        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
-        <acl_permission id="badidea-resources-2" kind="deny" reference="dummy-meta_attributes"/>
-      </acl_role>
-    </acls>
-*/
-
 static const char *
 acl_to_text(enum pcmk__xml_flags flags)
 {
