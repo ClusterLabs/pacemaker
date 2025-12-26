@@ -1833,7 +1833,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
         mark_xml_tree_dirty_created(new_child);
 
         // Check whether creation was allowed (may free new_child)
-        pcmk__apply_creation_acl(new_child, true);
+        pcmk__check_creation_acls(new_child);
     }
 }
 
