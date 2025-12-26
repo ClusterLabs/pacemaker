@@ -266,7 +266,8 @@ match_before(const char *key, size_t position, const char **matches)
             const size_t possible = position - match_len - 1;
 
             if ((key[possible] == '_')
-                && (strncmp(key + possible + 1, matches[i], match_len) == 0)) {
+                && g_str_has_prefix(key + possible + 1, matches[i])) {
+
                 return possible;
             }
         }
