@@ -598,7 +598,7 @@ acl_to_text(enum pcmk__xml_flags flags)
 }
 
 static void
-apply_acl(xmlNode *match, void *user_data)
+apply_acl_to_match(xmlNode *match, void *user_data)
 {
     const xml_acl_t *acl = user_data;
     xml_node_private_t *nodepriv = NULL;
@@ -648,6 +648,15 @@ apply_acl(xmlNode *match, void *user_data)
     g_string_free(path, TRUE);
 }
 
+static void
+apply_acl_to_doc(gpointer data, gpointer user_data)
+{
+    xml_acl_t *acl = data;
+    xmlDoc *doc = user_data;
+
+    pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl_to_match, acl);
+}
+
 void
 pcmk__apply_acls(xmlDoc *doc)
 {
@@ -660,11 +669,7 @@ pcmk__apply_acls(xmlDoc *doc)
         return;
     }
 
-    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
-        const xml_acl_t *acl = iter->data;
-
-        pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl, (void *) acl);
-    }
+    g_list_foreach(docpriv->acls, apply_acl_to_doc, doc);
 }
 
 /*!
