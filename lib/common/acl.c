@@ -221,19 +221,19 @@ create_acl(const xmlNode *xml, enum pcmk__xml_flags mode)
  *
  * Append the new \c xml_acl_t object to a list.
  *
- * \param[in]     xml   Permission element to unpack
- * \param[in,out] acls  List of ACLs to append to (\c NULL to start a new list)
+ * \param[in]     xml        Permission element to unpack
+ * \param[in,out] user_data  List of ACLs to append to (<tt>GList **</tt>)
  *
- * \return On success, \p acls with the new item appended, or a new list
- *         containing only the new item if \p acls is \c NULL. On failure,
- *         \p acls (unmodified).
+ * \return \c pcmk_rc_ok (to keep iterating)
  *
- * \note The caller is responsible for freeing the return value using
+ * \note The caller is responsible for freeing \p *user_data using
  *       \c pcmk__free_acls().
+ * \note This is used as a callback for \c pcmk__xe_foreach_child().
  */
-static GList *
-unpack_acl_permission(const xmlNode *xml, GList *acls)
+static int
+unpack_acl_permission(xmlNode *xml, void *user_data)
 {
+    GList **acls = user_data;
     const char *id = pcmk__xe_id(xml);
     const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
     const char *parent_type = (const char *) xml->parent->name;
@@ -257,7 +257,7 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
         pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
                          "(in <%s> %s) with no " PCMK_XA_KIND " attribute", id,
                          parent_type, parent_id);
-        return acls;
+        return pcmk_rc_ok;
     }
 
     kind = parse_acl_mode(kind_s);
@@ -266,7 +266,7 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
         pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
                          "(in <%s> %s) with unknown ACL kind '%s'", id,
                          parent_type, parent_id, kind_s);
-        return acls;
+        return pcmk_rc_ok;
     }
 
     if ((pcmk__xe_get(xml, PCMK_XA_OBJECT_TYPE) == NULL)
@@ -279,16 +279,17 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
                          "of the following attributes is required: "
                          PCMK_XA_OBJECT_TYPE ", " PCMK_XA_REFERENCE ", "
                          PCMK_XA_XPATH ".", id, parent_type, parent_id);
-        return acls;
+        return pcmk_rc_ok;
     }
 
     acl = create_acl(xml, kind);
+    *acls = g_list_append(*acls, acl);
 
     pcmk__trace("Unpacked <" PCMK_XE_ACL_PERMISSION "> element %s "
                 "(in <%s> %s) with " PCMK_XA_KIND "='%s' as XPath '%s'", id,
                 parent_type, parent_id, kind_s, acl->xpath);
 
-    return g_list_append(acls, acl);
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -399,13 +400,8 @@ unpack_acl_role_ref(xmlNode *xml, GList *acls)
     pcmk__trace("Unpacking role '%s' referenced in <%s> element %s", id,
                 parent_type, parent_id);
 
-    for (const xmlNode *perm = pcmk__xe_first_child(role,
-                                                    PCMK_XE_ACL_PERMISSION,
-                                                    NULL, NULL);
-         perm != NULL; perm = pcmk__xe_next(perm, PCMK_XE_ACL_PERMISSION)) {
-
-        acls = unpack_acl_permission(perm, acls);
-    }
+    pcmk__xe_foreach_child(role, PCMK_XE_ACL_PERMISSION, unpack_acl_permission,
+                           &acls);
     return acls;
 }
 
@@ -452,7 +448,7 @@ unpack_acl_role_ref_or_perm(xmlNode *xml, void *user_data)
                       "that <" PCMK_XE_ACL_ROLE ">.", id, parent_type,
                       parent_id);
 
-    *acls = unpack_acl_permission(xml, *acls);
+    unpack_acl_permission(xml, acls);
     return pcmk_rc_ok;
 }
 
