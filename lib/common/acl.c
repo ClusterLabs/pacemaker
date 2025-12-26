@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
+#include <stdint.h>                     // uint32_t
 #include <stdio.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -737,24 +738,55 @@ pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user)
     pcmk__apply_acls(target);
 }
 
-static inline bool
-test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
+/*!
+ * \internal
+ * \brief Check whether a flag group allows the requested ACL access
+ *
+ * At most one ACL mode flag should be set in the flag group, but this function
+ * defines an order of precedence if multiple flags are set.
+ *
+ * \param[in] flags  Group of <tt>enum pcmk__xml_flags</tt>
+ * \param[in] mode   Requested access type (one of \c pcmk__xf_acl_read,
+ *                   \c pcmk__xf_acl_write, or \c pcmk__xf_acl_create)
+ *
+ * \return \c true if \p flags allows the access type in \p mode, or \c false
+ *         otherwise
+ *
+ * \note \c pcmk__xf_acl_deny is an allowed value for \p mode, but it would make
+ *       no sense. This function always returns \c false if \c pcmk__xf_acl_deny
+ *       is set in \p flags.
+ */
+static bool
+is_mode_allowed(uint32_t flags, enum pcmk__xml_flags mode)
 {
-    if (pcmk__is_set(allowed, pcmk__xf_acl_deny)) {
+    if (pcmk__is_set(flags, pcmk__xf_acl_deny)) {
+        // All access is denied
         return false;
+    }
 
-    } else if (pcmk__all_flags_set(allowed, requested)) {
-        return true;
-
-    } else if (pcmk__is_set(requested, pcmk__xf_acl_read)
-               && pcmk__is_set(allowed, pcmk__xf_acl_write)) {
-        return true;
-
-    } else if (pcmk__is_set(requested, pcmk__xf_acl_create)
-               && pcmk__any_flags_set(allowed,
-                                      pcmk__xf_acl_write|pcmk__xf_created)) {
+    if (pcmk__is_set(flags, mode)) {
+        // The access we requested is explicitly allowed
         return true;
     }
+
+    if ((mode == pcmk__xf_acl_read)
+        && pcmk__is_set(flags, pcmk__xf_acl_write)) {
+
+        // Write access provides read access
+        return true;
+    }
+
+    if ((mode == pcmk__xf_acl_create)
+        && pcmk__any_flags_set(flags, pcmk__xf_acl_write|pcmk__xf_created)) {
+
+        /* Write access provides create access.
+         *
+         * @TODO Why does the \c pcmk__xf_created flag provide create access?
+         * This was introduced by commit e2ed85fe.
+         */
+        return true;
+    }
+
     return false;
 }
 
@@ -794,7 +826,7 @@ purge_xml_attributes(xmlNode *xml)
     bool readable_children = false;
     xml_node_private_t *nodepriv = xml->_private;
 
-    if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
+    if (is_mode_allowed(nodepriv->flags, pcmk__xf_acl_read)) {
         pcmk__trace("%s[@" PCMK_XA_ID "=%s] is readable", xml->name,
                     pcmk__xe_id(xml));
         return true;
@@ -1122,7 +1154,7 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
 
         const xml_node_private_t *nodepriv = parent->_private;
 
-        if (test_acl_mode(nodepriv->flags, mode)) {
+        if (is_mode_allowed(nodepriv->flags, mode)) {
             return true;
         }
 
