@@ -954,8 +954,6 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 static bool
 implicitly_allowed(xmlNode *xml)
 {
-    GString *path = NULL;
-
     for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
          attr = attr->next) {
 
@@ -964,14 +962,16 @@ implicitly_allowed(xmlNode *xml)
         }
     }
 
-    path = pcmk__element_xpath(xml);
-
-    if (strstr(path->str, "/" PCMK_XE_ACLS "/") != NULL) {
-        g_string_free(path, TRUE);
-        return false;
+    /* Creation is not implicitly allowed for a descendant of PCMK_XE_ACLS, but
+     * it may be for PCMK_XE_ACLS itself. Start checking at xml->parent and walk
+     * up the tree.
+     */
+    for (xml = xml->parent; xml != NULL; xml = xml->parent) {
+        if (pcmk__xe_is(xml, PCMK_XE_ACLS)) {
+            return false;
+        }
     }
 
-    g_string_free(path, TRUE);
     return true;
 }
 
