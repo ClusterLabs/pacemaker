@@ -308,6 +308,52 @@ unpack_acl_role_ref(xmlNode *xml, GList *acls)
 
 /*!
  * \internal
+ * \brief Unpack a child of an ACL target or group to a list of \c xml_acl_t
+ *
+ * \param[in]     xml        Child of a \c PCMK_XE_ACL_TARGET or
+ *                           \c PCMK_XE_ACL_GROUP
+ * \param[in,out] user_data  List of ACLs to append to (<tt>GList **</tt>)
+ *
+ * \return \c pcmk_rc_ok (to keep iterating)
+ *
+ * \note The caller is responsible for freeing \p *user_data using
+ *       \c pcmk__free_acls().
+ * \note This is used as a callback for \c pcmk__xe_foreach_child().
+ */
+static int
+unpack_acl_target_child(xmlNode *xml, void *user_data)
+{
+    GList **acls = user_data;
+    const char *id = pcmk__s(pcmk__xe_id(xml), "without ID");
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
+    if (pcmk__xe_is(xml, PCMK_XE_ROLE)) {
+        *acls = unpack_acl_role_ref(xml, *acls);
+        return pcmk_rc_ok;
+    }
+
+    if (!pcmk__xe_is(xml, PCMK_XE_ACL_PERMISSION)) {
+        return pcmk_rc_ok;
+    }
+
+    /* Not possible with schema validation enabled.
+     *
+     * @COMPAT Drop this support at a compatibility break. A PCMK_XE_ACL_TARGET
+     * or PCMK_XE_ACL_GROUP element should contain only PCMK_XE_ROLE elements as
+     * children.
+     */
+    pcmk__config_warn("<%s> element %s is a child of <%s> %s. It should be a "
+                      "child of an <%s>, and the parent should reference that "
+                      "<%s>.", PCMK_XE_ACL_PERMISSION, id, parent_type,
+                      parent_id, PCMK_XE_ACL_ROLE, PCMK_XE_ACL_ROLE);
+
+    *acls = unpack_acl_permission(xml, *acls);
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Unpack an ACL target (user) or group to a list of \c xml_acl_t
  *
  * \param[in]     xml   Element to unpack (\c PCMK_XE_ACL_TARGET
@@ -322,34 +368,9 @@ unpack_acl_role_ref(xmlNode *xml, GList *acls)
  *       \c pcmk__free_acls().
  */
 static GList *
-unpack_acl_target(const xmlNode *xml, GList *acls)
+unpack_acl_target(xmlNode *xml, GList *acls)
 {
-    for (xmlNode *child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
-         child != NULL; child = pcmk__xe_next(child, NULL)) {
-
-        if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
-            /* Not possible with schema validation enabled.
-             *
-             * @COMPAT Drop this support at a compatibility break. A
-             * PCMK_XE_ACL_TARGET or PCMK_XE_ACL_GROUP element should contain
-             * only role elements as children.
-             */
-            const char *id = pcmk__s(pcmk__xe_id(child), "without ID");
-            const char *parent_id = pcmk__s(pcmk__xe_id(xml), "without ID");
-            const char *parent_type = (const char *) xml->name;
-
-            pcmk__config_warn("<%s> element %s is a child of <%s> %s. It "
-                              "should be a child of a role, and the parent "
-                              "should reference that role.",
-                              PCMK_XE_ACL_PERMISSION, id, parent_type,
-                              parent_id);
-            acls = unpack_acl_permission(child, acls);
-
-        } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
-            acls = unpack_acl_role_ref(child, acls);
-        }
-    }
-
+    pcmk__xe_foreach_child(xml, NULL, unpack_acl_target_child, &acls);
     return acls;
 }
 
