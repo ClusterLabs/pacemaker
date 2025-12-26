@@ -1108,7 +1108,7 @@ pcmk_acl_required(const char *user)
         pcmk__trace("ACLs not required because no user set");
         return false;
 
-    } else if (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root")) {
+    } else if (pcmk__is_privileged(user)) {
         pcmk__trace("ACLs not required for privileged user %s", user);
         return false;
     }
