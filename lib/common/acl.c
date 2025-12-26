@@ -949,23 +949,24 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
  *
  * \param[in] xml  XML element to check
  *
- * \return true if XML element is implicitly allowed, false otherwise
+ * \return \c true if XML element is implicitly allowed, or \c false otherwise
  */
 static bool
-implicitly_allowed(const xmlNode *xml)
+implicitly_allowed(xmlNode *xml)
 {
     GString *path = NULL;
 
-    for (xmlAttr *prop = xml->properties; prop != NULL; prop = prop->next) {
-        if (strcmp((const char *) prop->name, PCMK_XA_ID) != 0) {
+    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
+         attr = attr->next) {
+
+        if (attr_is_not_id(attr, NULL)) {
             return false;
         }
     }
 
     path = pcmk__element_xpath(xml);
-    pcmk__assert(path != NULL);
 
-    if (strstr((const char *) path->str, "/" PCMK_XE_ACLS "/") != NULL) {
+    if (strstr(path->str, "/" PCMK_XE_ACLS "/") != NULL) {
         g_string_free(path, TRUE);
         return false;
     }
