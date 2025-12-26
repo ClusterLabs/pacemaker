@@ -36,7 +36,7 @@ pcmk__is_privileged(const char *user)
     return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
 
-void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
+void pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user);
 
 bool pcmk__check_acl(xmlNode *xml, const char *attr_name,
                      enum pcmk__xml_flags mode);
