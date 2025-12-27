@@ -33,13 +33,16 @@ extern "C" {
 
 const char *pcmk__xe_add_last_written(xmlNode *xe);
 
+void pcmk__xe_foreach_attr(xmlNode *xml, void (*fn)(xmlAttr *, void *),
+                           void *user_data);
+
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
 void pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
-                                    bool (*match)(xmlAttrPtr, void *),
+                                    bool (*match)(xmlAttr *, void *),
                                     void *user_data);
 int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
 int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);

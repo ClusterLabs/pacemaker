@@ -2942,6 +2942,7 @@ class AclsRegressionTest(RegressionTest):
         return [
             ShadowTestGroup(basic_tests + [
                             TestGroup(loop_tests,
+                                      #env={"PCMK_trace_functions": "pcmk__check_acl,apply_creation_acl_node"})]),
                                       env={"PCMK_trace_functions": "pcmk__check_acl,pcmk__apply_creation_acl"})]),
         ]
 

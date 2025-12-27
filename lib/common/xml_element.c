@@ -28,6 +28,28 @@
 
 /*!
  * \internal
+ * \brief Call a function for each of an XML element's attributes
+ *
+ * \param[in,out] xml        XML element
+ * \param[in]     fn         Function to call for each attribute
+ * \param[in,out] user_data  User data
+ */
+void
+pcmk__xe_foreach_attr(xmlNode *xml, void (*fn)(xmlAttr *, void *),
+                      void *user_data)
+{
+    xmlAttr *attr = pcmk__xe_first_attr(xml);
+
+    while (attr != NULL) {
+        xmlAttr *next = attr->next;
+
+        fn(attr, user_data);
+        attr = next;
+    }
+}
+
+/*!
+ * \internal
  * \brief Find first XML child element matching given criteria
  *
  * \param[in] parent     XML element to search (can be \c NULL)
@@ -236,6 +258,45 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
 
 /*!
  * \internal
+ * \brief User data for \c copy_attr()
+ */
+struct copy_attr_data {
+    xmlNode *target;    //!< Element to copy the attribute to
+    uint32_t flags;     //!< Group of <tt>enum pcmk__xa_flags</tt>
+};
+
+/*!
+ * \internal
+ * \brief Copy an attribute to a target element
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  User data (<tt>struct copy_attr_data *</tt>)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static void
+copy_attr(xmlAttr *attr, void *user_data)
+{
+    struct copy_attr_data *data = user_data;
+    const char *name = (const char *) attr->name;
+    const char *value = pcmk__xml_attr_value(attr);
+
+    if (pcmk__is_set(data->flags, pcmk__xaf_no_overwrite)
+        && (pcmk__xe_get(data->target, name) != NULL)) {
+
+        return;
+    }
+
+    if (pcmk__is_set(data->flags, pcmk__xaf_score_update)) {
+        pcmk__xe_set_score(data->target, name, value);
+
+    } else {
+        pcmk__xe_set(data->target, name, value);
+    }
+}
+
+/*!
+ * \internal
  * \brief Copy XML attributes from a source element to a target element
  *
  * This is similar to \c xmlCopyPropList() except that attributes are marked
@@ -250,26 +311,18 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
 int
 pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 {
+    struct copy_attr_data data = {
+        .target = target,
+        .flags = flags,
+    };
+
     CRM_CHECK((src != NULL) && (target != NULL), return EINVAL);
 
-    for (xmlAttr *attr = pcmk__xe_first_attr(src); attr != NULL;
-         attr = attr->next) {
-
-        const char *name = (const char *) attr->name;
-        const char *value = pcmk__xml_attr_value(attr);
-
-        if (pcmk__is_set(flags, pcmk__xaf_no_overwrite)
-            && (pcmk__xe_get(target, name) != NULL)) {
-            continue;
-        }
-
-        if (pcmk__is_set(flags, pcmk__xaf_score_update)) {
-            pcmk__xe_set_score(target, name, value);
-        } else {
-            pcmk__xe_set(target, name, value);
-        }
-    }
-
+    /* copy_attr() does not modify src or any of its attributes.
+     *
+     * @TODO Make a pcmk__xe_foreach_const_attr()?
+     */
+    pcmk__xe_foreach_attr((xmlNode *) src, copy_attr, &data);
     return pcmk_rc_ok;
 }
 
@@ -298,6 +351,45 @@ compare_xml_attr(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
+ * \brief Prepend an attribute to a list
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  List of attributes (<tt>GSList **</tt>)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static void
+prepend_attr(xmlAttr *attr, void *user_data)
+{
+    GSList **attr_list = user_data;
+
+    *attr_list = g_slist_prepend(*attr_list, attr);
+}
+
+/*!
+ * \internal
+ * \brief Unlink an attribute and then re-add it to its parent element
+ *
+ * \param[in,out] data       XML attribute (<tt>xmlNode *</tt>)
+ * \param[in,out] user_data  Parent element of \p data (<tt>xmlNode *</tt>)
+ *
+ * \note This is a \c GFunc compatible with \c g_slist_foreach().
+ */
+static void
+unlink_and_add_attr(gpointer data, gpointer user_data)
+{
+    /* attr was added to the list as an xmlAttr *, but we need to cast it to
+     * xmlNode * for xmlUnlinkNode() and xmlAddChild()
+     */
+    xmlNode *attr = data;
+    xmlNode *xml = user_data;
+
+    xmlUnlinkNode(attr);
+    xmlAddChild(xml, attr);
+}
+
+/*!
+ * \internal
  * \brief Sort an XML element's attributes by name
  *
  * This does not consider ACLs and does not mark the attributes as deleted or
@@ -312,18 +404,12 @@ pcmk__xe_sort_attrs(xmlNode *xml)
 {
     GSList *attr_list = NULL;
 
-    for (xmlAttr *iter = pcmk__xe_first_attr(xml); iter != NULL;
-         iter = iter->next) {
-        attr_list = g_slist_prepend(attr_list, iter);
-    }
+    pcmk__xe_foreach_attr(xml, prepend_attr, &attr_list);
+
     attr_list = g_slist_sort(attr_list, compare_xml_attr);
 
-    for (GSList *iter = attr_list; iter != NULL; iter = iter->next) {
-        xmlNode *attr = iter->data;
+    g_slist_foreach(attr_list, unlink_and_add_attr, xml);
 
-        xmlUnlinkNode(attr);
-        xmlAddChild(xml, attr);
-    }
     g_slist_free(attr_list);
 }
 
@@ -367,6 +453,56 @@ pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data)
 
 /*!
  * \internal
+ * \brief User data for \c remove_xa_if_matching()
+ */
+struct remove_xa_if_matching_data {
+    //! \c force argument for \c pcmk__xa_remove()
+    bool force;
+
+    //! Match function to call for each attribute
+    bool (*match)(xmlAttr *, void *);
+
+    //! User data argument for match function
+    void *match_data;
+
+    //! Whether any attribute removal has failed so far
+    bool has_failed;
+};
+
+/*!
+ * \internal
+ * \brief Remove an attribute if a match function returns true for it
+ *
+ * Do nothing if any previous removal has failed.
+ *
+ * \param[in,out] attr       XML attribute
+ * \param[in,out] user_data  User data
+ *                           (<tt>struct remove_xa_if_matching_data *</tt>)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static void
+remove_xa_if_matching(xmlAttr *attr, void *user_data)
+{
+    struct remove_xa_if_matching_data *data = user_data;
+
+    if (data->has_failed) {
+        // @TODO Why do we stop removing attributes if one removal fails?
+        return;
+    }
+
+    if ((data->match != NULL) && !data->match(attr, data->match_data)) {
+        // attr is not a match
+        return;
+    }
+
+    if (pcmk__xa_remove(attr, data->force) != pcmk_rc_ok) {
+        data->has_failed = true;
+    }
+}
+
+/*!
+ * \internal
  * \brief Remove an XML element's attributes that match some criteria
  *
  * \param[in,out] element    XML element to modify
@@ -378,19 +514,16 @@ pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data)
  */
 void
 pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
-                               bool (*match)(xmlAttrPtr, void *),
+                               bool (*match)(xmlAttr *, void *),
                                void *user_data)
 {
-    xmlAttrPtr next = NULL;
+    struct remove_xa_if_matching_data data = {
+        .force = force,
+        .match = match,
+        .match_data = user_data,
+    };
 
-    for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
-        next = a->next; // Grab now because attribute might get removed
-        if ((match == NULL) || match(a, user_data)) {
-            if (pcmk__xa_remove(a, force) != pcmk_rc_ok) {
-                return;
-            }
-        }
-    }
+    pcmk__xe_foreach_attr(element, remove_xa_if_matching, &data);
 }
 
 /*!
@@ -649,6 +782,48 @@ done:
 
 /*!
  * \internal
+ * \brief User data for \c match_attr_value()
+ */
+struct match_attr_value_data {
+    //! XML element to match against
+    xmlNode *xml;
+
+    //! Whether an attribute value mismatch has been found
+    bool has_mismatch;
+};
+
+/*!
+ * \internal
+ * \brief Check whether an element's attribute value matches a reference value
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  User data (<tt>struct match_attr_value_data *</tt>)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr()
+ */
+static void
+match_attr_value(xmlAttr *attr, void *user_data)
+{
+    struct match_attr_value_data *data = user_data;
+    const char *ref_val = NULL;
+    const char *xml_val = NULL;
+
+    if (data->has_mismatch) {
+        // No need to check further attributes
+        return;
+    }
+
+    ref_val = pcmk__xml_attr_value(attr);
+    xml_val = pcmk__xe_get(data->xml, (const char *) attr->name);
+
+    if (!pcmk__str_eq(ref_val, xml_val, pcmk__str_casei)) {
+        // attr's value does not match the corresponding attribute value in xml
+        data->has_mismatch = true;
+    }
+}
+
+/*!
+ * \internal
  * \brief Delete an XML subtree if it matches a search element
  *
  * A match is defined as follows:
@@ -669,22 +844,19 @@ static bool
 delete_xe_if_matching(xmlNode *xml, void *user_data)
 {
     xmlNode *search = user_data;
+    struct match_attr_value_data data = {
+        .xml = xml,
+    };
 
     if (!pcmk__xe_is(search, (const char *) xml->name)) {
         // No match: either not both elements, or different element types
         return true;
     }
 
-    for (const xmlAttr *attr = pcmk__xe_first_attr(search); attr != NULL;
-         attr = attr->next) {
-
-        const char *search_val = pcmk__xml_attr_value(attr);
-        const char *xml_val = pcmk__xe_get(xml, (const char *) attr->name);
-
-        if (!pcmk__str_eq(search_val, xml_val, pcmk__str_casei)) {
-            // No match: an attr in xml doesn't match the attr in search
-            return true;
-        }
+    pcmk__xe_foreach_attr(search, match_attr_value, &data);
+    if (data.has_mismatch) {
+        // No match: mismatched attribute values
+        return true;
     }
 
     pcmk__log_xml_trace(xml, "delete-match");
@@ -758,7 +930,7 @@ replace_node(xmlNode *old, xmlNode *new)
 
     if (pcmk__xml_doc_all_flags_set(new->doc, pcmk__xf_tracking)) {
         // Replaced sections may have included relevant ACLs
-        pcmk__apply_acl(new);
+        pcmk__apply_acls(new->doc);
     }
     pcmk__xml_mark_changes(old, new);
     pcmk__xml_free_node(old);
