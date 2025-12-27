@@ -205,6 +205,27 @@ pcmk__xml_parse(const char *input)
 
 /*!
  * \internal
+ * \brief Append an XML attribute to a buffer if it's not filterable
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Buffer (<tt>GString *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+dump_xa_if_not_filterable(const xmlAttr *attr, void *user_data)
+{
+    if (!pcmk__xa_filterable((const char *) attr->name)) {
+        pcmk__dump_xml_attr(attr, user_data);
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Append a string representation of an XML element to a buffer
  *
  * \param[in]     data     XML whose representation to append
@@ -220,18 +241,17 @@ dump_xml_element(const xmlNode *data, uint32_t options, GString *buffer,
     const bool filtered = pcmk__is_set(options, pcmk__xml_fmt_filtered);
     const int spaces = pretty? (2 * depth) : 0;
 
-    for (int lpc = 0; lpc < spaces; lpc++) {
+    for (int i = 0; i < spaces; i++) {
         g_string_append_c(buffer, ' ');
     }
 
     pcmk__g_strcat(buffer, "<", data->name, NULL);
 
-    for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
-         attr = attr->next) {
+    if (!filtered) {
+        pcmk__xe_foreach_const_attr(data, pcmk__dump_xml_attr, buffer);
 
-        if (!filtered || !pcmk__xa_filterable((const char *) (attr->name))) {
-            pcmk__dump_xml_attr(attr, buffer);
-        }
+    } else {
+        pcmk__xe_foreach_const_attr(data, dump_xa_if_not_filterable, buffer);
     }
 
     if (data->children == NULL) {
