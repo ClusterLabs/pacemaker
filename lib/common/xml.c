@@ -1287,63 +1287,71 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
 
 /*!
  * \internal
- * \brief Calculate differences in all previously existing XML attributes
+ * \brief Mark an XML attribute as deleted, changed, or moved if appropriate
  *
- * \param[in,out] old_xml  Original XML to compare
- * \param[in,out] new_xml  New XML to compare
+ * Given an attribute (from an old XML element) and a new XML element, check
+ * whether the attribute has been deleted, changed, or moved between the old and
+ * new elements. If so, mark the new XML element to indicate what changed.
+ *
+ * \param[in,out] old_attr   XML attribute from old element
+ * \param[in,out] user_data  New XML element
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
  */
-static void
-xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
+static bool
+mark_attr_diff(xmlAttr *old_attr, void *user_data)
 {
-    for (xmlAttr *old_attr = pcmk__xe_first_attr(old_xml); old_attr != NULL;
-         old_attr = old_attr->next) {
+    xmlNode *old_xml = old_attr->parent;
+    xmlNode *new_xml = user_data;
 
-        const char *name = (const char *) old_attr->name;
+    const char *name = (const char *) old_attr->name;
 
-        xmlAttr *new_attr = xmlHasProp(new_xml, old_attr->name);
-        xml_node_private_t *new_priv = NULL;
+    xmlAttr *new_attr = xmlHasProp(new_xml, old_attr->name);
+    xml_node_private_t *new_priv = NULL;
 
-        const char *old_value = pcmk__xml_attr_value(old_attr);
-        const char *new_value = NULL;
+    const char *old_value = pcmk__xml_attr_value(old_attr);
+    const char *new_value = NULL;
 
-        int old_pos = 0;
-        int new_pos = 0;
+    int old_pos = 0;
+    int new_pos = 0;
 
-        if (new_attr == NULL) {
-            mark_attr_deleted(new_xml, (const char *) old_xml->name, name,
-                              old_value);
-            continue;
-        }
-
-        new_priv = new_attr->_private;
-        new_value = pcmk__xe_get(new_xml, name);
-
-        // This attribute isn't new
-        pcmk__clear_xml_flags(new_priv, pcmk__xf_created);
-
-        if (!pcmk__str_eq(old_value, new_value, pcmk__str_none)) {
-            mark_attr_changed(new_xml, (const char *) old_xml->name, name,
-                              old_value);
-            continue;
-        }
-
-        old_pos = pcmk__xml_position((xmlNode *) old_attr, pcmk__xf_skip);
-        new_pos = pcmk__xml_position((xmlNode *) new_attr, pcmk__xf_skip);
-
-        /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes() before
-         * this function is called, so only the pcmk__xf_ignore_attr_pos check
-         * is truly relevant.
-         */
-        if ((old_pos == new_pos)
-            || pcmk__xml_doc_all_flags_set(new_xml->doc,
-                                           pcmk__xf_ignore_attr_pos
-                                           |pcmk__xf_tracking)) {
-            continue;
-        }
-
-        mark_attr_moved(new_xml, (const char *) old_xml->name, old_attr,
-                        new_attr, old_pos, new_pos);
+    if (new_attr == NULL) {
+        mark_attr_deleted(new_xml, (const char *) old_xml->name, name,
+                          old_value);
+        return true;
     }
+
+    new_priv = new_attr->_private;
+    new_value = pcmk__xe_get(new_xml, name);
+
+    // This attribute isn't new
+    pcmk__clear_xml_flags(new_priv, pcmk__xf_created);
+
+    if (!pcmk__str_eq(old_value, new_value, pcmk__str_none)) {
+        mark_attr_changed(new_xml, (const char *) old_xml->name, name,
+                          old_value);
+        return true;
+    }
+
+    old_pos = pcmk__xml_position((xmlNode *) old_attr, pcmk__xf_skip);
+    new_pos = pcmk__xml_position((xmlNode *) new_attr, pcmk__xf_skip);
+
+    /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes() before this
+     * function is called, so only the pcmk__xf_ignore_attr_pos check is truly
+     * relevant.
+     */
+    if ((old_pos == new_pos)
+        || pcmk__xml_doc_all_flags_set(new_xml->doc,
+                                       pcmk__xf_ignore_attr_pos
+                                       |pcmk__xf_tracking)) {
+        return true;
+    }
+
+    mark_attr_moved(new_xml, (const char *) old_xml->name, old_attr, new_attr,
+                    old_pos, new_pos);
+    return true;
 }
 
 /*!
@@ -1402,7 +1410,7 @@ xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
         pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
     }
 
-    xml_diff_old_attrs(old_xml, new_xml);
+    pcmk__xe_foreach_attr(old_xml, mark_attr_diff, new_xml);
     mark_created_attrs(new_xml);
 }
 
