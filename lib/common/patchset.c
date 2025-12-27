@@ -54,18 +54,25 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     // If this XML node is new, just report that
     if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
         GString *xpath = pcmk__element_xpath(xml->parent);
+        int position = 0;
 
-        if (xpath != NULL) {
-            int position = pcmk__xml_position(xml, pcmk__xf_deleted);
-
-            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
-            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
-            pcmk__xe_set_int(change, PCMK_XE_POSITION, position);
-            pcmk__xml_copy(change, xml);
-            g_string_free(xpath, TRUE);
+        if (xpath == NULL) {
+            /* This can happen only if xml->parent == NULL.
+             *
+             * @TODO Is that possible?
+             */
+            return;
         }
+
+        position = pcmk__xml_position(xml, pcmk__xf_deleted);
+
+        change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+
+        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
+        pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+        pcmk__xe_set_int(change, PCMK_XE_POSITION, position);
+        pcmk__xml_copy(change, xml);
+        g_string_free(xpath, TRUE);
 
         return;
     }
@@ -84,15 +91,13 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         if (change == NULL) {
             GString *xpath = pcmk__element_xpath(xml);
 
-            if (xpath != NULL) {
-                change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-                pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
-                pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
+            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
+            pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
 
-                change = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
-                g_string_free(xpath, TRUE);
-            }
+            change = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
+            g_string_free(xpath, TRUE);
         }
 
         attr = pcmk__xe_create(change, PCMK_XE_CHANGE_ATTR);
@@ -138,15 +143,13 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
                     pcmk__xml_position(xml, pcmk__xf_skip));
 
-        if (xpath != NULL) {
-            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+        change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
 
-            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
-            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
-            pcmk__xe_set_int(change, PCMK_XE_POSITION,
-                             pcmk__xml_position(xml, pcmk__xf_deleted));
-            g_string_free(xpath, TRUE);
-        }
+        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
+        pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+        pcmk__xe_set_int(change, PCMK_XE_POSITION,
+                         pcmk__xml_position(xml, pcmk__xf_deleted));
+        g_string_free(xpath, TRUE);
     }
 }
 
