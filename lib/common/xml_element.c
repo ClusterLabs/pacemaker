@@ -389,6 +389,53 @@ compare_xml_attr(gconstpointer a, gconstpointer b)
 
 /*!
  * \internal
+ * \brief Prepend an attribute to a list
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  List of attributes (<tt>GSList **</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note The argument is const because it isn't modified here and it gets added
+ *       as \c gpointer anyway. However, it will be used as non-const when we
+ *       process the list later.
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+prepend_attr(const xmlAttr *attr, void *user_data)
+{
+    GSList **attr_list = user_data;
+
+    *attr_list = g_slist_prepend(*attr_list, (gpointer) attr);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Unlink an attribute and then re-add it to its parent element
+ *
+ * This moves the attribute to the end of its parent's attribute list.
+ *
+ * \param[in,out] data       XML attribute (<tt>xmlNode *</tt>)
+ * \param[in,out] user_data  Parent element of \p data (<tt>xmlNode *</tt>)
+ *
+ * \note This is a \c GFunc compatible with \c g_slist_foreach().
+ */
+static void
+unlink_and_add_attr(gpointer data, gpointer user_data)
+{
+    /* attr was added to the list as an xmlAttr *, but we need to cast it to
+     * xmlNode * for xmlUnlinkNode() and xmlAddChild()
+     */
+    xmlNode *attr = data;
+    xmlNode *xml = user_data;
+
+    xmlUnlinkNode(attr);
+    xmlAddChild(xml, attr);
+}
+
+/*!
+ * \internal
  * \brief Sort an XML element's attributes by name
  *
  * This does not consider ACLs and does not mark the attributes as deleted or
@@ -403,18 +450,12 @@ pcmk__xe_sort_attrs(xmlNode *xml)
 {
     GSList *attr_list = NULL;
 
-    for (xmlAttr *iter = pcmk__xe_first_attr(xml); iter != NULL;
-         iter = iter->next) {
-        attr_list = g_slist_prepend(attr_list, iter);
-    }
+    pcmk__xe_foreach_const_attr(xml, prepend_attr, &attr_list);
+
     attr_list = g_slist_sort(attr_list, compare_xml_attr);
 
-    for (GSList *iter = attr_list; iter != NULL; iter = iter->next) {
-        xmlNode *attr = iter->data;
+    g_slist_foreach(attr_list, unlink_and_add_attr, xml);
 
-        xmlUnlinkNode(attr);
-        xmlAddChild(xml, attr);
-    }
     g_slist_free(attr_list);
 }
 
