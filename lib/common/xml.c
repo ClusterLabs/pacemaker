@@ -245,23 +245,6 @@ free_deleted_object(void *data)
     }
 }
 
-// Free and NULL user, ACLs, and deleted objects in an XML node's private data
-static void
-reset_xml_private_data(xml_doc_private_t *docpriv)
-{
-    if (docpriv != NULL) {
-        pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
-
-        g_clear_pointer(&docpriv->acl_user, free);
-        g_clear_pointer(&docpriv->acls, pcmk__free_acls);
-
-        if(docpriv->deleted_objs) {
-            g_list_free_full(docpriv->deleted_objs, free_deleted_object);
-            docpriv->deleted_objs = NULL;
-        }
-    }
-}
-
 /*!
  * \internal
  * \brief Allocate and initialize private data for an XML document
@@ -378,6 +361,33 @@ new_private_data(xmlNode *node, void *user_data)
 
 /*!
  * \internal
+ * \brief Free and zero all data fields of an XML document's private data
+ *
+ * This function does not clear the \c check field or free the private data
+ * object itself.
+ *
+ * \param[in,out] docpriv  XML document private data
+ */
+static void
+reset_doc_private_data(xml_doc_private_t *docpriv)
+{
+    if (docpriv == NULL) {
+        return;
+    }
+
+    pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
+
+    docpriv->flags = pcmk__xf_none;
+
+    g_clear_pointer(&docpriv->acl_user, free);
+    g_clear_pointer(&docpriv->acls, pcmk__free_acls);
+
+    g_list_free_full(docpriv->deleted_objs, free_deleted_object);
+    docpriv->deleted_objs = NULL;
+}
+
+/*!
+ * \internal
  * \brief Free private data for an XML node
  *
  * \param[in,out] node       XML node whose private data to free
@@ -397,7 +407,7 @@ free_private_data(xmlNode *node, void *user_data)
     }
 
     if (node->type == XML_DOCUMENT_NODE) {
-        reset_xml_private_data((xml_doc_private_t *) node->_private);
+        reset_doc_private_data((xml_doc_private_t *) node->_private);
 
     } else {
         xml_node_private_t *nodepriv = node->_private;
@@ -520,8 +530,7 @@ pcmk__xml_commit_changes(xmlDoc *doc)
         pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
                                NULL);
     }
-    reset_xml_private_data(docpriv);
-    docpriv->flags = pcmk__xf_none;
+    reset_doc_private_data(docpriv);
 }
 
 /*!
