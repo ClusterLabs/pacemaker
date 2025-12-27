@@ -33,6 +33,39 @@ static const char *const vfields[] = {
 
 /*!
  * \internal
+ * \brief Add a \c PCMK_VALUE_CREATE change to a patchset
+ *
+ * Given \p xml with the \c pcmk__xf_created flag set, create a
+ * \c PCMK_XE_CHANGE child of \p patchset, with \c PCMK_XA_OPERATION set to
+ * \c PCMK_VALUE_CREATE and with a child copy of the created node.
+ *
+ * \param[in]     xml       Newly created XML to add to \p patchset
+ * \param[in,out] patchset  XML patchset
+ */
+static void
+add_create_change(xmlNode *xml, xmlNode *patchset)
+{
+    xmlNode *change = NULL;
+    GString *xpath = pcmk__element_xpath(xml->parent);
+
+    if (xpath == NULL) {
+        // @TODO This can happen only if xml->parent == NULL. Is that possible?
+        return;
+    }
+
+    change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
+    pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+    pcmk__xe_set_int(change, PCMK_XE_POSITION,
+                     pcmk__xml_position(xml, pcmk__xf_deleted));
+    pcmk__xml_copy(change, xml);
+
+    g_string_free(xpath, TRUE);
+}
+
+/*!
+ * \internal
  * \brief Append an attribute to a list if it has been deleted or modified
  *
  * \param[in]     attr       XML attribute
@@ -181,27 +214,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 
     // If this XML node is new, just report that
     if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-        GString *xpath = pcmk__element_xpath(xml->parent);
-        int position = 0;
-
-        if (xpath == NULL) {
-            /* This can happen only if xml->parent == NULL.
-             *
-             * @TODO Is that possible?
-             */
-            return;
-        }
-
-        position = pcmk__xml_position(xml, pcmk__xf_deleted);
-
-        change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
-        pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
-        pcmk__xe_set_int(change, PCMK_XE_POSITION, position);
-        pcmk__xml_copy(change, xml);
-        g_string_free(xpath, TRUE);
-
+        add_create_change(xml, patchset);
         return;
     }
 
