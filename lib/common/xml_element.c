@@ -499,6 +499,50 @@ pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data)
 
 /*!
  * \internal
+ * \brief User data for \c remove_xa_if_matching()
+ */
+struct remove_xa_if_matching_data {
+    //! \c force argument for \c pcmk__xa_remove()
+    bool force;
+
+    //! Match function to call for each attribute
+    bool (*match)(xmlAttr *, void *);
+
+    //! User data argument for match function
+    void *match_data;
+};
+
+/*!
+ * \internal
+ * \brief Remove an attribute if a match function returns true for it
+ *
+ * Do nothing if any previous removal has failed.
+ *
+ * \param[in,out] attr       XML attribute
+ * \param[in,out] user_data  User data
+ *                           (<tt>struct remove_xa_if_matching_data *</tt>)
+ *
+ * \return \c true (to continue iterating) if \p attr was removed successfully
+ *         or if we did not attempt to remove it; or \c false if removal failed
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static bool
+remove_xa_if_matching(xmlAttr *attr, void *user_data)
+{
+    struct remove_xa_if_matching_data *data = user_data;
+
+    if ((data->match != NULL) && !data->match(attr, data->match_data)) {
+        // attr is not a match
+        return true;
+    }
+
+    // @TODO Why do we stop removing attributes if one removal fails?
+    return (pcmk__xa_remove(attr, data->force) == pcmk_rc_ok);
+}
+
+/*!
+ * \internal
  * \brief Remove an XML element's attributes that match some criteria
  *
  * \param[in,out] element    XML element to modify
@@ -510,19 +554,16 @@ pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data)
  */
 void
 pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
-                               bool (*match)(xmlAttrPtr, void *),
+                               bool (*match)(xmlAttr *, void *),
                                void *user_data)
 {
-    xmlAttrPtr next = NULL;
+    struct remove_xa_if_matching_data data = {
+        .force = force,
+        .match = match,
+        .match_data = user_data,
+    };
 
-    for (xmlAttrPtr a = pcmk__xe_first_attr(element); a != NULL; a = next) {
-        next = a->next; // Grab now because attribute might get removed
-        if ((match == NULL) || match(a, user_data)) {
-            if (pcmk__xa_remove(a, force) != pcmk_rc_ok) {
-                return;
-            }
-        }
-    }
+    pcmk__xe_foreach_attr(element, remove_xa_if_matching, &data);
 }
 
 /*!
