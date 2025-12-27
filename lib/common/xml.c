@@ -1200,12 +1200,11 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
  * differences have been calculated.
  *
  * \param[in,out] new_xml     XML to modify
- * \param[in]     element     Name of XML element that changed (for logging)
  * \param[in]     attr_name   Name of attribute that was deleted
  * \param[in]     old_value   Value of attribute that was deleted
  */
 static void
-mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
+mark_attr_deleted(xmlNode *new_xml, const char *attr_name,
                   const char *old_value)
 {
     xml_doc_private_t *docpriv = new_xml->doc->_private;
@@ -1228,7 +1227,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     pcmk__xa_remove(attr, false);
 
     pcmk__trace("XML attribute %s=%s was removed from %s", attr_name, old_value,
-                element);
+                (const char *) new_xml->name);
 }
 
 /*
@@ -1236,14 +1235,14 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
  * \brief Check ACLs for a changed XML attribute
  */
 static void
-mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
+mark_attr_changed(xmlNode *new_xml, const char *attr_name,
                   const char *old_value)
 {
     xml_doc_private_t *docpriv = new_xml->doc->_private;
     char *vcopy = pcmk__xe_get_copy(new_xml, attr_name);
 
     pcmk__trace("XML attribute %s was changed from '%s' to '%s' in %s",
-                attr_name, old_value, vcopy, element);
+                attr_name, old_value, vcopy, (const char *) new_xml->name);
 
     // Restore the original value (without checking ACLs)
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
@@ -1260,20 +1259,19 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
  * \brief Mark an XML attribute as having changed position
  *
  * \param[in,out] new_xml     XML to modify
- * \param[in]     element     Name of XML element that changed (for logging)
  * \param[in,out] old_attr    Attribute that moved, in original XML
  * \param[in,out] new_attr    Attribute that moved, in \p new_xml
  * \param[in]     p_old       Ordinal position of \p old_attr in original XML
  * \param[in]     p_new       Ordinal position of \p new_attr in \p new_xml
  */
 static void
-mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
-                xmlAttr *new_attr, int p_old, int p_new)
+mark_attr_moved(xmlNode *new_xml, xmlAttr *old_attr, xmlAttr *new_attr,
+                int p_old, int p_new)
 {
     xml_node_private_t *nodepriv = new_attr->_private;
 
     pcmk__trace("XML attribute %s moved from position %d to %d in %s",
-                old_attr->name, p_old, p_new, element);
+                old_attr->name, p_old, p_new, (const char *) new_xml->name);
 
     // Mark document, element, and all element's parents as changed
     pcmk__mark_xml_node_dirty(new_xml);
@@ -1303,7 +1301,6 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
 static bool
 mark_attr_diff(xmlAttr *old_attr, void *user_data)
 {
-    xmlNode *old_xml = old_attr->parent;
     xmlNode *new_xml = user_data;
 
     const char *name = (const char *) old_attr->name;
@@ -1318,8 +1315,7 @@ mark_attr_diff(xmlAttr *old_attr, void *user_data)
     int new_pos = 0;
 
     if (new_attr == NULL) {
-        mark_attr_deleted(new_xml, (const char *) old_xml->name, name,
-                          old_value);
+        mark_attr_deleted(new_xml, name, old_value);
         return true;
     }
 
@@ -1330,8 +1326,7 @@ mark_attr_diff(xmlAttr *old_attr, void *user_data)
     pcmk__clear_xml_flags(new_priv, pcmk__xf_created);
 
     if (!pcmk__str_eq(old_value, new_value, pcmk__str_none)) {
-        mark_attr_changed(new_xml, (const char *) old_xml->name, name,
-                          old_value);
+        mark_attr_changed(new_xml, name, old_value);
         return true;
     }
 
@@ -1344,8 +1339,7 @@ mark_attr_diff(xmlAttr *old_attr, void *user_data)
         return true;
     }
 
-    mark_attr_moved(new_xml, (const char *) old_xml->name, old_attr, new_attr,
-                    old_pos, new_pos);
+    mark_attr_moved(new_xml, old_attr, new_attr, old_pos, new_pos);
     return true;
 }
 
