@@ -1345,40 +1345,52 @@ mark_attr_diff(xmlAttr *old_attr, void *user_data)
 
 /*!
  * \internal
- * \brief Check all attributes in new XML for creation
+ * \brief Mark a new attribute dirty if ACLs allow creation, or remove otherwise
  *
- * For each of a given XML element's attributes marked as newly created, accept
- * (and mark as dirty) or reject the creation according to ACLs.
+ * We set the \c pcmk__xf_created flag on all attributes in the new XML at an
+ * earlier stage of change calculation. Then we checked whether each attribute
+ * was present in the old XML, and we cleared the flag if so. If the flag is
+ * still set, then the attribute is truly new.
  *
- * \param[in,out] new_xml  XML to check
+ * Now we check whether ACLs allow the attribute's creation. If so, we "accept"
+ * it: we mark the attribute as dirty and modified, and we mark all of its
+ * parents as dirty. Otherwise, we reject it by removing the attribute (ignoring
+ * ACLs and change tracking for the removal).
+ *
+ * \param[in,out] attr       XML attribute to mark dirty or remove
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
  */
-static void
-mark_created_attrs(xmlNode *new_xml)
+static bool
+check_new_attr_acls(xmlAttr *attr, void *user_data)
 {
-    for (xmlAttr *attr = pcmk__xe_first_attr(new_xml); attr != NULL;
-         attr = attr->next) {
+    const char *name = (const char *) attr->name;
+    const char *value = pcmk__xml_attr_value(attr);
+    const xml_node_private_t *nodepriv = attr->_private;
+    xmlNode *new_xml = attr->parent;
+    const char *new_xml_id = pcmk__s(pcmk__xe_id(new_xml), "without ID");
 
-        const char *name = (const char *) attr->name;
-        xml_node_private_t *nodepriv = attr->_private;
-
-        if (!pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-            continue;
-        }
-
-        pcmk__trace("Created new attribute %s=%s in %s", name,
-                    pcmk__xml_attr_value(attr), (const char *) new_xml->name);
-
-        /* Check ACLs (we can't use the remove-then-create trick because it
-         * would modify the attribute position).
-         */
-        if (pcmk__check_acl(new_xml, name, pcmk__xf_acl_write)) {
-            pcmk__mark_xml_attr_dirty(attr);
-
-        } else {
-            // Creation was not allowed, so remove the attribute
-            pcmk__xa_remove(attr, true);
-        }
+    if (!pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+        return true;
     }
+
+    /* Check ACLs (we can't use the remove-then-create trick because it
+     * would modify the attribute position).
+     */
+    if (!pcmk__check_acl(new_xml, name, pcmk__xf_acl_write)) {
+        pcmk__trace("ACLs prevent creation of attribute %s=%s in %s %s", name,
+                    value, (const char *) new_xml->name, new_xml_id);
+        pcmk__xa_remove(attr, true);
+        return true;
+    }
+
+    pcmk__trace("Created new attribute %s=%s in %s %s", name, value,
+                (const char *) new_xml->name, new_xml_id);
+    pcmk__mark_xml_attr_dirty(attr);
+    return true;
 }
 
 /*!
@@ -1400,7 +1412,7 @@ xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
     }
 
     pcmk__xe_foreach_attr(old_xml, mark_attr_diff, new_xml);
-    mark_created_attrs(new_xml);
+    pcmk__xe_foreach_attr(new_xml, check_new_attr_acls, NULL);
 }
 
 /*!
