@@ -226,7 +226,7 @@ add_move_change(const xmlNode *xml, xmlNode *patchset)
  * For patchset format, refer to diff schema.
  */
 static void
-add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
+add_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
     xml_node_private_t *nodepriv = xml->_private;
 
@@ -244,13 +244,15 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         return;
     }
 
-    add_modify_change(xml, patchset);
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
+        add_modify_change(xml, patchset);
+    }
 
     // Now recursively do the same for each child node of this node
     for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
          child = pcmk__xml_next(child)) {
 
-        add_xml_changes_to_patchset(child, patchset);
+        add_changes_to_patchset(child, patchset);
     }
 
     if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
@@ -344,7 +346,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         }
     }
 
-    add_xml_changes_to_patchset(target, patchset);
+    add_changes_to_patchset(target, patchset);
     return patchset;
 }
 
