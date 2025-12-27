@@ -195,13 +195,39 @@ add_modify_change(const xmlNode *xml, xmlNode *patchset)
     g_slist_free(changed_attrs);
 }
 
+/*!
+ * \internal
+ * \brief Add a \c PCMK_VALUE_MOVE change to a patchset
+ *
+ * Given \p xml with the \c pcmk__xf_move flag set, create a \c PCMK_XE_CHANGE
+ * child of \p patchset, with \c PCMK_XA_OPERATION set to \c PCMK_VALUE_MOVE.
+ *
+ * \param[in]     xml       XML whose move to add to \p patchset
+ * \param[in,out] patchset  XML patchset
+ */
+static void
+add_move_change(const xmlNode *xml, xmlNode *patchset)
+{
+    xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+    GString *xpath = pcmk__element_xpath(xml);
+
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
+    pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+    pcmk__xe_set_int(change, PCMK_XE_POSITION,
+                     pcmk__xml_position(xml, pcmk__xf_deleted));
+
+    pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
+                pcmk__xml_position(xml, pcmk__xf_skip));
+
+    g_string_free(xpath, TRUE);
+}
+
 /* Add changes for specified XML to patchset.
  * For patchset format, refer to diff schema.
  */
 static void
 add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
-    xmlNode *change = NULL;
     xml_node_private_t *nodepriv = xml->_private;
 
     if (nodepriv == NULL) {
@@ -227,20 +253,8 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         add_xml_changes_to_patchset(child, patchset);
     }
 
-    nodepriv = xml->_private;
     if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
-        GString *xpath = pcmk__element_xpath(xml);
-
-        pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
-                    pcmk__xml_position(xml, pcmk__xf_skip));
-
-        change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
-        pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
-        pcmk__xe_set_int(change, PCMK_XE_POSITION,
-                         pcmk__xml_position(xml, pcmk__xf_deleted));
-        g_string_free(xpath, TRUE);
+        add_move_change(xml, patchset);
     }
 }
 
