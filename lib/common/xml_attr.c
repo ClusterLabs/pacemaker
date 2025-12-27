@@ -105,18 +105,20 @@ pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data)
  * \internal
  * \brief Append an XML attribute to a buffer
  *
- * \param[in]     attr     Attribute to append
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
+ * Append the attribute in the form <tt>" NAME=\"VALUE\""</tt>, where any XML-
+ * special characters in the value are escaped.
+ *
+ * \param[in]     attr    XML attribute
+ * \param[in,out] buffer  Where to append the content
  */
 void
 pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
 {
-    const char *name = NULL;
     const char *value = NULL;
     gchar *value_esc = NULL;
-    xml_node_private_t *nodepriv = NULL;
+    const xml_node_private_t *nodepriv = NULL;
 
-    if (attr == NULL || attr->children == NULL) {
+    if (attr == NULL) {
         return;
     }
 
@@ -125,12 +127,11 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
         return;
     }
 
-    name = (const char *) attr->name;
-    value = (const char *) attr->children->content;
+    value = pcmk__xml_attr_value(attr);
     if (value == NULL) {
         /* Don't print anything for unset attribute. Any null-indicator value,
          * including the empty string, could also be a real value that needs to
-         * be treated differently from "unset".
+         * be treated differently from an unset value.
          */
         return;
     }
@@ -140,6 +141,7 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
         value = value_esc;
     }
 
-    pcmk__g_strcat(buffer, " ", name, "=\"", value, "\"", NULL);
+    pcmk__g_strcat(buffer, " ", (const char *) attr->name, "=\"", value, "\"",
+                   NULL);
     g_free(value_esc);
 }
