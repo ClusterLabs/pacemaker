@@ -388,6 +388,66 @@ reset_doc_private_data(xml_doc_private_t *docpriv)
 
 /*!
  * \internal
+ * \brief Free and clear private data for an XML document
+ *
+ * \param[in,out] doc  XML document
+ */
+static void
+free_doc_private_data(xmlDoc *doc)
+{
+    reset_doc_private_data(doc->_private);
+    g_clear_pointer(&doc->_private, free);
+}
+
+/*!
+ * \internal
+ * \brief Free and clear private data for a non-document XML node
+ *
+ * \param[in,out] xml  XML node
+ */
+static void
+free_node_private_data(xmlNode *xml)
+{
+    xml_node_private_t *nodepriv = xml->_private;
+
+    pcmk__assert(nodepriv->check == PCMK__XML_NODE_PRIVATE_MAGIC);
+
+    g_clear_pointer(&xml->_private, free);
+}
+
+/*!
+ * \internal
+ * \brief Free and clear private data for an XML attribute
+ *
+ * \param[in,out] attr       XML attribute
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static bool
+free_attr_private_data(xmlAttr *xml, void *user_data)
+{
+    free_node_private_data((xmlNode *) xml);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Free and clear private data for an XML element and its attributes
+ *
+ * \param[in,out] xml  XML element
+ */
+static void
+free_element_private_data(xmlNode *xml)
+{
+    free_node_private_data(xml);
+    pcmk__xe_foreach_attr(xml, free_attr_private_data, NULL);
+}
+
+/*!
+ * \internal
  * \brief Free private data for an XML node
  *
  * \param[in,out] node       XML node whose private data to free
@@ -406,23 +466,19 @@ free_private_data(xmlNode *node, void *user_data)
         return true;
     }
 
-    if (node->type == XML_DOCUMENT_NODE) {
-        reset_doc_private_data((xml_doc_private_t *) node->_private);
+    switch (node->type) {
+        case XML_DOCUMENT_NODE:
+            free_doc_private_data((xmlDoc *) node);
+            return true;
 
-    } else {
-        xml_node_private_t *nodepriv = node->_private;
+        case XML_ELEMENT_NODE:
+            free_element_private_data(node);
+            return true;
 
-        pcmk__assert(nodepriv->check == PCMK__XML_NODE_PRIVATE_MAGIC);
-
-        for (xmlAttr *iter = pcmk__xe_first_attr(node); iter != NULL;
-             iter = iter->next) {
-
-            free_private_data((xmlNode *) iter, user_data);
-        }
+        default:
+            free_node_private_data(node);
+            return true;
     }
-    free(node->_private);
-    node->_private = NULL;
-    return true;
 }
 
 /*!
