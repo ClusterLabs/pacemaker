@@ -1318,27 +1318,31 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
         new_priv = new_attr->_private;
         new_value = pcmk__xe_get(new_xml, name);
 
-        old_pos = pcmk__xml_position((xmlNode *) old_attr, pcmk__xf_skip);
-        new_pos = pcmk__xml_position((xmlNode *) new_attr, pcmk__xf_skip);
-
         // This attribute isn't new
         pcmk__clear_xml_flags(new_priv, pcmk__xf_created);
 
-        if (strcmp(new_value, old_value) != 0) {
+        if (!pcmk__str_eq(old_value, new_value, pcmk__str_none)) {
             mark_attr_changed(new_xml, (const char *) old_xml->name, name,
                               old_value);
-
-        } else if ((old_pos != new_pos)
-                   && !pcmk__xml_doc_all_flags_set(new_xml->doc,
-                                                   pcmk__xf_ignore_attr_pos
-                                                   |pcmk__xf_tracking)) {
-            /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes()
-             * before this function is called, so only the
-             * pcmk__xf_ignore_attr_pos check is truly relevant.
-             */
-            mark_attr_moved(new_xml, (const char *) old_xml->name,
-                            old_attr, new_attr, old_pos, new_pos);
+            continue;
         }
+
+        old_pos = pcmk__xml_position((xmlNode *) old_attr, pcmk__xf_skip);
+        new_pos = pcmk__xml_position((xmlNode *) new_attr, pcmk__xf_skip);
+
+        /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes() before
+         * this function is called, so only the pcmk__xf_ignore_attr_pos check
+         * is truly relevant.
+         */
+        if ((old_pos == new_pos)
+            || pcmk__xml_doc_all_flags_set(new_xml->doc,
+                                           pcmk__xf_ignore_attr_pos
+                                           |pcmk__xf_tracking)) {
+            continue;
+        }
+
+        mark_attr_moved(new_xml, (const char *) old_xml->name, old_attr,
+                        new_attr, old_pos, new_pos);
     }
 }
 
