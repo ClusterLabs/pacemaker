@@ -319,14 +319,12 @@ is_config_change(xmlNode *xml)
 static xmlNode *
 xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 {
-    int lpc = 0;
-    xml_doc_private_t *docpriv;
+    xml_doc_private_t *docpriv = NULL;
 
-    xmlNode *v = NULL;
-    xmlNode *version = NULL;
     xmlNode *patchset = NULL;
-
-    pcmk__assert(target != NULL);
+    xmlNode *version = NULL;
+    xmlNode *source_version = NULL;
+    xmlNode *target_version = NULL;
 
     if (!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
         return NULL;
@@ -340,24 +338,26 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     version = pcmk__xe_create(patchset, PCMK_XE_VERSION);
 
-    v = pcmk__xe_create(version, PCMK_XE_SOURCE);
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = pcmk__xe_get(source, vfields[lpc]);
+    source_version = pcmk__xe_create(version, PCMK_XE_SOURCE);
+
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        const char *value = pcmk__xe_get(source, vfields[i]);
 
         if (value == NULL) {
             value = "1";
         }
-        pcmk__xe_set(v, vfields[lpc], value);
+        pcmk__xe_set(source_version, vfields[i], value);
     }
 
-    v = pcmk__xe_create(version, PCMK_XE_TARGET);
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = pcmk__xe_get(target, vfields[lpc]);
+    target_version = pcmk__xe_create(version, PCMK_XE_TARGET);
+
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        const char *value = pcmk__xe_get(target, vfields[i]);
 
         if (value == NULL) {
             value = "1";
         }
-        pcmk__xe_set(v, vfields[lpc], value);
+        pcmk__xe_set(target_version, vfields[i], value);
     }
 
     /* Call this outside of add_changes_to_patchset(). That function is
