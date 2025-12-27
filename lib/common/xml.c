@@ -1299,39 +1299,45 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
          old_attr = old_attr->next) {
 
         const char *name = (const char *) old_attr->name;
-        const char *old_value = pcmk__xml_attr_value(old_attr);
+
         xmlAttr *new_attr = xmlHasProp(new_xml, old_attr->name);
+        xml_node_private_t *new_priv = NULL;
+
+        const char *old_value = pcmk__xml_attr_value(old_attr);
+        const char *new_value = NULL;
+
+        int old_pos = 0;
+        int new_pos = 0;
 
         if (new_attr == NULL) {
             mark_attr_deleted(new_xml, (const char *) old_xml->name, name,
                               old_value);
+            continue;
+        }
 
-        } else {
-            xml_node_private_t *nodepriv = new_attr->_private;
-            int new_pos = pcmk__xml_position((xmlNode*) new_attr,
-                                             pcmk__xf_skip);
-            int old_pos = pcmk__xml_position((xmlNode*) old_attr,
-                                             pcmk__xf_skip);
-            const char *new_value = pcmk__xe_get(new_xml, name);
+        new_priv = new_attr->_private;
+        new_value = pcmk__xe_get(new_xml, name);
 
-            // This attribute isn't new
-            pcmk__clear_xml_flags(nodepriv, pcmk__xf_created);
+        old_pos = pcmk__xml_position((xmlNode *) old_attr, pcmk__xf_skip);
+        new_pos = pcmk__xml_position((xmlNode *) new_attr, pcmk__xf_skip);
 
-            if (strcmp(new_value, old_value) != 0) {
-                mark_attr_changed(new_xml, (const char *) old_xml->name, name,
-                                  old_value);
+        // This attribute isn't new
+        pcmk__clear_xml_flags(new_priv, pcmk__xf_created);
 
-            } else if ((old_pos != new_pos)
-                       && !pcmk__xml_doc_all_flags_set(new_xml->doc,
-                                                       pcmk__xf_ignore_attr_pos
-                                                       |pcmk__xf_tracking)) {
-                /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes()
-                 * before this function is called, so only the
-                 * pcmk__xf_ignore_attr_pos check is truly relevant.
-                 */
-                mark_attr_moved(new_xml, (const char *) old_xml->name,
-                                old_attr, new_attr, old_pos, new_pos);
-            }
+        if (strcmp(new_value, old_value) != 0) {
+            mark_attr_changed(new_xml, (const char *) old_xml->name, name,
+                              old_value);
+
+        } else if ((old_pos != new_pos)
+                   && !pcmk__xml_doc_all_flags_set(new_xml->doc,
+                                                   pcmk__xf_ignore_attr_pos
+                                                   |pcmk__xf_tracking)) {
+            /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes()
+             * before this function is called, so only the
+             * pcmk__xf_ignore_attr_pos check is truly relevant.
+             */
+            mark_attr_moved(new_xml, (const char *) old_xml->name,
+                            old_attr, new_attr, old_pos, new_pos);
         }
     }
 }
