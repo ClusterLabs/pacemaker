@@ -156,6 +156,31 @@ expand_parents_fixed_nvpairs(const pcmk_resource_t *rsc,
     g_hash_table_destroy(parent_orig_meta);
 }
 
+/*!
+ * \internal
+ * \brief Add an attribute to a meta-attributes table using \c dup_attr()
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Table to add to (<tt>GHashTable *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+add_attr_to_meta_table(const xmlAttr *attr, void *user_data)
+{
+    GHashTable *table = user_data;
+    const char *value = pcmk__xml_attr_value(attr);
+
+    if (value == NULL) {
+        return true;
+    }
+
+    dup_attr((void *) attr->name, (void *) value, table);
+    return true;
+}
+
 /*
  * \brief Get fully evaluated resource meta-attributes
  *
@@ -173,16 +198,8 @@ get_meta_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
     CRM_CHECK((meta_hash != NULL) && (rsc != NULL) && (scheduler != NULL),
               return);
 
-    for (const xmlAttr *attr = pcmk__xe_first_attr(rsc->priv->xml);
-         attr != NULL; attr = attr->next) {
-
-        if (attr->children == NULL) {
-            continue;
-        }
-
-        dup_attr((void *) attr->name, (void *) attr->children->content,
-                 meta_hash);
-    }
+    pcmk__xe_foreach_const_attr(rsc->priv->xml, add_attr_to_meta_table,
+                                meta_hash);
 
     rule_input.now = scheduler->priv->now;
     rule_input.rsc_standard = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
