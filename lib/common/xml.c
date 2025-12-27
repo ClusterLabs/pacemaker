@@ -1295,15 +1295,13 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
 static void
 xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
 {
-    xmlAttr *attr_iter = pcmk__xe_first_attr(old_xml);
+    for (xmlAttr *old_attr = pcmk__xe_first_attr(old_xml); old_attr != NULL;
+         old_attr = old_attr->next) {
 
-    while (attr_iter != NULL) {
-        const char *name = (const char *) attr_iter->name;
-        xmlAttr *old_attr = attr_iter;
-        xmlAttr *new_attr = xmlHasProp(new_xml, attr_iter->name);
-        const char *old_value = pcmk__xml_attr_value(attr_iter);
+        const char *name = (const char *) old_attr->name;
+        const char *old_value = pcmk__xml_attr_value(old_attr);
+        xmlAttr *new_attr = xmlHasProp(new_xml, old_attr->name);
 
-        attr_iter = attr_iter->next;
         if (new_attr == NULL) {
             mark_attr_deleted(new_xml, (const char *) old_xml->name, name,
                               old_value);
