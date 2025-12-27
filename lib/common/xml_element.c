@@ -822,6 +822,29 @@ done:
 
 /*!
  * \internal
+ * \brief Check whether an element's attribute value matches a reference value
+ *
+ * \param[in] attr       XML attribute
+ * \param[in] user_data  XML element to match against (<tt>const xmlNode *</tt>)
+ *
+ * \return \c true (to continue iterating) if \p user_data has an attribute with
+ *         the same name and value as \p attr, or \c false otherwise
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr()
+ */
+static bool
+match_attr_value(const xmlAttr *attr, void *user_data)
+{
+    const xmlNode *xml = user_data;
+    const char *ref_val = pcmk__xml_attr_value(attr);
+    const char *xml_val = pcmk__xe_get(xml, (const char *) attr->name);
+
+    // Check whether attr's value matches the corresponding value in xml
+    return pcmk__str_eq(ref_val, xml_val, pcmk__str_casei);
+}
+
+/*!
+ * \internal
  * \brief Delete an XML subtree if it matches a search element
  *
  * A match is defined as follows:
@@ -841,23 +864,16 @@ done:
 static bool
 delete_xe_if_matching(xmlNode *xml, void *user_data)
 {
-    xmlNode *search = user_data;
+    const xmlNode *search = user_data;
 
     if (!pcmk__xe_is(search, (const char *) xml->name)) {
         // No match: either not both elements, or different element types
         return true;
     }
 
-    for (const xmlAttr *attr = pcmk__xe_first_attr(search); attr != NULL;
-         attr = attr->next) {
-
-        const char *search_val = pcmk__xml_attr_value(attr);
-        const char *xml_val = pcmk__xe_get(xml, (const char *) attr->name);
-
-        if (!pcmk__str_eq(search_val, xml_val, pcmk__str_casei)) {
-            // No match: an attr in xml doesn't match the attr in search
-            return true;
-        }
+    if (!pcmk__xe_foreach_const_attr(search, match_attr_value, xml)) {
+        // No match: mismatched attribute values
+        return true;
     }
 
     pcmk__log_xml_trace(xml, "delete-match");
