@@ -28,6 +28,67 @@
 
 /*!
  * \internal
+ * \brief Call a function for each of an XML element's attributes
+ *
+ * \param[in,out] xml        XML element
+ * \param[in]     fn         Function to call for each attribute (returns
+ *                           \c true to continue iterating over attributes or
+ *                           \c false to stop)
+ * \param[in,out] user_data  User data argument for \p fn
+ *
+ * \return \c false if any \p fn call returned \c false, or \c true otherwise
+ *
+ * \note \p fn may remove its attribute argument.
+ */
+bool
+pcmk__xe_foreach_attr(xmlNode *xml, bool (*fn)(xmlAttr *, void *),
+                      void *user_data)
+{
+    xmlAttr *attr = pcmk__xe_first_attr(xml);
+
+    while (attr != NULL) {
+        xmlAttr *next = attr->next;
+
+        if (!fn(attr, user_data)) {
+            return false;
+        }
+
+        attr = next;
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Call a function for each of a \c const XML element's attributes
+ *
+ * \param[in]     xml        XML element
+ * \param[in]     fn         Function to call for each attribute (returns
+ *                           \c true to continue iterating over attributes or
+ *                           \c false to stop)
+ * \param[in,out] user_data  User data argument for \p fn
+ *
+ * \return \c false if any \p fn call returned \c false, or \c true otherwise
+ */
+bool
+pcmk__xe_foreach_const_attr(const xmlNode *xml,
+                            bool (*fn)(const xmlAttr *, void *),
+                            void *user_data)
+{
+    for (const xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
+         attr = attr->next) {
+
+        if (!fn(attr, user_data)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Find first XML child element matching given criteria
  *
  * \param[in] parent     XML element to search (can be \c NULL)
