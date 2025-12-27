@@ -1192,6 +1192,26 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 
 /*!
  * \internal
+ * \brief Set the \c pcmk__xf_created flag on an attribute
+ *
+ * \param[in,out] attr       XML attribute
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static bool
+mark_attr_created(xmlAttr *attr, void *user_data)
+{
+    xml_node_private_t *nodepriv = attr->_private;
+
+    pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Add an XML attribute to a node, marked as deleted
  *
  * When calculating XML changes, we need to know when an attribute has been
@@ -1404,12 +1424,7 @@ static void
 xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
 {
     // Cleared later if attributes are not really new
-    for (xmlAttr *attr = pcmk__xe_first_attr(new_xml); attr != NULL;
-         attr = attr->next) {
-        xml_node_private_t *nodepriv = attr->_private;
-
-        pcmk__set_xml_flags(nodepriv, pcmk__xf_created);
-    }
+    pcmk__xe_foreach_attr(new_xml, mark_attr_created, NULL);
 
     pcmk__xe_foreach_attr(old_xml, mark_attr_diff, new_xml);
     pcmk__xe_foreach_attr(new_xml, check_new_attr_acls, NULL);
