@@ -790,6 +790,24 @@ is_mode_allowed(uint32_t flags, enum pcmk__xml_flags mode)
 
 /*!
  * \internal
+ * \brief Check whether an XML attribute's name is \c PCMK_XA_ID
+ *
+ * \param[in] attr       Attribute to check
+ * \param[in] user_data  Ignored
+ *
+ * \return \c true if the attribute's name is \c PCMK_XA_ID, or \c false
+ *         otherwise
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+attr_is_id(const xmlAttr *attr, void *user_data)
+{
+    return pcmk__str_eq((const char *) attr->name, PCMK_XA_ID, pcmk__str_none);
+}
+
+/*!
+ * \internal
  * \brief Check whether an XML attribute's name is not \c PCMK_XA_ID
  *
  * \param[in] attr       Attribute to check
@@ -803,7 +821,7 @@ is_mode_allowed(uint32_t flags, enum pcmk__xml_flags mode)
 static bool
 attr_is_not_id(xmlAttr *attr, void *user_data)
 {
-    return !pcmk__str_eq((const char *) attr->name, PCMK_XA_ID, pcmk__str_none);
+    return !attr_is_id(attr, user_data);
 }
 
 /*!
@@ -956,14 +974,10 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
  * \return \c true if XML element is implicitly allowed, or \c false otherwise
  */
 static bool
-implicitly_allowed(xmlNode *xml)
+implicitly_allowed(const xmlNode *xml)
 {
-    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
-         attr = attr->next) {
-
-        if (attr_is_not_id(attr, NULL)) {
-            return false;
-        }
+    if (!pcmk__xe_foreach_const_attr(xml, attr_is_id, NULL)) {
+        return false;
     }
 
     /* Creation is not implicitly allowed for a descendant of PCMK_XE_ACLS, but
