@@ -1338,14 +1338,9 @@ mark_attr_diff(xmlAttr *old_attr, void *user_data)
     old_pos = pcmk__xml_position((xmlNode *) old_attr, pcmk__xf_skip);
     new_pos = pcmk__xml_position((xmlNode *) new_attr, pcmk__xf_skip);
 
-    /* pcmk__xf_tracking is always set by pcmk__xml_mark_changes() before this
-     * function is called, so only the pcmk__xf_ignore_attr_pos check is truly
-     * relevant.
-     */
     if ((old_pos == new_pos)
         || pcmk__xml_doc_all_flags_set(new_xml->doc,
-                                       pcmk__xf_ignore_attr_pos
-                                       |pcmk__xf_tracking)) {
+                                       pcmk__xf_ignore_attr_pos)) {
         return true;
     }
 
