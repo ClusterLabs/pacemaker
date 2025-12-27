@@ -431,11 +431,23 @@ void pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml);
 bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
                             void *user_data);
 
+/*!
+ * \internal
+ * \brief Get an XML attribute's value
+ *
+ * \param[in] attr  XML attribute
+ *
+ * \return Value of \p attr, or \c NULL if \p attr is \c NULL or its value is
+ *         unset
+ */
 static inline const char *
 pcmk__xml_attr_value(const xmlAttr *attr)
 {
-    return ((attr == NULL) || (attr->children == NULL))? NULL
-           : (const char *) attr->children->content;
+    if ((attr == NULL) || (attr->children == NULL)) {
+        return NULL;
+    }
+
+    return (const char *) attr->children->content;
 }
 
 void pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target);
