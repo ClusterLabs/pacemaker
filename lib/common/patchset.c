@@ -33,6 +33,32 @@ static const char *const vfields[] = {
 
 /*!
  * \internal
+ * \brief Set patchset version fields for source or target XML
+ *
+ * Create a child of \p version with name \p name and add version numbers from
+ * \p from.
+ *
+ * \param[in,out] version  \c PCMK_XE_VERSION child of patchset
+ * \param[in]     from     XML to get version numbers from
+ * \param[in]     name     Name for new child of \p version to add fields to
+ */
+static void
+set_version_fields(xmlNode *version, xmlNode *from, const char *name)
+{
+    xmlNode *child = pcmk__xe_create(version, name);
+
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        const char *value = pcmk__xe_get(from, vfields[i]);
+
+        if (value == NULL) {
+            value = "1";
+        }
+        pcmk__xe_set(child, vfields[i], value);
+    }
+}
+
+/*!
+ * \internal
  * \brief Add a \c PCMK_VALUE_DELETE change to a patchset
  *
  * \param[in]     data       Deleted object
@@ -323,8 +349,6 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 
     xmlNode *patchset = NULL;
     xmlNode *version = NULL;
-    xmlNode *source_version = NULL;
-    xmlNode *target_version = NULL;
 
     if (!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
         return NULL;
@@ -337,28 +361,8 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     pcmk__xe_set_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = pcmk__xe_create(patchset, PCMK_XE_VERSION);
-
-    source_version = pcmk__xe_create(version, PCMK_XE_SOURCE);
-
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-        const char *value = pcmk__xe_get(source, vfields[i]);
-
-        if (value == NULL) {
-            value = "1";
-        }
-        pcmk__xe_set(source_version, vfields[i], value);
-    }
-
-    target_version = pcmk__xe_create(version, PCMK_XE_TARGET);
-
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
-        const char *value = pcmk__xe_get(target, vfields[i]);
-
-        if (value == NULL) {
-            value = "1";
-        }
-        pcmk__xe_set(target_version, vfields[i], value);
-    }
+    set_version_fields(version, source, PCMK_XE_SOURCE);
+    set_version_fields(version, target, PCMK_XE_TARGET);
 
     /* Call this outside of add_changes_to_patchset(). That function is
      * recursive and all calls will use the same XML document. We don't want to
