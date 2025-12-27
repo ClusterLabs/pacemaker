@@ -40,6 +40,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
     xmlNode *change = NULL;
+    xmlNode *change_list = NULL;
     xml_node_private_t *nodepriv = xml->_private;
     const char *value = NULL;
 
@@ -96,11 +97,11 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
             pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
             pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
 
-            change = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
+            change_list = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
             g_string_free(xpath, TRUE);
         }
 
-        attr = pcmk__xe_create(change, PCMK_XE_CHANGE_ATTR);
+        attr = pcmk__xe_create(change_list, PCMK_XE_CHANGE_ATTR);
 
         pcmk__xe_set(attr, PCMK_XA_NAME, (const char *) pIter->name);
         if (nodepriv->flags & pcmk__xf_deleted) {
@@ -117,7 +118,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     if (change) {
         xmlNode *result = NULL;
 
-        change = pcmk__xe_create(change->parent, PCMK_XE_CHANGE_RESULT);
+        change = pcmk__xe_create(change, PCMK_XE_CHANGE_RESULT);
         result = pcmk__xe_create(change, (const char *)xml->name);
 
         for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
