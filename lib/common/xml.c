@@ -1358,23 +1358,25 @@ mark_created_attrs(xmlNode *new_xml)
     for (xmlAttr *attr = pcmk__xe_first_attr(new_xml); attr != NULL;
          attr = attr->next) {
 
+        const char *name = (const char *) attr->name;
         xml_node_private_t *nodepriv = attr->_private;
 
-        if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-            const char *name = (const char *) attr->name;
+        if (!pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+            continue;
+        }
 
-            pcmk__trace("Created new attribute %s=%s in %s", name,
-                        pcmk__xml_attr_value(attr), new_xml->name);
+        pcmk__trace("Created new attribute %s=%s in %s", name,
+                    pcmk__xml_attr_value(attr), (const char *) new_xml->name);
 
-            /* Check ACLs (we can't use the remove-then-create trick because it
-             * would modify the attribute position).
-             */
-            if (pcmk__check_acl(new_xml, name, pcmk__xf_acl_write)) {
-                pcmk__mark_xml_attr_dirty(attr);
-            } else {
-                // Creation was not allowed, so remove the attribute
-                pcmk__xa_remove(attr, true);
-            }
+        /* Check ACLs (we can't use the remove-then-create trick because it
+         * would modify the attribute position).
+         */
+        if (pcmk__check_acl(new_xml, name, pcmk__xf_acl_write)) {
+            pcmk__mark_xml_attr_dirty(attr);
+
+        } else {
+            // Creation was not allowed, so remove the attribute
+            pcmk__xa_remove(attr, true);
         }
     }
 }
