@@ -1355,27 +1355,25 @@ mark_attr_diff(xmlAttr *old_attr, void *user_data)
 static void
 mark_created_attrs(xmlNode *new_xml)
 {
-    xmlAttr *attr_iter = pcmk__xe_first_attr(new_xml);
+    for (xmlAttr *attr = pcmk__xe_first_attr(new_xml); attr != NULL;
+         attr = attr->next) {
 
-    while (attr_iter != NULL) {
-        xmlAttr *new_attr = attr_iter;
-        xml_node_private_t *nodepriv = attr_iter->_private;
+        xml_node_private_t *nodepriv = attr->_private;
 
-        attr_iter = attr_iter->next;
         if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-            const char *attr_name = (const char *) new_attr->name;
+            const char *name = (const char *) attr->name;
 
-            pcmk__trace("Created new attribute %s=%s in %s", attr_name,
-                        pcmk__xml_attr_value(new_attr), new_xml->name);
+            pcmk__trace("Created new attribute %s=%s in %s", name,
+                        pcmk__xml_attr_value(attr), new_xml->name);
 
             /* Check ACLs (we can't use the remove-then-create trick because it
              * would modify the attribute position).
              */
-            if (pcmk__check_acl(new_xml, attr_name, pcmk__xf_acl_write)) {
-                pcmk__mark_xml_attr_dirty(new_attr);
+            if (pcmk__check_acl(new_xml, name, pcmk__xf_acl_write)) {
+                pcmk__mark_xml_attr_dirty(attr);
             } else {
                 // Creation was not allowed, so remove the attribute
-                pcmk__xa_remove(new_attr, true);
+                pcmk__xa_remove(attr, true);
             }
         }
     }
