@@ -862,13 +862,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             // Remove all attributes
             pcmk__xe_remove_matching_attrs(match, false, NULL, NULL);
 
-            for (xmlAttrPtr pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
-                 pIter = pIter->next) {
-                const char *name = (const char *) pIter->name;
-                const char *value = pcmk__xml_attr_value(pIter);
-
-                pcmk__xe_set(match, name, value);
-            }
+            // Copy the ones from attrs
+            pcmk__xe_copy_attrs(match, attrs, pcmk__xaf_none);
 
         } else {
             pcmk__err("Unknown operation: %s", op);
