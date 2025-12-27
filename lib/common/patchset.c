@@ -33,6 +33,32 @@ static const char *const vfields[] = {
 
 /*!
  * \internal
+ * \brief Add a \c PCMK_VALUE_DELETE change to a patchset
+ *
+ * \param[in]     data       Deleted object
+ *                           (<tt>const pcmk__deleted_xml_t *</tt>)
+ * \param[in,out] user_data  XML patchset (<tt>xmlNode *</tt>)
+ *
+ * \note This is a \c GFunc compatible with \c g_list_foreach().
+ */
+static void
+add_delete_change(gpointer data, gpointer user_data)
+{
+    const pcmk__deleted_xml_t *deleted_obj = data;
+    xmlNode *patchset = user_data;
+
+    xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
+    pcmk__xe_set(change, PCMK_XA_PATH, deleted_obj->path);
+
+    if (deleted_obj->position >= 0) {
+        pcmk__xe_set_int(change, PCMK_XE_POSITION, deleted_obj->position);
+    }
+}
+
+/*!
+ * \internal
  * \brief Add a \c PCMK_VALUE_CREATE change to a patchset
  *
  * Given \p xml with the \c pcmk__xf_created flag set, create a
@@ -294,7 +320,6 @@ static xmlNode *
 xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
-    GList *gIter = NULL;
     xml_doc_private_t *docpriv;
 
     xmlNode *v = NULL;
@@ -335,16 +360,11 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
         pcmk__xe_set(v, vfields[lpc], value);
     }
 
-    for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-        pcmk__deleted_xml_t *deleted_obj = gIter->data;
-        xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
-        pcmk__xe_set(change, PCMK_XA_PATH, deleted_obj->path);
-        if (deleted_obj->position >= 0) {
-            pcmk__xe_set_int(change, PCMK_XE_POSITION, deleted_obj->position);
-        }
-    }
+    /* Call this outside of add_changes_to_patchset(). That function is
+     * recursive and all calls will use the same XML document. We don't want to
+     * add duplicate delete changes to the patchset.
+     */
+    g_list_foreach(docpriv->deleted_objs, add_delete_change, patchset);
 
     add_changes_to_patchset(target, patchset);
     return patchset;
