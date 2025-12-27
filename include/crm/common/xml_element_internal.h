@@ -33,6 +33,9 @@ extern "C" {
 
 const char *pcmk__xe_add_last_written(xmlNode *xe);
 
+void pcmk__xe_foreach_attr(xmlNode *xml, void (*fn)(xmlAttr *, void *),
+                           void *user_data);
+
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
