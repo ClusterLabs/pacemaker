@@ -142,6 +142,10 @@ G_GNUC_INTERNAL
 void pcmk__xc_update(xmlNode *parent, xmlNode *target, xmlNode *update);
 
 G_GNUC_INTERNAL
+void pcmk__xe_foreach_attr(xmlNode *xml, void (*fn)(xmlAttr *, void *),
+                           void *user_data);
+
+G_GNUC_INTERNAL
 void pcmk__free_acls(GList *acls);
 
 G_GNUC_INTERNAL

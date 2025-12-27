@@ -28,6 +28,25 @@
 
 /*!
  * \internal
+ * \brief Call a function for each of an XML element's attributes
+ *
+ * \param[in,out] xml        XML element
+ * \param[in]     fn         Function to call for each attribute
+ * \param[in,out] user_data  User data
+ */
+void
+pcmk__xe_foreach_attr(xmlNode *xml, void (*fn)(xmlAttr *, void *),
+                      void *user_data)
+{
+    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
+         attr = attr->next) {
+
+        fn(attr, user_data);
+    }
+}
+
+/*!
+ * \internal
  * \brief Find first XML child element matching given criteria
  *
  * \param[in] parent     XML element to search (can be \c NULL)
