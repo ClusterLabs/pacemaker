@@ -119,7 +119,6 @@ copy_attr_if_not_deleted(const xmlAttr *attr, void *user_data)
 static void
 add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
-    xmlNode *cIter = NULL;
     GSList *changed_attrs = NULL;
     xmlNode *change = NULL;
     xml_node_private_t *nodepriv = xml->_private;
@@ -189,9 +188,10 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // Now recursively do the same for each child node of this node
-    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        add_xml_changes_to_patchset(cIter, patchset);
+    for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        add_xml_changes_to_patchset(child, patchset);
     }
 
     nodepriv = xml->_private;
