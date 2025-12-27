@@ -31,6 +31,88 @@ static const char *const vfields[] = {
     PCMK_XA_NUM_UPDATES,
 };
 
+/*!
+ * \internal
+ * \brief Append an attribute to a list if it has been deleted or modified
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  List of changed attributes (<tt>GSList **</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+append_attr_if_changed(const xmlAttr *attr, void *user_data)
+{
+    GSList **changed_attrs = user_data;
+    const xml_node_private_t *nodepriv = attr->_private;
+
+    if (pcmk__any_flags_set(nodepriv->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
+        *changed_attrs = g_slist_append(*changed_attrs, (gpointer) attr);
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Add a \c PCMK_XE_CHANGE_ATTR to a \c PCMK_XE_CHANGE_LIST
+ *
+ * Create a new \c PCMK_XE_CHANGE_ATTR child of a \c PCMK_XE_CHANGE_LIST and set
+ * its content based on a deleted or modified XML attribute.
+ *
+ * \param[in]  data       XML attribute
+ * \param[out] user_data  \c PCMK_XE_CHANGE_LIST element
+ *
+ * \note This is a \c GFunc compatible with \c g_slist_foreach().
+ */
+static void
+add_change_attr(gpointer data, gpointer user_data)
+{
+    const xmlAttr *attr = data;
+    xmlNode *change_list = user_data;
+
+    const xml_node_private_t *nodepriv = attr->_private;
+    xmlNode *change_attr = pcmk__xe_create(change_list, PCMK_XE_CHANGE_ATTR);
+
+    pcmk__xe_set(change_attr, PCMK_XA_NAME, (const char *) attr->name);
+
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+        pcmk__xe_set(change_attr, PCMK_XA_OPERATION, "unset");
+
+    } else {
+        // pcmk__xf_dirty is set
+        pcmk__xe_set(change_attr, PCMK_XA_OPERATION, "set");
+        pcmk__xe_set(change_attr, PCMK_XA_VALUE, pcmk__xml_attr_value(attr));
+    }
+}
+
+/*!
+ * \internal
+ * \brief Copy an attribute to a target element if the deleted flag is not set
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Target element
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+copy_attr_if_not_deleted(const xmlAttr *attr, void *user_data)
+{
+    xmlNode *target = user_data;
+    const xml_node_private_t *nodepriv = attr->_private;
+
+    if (!pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+        pcmk__xe_set(target, (const char *) attr->name,
+                     pcmk__xml_attr_value(attr));
+    }
+
+    return true;
+}
+
 /* Add changes for specified XML to patchset.
  * For patchset format, refer to diff schema.
  */
@@ -38,11 +120,9 @@ static void
 add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
     xmlNode *cIter = NULL;
-    xmlAttr *pIter = NULL;
+    GSList *changed_attrs = NULL;
     xmlNode *change = NULL;
-    xmlNode *change_list = NULL;
     xml_node_private_t *nodepriv = xml->_private;
-    const char *value = NULL;
 
     if (nodepriv == NULL) {
         /* Elements that shouldn't occur in a CIB don't have _private set. They
@@ -79,56 +159,33 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // Check each of the XML node's attributes for changes
-    for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
-         pIter = pIter->next) {
-        xmlNode *attr = NULL;
+    pcmk__xe_foreach_const_attr(xml, append_attr_if_changed, &changed_attrs);
 
-        nodepriv = pIter->_private;
-        if (!pcmk__any_flags_set(nodepriv->flags,
-                                 pcmk__xf_deleted|pcmk__xf_dirty)) {
-            continue;
-        }
-
-        if (change == NULL) {
-            GString *xpath = pcmk__element_xpath(xml);
-
-            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
-            pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
-
-            change_list = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
-            g_string_free(xpath, TRUE);
-        }
-
-        attr = pcmk__xe_create(change_list, PCMK_XE_CHANGE_ATTR);
-
-        pcmk__xe_set(attr, PCMK_XA_NAME, (const char *) pIter->name);
-        if (nodepriv->flags & pcmk__xf_deleted) {
-            pcmk__xe_set(attr, PCMK_XA_OPERATION, "unset");
-
-        } else {
-            pcmk__xe_set(attr, PCMK_XA_OPERATION, "set");
-
-            value = pcmk__xml_attr_value(pIter);
-            pcmk__xe_set(attr, PCMK_XA_VALUE, value);
-        }
-    }
-
-    if (change) {
+    /* If any attributes changed, create a PCMK_XE_CHANGE child of patchset,
+     * with the following children:
+     * - PCMK_XE_CHANGE_LIST, with a PCMK_XE_CHANGE_ATTR child for each deleted
+     *   or modified attribute
+     * - PCMK_XE_CHANGE_RESULT, with a child of the same type as xml whose
+     *   attributes are set to the changed values
+     */
+    if (changed_attrs != NULL) {
+        GString *xpath = pcmk__element_xpath(xml);
+        xmlNode *change_list = NULL;
         xmlNode *result = NULL;
 
-        change = pcmk__xe_create(change, PCMK_XE_CHANGE_RESULT);
-        result = pcmk__xe_create(change, (const char *)xml->name);
+        change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
+        pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
 
-        for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
-             pIter = pIter->next) {
-            nodepriv = pIter->_private;
-            if (!pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                value = pcmk__xe_get(xml, (const char *) pIter->name);
-                pcmk__xe_set(result, (const char *)pIter->name, value);
-            }
-        }
+        change_list = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
+        g_slist_foreach(changed_attrs, add_change_attr, change_list);
+
+        result = pcmk__xe_create(change, PCMK_XE_CHANGE_RESULT);
+        result = pcmk__xe_create(result, (const char *) xml->name);
+        pcmk__xe_foreach_const_attr(xml, copy_attr_if_not_deleted, result);
+
+        g_string_free(xpath, TRUE);
+        g_slist_free(changed_attrs);
     }
 
     // Now recursively do the same for each child node of this node
