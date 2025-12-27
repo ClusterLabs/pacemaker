@@ -255,6 +255,45 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
 
 /*!
  * \internal
+ * \brief User data for \c copy_attr()
+ */
+struct copy_attr_data {
+    xmlNode *target;    //!< Element to copy the attribute to
+    uint32_t flags;     //!< Group of <tt>enum pcmk__xa_flags</tt>
+};
+
+/*!
+ * \internal
+ * \brief Copy an attribute to a target element
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  User data (<tt>struct copy_attr_data *</tt>)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static void
+copy_attr(xmlAttr *attr, void *user_data)
+{
+    struct copy_attr_data *data = user_data;
+    const char *name = (const char *) attr->name;
+    const char *value = pcmk__xml_attr_value(attr);
+
+    if (pcmk__is_set(data->flags, pcmk__xaf_no_overwrite)
+        && (pcmk__xe_get(data->target, name) != NULL)) {
+
+        return;
+    }
+
+    if (pcmk__is_set(data->flags, pcmk__xaf_score_update)) {
+        pcmk__xe_set_score(data->target, name, value);
+
+    } else {
+        pcmk__xe_set(data->target, name, value);
+    }
+}
+
+/*!
+ * \internal
  * \brief Copy XML attributes from a source element to a target element
  *
  * This is similar to \c xmlCopyPropList() except that attributes are marked
@@ -269,26 +308,18 @@ pcmk__xe_set_score(xmlNode *target, const char *name, const char *value)
 int
 pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
 {
+    struct copy_attr_data data = {
+        .target = target,
+        .flags = flags,
+    };
+
     CRM_CHECK((src != NULL) && (target != NULL), return EINVAL);
 
-    for (xmlAttr *attr = pcmk__xe_first_attr(src); attr != NULL;
-         attr = attr->next) {
-
-        const char *name = (const char *) attr->name;
-        const char *value = pcmk__xml_attr_value(attr);
-
-        if (pcmk__is_set(flags, pcmk__xaf_no_overwrite)
-            && (pcmk__xe_get(target, name) != NULL)) {
-            continue;
-        }
-
-        if (pcmk__is_set(flags, pcmk__xaf_score_update)) {
-            pcmk__xe_set_score(target, name, value);
-        } else {
-            pcmk__xe_set(target, name, value);
-        }
-    }
-
+    /* copy_attr() does not modify src or any of its attributes.
+     *
+     * @TODO Make a pcmk__xe_foreach_const_attr()?
+     */
+    pcmk__xe_foreach_attr((xmlNode *) src, copy_attr, &data);
     return pcmk_rc_ok;
 }
 
