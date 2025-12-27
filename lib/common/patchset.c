@@ -52,7 +52,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // If this XML node is new, just report that
-    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
         GString *xpath = pcmk__element_xpath(xml->parent);
 
         if (xpath != NULL) {
@@ -132,7 +132,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     nodepriv = xml->_private;
-    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
         GString *xpath = pcmk__element_xpath(xml);
 
         pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
