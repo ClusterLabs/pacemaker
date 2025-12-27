@@ -113,13 +113,61 @@ copy_attr_if_not_deleted(const xmlAttr *attr, void *user_data)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Add a \c PCMK_VALUE_MODIFY change to a patchset if appropriate
+ *
+ * If any attributes of \p xml were deleted or modified, create a
+ * \c PCMK_XE_CHANGE child of \p patchset, with \c PCMK_XA_OPERATION set to
+ * \c PCMK_VALUE_MODIFY and with the following children:
+ * - \c PCMK_XE_CHANGE_LIST, with a \c PCMK_XE_CHANGE_ATTR child for each
+ *   deleted or modified attribute
+ * - \c PCMK_XE_CHANGE_RESULT, with a child of the same type as \p xml whose
+ *   attributes are set to the post-change values. Deleted attributes are not
+ *   added.
+ *
+ * \param[in]     xml       XML whose changes to add to \p patchset
+ * \param[in,out] patchset  XML patchset
+ */
+static void
+add_modify_change(const xmlNode *xml, xmlNode *patchset)
+{
+    GSList *changed_attrs = NULL;
+    GString *xpath = NULL;
+    xmlNode *change = NULL;
+    xmlNode *change_list = NULL;
+    xmlNode *result = NULL;
+
+    // Check each of the XML node's attributes for changes
+    pcmk__xe_foreach_const_attr(xml, append_attr_if_changed, &changed_attrs);
+
+    if (changed_attrs == NULL) {
+        return;
+    }
+
+    xpath = pcmk__element_xpath(xml);
+
+    change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
+    pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+
+    change_list = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
+    g_slist_foreach(changed_attrs, add_change_attr, change_list);
+
+    result = pcmk__xe_create(change, PCMK_XE_CHANGE_RESULT);
+    result = pcmk__xe_create(result, (const char *) xml->name);
+    pcmk__xe_foreach_const_attr(xml, copy_attr_if_not_deleted, result);
+
+    g_string_free(xpath, TRUE);
+    g_slist_free(changed_attrs);
+}
+
 /* Add changes for specified XML to patchset.
  * For patchset format, refer to diff schema.
  */
 static void
 add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
-    GSList *changed_attrs = NULL;
     xmlNode *change = NULL;
     xml_node_private_t *nodepriv = xml->_private;
 
@@ -157,35 +205,7 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
         return;
     }
 
-    // Check each of the XML node's attributes for changes
-    pcmk__xe_foreach_const_attr(xml, append_attr_if_changed, &changed_attrs);
-
-    /* If any attributes changed, create a PCMK_XE_CHANGE child of patchset,
-     * with the following children:
-     * - PCMK_XE_CHANGE_LIST, with a PCMK_XE_CHANGE_ATTR child for each deleted
-     *   or modified attribute
-     * - PCMK_XE_CHANGE_RESULT, with a child of the same type as xml whose
-     *   attributes are set to the changed values
-     */
-    if (changed_attrs != NULL) {
-        GString *xpath = pcmk__element_xpath(xml);
-        xmlNode *change_list = NULL;
-        xmlNode *result = NULL;
-
-        change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
-        pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
-
-        change_list = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
-        g_slist_foreach(changed_attrs, add_change_attr, change_list);
-
-        result = pcmk__xe_create(change, PCMK_XE_CHANGE_RESULT);
-        result = pcmk__xe_create(result, (const char *) xml->name);
-        pcmk__xe_foreach_const_attr(xml, copy_attr_if_not_deleted, result);
-
-        g_string_free(xpath, TRUE);
-        g_slist_free(changed_attrs);
-    }
+    add_modify_change(xml, patchset);
 
     // Now recursively do the same for each child node of this node
     for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
