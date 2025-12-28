@@ -113,19 +113,6 @@ pcmk__mark_xml_attr_dirty(xmlAttr *a)
     pcmk__mark_xml_node_dirty(parent);
 }
 
-// This also clears attribute's flags if not marked as deleted
-bool
-pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data)
-{
-    xml_node_private_t *nodepriv = a->_private;
-
-    if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
-        return true;
-    }
-    nodepriv->flags = pcmk__xf_none;
-    return false;
-}
-
 /*!
  * \internal
  * \brief Append an XML attribute to a buffer
