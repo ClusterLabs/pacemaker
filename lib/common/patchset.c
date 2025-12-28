@@ -312,10 +312,45 @@ add_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether a deleted object path contains the configuration element
+ *
+ * \param[in] data     Deleted object (<tt>const pcmk__deleted_xml_t *</tt>)
+ * \param[in] ignored  Ignored
+ *
+ * \retval 0 if \p data->path contains
+ *           <tt>"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION</tt>
+ * \retval 1 otherwise
+ *
+ * \note This is a \c GCompareFunc.
+ */
+static gint
+config_in_deleted_obj_path(gconstpointer data, gconstpointer ignored)
+{
+    const pcmk__deleted_xml_t *deleted_obj = data;
+
+    if (strstr(deleted_obj->path,
+               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
+
+        return 0;
+    }
+
+    return 1;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a CIB XML tree contains a configuration change
+ *
+ * \param[in] xml  XML tree
+ *
+ * \return \c true if \p xml contains a dirty or deleted configuration element,
+ *         or \c false otherwise
+ */
 static bool
 is_config_change(const xmlNode *xml)
 {
-    GList *gIter = NULL;
     xml_node_private_t *nodepriv = NULL;
     xml_doc_private_t *docpriv = xml->doc->_private;
     xmlNode *config = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
@@ -330,16 +365,8 @@ is_config_change(const xmlNode *xml)
         return true;
     }
 
-    for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-        pcmk__deleted_xml_t *deleted_obj = gIter->data;
-
-        if (strstr(deleted_obj->path,
-                   "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
-            return true;
-        }
-    }
-
-    return false;
+    return (g_list_find_custom(docpriv->deleted_objs, NULL,
+                               config_in_deleted_obj_path) != NULL);
 }
 
 static xmlNode *
