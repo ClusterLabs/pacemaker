@@ -819,7 +819,7 @@ attr_is_id(const xmlAttr *attr, void *user_data)
  * \note This is compatible with \c pcmk__xe_remove_matching_attrs().
  */
 static bool
-attr_is_not_id(xmlAttr *attr, void *user_data)
+attr_is_not_id(const xmlAttr *attr, void *user_data)
 {
     return !attr_is_id(attr, user_data);
 }
