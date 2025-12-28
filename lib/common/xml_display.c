@@ -111,10 +111,9 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             xml_node_private_t *nodepriv = attr->_private;
             const char *p_name = (const char *) attr->name;
             const char *p_value = pcmk__xml_attr_value(attr);
-            gchar *p_value_disp = NULL;
 
-            if ((nodepriv == NULL)
-                || pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+            if ((nodepriv != NULL)
+                && pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 continue;
             }
 
@@ -122,19 +121,20 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                 continue;
             }
 
+            // This block is the only real difference from pcmk__dump_xml_attr()
             if ((hidden != NULL) && !pcmk__str_empty(p_name)) {
                 gchar **hidden_names = g_strsplit(hidden, ",", 0);
 
                 if (pcmk__g_strv_contains(hidden_names, p_name)) {
-                    p_value = "*****";
+                    g_string_append_printf(buffer, " %s=\"*****\"", p_name);
+                    g_strfreev(hidden_names);
+                    continue;
                 }
+
                 g_strfreev(hidden_names);
             }
 
-            p_value_disp = pcmk__xml_escape(p_value, pcmk__xml_escape_attr);
-
-            pcmk__g_strcat(buffer, " ", p_name, "=\"", p_value_disp, "\"", NULL);
-            g_free(p_value_disp);
+            pcmk__dump_xml_attr(attr, buffer);
         }
 
         if ((data->children != NULL)
