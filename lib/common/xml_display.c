@@ -72,6 +72,55 @@ show_xml_comment(pcmk__output_t *out, const xmlNode *data, int depth,
 
 /*!
  * \internal
+ * \brief Append an attribute to a buffer, respecting hidden attributes
+ *
+ * If the attribute has the \c pcmk__xf_deleted flag set, don't append it.
+ * Otherwise, append the attribute in the form <tt>" NAME=\"VALUE\""</tt>.
+ *
+ * If the attribute's name is in the parent element's \c PCMK__XA_HIDDEN
+ * attribute, hide it by showing \c "*****" for the value.
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Buffer (<tt>GString *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is just like \c pcmk__dump_xml_attr() except for the handling of
+ *       hidden attributes.
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+show_xml_attribute(const xmlAttr *attr, void *user_data)
+{
+    GString *buffer = user_data;
+
+    const xml_node_private_t *nodepriv = attr->_private;
+    const char *name = (const char *) attr->name;
+    const char *hidden = pcmk__xe_get(attr->parent, PCMK__XA_HIDDEN);
+
+    /* NULL-check nodepriv because, at the time of writing, the argument can be
+     * arbitrary XML from the public API
+     */
+    if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+        return true;
+    }
+
+    if (hidden != NULL) {
+        gchar **hidden_names = g_strsplit(hidden, ",", 0);
+
+        if (pcmk__g_strv_contains(hidden_names, name)) {
+            g_string_append_printf(buffer, " %s=\"*****\"", name);
+            g_strfreev(hidden_names);
+            return true;
+        }
+        g_strfreev(hidden_names);
+    }
+
+    return pcmk__dump_xml_attr(attr, buffer);
+}
+
+/*!
+ * \internal
  * \brief Output an XML element in a formatted way
  *
  * \param[in,out] out      Output object
@@ -97,8 +146,6 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
     int rc = pcmk_rc_no_output;
 
     if (pcmk__is_set(options, pcmk__xml_fmt_open)) {
-        const char *hidden = pcmk__xe_get(data, PCMK__XA_HIDDEN);
-
         g_string_truncate(buffer, 0);
 
         for (int lpc = 0; lpc < spaces; lpc++) {
@@ -106,31 +153,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
         }
         pcmk__g_strcat(buffer, "<", data->name, NULL);
 
-        for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
-             attr = attr->next) {
-            const xml_node_private_t *nodepriv = attr->_private;
-            const char *p_name = (const char *) attr->name;
-
-            if ((nodepriv != NULL)
-                && pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                continue;
-            }
-
-            // This block is the only real difference from pcmk__dump_xml_attr()
-            if (hidden != NULL) {
-                gchar **hidden_names = g_strsplit(hidden, ",", 0);
-
-                if (pcmk__g_strv_contains(hidden_names, p_name)) {
-                    g_string_append_printf(buffer, " %s=\"*****\"", p_name);
-                    g_strfreev(hidden_names);
-                    continue;
-                }
-
-                g_strfreev(hidden_names);
-            }
-
-            pcmk__dump_xml_attr(attr, buffer);
-        }
+        pcmk__xe_foreach_const_attr(data, show_xml_attribute, buffer);
 
         if ((data->children != NULL)
             && pcmk__is_set(options, pcmk__xml_fmt_children)) {
