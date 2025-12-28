@@ -532,6 +532,26 @@ pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
 
 /*!
  * \internal
+ * \brief Check whether an attribute is marked as deleted
+ *
+ * \param[in] attr       XML attribute
+ * \param[in] user_data  Ignored
+ *
+ * \return \c true if \c pcmk__xf_deleted is set for \p attr, or \c false
+ *         otherwise
+ *
+ * \note This is compatible with \c pcmk__xe_remove_matching_attrs().
+ */
+static bool
+marked_as_deleted(xmlAttr *attr, void *user_data)
+{
+    const xml_node_private_t *nodepriv = attr->_private;
+
+    return pcmk__is_set(nodepriv->flags, pcmk__xf_deleted);
+}
+
+/*!
+ * \internal
  * \brief Remove all attributes marked as deleted from an XML node
  *
  * \param[in,out] xml        XML node whose deleted attributes to remove
@@ -545,7 +565,7 @@ static bool
 commit_attr_deletions(xmlNode *xml, void *user_data)
 {
     pcmk__xml_reset_node_flags(xml, NULL);
-    pcmk__xe_remove_matching_attrs(xml, true, pcmk__marked_as_deleted, NULL);
+    pcmk__xe_remove_matching_attrs(xml, true, marked_as_deleted, NULL);
     return true;
 }
 
