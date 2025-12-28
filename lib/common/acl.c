@@ -848,8 +848,6 @@ purge_xml_attributes(xmlNode *xml)
         return true;
     }
 
-    pcmk__xe_remove_matching_attrs(xml, true, attr_is_not_id, NULL);
-
     child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
     while (child != NULL) {
         xmlNode *tmp = child;
@@ -861,10 +859,14 @@ purge_xml_attributes(xmlNode *xml)
         }
     }
 
-    if (!readable_children) {
+    if (readable_children) {
+        pcmk__xe_remove_matching_attrs(xml, true, attr_is_not_id, NULL);
+
+    } else {
         // Nothing readable under here, so purge completely
         pcmk__xml_free(xml);
     }
+
     return readable_children;
 }
 
