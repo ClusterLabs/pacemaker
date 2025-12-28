@@ -294,6 +294,65 @@ pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
 
 /*!
  * \internal
+ * \brief User data for \c show_attr_change()
+ */
+struct show_attr_change_data {
+    pcmk__output_t *out;    //!< Output object
+    int rc;                 //!< Standard Pacemaker return code
+    int spaces;             //!< Number of indentation spaces to output
+};
+
+/*!
+ * \internal
+ * \brief Output an attribute change
+ *
+ * Do nothing if the attribute has not been deleted or changed.
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  User data (<tt>struct show_attr_change_data *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This currently produces output only for text-like output objects.
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+show_attr_change(const xmlAttr *attr, void *user_data)
+{
+    struct show_attr_change_data *data = user_data;
+    pcmk__output_t *out = data->out;
+
+    int rc = pcmk_rc_no_output;
+    const char *prefix = PCMK__XML_PREFIX_MODIFIED;
+    const xml_node_private_t *nodepriv = attr->_private;
+
+    if (!pcmk__any_flags_set(nodepriv->flags,
+                             pcmk__xf_deleted|pcmk__xf_dirty)) {
+        return true;
+    }
+
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+        prefix = PCMK__XML_PREFIX_DELETED;
+
+    } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+        prefix = PCMK__XML_PREFIX_CREATED;
+
+    } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_modified)) {
+        prefix = PCMK__XML_PREFIX_MODIFIED;
+
+    } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
+        prefix = PCMK__XML_PREFIX_MOVED;
+    }
+
+    rc = out->info(out, "%s %*s @%s=%s", prefix, data->spaces, "",
+                   (const char *) attr->name, pcmk__xml_attr_value(attr));
+    data->rc = pcmk__output_select_rc(data->rc, rc);
+
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Output XML portions that have been marked as changed
  *
  * \param[in,out] out      Output object
@@ -335,6 +394,12 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *xml, int depth,
         int spaces = pretty? (2 * depth) : 0;
         const char *prefix = PCMK__XML_PREFIX_MODIFIED;
 
+        struct show_attr_change_data data = {
+            .out = out,
+            .rc = rc,
+            .spaces = spaces,
+        };
+
         if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
             prefix = PCMK__XML_PREFIX_MOVED;
         }
@@ -344,40 +409,7 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *xml, int depth,
                             options|pcmk__xml_fmt_open);
 
         // Log changes to attributes
-        for (const xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
-             attr = attr->next) {
-            const char *name = (const char *) attr->name;
-
-            nodepriv = attr->_private;
-
-            if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                const char *value = pcmk__xml_attr_value(attr);
-
-                temp_rc = out->info(out, "%s %*s @%s=%s",
-                                    PCMK__XML_PREFIX_DELETED, spaces, "", name,
-                                    value);
-
-            } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
-                const char *value = pcmk__xml_attr_value(attr);
-
-                if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-                    prefix = PCMK__XML_PREFIX_CREATED;
-
-                } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_modified)) {
-                    prefix = PCMK__XML_PREFIX_MODIFIED;
-
-                } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
-                    prefix = PCMK__XML_PREFIX_MOVED;
-
-                } else {
-                    prefix = PCMK__XML_PREFIX_MODIFIED;
-                }
-
-                temp_rc = out->info(out, "%s %*s @%s=%s",
-                                    prefix, spaces, "", name, value);
-            }
-            rc = pcmk__output_select_rc(rc, temp_rc);
-        }
+        pcmk__xe_foreach_const_attr(xml, show_attr_change, &data);
 
         // Log changes to children
         for (const xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
