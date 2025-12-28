@@ -297,22 +297,22 @@ pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
  * \brief Output XML portions that have been marked as changed
  *
  * \param[in,out] out      Output object
- * \param[in]     data     XML node to output
+ * \param[in]     xml     XML node to output
  * \param[in]     depth    Current indentation level
  * \param[in]     options  Group of \p pcmk__xml_fmt_options flags
  *
- * \note This is a recursive helper for \p pcmk__xml_show_changes(), showing
- *       changes to \p data and its children.
+ * \note This is a recursive helper for \c pcmk__xml_show_changes(), showing
+ *       changes to \p xml and its children.
  * \note This currently produces output only for text-like output objects.
  */
 static int
-show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
+show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *xml, int depth,
                            uint32_t options)
 {
     /* @COMPAT: When log_data_element() is removed, we can remove the options
      * argument here and instead hard-code pcmk__xml_log_pretty.
      */
-    xml_node_private_t *nodepriv = (xml_node_private_t *) data->_private;
+    const xml_node_private_t *nodepriv = xml->_private;
     int rc = pcmk_rc_no_output;
     int temp_rc = pcmk_rc_no_output;
 
@@ -322,7 +322,7 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
 
     if (pcmk__all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         // Newly created
-        return pcmk__xml_show(out, PCMK__XML_PREFIX_CREATED, data, depth,
+        return pcmk__xml_show(out, PCMK__XML_PREFIX_CREATED, xml, depth,
                               options
                               |pcmk__xml_fmt_open
                               |pcmk__xml_fmt_children
@@ -340,11 +340,11 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
         }
 
         // Log opening tag
-        rc = pcmk__xml_show(out, prefix, data, depth,
+        rc = pcmk__xml_show(out, prefix, xml, depth,
                             options|pcmk__xml_fmt_open);
 
         // Log changes to attributes
-        for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
+        for (const xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
              attr = attr->next) {
             const char *name = (const char *) attr->name;
 
@@ -380,7 +380,7 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
         }
 
         // Log changes to children
-        for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
+        for (const xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
              child = pcmk__xml_next(child)) {
             temp_rc = show_xml_changes_recursive(out, child, depth + 1,
                                                  options);
@@ -388,13 +388,13 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
         }
 
         // Log closing tag
-        temp_rc = pcmk__xml_show(out, PCMK__XML_PREFIX_MODIFIED, data, depth,
+        temp_rc = pcmk__xml_show(out, PCMK__XML_PREFIX_MODIFIED, xml, depth,
                                  options|pcmk__xml_fmt_close);
         return pcmk__output_select_rc(rc, temp_rc);
     }
 
     // This node hasn't changed, but check its children
-    for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
+    for (const xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
          child = pcmk__xml_next(child)) {
         temp_rc = show_xml_changes_recursive(out, child, depth + 1, options);
         rc = pcmk__output_select_rc(rc, temp_rc);
