@@ -869,6 +869,70 @@ purge_xml_attributes(xmlNode *xml)
 }
 
 /*!
+ * \internal
+ * \brief User data for \c acl_filter_doc()
+ */
+struct acl_filter_doc_data {
+    xmlDoc *doc;        //!< XML document being filtered
+    bool all_filtered;  //!< Whether access has been denied to entire document
+};
+
+/*!
+ * \internal
+ * \brief Filter an XML document using one ACL
+ *
+ * \param[in]     acl        ACL object
+ * \param[in,out] user_data  User data (<tt>struct acl_filter_doc_data *</tt>)
+ */
+static void
+acl_filter_doc(gpointer data, gpointer user_data)
+{
+    const xml_acl_t *acl = data;
+    struct acl_filter_doc_data *filter_data = user_data;
+
+    xmlNode *root = xmlDocGetRootElement(filter_data->doc);
+    xml_doc_private_t *docpriv = filter_data->doc->_private;
+    xmlXPathObject *xpath_obj = NULL;
+    int num_results = 0;
+
+    if (filter_data->all_filtered) {
+        return;
+    }
+
+    if ((acl->mode != pcmk__xf_acl_deny) || (acl->xpath == NULL)) {
+        return;
+    }
+
+    xpath_obj = pcmk__xpath_search(filter_data->doc, acl->xpath);
+    num_results = pcmk__xpath_num_results(xpath_obj);
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = pcmk__xpath_result(xpath_obj, i);
+
+        if (match == NULL) {
+            continue;
+        }
+
+        // @COMPAT See COMPAT comment in pcmk__apply_acls()
+        match = pcmk__xpath_match_element(match);
+        if (match == NULL) {
+            continue;
+        }
+
+        if (!purge_xml_attributes(match) && (match == root)) {
+            xmlXPathFreeObject(xpath_obj);
+            filter_data->all_filtered = true;
+            return;
+        }
+    }
+
+    pcmk__trace("ACLs deny user '%s' access to %s (%d match%s)",
+                docpriv->acl_user, acl->xpath, num_results,
+                pcmk__plural_alt(num_results, "", "es"));
+    xmlXPathFreeObject(xpath_obj);
+}
+
+/*!
  * \brief Copy ACL-allowed portions of specified XML
  *
  * \param[in]  user        Username whose ACLs should be used
@@ -887,6 +951,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 {
     xmlNode *target = NULL;
     xml_doc_private_t *docpriv = NULL;
+    struct acl_filter_doc_data data = { 0, };
 
     *result = NULL;
     if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
@@ -902,45 +967,10 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
 
-    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
-        const xml_acl_t *acl = iter->data;
-        xmlXPathObject *xpath_obj = NULL;
-        int num_results = 0;
+    data.doc = target->doc;
+    g_list_foreach(docpriv->acls, acl_filter_doc, &data);
 
-        if ((acl->mode != pcmk__xf_acl_deny) || (acl->xpath == NULL)) {
-            continue;
-        }
-
-        xpath_obj = pcmk__xpath_search(target->doc, acl->xpath);
-        num_results = pcmk__xpath_num_results(xpath_obj);
-
-        for (int i = 0; i < num_results; i++) {
-            xmlNode *match = pcmk__xpath_result(xpath_obj, i);
-
-            if (match == NULL) {
-                continue;
-            }
-
-            // @COMPAT See COMPAT comment in pcmk__apply_acls()
-            match = pcmk__xpath_match_element(match);
-            if (match == NULL) {
-                continue;
-            }
-
-            if (!purge_xml_attributes(match) && (match == target)) {
-                pcmk__trace("ACLs deny user '%s' access to entire XML document",
-                            user);
-                xmlXPathFreeObject(xpath_obj);
-                return true;
-            }
-        }
-        pcmk__trace("ACLs deny user '%s' access to %s (%d match%s)", user,
-                    acl->xpath, num_results,
-                    pcmk__plural_alt(num_results, "", "es"));
-        xmlXPathFreeObject(xpath_obj);
-    }
-
-    if (!purge_xml_attributes(target)) {
+    if (data.all_filtered || !purge_xml_attributes(target)) {
         pcmk__trace("ACLs deny user '%s' access to entire XML document", user);
         return true;
     }
