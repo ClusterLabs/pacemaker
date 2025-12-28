@@ -173,9 +173,6 @@ G_GNUC_INTERNAL
 void pcmk__mark_xml_node_dirty(xmlNode *xml);
 
 G_GNUC_INTERNAL
-bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
-
-G_GNUC_INTERNAL
 bool pcmk__dump_xml_attr(const xmlAttr *attr, void *user_data);
 
 G_GNUC_INTERNAL
