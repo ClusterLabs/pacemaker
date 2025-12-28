@@ -108,21 +108,16 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
 
         for (const xmlAttr *attr = pcmk__xe_first_attr(data); attr != NULL;
              attr = attr->next) {
-            xml_node_private_t *nodepriv = attr->_private;
+            const xml_node_private_t *nodepriv = attr->_private;
             const char *p_name = (const char *) attr->name;
-            const char *p_value = pcmk__xml_attr_value(attr);
 
             if ((nodepriv != NULL)
                 && pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 continue;
             }
 
-            if (p_value == NULL) {
-                continue;
-            }
-
             // This block is the only real difference from pcmk__dump_xml_attr()
-            if ((hidden != NULL) && !pcmk__str_empty(p_name)) {
+            if (hidden != NULL) {
                 gchar **hidden_names = g_strsplit(hidden, ",", 0);
 
                 if (pcmk__g_strv_contains(hidden_names, p_name)) {
