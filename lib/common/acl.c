@@ -870,12 +870,45 @@ purge_xml_attributes(xmlNode *xml)
 
 /*!
  * \internal
- * \brief User data for \c acl_filter_doc()
+ * \brief User data for \c acl_filter_match() and \c acl_filter_doc()
  */
-struct acl_filter_doc_data {
+struct acl_filter_data {
     xmlDoc *doc;        //!< XML document being filtered
     bool all_filtered;  //!< Whether access has been denied to entire document
 };
+
+/*!
+ * \internal
+ * \brief Filter a node that matches an ACL's XPath expression
+ *
+ * Given a node that matches an ACL's XPath expression, get the corresponding
+ * XML element. Then filter it. See \c purge_xml_atributes() for details.
+ *
+ * \param[in,out] match      Node matched by the ACL's XPath expression
+ * \param[in,out] user_data  User data (<tt>struct acl_filter_doc_data *</tt>)
+ *
+ * \note This is compatible with \c pcmk__xpath_foreach_result().
+ */
+static void
+acl_filter_match(xmlNode *match, void *user_data)
+{
+    struct acl_filter_data *data = user_data;
+    xmlNode *root = xmlDocGetRootElement(data->doc);
+
+    if (data->all_filtered) {
+        return;
+    }
+
+    // @COMPAT See COMPAT comment in pcmk__apply_acls()
+    match = pcmk__xpath_match_element(match);
+    if (match == NULL) {
+        return;
+    }
+
+    if (!purge_xml_attributes(match) && (match == root)) {
+        data->all_filtered = true;
+    }
+}
 
 /*!
  * \internal
@@ -888,12 +921,7 @@ static void
 acl_filter_doc(gpointer data, gpointer user_data)
 {
     const xml_acl_t *acl = data;
-    struct acl_filter_doc_data *filter_data = user_data;
-
-    xmlNode *root = xmlDocGetRootElement(filter_data->doc);
-    xml_doc_private_t *docpriv = filter_data->doc->_private;
-    xmlXPathObject *xpath_obj = NULL;
-    int num_results = 0;
+    struct acl_filter_data *filter_data = user_data;
 
     if (filter_data->all_filtered) {
         return;
@@ -903,33 +931,8 @@ acl_filter_doc(gpointer data, gpointer user_data)
         return;
     }
 
-    xpath_obj = pcmk__xpath_search(filter_data->doc, acl->xpath);
-    num_results = pcmk__xpath_num_results(xpath_obj);
-
-    for (int i = 0; i < num_results; i++) {
-        xmlNode *match = pcmk__xpath_result(xpath_obj, i);
-
-        if (match == NULL) {
-            continue;
-        }
-
-        // @COMPAT See COMPAT comment in pcmk__apply_acls()
-        match = pcmk__xpath_match_element(match);
-        if (match == NULL) {
-            continue;
-        }
-
-        if (!purge_xml_attributes(match) && (match == root)) {
-            xmlXPathFreeObject(xpath_obj);
-            filter_data->all_filtered = true;
-            return;
-        }
-    }
-
-    pcmk__trace("ACLs deny user '%s' access to %s (%d match%s)",
-                docpriv->acl_user, acl->xpath, num_results,
-                pcmk__plural_alt(num_results, "", "es"));
-    xmlXPathFreeObject(xpath_obj);
+    pcmk__xpath_foreach_result(filter_data->doc, acl->xpath, acl_filter_match,
+                               user_data);
 }
 
 /*!
@@ -951,7 +954,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 {
     xmlNode *target = NULL;
     xml_doc_private_t *docpriv = NULL;
-    struct acl_filter_doc_data data = { 0, };
+    struct acl_filter_data data = { 0, };
 
     *result = NULL;
     if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
