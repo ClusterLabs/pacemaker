@@ -313,32 +313,33 @@ add_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 }
 
 static bool
-is_config_change(xmlNode *xml)
+is_config_change(const xmlNode *xml)
 {
     GList *gIter = NULL;
     xml_node_private_t *nodepriv = NULL;
-    xml_doc_private_t *docpriv;
+    xml_doc_private_t *docpriv = xml->doc->_private;
     xmlNode *config = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
                                            NULL);
 
-    if (config) {
+    if (config != NULL) {
         nodepriv = config->_private;
     }
+
+    // Arbitrary xml may come from the public API, so NULL-check nodepriv
     if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
-        return TRUE;
+        return true;
     }
 
-    docpriv = xml->doc->_private;
     for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
         pcmk__deleted_xml_t *deleted_obj = gIter->data;
 
         if (strstr(deleted_obj->path,
                    "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 static xmlNode *
