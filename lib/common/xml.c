@@ -543,7 +543,7 @@ pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
  * \note This is compatible with \c pcmk__xe_remove_matching_attrs().
  */
 static bool
-marked_as_deleted(xmlAttr *attr, void *user_data)
+marked_as_deleted(const xmlAttr *attr, void *user_data)
 {
     const xml_node_private_t *nodepriv = attr->_private;
 

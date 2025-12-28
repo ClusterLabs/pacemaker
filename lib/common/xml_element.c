@@ -506,7 +506,7 @@ struct remove_xa_if_matching_data {
     bool force;
 
     //! Match function to call for each attribute
-    bool (*match)(xmlAttr *, void *);
+    bool (*match)(const xmlAttr *, void *);
 
     //! User data argument for match function
     void *match_data;
@@ -554,7 +554,7 @@ remove_xa_if_matching(xmlAttr *attr, void *user_data)
  */
 void
 pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
-                               bool (*match)(xmlAttr *, void *),
+                               bool (*match)(const xmlAttr *, void *),
                                void *user_data)
 {
     struct remove_xa_if_matching_data data = {
