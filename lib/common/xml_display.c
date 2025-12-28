@@ -118,6 +118,10 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                 continue;
             }
 
+            if (p_value == NULL) {
+                continue;
+            }
+
             if ((hidden != NULL) && !pcmk__str_empty(p_name)) {
                 gchar **hidden_names = g_strsplit(hidden, ",", 0);
 
@@ -129,8 +133,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
 
             p_value_disp = pcmk__xml_escape(p_value, pcmk__xml_escape_attr);
 
-            pcmk__g_strcat(buffer, " ", p_name, "=\"",
-                           pcmk__s(p_value_disp, "<null>"), "\"", NULL);
+            pcmk__g_strcat(buffer, " ", p_name, "=\"", p_value_disp, "\"", NULL);
             g_free(p_value_disp);
         }
 
