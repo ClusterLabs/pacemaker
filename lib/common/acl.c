@@ -970,6 +970,13 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
 
+    if (docpriv->acls == NULL) {
+        pcmk__trace("User '%s' without ACLs denied access to entire XML "
+                    "document", user);
+        pcmk__xml_free(target);
+        return true;
+    }
+
     data.doc = target->doc;
     g_list_foreach(docpriv->acls, acl_filter_doc, &data);
 
@@ -978,19 +985,9 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         return true;
     }
 
-    if (docpriv->acls == NULL) {
-        pcmk__trace("User '%s' without ACLs denied access to entire XML "
-                    "document", user);
-        pcmk__xml_free(target);
-        return true;
-    }
-
     g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
-    if (target != NULL) {
-        *result = target;
-    }
-
+    *result = target;
     return true;
 }
 
