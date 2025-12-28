@@ -328,17 +328,16 @@ is_config_change(xmlNode *xml)
         return TRUE;
     }
 
-    if ((xml->doc != NULL) && (xml->doc->_private != NULL)) {
-        docpriv = xml->doc->_private;
-        for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-            pcmk__deleted_xml_t *deleted_obj = gIter->data;
+    docpriv = xml->doc->_private;
+    for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
+        pcmk__deleted_xml_t *deleted_obj = gIter->data;
 
-            if (strstr(deleted_obj->path,
-                       "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
-                return TRUE;
-            }
+        if (strstr(deleted_obj->path,
+                   "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
+            return TRUE;
         }
     }
+
     return FALSE;
 }
 
