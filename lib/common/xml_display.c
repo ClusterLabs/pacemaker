@@ -72,6 +72,39 @@ show_xml_comment(pcmk__output_t *out, const xmlNode *data, int depth,
 
 /*!
  * \internal
+ * \brief Check whether an XML attribute is hidden
+ *
+ * If the \c PCMK__XA_HIDDEN attribute is set for an XML element, then it is
+ * treated as a comma-separated list of sibling attribute names whose values
+ * should be hidden.
+ *
+ * Parse the value of \c PCMK__XA_HIDDEN (if present) in the parent of \p attr,
+ * and check whether \p attr is in the list.
+ *
+ * \param[in] attr  XML attribute
+ *
+ * \return \c true if \p attr is hidden, or \c false otherwise
+ */
+static bool
+is_attr_hidden(const xmlAttr *attr)
+{
+    const char *hidden = pcmk__xe_get(attr->parent, PCMK__XA_HIDDEN);
+    gchar **hidden_names = NULL;
+    bool rc = false;
+
+    if (hidden == NULL) {
+        return false;
+    }
+
+    hidden_names = g_strsplit(hidden, ",", 0);
+    rc = pcmk__g_strv_contains(hidden_names, (const char *) attr->name);
+
+    g_strfreev(hidden_names);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Append an attribute to a buffer, respecting hidden attributes
  *
  * If the attribute has the \c pcmk__xf_deleted flag set, don't append it.
@@ -95,8 +128,6 @@ show_xml_attribute(const xmlAttr *attr, void *user_data)
     GString *buffer = user_data;
 
     const xml_node_private_t *nodepriv = attr->_private;
-    const char *name = (const char *) attr->name;
-    const char *hidden = pcmk__xe_get(attr->parent, PCMK__XA_HIDDEN);
 
     /* NULL-check nodepriv because, at the time of writing, the argument can be
      * arbitrary XML from the public API
@@ -105,15 +136,10 @@ show_xml_attribute(const xmlAttr *attr, void *user_data)
         return true;
     }
 
-    if (hidden != NULL) {
-        gchar **hidden_names = g_strsplit(hidden, ",", 0);
-
-        if (pcmk__g_strv_contains(hidden_names, name)) {
-            g_string_append_printf(buffer, " %s=\"*****\"", name);
-            g_strfreev(hidden_names);
-            return true;
-        }
-        g_strfreev(hidden_names);
+    if (is_attr_hidden(attr)) {
+        g_string_append_printf(buffer, " %s=\"*****\"",
+                               (const char *) attr->name);
+        return true;
     }
 
     return pcmk__dump_xml_attr(attr, buffer);
