@@ -2012,9 +2012,7 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
         if (acl_source == NULL) {
             acl_source = xml;
         }
-        pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
-        pcmk__unpack_acls(acl_source->doc, xml->doc->_private, user);
-        pcmk__apply_acls(xml->doc);
+        pcmk__enable_acls(acl_source->doc, xml->doc, user);
     }
 }
 
