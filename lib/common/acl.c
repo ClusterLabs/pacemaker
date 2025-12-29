@@ -1074,20 +1074,6 @@ pcmk__check_creation_acls(xmlNode *xml)
     pcmk__xml_tree_foreach_remove(xml, check_creation_disallowed);
 }
 
-/*!
- * \brief Check whether or not an XML node is ACL-denied
- *
- * \param[in]  xml node to check
- *
- * \return true if XML node exists and is ACL-denied, false otherwise
- */
-bool
-xml_acl_denied(const xmlNode *xml)
-{
-    return (xml != NULL)
-           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_denied);
-}
-
 void
 xml_acl_disable(xmlNode *xml)
 {
@@ -1368,6 +1354,13 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
     *result = pcmk__acl_filtered_copy(user, acl_source->doc, xml);
     return true;
+}
+
+bool
+xml_acl_denied(const xmlNode *xml)
+{
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_denied);
 }
 
 // LCOV_EXCL_STOP
