@@ -37,6 +37,9 @@ bool xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 //! \deprecated Do not use
 bool xml_acl_denied(const xmlNode *xml);
 
+//! \deprecated Do not use
+bool pcmk_acl_required(const char *user);
+
 #ifdef __cplusplus
 }
 #endif
