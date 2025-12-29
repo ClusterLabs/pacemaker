@@ -598,7 +598,7 @@ unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
 
     pcmk__assert(target != NULL);
 
-    if ((target->acls != NULL) || !pcmk_acl_required(user)) {
+    if ((target->acls != NULL) || !pcmk__acl_required(user)) {
         return;
     }
 
@@ -959,7 +959,7 @@ pcmk__acl_filtered_copy(const char *user, xmlDoc *acl_source, xmlNode *xml)
 
     result = pcmk__xml_copy(NULL, xml);
 
-    if (!pcmk_acl_required(user)) {
+    if (!pcmk__acl_required(user)) {
         // Return an unfiltered copy
         return result;
     }
@@ -1205,16 +1205,7 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
 bool
 pcmk_acl_required(const char *user)
 {
-    if (pcmk__str_empty(user)) {
-        pcmk__trace("ACLs not required because no user set");
-        return false;
-
-    } else if (pcmk__is_privileged(user)) {
-        pcmk__trace("ACLs not required for privileged user %s", user);
-        return false;
-    }
-    pcmk__trace("ACLs required for %s", user);
-    return true;
+    return pcmk__acl_required(user);
 }
 
 char *
@@ -1348,7 +1339,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                       xmlNode **result)
 {
     if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
-        || !pcmk_acl_required(user)) {
+        || !pcmk__acl_required(user)) {
 
         return false;
     }
