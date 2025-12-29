@@ -31,10 +31,12 @@ extern "C" {
 
 // Handle CMocka API changes (see configure.ac)
 
-#if !HAVE_DECL_ASSERT_FLOAT_EQUAL
+// @COMPAT CMocka 1.1.4 added assert_float_equal() (commit 10f50a29)
+
+#ifndef assert_float_equal
 #define assert_float_equal(a, b, epsilon)   \
         assert_true(fabs((a) - (b)) < (epsilon))
-#endif  // !HAVE_DECL_ASSERT_FLOAT_EQUAL
+#endif  // ifndef assert_float_equal
 
 
 #if (PCMK__WITH_COVERAGE == 1)
