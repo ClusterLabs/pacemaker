@@ -1096,7 +1096,6 @@ void
 xml_acl_disable(xmlNode *xml)
 {
     xmlNode *child = NULL;
-    xml_doc_private_t *docpriv = NULL;
 
     if ((xml == NULL)
         || !pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
@@ -1121,8 +1120,7 @@ xml_acl_disable(xmlNode *xml)
         child = next;
     }
 
-    docpriv = xml->doc->_private;
-    pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
+    pcmk__xml_doc_clear_flags(xml->doc, pcmk__xf_acl_enabled);
 }
 
 /*!
