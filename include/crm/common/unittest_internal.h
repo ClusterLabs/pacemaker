@@ -29,6 +29,14 @@ extern "C" {
 
 /* internal unit testing related utilities */
 
+// Handle CMocka API changes (see configure.ac)
+
+#if !HAVE_DECL_ASSERT_FLOAT_EQUAL
+#define assert_float_equal(a, b, epsilon)   \
+        assert_true(fabs((a) - (b)) < (epsilon))
+#endif  // !HAVE_DECL_ASSERT_FLOAT_EQUAL
+
+
 #if (PCMK__WITH_COVERAGE == 1)
 /* This function isn't exposed anywhere.  The following prototype was taken from
  * /usr/lib/gcc/x86_64-redhat-linux/??/include/gcov.h

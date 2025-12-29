@@ -1171,6 +1171,8 @@ dnl ========================================================================
 dnl Unit test declarations
 dnl ========================================================================
 
+dnl @COMPAT CMocka 1.1.4 added assert_float_equal.
+
 AC_CHECK_DECLS([assert_float_equal], [], [], [[
     #include <stdarg.h>
     #include <stddef.h>
