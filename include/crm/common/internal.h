@@ -60,6 +60,7 @@
 #include <crm/common/servers_internal.h>
 #include <crm/common/tls_internal.h>
 #include <crm/common/utils_internal.h>
+// xml_attr_internal.h intentionally left out
 // xml_comment_internal.h intentionally left out
 // xml_element_internal.h intentionally left out
 // xml_idref_internal.h intentionally left out

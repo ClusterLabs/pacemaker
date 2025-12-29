@@ -709,11 +709,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
          * This ensures we use the name and interval from the <op> tag.
          * (See below for the only exception, fence device start/probe timeout.)
          */
-        for (xmlAttrPtr attr = action_config->properties;
-             attr != NULL; attr = attr->next) {
-            pcmk__insert_dup(meta, (const char *) attr->name,
-                             pcmk__xml_attr_value(attr));
-        }
+        pcmk__xe_foreach_const_attr(action_config, pcmk__xa_insert_dup, meta);
     }
 
     // Derive default timeout for probes from recurring monitor timeouts
