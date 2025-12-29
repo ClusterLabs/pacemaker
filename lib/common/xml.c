@@ -174,11 +174,32 @@ pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags)
 void
 pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags)
 {
-    if (doc != NULL) {
-        xml_doc_private_t *docpriv = doc->_private;
+    xml_doc_private_t *docpriv = NULL;
 
-        pcmk__set_xml_flags(docpriv, flags);
+    if (doc == NULL) {
+        return;
     }
+    docpriv = doc->_private;
+    pcmk__set_xml_flags(docpriv, flags);
+}
+
+/*!
+ * \internal
+ * \brief Clear flags for an XML document
+ *
+ * \param[in,out] doc    XML document
+ * \param[in]     flags  Group of <tt>enum pcmk__xml_flags</tt>
+ */
+void
+pcmk__xml_doc_clear_flags(xmlDoc *doc, uint32_t flags)
+{
+    xml_doc_private_t *docpriv = NULL;
+
+    if (doc == NULL) {
+        return;
+    }
+    docpriv = doc->_private;
+    pcmk__clear_xml_flags(docpriv, flags);
 }
 
 /*!
@@ -1294,16 +1315,15 @@ static void
 mark_attr_deleted(xmlNode *new_xml, const char *attr_name,
                   const char *old_value)
 {
-    xml_doc_private_t *docpriv = new_xml->doc->_private;
     xmlAttr *attr = NULL;
     xml_node_private_t *nodepriv;
 
     /* Restore the old value (without setting dirty flag recursively upwards or
      * checking ACLs)
      */
-    pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
+    pcmk__xml_doc_clear_flags(new_xml->doc, pcmk__xf_tracking);
     pcmk__xe_set(new_xml, attr_name, old_value);
-    pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
+    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
     attr = xmlHasProp(new_xml, (const xmlChar *) attr_name);
@@ -1325,16 +1345,15 @@ static void
 mark_attr_changed(xmlNode *new_xml, const char *attr_name,
                   const char *old_value)
 {
-    xml_doc_private_t *docpriv = new_xml->doc->_private;
     char *vcopy = pcmk__xe_get_copy(new_xml, attr_name);
 
     pcmk__trace("XML attribute %s was changed from '%s' to '%s' in %s",
                 attr_name, old_value, vcopy, (const char *) new_xml->name);
 
     // Restore the original value (without checking ACLs)
-    pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
+    pcmk__xml_doc_clear_flags(new_xml->doc, pcmk__xf_tracking);
     pcmk__xe_set(new_xml, attr_name, old_value);
-    pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
+    pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
 
     // Change it back to the new value, to check ACLs
     pcmk__xe_set(new_xml, attr_name, vcopy);
