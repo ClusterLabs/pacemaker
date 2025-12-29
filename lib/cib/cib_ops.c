@@ -715,8 +715,36 @@ cib__process_query(const char *op, int options, const char *section,
     return result;
 }
 
+static bool
+replace_cib_digest_matches(xmlNode *request, xmlNode *input)
+{
+    const char *peer = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *expected = pcmk__xe_get(request, PCMK_XA_DIGEST);
+    char *calculated = NULL;
+    bool matches = false;
+
+    if (expected == NULL) {
+        // Nothing to verify
+        return true;
+    }
+
+    calculated = pcmk__digest_xml(input, true);
+    matches = pcmk__str_eq(calculated, expected, pcmk__str_casei);
+
+    if (matches) {
+        pcmk__info("Digest matched on replace from %s: %s", peer, expected);
+
+    } else {
+        pcmk__err("Digest mismatch on replace from %s: %s vs. %s (expected)",
+                  peer, calculated, expected);
+    }
+
+    free(calculated);
+    return matches;
+}
+
 static int
-replace_cib(xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
             xmlNode **result_cib)
 {
     int result = pcmk_ok;
@@ -730,26 +758,10 @@ replace_cib(xmlNode *req, xmlNode *input, xmlNode *existing_cib,
     int replace_admin_epoch = 0;
 
     const char *reason = NULL;
-    const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
-    const char *digest = pcmk__xe_get(req, PCMK_XA_DIGEST);
+    const char *peer = pcmk__xe_get(request, PCMK__XA_SRC);
 
-    if (digest) {
-        char *digest_verify = pcmk__digest_xml(input, true);
-
-        if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
-            pcmk__err("Digest mis-match on replace from %s: %s vs. %s "
-                      "(expected)",
-                      peer, digest_verify, digest);
-            reason = "digest mismatch";
-
-        } else {
-            pcmk__info("Digest matched on replace from %s: %s", peer,
-                       digest);
-        }
-        free(digest_verify);
-
-    } else {
-        pcmk__trace("No digest to verify");
+    if (!replace_cib_digest_matches(request, input)) {
+        reason = "digest mismatch";
     }
 
     cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
