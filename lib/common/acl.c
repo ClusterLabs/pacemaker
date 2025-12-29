@@ -920,6 +920,73 @@ filter_unreadable_nodes(xmlNode **xml, bool in_readable_context)
 }
 
 /*!
+ * \internal
+ * \brief Copy XML, filtering out portions that are unreadable based on ACLs
+ *
+ * Access or denial via ACLs is inherited, with more specific ACLs (those that
+ * match the node directly or match a more recent ancestor) taking precedence
+ * over less specific ones (those that match a less recent ancestor). Access is
+ * denied by default, if no ACL matches a node or any of its ancestors.
+ *
+ * If the user's ACLs grant read access to a node (either directly or through
+ * the most recent ancestor node matched by an ACL), then that node is kept
+ * intact.
+ *
+ * If the user's ACLs deny read access to a node (either directly, through the
+ * most recent ancestor node matched by an ACL, or by default), then:
+ * - If the current node has at least one readable descendant, then all of the
+ *   current node's attributes are removed other than \c PCMK_XA_ID.
+ * - Otherwise, the current node is removed.
+ *
+ * \param[in] user        User whose ACLs to use
+ * \param[in] acl_source  XML document whose ACL definitions to use
+ * \param[in] xml         XML to copy
+ *
+ * \return Newly allocated ACL-filtered copy of \p xml, or \c NULL if the entire
+ *         document is filtered out
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
+ */
+xmlNode *
+pcmk__acl_filtered_copy(const char *user, xmlDoc *acl_source, xmlNode *xml)
+{
+    xmlNode *result = NULL;
+    xml_doc_private_t *docpriv = NULL;
+
+    pcmk__assert((acl_source != NULL) && (xml != NULL));
+
+    result = pcmk__xml_copy(NULL, xml);
+
+    if (!pcmk_acl_required(user)) {
+        // Return an unfiltered copy
+        return result;
+    }
+
+    pcmk__enable_acls(acl_source->doc, result->doc, user);
+
+    docpriv = result->doc->_private;
+    if (docpriv->acls == NULL) {
+        pcmk__trace("User '%s' without ACLs denied access to entire XML "
+                    "document", user);
+        pcmk__xml_free(result);
+        return NULL;
+    }
+
+    pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
+    filter_unreadable_nodes(&result, false);
+
+    if (result == NULL) {
+        // Entire document was freed, so don't free docpriv->acls here
+        pcmk__trace("ACLs deny user '%s' access to entire XML document", user);
+        return NULL;
+    }
+
+    g_clear_pointer(&docpriv->acls, pcmk__free_acls);
+    return result;
+}
+
+/*!
  * \brief Copy XML, filtering out portions that are unreadable based on ACLs
  *
  * Access or denial via ACLs is inherited, with more specific ACLs (those that
@@ -943,8 +1010,9 @@ filter_unreadable_nodes(xmlNode **xml, bool in_readable_context)
  * \param[out] result      Where to store ACL-filtered copy of \p xml (will be
  *                         set to \c NULL if entire document is filtered out)
  *
- * \return \c true if \p acl_source and \p xml are non-<tt>NULL</tt> and ACLs
- *         are required for \p user, or \c false otherwise
+ * \return \c true if \p acl_source, \p acl_source->doc, and \p xml are
+ *         non-<tt>NULL</tt> and ACLs are required for \p user, or \c false
+ *         otherwise
  *
  * \note If this returns true, caller should use \p *result rather than \p xml.
  * \note The caller is responsible for freeing \p *result using
@@ -956,36 +1024,13 @@ bool
 xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                       xmlNode **result)
 {
-    xml_doc_private_t *docpriv = NULL;
-
     if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
         || !pcmk_acl_required(user)) {
 
         return false;
     }
 
-    *result = pcmk__xml_copy(NULL, xml);
-
-    pcmk__enable_acls(acl_source->doc, (*result)->doc, user);
-
-    docpriv = (*result)->doc->_private;
-    if (docpriv->acls == NULL) {
-        pcmk__trace("User '%s' without ACLs denied access to entire XML "
-                    "document", user);
-        g_clear_pointer(result, pcmk__xml_free);
-        return true;
-    }
-
-    pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
-    filter_unreadable_nodes(result, false);
-
-    if (*result == NULL) {
-        // Entire document was freed, so don't free docpriv->acls here
-        pcmk__trace("ACLs deny user '%s' access to entire XML document", user);
-        return true;
-    }
-
-    g_clear_pointer(&docpriv->acls, pcmk__free_acls);
+    *result = pcmk__acl_filtered_copy(user, acl_source->doc, xml);
     return true;
 }
 
