@@ -570,7 +570,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     // Allow ourselves to make any additional necessary changes
     xml_acl_disable(*cib);
 
-    if (xml_acl_denied(*cib)) {
+    if (pcmk__xml_doc_all_flags_set((*cib)->doc, pcmk__xf_acl_denied)) {
         pcmk__trace("ACL rejected part or all of the proposed changes");
         rc = EACCES;
         goto done;
