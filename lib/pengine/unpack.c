@@ -1002,6 +1002,29 @@ unpack_tags(xmlNode *xml_tags, pcmk_scheduler_t *scheduler)
 
 /*!
  * \internal
+ * \brief Add a non-ID attribute to a hash table of name-value pairs
+ *
+ * This is like \c pcmk__xa_insert_dup() but does nothing if the attribute's
+ * name is \c PCMK_XA_ID.
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Name-value pair table (<tt>GHashTable *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+insert_dup_attr_if_not_id(const xmlAttr *attr, void *user_data)
+{
+    if (!pcmk__str_eq((const char *) attr->name, PCMK_XA_ID, pcmk__str_none)) {
+        pcmk__xa_insert_dup(attr, user_data);
+    }
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Unpack a ticket state entry
  *
  * \param[in]     xml_ticket  XML ticket state to unpack
@@ -1018,7 +1041,6 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
     const char *granted = NULL;
     const char *last_granted = NULL;
     const char *standby = NULL;
-    xmlAttrPtr xIter = NULL;
 
     pcmk__ticket_t *ticket = NULL;
 
@@ -1038,15 +1060,8 @@ unpack_ticket_state(xmlNode *xml_ticket, void *userdata)
         }
     }
 
-    for (xIter = xml_ticket->properties; xIter; xIter = xIter->next) {
-        const char *prop_name = (const char *)xIter->name;
-        const char *prop_value = pcmk__xml_attr_value(xIter);
-
-        if (pcmk__str_eq(prop_name, PCMK_XA_ID, pcmk__str_none)) {
-            continue;
-        }
-        pcmk__insert_dup(ticket->state, prop_name, prop_value);
-    }
+    pcmk__xe_foreach_const_attr(xml_ticket, insert_dup_attr_if_not_id,
+                                ticket->state);
 
     granted = g_hash_table_lookup(ticket->state, PCMK__XA_GRANTED);
     if (pcmk__is_true(granted)) {
