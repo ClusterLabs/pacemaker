@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,8 +22,8 @@ calloc_fails(void **state)
     pcmk__assert_exits(CRM_EX_OSERR,
         {
             pcmk__mock_calloc = true;   // calloc() will return NULL
-            expect_value(__wrap_calloc, nmemb, 1);
-            expect_value(__wrap_calloc, size, sizeof(pcmk__common_args_t));
+            expect_uint_value(__wrap_calloc, nmemb, 1);
+            expect_uint_value(__wrap_calloc, size, sizeof(pcmk__common_args_t));
             pcmk__new_common_args("boring summary");
             pcmk__mock_calloc = false;  // Use real calloc()
         }

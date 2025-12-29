@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ no_pids(void **state)
 
     expect_string(__wrap_readlink, path, path);
     expect_any(__wrap_readlink, buf);
-    expect_value(__wrap_readlink, bufsize, PATH_MAX - 1);
+    expect_uint_value(__wrap_readlink, bufsize, PATH_MAX - 1);
     will_return(__wrap_readlink, ENOENT);
     will_return(__wrap_readlink, NULL);
 

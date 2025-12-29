@@ -35,6 +35,31 @@
         assert_true(fabs((a) - (b)) < (epsilon))
 #endif  // ifndef assert_float_equal
 
+/* @COMPAT CMocka 2.0.0:
+ * - Deprecated check_expected() in favor of the new check_expected_int() and
+ *   check_expected_uint() (commit ba5b1970).
+ * - Deprecated expect_value() (commit cac1c1d2) in favor of the new
+ *   expect_int_value() and expect_uint_value() (commit bd47d6dd).
+ */
+
+#ifndef check_expected_int
+#define check_expected_int(parameter) check_expected(parameter)
+#endif  // ifndef check_expected_int
+
+#ifndef check_expected_uint
+#define check_expected_uint(parameter) check_expected(parameter)
+#endif  // ifndef check_expected_uint
+
+#ifndef expect_int_value
+#define expect_int_value(function, parameter, value)    \
+    expect_value(function, parameter, value)
+#endif  // ifndef expect_int_value
+
+#ifndef expect_uint_value
+#define expect_uint_value(function, parameter, value)   \
+    expect_value(function, parameter, value)
+#endif  // ifndef expect_uint_value
+
 
 #if (PCMK__WITH_COVERAGE == 1)
 /* This function isn't exposed anywhere.  The following prototype was taken from
