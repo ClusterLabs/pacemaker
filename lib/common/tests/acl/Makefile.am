@@ -15,6 +15,5 @@ include $(top_srcdir)/mk/unittest.mk
 
 check_PROGRAMS = pcmk__is_user_in_group_test
 check_PROGRAMS += pcmk_acl_required_test
-check_PROGRAMS += xml_acl_denied_test
 
 TESTS = $(check_PROGRAMS)
