@@ -1194,19 +1194,6 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
     return false;
 }
 
-/*!
- * \brief Check whether ACLs are required for a given user
- *
- * \param[in]  User name to check
- *
- * \return true if the user requires ACLs, false otherwise
- */
-bool
-pcmk_acl_required(const char *user)
-{
-    return pcmk__acl_required(user);
-}
-
 char *
 pcmk__uid2username(uid_t uid)
 {
@@ -1352,6 +1339,12 @@ xml_acl_denied(const xmlNode *xml)
 {
     return (xml != NULL)
            && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_denied);
+}
+
+bool
+pcmk_acl_required(const char *user)
+{
+    return pcmk__acl_required(user);
 }
 
 // LCOV_EXCL_STOP

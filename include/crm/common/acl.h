@@ -25,8 +25,6 @@ extern "C" {
 
 void xml_acl_disable(xmlNode *xml);
 
-bool pcmk_acl_required(const char *user);
-
 #ifdef __cplusplus
 }
 #endif
