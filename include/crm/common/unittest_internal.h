@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,6 +28,14 @@ extern "C" {
 #endif
 
 /* internal unit testing related utilities */
+
+// Handle CMocka API changes (see configure.ac)
+
+#if !HAVE_DECL_ASSERT_FLOAT_EQUAL
+#define assert_float_equal(a, b, epsilon)   \
+        assert_true(fabs((a) - (b)) < (epsilon))
+#endif  // !HAVE_DECL_ASSERT_FLOAT_EQUAL
+
 
 #if (PCMK__WITH_COVERAGE == 1)
 /* This function isn't exposed anywhere.  The following prototype was taken from
