@@ -233,8 +233,8 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
 
     cib = *current_cib;
 
-    if (cib_acl_enabled(cib, user)
-        && xml_acl_filtered_copy(user, cib, cib, &cib_filtered)) {
+    if (cib_acl_enabled(cib, user)) {
+        cib_filtered = pcmk__acl_filtered_copy(user, cib->doc, cib);
 
         if (cib_filtered == NULL) {
             pcmk__debug("Pre-filtered the entire cib");
@@ -662,12 +662,12 @@ done:
     if ((rc != pcmk_rc_ok) && cib_acl_enabled(old_versions, user)) {
         xmlNode *saved_cib = *cib;
 
-        if (xml_acl_filtered_copy(user, old_versions, *cib, cib)) {
-            if (*cib == NULL) {
-                pcmk__debug("Pre-filtered the entire cib result");
-            }
-            pcmk__xml_free(saved_cib);
+        *cib = pcmk__acl_filtered_copy(user, old_versions->doc, *cib);
+        if (*cib == NULL) {
+            pcmk__debug("Pre-filtered the entire cib result");
         }
+
+        pcmk__xml_free(saved_cib);
     }
 
     pcmk__xml_free(top);
