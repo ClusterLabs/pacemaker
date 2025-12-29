@@ -1095,29 +1095,34 @@ xml_acl_denied(const xmlNode *xml)
 void
 xml_acl_disable(xmlNode *xml)
 {
-    if ((xml != NULL)
-        && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
+    xmlNode *child = NULL;
+    xml_doc_private_t *docpriv = NULL;
 
-        xml_doc_private_t *docpriv = xml->doc->_private;
+    if ((xml == NULL)
+        || !pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
 
-        /* Catch anything that was created but shouldn't have been */
-        pcmk__apply_acls(xml->doc);
-
-        /* Be sure not to free xml itself.
-         *
-         * @TODO Maybe we should free xml if it's newly created and the creation
-         * is disallowed, but we would need a way to inform the caller. This is
-         * public API.
-         */
-        xml = pcmk__xml_first_child(xml);
-        while (xml != NULL) {
-            xmlNode *next = pcmk__xml_next(xml);
-
-            pcmk__check_creation_acls(xml);
-            xml = next;
-        }
-        pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
+        return;
     }
+
+    // Catch anything that was created but shouldn't have been
+    pcmk__apply_acls(xml->doc);
+
+    /* Be sure not to free xml itself.
+     *
+     * @TODO Maybe we should free xml if it's newly created and the creation
+     * is disallowed, but we would need a way to inform the caller. This is
+     * public API.
+     */
+    child = pcmk__xml_first_child(xml);
+    while (child != NULL) {
+        xmlNode *next = pcmk__xml_next(child);
+
+        pcmk__check_creation_acls(child);
+        child = next;
+    }
+
+    docpriv = xml->doc->_private;
+    pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
 }
 
 /*!
