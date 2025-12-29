@@ -17,6 +17,7 @@ check_PROGRAMS = pcmk__compare_versions_test		\
 		 pcmk__fail_attr_name_test 		\
 		 pcmk__failcount_name_test 		\
 		 pcmk__getpid_s_test 			\
+		 pcmk__is_user_in_group_test 		\
 		 pcmk__lastfailure_name_test 		\
 		 pcmk__lookup_user_test			\
 		 pcmk__realloc_test 			\
