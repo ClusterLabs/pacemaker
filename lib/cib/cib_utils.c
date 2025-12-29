@@ -285,7 +285,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                xmlNode **output)
 {
     int rc = pcmk_rc_ok;
-    bool check_schema = true;
     bool make_copy = true;
     xmlNode *top = NULL;
     xmlNode *scratch = NULL;
@@ -481,14 +480,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         );
     }
 
-    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
-        /* Throttle the amount of costly validation we perform due to status updates
-         * a) we don't really care whats in the status section
-         * b) we don't validate any of its contents at the moment anyway
-         */
-        check_schema = false;
-    }
-
     /* scratch must not be modified after this point, except for the attributes
      * for which pcmk__xa_filterable() returns true
      */
@@ -530,8 +521,11 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         }
     }
 
-    if ((rc == pcmk_rc_ok) && check_schema
+    // Skip validation for status-only updates, since we allow anything there
+    if ((rc == pcmk_rc_ok)
+        && !pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)
         && !pcmk__configured_schema_validates(scratch)) {
+
         rc = pcmk_rc_schema_validation;
     }
 
