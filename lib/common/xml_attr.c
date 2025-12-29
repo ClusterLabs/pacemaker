@@ -77,6 +77,31 @@ remove:
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Add an attribute to a hash table of name-value pairs
+ *
+ * Insert a copy of the attribute's name as the key and a copy of the
+ * attribute's value as the value, using \c pcmk__insert_dup().
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Name-value pair table (<tt>GHashTable *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+bool
+pcmk__xa_insert_dup(const xmlAttr *attr, void *user_data)
+{
+    GHashTable *table = user_data;
+    const char *name = (const char *) attr->name;
+    const char *value = pcmk__xml_attr_value(attr);
+
+    pcmk__insert_dup(table, name, value);
+    return true;
+}
+
 void
 pcmk__mark_xml_attr_dirty(xmlAttr *a) 
 {

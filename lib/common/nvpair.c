@@ -323,31 +323,6 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
 }
 
 /*!
- * \internal
- * \brief Add an attribute to a hash table of name-value pairs
- *
- * Insert a copy of the attribute's name as the key and a copy of the
- * attribute's value as the value.
- *
- * \param[in]     attr       XML attribute
- * \param[in,out] user_data  Name-value pair table (<tt>GHashTable *</tt>)
- *
- * \return \c true (to continue iterating)
- *
- * \note This is compatible with \c pcmk__xe_foreach_const_attr().
- */
-static bool
-add_attr_to_nvpair_table(const xmlAttr *attr, void *user_data)
-{
-    GHashTable *table = user_data;
-    const char *name = (const char *) attr->name;
-    const char *value = pcmk__xml_attr_value(attr);
-
-    pcmk__insert_dup(table, name, value);
-    return true;
-}
-
-/*!
  * \brief Retrieve XML attributes as a hash table
  *
  * Given an XML element, this will look for any \<attributes> element child,
@@ -378,8 +353,7 @@ xml2list(const xmlNode *parent)
 
     pcmk__log_xml_trace(nvpair_list, "Unpacking");
 
-    pcmk__xe_foreach_const_attr(nvpair_list, add_attr_to_nvpair_table,
-                                nvpair_hash);
+    pcmk__xe_foreach_const_attr(nvpair_list, pcmk__xa_insert_dup, nvpair_hash);
 
     for (child = pcmk__xe_first_child(nvpair_list, PCMK__XE_PARAM, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, PCMK__XE_PARAM)) {
