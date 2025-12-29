@@ -987,54 +987,6 @@ pcmk__acl_filtered_copy(const char *user, xmlDoc *acl_source, xmlNode *xml)
 }
 
 /*!
- * \brief Copy XML, filtering out portions that are unreadable based on ACLs
- *
- * Access or denial via ACLs is inherited, with more specific ACLs (those that
- * match the node directly or match a more recent ancestor) taking precedence
- * over less specific ones (those that match a less recent ancestor). Access is
- * denied by default, if no ACL matches a node or any of its ancestors.
- *
- * If the user's ACLs grant read access to a node (either directly or through
- * the most recent ancestor node matched by an ACL), then that node is kept
- * intact.
- *
- * If the user's ACLs deny read access to a node (either directly, through the
- * most recent ancestor node matched by an ACL, or by default), then:
- * - If the current node has at least one readable descendant, then all of the
- *   current node's attributes are removed other than \c PCMK_XA_ID.
- * - Otherwise, the current node is removed.
- *
- * \param[in]  user        User whose ACLs to use
- * \param[in]  acl_source  XML containing ACLs
- * \param[in]  xml         XML to be copied
- * \param[out] result      Where to store ACL-filtered copy of \p xml (will be
- *                         set to \c NULL if entire document is filtered out)
- *
- * \return \c true if \p acl_source, \p acl_source->doc, and \p xml are
- *         non-<tt>NULL</tt> and ACLs are required for \p user, or \c false
- *         otherwise
- *
- * \note If this returns true, caller should use \p *result rather than \p xml.
- * \note The caller is responsible for freeing \p *result using
- *       \c xmlFreeDoc((*result)->doc). The document and its nodes also contain
- *       Pacemaker-generated private data, which cannot be freed by external
- *       programs at this time.
- */
-bool
-xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
-                      xmlNode **result)
-{
-    if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
-        || !pcmk_acl_required(user)) {
-
-        return false;
-    }
-
-    *result = pcmk__acl_filtered_copy(user, acl_source->doc, xml);
-    return true;
-}
-
-/*!
  * \internal
  * \brief Check whether creation of an XML element is implicitly allowed
  *
@@ -1403,6 +1355,20 @@ xml_acl_enabled(const xmlNode *xml)
         return pcmk__is_set(docpriv->flags, pcmk__xf_acl_enabled);
     }
     return false;
+}
+
+bool
+xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
+                      xmlNode **result)
+{
+    if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
+        || !pcmk_acl_required(user)) {
+
+        return false;
+    }
+
+    *result = pcmk__acl_filtered_copy(user, acl_source->doc, xml);
+    return true;
 }
 
 // LCOV_EXCL_STOP

@@ -30,6 +30,10 @@ extern "C" {
 //! \deprecated Do not use
 bool xml_acl_enabled(const xmlNode *xml);
 
+//! \deprecated Do not use
+bool xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
+                           xmlNode **result);
+
 #ifdef __cplusplus
 }
 #endif
