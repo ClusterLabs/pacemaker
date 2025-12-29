@@ -1084,12 +1084,8 @@ pcmk__check_creation_acls(xmlNode *xml)
 bool
 xml_acl_denied(const xmlNode *xml)
 {
-    if (xml && xml->doc && xml->doc->_private){
-        xml_doc_private_t *docpriv = xml->doc->_private;
-
-        return pcmk__is_set(docpriv->flags, pcmk__xf_acl_denied);
-    }
-    return false;
+    return (xml != NULL)
+           && pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_denied);
 }
 
 void
