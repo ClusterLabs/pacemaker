@@ -215,7 +215,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return EINVAL;
     }
 
-    if (!pcmk_acl_required(cred)) {
+    if (!pcmk__acl_required(cred)) {
         /* nothing to evaluate */
         return pcmk_rc_already;
     }

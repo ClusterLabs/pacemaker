@@ -134,7 +134,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 {
     bool rc = false;
 
-    if(pcmk_acl_required(user)) {
+    if (pcmk__acl_required(user)) {
         const char *value = NULL;
         GHashTable *options = pcmk__strkey_table(free, free);
 
