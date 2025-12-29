@@ -1170,8 +1170,8 @@ main(int argc, char **argv)
                 goto done;
             }
 
-            // @COMPAT Fail if pcmk_acl_required(username)
-            if (pcmk_acl_required(username)) {
+            // @COMPAT Fail if pcmk__acl_required(username)
+            if (pcmk__acl_required(username)) {
                 out->err(out,
                          "Warning: cibadmin is being run as user %s, which is "
                          "subject to ACLs. As a result, ACLs for user %s may "

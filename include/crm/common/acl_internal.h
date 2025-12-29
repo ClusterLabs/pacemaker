@@ -36,6 +36,21 @@ pcmk__is_privileged(const char *user)
     return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
 
+/*!
+ * \internal
+ * \brief Check whether an ACL is required for a given user to access the CIB
+ *
+ * \param[in] user  User name
+ *
+ * \return \c true if \p user requires an ACL to access the CIB, or \c false
+ *         otherwise
+ */
+static inline bool
+pcmk__acl_required(const char *user)
+{
+    return !pcmk__str_empty(user) && !pcmk__is_privileged(user);
+}
+
 void pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user);
 
 xmlNode *pcmk__acl_filtered_copy(const char *user, xmlDoc *acl_source,
