@@ -338,13 +338,17 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     if ((rc == pcmk_rc_ok) && (scratch == NULL)) {
         rc = EINVAL;
         goto done;
+    }
 
-    } else if ((rc == pcmk_rc_ok) && xml_acl_denied(scratch)) {
+    if ((rc == pcmk_rc_ok)
+        && pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_acl_denied)) {
+
         pcmk__trace("ACL rejected part or all of the proposed changes");
         rc = EACCES;
         goto done;
+    }
 
-    } else if (rc != pcmk_rc_ok) {
+    if (rc != pcmk_rc_ok) {
         goto done;
     }
 
