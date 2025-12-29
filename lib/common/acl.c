@@ -590,8 +590,8 @@ unpack_acl_target_or_group(xmlNode *xml, void *user_data)
  * \param[in,out] target  XML document private data whose \c acls field to set
  * \param[in]     user    User whose ACLs to unpack
  */
-void
-pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
+static void
+unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
 {
     xmlNode *acls = NULL;
 
@@ -733,7 +733,7 @@ pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user)
     if (target == NULL) {
         return;
     }
-    pcmk__unpack_acls(source, target->_private, user);
+    unpack_acls(source, target->_private, user);
     pcmk__xml_doc_set_flags(target, pcmk__xf_acl_enabled);
     pcmk__apply_acls(target);
 }
