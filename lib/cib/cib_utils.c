@@ -239,9 +239,9 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         xmlNode *cib_ro = *current_cib;
         xmlNode *cib_filtered = NULL;
 
-        if (enable_acl
-            && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                     &cib_filtered)) {
+        if (enable_acl) {
+            cib_filtered = pcmk__acl_filtered_copy(user, (*current_cib)->doc,
+                                                   *current_cib);
 
             if (cib_filtered == NULL) {
                 pcmk__debug("Pre-filtered the entire cib");
@@ -522,8 +522,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     /* @TODO: This may not work correctly with !make_copy, since we don't
      * keep the original CIB.
      */
-    if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)
-        && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
+    if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)) {
+        *result_cib = pcmk__acl_filtered_copy(user, patchset_cib->doc, scratch);
 
         if (*result_cib == NULL) {
             pcmk__debug("Pre-filtered the entire cib result");
