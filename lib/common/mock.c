@@ -11,13 +11,14 @@
 
 #include <errno.h>
 #include <pwd.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <setjmp.h>                         // Required by cmocka.h
+#include <stdarg.h>                         // Required by cmocka.h
+#include <stdbool.h>                        // Required by cmocka.h
+#include <stddef.h>                         // Required by cmocka.h
+#include <stdint.h>                         // Required by cmocka.h
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <setjmp.h>
 #include <sys/types.h>                      // pid_t, size_t
 #include <sys/utsname.h>
 #include <unistd.h>
