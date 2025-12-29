@@ -28,6 +28,7 @@
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
 // This file is a wrapper for other {xml_*,xpath}_internal.h headers
+#include <crm/common/xml_attr_internal.h>
 #include <crm/common/xml_comment_internal.h>
 #include <crm/common/xml_element_internal.h>
 #include <crm/common/xml_idref_internal.h>
