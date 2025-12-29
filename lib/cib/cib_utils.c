@@ -156,7 +156,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     GHashTable *options = NULL;
     bool rc = false;
 
-    if ((xml == NULL) || !pcmk_acl_required(user)) {
+    if ((xml == NULL) || !pcmk__acl_required(user)) {
         return false;
     }
 
