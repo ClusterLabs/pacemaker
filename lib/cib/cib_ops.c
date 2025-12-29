@@ -715,6 +715,84 @@ cib__process_query(const char *op, int options, const char *section,
     return result;
 }
 
+static int
+replace_cib(xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+            xmlNode **result_cib)
+{
+    int result = pcmk_ok;
+
+    int updates = 0;
+    int epoch = 0;
+    int admin_epoch = 0;
+
+    int replace_updates = 0;
+    int replace_epoch = 0;
+    int replace_admin_epoch = 0;
+
+    const char *reason = NULL;
+    const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
+    const char *digest = pcmk__xe_get(req, PCMK_XA_DIGEST);
+
+    if (digest) {
+        char *digest_verify = pcmk__digest_xml(input, true);
+
+        if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
+            pcmk__err("Digest mis-match on replace from %s: %s vs. %s "
+                      "(expected)",
+                      peer, digest_verify, digest);
+            reason = "digest mismatch";
+
+        } else {
+            pcmk__info("Digest matched on replace from %s: %s", peer,
+                       digest);
+        }
+        free(digest_verify);
+
+    } else {
+        pcmk__trace("No digest to verify");
+    }
+
+    cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
+    cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
+
+    if (replace_admin_epoch < admin_epoch) {
+        reason = PCMK_XA_ADMIN_EPOCH;
+
+    } else if (replace_admin_epoch > admin_epoch) {
+        /* no more checks */
+
+    } else if (replace_epoch < epoch) {
+        reason = PCMK_XA_EPOCH;
+
+    } else if (replace_epoch > epoch) {
+        /* no more checks */
+
+    } else if (replace_updates < updates) {
+        reason = PCMK_XA_NUM_UPDATES;
+    }
+
+    if (reason != NULL) {
+        pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
+                   "current %s is greater than the replacement",
+                   replace_admin_epoch, replace_epoch,
+                   replace_updates, peer, admin_epoch, epoch, updates,
+                   reason);
+        result = -pcmk_err_old_data;
+    } else {
+        pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
+                   admin_epoch, epoch, updates,
+                   replace_admin_epoch, replace_epoch, replace_updates,
+                   peer);
+    }
+
+    if (*result_cib != existing_cib) {
+        pcmk__xml_free(*result_cib);
+    }
+    *result_cib = pcmk__xml_copy(NULL, input);
+
+    return result;
+}
+
 int
 cib__process_replace(const char *op, int options, const char *section,
                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
@@ -744,74 +822,7 @@ cib__process_replace(const char *op, int options, const char *section,
     }
 
     if (pcmk__xe_is(input, PCMK_XE_CIB)) {
-        int updates = 0;
-        int epoch = 0;
-        int admin_epoch = 0;
-
-        int replace_updates = 0;
-        int replace_epoch = 0;
-        int replace_admin_epoch = 0;
-
-        const char *reason = NULL;
-        const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
-        const char *digest = pcmk__xe_get(req, PCMK_XA_DIGEST);
-
-        if (digest) {
-            char *digest_verify = pcmk__digest_xml(input, true);
-
-            if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
-                pcmk__err("Digest mis-match on replace from %s: %s vs. %s "
-                          "(expected)",
-                          peer, digest_verify, digest);
-                reason = "digest mismatch";
-
-            } else {
-                pcmk__info("Digest matched on replace from %s: %s", peer,
-                           digest);
-            }
-            free(digest_verify);
-
-        } else {
-            pcmk__trace("No digest to verify");
-        }
-
-        cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
-        cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
-
-        if (replace_admin_epoch < admin_epoch) {
-            reason = PCMK_XA_ADMIN_EPOCH;
-
-        } else if (replace_admin_epoch > admin_epoch) {
-            /* no more checks */
-
-        } else if (replace_epoch < epoch) {
-            reason = PCMK_XA_EPOCH;
-
-        } else if (replace_epoch > epoch) {
-            /* no more checks */
-
-        } else if (replace_updates < updates) {
-            reason = PCMK_XA_NUM_UPDATES;
-        }
-
-        if (reason != NULL) {
-            pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
-                       "current %s is greater than the replacement",
-                       replace_admin_epoch, replace_epoch,
-                       replace_updates, peer, admin_epoch, epoch, updates,
-                       reason);
-            result = -pcmk_err_old_data;
-        } else {
-            pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
-                       admin_epoch, epoch, updates,
-                       replace_admin_epoch, replace_epoch, replace_updates,
-                       peer);
-        }
-
-        if (*result_cib != existing_cib) {
-            pcmk__xml_free(*result_cib);
-        }
-        *result_cib = pcmk__xml_copy(NULL, input);
+        result = replace_cib(req, input, existing_cib, result_cib);
 
     } else {
         xmlNode *obj_root = NULL;
