@@ -52,11 +52,11 @@ valid_inputs_set(void **state)
     new_value = "new_value";
     expect_string(__wrap_setenv, name, OPT_NAME_PCMK);
     expect_string(__wrap_setenv, value, new_value);
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     expect_string(__wrap_setenv, name, OPT_NAME_HA);
     expect_string(__wrap_setenv, value, new_value);
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     pcmk__set_env_option(OPT_NAME, new_value, true);
 
@@ -64,11 +64,11 @@ valid_inputs_set(void **state)
     new_value = "";
     expect_string(__wrap_setenv, name, OPT_NAME_PCMK);
     expect_string(__wrap_setenv, value, new_value);
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     expect_string(__wrap_setenv, name, OPT_NAME_HA);
     expect_string(__wrap_setenv, value, new_value);
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     pcmk__set_env_option(OPT_NAME, new_value, true);
 
@@ -100,7 +100,7 @@ disable_compat(void **state)
 
     expect_string(__wrap_setenv, name, OPT_NAME_PCMK);
     expect_string(__wrap_setenv, value, new_value);
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     pcmk__set_env_option(OPT_NAME, new_value, false);
 

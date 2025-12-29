@@ -47,8 +47,9 @@ calloc_fails(void **state) {
         CRM_EX_OSERR,
         {
             pcmk__mock_calloc = true;   // calloc() will return NULL
-            expect_value(__wrap_calloc, nmemb, (size_t) ((40 * 1.01) + 601));
-            expect_value(__wrap_calloc, size, sizeof(char));
+            expect_uint_value(__wrap_calloc, nmemb,
+                              (size_t) ((40 * 1.01) + 601));
+            expect_uint_value(__wrap_calloc, size, sizeof(char));
             pcmk__compress(SIMPLE_DATA, 40, 0, &result, &len);
             pcmk__mock_calloc = false;  // Use the real calloc()
         }
