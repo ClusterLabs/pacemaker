@@ -38,6 +38,9 @@ pcmk__is_privileged(const char *user)
 
 void pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user);
 
+xmlNode *pcmk__acl_filtered_copy(const char *user, xmlDoc *acl_source,
+                                 xmlNode *xml);
+
 bool pcmk__check_acl(xmlNode *xml, const char *attr_name,
                      enum pcmk__xml_flags mode);
 
