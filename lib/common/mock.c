@@ -95,8 +95,8 @@ __wrap_calloc(size_t nmemb, size_t size)
     if (!pcmk__mock_calloc) {
         return __real_calloc(nmemb, size);
     }
-    check_expected(nmemb);
-    check_expected(size);
+    check_expected_uint(nmemb);
+    check_expected_uint(size);
     return NULL;
 }
 
@@ -145,7 +145,7 @@ __wrap_realloc(void *ptr, size_t size)
         return __real_realloc(ptr, size);
     }
     check_expected_ptr(ptr);
-    check_expected(size);
+    check_expected_uint(size);
     return NULL;
 }
 
@@ -174,7 +174,7 @@ __wrap_setenv(const char *name, const char *value, int overwrite)
     }
     check_expected_ptr(name);
     check_expected_ptr(value);
-    check_expected(overwrite);
+    check_expected_int(overwrite);
     errno = mock_type(int);
     return (errno == 0)? 0 : -1;
 }
@@ -385,7 +385,7 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
         check_expected_ptr(name);
         check_expected_ptr(pwd);
         check_expected_ptr(buf);
-        check_expected(buflen);
+        check_expected_uint(buflen);
         check_expected_ptr(result);
         *result = mock_ptr_type(struct passwd *);
         return retval;
@@ -419,7 +419,7 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
         const char *contents = NULL;
 
         check_expected_ptr(path);
-        check_expected(bufsize);
+        check_expected_uint(bufsize);
         errno = mock_type(int);
         contents = mock_ptr_type(const char *);
 

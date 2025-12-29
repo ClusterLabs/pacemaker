@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,7 +85,7 @@ input_too_long_for_pcmk(void **state)
 
     expect_string(__wrap_setenv, name, buf);
     expect_string(__wrap_setenv, value, "new_value");
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     pcmk__set_env_option(long_opt, "new_value", true);
 
@@ -109,22 +109,22 @@ valid_inputs_set(void **state)
 
     expect_string(__wrap_setenv, name, "PCMK_env_var");
     expect_string(__wrap_setenv, value, "new_value");
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     expect_string(__wrap_setenv, name, "HA_env_var");
     expect_string(__wrap_setenv, value, "new_value");
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     pcmk__set_env_option("env_var", "new_value", true);
 
     // Empty string is also a valid value
     expect_string(__wrap_setenv, name, "PCMK_env_var");
     expect_string(__wrap_setenv, value, "");
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     expect_string(__wrap_setenv, name, "HA_env_var");
     expect_string(__wrap_setenv, value, "");
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     pcmk__set_env_option("env_var", "", true);
 
@@ -154,7 +154,7 @@ disable_compat(void **state)
 
     expect_string(__wrap_setenv, name, "PCMK_env_var");
     expect_string(__wrap_setenv, value, "new_value");
-    expect_value(__wrap_setenv, overwrite, 1);
+    expect_int_value(__wrap_setenv, overwrite, 1);
     will_return(__wrap_setenv, 0);
     pcmk__set_env_option("env_var", "new_value", false);
 

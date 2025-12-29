@@ -28,7 +28,7 @@ has_pids(void **state)
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, path);
-    expect_value(__wrap_readlink, bufsize, PATH_MAX - 1);
+    expect_uint_value(__wrap_readlink, bufsize, PATH_MAX - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/ok");
 
