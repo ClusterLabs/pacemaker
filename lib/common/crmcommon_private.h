@@ -147,10 +147,6 @@ G_GNUC_INTERNAL
 void pcmk__free_acls(GList *acls);
 
 G_GNUC_INTERNAL
-void pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target,
-                       const char *user);
-
-G_GNUC_INTERNAL
 bool pcmk__is_user_in_group(const char *user, const char *group);
 
 G_GNUC_INTERNAL
