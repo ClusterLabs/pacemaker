@@ -1161,6 +1161,120 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
 
 /*!
  * \internal
+ * \brief Append an XML-escaped character to a buffer (text escaping)
+ *
+ * This appends an escaped character in \c pcmk__xml_escape_text mode.
+ *
+ * \param[in]     current_char  Character to escape
+ * \param[in,out] buffer        Buffer
+ */
+static void
+append_xml_escaped_char_text(char current_char, GString *buffer)
+{
+    switch (current_char) {
+        case '<':
+            g_string_append(buffer, PCMK__XML_ENTITY_LT);
+            return;
+
+        case '>':
+            g_string_append(buffer, PCMK__XML_ENTITY_GT);
+            return;
+
+        case '&':
+            g_string_append(buffer, PCMK__XML_ENTITY_AMP);
+            return;
+
+        case '\n':
+        case '\t':
+            g_string_append_c(buffer, current_char);
+            return;
+
+        default:
+            if (g_ascii_iscntrl(current_char)) {
+                g_string_append_printf(buffer, "&#x%.2X;", current_char);
+            } else {
+                g_string_append_c(buffer, current_char);
+            }
+            return;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Append an XML-escaped character to a buffer (attribute escaping)
+ *
+ * This appends an escaped character in \c pcmk__xml_escape_attr mode.
+ *
+ * \param[in]     current_char  Character to escape
+ * \param[in,out] buffer        Buffer
+ */
+static void
+append_xml_escaped_char_attr(char current_char, GString *buffer)
+{
+    switch (current_char) {
+        case '<':
+            g_string_append(buffer, PCMK__XML_ENTITY_LT);
+            return;
+
+        case '>':
+            g_string_append(buffer, PCMK__XML_ENTITY_GT);
+            return;
+
+        case '&':
+            g_string_append(buffer, PCMK__XML_ENTITY_AMP);
+            return;
+
+        case '"':
+            g_string_append(buffer, PCMK__XML_ENTITY_QUOT);
+            return;
+
+        default:
+            if (g_ascii_iscntrl(current_char)) {
+                g_string_append_printf(buffer, "&#x%.2X;", current_char);
+            } else {
+                g_string_append_c(buffer, current_char);
+            }
+            return;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Append an XML-escaped character to a buffer (pretty escaping)
+ *
+ * This appends an escaped character in \c pcmk__xml_escape_attr_pretty mode.
+ *
+ * \param[in]     current_char  Character to escape
+ * \param[in,out] buffer        Buffer
+ */
+static void
+append_xml_escaped_char_pretty(char current_char, GString *buffer)
+{
+    switch (current_char) {
+        case '"':
+            g_string_append(buffer, "\\\"");
+            return;
+
+        case '\n':
+            g_string_append(buffer, "\\n");
+            return;
+
+        case '\r':
+            g_string_append(buffer, "\\r");
+            return;
+
+        case '\t':
+            g_string_append(buffer, "\\t");
+            return;
+
+        default:
+            g_string_append_c(buffer, current_char);
+            return;
+    }
+}
+
+/*!
+ * \internal
  * \brief Append an XML-escaped character to a buffer
  *
  * \param[in]     current_char  Character to escape
@@ -1173,72 +1287,16 @@ append_xml_escaped_char(char current_char, enum pcmk__xml_escape_type type,
 {
     switch (type) {
         case pcmk__xml_escape_text:
-            switch (current_char) {
-                case '<':
-                    g_string_append(buffer, PCMK__XML_ENTITY_LT);
-                    return;
-                case '>':
-                    g_string_append(buffer, PCMK__XML_ENTITY_GT);
-                    return;
-                case '&':
-                    g_string_append(buffer, PCMK__XML_ENTITY_AMP);
-                    return;
-                case '\n':
-                case '\t':
-                    g_string_append_c(buffer, current_char);
-                    return;
-                default:
-                    if (g_ascii_iscntrl(current_char)) {
-                        g_string_append_printf(buffer, "&#x%.2X;",
-                                               current_char);
-                    } else {
-                        g_string_append_c(buffer, current_char);
-                    }
-                    return;
-            }
+            append_xml_escaped_char_text(current_char, buffer);
+            return;
 
         case pcmk__xml_escape_attr:
-            switch (current_char) {
-                case '<':
-                    g_string_append(buffer, PCMK__XML_ENTITY_LT);
-                    return;
-                case '>':
-                    g_string_append(buffer, PCMK__XML_ENTITY_GT);
-                    return;
-                case '&':
-                    g_string_append(buffer, PCMK__XML_ENTITY_AMP);
-                    return;
-                case '"':
-                    g_string_append(buffer, PCMK__XML_ENTITY_QUOT);
-                    return;
-                default:
-                    if (g_ascii_iscntrl(current_char)) {
-                        g_string_append_printf(buffer, "&#x%.2X;",
-                                               current_char);
-                    } else {
-                        g_string_append_c(buffer, current_char);
-                    }
-                    return;
-            }
+            append_xml_escaped_char_attr(current_char, buffer);
+            return;
 
         case pcmk__xml_escape_attr_pretty:
-            switch (current_char) {
-                case '"':
-                    g_string_append(buffer, "\\\"");
-                    return;
-                case '\n':
-                    g_string_append(buffer, "\\n");
-                    return;
-                case '\r':
-                    g_string_append(buffer, "\\r");
-                    return;
-                case '\t':
-                    g_string_append(buffer, "\\t");
-                    return;
-                default:
-                    g_string_append_c(buffer, current_char);
-                    return;
-            }
+            append_xml_escaped_char_pretty(current_char, buffer);
+            return;
 
         default:    // Invalid enum value
             pcmk__assert(false);
