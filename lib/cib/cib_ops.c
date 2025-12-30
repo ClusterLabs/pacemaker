@@ -731,7 +731,6 @@ process_query_section(int options, const char *section, xmlNode *existing_cib,
                       xmlNode **answer)
 {
     xmlNode *obj_root = NULL;
-    int rc = pcmk_rc_ok;
 
     CRM_CHECK(*answer == NULL, g_clear_pointer(answer, pcmk__xml_free));
 
@@ -740,11 +739,15 @@ process_query_section(int options, const char *section, xmlNode *existing_cib,
     }
 
     obj_root = pcmk_find_cib_element(existing_cib, section);
-
     if (obj_root == NULL) {
-        rc = ENXIO;
+        return ENXIO;
+    }
 
-    } else if (pcmk__is_set(options, cib_no_children)) {
+    /* We make a copy in the cib_no_children case but not in the other. We may
+     * be able to simplify the callers if we're able to do the same thing (copy
+     * or don't copy) for both.
+     */
+    if (pcmk__is_set(options, cib_no_children)) {
         *answer = pcmk__xe_create(NULL, (const char *) obj_root->name);
         pcmk__xe_copy_attrs(*answer, obj_root, pcmk__xaf_none);
 
@@ -752,12 +755,7 @@ process_query_section(int options, const char *section, xmlNode *existing_cib,
         *answer = obj_root;
     }
 
-    if ((rc == pcmk_rc_ok) && (*answer == NULL)) {
-        pcmk__err("Error creating query response");
-        rc = ENOMSG;
-    }
-
-    return rc;
+    return pcmk_rc_ok;
 }
 
 int
