@@ -201,7 +201,6 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
     }
 
     rc = fn(op, call_options, section, req, input, cib_ro, &result_cib, output);
-    rc = pcmk_legacy2rc(rc);
 
     if (*output == NULL) {
         // Do nothing
@@ -323,7 +322,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         }
 
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
-        rc = pcmk_legacy2rc(rc);
 
         /* If scratch points to a new object now (for example, after an erase
          * operation), then *current_cib should point to the same object.
@@ -344,7 +342,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
-        rc = pcmk_legacy2rc(rc);
 
         /* @TODO This appears to be a hack to determine whether scratch points
          * to a new object now, without saving the old pointer (which may be
@@ -810,6 +807,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     if (input != NULL) {
         rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
                                       output, NULL);
+        rc = pcmk_rc2legacy(rc);
 
         if (rc != pcmk_ok) {
             pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc),
