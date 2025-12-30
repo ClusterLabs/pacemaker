@@ -726,23 +726,14 @@ done:
     return rc;
 }
 
-int
-cib__process_query(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                   xmlNode **result_cib, xmlNode **answer)
+static int
+process_query_section(int options, const char *section, xmlNode *existing_cib,
+                      xmlNode **answer)
 {
     xmlNode *obj_root = NULL;
     int rc = pcmk_rc_ok;
 
-    pcmk__trace("Processing %s for %s section", op,
-                pcmk__s(section, "unspecified"));
-
-    if (pcmk__is_set(options, cib_xpath)) {
-        return process_query_xpath(op, options, section, existing_cib, answer);
-    }
-
-    CRM_CHECK(*answer == NULL, pcmk__xml_free(*answer));
-    *answer = NULL;
+    CRM_CHECK(*answer == NULL, g_clear_pointer(answer, pcmk__xml_free));
 
     if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
@@ -770,6 +761,21 @@ cib__process_query(const char *op, int options, const char *section,
     }
 
     return rc;
+}
+
+int
+cib__process_query(const char *op, int options, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                   xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
+
+    if (pcmk__is_set(options, cib_xpath)) {
+        return process_query_xpath(op, options, section, existing_cib, answer);
+    }
+
+    return process_query_section(options, section, existing_cib, answer);
 }
 
 static bool
