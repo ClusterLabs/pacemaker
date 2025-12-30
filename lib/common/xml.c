@@ -1638,6 +1638,41 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_child, int old_pos,
 
 /*!
  * \internal
+ * \brief Mark a child as created, and free it if ACLs disallow its creation
+ *
+ * This sets the \c pcmk__xf_skip, \c pcmk__xf_dirty, and \c pcmk__xf_created
+ * flags on \p new_child, and it sets dirty flags on all ancestor nodes and the
+ * document.
+ *
+ * \param[in,out] new_child  Newly created child of new XML node
+ */
+static void
+mark_child_created(xmlNode *new_child)
+{
+    xml_node_private_t *nodepriv = new_child->_private;
+
+    /* Setting all these flags first seems like wasted work (albeit not much) if
+     * pcmk__check_creation_acls() ends up freeing new_child. It also sets dirty
+     * flags on the ancestors and document even if new_child ends up getting
+     * freed. We do these steps first because:
+     * - Currently pcmk__check_creation_acls() does nothing for nodes that don't
+     *   have the pcmk__xf_created flag set.
+     * - Otherwise we have a use-after-free if new_child gets freed.
+     *
+     * @TODO Create a way to call pcmk__check_creation_acls() first.
+     */
+
+    // @TODO Why do we set pcmk__xf_skip here?
+    pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
+
+    mark_xml_tree_dirty_created(new_child);
+
+    // Check whether creation was allowed (may free new_child)
+    pcmk__check_creation_acls(new_child);
+}
+
+/*!
+ * \internal
  * \brief Check whether a new XML child comment matches an old XML child comment
  *
  * Two comments match if they have the same position among their siblings and
@@ -1874,40 +1909,38 @@ mark_child_changed_or_deleted(xmlNode *old_child, void *user_data)
 static bool
 mark_child_moved_or_created(xmlNode *new_child, void *user_data)
 {
+    xmlNode *old_child = NULL;
+    int old_pos = 0;
+    int new_pos = 0;
     xml_node_private_t *nodepriv = new_child->_private;
 
     if (nodepriv == NULL) {
         return true;
     }
 
-    if (nodepriv->match != NULL) {
-        /* Fetch the match and clear new_child->_private's match member. Any
-         * changes within the child were marked by
-         * mark_child_changed_or_deleted(). If the child was moved, mark the
-         * move now.
-         *
-         * We might be able to mark the move earlier, in
-         * mark_child_changed_or_deleted(), consolidating both actions. We'd
-         * have to think about whether the timing of setting the pcmk__xf_skip
-         * flag makes any difference.
-         */
-        xmlNode *old_child = nodepriv->match;
-        int old_pos = pcmk__xml_position(old_child, pcmk__xf_skip);
-        int new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
-
-        if (old_pos != new_pos) {
-            mark_child_moved(old_child, new_child, old_pos, new_pos);
-        }
-        nodepriv->match = NULL;
+    if (nodepriv->match == NULL) {
+        // No match in old XML means the new child is newly created
+        mark_child_created(new_child);
         return true;
     }
 
-    // No match in old XML means the new child is newly created
-    pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
-    mark_xml_tree_dirty_created(new_child);
+    /* Fetch the match and clear new_child->_private's match member. Any changes
+     * within the child were marked by mark_child_changed_or_deleted(). If the
+     * child was moved, mark the move now.
+     *
+     * We might be able to mark the move in mark_child_changed_or_deleted(),
+     * consolidating both actions. We'd have to think about whether the timing
+     * of setting the pcmk__xf_skip flag makes any difference.
+     */
+    old_child = nodepriv->match;
+    nodepriv->match = NULL;
 
-    // Check whether creation was allowed (may free new_child)
-    pcmk__check_creation_acls(new_child);
+    old_pos = pcmk__xml_position(old_child, pcmk__xf_skip);
+    new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
+
+    if (old_pos != new_pos) {
+        mark_child_moved(old_child, new_child, old_pos, new_pos);
+    }
 
     return true;
 }
