@@ -260,7 +260,6 @@ enum pcmk__xml_escape_type {
     pcmk__xml_escape_attr_pretty,
 };
 
-bool pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type);
 char *pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type);
 
 /*!
