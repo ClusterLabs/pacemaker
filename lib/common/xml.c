@@ -1802,6 +1802,57 @@ find_and_set_match(xmlNode *old_child, void *user_data)
 
 /*!
  * \internal
+ * \brief Mark a child node as changed or deleted if appropriate
+ *
+ * If the old child has its \c match pointer set, then it's present in the new
+ * XML. It may or may not have changed. We make a recursive call to
+ * \c pcmk__xml_mark_changes() to mark any changes that may be present.
+ *
+ * Otherwise, the old child is absent from the new node, so we mark it as
+ * deleted.
+ *
+ * \param[in,out] old_child  Child of old XML node
+ * \param[in,out] user_data  New XML node (<tt>xmlNode *</tt>)
+ *
+ * \return \c true (to continue iterating over old children)
+ */
+static bool
+mark_child_changed_or_deleted(xmlNode *old_child, void *user_data)
+{
+    xmlNode *new_xml = user_data;
+    xmlNode *new_child = NULL;
+    xml_node_private_t *nodepriv = old_child->_private;
+
+    if (nodepriv == NULL) {
+        return true;
+    }
+
+    if (nodepriv->match == NULL) {
+        // No match in new XML means the old child was deleted
+        mark_child_deleted(old_child, new_xml);
+        return true;
+    }
+
+    /* Fetch the match and clear old_child->_private's match member.
+     * new_child->_private's match member is handled in the new_xml loop in
+     * pcmk__xml_mark_changes().
+     */
+    new_child = nodepriv->match;
+    nodepriv->match = NULL;
+
+    pcmk__assert(old_child->type == new_child->type);
+
+    if (old_child->type == XML_COMMENT_NODE) {
+        // Comments match only if their positions and contents match
+        return true;
+    }
+
+    pcmk__xml_mark_changes(old_child, new_child);
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Mark changes between two XML trees
  *
  * Set flags in a new XML tree to indicate changes relative to an old XML tree.
@@ -1810,6 +1861,7 @@ find_and_set_match(xmlNode *old_child, void *user_data)
  * \param[in,out] new_xml  XML after changes
  *
  * \note This may set \c pcmk__xf_skip on parts of \p old_xml.
+ * \note This function is recursive via \c mark_child_changed_or_deleted().
  */
 void
 pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
@@ -1831,39 +1883,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
     xml_diff_attrs(old_xml, new_xml);
 
     pcmk__xml_foreach_child(old_xml, find_and_set_match, new_xml);
-
-    // Process matches (changed children) and deletions
-    for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
-         old_child = pcmk__xml_next(old_child)) {
-
-        xml_node_private_t *nodepriv = old_child->_private;
-        xmlNode *new_child = NULL;
-
-        if (nodepriv == NULL) {
-            continue;
-        }
-
-        if (nodepriv->match == NULL) {
-            // No match in new XML means the old child was deleted
-            mark_child_deleted(old_child, new_xml);
-            continue;
-        }
-
-        /* Fetch the match and clear old_child->_private's match member.
-         * new_child->_private's match member is handled in the new_xml loop.
-         */
-        new_child = nodepriv->match;
-        nodepriv->match = NULL;
-
-        pcmk__assert(old_child->type == new_child->type);
-
-        if (old_child->type == XML_COMMENT_NODE) {
-            // Comments match only if their positions and contents match
-            continue;
-        }
-
-        pcmk__xml_mark_changes(old_child, new_child);
-    }
+    pcmk__xml_foreach_child(old_xml, mark_child_changed_or_deleted, new_xml);
 
     /* Mark unmatched new children as created, and mark matched new children as
      * moved if their positions changed. Grab the next new child in advance,
