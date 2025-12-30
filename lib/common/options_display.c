@@ -348,6 +348,7 @@ add_option_metadata_xml(pcmk__output_t *out,
                         const pcmk__cluster_option_t *option,
                         const char *replaced_with)
 {
+    xmlNode *xml = NULL;
     const char *type = option->type;
     const char *desc_long = option->description_long;
     const char *desc_short = option->description_short;
@@ -427,14 +428,13 @@ add_option_metadata_xml(pcmk__output_t *out,
         generated_s = NULL;
     }
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETER,
-                                   PCMK_XA_NAME, option->name,
-                                   PCMK_XA_ADVANCED, advanced_s,
-                                   PCMK_XA_GENERATED, generated_s,
-                                   NULL);
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETER);
+    pcmk__xe_set(xml, PCMK_XA_NAME, option->name);
+    pcmk__xe_set(xml, PCMK_XA_ADVANCED, advanced_s);
+    pcmk__xe_set(xml, PCMK_XA_GENERATED, generated_s);
 
     if (deprecated && !legacy) {
-        pcmk__output_xml_create_parent(out, PCMK_XE_DEPRECATED, NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_DEPRECATED);
 
         if (replaced_with != NULL) {
             pcmk__output_create_xml_node(out, PCMK_XE_REPLACED_WITH,
@@ -446,10 +446,9 @@ add_option_metadata_xml(pcmk__output_t *out,
     add_desc_xml(out, true, desc_long);
     add_desc_xml(out, false, desc_short);
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_CONTENT,
-                                   PCMK_XA_TYPE, type,
-                                   PCMK_XA_DEFAULT, option->default_value,
-                                   NULL);
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_CONTENT);
+    pcmk__xe_set(xml, PCMK_XA_TYPE, type);
+    pcmk__xe_set(xml, PCMK_XA_DEFAULT, option->default_value);
 
     add_possible_values_xml(out, option);
 
@@ -485,6 +484,7 @@ PCMK__OUTPUT_ARGS("option-list", "const char *", "const char *", "const char *",
 static int
 option_list_xml(pcmk__output_t *out, va_list args)
 {
+    xmlNode *xml = NULL;
     const char *name = va_arg(args, const char *);
     const char *desc_short = va_arg(args, const char *);
     const char *desc_long = va_arg(args, const char *);
@@ -495,16 +495,15 @@ option_list_xml(pcmk__output_t *out, va_list args)
     pcmk__assert((out != NULL) && (name != NULL) && (desc_short != NULL)
                  && (desc_long != NULL) && (option_list != NULL));
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE_AGENT,
-                                   PCMK_XA_NAME, name,
-                                   PCMK_XA_VERSION, PACEMAKER_VERSION,
-                                   NULL);
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE_AGENT);
+    pcmk__xe_set(xml, PCMK_XA_NAME, name);
+    pcmk__xe_set(xml, PCMK_XA_VERSION, PACEMAKER_VERSION);
 
     pcmk__output_create_xml_text_node(out, PCMK_XE_VERSION, PCMK_OCF_VERSION);
     add_desc_xml(out, true, desc_long);
     add_desc_xml(out, false, desc_short);
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETERS, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_PARAMETERS);
 
     for (const pcmk__cluster_option_t *option = option_list;
          option->name != NULL; option++) {
