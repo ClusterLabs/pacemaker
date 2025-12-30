@@ -917,8 +917,8 @@ pcmk__xml_free_node(xmlNode *xml)
  *
  * \return Standard Pacemaker return code
  */
-static int
-free_xml_with_position(xmlNode *node, int position)
+int
+pcmk__xml_free_position(xmlNode *node, int position)
 {
     xmlDoc *doc = NULL;
     xml_node_private_t *nodepriv = NULL;
@@ -999,7 +999,7 @@ free_xml_with_position(xmlNode *node, int position)
 void
 pcmk__xml_free(xmlNode *xml)
 {
-    free_xml_with_position(xml, -1);
+    pcmk__xml_free_position(xml, -1);
 }
 
 /*!
@@ -1541,14 +1541,14 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     // Clear flags on new child and its children
     pcmk__xml_tree_foreach(candidate, pcmk__xml_reset_node_flags, NULL);
 
-    // free_xml_with_position() will check whether ACLs allow the deletion
+    // pcmk__xml_free_position() will check whether ACLs allow the deletion
     pcmk__apply_acls(candidate->doc);
 
     /* Try to remove the child again (which will track it in document's
      * deleted_objs on success)
      */
-    if (free_xml_with_position(candidate, pos) != pcmk_rc_ok) {
-        // ACLs denied deletion in free_xml_with_position. Free candidate here.
+    if (pcmk__xml_free_position(candidate, pos) != pcmk_rc_ok) {
+        // ACLs denied deletion in pcmk__xml_free_position(), so free here
         pcmk__xml_free_node(candidate);
     }
 
