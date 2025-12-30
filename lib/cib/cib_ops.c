@@ -745,11 +745,8 @@ process_query_section(int options, const char *section, xmlNode *existing_cib,
         rc = ENXIO;
 
     } else if (pcmk__is_set(options, cib_no_children)) {
-        xmlNode *shallow = pcmk__xe_create(*answer,
-                                           (const char *) obj_root->name);
-
-        pcmk__xe_copy_attrs(shallow, obj_root, pcmk__xaf_none);
-        *answer = shallow;
+        *answer = pcmk__xe_create(NULL, (const char *) obj_root->name);
+        pcmk__xe_copy_attrs(*answer, obj_root, pcmk__xaf_none);
 
     } else {
         *answer = obj_root;
