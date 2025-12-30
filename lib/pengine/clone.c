@@ -586,21 +586,21 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE,
-                                          PCMK_XA_ID, rsc->id,
-                                          PCMK_XA_MULTI_STATE, multi_state,
-                                          PCMK_XA_UNIQUE, unique,
-                                          PCMK_XA_MAINTENANCE, maintenance,
-                                          PCMK_XA_MANAGED, managed,
-                                          PCMK_XA_DISABLED, disabled,
-                                          PCMK_XA_FAILED, failed,
-                                          PCMK_XA_FAILURE_IGNORED, ignored,
-                                          PCMK_XA_TARGET_ROLE, target_role,
-                                          PCMK_XA_DESCRIPTION, desc,
-                                          NULL);
-            pcmk__assert(rc == pcmk_rc_ok);
+            pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE,
+                                     PCMK_XA_ID, rsc->id,
+                                     PCMK_XA_MULTI_STATE, multi_state,
+                                     PCMK_XA_UNIQUE, unique,
+                                     PCMK_XA_MAINTENANCE, maintenance,
+                                     PCMK_XA_MANAGED, managed,
+                                     PCMK_XA_DISABLED, disabled,
+                                     PCMK_XA_FAILED, failed,
+                                     PCMK_XA_FAILURE_IGNORED, ignored,
+                                     PCMK_XA_TARGET_ROLE, target_role,
+                                     PCMK_XA_DESCRIPTION, desc,
+                                     NULL);
         }
 
+        rc = pcmk_rc_ok;
         out->message(out, (const char *) child_rsc->priv->xml->name,
                      show_opts, child_rsc, only_node, all);
     }
