@@ -1663,13 +1663,11 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
         interval_ms_s = pcmk__assert_asprintf("%u", interval_ms);
 
-        pcmk__xe_set_props(node,
-                           PCMK_XA_LAST_RC_CHANGE, rc_change,
-                           PCMK_XA_QUEUED, queue_time,
-                           PCMK_XA_EXEC, exec,
-                           PCMK_XA_INTERVAL, interval_ms_s,
-                           PCMK_XA_TASK, task,
-                           NULL);
+        pcmk__xe_set(node, PCMK_XA_LAST_RC_CHANGE, rc_change);
+        pcmk__xe_set(node, PCMK_XA_QUEUED, queue_time);
+        pcmk__xe_set(node, PCMK_XA_EXEC, exec);
+        pcmk__xe_set(node, PCMK_XA_INTERVAL, interval_ms_s);
+        pcmk__xe_set(node, PCMK_XA_TASK, task);
 
         free(interval_ms_s);
         free(rc_change);
@@ -2316,10 +2314,9 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
                                                   (has_provider? provider : ""),
                                                   kind);
 
-        pcmk__xe_set_props(node,
-                           PCMK_XA_RSC, rsc_printable_id(rsc),
-                           PCMK_XA_AGENT, agent_tuple,
-                           NULL);
+        pcmk__xe_set(node, PCMK_XA_RSC, rsc_printable_id(rsc));
+        pcmk__xe_set(node, PCMK_XA_AGENT, agent_tuple);
+
         free(agent_tuple);
     }
 
@@ -2328,10 +2325,8 @@ node_and_op_xml(pcmk__output_t *out, va_list args) {
         const char *last_rc_change = g_strchomp(ctime(&last_change));
         const char *exec_time = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
 
-        pcmk__xe_set_props(node,
-                           PCMK_XA_LAST_RC_CHANGE, last_rc_change,
-                           PCMK_XA_EXEC_TIME, exec_time,
-                           NULL);
+        pcmk__xe_set(node, PCMK_XA_LAST_RC_CHANGE, last_rc_change);
+        pcmk__xe_set(node, PCMK_XA_EXEC_TIME, exec_time);
     }
 
     return pcmk_rc_ok;
@@ -3008,11 +3003,10 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     } else if (all || failcount || last_failure > 0) {
         char *migration_s = pcmk__itoa(rsc->priv->ban_after_failures);
 
-        pcmk__xe_set_props(node,
-                           PCMK_XA_ORPHAN, PCMK_VALUE_FALSE,
-                           PCMK_XA_REMOVED, PCMK_VALUE_FALSE,
-                           PCMK_META_MIGRATION_THRESHOLD, migration_s,
-                           NULL);
+        pcmk__xe_set(node, PCMK_XA_ORPHAN, PCMK_VALUE_FALSE);
+        pcmk__xe_set(node, PCMK_XA_REMOVED, PCMK_VALUE_FALSE);
+        pcmk__xe_set(node, PCMK_META_MIGRATION_THRESHOLD, migration_s);
+
         free(migration_s);
 
         if (failcount > 0) {

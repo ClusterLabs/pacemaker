@@ -356,20 +356,18 @@ pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
     xmlNode *cib_node = pcmk__inject_node(cib_conn, node, NULL);
 
     if (up) {
-        pcmk__xe_set_props(cib_node,
-                           PCMK__XA_IN_CCM, PCMK_VALUE_TRUE,
-                           PCMK_XA_CRMD, PCMK_VALUE_ONLINE,
-                           PCMK__XA_JOIN, CRMD_JOINSTATE_MEMBER,
-                           PCMK_XA_EXPECTED, CRMD_JOINSTATE_MEMBER,
-                           NULL);
+        pcmk__xe_set(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_TRUE);
+        pcmk__xe_set(cib_node, PCMK_XA_CRMD, PCMK_VALUE_ONLINE);
+        pcmk__xe_set(cib_node, PCMK__XA_JOIN, CRMD_JOINSTATE_MEMBER);
+        pcmk__xe_set(cib_node, PCMK_XA_EXPECTED, CRMD_JOINSTATE_MEMBER);
+
     } else {
-        pcmk__xe_set_props(cib_node,
-                           PCMK__XA_IN_CCM, PCMK_VALUE_FALSE,
-                           PCMK_XA_CRMD, PCMK_VALUE_OFFLINE,
-                           PCMK__XA_JOIN, CRMD_JOINSTATE_DOWN,
-                           PCMK_XA_EXPECTED, CRMD_JOINSTATE_DOWN,
-                           NULL);
+        pcmk__xe_set(cib_node, PCMK__XA_IN_CCM, PCMK_VALUE_FALSE);
+        pcmk__xe_set(cib_node, PCMK_XA_CRMD, PCMK_VALUE_OFFLINE);
+        pcmk__xe_set(cib_node, PCMK__XA_JOIN, CRMD_JOINSTATE_DOWN);
+        pcmk__xe_set(cib_node, PCMK_XA_EXPECTED, CRMD_JOINSTATE_DOWN);
     }
+
     pcmk__xe_set(cib_node, PCMK_XA_CRM_DEBUG_ORIGIN, crm_system_name);
     return cib_node;
 }
