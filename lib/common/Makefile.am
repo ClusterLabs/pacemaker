@@ -107,6 +107,7 @@ libcrmcommon_la_SOURCES	+= xml_display.c
 libcrmcommon_la_SOURCES	+= xml_element.c
 libcrmcommon_la_SOURCES	+= xml_idref.c
 libcrmcommon_la_SOURCES	+= xml_io.c
+libcrmcommon_la_SOURCES	+= xml_tracking.c
 libcrmcommon_la_SOURCES	+= xpath.c
 
 #
