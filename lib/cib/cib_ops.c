@@ -287,6 +287,41 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
     pcmk__warn("Action %s failed: %s", operation, pcmk_rc_str(rc));
 }
 
+static int
+process_create_xpath(const char *op, const char *xpath, xmlNode *input,
+                     xmlNode **result_cib)
+{
+    int num_results = 0;
+    int rc = pcmk_ok;
+    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
+    xmlNode *match = NULL;
+    xmlChar *path = NULL;
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    num_results = pcmk__xpath_num_results(xpath_obj);
+    if (num_results == 0) {
+        pcmk__debug("%s: %s does not exist", op, xpath);
+        rc = -ENXIO;
+        goto done;
+    }
+
+    match = pcmk__xpath_result(xpath_obj, 0);
+    if (match == NULL) {
+        goto done;
+    }
+
+    path = xmlGetNodePath(match);
+    pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
+    free(path);
+
+    pcmk__xml_copy(match, input);
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return rc;
+}
+
 int
 cib__process_create(const char *op, int options, const char *section,
                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
@@ -401,12 +436,7 @@ process_xpath(const char *op, int options, const char *xpath, xmlNode *input,
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_CREATE, pcmk__str_none)) {
-            pcmk__xml_copy(match, input);
-            break;
-
-        } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
-                                pcmk__str_none)) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
             xmlNode *parent = match->parent;
 
             pcmk__xml_free(match);
@@ -627,8 +657,10 @@ cib__process_modify(const char *op, int options, const char *section,
         }
 
         tmp_section = pcmk__xe_create(NULL, section);
-        process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, tmp_section,
-                      result_cib);
+
+        // @TODO This feels hacky and is the only call to process_create_xpath()
+        process_create_xpath(PCMK__CIB_REQUEST_CREATE, path, tmp_section,
+                             result_cib);
         pcmk__xml_free(tmp_section);
 
         obj_root = pcmk_find_cib_element(*result_cib, section);
