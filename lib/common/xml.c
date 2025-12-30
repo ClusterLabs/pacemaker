@@ -1775,29 +1775,29 @@ set_match_if_matching(xmlNode *new_child, void *user_data)
 
 /*!
  * \internal
- * \brief Find matching XML node pairs between old and new XML's children
+ * \brief Find a child of a new XML node that matches a child of an old node
  *
- * A node that is part of a matching pair gets its <tt>_private:match</tt>
- * member set to the matching node.
+ * If a match is found, set the <tt>_private:child</tt> pointers in the matching
+ * old and new children to each other.
  *
- * \param[in,out] old_xml  Old XML
- * \param[in,out] new_xml  New XML
+ * \param[in,out] old_child  Child of old XML node
+ * \param[in,out] user_data  New XML node (<tt>xmlNode *</tt>)
+ *
+ * \return \c true (to continue iterating over old children)
  */
-static void
-find_matching_children(xmlNode *old_xml, xmlNode *new_xml)
+static bool
+find_and_set_match(xmlNode *old_child, void *user_data)
 {
-    for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
-         old_child = pcmk__xml_next(old_child)) {
+    xmlNode *new_xml = user_data;
+    xml_node_private_t *old_nodepriv = old_child->_private;
 
-        xml_node_private_t *old_nodepriv = old_child->_private;
-
-        if ((old_nodepriv == NULL) || (old_nodepriv->match != NULL)) {
-            // Can't process, or we already found a match for this old child
-            continue;
-        }
-
-        pcmk__xml_foreach_child(new_xml, set_match_if_matching, old_child);
+    if ((old_nodepriv == NULL) || (old_nodepriv->match != NULL)) {
+        // Can't process, or we already found a match for this old child
+        return true;
     }
+
+    pcmk__xml_foreach_child(new_xml, set_match_if_matching, old_child);
+    return true;
 }
 
 /*!
@@ -1830,7 +1830,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
     pcmk__xml_doc_set_flags(new_xml->doc, pcmk__xf_tracking);
     xml_diff_attrs(old_xml, new_xml);
 
-    find_matching_children(old_xml, new_xml);
+    pcmk__xml_foreach_child(old_xml, find_and_set_match, new_xml);
 
     // Process matches (changed children) and deletions
     for (xmlNode *old_child = pcmk__xml_first_child(old_xml); old_child != NULL;
