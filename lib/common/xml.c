@@ -1834,8 +1834,8 @@ mark_child_changed_or_deleted(xmlNode *old_child, void *user_data)
     }
 
     /* Fetch the match and clear old_child->_private's match member.
-     * new_child->_private's match member is handled in the new_xml loop in
-     * pcmk__xml_mark_changes().
+     * new_child->_private's match member is handled in
+     * mark_child_moved_or_created().
      */
     new_child = nodepriv->match;
     nodepriv->match = NULL;
@@ -1848,6 +1848,67 @@ mark_child_changed_or_deleted(xmlNode *old_child, void *user_data)
     }
 
     pcmk__xml_mark_changes(old_child, new_child);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Mark a child node as moved or created if appropriate
+ *
+ * If the new child has its \c match pointer set, then it's present in the old
+ * XML. Any changes within the child were marked in
+ * \c mark_child_changed_or_moved(). It may or may not have moved. We check for
+ * that and mark the move here if so.
+ *
+ * Otherwise, the new child is absent from the old node, so we mark it as
+ * created.
+ *
+ * \param[in,out] new_child  Child of new XML node
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true (to continue iterating over new children)
+ *
+ * \note This frees \p new_child if it's newly created and ACLs disallow the
+ *       creation.
+ */
+static bool
+mark_child_moved_or_created(xmlNode *new_child, void *user_data)
+{
+    xml_node_private_t *nodepriv = new_child->_private;
+
+    if (nodepriv == NULL) {
+        return true;
+    }
+
+    if (nodepriv->match != NULL) {
+        /* Fetch the match and clear new_child->_private's match member. Any
+         * changes within the child were marked by
+         * mark_child_changed_or_deleted(). If the child was moved, mark the
+         * move now.
+         *
+         * We might be able to mark the move earlier, in
+         * mark_child_changed_or_deleted(), consolidating both actions. We'd
+         * have to think about whether the timing of setting the pcmk__xf_skip
+         * flag makes any difference.
+         */
+        xmlNode *old_child = nodepriv->match;
+        int old_pos = pcmk__xml_position(old_child, pcmk__xf_skip);
+        int new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
+
+        if (old_pos != new_pos) {
+            mark_child_moved(old_child, new_child, old_pos, new_pos);
+        }
+        nodepriv->match = NULL;
+        return true;
+    }
+
+    // No match in old XML means the new child is newly created
+    pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
+    mark_xml_tree_dirty_created(new_child);
+
+    // Check whether creation was allowed (may free new_child)
+    pcmk__check_creation_acls(new_child);
+
     return true;
 }
 
@@ -1884,49 +1945,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
 
     pcmk__xml_foreach_child(old_xml, find_and_set_match, new_xml);
     pcmk__xml_foreach_child(old_xml, mark_child_changed_or_deleted, new_xml);
-
-    /* Mark unmatched new children as created, and mark matched new children as
-     * moved if their positions changed. Grab the next new child in advance,
-     * since new_child may get freed in the loop body.
-     */
-    for (xmlNode *new_child = pcmk__xml_first_child(new_xml),
-                 *next = pcmk__xml_next(new_child);
-         new_child != NULL;
-         new_child = next, next = pcmk__xml_next(new_child)) {
-
-        xml_node_private_t *nodepriv = new_child->_private;
-
-        if (nodepriv == NULL) {
-            continue;
-        }
-
-        if (nodepriv->match != NULL) {
-            /* Fetch the match and clear new_child->_private's match member. Any
-             * changes were marked in the old_xml loop. Mark the move.
-             *
-             * We might be able to mark the move earlier, when we mark changes
-             * for matches in the old_xml loop, consolidating both actions. We'd
-             * have to think about whether the timing of setting the
-             * pcmk__xf_skip flag makes any difference.
-             */
-            xmlNode *old_child = nodepriv->match;
-            int old_pos = pcmk__xml_position(old_child, pcmk__xf_skip);
-            int new_pos = pcmk__xml_position(new_child, pcmk__xf_skip);
-
-            if (old_pos != new_pos) {
-                mark_child_moved(old_child, new_child, old_pos, new_pos);
-            }
-            nodepriv->match = NULL;
-            continue;
-        }
-
-        // No match in old XML means the new child is newly created
-        pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
-        mark_xml_tree_dirty_created(new_child);
-
-        // Check whether creation was allowed (may free new_child)
-        pcmk__check_creation_acls(new_child);
-    }
+    pcmk__xml_foreach_child(new_xml, mark_child_moved_or_created, NULL);
 }
 
 char *
