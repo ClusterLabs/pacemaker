@@ -79,17 +79,16 @@ pcmk__new_message_as(const char *origin, enum pcmk_ipc_server server,
     }
 
     message = pcmk__xe_create(NULL, PCMK__XE_MESSAGE);
-    pcmk__xe_set_props(message,
-                       PCMK_XA_ORIGIN, origin,
-                       PCMK__XA_T, pcmk__server_message_type(server),
-                       PCMK__XA_SUBT, subtype,
-                       PCMK_XA_VERSION, CRM_FEATURE_SET,
-                       PCMK_XA_REFERENCE, reply_to,
-                       PCMK__XA_CRM_SYS_FROM, sender_system,
-                       PCMK__XA_CRM_HOST_TO, recipient_node,
-                       PCMK__XA_CRM_SYS_TO, recipient_system,
-                       PCMK__XA_CRM_TASK, task,
-                       NULL);
+    pcmk__xe_set(message, PCMK_XA_ORIGIN, origin);
+    pcmk__xe_set(message, PCMK__XA_T, pcmk__server_message_type(server));
+    pcmk__xe_set(message, PCMK__XA_SUBT, subtype);
+    pcmk__xe_set(message, PCMK_XA_VERSION, CRM_FEATURE_SET);
+    pcmk__xe_set(message, PCMK_XA_REFERENCE, reply_to);
+    pcmk__xe_set(message, PCMK__XA_CRM_SYS_FROM, sender_system);
+    pcmk__xe_set(message, PCMK__XA_CRM_HOST_TO, recipient_node);
+    pcmk__xe_set(message, PCMK__XA_CRM_SYS_TO, recipient_system);
+    pcmk__xe_set(message, PCMK__XA_CRM_TASK, task);
+
     if (data != NULL) {
         xmlNode *wrapper = pcmk__xe_create(message, PCMK__XE_CRM_XML);
 

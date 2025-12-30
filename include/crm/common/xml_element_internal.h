@@ -86,30 +86,7 @@ void pcmk__xe_sort_attrs(xmlNode *xml);
 void pcmk__xe_set_id(xmlNode *xml, const char *format, ...)
     G_GNUC_PRINTF(2, 3);
 
-/*!
- * \internal
- * \brief Like pcmk__xe_set_props, but takes a va_list instead of
- *        arguments directly.
- *
- * \param[in,out] node   XML to add attributes to
- * \param[in]     pairs  NULL-terminated list of name/value pairs to add
- */
-void
-pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
-
-/*!
- * \internal
- * \brief Add a NULL-terminated list of name/value pairs to the given
- *        XML node as properties.
- *
- * \param[in,out] node XML node to add properties to
- * \param[in]     ...  NULL-terminated list of name/value pairs
- *
- * \note A NULL name terminates the arguments; a NULL value will be skipped.
- */
-void
-pcmk__xe_set_props(xmlNodePtr node, ...)
-G_GNUC_NULL_TERMINATED;
+void pcmk__xe_set_propv(xmlNode *xml, va_list pairs);
 
 /*!
  * \internal

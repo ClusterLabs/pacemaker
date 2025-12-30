@@ -489,10 +489,8 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
 
     switch (event->state) {
         case st_failed:
-            pcmk__xe_set_props(node,
-                               PCMK_XA_STATUS, PCMK_VALUE_FAILED,
-                               PCMK_XA_EXIT_REASON, event->exit_reason,
-                               NULL);
+            pcmk__xe_set(node, PCMK_XA_STATUS, PCMK_VALUE_FAILED);
+            pcmk__xe_set(node, PCMK_XA_EXIT_REASON, event->exit_reason);
             break;
 
         case st_done:
@@ -501,10 +499,10 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
 
         default: {
             char *state = pcmk__itoa(event->state);
-            pcmk__xe_set_props(node,
-                               PCMK_XA_STATUS, PCMK_VALUE_PENDING,
-                               PCMK_XA_EXTENDED_STATUS, state,
-                               NULL);
+
+            pcmk__xe_set(node, PCMK_XA_STATUS, PCMK_VALUE_PENDING);
+            pcmk__xe_set(node, PCMK_XA_EXTENDED_STATUS, state);
+
             free(state);
             break;
         }

@@ -211,10 +211,8 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
         char *rc_as_str = pcmk__itoa(exit_status);
 
         node = pcmk__xe_create(priv->root, PCMK_XE_STATUS);
-        pcmk__xe_set_props(node,
-                           PCMK_XA_CODE, rc_as_str,
-                           PCMK_XA_MESSAGE, crm_exit_str(exit_status),
-                           NULL);
+        pcmk__xe_set(node, PCMK_XA_CODE, rc_as_str);
+        pcmk__xe_set(node, PCMK_XA_MESSAGE, crm_exit_str(exit_status));
 
         if (g_slist_length(priv->errors) > 0) {
             xmlNodePtr errors_node = pcmk__xe_create(node, PCMK_XE_ERRORS);
