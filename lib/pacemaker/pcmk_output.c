@@ -287,13 +287,10 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     if (need_role && (origin == NULL)) {
         /* Starting and promoting a promotable clone instance */
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE,
-                           pcmk_role_text(rsc->priv->orig_role),
-                           PCMK_XA_NEXT_ROLE,
-                           pcmk_role_text(rsc->priv->next_role),
-                           PCMK_XA_DEST, destination->priv->name,
-                           NULL);
+        pcmk__xe_set(xml, PCMK_XA_ROLE, pcmk_role_text(rsc->priv->orig_role));
+        pcmk__xe_set(xml, PCMK_XA_NEXT_ROLE,
+                     pcmk_role_text(rsc->priv->next_role));
+        pcmk__xe_set(xml, PCMK_XA_DEST, destination->priv->name);
 
     } else if (origin == NULL) {
         /* Starting a resource */
@@ -301,11 +298,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     } else if (need_role && (destination == NULL)) {
         /* Stopping a promotable clone instance */
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE,
-                           pcmk_role_text(rsc->priv->orig_role),
-                           PCMK_XA_NODE, origin->priv->name,
-                           NULL);
+        pcmk__xe_set(xml, PCMK_XA_ROLE, pcmk_role_text(rsc->priv->orig_role));
+        pcmk__xe_set(xml, PCMK_XA_NODE, origin->priv->name);
 
     } else if (destination == NULL) {
         /* Stopping a resource */
@@ -313,11 +307,8 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     } else if (need_role && same_role && same_host) {
         /* Recovering, restarting or re-promoting a promotable clone instance */
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE,
-                           pcmk_role_text(rsc->priv->orig_role),
-                           PCMK_XA_SOURCE, origin->priv->name,
-                           NULL);
+        pcmk__xe_set(xml, PCMK_XA_ROLE, pcmk_role_text(rsc->priv->orig_role));
+        pcmk__xe_set(xml, PCMK_XA_SOURCE, origin->priv->name);
 
     } else if (same_role && same_host) {
         /* Recovering or Restarting a normal resource */
@@ -325,48 +316,36 @@ rsc_action_item_xml(pcmk__output_t *out, va_list args)
 
     } else if (need_role && same_role) {
         /* Moving a promotable clone instance */
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_SOURCE, origin->priv->name,
-                           PCMK_XA_DEST, destination->priv->name,
-                           PCMK_XA_ROLE,
-                           pcmk_role_text(rsc->priv->orig_role),
-                           NULL);
+        pcmk__xe_set(xml, PCMK_XA_SOURCE, origin->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_DEST, destination->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_ROLE, pcmk_role_text(rsc->priv->orig_role));
 
     } else if (same_role) {
         /* Moving a normal resource */
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_SOURCE, origin->priv->name,
-                           PCMK_XA_DEST, destination->priv->name,
-                           NULL);
+        pcmk__xe_set(xml, PCMK_XA_SOURCE, origin->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_DEST, destination->priv->name);
 
     } else if (same_host) {
         /* Promoting or demoting a promotable clone instance */
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE,
-                           pcmk_role_text(rsc->priv->orig_role),
-                           PCMK_XA_NEXT_ROLE,
-                           pcmk_role_text(rsc->priv->next_role),
-                           PCMK_XA_SOURCE, origin->priv->name,
-                           NULL);
+        pcmk__xe_set(xml, PCMK_XA_ROLE, pcmk_role_text(rsc->priv->orig_role));
+        pcmk__xe_set(xml, PCMK_XA_NEXT_ROLE,
+                     pcmk_role_text(rsc->priv->next_role));
+        pcmk__xe_set(xml, PCMK_XA_SOURCE, origin->priv->name);
 
     } else {
         /* Moving and promoting/demoting */
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_ROLE,
-                           pcmk_role_text(rsc->priv->orig_role),
-                           PCMK_XA_SOURCE, origin->priv->name,
-                           PCMK_XA_NEXT_ROLE,
-                           pcmk_role_text(rsc->priv->next_role),
-                           PCMK_XA_DEST, destination->priv->name,
-                           NULL);
+        pcmk__xe_set(xml, PCMK_XA_ROLE, pcmk_role_text(rsc->priv->orig_role));
+        pcmk__xe_set(xml, PCMK_XA_SOURCE, origin->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_NEXT_ROLE,
+                     pcmk_role_text(rsc->priv->next_role));
+        pcmk__xe_set(xml, PCMK_XA_DEST, destination->priv->name);
     }
 
     if ((source->reason != NULL)
         && !pcmk__is_set(action->flags, pcmk__action_runnable)) {
-        pcmk__xe_set_props(xml,
-                           PCMK_XA_REASON, source->reason,
-                           PCMK_XA_BLOCKED, PCMK_VALUE_TRUE,
-                           NULL);
+
+        pcmk__xe_set(xml,PCMK_XA_REASON, source->reason);
+        pcmk__xe_set(xml, PCMK_XA_BLOCKED, PCMK_VALUE_TRUE);
 
     } else if (source->reason != NULL) {
         pcmk__xe_set(xml, PCMK_XA_REASON, source->reason);
