@@ -1623,14 +1623,11 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
     const char *status_s = NULL;
 
     time_t epoch = 0;
-    gchar *exit_reason_esc = NULL;
     char *rc_s = NULL;
     xmlNodePtr node = NULL;
+    gchar *exit_reason_esc = pcmk__xml_escape(exit_reason,
+                                              pcmk__xml_escape_attr);
 
-    if (pcmk__xml_needs_escape(exit_reason, pcmk__xml_escape_attr)) {
-        exit_reason_esc = pcmk__xml_escape(exit_reason, pcmk__xml_escape_attr);
-        exit_reason = exit_reason_esc;
-    }
     pcmk__scan_min_int(pcmk__xe_get(xml_op, PCMK__XA_RC_CODE), &rc, 0);
     pcmk__scan_min_int(pcmk__xe_get(xml_op, PCMK__XA_OP_STATUS), &status, 0);
 
@@ -1644,7 +1641,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
                                         op_key_name, op_key,
                                         PCMK_XA_NODE, uname,
                                         PCMK_XA_EXITSTATUS, exitstatus,
-                                        PCMK_XA_EXITREASON, exit_reason,
+                                        PCMK_XA_EXITREASON, exit_reason_esc,
                                         PCMK_XA_EXITCODE, rc_s,
                                         PCMK_XA_CALL, call_id,
                                         PCMK_XA_STATUS, status_s,
