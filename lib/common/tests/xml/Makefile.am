@@ -16,7 +16,6 @@ check_PROGRAMS = \
 		 pcmk__xml_escape_test		\
 		 pcmk__xml_is_name_char_test	\
 		 pcmk__xml_is_name_start_char_test	\
-		 pcmk__xml_needs_escape_test	\
 		 pcmk__xml_new_doc_test		\
 		 pcmk__xml_sanitize_id_test
 
