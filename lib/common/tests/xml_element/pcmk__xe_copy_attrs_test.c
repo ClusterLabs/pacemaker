@@ -71,11 +71,9 @@ copy_multiple(void **state)
     xmlNode *src = pcmk__xe_create(NULL, "test");
     xmlNode *target = pcmk__xe_create(NULL, "test");
 
-    pcmk__xe_set_props(src,
-                       "attr1", "value1",
-                       "attr2", "value2",
-                       "attr3", "value3",
-                       NULL);
+    pcmk__xe_set(src, "attr1", "value1");
+    pcmk__xe_set(src, "attr2", "value2");
+    pcmk__xe_set(src, "attr3", "value3");
 
     assert_int_equal(pcmk__xe_copy_attrs(target, src, pcmk__xaf_none),
                      pcmk_rc_ok);

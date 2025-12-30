@@ -193,9 +193,9 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     if (stylesheet_link != NULL) {
         htmlNodePtr link_node = pcmk__xe_create(head_node, "link");
-        pcmk__xe_set_props(link_node, "rel", "stylesheet",
-                           "href", stylesheet_link,
-                           NULL);
+
+        pcmk__xe_set(link_node, "rel", "stylesheet");
+        pcmk__xe_set(link_node, "href", stylesheet_link);
     }
 
     if (g_slist_length(priv->errors) > 0) {
@@ -492,10 +492,8 @@ pcmk__html_create(xmlNode *parent, const char *name, const char *id,
 {
     xmlNode *node = pcmk__xe_create(parent, name);
 
-    pcmk__xe_set_props(node,
-                       PCMK_XA_CLASS, class_name,
-                       PCMK_XA_ID, id,
-                       NULL);
+    pcmk__xe_set(node, PCMK_XA_CLASS, class_name);
+    pcmk__xe_set(node, PCMK_XA_ID, id);
     return node;
 }
 
