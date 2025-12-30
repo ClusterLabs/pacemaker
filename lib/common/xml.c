@@ -1741,13 +1741,47 @@ new_child_matches(const xmlNode *old_child, const xmlNode *new_child)
 
 /*!
  * \internal
+ * \brief Set old and new child's \c match pointers to each other if they match
+ *
+ * A node that is part of a matching pair gets its <tt>_private:match</tt>
+ * member set to the matching node.
+ *
+ * \param[in,out] new_child  New child
+ * \param[in,out] user_data  Old child (<tt>xmlNode *</tt>)
+ *
+ * \return \c true (to continue iterating over new children) if the nodes don't
+ *         match, or \c false (to stop iterating) if they do
+ */
+static bool
+set_match_if_matching(xmlNode *new_child, void *user_data)
+{
+    xmlNode *old_child = user_data;
+    xml_node_private_t *old_nodepriv = old_child->_private;
+    xml_node_private_t *new_nodepriv = new_child->_private;
+
+    if ((new_nodepriv == NULL) || (new_nodepriv->match != NULL)) {
+        // Can't process, or this new child already matched some old child
+        return true;
+    }
+
+    if (!new_child_matches(old_child, new_child)) {
+        return true;
+    }
+
+    old_nodepriv->match = new_child;
+    new_nodepriv->match = old_child;
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Find matching XML node pairs between old and new XML's children
  *
  * A node that is part of a matching pair gets its <tt>_private:match</tt>
  * member set to the matching node.
  *
- * \param[in,out] old_xml       Old XML
- * \param[in,out] new_xml       New XML
+ * \param[in,out] old_xml  Old XML
+ * \param[in,out] new_xml  New XML
  */
 static void
 find_matching_children(xmlNode *old_xml, xmlNode *new_xml)
@@ -1762,24 +1796,7 @@ find_matching_children(xmlNode *old_xml, xmlNode *new_xml)
             continue;
         }
 
-        for (xmlNode *new_child = pcmk__xml_first_child(new_xml);
-             new_child != NULL; new_child = pcmk__xml_next(new_child)) {
-
-            xml_node_private_t *new_nodepriv = new_child->_private;
-
-            if ((new_nodepriv == NULL) || (new_nodepriv->match != NULL)) {
-                /* Can't process, or this new child already matched some old
-                 * child
-                 */
-                continue;
-            }
-
-            if (new_child_matches(old_child, new_child)) {
-                old_nodepriv->match = new_child;
-                new_nodepriv->match = old_child;
-                break;
-            }
-        }
+        pcmk__xml_foreach_child(new_xml, set_match_if_matching, old_child);
     }
 }
 
