@@ -630,28 +630,6 @@ pe__node_display_name(pcmk_node_t *node, bool print_detail)
     return node_name;
 }
 
-void
-pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name,
-                         ...)
-{
-    xmlNodePtr xml_node = NULL;
-    va_list pairs;
-
-    pcmk__assert(tag_name != NULL);
-
-    xml_node = pcmk__output_xml_peek_parent(out);
-    pcmk__assert(xml_node != NULL);
-    xml_node = pcmk__xe_create(xml_node, tag_name);
-
-    va_start(pairs, tag_name);
-    pcmk__xe_set_propv(xml_node, pairs);
-    va_end(pairs);
-
-    if (is_list) {
-        pcmk__output_xml_push_parent(out, xml_node);
-    }
-}
-
 static const char *
 role_desc(enum rsc_role_e role)
 {
@@ -2093,23 +2071,24 @@ node_xml(pcmk__output_t *out, va_list args) {
         char *resources_running = pcmk__itoa(length);
         const char *node_type = node_variant_text(node->priv->variant);
 
-        pe__name_and_nvpairs_xml(out, true, PCMK_XE_NODE,
-                                 PCMK_XA_NAME, node->priv->name,
-                                 PCMK_XA_ID, node->priv->id,
-                                 PCMK_XA_ONLINE, online,
-                                 PCMK_XA_STANDBY, standby,
-                                 PCMK_XA_STANDBY_ONFAIL, standby_onfail,
-                                 PCMK_XA_MAINTENANCE, maintenance,
-                                 PCMK_XA_PENDING, pending,
-                                 PCMK_XA_UNCLEAN, unclean,
-                                 PCMK_XA_HEALTH, health,
-                                 PCMK_XA_FEATURE_SET, feature_set,
-                                 PCMK_XA_SHUTDOWN, shutdown,
-                                 PCMK_XA_EXPECTED_UP, expected_up,
-                                 PCMK_XA_IS_DC, pcmk__btoa(is_dc),
-                                 PCMK_XA_RESOURCES_RUNNING, resources_running,
-                                 PCMK_XA_TYPE, node_type,
-                                 NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
+                                       PCMK_XA_NAME, node->priv->name,
+                                       PCMK_XA_ID, node->priv->id,
+                                       PCMK_XA_ONLINE, online,
+                                       PCMK_XA_STANDBY, standby,
+                                       PCMK_XA_STANDBY_ONFAIL, standby_onfail,
+                                       PCMK_XA_MAINTENANCE, maintenance,
+                                       PCMK_XA_PENDING, pending,
+                                       PCMK_XA_UNCLEAN, unclean,
+                                       PCMK_XA_HEALTH, health,
+                                       PCMK_XA_FEATURE_SET, feature_set,
+                                       PCMK_XA_SHUTDOWN, shutdown,
+                                       PCMK_XA_EXPECTED_UP, expected_up,
+                                       PCMK_XA_IS_DC, pcmk__btoa(is_dc),
+                                       PCMK_XA_RESOURCES_RUNNING,
+                                           resources_running,
+                                       PCMK_XA_TYPE, node_type,
+                                       NULL);
 
         free(resources_running);
 
