@@ -285,11 +285,11 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
 
 static int
 process_create_xpath(const char *op, const char *xpath, xmlNode *input,
-                     xmlNode **result_cib)
+                     xmlNode *result_cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
     xmlNode *match = NULL;
     xmlChar *path = NULL;
 
@@ -528,11 +528,11 @@ cib__process_erase(const char *op, int options, const char *section,
 
 static int
 process_modify_xpath(const char *op, int options, const char *xpath,
-                     xmlNode *input, xmlNode **result_cib)
+                     xmlNode *input, xmlNode *result_cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
     const bool score = pcmk__is_set(options, cib_score_update);
     const uint32_t flags = (score? pcmk__xaf_score_update : pcmk__xaf_none);
 
@@ -571,26 +571,20 @@ done:
     return rc;
 }
 
-int
-cib__process_modify(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                    xmlNode **result_cib, xmlNode **answer)
+static int
+process_modify_section(int options, const char *section, xmlNode *input,
+                       xmlNode *result_cib)
 {
+    const bool score = pcmk__is_set(options, cib_score_update);
+    const uint32_t flags = (score? pcmk__xaf_score_update : pcmk__xaf_none);
     xmlNode *obj_root = NULL;
-    uint32_t flags = pcmk__xaf_none;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (pcmk__is_set(options, cib_xpath)) {
-        return process_modify_xpath(op, options, section, input, result_cib);
-    }
 
     if (input == NULL) {
-        pcmk__err("Cannot perform modification with no data");
+        pcmk__err("Cannot complete CIB modify request with no input data");
         return EINVAL;
     }
 
-    obj_root = pcmk_find_cib_element(*result_cib, section);
+    obj_root = pcmk_find_cib_element(result_cib, section);
     if (obj_root == NULL) {
         xmlNode *tmp_section = NULL;
         const char *path = pcmk_cib_parent_name_for(section);
@@ -606,24 +600,36 @@ cib__process_modify(const char *op, int options, const char *section,
                              result_cib);
         pcmk__xml_free(tmp_section);
 
-        obj_root = pcmk_find_cib_element(*result_cib, section);
+        obj_root = pcmk_find_cib_element(result_cib, section);
     }
 
+    // Should be impossible, as we just created this section if it didn't exist
     CRM_CHECK(obj_root != NULL, return EINVAL);
 
-    if (pcmk__is_set(options, cib_score_update)) {
-        flags |= pcmk__xaf_score_update;
+    if (pcmk__xe_update_match(obj_root, input, flags) == pcmk_rc_ok) {
+        return pcmk_rc_ok;
     }
 
-    if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
-        if (pcmk__is_set(options, cib_can_create)) {
-            pcmk__xml_copy(obj_root, input);
-        } else {
-            return ENXIO;
-        }
+    if (!pcmk__is_set(options, cib_can_create)) {
+        return ENXIO;
     }
 
+    pcmk__xml_copy(obj_root, input);
     return pcmk_rc_ok;
+}
+
+int
+cib__process_modify(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (pcmk__is_set(options, cib_xpath)) {
+        return process_modify_xpath(op, options, section, input, *result_cib);
+    }
+
+    return process_modify_section(options, section, input, *result_cib);
 }
 
 static int
