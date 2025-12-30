@@ -401,20 +401,7 @@ process_xpath(const char *op, int options, const char *xpath, xmlNode *input,
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
-            uint32_t flags = pcmk__xaf_none;
-
-            if (pcmk__is_set(options, cib_score_update)) {
-                flags |= pcmk__xaf_score_update;
-            }
-
-            if (pcmk__xe_update_match(match, input, flags) != pcmk_rc_ok) {
-                rc = -ENXIO;
-            } else if (!pcmk__is_set(options, cib_multiple)) {
-                break;
-            }
-
-        } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_CREATE, pcmk__str_none)) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_CREATE, pcmk__str_none)) {
             pcmk__xml_copy(match, input);
             break;
 
@@ -566,6 +553,51 @@ cib__process_erase(const char *op, int options, const char *section,
     return result;
 }
 
+static int
+process_modify_xpath(const char *op, int options, const char *xpath,
+                     xmlNode *input, xmlNode **result_cib)
+{
+    int num_results = 0;
+    int rc = pcmk_ok;
+    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
+    const bool score = pcmk__is_set(options, cib_score_update);
+    const uint32_t flags = (score? pcmk__xaf_score_update : pcmk__xaf_none);
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    num_results = pcmk__xpath_num_results(xpath_obj);
+    if (num_results == 0) {
+        pcmk__debug("%s: %s does not exist", op, xpath);
+        rc = -ENXIO;
+        goto done;
+    }
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = NULL;
+        xmlChar *path = NULL;
+
+        match = pcmk__xpath_result(xpath_obj, i);
+        if (match == NULL) {
+            continue;
+        }
+
+        path = xmlGetNodePath(match);
+        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
+        free(path);
+
+        if (pcmk__xe_update_match(match, input, flags) != pcmk_rc_ok) {
+            rc = -ENXIO;
+
+        } else if (!pcmk__is_set(options, cib_multiple)) {
+            break;
+        }
+    }
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return rc;
+}
+
 int
 cib__process_modify(const char *op, int options, const char *section,
                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
@@ -577,7 +609,7 @@ cib__process_modify(const char *op, int options, const char *section,
     pcmk__trace("Processing \"%s\" event", op);
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, input, result_cib);
+        return process_modify_xpath(op, options, section, input, result_cib);
     }
 
     if (input == NULL) {
