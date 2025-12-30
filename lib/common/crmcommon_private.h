@@ -129,6 +129,9 @@ G_GNUC_INTERNAL
 void pcmk__xml_new_private_data(xmlNode *xml);
 
 G_GNUC_INTERNAL
+void pcmk__xml_reset_doc_private_data(xml_doc_private_t *docpriv);
+
+G_GNUC_INTERNAL
 void pcmk__xml_free_private_data(xmlNode *xml);
 
 G_GNUC_INTERNAL
