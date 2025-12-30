@@ -77,8 +77,8 @@ gchar *pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                                   const pcmk_node_t *node, uint32_t show_opts,
                                   const char *target_role, bool show_nodes);
 
-int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name,
-                             ...) G_GNUC_NULL_TERMINATED;
+void pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list,
+                              const char *tag_name, ...) G_GNUC_NULL_TERMINATED;
 char *pe__node_display_name(pcmk_node_t *node, bool print_detail);
 
 
