@@ -361,59 +361,42 @@ cib__process_create(const char *op, int options, const char *section,
 
 /*!
  * \internal
- * \brief Query or modify a CIB
+ * \brief Modify a CIB using XPath as section
  *
- * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
- * \param[in]     options       Flag set of \c cib_call_options
- * \param[in]     section       XPath to query or modify
- * \param[in]     input         Portion of CIB to modify (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[in,out] existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
- * \param[in,out] result_cib    CIB copy to make changes in (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY,
- *                              PCMK__CIB_REQUEST_DELETE, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
+ * \param[in]     op          \c PCMK__CIB_REQUEST_* operation to be performed
+ * \param[in]     options     Flag set of \c cib_call_options
+ * \param[in]     xpath       XPath to query or modify
+ * \param[in]     input       Portion of CIB to modify (used with
+ *                            \c PCMK__CIB_REQUEST_CREATE,
+ *                            \c PCMK__CIB_REQUEST_MODIFY, and
+ *                            \c PCMK__CIB_REQUEST_REPLACE)
+ * \param[in,out] result_cib  CIB copy to make changes in
  *
  * \return Legacy Pacemaker return code
  */
 static int
-process_xpath(const char *op, int options, const char *section, xmlNode *input,
-              xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
+process_xpath(const char *op, int options, const char *xpath, xmlNode *input,
+              xmlNode **result_cib)
 {
     int num_results = 0;
     int rc = pcmk_ok;
-    bool is_query = pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none);
     bool delete_multiple = pcmk__is_set(options, cib_multiple)
                            && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE,
                                            pcmk__str_none);
-    xmlXPathObject *xpathObj = NULL;
+    xmlXPathObject *xpathObj = pcmk__xpath_search((*result_cib)->doc, xpath);
 
     pcmk__trace("Processing \"%s\" event", op);
-
-    if (is_query) {
-        xpathObj = pcmk__xpath_search(existing_cib->doc, section);
-    } else {
-        xpathObj = pcmk__xpath_search((*result_cib)->doc, section);
-    }
 
     num_results = pcmk__xpath_num_results(xpathObj);
     if (num_results == 0) {
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-            pcmk__debug("%s was already removed", section);
+            pcmk__debug("%s was already removed", xpath);
 
         } else {
-            pcmk__debug("%s: %s does not exist", op, section);
+            pcmk__debug("%s: %s does not exist", op, xpath);
             rc = -ENXIO;
         }
         goto done;
-    }
-
-    if (is_query && (num_results > 1)) {
-        *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
     }
 
     for (int i = 0; i < num_results; i++) {
@@ -447,15 +430,14 @@ process_xpath(const char *op, int options, const char *section, xmlNode *input,
         }
 
         path = xmlGetNodePath(match);
-        pcmk__debug("Processing %s op for %s with %s", op, section, path);
+        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
         if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
             if (match == *result_cib) {
                 /* Attempting to delete the whole "/cib" */
                 pcmk__warn("Cannot perform %s for %s: The xpath is addressing "
-                           "the whole /cib",
-                           op, section);
+                           "the whole /cib", op, xpath);
                 rc = -EINVAL;
                 break;
             }
@@ -481,55 +463,6 @@ process_xpath(const char *op, int options, const char *section, xmlNode *input,
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_CREATE, pcmk__str_none)) {
             pcmk__xml_copy(match, input);
             break;
-
-        } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
-            if (pcmk__is_set(options, cib_no_children)) {
-                xmlNode *shallow = pcmk__xe_create(*answer,
-                                                   (const char *) match->name);
-
-                pcmk__xe_copy_attrs(shallow, match, pcmk__xaf_none);
-
-                if (*answer == NULL) {
-                    *answer = shallow;
-                }
-
-            } else if (pcmk__is_set(options, cib_xpath_address)) {
-                // @COMPAT cib_xpath_address is deprecated since 3.0.2
-                char *path = NULL;
-                xmlNode *parent = match;
-
-                while (parent && parent->type == XML_ELEMENT_NODE) {
-                    const char *id = pcmk__xe_get(parent, PCMK_XA_ID);
-                    char *new_path = NULL;
-
-                    if (id) {
-                        new_path =
-                            pcmk__assert_asprintf("/%s[@" PCMK_XA_ID "='%s']%s",
-                                                  parent->name, id,
-                                                  pcmk__s(path, ""));
-                    } else {
-                        new_path = pcmk__assert_asprintf("/%s%s", parent->name,
-                                                         pcmk__s(path, ""));
-                    }
-                    free(path);
-                    path = new_path;
-                    parent = parent->parent;
-                }
-                pcmk__trace("Got: %s", path);
-
-                if (*answer == NULL) {
-                    *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
-                }
-                parent = pcmk__xe_create(*answer, PCMK__XE_XPATH_QUERY_PATH);
-                pcmk__xe_set(parent, PCMK_XA_ID, path);
-                free(path);
-
-            } else if (*answer) {
-                pcmk__xml_copy(*answer, match);
-
-            } else {
-                *answer = match;
-            }
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
                                 pcmk__str_none)) {
@@ -572,8 +505,7 @@ cib__process_delete(const char *op, int options, const char *section,
     pcmk__trace("Processing \"%s\" event", op);
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, input, existing_cib,
-                             result_cib, answer);
+        return process_xpath(op, options, section, input, result_cib);
     }
 
     if (input == NULL) {
@@ -622,8 +554,7 @@ cib__process_modify(const char *op, int options, const char *section,
     pcmk__trace("Processing \"%s\" event", op);
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, input, existing_cib,
-                             result_cib, answer);
+        return process_xpath(op, options, section, input, result_cib);
     }
 
     if (input == NULL) {
@@ -642,7 +573,7 @@ cib__process_modify(const char *op, int options, const char *section,
 
         tmp_section = pcmk__xe_create(NULL, section);
         process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, tmp_section,
-                      NULL, result_cib, answer);
+                      result_cib);
         pcmk__xml_free(tmp_section);
 
         obj_root = pcmk_find_cib_element(*result_cib, section);
@@ -665,6 +596,100 @@ cib__process_modify(const char *op, int options, const char *section,
     return pcmk_ok;
 }
 
+static int
+process_query_xpath(const char *op, int options, const char *xpath,
+                    xmlNode *existing_cib, xmlNode **answer)
+{
+    int num_results = 0;
+    int rc = pcmk_ok;
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(existing_cib->doc, xpath);
+
+    pcmk__trace("Processing '%s' event", op);
+
+    num_results = pcmk__xpath_num_results(xpath_obj);
+    if (num_results == 0) {
+        pcmk__debug("%s: %s does not exist", op, xpath);
+        rc = -ENXIO;
+        goto done;
+    }
+
+    if (num_results > 1) {
+        *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
+    }
+
+    for (int i = 0; i < num_results; i++) {
+        xmlChar *path = NULL;
+        xmlNode *match = pcmk__xpath_result(xpath_obj, i);
+
+        if (match == NULL) {
+            continue;
+        }
+
+        path = xmlGetNodePath(match);
+        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
+        free(path);
+
+        if (pcmk__is_set(options, cib_no_children)) {
+            xmlNode *shallow = pcmk__xe_create(*answer,
+                                               (const char *) match->name);
+
+            pcmk__xe_copy_attrs(shallow, match, pcmk__xaf_none);
+
+            if (*answer == NULL) {
+                *answer = shallow;
+            }
+
+            continue;
+        }
+
+        if (pcmk__is_set(options, cib_xpath_address)) {
+            // @COMPAT cib_xpath_address is deprecated since 3.0.2
+            char *path = NULL;
+            xmlNode *parent = match;
+
+            while ((parent != NULL) && (parent->type == XML_ELEMENT_NODE)) {
+                const char *id = pcmk__xe_get(parent, PCMK_XA_ID);
+                char *new_path = NULL;
+
+                if (id != NULL) {
+                    new_path = pcmk__assert_asprintf("/%s[@" PCMK_XA_ID "='%s']"
+                                                     "%s", parent->name, id,
+                                                     pcmk__s(path, ""));
+                } else {
+                    new_path = pcmk__assert_asprintf("/%s%s", parent->name,
+                                                     pcmk__s(path, ""));
+                }
+
+                free(path);
+                path = new_path;
+                parent = parent->parent;
+            }
+
+            pcmk__trace("Got: %s", path);
+
+            if (*answer == NULL) {
+                *answer = pcmk__xe_create(NULL, PCMK__XE_XPATH_QUERY);
+            }
+
+            parent = pcmk__xe_create(*answer, PCMK__XE_XPATH_QUERY_PATH);
+            pcmk__xe_set(parent, PCMK_XA_ID, path);
+            free(path);
+            continue;
+        }
+
+        if (*answer != NULL) {
+            pcmk__xml_copy(*answer, match);
+            continue;
+        }
+
+        *answer = match;
+    }
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return rc;
+}
+
 int
 cib__process_query(const char *op, int options, const char *section,
                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
@@ -677,8 +702,7 @@ cib__process_query(const char *op, int options, const char *section,
                 pcmk__s(section, "unspecified"));
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, input, existing_cib,
-                             result_cib, answer);
+        return process_query_xpath(op, options, section, existing_cib, answer);
     }
 
     CRM_CHECK(*answer == NULL, pcmk__xml_free(*answer));
@@ -813,8 +837,7 @@ cib__process_replace(const char *op, int options, const char *section,
                 pcmk__s(section, "unspecified"));
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, input, existing_cib,
-                             result_cib, answer);
+        return process_xpath(op, options, section, input, result_cib);
     }
 
     *answer = NULL;
