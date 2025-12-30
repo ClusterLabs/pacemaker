@@ -782,24 +782,24 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     }
 
     // @COMPAT PCMK_XA_ORPHANED is deprecated since 3.0.2
-    pe__name_and_nvpairs_xml(out, true, PCMK_XE_RESOURCE,
-                             PCMK_XA_ID, rsc_printable_id(rsc),
-                             PCMK_XA_RESOURCE_AGENT, ra_name,
-                             PCMK_XA_ROLE, rsc_state,
-                             PCMK_XA_TARGET_ROLE, target_role,
-                             PCMK_XA_ACTIVE, active,
-                             PCMK_XA_ORPHANED, removed,
-                             PCMK_XA_REMOVED, removed,
-                             PCMK_XA_BLOCKED, blocked,
-                             PCMK_XA_MAINTENANCE, maintenance,
-                             PCMK_XA_MANAGED, managed,
-                             PCMK_XA_FAILED, failed,
-                             PCMK_XA_FAILURE_IGNORED, ignored,
-                             PCMK_XA_NODES_RUNNING_ON, nodes_running_on,
-                             PCMK_XA_PENDING, pending,
-                             PCMK_XA_LOCKED_TO, locked_to,
-                             PCMK_XA_DESCRIPTION, desc,
-                             NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
+                                   PCMK_XA_ID, rsc_printable_id(rsc),
+                                   PCMK_XA_RESOURCE_AGENT, ra_name,
+                                   PCMK_XA_ROLE, rsc_state,
+                                   PCMK_XA_TARGET_ROLE, target_role,
+                                   PCMK_XA_ACTIVE, active,
+                                   PCMK_XA_ORPHANED, removed,
+                                   PCMK_XA_REMOVED, removed,
+                                   PCMK_XA_BLOCKED, blocked,
+                                   PCMK_XA_MAINTENANCE, maintenance,
+                                   PCMK_XA_MANAGED, managed,
+                                   PCMK_XA_FAILED, failed,
+                                   PCMK_XA_FAILURE_IGNORED, ignored,
+                                   PCMK_XA_NODES_RUNNING_ON, nodes_running_on,
+                                   PCMK_XA_PENDING, pending,
+                                   PCMK_XA_LOCKED_TO, locked_to,
+                                   PCMK_XA_DESCRIPTION, desc,
+                                   NULL);
     rc = pcmk_rc_ok;
     free(ra_name);
     free(nodes_running_on);
@@ -810,11 +810,11 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
         pcmk_node_t *node = (pcmk_node_t *) gIter->data;
         const char *cached = pcmk__btoa(node->details->online);
 
-        pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
-                                 PCMK_XA_NAME, node->priv->name,
-                                 PCMK_XA_ID, node->priv->id,
-                                 PCMK_XA_CACHED, cached,
-                                 NULL);
+        pcmk__output_create_xml_node(out, PCMK_XE_NODE,
+                                     PCMK_XA_NAME, node->priv->name,
+                                     PCMK_XA_ID, node->priv->id,
+                                     PCMK_XA_CACHED, cached,
+                                     NULL);
     }
 
     pcmk__output_xml_pop_parent(out);

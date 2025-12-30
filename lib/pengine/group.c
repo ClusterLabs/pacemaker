@@ -298,14 +298,14 @@ pe__group_xml(pcmk__output_t *out, va_list args)
                                                   pcmk__rsc_managed);
             const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
 
-            pe__name_and_nvpairs_xml(out, true, PCMK_XE_GROUP,
-                                     PCMK_XA_ID, rsc->id,
-                                     PCMK_XA_NUMBER_RESOURCES, count,
-                                     PCMK_XA_MAINTENANCE, maintenance,
-                                     PCMK_XA_MANAGED, managed,
-                                     PCMK_XA_DISABLED, disabled,
-                                     PCMK_XA_DESCRIPTION, desc,
-                                     NULL);
+            pcmk__output_xml_create_parent(out, PCMK_XE_GROUP,
+                                           PCMK_XA_ID, rsc->id,
+                                           PCMK_XA_NUMBER_RESOURCES, count,
+                                           PCMK_XA_MAINTENANCE, maintenance,
+                                           PCMK_XA_MANAGED, managed,
+                                           PCMK_XA_DISABLED, disabled,
+                                           PCMK_XA_DESCRIPTION, desc,
+                                           NULL);
             rc = pcmk_rc_ok;
             free(count);
         }
@@ -382,7 +382,7 @@ pe__group_default(pcmk__output_t *out, va_list args)
         }
     }
 
-	PCMK__OUTPUT_LIST_FOOTER(out, rc);
+    PCMK__OUTPUT_LIST_FOOTER(out, rc);
 
     return rc;
 }
