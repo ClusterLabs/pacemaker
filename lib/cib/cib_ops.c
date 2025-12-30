@@ -366,10 +366,7 @@ cib__process_create(const char *op, int options, const char *section,
  * \param[in]     op          \c PCMK__CIB_REQUEST_* operation to be performed
  * \param[in]     options     Flag set of \c cib_call_options
  * \param[in]     xpath       XPath to query or modify
- * \param[in]     input       Portion of CIB to modify (used with
- *                            \c PCMK__CIB_REQUEST_CREATE,
- *                            \c PCMK__CIB_REQUEST_MODIFY, and
- *                            \c PCMK__CIB_REQUEST_REPLACE)
+ * \param[in]     input       Portion of CIB to modify
  * \param[in,out] result_cib  CIB copy to make changes in
  *
  * \return Legacy Pacemaker return code
@@ -380,22 +377,14 @@ process_xpath(const char *op, int options, const char *xpath, xmlNode *input,
 {
     int num_results = 0;
     int rc = pcmk_ok;
-    bool delete_multiple = pcmk__is_set(options, cib_multiple)
-                           && pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE,
-                                           pcmk__str_none);
     xmlXPathObject *xpathObj = pcmk__xpath_search((*result_cib)->doc, xpath);
 
     pcmk__trace("Processing \"%s\" event", op);
 
     num_results = pcmk__xpath_num_results(xpathObj);
     if (num_results == 0) {
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-            pcmk__debug("%s was already removed", xpath);
-
-        } else {
-            pcmk__debug("%s: %s does not exist", op, xpath);
-            rc = -ENXIO;
-        }
+        pcmk__debug("%s: %s does not exist", op, xpath);
+        rc = -ENXIO;
         goto done;
     }
 
@@ -403,28 +392,7 @@ process_xpath(const char *op, int options, const char *xpath, xmlNode *input,
         xmlNode *match = NULL;
         xmlChar *path = NULL;
 
-        /* If we're deleting multiple nodes, go in reverse document order.
-         * If we go in forward order and the node set contains both a parent and
-         * its descendant, then deleting the parent frees the descendant before
-         * the loop reaches the descendant. This is a use-after-free error.
-         *
-         * @COMPAT cib_multiple is only ever used with delete operations. The
-         * correct order to process multiple nodes for operations other than
-         * query (forward) and delete (reverse) is less clear but likely should
-         * be reverse. If we ever replace the CIB public API with libpacemaker
-         * functions, revisit this. For now, we keep forward order for other
-         * operations to preserve backward compatibility, even though external
-         * callers of other ops with cib_multiple might segfault.
-         *
-         * For more info, see comment in xpath2.c:update_xpath_nodes() in
-         * libxml2.
-         */
-        if (delete_multiple) {
-            match = pcmk__xpath_result(xpathObj, num_results - 1 - i);
-        } else {
-            match = pcmk__xpath_result(xpathObj, i);
-        }
-
+        match = pcmk__xpath_result(xpathObj, i);
         if (match == NULL) {
             continue;
         }
@@ -433,21 +401,7 @@ process_xpath(const char *op, int options, const char *xpath, xmlNode *input,
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_DELETE, pcmk__str_none)) {
-            if (match == *result_cib) {
-                /* Attempting to delete the whole "/cib" */
-                pcmk__warn("Cannot perform %s for %s: The xpath is addressing "
-                           "the whole /cib", op, xpath);
-                rc = -EINVAL;
-                break;
-            }
-
-            pcmk__xml_free(match);
-            if (!pcmk__is_set(options, cib_multiple)) {
-                break;
-            }
-
-        } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
+        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_MODIFY, pcmk__str_none)) {
             uint32_t flags = pcmk__xaf_none;
 
             if (pcmk__is_set(options, cib_score_update)) {
@@ -483,6 +437,75 @@ done:
 }
 
 static int
+process_delete_xpath(const char *op, int options, const char *xpath,
+                     xmlNode **result_cib)
+{
+    int num_results = 0;
+    int rc = pcmk_ok;
+
+    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
+
+    pcmk__trace("Processing '%s' event", op);
+
+    num_results = pcmk__xpath_num_results(xpath_obj);
+    if (num_results == 0) {
+        pcmk__debug("%s was already removed", xpath);
+        goto done;
+    }
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = NULL;
+        xmlChar *path = NULL;
+
+        /* If we're deleting multiple nodes, go in reverse document order.
+         * If we go in forward order and the node set contains both a parent and
+         * its descendant, then deleting the parent frees the descendant before
+         * the loop reaches the descendant. This is a use-after-free error.
+         *
+         * @COMPAT cib_multiple is only ever used with delete operations. The
+         * correct order to process multiple nodes for operations other than
+         * query (forward) and delete (reverse) is less clear but likely should
+         * be reverse. If we ever replace the CIB public API with libpacemaker
+         * functions, revisit this. For now, we keep forward order for other
+         * operations to preserve backward compatibility, even though external
+         * callers of other ops with cib_multiple might segfault.
+         *
+         * For more info, see comment in xpath2.c:update_xpath_nodes() in
+         * libxml2.
+         */
+        if (pcmk__is_set(options, cib_multiple)) {
+            match = pcmk__xpath_result(xpath_obj, num_results - 1 - i);
+        } else {
+            match = pcmk__xpath_result(xpath_obj, i);
+        }
+
+        if (match == NULL) {
+            continue;
+        }
+
+        path = xmlGetNodePath(match);
+        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
+        free(path);
+
+        if (match == *result_cib) {
+            pcmk__warn("Cannot perform %s for %s: the XPath is addressing the "
+                       "whole /cib", op, xpath);
+            rc = -EINVAL;
+            break;
+        }
+
+        pcmk__xml_free(match);
+        if (!pcmk__is_set(options, cib_multiple)) {
+            break;
+        }
+    }
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return rc;
+}
+
+static int
 delete_child(xmlNode *child, void *userdata)
 {
     xmlNode *obj_root = userdata;
@@ -505,7 +528,7 @@ cib__process_delete(const char *op, int options, const char *section,
     pcmk__trace("Processing \"%s\" event", op);
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, input, result_cib);
+        return process_delete_xpath(op, options, section, result_cib);
     }
 
     if (input == NULL) {
