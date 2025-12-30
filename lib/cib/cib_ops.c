@@ -392,12 +392,12 @@ cib__process_create(const char *op, int options, const char *section,
 
 static int
 process_delete_xpath(const char *op, int options, const char *xpath,
-                     xmlNode **result_cib)
+                     xmlNode *result_cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
 
-    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
 
     pcmk__trace("Processing '%s' event", op);
 
@@ -441,7 +441,7 @@ process_delete_xpath(const char *op, int options, const char *xpath,
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
-        if (match == *result_cib) {
+        if (match == result_cib) {
             pcmk__warn("Cannot perform %s for %s: the XPath is addressing the "
                        "whole /cib", op, xpath);
             rc = EINVAL;
@@ -472,32 +472,40 @@ delete_child(xmlNode *child, void *userdata)
     return pcmk_rc_ok;
 }
 
-int
-cib__process_delete(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                    xmlNode **result_cib, xmlNode **answer)
+static int
+process_delete_section(const char *section, xmlNode *input, xmlNode *result_cib)
 {
     xmlNode *obj_root = NULL;
 
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (pcmk__is_set(options, cib_xpath)) {
-        return process_delete_xpath(op, options, section, result_cib);
-    }
-
     if (input == NULL) {
-        pcmk__err("Cannot perform modification with no data");
+        pcmk__err("Cannot find matching section to delete with no input data");
         return EINVAL;
     }
 
-    obj_root = pcmk_find_cib_element(*result_cib, section);
+    obj_root = pcmk_find_cib_element(result_cib, section);
+
     if (pcmk__xe_is(input, section)) {
         pcmk__xe_foreach_child(input, NULL, delete_child, obj_root);
+
     } else {
         delete_child(input, obj_root);
     }
 
     return pcmk_rc_ok;
+}
+
+int
+cib__process_delete(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (pcmk__is_set(options, cib_xpath)) {
+        return process_delete_xpath(op, options, section, *result_cib);
+    }
+
+    return process_delete_section(section, input, *result_cib);
 }
 
 int
