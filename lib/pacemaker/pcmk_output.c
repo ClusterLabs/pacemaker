@@ -616,7 +616,7 @@ locations_and_colocations_xml(pcmk__output_t *out, va_list args)
         rsc = uber_parent(rsc);
     }
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS);
     do_locations_list_xml(out, rsc, false);
 
     pe__clear_resource_flags_on_all(rsc->priv->scheduler,
@@ -1593,7 +1593,7 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    node = pcmk__output_xml_create_parent(out, PCMK_XE_MODIFICATIONS, NULL);
+    node = pcmk__output_xml_create_parent(out, PCMK_XE_MODIFICATIONS);
 
     if (quorum) {
         pcmk__xe_set(node, PCMK_XA_QUORUM, quorum);
@@ -2414,6 +2414,7 @@ ticket_attribute_xml(pcmk__output_t *out, va_list args)
     const char *ticket_id = va_arg(args, const char *);
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
+    xmlNode *xml = NULL;
 
     /* Create:
      * <tickets>
@@ -2422,9 +2423,11 @@ ticket_attribute_xml(pcmk__output_t *out, va_list args)
      *   </ticket>
      * </tickets>
      */
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
-                                   PCMK_XA_ID, ticket_id, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS);
+
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_TICKET);
+    pcmk__xe_set(xml, PCMK_XA_ID, ticket_id);
+
     pcmk__output_create_xml_node(out, PCMK_XA_ATTRIBUTE,
                                  PCMK_XA_NAME, name,
                                  PCMK_XA_VALUE, value,
@@ -2489,10 +2492,12 @@ add_ticket_element_with_constraints(xmlNode *node, void *userdata)
 {
     pcmk__output_t *out = (pcmk__output_t *) userdata;
     const char *ticket_id = pcmk__xe_get(node, PCMK_XA_TICKET);
+    xmlNode *xml = NULL;
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKET,
-                                   PCMK_XA_ID, ticket_id, NULL);
-    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS, NULL);
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_TICKET);
+    pcmk__xe_set(xml, PCMK_XA_ID, ticket_id);
+
+    pcmk__output_xml_create_parent(out, PCMK_XE_CONSTRAINTS);
     pcmk__output_xml_add_node_copy(out, node);
 
     /* Pop two parents so now we are back under the <tickets> element */
@@ -2529,7 +2534,7 @@ ticket_constraints_xml(pcmk__output_t *out, va_list args)
      *   ...
      * </tickets>
      */
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS);
 
     if (pcmk__xe_is(constraint_xml, PCMK__XE_XPATH_QUERY)) {
         /* Iterate through the list of children once to create all the
@@ -2552,7 +2557,7 @@ ticket_constraints_xml(pcmk__output_t *out, va_list args)
          *   ...
          * </resources>
          */
-        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES);
         pcmk__xe_foreach_child(constraint_xml, NULL, add_resource_element, out);
         pcmk__output_xml_pop_parent(out);
 
@@ -2563,7 +2568,7 @@ ticket_constraints_xml(pcmk__output_t *out, va_list args)
         add_ticket_element_with_constraints(constraint_xml, out);
         pcmk__output_xml_pop_parent(out);
 
-        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES, NULL);
+        pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCES);
         add_resource_element(constraint_xml, out);
         pcmk__output_xml_pop_parent(out);
     }
@@ -2610,7 +2615,7 @@ ticket_state_xml(pcmk__output_t *out, va_list args)
      *   ...
      * </tickets>
      */
-    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_TICKETS);
 
     if (state_xml->children != NULL) {
         /* Iterate through the list of children once to create all the

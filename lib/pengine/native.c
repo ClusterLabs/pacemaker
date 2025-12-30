@@ -740,6 +740,7 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     GList *only_rsc = va_arg(args, GList *);
 
     int rc = pcmk_rc_no_output;
+    xmlNode *xml = NULL;
     const bool print_pending = pcmk__is_set(show_opts, pcmk_show_pending);
     const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     const char *prov = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
@@ -747,7 +748,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     char *ra_name = NULL;
     const char *rsc_state = native_displayable_state(rsc, print_pending);
     const char *target_role = NULL;
-    const char *active = pcmk__btoa(rsc->priv->fns->active(rsc, true));
     const char *removed = pcmk__flag_text(rsc->flags, pcmk__rsc_removed);
     const char *blocked = pcmk__flag_text(rsc->flags, pcmk__rsc_blocked);
     const char *maintenance = pcmk__flag_text(rsc->flags,
@@ -755,7 +755,6 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     const char *managed = pcmk__flag_text(rsc->flags, pcmk__rsc_managed);
     const char *failed = pcmk__flag_text(rsc->flags, pcmk__rsc_failed);
     const char *ignored = pcmk__flag_text(rsc->flags, pcmk__rsc_ignore_failure);
-    char *nodes_running_on = NULL;
     const char *pending = print_pending? native_pending_action(rsc) : NULL;
     const char *locked_to = NULL;
     const char *desc = pe__resource_description(rsc, show_opts);
@@ -775,34 +774,32 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
     target_role = g_hash_table_lookup(rsc->priv->meta,
                                       PCMK_META_TARGET_ROLE);
 
-    nodes_running_on = pcmk__itoa(g_list_length(rsc->priv->active_nodes));
-
     if (rsc->priv->lock_node != NULL) {
         locked_to = rsc->priv->lock_node->priv->name;
     }
 
     // @COMPAT PCMK_XA_ORPHANED is deprecated since 3.0.2
-    pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE,
-                                   PCMK_XA_ID, rsc_printable_id(rsc),
-                                   PCMK_XA_RESOURCE_AGENT, ra_name,
-                                   PCMK_XA_ROLE, rsc_state,
-                                   PCMK_XA_TARGET_ROLE, target_role,
-                                   PCMK_XA_ACTIVE, active,
-                                   PCMK_XA_ORPHANED, removed,
-                                   PCMK_XA_REMOVED, removed,
-                                   PCMK_XA_BLOCKED, blocked,
-                                   PCMK_XA_MAINTENANCE, maintenance,
-                                   PCMK_XA_MANAGED, managed,
-                                   PCMK_XA_FAILED, failed,
-                                   PCMK_XA_FAILURE_IGNORED, ignored,
-                                   PCMK_XA_NODES_RUNNING_ON, nodes_running_on,
-                                   PCMK_XA_PENDING, pending,
-                                   PCMK_XA_LOCKED_TO, locked_to,
-                                   PCMK_XA_DESCRIPTION, desc,
-                                   NULL);
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE);
+    pcmk__xe_set(xml, PCMK_XA_ID, rsc_printable_id(rsc));
+    pcmk__xe_set(xml, PCMK_XA_RESOURCE_AGENT, ra_name);
+    pcmk__xe_set(xml, PCMK_XA_ROLE, rsc_state);
+    pcmk__xe_set(xml, PCMK_XA_TARGET_ROLE, target_role);
+    pcmk__xe_set_bool(xml, PCMK_XA_ACTIVE, rsc->priv->fns->active(rsc, true));
+    pcmk__xe_set(xml, PCMK_XA_ORPHANED, removed);
+    pcmk__xe_set(xml, PCMK_XA_REMOVED, removed);
+    pcmk__xe_set(xml, PCMK_XA_BLOCKED, blocked);
+    pcmk__xe_set(xml, PCMK_XA_MAINTENANCE, maintenance);
+    pcmk__xe_set(xml, PCMK_XA_MANAGED, managed);
+    pcmk__xe_set(xml, PCMK_XA_FAILED, failed);
+    pcmk__xe_set(xml, PCMK_XA_FAILURE_IGNORED, ignored);
+    pcmk__xe_set_int(xml, PCMK_XA_NODES_RUNNING_ON,
+                     g_list_length(rsc->priv->active_nodes));
+    pcmk__xe_set(xml, PCMK_XA_PENDING, pending);
+    pcmk__xe_set(xml, PCMK_XA_LOCKED_TO, locked_to);
+    pcmk__xe_set(xml, PCMK_XA_DESCRIPTION, desc);
+
     rc = pcmk_rc_ok;
     free(ra_name);
-    free(nodes_running_on);
 
     for (GList *gIter = rsc->priv->active_nodes;
          gIter != NULL; gIter = gIter->next) {
