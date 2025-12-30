@@ -294,52 +294,6 @@ pcmk__xml_reset_node_flags(xmlNode *xml, void *user_data)
     return true;
 }
 
-/*!
- * \internal
- * \brief Set the \c pcmk__xf_dirty and \c pcmk__xf_created flags on an XML node
- *
- * \param[in,out] xml        Node whose flags to set
- * \param[in]     user_data  Ignored
- *
- * \return \c true (to continue traversing the tree)
- *
- * \note This is compatible with \c pcmk__xml_tree_foreach().
- */
-static bool
-mark_xml_dirty_created(xmlNode *xml, void *user_data)
-{
-    xml_node_private_t *nodepriv = xml->_private;
-
-    if (nodepriv != NULL) {
-        pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
-    }
-    return true;
-}
-
-/*!
- * \internal
- * \brief Mark an XML tree as dirty and created, and mark its parents dirty
- *
- * Also mark the document dirty.
- *
- * \param[in,out] xml  Tree to mark as dirty and created
- */
-static void
-mark_xml_tree_dirty_created(xmlNode *xml)
-{
-    pcmk__assert(xml != NULL);
-
-    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)) {
-        // Tracking is disabled for entire document
-        return;
-    }
-
-    // Mark all parents and document dirty
-    pcmk__mark_xml_node_dirty(xml);
-
-    pcmk__xml_tree_foreach(xml, mark_xml_dirty_created, NULL);
-}
-
 // Free an XML object previously marked as deleted
 static void
 free_deleted_object(void *data)
@@ -1638,6 +1592,28 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_child, int old_pos,
 
 /*!
  * \internal
+ * \brief Set the \c pcmk__xf_dirty and \c pcmk__xf_created flags on an XML node
+ *
+ * \param[in,out] xml        Node whose flags to set
+ * \param[in]     user_data  Ignored
+ *
+ * \return \c true (to continue traversing the tree)
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach().
+ */
+static bool
+mark_xml_dirty_created(xmlNode *xml, void *user_data)
+{
+    xml_node_private_t *nodepriv = xml->_private;
+
+    if (nodepriv != NULL) {
+        pcmk__set_xml_flags(nodepriv, pcmk__xf_dirty|pcmk__xf_created);
+    }
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Mark a child as created, and free it if ACLs disallow its creation
  *
  * This sets the \c pcmk__xf_skip, \c pcmk__xf_dirty, and \c pcmk__xf_created
@@ -1665,7 +1641,11 @@ mark_child_created(xmlNode *new_child)
     // @TODO Why do we set pcmk__xf_skip here?
     pcmk__set_xml_flags(nodepriv, pcmk__xf_skip);
 
-    mark_xml_tree_dirty_created(new_child);
+    // Mark all ancestors and document dirty
+    pcmk__mark_xml_node_dirty(new_child);
+
+    // Mark new_child and all descendants dirty and created
+    pcmk__xml_tree_foreach(new_child, mark_xml_dirty_created, NULL);
 
     // Check whether creation was allowed (may free new_child)
     pcmk__check_creation_acls(new_child);
