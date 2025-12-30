@@ -299,18 +299,13 @@ dump_xml_text(const xmlNode *data, uint32_t options, GString *buffer,
     const bool pretty = pcmk__is_set(options, pcmk__xml_fmt_pretty);
     const int spaces = pretty? (2 * depth) : 0;
     const char *content = (const char *) data->content;
-    gchar *content_esc = NULL;
-
-    if (pcmk__xml_needs_escape(content, pcmk__xml_escape_text)) {
-        content_esc = pcmk__xml_escape(content, pcmk__xml_escape_text);
-        content = content_esc;
-    }
+    gchar *content_esc = pcmk__xml_escape(content, pcmk__xml_escape_text);
 
     for (int lpc = 0; lpc < spaces; lpc++) {
         g_string_append_c(buffer, ' ');
     }
 
-    g_string_append(buffer, content);
+    g_string_append(buffer, content_esc);
 
     if (pretty) {
         g_string_append_c(buffer, '\n');

@@ -153,13 +153,10 @@ pcmk__dump_xml_attr(const xmlAttr *attr, void *user_data)
         return true;
     }
 
-    if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr)) {
-        value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr);
-        value = value_esc;
-    }
+    value_esc = pcmk__xml_escape(value, pcmk__xml_escape_attr);
 
-    pcmk__g_strcat(buffer, " ", (const char *) attr->name, "=\"", value, "\"",
-                   NULL);
+    pcmk__g_strcat(buffer, " ", (const char *) attr->name,
+                   "=\"", value_esc, "\"", NULL);
     g_free(value_esc);
     return true;
 }
