@@ -570,6 +570,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            xmlNode *xml = NULL;
             const char *multi_state = pcmk__flag_text(rsc->flags,
                                                       pcmk__rsc_promotable);
             const char *unique = pcmk__flag_text(rsc->flags, pcmk__rsc_unique);
@@ -577,7 +578,6 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                                                       pcmk__rsc_maintenance);
             const char *managed = pcmk__flag_text(rsc->flags,
                                                   pcmk__rsc_managed);
-            const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
             const char *failed = pcmk__flag_text(rsc->flags, pcmk__rsc_failed);
             const char *ignored = pcmk__flag_text(rsc->flags,
                                                   pcmk__rsc_ignore_failure);
@@ -586,18 +586,18 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
             printed_header = TRUE;
 
-            pcmk__output_xml_create_parent(out, PCMK_XE_CLONE,
-                                           PCMK_XA_ID, rsc->id,
-                                           PCMK_XA_MULTI_STATE, multi_state,
-                                           PCMK_XA_UNIQUE, unique,
-                                           PCMK_XA_MAINTENANCE, maintenance,
-                                           PCMK_XA_MANAGED, managed,
-                                           PCMK_XA_DISABLED, disabled,
-                                           PCMK_XA_FAILED, failed,
-                                           PCMK_XA_FAILURE_IGNORED, ignored,
-                                           PCMK_XA_TARGET_ROLE, target_role,
-                                           PCMK_XA_DESCRIPTION, desc,
-                                           NULL);
+            xml = pcmk__output_xml_create_parent(out, PCMK_XE_CLONE);
+            pcmk__xe_set(xml, PCMK_XA_ID, rsc->id);
+            pcmk__xe_set(xml, PCMK_XA_MULTI_STATE, multi_state);
+            pcmk__xe_set(xml, PCMK_XA_UNIQUE, unique);
+            pcmk__xe_set(xml, PCMK_XA_MAINTENANCE, maintenance);
+            pcmk__xe_set(xml, PCMK_XA_MANAGED, managed);
+            pcmk__xe_set_bool(xml, PCMK_XA_DISABLED,
+                              pe__resource_is_disabled(rsc));
+            pcmk__xe_set(xml, PCMK_XA_FAILED, failed);
+            pcmk__xe_set(xml, PCMK_XA_FAILURE_IGNORED, ignored);
+            pcmk__xe_set(xml, PCMK_XA_TARGET_ROLE, target_role);
+            pcmk__xe_set(xml, PCMK_XA_DESCRIPTION, desc);
         }
 
         rc = pcmk_rc_ok;

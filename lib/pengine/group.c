@@ -291,23 +291,23 @@ pe__group_xml(pcmk__output_t *out, va_list args)
         }
 
         if (rc == pcmk_rc_no_output) {
-            char *count = pcmk__itoa(g_list_length(gIter));
+            xmlNode *xml = NULL;
             const char *maintenance = pcmk__flag_text(rsc->flags,
                                                       pcmk__rsc_maintenance);
             const char *managed = pcmk__flag_text(rsc->flags,
                                                   pcmk__rsc_managed);
-            const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
 
-            pcmk__output_xml_create_parent(out, PCMK_XE_GROUP,
-                                           PCMK_XA_ID, rsc->id,
-                                           PCMK_XA_NUMBER_RESOURCES, count,
-                                           PCMK_XA_MAINTENANCE, maintenance,
-                                           PCMK_XA_MANAGED, managed,
-                                           PCMK_XA_DISABLED, disabled,
-                                           PCMK_XA_DESCRIPTION, desc,
-                                           NULL);
+            xml = pcmk__output_xml_create_parent(out, PCMK_XE_GROUP);
+            pcmk__xe_set(xml, PCMK_XA_ID, rsc->id);
+            pcmk__xe_set_int(xml, PCMK_XA_NUMBER_RESOURCES,
+                             g_list_length(gIter));
+            pcmk__xe_set(xml, PCMK_XA_MAINTENANCE, maintenance);
+            pcmk__xe_set(xml, PCMK_XA_MANAGED, managed);
+            pcmk__xe_set_bool(xml, PCMK_XA_DISABLED,
+                              pe__resource_is_disabled(rsc));
+            pcmk__xe_set(xml, PCMK_XA_DESCRIPTION, desc);
+
             rc = pcmk_rc_ok;
-            free(count);
         }
 
         out->message(out, (const char *) child_rsc->priv->xml->name,

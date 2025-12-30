@@ -1798,7 +1798,7 @@ node_html(pcmk__output_t *out, va_list args) {
             GList *rscs = pe__filter_rsc_list(node->details->running_rsc, only_rsc);
 
             out->begin_list(out, NULL, NULL, "%s:", node_name);
-            item_node = pcmk__output_xml_create_parent(out, "li", NULL);
+            item_node = pcmk__output_xml_create_parent(out, "li");
             child = pcmk__html_create(item_node, PCMK__XE_SPAN, NULL, NULL);
             pcmk__xe_set_content(child, "Status:");
             status_node(node, item_node, show_opts);
@@ -1818,7 +1818,7 @@ node_html(pcmk__output_t *out, va_list args) {
             int rc = pcmk_rc_no_output;
 
             out->begin_list(out, NULL, NULL, "%s:", node_name);
-            item_node = pcmk__output_xml_create_parent(out, "li", NULL);
+            item_node = pcmk__output_xml_create_parent(out, "li");
             child = pcmk__html_create(item_node, PCMK__XE_SPAN, NULL, NULL);
             pcmk__xe_set_content(child, "Status:");
             status_node(node, item_node, show_opts);
@@ -2052,45 +2052,36 @@ node_xml(pcmk__output_t *out, va_list args) {
     GList *only_rsc = va_arg(args, GList *);
 
     if (full) {
-        const char *online = pcmk__btoa(node->details->online);
+        xmlNode *xml = NULL;
         const char *standby = pcmk__flag_text(node->priv->flags,
                                               pcmk__node_standby);
         const char *standby_onfail = pcmk__flag_text(node->priv->flags,
                                                      pcmk__node_fail_standby);
-        const char *maintenance = pcmk__btoa(node->details->maintenance);
-        const char *pending = pcmk__btoa(node->details->pending);
-        const char *unclean = pcmk__btoa(node->details->unclean);
         const char *health = health_text(pe__node_health(node));
         const char *feature_set = get_node_feature_set(node);
-        const char *shutdown = pcmk__btoa(node->details->shutdown);
         const char *expected_up = pcmk__flag_text(node->priv->flags,
                                                   pcmk__node_expected_up);
         const bool is_dc = pcmk__same_node(node,
                                            node->priv->scheduler->dc_node);
-        int length = g_list_length(node->details->running_rsc);
-        char *resources_running = pcmk__itoa(length);
         const char *node_type = node_variant_text(node->priv->variant);
 
-        pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
-                                       PCMK_XA_NAME, node->priv->name,
-                                       PCMK_XA_ID, node->priv->id,
-                                       PCMK_XA_ONLINE, online,
-                                       PCMK_XA_STANDBY, standby,
-                                       PCMK_XA_STANDBY_ONFAIL, standby_onfail,
-                                       PCMK_XA_MAINTENANCE, maintenance,
-                                       PCMK_XA_PENDING, pending,
-                                       PCMK_XA_UNCLEAN, unclean,
-                                       PCMK_XA_HEALTH, health,
-                                       PCMK_XA_FEATURE_SET, feature_set,
-                                       PCMK_XA_SHUTDOWN, shutdown,
-                                       PCMK_XA_EXPECTED_UP, expected_up,
-                                       PCMK_XA_IS_DC, pcmk__btoa(is_dc),
-                                       PCMK_XA_RESOURCES_RUNNING,
-                                           resources_running,
-                                       PCMK_XA_TYPE, node_type,
-                                       NULL);
-
-        free(resources_running);
+        xml = pcmk__output_xml_create_parent(out, PCMK_XE_NODE);
+        pcmk__xe_set(xml, PCMK_XA_NAME, node->priv->name);
+        pcmk__xe_set(xml, PCMK_XA_ID, node->priv->id);
+        pcmk__xe_set_bool(xml, PCMK_XA_ONLINE, node->details->online);
+        pcmk__xe_set(xml, PCMK_XA_STANDBY, standby);
+        pcmk__xe_set(xml, PCMK_XA_STANDBY_ONFAIL, standby_onfail);
+        pcmk__xe_set_bool(xml, PCMK_XA_MAINTENANCE, node->details->maintenance);
+        pcmk__xe_set_bool(xml, PCMK_XA_PENDING, node->details->pending);
+        pcmk__xe_set_bool(xml, PCMK_XA_UNCLEAN, node->details->unclean);
+        pcmk__xe_set(xml, PCMK_XA_HEALTH, health);
+        pcmk__xe_set(xml, PCMK_XA_FEATURE_SET, feature_set);
+        pcmk__xe_set_bool(xml, PCMK_XA_SHUTDOWN, node->details->shutdown);
+        pcmk__xe_set(xml, PCMK_XA_EXPECTED_UP, expected_up);
+        pcmk__xe_set_bool(xml, PCMK_XA_IS_DC, is_dc);
+        pcmk__xe_set_int(xml, PCMK_XA_RESOURCES_RUNNING,
+                         g_list_length(node->details->running_rsc));
+        pcmk__xe_set(xml, PCMK_XA_TYPE, node_type);
 
         if (pcmk__is_guest_or_bundle_node(node)) {
             xmlNodePtr xml_node = pcmk__output_xml_peek_parent(out);
@@ -2111,10 +2102,11 @@ node_xml(pcmk__output_t *out, va_list args) {
         }
 
         out->end_list(out);
+
     } else {
-        pcmk__output_xml_create_parent(out, PCMK_XE_NODE,
-                                       PCMK_XA_NAME, node->priv->name,
-                                       NULL);
+        xmlNode *xml = pcmk__output_xml_create_parent(out, PCMK_XE_NODE);
+
+        pcmk__xe_set(xml, PCMK_XA_NAME, node->priv->name);
     }
 
     return pcmk_rc_ok;
@@ -2964,37 +2956,30 @@ resource_history_xml(pcmk__output_t *out, va_list args) {
     int failcount = va_arg(args, int);
     time_t last_failure = va_arg(args, time_t);
     bool as_header = va_arg(args, int);
+    xmlNode *xml = NULL;
 
-    xmlNodePtr node = pcmk__output_xml_create_parent(out,
-                                                     PCMK_XE_RESOURCE_HISTORY,
-                                                     PCMK_XA_ID, rsc_id,
-                                                     NULL);
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_RESOURCE_HISTORY);
+    pcmk__xe_set(xml, PCMK_XA_ID, rsc_id);
 
     // @COMPAT PCMK_XA_ORPHAN is deprecated since 3.0.2
     if (rsc == NULL) {
-        pcmk__xe_set_bool(node, PCMK_XA_ORPHAN, true);
-        pcmk__xe_set_bool(node, PCMK_XA_REMOVED, true);
+        pcmk__xe_set_bool(xml, PCMK_XA_ORPHAN, true);
+        pcmk__xe_set_bool(xml, PCMK_XA_REMOVED, true);
 
     } else if (all || failcount || last_failure > 0) {
-        char *migration_s = pcmk__itoa(rsc->priv->ban_after_failures);
-
-        pcmk__xe_set(node, PCMK_XA_ORPHAN, PCMK_VALUE_FALSE);
-        pcmk__xe_set(node, PCMK_XA_REMOVED, PCMK_VALUE_FALSE);
-        pcmk__xe_set(node, PCMK_META_MIGRATION_THRESHOLD, migration_s);
-
-        free(migration_s);
+        pcmk__xe_set(xml, PCMK_XA_ORPHAN, PCMK_VALUE_FALSE);
+        pcmk__xe_set(xml, PCMK_XA_REMOVED, PCMK_VALUE_FALSE);
+        pcmk__xe_set_int(xml, PCMK_META_MIGRATION_THRESHOLD,
+                         rsc->priv->ban_after_failures);
 
         if (failcount > 0) {
-            char *s = pcmk__itoa(failcount);
-
-            pcmk__xe_set(node, PCMK_XA_FAIL_COUNT, s);
-            free(s);
+            pcmk__xe_set_int(xml, PCMK_XA_FAIL_COUNT, failcount);
         }
 
         if (last_failure > 0) {
             char *s = pcmk__epoch2str(&last_failure, 0);
 
-            pcmk__xe_set(node, PCMK_XA_LAST_FAILURE, s);
+            pcmk__xe_set(xml, PCMK_XA_LAST_FAILURE, s);
             free(s);
         }
     }
