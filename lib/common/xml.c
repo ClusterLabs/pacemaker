@@ -429,8 +429,8 @@ new_private_data(xmlNode *node, void *user_data)
  *
  * \param[in,out] docpriv  XML document private data
  */
-static void
-reset_doc_private_data(xml_doc_private_t *docpriv)
+void
+pcmk__xml_reset_doc_private_data(xml_doc_private_t *docpriv)
 {
     if (docpriv == NULL) {
         return;
@@ -456,7 +456,7 @@ reset_doc_private_data(xml_doc_private_t *docpriv)
 static void
 free_doc_private_data(xmlDoc *doc)
 {
-    reset_doc_private_data(doc->_private);
+    pcmk__xml_reset_doc_private_data(doc->_private);
     g_clear_pointer(&doc->_private, free);
 }
 
@@ -667,7 +667,7 @@ pcmk__xml_commit_changes(xmlDoc *doc)
         pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
                                NULL);
     }
-    reset_doc_private_data(docpriv);
+    pcmk__xml_reset_doc_private_data(docpriv);
 }
 
 /*!
