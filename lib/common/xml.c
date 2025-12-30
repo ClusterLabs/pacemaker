@@ -1161,6 +1161,93 @@ pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type)
 
 /*!
  * \internal
+ * \brief Append an XML-escaped character to a buffer
+ *
+ * \param[in]     current_char  Character to escape
+ * \param[in]     type          Type of escaping
+ * \param[in,out] buffer        Buffer
+ */
+static void
+append_xml_escaped_char(char current_char, enum pcmk__xml_escape_type type,
+                        GString *buffer)
+{
+    switch (type) {
+        case pcmk__xml_escape_text:
+            switch (current_char) {
+                case '<':
+                    g_string_append(buffer, PCMK__XML_ENTITY_LT);
+                    return;
+                case '>':
+                    g_string_append(buffer, PCMK__XML_ENTITY_GT);
+                    return;
+                case '&':
+                    g_string_append(buffer, PCMK__XML_ENTITY_AMP);
+                    return;
+                case '\n':
+                case '\t':
+                    g_string_append_c(buffer, current_char);
+                    return;
+                default:
+                    if (g_ascii_iscntrl(current_char)) {
+                        g_string_append_printf(buffer, "&#x%.2X;",
+                                               current_char);
+                    } else {
+                        g_string_append_c(buffer, current_char);
+                    }
+                    return;
+            }
+
+        case pcmk__xml_escape_attr:
+            switch (current_char) {
+                case '<':
+                    g_string_append(buffer, PCMK__XML_ENTITY_LT);
+                    return;
+                case '>':
+                    g_string_append(buffer, PCMK__XML_ENTITY_GT);
+                    return;
+                case '&':
+                    g_string_append(buffer, PCMK__XML_ENTITY_AMP);
+                    return;
+                case '"':
+                    g_string_append(buffer, PCMK__XML_ENTITY_QUOT);
+                    return;
+                default:
+                    if (g_ascii_iscntrl(current_char)) {
+                        g_string_append_printf(buffer, "&#x%.2X;",
+                                               current_char);
+                    } else {
+                        g_string_append_c(buffer, current_char);
+                    }
+                    return;
+            }
+
+        case pcmk__xml_escape_attr_pretty:
+            switch (current_char) {
+                case '"':
+                    g_string_append(buffer, "\\\"");
+                    return;
+                case '\n':
+                    g_string_append(buffer, "\\n");
+                    return;
+                case '\r':
+                    g_string_append(buffer, "\\r");
+                    return;
+                case '\t':
+                    g_string_append(buffer, "\\t");
+                    return;
+                default:
+                    g_string_append_c(buffer, current_char);
+                    return;
+            }
+
+        default:    // Invalid enum value
+            pcmk__assert(false);
+            return;
+    }
+}
+
+/*!
+ * \internal
  * \brief Replace special characters with their XML escape sequences
  *
  * \param[in] text  Text to escape
@@ -1198,80 +1285,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
             continue;
         }
 
-        switch (type) {
-            case pcmk__xml_escape_text:
-                switch (*text) {
-                    case '<':
-                        g_string_append(copy, PCMK__XML_ENTITY_LT);
-                        break;
-                    case '>':
-                        g_string_append(copy, PCMK__XML_ENTITY_GT);
-                        break;
-                    case '&':
-                        g_string_append(copy, PCMK__XML_ENTITY_AMP);
-                        break;
-                    case '\n':
-                    case '\t':
-                        g_string_append_c(copy, *text);
-                        break;
-                    default:
-                        if (g_ascii_iscntrl(*text)) {
-                            g_string_append_printf(copy, "&#x%.2X;", *text);
-                        } else {
-                            g_string_append_c(copy, *text);
-                        }
-                        break;
-                }
-                break;
-
-            case pcmk__xml_escape_attr:
-                switch (*text) {
-                    case '<':
-                        g_string_append(copy, PCMK__XML_ENTITY_LT);
-                        break;
-                    case '>':
-                        g_string_append(copy, PCMK__XML_ENTITY_GT);
-                        break;
-                    case '&':
-                        g_string_append(copy, PCMK__XML_ENTITY_AMP);
-                        break;
-                    case '"':
-                        g_string_append(copy, PCMK__XML_ENTITY_QUOT);
-                        break;
-                    default:
-                        if (g_ascii_iscntrl(*text)) {
-                            g_string_append_printf(copy, "&#x%.2X;", *text);
-                        } else {
-                            g_string_append_c(copy, *text);
-                        }
-                        break;
-                }
-                break;
-
-            case pcmk__xml_escape_attr_pretty:
-                switch (*text) {
-                    case '"':
-                        g_string_append(copy, "\\\"");
-                        break;
-                    case '\n':
-                        g_string_append(copy, "\\n");
-                        break;
-                    case '\r':
-                        g_string_append(copy, "\\r");
-                        break;
-                    case '\t':
-                        g_string_append(copy, "\\t");
-                        break;
-                    default:
-                        g_string_append_c(copy, *text);
-                        break;
-                }
-                break;
-
-            default:    // Invalid enum value
-                pcmk__assert(false);
-                break;
-        }
+        append_xml_escaped_char(*text, type, copy);
 
         text = g_utf8_next_char(text);
     }
