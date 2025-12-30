@@ -1468,25 +1468,25 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
             desc = pe__resource_description(rsc, show_opts);
 
-            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE,
-                                          PCMK_XA_ID, rsc->id,
-                                          PCMK_XA_TYPE, type,
-                                          PCMK_XA_IMAGE, bundle_data->image,
-                                          PCMK_XA_UNIQUE, unique,
-                                          PCMK_XA_MAINTENANCE, maintenance,
-                                          PCMK_XA_MANAGED, managed,
-                                          PCMK_XA_FAILED, failed,
-                                          PCMK_XA_DESCRIPTION, desc,
-                                          NULL);
-            pcmk__assert(rc == pcmk_rc_ok);
+            pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE,
+                                     PCMK_XA_ID, rsc->id,
+                                     PCMK_XA_TYPE, type,
+                                     PCMK_XA_IMAGE, bundle_data->image,
+                                     PCMK_XA_UNIQUE, unique,
+                                     PCMK_XA_MAINTENANCE, maintenance,
+                                     PCMK_XA_MANAGED, managed,
+                                     PCMK_XA_FAILED, failed,
+                                     PCMK_XA_DESCRIPTION, desc,
+                                     NULL);
         }
 
         id = pcmk__itoa(replica->offset);
-        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA,
-                                      PCMK_XA_ID, id,
-                                      NULL);
+        pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA,
+                                 PCMK_XA_ID, id,
+                                 NULL);
         free(id);
-        pcmk__assert(rc == pcmk_rc_ok);
+
+        rc = pcmk_rc_ok;
 
         if (print_ip) {
             out->message(out, (const char *) ip->priv->xml->name, show_opts,
