@@ -366,7 +366,6 @@ cib__process_create(const char *op, int options, const char *section,
  * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
  * \param[in]     options       Flag set of \c cib_call_options
  * \param[in]     section       XPath to query or modify
- * \param[in]     req           unused
  * \param[in]     input         Portion of CIB to modify (used with
  *                              PCMK__CIB_REQUEST_CREATE,
  *                              PCMK__CIB_REQUEST_MODIFY, and
@@ -382,9 +381,8 @@ cib__process_create(const char *op, int options, const char *section,
  * \return Legacy Pacemaker return code
  */
 static int
-process_xpath(const char *op, int options, const char *section,
-              const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-              xmlNode **result_cib, xmlNode **answer)
+process_xpath(const char *op, int options, const char *section, xmlNode *input,
+              xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
 {
     int num_results = 0;
     int rc = pcmk_ok;
@@ -574,7 +572,7 @@ cib__process_delete(const char *op, int options, const char *section,
     pcmk__trace("Processing \"%s\" event", op);
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, req, input, existing_cib,
+        return process_xpath(op, options, section, input, existing_cib,
                              result_cib, answer);
     }
 
@@ -624,7 +622,7 @@ cib__process_modify(const char *op, int options, const char *section,
     pcmk__trace("Processing \"%s\" event", op);
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, req, input, existing_cib,
+        return process_xpath(op, options, section, input, existing_cib,
                              result_cib, answer);
     }
 
@@ -643,7 +641,7 @@ cib__process_modify(const char *op, int options, const char *section,
         }
 
         tmp_section = pcmk__xe_create(NULL, section);
-        process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
+        process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, tmp_section,
                       NULL, result_cib, answer);
         pcmk__xml_free(tmp_section);
 
@@ -679,7 +677,7 @@ cib__process_query(const char *op, int options, const char *section,
                 pcmk__s(section, "unspecified"));
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, req, input, existing_cib,
+        return process_xpath(op, options, section, input, existing_cib,
                              result_cib, answer);
     }
 
@@ -815,7 +813,7 @@ cib__process_replace(const char *op, int options, const char *section,
                 pcmk__s(section, "unspecified"));
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, req, input, existing_cib,
+        return process_xpath(op, options, section, input, existing_cib,
                              result_cib, answer);
     }
 
