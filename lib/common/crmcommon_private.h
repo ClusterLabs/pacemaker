@@ -138,6 +138,9 @@ G_GNUC_INTERNAL
 void pcmk__xml_free_node(xmlNode *xml);
 
 G_GNUC_INTERNAL
+int pcmk__xml_free_position(xmlNode *node, int position);
+
+G_GNUC_INTERNAL
 xmlDoc *pcmk__xml_new_doc(void);
 
 G_GNUC_INTERNAL
