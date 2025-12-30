@@ -394,65 +394,6 @@ cib__process_create(const char *op, int options, const char *section,
     return result;
 }
 
-/*!
- * \internal
- * \brief Modify a CIB using XPath as section
- *
- * \param[in]     op          \c PCMK__CIB_REQUEST_* operation to be performed
- * \param[in]     options     Flag set of \c cib_call_options
- * \param[in]     xpath       XPath to query or modify
- * \param[in]     input       Portion of CIB to modify
- * \param[in,out] result_cib  CIB copy to make changes in
- *
- * \return Legacy Pacemaker return code
- */
-static int
-process_xpath(const char *op, int options, const char *xpath, xmlNode *input,
-              xmlNode **result_cib)
-{
-    int num_results = 0;
-    int rc = pcmk_ok;
-    xmlXPathObject *xpathObj = pcmk__xpath_search((*result_cib)->doc, xpath);
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    num_results = pcmk__xpath_num_results(xpathObj);
-    if (num_results == 0) {
-        pcmk__debug("%s: %s does not exist", op, xpath);
-        rc = -ENXIO;
-        goto done;
-    }
-
-    for (int i = 0; i < num_results; i++) {
-        xmlNode *match = NULL;
-        xmlChar *path = NULL;
-
-        match = pcmk__xpath_result(xpathObj, i);
-        if (match == NULL) {
-            continue;
-        }
-
-        path = xmlGetNodePath(match);
-        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
-        free(path);
-
-        if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
-            xmlNode *parent = match->parent;
-
-            pcmk__xml_free(match);
-            pcmk__xml_copy(parent, input);
-
-            if (!pcmk__is_set(options, cib_multiple)) {
-                break;
-            }
-        }
-    }
-
-done:
-    xmlXPathFreeObject(xpathObj);
-    return rc;
-}
-
 static int
 process_delete_xpath(const char *op, int options, const char *xpath,
                      xmlNode **result_cib)
@@ -913,6 +854,52 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
     return result;
 }
 
+static int
+process_replace_xpath(const char *op, int options, const char *xpath,
+                      xmlNode *input, xmlNode **result_cib)
+{
+    int num_results = 0;
+    int rc = pcmk_ok;
+    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    num_results = pcmk__xpath_num_results(xpath_obj);
+    if (num_results == 0) {
+        pcmk__debug("%s: %s does not exist", op, xpath);
+        rc = -ENXIO;
+        goto done;
+    }
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = NULL;
+        xmlNode *parent = NULL;
+        xmlChar *path = NULL;
+
+        match = pcmk__xpath_result(xpath_obj, i);
+        if (match == NULL) {
+            continue;
+        }
+
+        path = xmlGetNodePath(match);
+        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
+        free(path);
+
+        parent = match->parent;
+
+        pcmk__xml_free(match);
+        pcmk__xml_copy(parent, input);
+
+        if (!pcmk__is_set(options, cib_multiple)) {
+            break;
+        }
+    }
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return rc;
+}
+
 int
 cib__process_replace(const char *op, int options, const char *section,
                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
@@ -924,7 +911,7 @@ cib__process_replace(const char *op, int options, const char *section,
                 pcmk__s(section, "unspecified"));
 
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_xpath(op, options, section, input, result_cib);
+        return process_replace_xpath(op, options, section, input, result_cib);
     }
 
     *answer = NULL;
