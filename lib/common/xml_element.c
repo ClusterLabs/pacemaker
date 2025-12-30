@@ -46,6 +46,8 @@ pcmk__xe_foreach_attr(xmlNode *xml, bool (*fn)(xmlAttr *, void *),
 {
     xmlAttr *attr = pcmk__xe_first_attr(xml);
 
+    pcmk__assert(fn != NULL);
+
     while (attr != NULL) {
         xmlAttr *next = attr->next;
 
@@ -76,6 +78,8 @@ pcmk__xe_foreach_const_attr(const xmlNode *xml,
                             bool (*fn)(const xmlAttr *, void *),
                             void *user_data)
 {
+    pcmk__assert(fn != NULL);
+
     for (const xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
          attr = attr->next) {
 

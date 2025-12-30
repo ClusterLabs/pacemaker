@@ -72,6 +72,41 @@ pcmk__xml_element_type_text(xmlElementType type)
 
 /*!
  * \internal
+ * \brief Call a function for each of an XML node's non-text children
+ *
+ * \param[in,out] xml        XML element
+ * \param[in]     fn         Function to call for each attribute (returns
+ *                           \c true to continue iterating over children or
+ *                           \c false to stop)
+ * \param[in,out] user_data  User data argument for \p fn
+ *
+ * \return \c false if any \p fn call returned \c false, or \c true otherwise
+ *
+ * \note \p fn may remove its XML node argument.
+ */
+bool
+pcmk__xml_foreach_child(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                        void *user_data)
+{
+    xmlNode *child = pcmk__xml_first_child(xml);
+
+    pcmk__assert(fn != NULL);
+
+    while (child != NULL) {
+        xmlNode *next = pcmk__xml_next(child);
+
+        if (!fn(child, user_data)) {
+            return false;
+        }
+
+        child = next;
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Call a function for each XML node in a tree (pre-order, depth-first)
  *
  * \param[in,out] xml        XML tree to traverse
@@ -90,6 +125,8 @@ bool
 pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
                        void *user_data)
 {
+    pcmk__assert(fn != NULL);
+
     if (xml == NULL) {
         return true;
     }
@@ -127,6 +164,8 @@ pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
 void
 pcmk__xml_tree_foreach_remove(xmlNode *xml, bool (*fn)(xmlNode *))
 {
+    pcmk__assert(fn != NULL);
+
     if (xml == NULL) {
         return;
     }
