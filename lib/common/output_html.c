@@ -126,7 +126,7 @@ html_init(pcmk__output_t *out) {
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
-    pcmk__output_xml_create_parent(out, "body", NULL);
+    pcmk__output_xml_create_parent(out, "body");
 
     return true;
 }
@@ -325,7 +325,7 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
      */
     q_len = g_queue_get_length(priv->parent_q);
     if (q_len > 2) {
-        pcmk__output_xml_create_parent(out, "li", NULL);
+        pcmk__output_xml_create_parent(out, "li");
     }
 
     if (format != NULL) {
@@ -347,7 +347,9 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
         free(buf);
     }
 
-    node = pcmk__output_xml_create_parent(out, "ul", NULL);
+    node = pcmk__output_xml_create_parent(out, "ul");
+
+    // @FIXME This looks like an incorrect double-push; check this
     g_queue_push_tail(priv->parent_q, node);
 }
 
