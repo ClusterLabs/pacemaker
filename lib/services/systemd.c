@@ -777,6 +777,7 @@ systemd_unit_metadata(const char *name, int timeout)
     char *meta = NULL;
     char *desc = NULL;
     char *path = NULL;
+    gchar *desc_esc = NULL;
 
     if (invoke_unit_by_name(name, NULL, &path) == pcmk_rc_ok) {
         /* TODO: Worth a making blocking call for? Probably not. Possibly if cached. */
@@ -786,18 +787,12 @@ systemd_unit_metadata(const char *name, int timeout)
         desc = pcmk__assert_asprintf("Systemd unit file for %s", name);
     }
 
-    if (pcmk__xml_needs_escape(desc, pcmk__xml_escape_text)) {
-        gchar *escaped = pcmk__xml_escape(desc, pcmk__xml_escape_text);
-
-        meta = pcmk__assert_asprintf(METADATA_FORMAT, name, escaped, name);
-        g_free(escaped);
-
-    } else {
-        meta = pcmk__assert_asprintf(METADATA_FORMAT, name, desc, name);
-    }
+    desc_esc = pcmk__xml_escape(desc, pcmk__xml_escape_text);
+    meta = pcmk__assert_asprintf(METADATA_FORMAT, name, desc_esc, name);
 
     free(desc);
     free(path);
+    g_free(desc_esc);
     return meta;
 }
 
