@@ -463,7 +463,7 @@ process_xpath(const char *op, int options, const char *section,
             }
 
             pcmk__xml_free(match);
-            if ((options & cib_multiple) == 0) {
+            if (!pcmk__is_set(options, cib_multiple)) {
                 break;
             }
 
@@ -476,7 +476,7 @@ process_xpath(const char *op, int options, const char *section,
 
             if (pcmk__xe_update_match(match, input, flags) != pcmk_rc_ok) {
                 rc = -ENXIO;
-            } else if ((options & cib_multiple) == 0) {
+            } else if (!pcmk__is_set(options, cib_multiple)) {
                 break;
             }
 
@@ -485,8 +485,7 @@ process_xpath(const char *op, int options, const char *section,
             break;
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
-
-            if (options & cib_no_children) {
+            if (pcmk__is_set(options, cib_no_children)) {
                 xmlNode *shallow = pcmk__xe_create(*answer,
                                                    (const char *) match->name);
 
@@ -496,7 +495,7 @@ process_xpath(const char *op, int options, const char *section,
                     *answer = shallow;
                 }
 
-            } else if (options & cib_xpath_address) {
+            } else if (pcmk__is_set(options, cib_xpath_address)) {
                 // @COMPAT cib_xpath_address is deprecated since 3.0.2
                 char *path = NULL;
                 xmlNode *parent = match;
@@ -541,7 +540,7 @@ process_xpath(const char *op, int options, const char *section,
             pcmk__xml_free(match);
             pcmk__xml_copy(parent, input);
 
-            if ((options & cib_multiple) == 0) {
+            if (!pcmk__is_set(options, cib_multiple)) {
                 break;
             }
         }
@@ -574,7 +573,7 @@ cib__process_delete(const char *op, int options, const char *section,
 
     pcmk__trace("Processing \"%s\" event", op);
 
-    if (options & cib_xpath) {
+    if (pcmk__is_set(options, cib_xpath)) {
         return process_xpath(op, options, section, req, input, existing_cib,
                              result_cib, answer);
     }
@@ -624,7 +623,7 @@ cib__process_modify(const char *op, int options, const char *section,
 
     pcmk__trace("Processing \"%s\" event", op);
 
-    if (options & cib_xpath) {
+    if (pcmk__is_set(options, cib_xpath)) {
         return process_xpath(op, options, section, req, input, existing_cib,
                              result_cib, answer);
     }
@@ -658,7 +657,7 @@ cib__process_modify(const char *op, int options, const char *section,
     }
 
     if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
-        if (options & cib_can_create) {
+        if (pcmk__is_set(options, cib_can_create)) {
             pcmk__xml_copy(obj_root, input);
         } else {
             return -ENXIO;
@@ -679,7 +678,7 @@ cib__process_query(const char *op, int options, const char *section,
     pcmk__trace("Processing %s for %s section", op,
                 pcmk__s(section, "unspecified"));
 
-    if (options & cib_xpath) {
+    if (pcmk__is_set(options, cib_xpath)) {
         return process_xpath(op, options, section, req, input, existing_cib,
                              result_cib, answer);
     }
@@ -696,7 +695,7 @@ cib__process_query(const char *op, int options, const char *section,
     if (obj_root == NULL) {
         result = -ENXIO;
 
-    } else if (options & cib_no_children) {
+    } else if (pcmk__is_set(options, cib_no_children)) {
         xmlNode *shallow = pcmk__xe_create(*answer,
                                            (const char *) obj_root->name);
 
@@ -815,7 +814,7 @@ cib__process_replace(const char *op, int options, const char *section,
     pcmk__trace("Processing %s for %s section", op,
                 pcmk__s(section, "unspecified"));
 
-    if (options & cib_xpath) {
+    if (pcmk__is_set(options, cib_xpath)) {
         return process_xpath(op, options, section, req, input, existing_cib,
                              result_cib, answer);
     }
