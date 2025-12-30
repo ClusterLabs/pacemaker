@@ -156,11 +156,9 @@ already_sorted(void **state)
         }
     }
 
-    pcmk__xe_set_props(reference_xml,
-                       "admin", "john",
-                       "dummy", "value",
-                       "location", "usa",
-                       NULL);
+    pcmk__xe_set(reference_xml, "admin", "john");
+    pcmk__xe_set(reference_xml, "dummy", "value");
+    pcmk__xe_set(reference_xml, "location", "usa");
 
     assert_order(test_xml, reference_xml);
 
@@ -199,11 +197,9 @@ need_sort(void **state)
         }
     }
 
-    pcmk__xe_set_props(reference_xml,
-                       "admin", "john",
-                       "dummy", "value",
-                       "location", "usa",
-                       NULL);
+    pcmk__xe_set(reference_xml, "admin", "john");
+    pcmk__xe_set(reference_xml, "dummy", "value");
+    pcmk__xe_set(reference_xml, "location", "usa");
 
     assert_order(test_xml, reference_xml);
 

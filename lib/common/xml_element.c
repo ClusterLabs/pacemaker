@@ -1141,11 +1141,22 @@ pcmk__xe_update_match(xmlNode *xml, xmlNode *update, uint32_t flags)
     return ENXIO;
 }
 
+/*!
+ * \internal
+ * \brief Set a list of name/value pairs as attributes for an XML element
+ *
+ * \param[in,out] xml    XML element
+ * \param[in]     pairs  <tt>NULL</tt>-terminated list of name/value pairs
+ *
+ * \note A \c NULL name terminates the arguments; a \c NULL value will be
+ *       skipped.
+ */
 void
-pcmk__xe_set_propv(xmlNodePtr node, va_list pairs)
+pcmk__xe_set_propv(xmlNode *xml, va_list pairs)
 {
     while (true) {
-        const char *name, *value;
+        const char *name = NULL;
+        const char *value = NULL;
 
         name = va_arg(pairs, const char *);
         if (name == NULL) {
@@ -1153,17 +1164,8 @@ pcmk__xe_set_propv(xmlNodePtr node, va_list pairs)
         }
 
         value = va_arg(pairs, const char *);
-        pcmk__xe_set(node, name, value);
+        pcmk__xe_set(xml, name, value);
     }
-}
-
-void
-pcmk__xe_set_props(xmlNodePtr node, ...)
-{
-    va_list pairs;
-    va_start(pairs, node);
-    pcmk__xe_set_propv(node, pairs);
-    va_end(pairs);
 }
 
 int
