@@ -26,7 +26,7 @@ assert_pid2path_one(int errno_to_set, const char *link_contents, char **dest,
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_value(__wrap_readlink, bufsize, PATH_MAX);
+    expect_uint_value(__wrap_readlink, bufsize, PATH_MAX);
     will_return(__wrap_readlink, errno_to_set);
     will_return(__wrap_readlink, link_contents);
 

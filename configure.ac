@@ -1168,17 +1168,6 @@ AC_CHECK_DECLS([CLOCK_MONOTONIC], [PCMK_FEATURES="$PCMK_FEATURES monotonic"], []
 ]])
 
 dnl ========================================================================
-dnl Unit test declarations
-dnl ========================================================================
-
-AC_CHECK_DECLS([assert_float_equal], [], [], [[
-    #include <stdarg.h>
-    #include <stddef.h>
-    #include <setjmp.h>
-    #include <cmocka.h>
-]])
-
-dnl ========================================================================
 dnl Byte size
 dnl ========================================================================
 

@@ -20,7 +20,7 @@ assert_parse_ms(const char *input, int expected_rc, long long expected_result)
     long long result = magic;
 
     assert_int_equal(pcmk__parse_ms(input, &result), expected_rc);
-    assert_in_range(result, expected_result, expected_result);
+    assert_int_equal(result, expected_result);
 }
 
 static void

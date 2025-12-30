@@ -29,7 +29,7 @@ no_pids(void **state)
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, exe_path);
-    expect_value(__wrap_readlink, bufsize, PATH_MAX);
+    expect_uint_value(__wrap_readlink, bufsize, PATH_MAX);
     will_return(__wrap_readlink, ENOENT);
     will_return(__wrap_readlink, NULL);
 

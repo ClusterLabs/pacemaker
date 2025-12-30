@@ -32,7 +32,7 @@ realloc_fails(void **state)
         {
             pcmk__mock_realloc = true;   // realloc() will return NULL
             expect_any(__wrap_realloc, ptr);
-            expect_value(__wrap_realloc, size, 1000);
+            expect_uint_value(__wrap_realloc, size, 1000);
             pcmk__realloc(ptr, 1000);
             pcmk__mock_realloc = false;  // Use real realloc()
         }
