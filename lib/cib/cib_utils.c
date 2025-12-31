@@ -639,11 +639,13 @@ validate_transaction_request(const xmlNode *request)
  * \param[in,out] cib      CIB client whose transaction to extend
  * \param[in,out] request  Request to add to transaction
  *
- * \return Legacy Pacemaker return code
+ * \return Standard Pacemaker return code
  */
 int
 cib__extend_transaction(cib_t *cib, xmlNode *request)
 {
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *client_id = NULL;
     int rc = pcmk_rc_ok;
 
     pcmk__assert((cib != NULL) && (request != NULL));
@@ -656,18 +658,16 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
 
     if (rc == pcmk_rc_ok) {
         pcmk__xml_copy(cib->transaction, request);
-
-    } else {
-        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-        const char *client_id = NULL;
-
-        cib->cmds->client_id(cib, NULL, &client_id);
-        pcmk__err("Failed to add '%s' operation to transaction for client %s: "
-                  "%s",
-                  op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
-        pcmk__log_xml_info(request, "failed");
+        return pcmk_rc_ok;
     }
-    return pcmk_rc2legacy(rc);
+
+    cib->cmds->client_id(cib, NULL, &client_id);
+
+    pcmk__err("Failed to add '%s' operation to transaction for client %s: %s",
+              op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
+    pcmk__log_xml_info(request, "failed");
+
+    return rc;
 }
 
 void
