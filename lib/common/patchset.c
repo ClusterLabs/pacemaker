@@ -181,7 +181,7 @@ is_config_change(xmlNode *xml)
 }
 
 static xmlNode *
-xml_create_patchset_v2(xmlNode *source, xmlNode *target)
+xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
     GList *gIter = NULL;
@@ -241,7 +241,7 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 }
 
 xmlNode *
-xml_create_patchset(int format, xmlNode *source, xmlNode *target,
+xml_create_patchset(int format, const xmlNode *source, xmlNode *target,
                     bool *config_changed, bool manage_version)
 {
     bool local_config_changed = false;
