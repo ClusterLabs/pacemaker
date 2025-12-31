@@ -485,13 +485,20 @@ cib__process_erase(const char *op, int options, const char *section,
                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                    xmlNode **result_cib, xmlNode **answer)
 {
-    if (*result_cib != existing_cib) {
-        pcmk__xml_free(*result_cib);
-    }
+    xmlNode *tmp = pcmk__xe_create(NULL, (const char *) (*result_cib)->name);
+
+    // Save version details
+    pcmk__xe_copy_attrs(tmp, *result_cib, pcmk__xaf_none);
+
+    // Replace with an empty CIB
+    pcmk__xml_free(*result_cib);
     *result_cib = createEmptyCib(0);
-    pcmk__xe_copy_attrs(*result_cib, existing_cib, pcmk__xaf_none);
+
+    // Restore version details and bump PCMK_XA_ADMIN_EPOCH
+    pcmk__xe_copy_attrs(*result_cib, tmp, pcmk__xaf_none);
     update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
 
+    pcmk__xml_free(tmp);
     return pcmk_rc_ok;
 }
 
