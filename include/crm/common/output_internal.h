@@ -753,11 +753,9 @@ void pcmk__output_set_log_filter(pcmk__output_t *out, const char *file,
  *
  * \param[in,out] out  The output functions structure.
  * \param[in]     name The name of the node to be created.
- * \param[in]     ...     Name/value pairs to set as XML properties.
  */
-xmlNodePtr
-pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...)
-G_GNUC_NULL_TERMINATED;
+xmlNode *
+pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name);
 
 /*!
  * \internal
@@ -777,11 +775,9 @@ pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node);
  *
  * \param[in,out] out  The output functions structure.
  * \param[in]     name The name of the node to be created.
- * \param[in]     ...     Name/value pairs to set as XML properties.
  */
-xmlNodePtr
-pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...)
-G_GNUC_NULL_TERMINATED;
+xmlNode *
+pcmk__output_create_xml_node(pcmk__output_t *out, const char *name);
 
 /*!
  * \internal

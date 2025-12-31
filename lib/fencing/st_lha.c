@@ -204,8 +204,8 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
     }
 
     if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
-        char *meta_longdesc = NULL;
-        char *meta_shortdesc = NULL;
+        gchar *meta_longdesc = NULL;
+        gchar *meta_shortdesc = NULL;
         char *meta_param = NULL;
         const char *timeout_str = NULL;
 
@@ -219,18 +219,22 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
             /* A st_info_fn() may free any existing output buffer every time
              * when it's called. Copy the output every time.
              */
-            meta_longdesc = pcmk__str_copy(st_info_fn(stonith_obj,
-                                                      ST_DEVICEDESCR));
+            meta_longdesc = pcmk__xml_escape(st_info_fn(stonith_obj,
+                                                        ST_DEVICEDESCR),
+                                             pcmk__xml_escape_text);
             if (meta_longdesc == NULL) {
                 pcmk__warn("No long description in %s's metadata", agent);
-                meta_longdesc = pcmk__str_copy(no_parameter_info);
+                meta_longdesc = pcmk__xml_escape(no_parameter_info,
+                                                 pcmk__xml_escape_text);
             }
 
-            meta_shortdesc = pcmk__str_copy(st_info_fn(stonith_obj,
-                                                       ST_DEVICEID));
+            meta_shortdesc = pcmk__xml_escape(st_info_fn(stonith_obj,
+                                                         ST_DEVICEID),
+                                              pcmk__xml_escape_text);
             if (meta_shortdesc == NULL) {
                 pcmk__warn("No short description in %s's metadata", agent);
-                meta_shortdesc = pcmk__str_copy(no_parameter_info);
+                meta_shortdesc = pcmk__xml_escape(no_parameter_info,
+                                                  pcmk__xml_escape_text);
             }
 
             meta_param = pcmk__str_copy(st_info_fn(stonith_obj,
@@ -248,33 +252,17 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
             return -EINVAL;
         }
 
-        if (pcmk__xml_needs_escape(meta_longdesc, pcmk__xml_escape_text)) {
-            meta_longdesc_esc = pcmk__xml_escape(meta_longdesc,
-                                                 pcmk__xml_escape_text);
-        }
-        if (pcmk__xml_needs_escape(meta_shortdesc, pcmk__xml_escape_text)) {
-            meta_shortdesc_esc = pcmk__xml_escape(meta_shortdesc,
-                                                  pcmk__xml_escape_text);
-        }
-
         /* @TODO This needs a string that's parsable by pcmk__parse_ms(). In
          * general, pcmk__readable_interval() doesn't provide that. It works
          * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
          */
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
-        buffer = pcmk__assert_asprintf(META_TEMPLATE, agent,
-                                       pcmk__s(meta_longdesc_esc,
-                                               meta_longdesc),
-                                       pcmk__s(meta_shortdesc_esc,
-                                               meta_shortdesc),
-                                       meta_param, timeout_str, timeout_str,
-                                       timeout_str);
+        buffer = pcmk__assert_asprintf(META_TEMPLATE, agent, meta_longdesc,
+                                       meta_shortdesc, meta_param, timeout_str,
+                                       timeout_str, timeout_str);
 
-        g_free(meta_longdesc_esc);
-        g_free(meta_shortdesc_esc);
-
-        free(meta_longdesc);
-        free(meta_shortdesc);
+        g_free(meta_longdesc);
+        g_free(meta_shortdesc);
         free(meta_param);
     }
     if (output) {

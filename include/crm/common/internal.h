@@ -32,6 +32,7 @@
 #include <crm/common/nvpair_internal.h>
 #include <crm/common/scores_internal.h>
 #include <crm/common/strings_internal.h>    // pcmk__assert_asprintf()
+#include <crm/common/xml_attr_internal.h>
 #include <crm/common/acl_internal.h>
 
 #ifdef __cplusplus
