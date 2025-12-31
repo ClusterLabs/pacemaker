@@ -343,7 +343,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
     const char *user = NULL;
     bool enable_acl = false;
-    bool with_digest = false;
 
     pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
                  && (config_changed != NULL) && (!*config_changed)
@@ -482,16 +481,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
     pcmk__strip_xml_text(working_cib);
 
-    if (make_copy) {
-        static time_t expires = 0;
-        time_t tm_now = time(NULL);
-
-        if (expires < tm_now) {
-            expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
-            with_digest = true;
-        }
-    }
-
     local_diff = xml_create_patchset(0, patchset_cib, working_cib,
                                      config_changed, manage_counters);
 
@@ -499,9 +488,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     pcmk__xml_commit_changes(working_cib->doc);
 
     if (local_diff != NULL) {
-        if (with_digest) {
-            pcmk__xml_patchset_add_digest(local_diff, working_cib);
-        }
         pcmk__log_xml_patchset(LOG_INFO, local_diff);
         pcmk__log_xml_trace(local_diff, "raw patch");
     }
@@ -514,6 +500,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                 int test_rc = pcmk_ok;
                 int format = 1;
                 xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
+
+                pcmk__xml_patchset_add_digest(local_diff, working_cib);
 
                 pcmk__xe_get_int(local_diff, PCMK_XA_FORMAT, &format);
                 test_rc = xml_apply_patchset(cib_copy, local_diff,
