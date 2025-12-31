@@ -205,9 +205,9 @@ based_process_ping(const char *op, int options, const char *section,
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
                host, digest,
-               pcmk__xe_get(existing_cib, PCMK_XA_ADMIN_EPOCH),
-               pcmk__xe_get(existing_cib, PCMK_XA_EPOCH),
-               pcmk__xe_get(existing_cib, PCMK_XA_NUM_UPDATES));
+               pcmk__xe_get(*result_cib, PCMK_XA_ADMIN_EPOCH),
+               pcmk__xe_get(*result_cib, PCMK_XA_EPOCH),
+               pcmk__xe_get(*result_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 
