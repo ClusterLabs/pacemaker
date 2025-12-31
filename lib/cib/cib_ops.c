@@ -820,12 +820,16 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
     const char *reason = NULL;
     const char *peer = pcmk__xe_get(request, PCMK__XA_SRC);
 
-    if (!replace_cib_digest_matches(request, input)) {
-        reason = "digest mismatch";
-    }
-
     cib_version_details(*result_cib, &admin_epoch, &epoch, &updates);
     cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
+
+    if (!replace_cib_digest_matches(request, input)) {
+        pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
+                   "digest mismatch", replace_admin_epoch, replace_epoch,
+                   replace_updates, peer, admin_epoch, epoch, updates);
+        rc = pcmk_rc_digest_mismatch;
+        goto done;
+    }
 
     if (replace_admin_epoch < admin_epoch) {
         reason = PCMK_XA_ADMIN_EPOCH;
@@ -846,18 +850,17 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
     if (reason != NULL) {
         pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
                    "current %s is greater than the replacement",
-                   replace_admin_epoch, replace_epoch,
-                   replace_updates, peer, admin_epoch, epoch, updates,
-                   reason);
+                   replace_admin_epoch, replace_epoch, replace_updates, peer,
+                   admin_epoch, epoch, updates, reason);
         rc = pcmk_rc_old_data;
-
-    } else {
-        pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
-                   admin_epoch, epoch, updates,
-                   replace_admin_epoch, replace_epoch, replace_updates,
-                   peer);
+        goto done;
     }
 
+    pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s", admin_epoch, epoch,
+               updates, replace_admin_epoch, replace_epoch, replace_updates,
+               peer);
+
+done:
     if (*result_cib != existing_cib) {
         pcmk__xml_free(*result_cib);
     }
