@@ -85,7 +85,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
         pcmk__xml_free(op_msg);
-        return rc;
+        return pcmk_rc2legacy(rc);
     }
 
     pcmk__trace("Sending %s message to the CIB manager", op);
