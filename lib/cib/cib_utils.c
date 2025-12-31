@@ -181,7 +181,7 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
     xmlNode *cib_filtered = NULL;
     xmlNode *result_cib = NULL;
 
-    pcmk__assert((fn != NULL) && (req != NULL)
+    pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
                  && (current_cib != NULL) && (*current_cib != NULL)
                  && (output != NULL) && (*output == NULL));
 
@@ -199,6 +199,10 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
         cib_ro = cib_filtered;
         pcmk__log_xml_trace(cib_ro, "filtered");
     }
+
+    pcmk__trace("Processing %s for section '%s', user '%s'", op,
+                pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
+    pcmk__log_xml_trace(req, "request");
 
     rc = fn(op, call_options, section, req, input, cib_ro, &result_cib, output);
 
@@ -294,7 +298,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     bool enable_acl = false;
     bool with_digest = false;
 
-    pcmk__assert((fn != NULL) && (req != NULL)
+    pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
                  && (config_changed != NULL) && (!*config_changed)
                  && (current_cib != NULL) && (*current_cib != NULL)
                  && (result_cib != NULL) && (*result_cib == NULL)
@@ -321,6 +325,10 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             pcmk__enable_acl(*current_cib, scratch, user);
         }
 
+        pcmk__trace("Processing %s for section '%s', user '%s'", op,
+                    pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
+        pcmk__log_xml_trace(req, "request");
+
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
 
         /* If scratch points to a new object now (for example, after an erase
@@ -339,6 +347,10 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         if (enable_acl) {
             pcmk__enable_acl(*current_cib, scratch, user);
         }
+
+        pcmk__trace("Processing %s for section '%s', user '%s'", op,
+                    pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
+        pcmk__log_xml_trace(req, "request");
 
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
