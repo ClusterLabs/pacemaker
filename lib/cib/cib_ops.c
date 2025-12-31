@@ -202,9 +202,7 @@ cib__process_bump(const char *op, int options, const char *section,
                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                   xmlNode **result_cib, xmlNode **answer)
 {
-    *answer = NULL;
     update_counter(*result_cib, PCMK_XA_EPOCH, false);
-
     return pcmk_rc_ok;
 }
 
@@ -496,7 +494,6 @@ cib__process_erase(const char *op, int options, const char *section,
     *result_cib = createEmptyCib(0);
     pcmk__xe_copy_attrs(*result_cib, existing_cib, pcmk__xaf_none);
     update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
-    *answer = NULL;
 
     return pcmk_rc_ok;
 }
@@ -701,8 +698,6 @@ process_query_section(int options, const char *section, xmlNode *existing_cib,
 {
     xmlNode *obj_root = NULL;
 
-    CRM_CHECK(*answer == NULL, g_clear_pointer(answer, pcmk__xml_free));
-
     if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
         section = NULL;
     }
@@ -876,14 +871,10 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
 
 static int
 process_replace_section(const char *section, xmlNode *request, xmlNode *input,
-                        xmlNode *existing_cib, xmlNode **result_cib,
-                        xmlNode **answer)
+                        xmlNode *existing_cib, xmlNode **result_cib)
 {
     int rc = pcmk_rc_ok;
     xmlNode *obj_root = NULL;
-
-    // @TODO Drop this?
-    *answer = NULL;
 
     if (input == NULL) {
         pcmk__err("Cannot find matching section to replace with no input data");
@@ -920,7 +911,7 @@ cib__process_replace(const char *op, int options, const char *section,
     }
 
     return process_replace_section(section, req, input, existing_cib,
-                                   result_cib, answer);
+                                   result_cib);
 }
 
 int
@@ -932,8 +923,6 @@ cib__process_upgrade(const char *op, int options, const char *section,
     const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
     const char *original_schema = NULL;
     const char *new_schema = NULL;
-
-    *answer = NULL;
 
     original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
     rc = pcmk__update_schema(result_cib, max_schema, true,
