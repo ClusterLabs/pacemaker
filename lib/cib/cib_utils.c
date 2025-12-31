@@ -480,7 +480,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         }
     }
 
-    pcmk__trace("Massaging CIB contents");
     pcmk__strip_xml_text(working_cib);
 
     if (make_copy) {
