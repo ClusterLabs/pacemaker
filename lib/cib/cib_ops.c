@@ -181,28 +181,20 @@ cib__process_apply_patch(const char *op, int options, const char *section,
 }
 
 static void
-update_counter(xmlNode *xml_obj, const char *field, bool reset)
+update_counter(xmlNode *xml, const char *field, bool reset)
 {
-    char *new_value = NULL;
-    char *old_value = NULL;
-    int int_value = -1;
+    int old_value = 0;
+    bool was_set = (pcmk__xe_get_int(xml, field, &old_value) == pcmk_rc_ok);
+    int new_value = (reset? 1 : (old_value + 1));
 
-    if (!reset && pcmk__xe_get(xml_obj, field) != NULL) {
-        old_value = pcmk__xe_get_copy(xml_obj, field);
-    }
-    if (old_value != NULL) {
-        int_value = atoi(old_value);
-        new_value = pcmk__itoa(++int_value);
+    if (was_set) {
+        pcmk__trace("Updating %s from %d to %d", field, old_value, new_value);
+
     } else {
-        new_value = pcmk__str_copy("1");
+        pcmk__trace("Updating %s from unset to %d", field, new_value);
     }
 
-    pcmk__trace("Update %s from %s to %s", field, pcmk__s(old_value, "unset"),
-                new_value);
-    pcmk__xe_set(xml_obj, field, new_value);
-
-    free(new_value);
-    free(old_value);
+    pcmk__xe_set_int(xml, field, new_value);
 }
 
 int
