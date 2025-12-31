@@ -823,22 +823,20 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
                                   output, NULL);
     rc = pcmk_rc2legacy(rc);
-
-    if (rc != pcmk_ok) {
-        pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc,
-                    *output);
-
-        if (rc == -pcmk_err_old_data) {
-            pcmk__trace("Masking error, we already have the supplied "
-                        "update");
-            return pcmk_ok;
-        }
-
-        g_clear_pointer(output, pcmk__xml_free);
-        return rc;
+    if (rc == pcmk_ok) {
+        return pcmk_ok;
     }
 
-    return pcmk_ok;
+    pcmk__debug("Update didn't apply: %s (%d)", pcmk_strerror(rc), rc);
+
+    if (rc == -pcmk_err_old_data) {
+        // Mask this error, since it means we already have the supplied update
+        return pcmk_ok;
+    }
+
+    // Some other error
+    g_clear_pointer(output, pcmk__xml_free);
+    return rc;
 }
 
 #define log_signon_query_err(out, fmt, args...) do {    \
