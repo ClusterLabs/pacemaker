@@ -824,7 +824,7 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
         reason = "digest mismatch";
     }
 
-    cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
+    cib_version_details(*result_cib, &admin_epoch, &epoch, &updates);
     cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
 
     if (replace_admin_epoch < admin_epoch) {
@@ -921,7 +921,7 @@ cib__process_upgrade(const char *op, int options, const char *section,
     const char *original_schema = NULL;
     const char *new_schema = NULL;
 
-    original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
+    original_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
     rc = pcmk__update_schema(result_cib, max_schema, true,
                              !pcmk__is_set(options, cib_verbose));
     new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
