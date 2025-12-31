@@ -155,11 +155,11 @@ static int
 node_id_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
 
+    xmlNode *xml = NULL;
     char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
-                                 PCMK_XA_NODEID, id_s,
-                                 NULL);
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO);
+    pcmk__xe_set(xml, PCMK_XA_NODEID, id_s);
 
     free(id_s);
     return pcmk_rc_ok;
@@ -190,13 +190,13 @@ simple_node_list_xml(pcmk__output_t *out, va_list args)
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
+        xmlNode *xml = NULL;
         char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
-        pcmk__output_create_xml_node(out, PCMK_XE_NODE,
-                                     PCMK_XA_ID, id_s,
-                                     PCMK_XA_NAME, node->uname,
-                                     PCMK_XA_STATE, node->state,
-                                     NULL);
+        xml = pcmk__output_create_xml_node(out, PCMK_XE_NODE);
+        pcmk__xe_set(xml, PCMK_XA_ID, id_s);
+        pcmk__xe_set(xml, PCMK_XA_NAME, node->uname);
+        pcmk__xe_set(xml, PCMK_XA_STATE, node->state);
 
         free(id_s);
     }
@@ -222,12 +222,12 @@ node_name_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
     const char *node_name = va_arg(args, const char *);
 
+    xmlNode *xml = NULL;
     char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
-    pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
-                                 PCMK_XA_NODEID, id_s,
-                                 PCMK_XA_UNAME, node_name,
-                                 NULL);
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO);
+    pcmk__xe_set(xml, PCMK_XA_NODEID, id_s);
+    pcmk__xe_set(xml, PCMK_XA_UNAME, node_name);
 
     free(id_s);
     return pcmk_rc_ok;
@@ -272,13 +272,14 @@ partition_list_xml(pcmk__output_t *out, va_list args)
         pcmk_controld_api_node_t *node = node_iter->data;
 
         if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
+            xmlNode *xml = NULL;
             char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
-            pcmk__output_create_xml_node(out, PCMK_XE_NODE,
-                                         PCMK_XA_ID, id_s,
-                                         PCMK_XA_NAME, node->uname,
-                                         PCMK_XA_STATE, node->state,
-                                         NULL);
+            xml = pcmk__output_create_xml_node(out, PCMK_XE_NODE);
+            pcmk__xe_set(xml, PCMK_XA_ID, id_s);
+            pcmk__xe_set(xml, PCMK_XA_NAME, node->uname);
+            pcmk__xe_set(xml, PCMK_XA_STATE, node->state);
+
             free(id_s);
         }
     }
@@ -300,10 +301,11 @@ PCMK__OUTPUT_ARGS("quorum", "bool")
 static int
 quorum_xml(pcmk__output_t *out, va_list args) {
     bool have_quorum = va_arg(args, int);
+    xmlNode *xml = NULL;
 
-    pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_INFO,
-                                 PCMK_XA_QUORUM, pcmk__btoa(have_quorum),
-                                 NULL);
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_CLUSTER_INFO);
+    pcmk__xe_set_bool(xml, PCMK_XA_QUORUM, have_quorum);
+
     return pcmk_rc_ok;
 }
 
