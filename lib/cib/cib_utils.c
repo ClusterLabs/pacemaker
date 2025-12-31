@@ -277,6 +277,56 @@ should_copy_cib(const char *op, const char *section, int call_options)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Set values for update origin host, client, and user in new CIB
+ *
+ * \param[in,out] new_cib  Result CIB after performing operation
+ * \param[in]     request  CIB request (source of origin info)
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+set_update_origin(xmlNode *new_cib, const xmlNode *request)
+{
+    const char *origin = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *client = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *user = pcmk__xe_get(request, PCMK__XA_CIB_USER);
+    const char *schema = pcmk__xe_get(new_cib, PCMK_XA_VALIDATE_WITH);
+
+    if (schema == NULL) {
+        return pcmk_rc_cib_corrupt;
+    }
+
+    pcmk__xe_add_last_written(new_cib);
+    pcmk__warn_if_schema_deprecated(schema);
+
+    // pacemaker-1.2 is the earliest schema version that allow these attributes
+    if (pcmk__cmp_schemas_by_name(schema, "pacemaker-1.2") < 0) {
+        return pcmk_rc_ok;
+    }
+
+    if (origin != NULL) {
+        pcmk__xe_set(new_cib, PCMK_XA_UPDATE_ORIGIN, origin);
+    } else {
+        pcmk__xe_remove_attr(new_cib, PCMK_XA_UPDATE_ORIGIN);
+    }
+
+    if (client != NULL) {
+        pcmk__xe_set(new_cib, PCMK_XA_UPDATE_CLIENT, client);
+    } else {
+        pcmk__xe_remove_attr(new_cib, PCMK_XA_UPDATE_CLIENT);
+    }
+
+    if (user != NULL) {
+        pcmk__xe_set(new_cib, PCMK_XA_UPDATE_USER, user);
+    } else {
+        pcmk__xe_remove_attr(new_cib, PCMK_XA_UPDATE_USER);
+    }
+
+    return pcmk_rc_ok;
+}
+
 int
 cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                cib__op_fn_t fn, const char *section, xmlNode *req,
@@ -495,39 +545,9 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
      */
 
     if (*config_changed && !pcmk__is_set(call_options, cib_no_mtime)) {
-        const char *schema = pcmk__xe_get(working_cib, PCMK_XA_VALIDATE_WITH);
-
-        if (schema == NULL) {
-            rc = pcmk_rc_cib_corrupt;
-        }
-
-        pcmk__xe_add_last_written(working_cib);
-        pcmk__warn_if_schema_deprecated(schema);
-
-        /* Make values of origin, client, and user in working_cib match the ones
-         * in req (if the schema allows the attributes)
-         */
-        if (pcmk__cmp_schemas_by_name(schema, "pacemaker-1.2") >= 0) {
-            const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
-            const char *client = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTNAME);
-
-            if (origin != NULL) {
-                pcmk__xe_set(working_cib, PCMK_XA_UPDATE_ORIGIN, origin);
-            } else {
-                pcmk__xe_remove_attr(working_cib, PCMK_XA_UPDATE_ORIGIN);
-            }
-
-            if (client != NULL) {
-                pcmk__xe_set(working_cib, PCMK_XA_UPDATE_CLIENT, client);
-            } else {
-                pcmk__xe_remove_attr(working_cib, PCMK_XA_UPDATE_CLIENT);
-            }
-
-            if (user != NULL) {
-                pcmk__xe_set(working_cib, PCMK_XA_UPDATE_USER, user);
-            } else {
-                pcmk__xe_remove_attr(working_cib, PCMK_XA_UPDATE_USER);
-            }
+        rc = set_update_origin(working_cib, req);
+        if (rc != pcmk_rc_ok) {
+            goto done;
         }
     }
 
