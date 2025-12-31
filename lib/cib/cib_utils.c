@@ -279,6 +279,31 @@ should_copy_cib(const char *op, const char *section, int call_options)
 
 /*!
  * \internal
+ * \brief Validate that a new CIB's feature set is not newer than ours
+ *
+ * Return an error if the new CIB's feature set is newer than ours.
+ *
+ * \param[in] new_cib  Result CIB after performing operation
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+check_new_feature_set(const xmlNode *new_cib)
+{
+    const char *new_version = pcmk__xe_get(new_cib, PCMK_XA_CRM_FEATURE_SET);
+    int rc = pcmk__check_feature_set(new_version);
+
+    if (rc == pcmk_rc_ok) {
+        return pcmk_rc_ok;
+    }
+
+    pcmk__err("Discarding update with feature set %s greater than our own (%s)",
+              new_version, CRM_FEATURE_SET);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Validate that a new CIB has a newer version attribute than an old CIB
  *
  * Return an error if the value of the given attribute is higher in the old CIB
@@ -521,14 +546,8 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
      * is checked elsewhere.
      */
     if (variant != cib_file) {
-        const char *new_version = pcmk__xe_get(working_cib,
-                                               PCMK_XA_CRM_FEATURE_SET);
-
-        rc = pcmk__check_feature_set(new_version);
+        rc = check_new_feature_set(working_cib);
         if (rc != pcmk_rc_ok) {
-            pcmk__err("Discarding update with feature set '%s' greater than "
-                      "our own '%s'",
-                      new_version, CRM_FEATURE_SET);
             goto done;
         }
     }
