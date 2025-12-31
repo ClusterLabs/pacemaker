@@ -86,8 +86,6 @@ void pcmk__xe_sort_attrs(xmlNode *xml);
 void pcmk__xe_set_id(xmlNode *xml, const char *format, ...)
     G_GNUC_PRINTF(2, 3);
 
-void pcmk__xe_set_propv(xmlNode *xml, va_list pairs);
-
 /*!
  * \internal
  * \brief Get first attribute of an XML element
