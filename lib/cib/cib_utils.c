@@ -501,16 +501,18 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     // Allow ourselves to make any additional necessary changes
     xml_acl_disable(working_cib);
 
-    if ((rc == pcmk_rc_ok) && (working_cib == NULL)) {
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (working_cib == NULL) {
         rc = EINVAL;
         goto done;
+    }
 
-    } else if ((rc == pcmk_rc_ok) && xml_acl_denied(working_cib)) {
+    if (xml_acl_denied(working_cib)) {
         pcmk__trace("ACL rejected part or all of the proposed changes");
         rc = EACCES;
-        goto done;
-
-    } else if (rc != pcmk_rc_ok) {
         goto done;
     }
 
