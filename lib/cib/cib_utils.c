@@ -335,7 +335,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                xmlNode **output)
 {
     int rc = pcmk_rc_ok;
-    bool make_copy = true;
     xmlNode *top = NULL;
     xmlNode *working_cib = NULL;
     xmlNode *patchset_cib = NULL;
@@ -353,9 +352,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     enable_acl = cib_acl_enabled(*current_cib, user);
 
-    make_copy = should_copy_cib(op, section, call_options);
-
-    if (!make_copy) {
+    if (!should_copy_cib(op, section, call_options)) {
         // Make a copy of the top-level element to store version details
         top = pcmk__xe_create(NULL, (const char *) (*current_cib)->name);
         pcmk__xe_copy_attrs(top, *current_cib, pcmk__xaf_none);
@@ -512,7 +509,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 done:
     *result_cib = working_cib;
 
-    /* @TODO: This may not work correctly with !make_copy, since we don't
+    /* @TODO This may not work correctly when !should_copy_cib(), since we don't
      * keep the original CIB.
      */
     if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)
