@@ -820,6 +820,11 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         return rc;
     }
 
+    if (*output != input) {
+        pcmk__xml_free(*output);
+        *output = pcmk__xml_copy(NULL, input);
+    }
+
     rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
                                   output, NULL);
     rc = pcmk_rc2legacy(rc);

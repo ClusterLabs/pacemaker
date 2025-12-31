@@ -172,12 +172,9 @@ cib__process_apply_patch(const char *op, int options, const char *section,
                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                          xmlNode **result_cib, xmlNode **answer)
 {
-    if (*result_cib != existing_cib) {
-        pcmk__xml_free(*result_cib);
-    }
-    *result_cib = pcmk__xml_copy(NULL, existing_cib);
+    int rc = xml_apply_patchset(*result_cib, input, true);
 
-    return pcmk_legacy2rc(xml_apply_patchset(*result_cib, input, true));
+    return pcmk_legacy2rc(rc);
 }
 
 static void
