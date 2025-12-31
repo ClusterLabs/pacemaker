@@ -363,7 +363,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             }
             pcmk__xml_mark_changes(*current_cib, scratch);
         }
-        CRM_CHECK(*current_cib != scratch, return EINVAL);
+
+        pcmk__assert(*current_cib != scratch);
     }
 
     xml_acl_disable(scratch); /* Allow the system to make any additional changes */
