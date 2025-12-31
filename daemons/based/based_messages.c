@@ -368,7 +368,7 @@ based_process_upgrade(const char *op, int options, const char *section,
                                     existing_cib, result_cib, answer);
 
     } else {
-        xmlNode *scratch = pcmk__xml_copy(NULL, existing_cib);
+        xmlNode *scratch = pcmk__xml_copy(NULL, *result_cib);
         const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
         const char *original_schema = NULL;
         const char *new_schema = NULL;
@@ -376,7 +376,7 @@ based_process_upgrade(const char *op, int options, const char *section,
         const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
         const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
 
-        original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
+        original_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
         if (original_schema == NULL) {
             pcmk__info("Rejecting upgrade request from %s: No "
                        PCMK_XA_VALIDATE_WITH,
