@@ -74,6 +74,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
+        rc = pcmk_rc2legacy(rc);
         goto done;
     }
 
