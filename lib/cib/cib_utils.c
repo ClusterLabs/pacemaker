@@ -356,8 +356,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     make_copy = should_copy_cib(op, section, call_options);
 
     if (!make_copy) {
-        /* Conditional on v2 patch style */
-
         // Make a copy of the top-level element to store version details
         top = pcmk__xe_create(NULL, (const char *) (*current_cib)->name);
         pcmk__xe_copy_attrs(top, *current_cib, pcmk__xaf_none);
@@ -490,41 +488,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     if (local_diff != NULL) {
         pcmk__log_xml_patchset(LOG_INFO, local_diff);
         pcmk__log_xml_trace(local_diff, "raw patch");
-    }
-
-    if (make_copy && (local_diff != NULL)) {
-        // Original to compare against doesn't exist
-        pcmk__if_tracing(
-            {
-                // Validate the calculated patch set
-                int test_rc = pcmk_ok;
-                int format = 1;
-                xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
-
-                pcmk__xml_patchset_add_digest(local_diff, working_cib);
-
-                pcmk__xe_get_int(local_diff, PCMK_XA_FORMAT, &format);
-                test_rc = xml_apply_patchset(cib_copy, local_diff,
-                                             manage_counters);
-
-                if (test_rc != pcmk_ok) {
-                    pcmk__xml_write_temp_file(cib_copy, "PatchApply:calculated",
-                                              NULL);
-                    pcmk__xml_write_temp_file(patchset_cib, "PatchApply:input",
-                                              NULL);
-                    pcmk__xml_write_temp_file(working_cib, "PatchApply:actual",
-                                              NULL);
-                    pcmk__xml_write_temp_file(local_diff, "PatchApply:diff",
-                                              NULL);
-                    pcmk__err("v%d patchset error, patch failed to apply: %s "
-                              "(%d)",
-                              format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
-                              test_rc);
-                }
-                pcmk__xml_free(cib_copy);
-            },
-            {}
-        );
     }
 
     /* working_cib must not be modified after this point, except for the
