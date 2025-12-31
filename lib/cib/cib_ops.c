@@ -773,6 +773,52 @@ cib__process_query(const char *op, int options, const char *section,
     return process_query_section(options, section, existing_cib, answer);
 }
 
+static int
+process_replace_xpath(const char *op, int options, const char *xpath,
+                      xmlNode *input, xmlNode *result_cib)
+{
+    int num_results = 0;
+    int rc = pcmk_rc_ok;
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    num_results = pcmk__xpath_num_results(xpath_obj);
+    if (num_results == 0) {
+        pcmk__debug("%s: %s does not exist", op, xpath);
+        rc = ENXIO;
+        goto done;
+    }
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = NULL;
+        xmlNode *parent = NULL;
+        xmlChar *path = NULL;
+
+        match = pcmk__xpath_result(xpath_obj, i);
+        if (match == NULL) {
+            continue;
+        }
+
+        path = xmlGetNodePath(match);
+        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
+        free(path);
+
+        parent = match->parent;
+
+        pcmk__xml_free(match);
+        pcmk__xml_copy(parent, input);
+
+        if (!pcmk__is_set(options, cib_multiple)) {
+            break;
+        }
+    }
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return rc;
+}
+
 static bool
 replace_cib_digest_matches(xmlNode *request, xmlNode *input)
 {
@@ -848,6 +894,7 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
                    replace_updates, peer, admin_epoch, epoch, updates,
                    reason);
         rc = pcmk_rc_old_data;
+
     } else {
         pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
                    admin_epoch, epoch, updates,
@@ -858,87 +905,35 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
     if (*result_cib != existing_cib) {
         pcmk__xml_free(*result_cib);
     }
-    *result_cib = pcmk__xml_copy(NULL, input);
 
+    *result_cib = pcmk__xml_copy(NULL, input);
     return rc;
 }
 
 static int
-process_replace_xpath(const char *op, int options, const char *xpath,
-                      xmlNode *input, xmlNode **result_cib)
-{
-    int num_results = 0;
-    int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search((*result_cib)->doc, xpath);
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    num_results = pcmk__xpath_num_results(xpath_obj);
-    if (num_results == 0) {
-        pcmk__debug("%s: %s does not exist", op, xpath);
-        rc = ENXIO;
-        goto done;
-    }
-
-    for (int i = 0; i < num_results; i++) {
-        xmlNode *match = NULL;
-        xmlNode *parent = NULL;
-        xmlChar *path = NULL;
-
-        match = pcmk__xpath_result(xpath_obj, i);
-        if (match == NULL) {
-            continue;
-        }
-
-        path = xmlGetNodePath(match);
-        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
-        free(path);
-
-        parent = match->parent;
-
-        pcmk__xml_free(match);
-        pcmk__xml_copy(parent, input);
-
-        if (!pcmk__is_set(options, cib_multiple)) {
-            break;
-        }
-    }
-
-done:
-    xmlXPathFreeObject(xpath_obj);
-    return rc;
-}
-
-int
-cib__process_replace(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                     xmlNode **result_cib, xmlNode **answer)
+process_replace_section(const char *section, xmlNode *request, xmlNode *input,
+                        xmlNode *existing_cib, xmlNode **result_cib,
+                        xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
     xmlNode *obj_root = NULL;
 
-    pcmk__trace("Processing %s for %s section", op,
-                pcmk__s(section, "unspecified"));
-
-    if (pcmk__is_set(options, cib_xpath)) {
-        return process_replace_xpath(op, options, section, input, result_cib);
-    }
-
+    // @TODO Drop this?
     *answer = NULL;
 
     if (input == NULL) {
+        pcmk__err("Cannot find matching section to replace with no input data");
         return EINVAL;
     }
 
-    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__xe_is(input, section)) {
-        section = NULL;
+    if (pcmk__xe_is(input, PCMK_XE_CIB)) {
+        return replace_cib(request, input, existing_cib, result_cib);
     }
 
-    if (pcmk__xe_is(input, PCMK_XE_CIB)) {
-        return replace_cib(req, input, existing_cib, result_cib);
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)
+        || pcmk__xe_is(input, section)) {
+
+        section = NULL;
     }
 
     obj_root = pcmk_find_cib_element(*result_cib, section);
@@ -949,6 +944,22 @@ cib__process_replace(const char *op, int options, const char *section,
     }
 
     return rc;
+}
+
+int
+cib__process_replace(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
+
+    if (pcmk__is_set(options, cib_xpath)) {
+        return process_replace_xpath(op, options, section, input, *result_cib);
+    }
+
+    return process_replace_section(section, req, input, existing_cib,
+                                   result_cib, answer);
 }
 
 int
