@@ -279,6 +279,92 @@ should_copy_cib(const char *op, const char *section, int call_options)
 
 /*!
  * \internal
+ * \brief Validate that a new CIB has a newer version attribute than an old CIB
+ *
+ * Return an error if the value of the given attribute is higher in the old CIB
+ * than in the new CIB.
+ *
+ * \param[in] attr     Name of version attribute to check
+ * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
+ * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
+ * \param[in] request  CIB request
+ * \param[in] input    Input data for CIB request
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p old_cib only has to contain the top-level \c PCMK_XE_CIB element. It
+ *       might not be a full CIB.
+ */
+static int
+check_cib_version_attr(const char *attr, const xmlNode *old_cib,
+                       const xmlNode *new_cib, const xmlNode *request,
+                       const xmlNode *input)
+{
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    int old_version = 0;
+    int new_version = 0;
+
+    pcmk__xe_get_int(old_cib, attr, &old_version);
+    pcmk__xe_get_int(new_cib, attr, &new_version);
+
+    if (old_version < new_version) {
+        return pcmk_rc_ok;
+    }
+
+    if (old_version == new_version) {
+        return pcmk_rc_undetermined;
+    }
+
+    pcmk__err("%s went backwards in %s request: %d -> %d", attr, op,
+              old_version, new_version);
+    pcmk__log_xml_warn(request, "bad-request");
+    pcmk__log_xml_warn(input, "bad-input");
+
+    return pcmk_rc_old_data;
+}
+
+/*!
+ * \internal
+ * \brief Validate that a new CIB has newer versions than an old CIB
+ *
+ * Return an error if:
+ * - \c PCMK_XA_ADMIN_EPOCH is newer in the old CIB than in the new CIB; or
+ * - The \c PCMK_XA_ADMIN_EPOCH attributes are equal and \c PCMK_XA_EPOCH is
+ *   newer in the old CIB than in the new CIB.
+ *
+ * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
+ * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
+ * \param[in] request  CIB request
+ * \param[in] input    Input data for CIB request
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p old_cib only has to contain the top-level \c PCMK_XE_CIB element. It
+ *       might not be a full CIB.
+ */
+static int
+check_cib_versions(const xmlNode *old_cib, const xmlNode *new_cib,
+                   const xmlNode *request, const xmlNode *input)
+{
+    int rc = check_cib_version_attr(PCMK_XA_ADMIN_EPOCH, old_cib, new_cib,
+                                    request, input);
+
+    if (rc != pcmk_rc_undetermined) {
+        return rc;
+    }
+
+    // @TODO Why aren't we checking PCMK_XA_NUM_UPDATES if epochs are equal?
+    rc = check_cib_version_attr(PCMK_XA_EPOCH, old_cib, new_cib, request,
+                                input);
+    if (rc == pcmk_rc_undetermined) {
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Set values for update origin host, client, and user in new CIB
  *
  * \param[in,out] new_cib  Result CIB after performing operation
@@ -447,32 +533,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         }
     }
 
-    if (patchset_cib != NULL) {
-        int old = 0;
-        int new = 0;
-
-        pcmk__xe_get_int(working_cib, PCMK_XA_ADMIN_EPOCH, &new);
-        pcmk__xe_get_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
-
-        if (old > new) {
-            pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
-                      PCMK_XA_ADMIN_EPOCH, old, new, call_options);
-            pcmk__log_xml_warn(req, "Bad Op");
-            pcmk__log_xml_warn(input, "Bad Data");
-            rc = pcmk_rc_old_data;
-
-        } else if (old == new) {
-            pcmk__xe_get_int(working_cib, PCMK_XA_EPOCH, &new);
-            pcmk__xe_get_int(patchset_cib, PCMK_XA_EPOCH, &old);
-            if (old > new) {
-                pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
-                          PCMK_XA_EPOCH, old, new, call_options);
-                pcmk__log_xml_warn(req, "Bad Op");
-                pcmk__log_xml_warn(input, "Bad Data");
-                rc = pcmk_rc_old_data;
-            }
-        }
-    }
+    rc = check_cib_versions(patchset_cib, working_cib, req, input);
 
     pcmk__strip_xml_text(working_cib);
 
