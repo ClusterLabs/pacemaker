@@ -147,8 +147,6 @@ based_process_is_primary(const char *op, int options, const char *section,
                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                          xmlNode **result_cib, xmlNode **answer)
 {
-    pcmk__trace("Processing \"%s\" event", op);
-
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
     return (based_is_primary? pcmk_rc_ok : EPERM);
 }
@@ -159,7 +157,6 @@ based_process_noop(const char *op, int options, const char *section,
                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                    xmlNode **result_cib, xmlNode **answer)
 {
-    pcmk__trace("Processing \"%s\" event", op);
     *answer = NULL;
     return pcmk_rc_ok;
 }
@@ -175,7 +172,6 @@ based_process_ping(const char *op, int options, const char *section,
 
     xmlNode *wrapper = NULL;
 
-    pcmk__trace("Processing \"%s\" event %s from %s", op, seq, host);
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
     pcmk__xe_set(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
@@ -218,8 +214,6 @@ based_process_primary(const char *op, int options, const char *section,
                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                       xmlNode **result_cib, xmlNode ** answer)
 {
-    pcmk__trace("Processing \"%s\" event", op);
-
     if (!based_is_primary) {
         pcmk__info("We are now in R/W mode");
         based_is_primary = true;
@@ -296,8 +290,6 @@ based_process_secondary(const char *op, int options, const char *section,
                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                         xmlNode **result_cib, xmlNode **answer)
 {
-    pcmk__trace("Processing \"%s\" event", op);
-
     if (based_is_primary) {
         pcmk__info("We are now in R/O mode");
         based_is_primary = false;
@@ -376,7 +368,6 @@ based_process_upgrade(const char *op, int options, const char *section,
         const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
         const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
 
-        pcmk__trace("Processing \"%s\" event", op);
         original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
         if (original_schema == NULL) {
             pcmk__info("Rejecting upgrade request from %s: No "
