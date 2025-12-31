@@ -169,10 +169,10 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
 
 int
 cib__process_apply_patch(const char *op, int options, const char *section,
-                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                         xmlNode **result_cib, xmlNode **answer)
+                         xmlNode *req, xmlNode *input, xmlNode **cib,
+                         xmlNode **answer)
 {
-    int rc = xml_apply_patchset(*result_cib, input, true);
+    int rc = xml_apply_patchset(*cib, input, true);
 
     return pcmk_legacy2rc(rc);
 }
@@ -196,10 +196,9 @@ update_counter(xmlNode *xml, const char *field, bool reset)
 
 int
 cib__process_bump(const char *op, int options, const char *section,
-                  xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                  xmlNode **result_cib, xmlNode **answer)
+                  xmlNode *req, xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
-    update_counter(*result_cib, PCMK_XA_EPOCH, false);
+    update_counter(*cib, PCMK_XA_EPOCH, false);
     return pcmk_rc_ok;
 }
 
@@ -265,11 +264,11 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
 
 static int
 process_create_xpath(const char *op, const char *xpath, xmlNode *input,
-                     xmlNode *result_cib)
+                     xmlNode *cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
     xmlNode *match = NULL;
     xmlChar *path = NULL;
 
@@ -298,8 +297,8 @@ done:
 
 int
 cib__process_create(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                    xmlNode **result_cib, xmlNode **answer)
+                    xmlNode *req, xmlNode *input, xmlNode **cib,
+                    xmlNode **answer)
 {
     xmlNode *failed = NULL;
     int rc = pcmk_rc_ok;
@@ -323,14 +322,14 @@ cib__process_create(const char *op, int options, const char *section,
     }
 
     if (section == NULL) {
-        return cib__process_modify(op, options, section, req, input,
-                                   existing_cib, result_cib, answer);
+        return cib__process_modify(op, options, section, req, input, cib,
+                                   answer);
     }
 
     // @COMPAT Deprecated since 2.1.8
     failed = pcmk__xe_create(NULL, PCMK__XE_FAILED);
 
-    update_section = pcmk_find_cib_element(*result_cib, section);
+    update_section = pcmk_find_cib_element(*cib, section);
     if (pcmk__xe_is(input, section)) {
         xmlNode *a_child = NULL;
 
@@ -368,12 +367,12 @@ cib__process_create(const char *op, int options, const char *section,
 
 static int
 process_delete_xpath(const char *op, int options, const char *xpath,
-                     xmlNode *result_cib)
+                     xmlNode *cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
 
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
 
     num_results = pcmk__xpath_num_results(xpath_obj);
     if (num_results == 0) {
@@ -415,7 +414,7 @@ process_delete_xpath(const char *op, int options, const char *xpath,
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
 
-        if (match == result_cib) {
+        if (match == cib) {
             pcmk__warn("Cannot perform %s for %s: the XPath is addressing the "
                        "whole /cib", op, xpath);
             rc = EINVAL;
@@ -447,7 +446,7 @@ delete_child(xmlNode *child, void *userdata)
 }
 
 static int
-process_delete_section(const char *section, xmlNode *input, xmlNode *result_cib)
+process_delete_section(const char *section, xmlNode *input, xmlNode *cib)
 {
     xmlNode *obj_root = NULL;
 
@@ -456,7 +455,7 @@ process_delete_section(const char *section, xmlNode *input, xmlNode *result_cib)
         return EINVAL;
     }
 
-    obj_root = pcmk_find_cib_element(result_cib, section);
+    obj_root = pcmk_find_cib_element(cib, section);
 
     if (pcmk__xe_is(input, section)) {
         pcmk__xe_foreach_child(input, NULL, delete_child, obj_root);
@@ -470,20 +469,20 @@ process_delete_section(const char *section, xmlNode *input, xmlNode *result_cib)
 
 int
 cib__process_delete(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                    xmlNode **result_cib, xmlNode **answer)
+                    xmlNode *req, xmlNode *input, xmlNode **cib,
+                    xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_delete_xpath(op, options, section, *result_cib);
+        return process_delete_xpath(op, options, section, *cib);
     }
 
-    return process_delete_section(section, input, *result_cib);
+    return process_delete_section(section, input, *cib);
 }
 
 int
 cib__process_erase(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                   xmlNode **result_cib, xmlNode **answer)
+                   xmlNode *req, xmlNode *input, xmlNode **cib,
+                   xmlNode **answer)
 {
     xmlNode *empty = createEmptyCib(0);
     xmlNode *empty_config = pcmk__xe_first_child(empty, PCMK_XE_CONFIGURATION,
@@ -492,20 +491,19 @@ cib__process_erase(const char *op, int options, const char *section,
                                                  NULL);
 
     // Free all existing children, regardless of node type
-    while ((*result_cib)->children != NULL) {
-        pcmk__xml_free((*result_cib)->children);
+    while ((*cib)->children != NULL) {
+        pcmk__xml_free((*cib)->children);
     }
 
     /* Copying is wasteful here, but calling pcmk__xml_copy() adds the copy as a
-     * child of the existing *result_cib within the same document. This reduces
-     * the number of opportunities to make mistakes related to XML documents,
-     * change tracking, etc., compared to calling xmlUnlinkChild(),
-     * xmlAddChild(), etc.
+     * child of the existing *cib within the same document. This reduces the
+     * number of opportunities to make mistakes related to XML documents, change
+     * tracking, etc., compared to calling xmlUnlinkChild(), xmlAddChild(), etc.
      */
-    pcmk__xml_copy(*result_cib, empty_config);
-    pcmk__xml_copy(*result_cib, empty_status);
+    pcmk__xml_copy(*cib, empty_config);
+    pcmk__xml_copy(*cib, empty_status);
 
-    update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
+    update_counter(*cib, PCMK_XA_ADMIN_EPOCH, false);
 
     pcmk__xml_free(empty);
     return pcmk_rc_ok;
@@ -513,11 +511,11 @@ cib__process_erase(const char *op, int options, const char *section,
 
 static int
 process_modify_xpath(const char *op, int options, const char *xpath,
-                     xmlNode *input, xmlNode *result_cib)
+                     xmlNode *input, xmlNode *cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
     const bool score = pcmk__is_set(options, cib_score_update);
     const uint32_t flags = (score? pcmk__xaf_score_update : pcmk__xaf_none);
 
@@ -556,7 +554,7 @@ done:
 
 static int
 process_modify_section(int options, const char *section, xmlNode *input,
-                       xmlNode *result_cib)
+                       xmlNode *cib)
 {
     const bool score = pcmk__is_set(options, cib_score_update);
     const uint32_t flags = (score? pcmk__xaf_score_update : pcmk__xaf_none);
@@ -567,7 +565,7 @@ process_modify_section(int options, const char *section, xmlNode *input,
         return EINVAL;
     }
 
-    obj_root = pcmk_find_cib_element(result_cib, section);
+    obj_root = pcmk_find_cib_element(cib, section);
     if (obj_root == NULL) {
         xmlNode *tmp_section = NULL;
         const char *path = pcmk_cib_parent_name_for(section);
@@ -579,11 +577,10 @@ process_modify_section(int options, const char *section, xmlNode *input,
         tmp_section = pcmk__xe_create(NULL, section);
 
         // @TODO This feels hacky and is the only call to process_create_xpath()
-        process_create_xpath(PCMK__CIB_REQUEST_CREATE, path, tmp_section,
-                             result_cib);
+        process_create_xpath(PCMK__CIB_REQUEST_CREATE, path, tmp_section, cib);
         pcmk__xml_free(tmp_section);
 
-        obj_root = pcmk_find_cib_element(result_cib, section);
+        obj_root = pcmk_find_cib_element(cib, section);
     }
 
     // Should be impossible, as we just created this section if it didn't exist
@@ -603,14 +600,14 @@ process_modify_section(int options, const char *section, xmlNode *input,
 
 int
 cib__process_modify(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                    xmlNode **result_cib, xmlNode **answer)
+                    xmlNode *req, xmlNode *input, xmlNode **cib,
+                    xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_modify_xpath(op, options, section, input, *result_cib);
+        return process_modify_xpath(op, options, section, input, *cib);
     }
 
-    return process_modify_section(options, section, input, *result_cib);
+    return process_modify_section(options, section, input, *cib);
 }
 
 static int
@@ -737,23 +734,22 @@ process_query_section(int options, const char *section, xmlNode *cib,
 
 int
 cib__process_query(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                   xmlNode **result_cib, xmlNode **answer)
+                   xmlNode *req, xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_query_xpath(op, options, section, *result_cib, answer);
+        return process_query_xpath(op, options, section, *cib, answer);
     }
 
-    return process_query_section(options, section, *result_cib, answer);
+    return process_query_section(options, section, *cib, answer);
 }
 
 static int
 process_replace_xpath(const char *op, int options, const char *xpath,
-                      xmlNode *input, xmlNode *result_cib)
+                      xmlNode *input, xmlNode *cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(result_cib->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
 
     num_results = pcmk__xpath_num_results(xpath_obj);
     if (num_results == 0) {
@@ -820,7 +816,7 @@ replace_cib_digest_matches(xmlNode *request, xmlNode *input)
 }
 
 static int
-replace_cib(xmlNode *request, xmlNode *input, xmlNode **result_cib)
+replace_cib(xmlNode *request, xmlNode *input, xmlNode **cib)
 {
     int updates = 0;
     int epoch = 0;
@@ -833,7 +829,7 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode **result_cib)
     const char *reason = NULL;
     const char *peer = pcmk__xe_get(request, PCMK__XA_SRC);
 
-    cib_version_details(*result_cib, &admin_epoch, &epoch, &updates);
+    cib_version_details(*cib, &admin_epoch, &epoch, &updates);
     cib_version_details(input, &replace_admin_epoch, &replace_epoch,
                         &replace_updates);
 
@@ -868,7 +864,7 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode **result_cib)
         return pcmk_rc_old_data;
     }
 
-    *result_cib = pcmk__xml_replace_with_copy(*result_cib, input);
+    *cib = pcmk__xml_replace_with_copy(*cib, input);
 
     pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s", admin_epoch, epoch,
                updates, replace_admin_epoch, replace_epoch, replace_updates,
@@ -878,7 +874,7 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode **result_cib)
 
 static int
 process_replace_section(const char *section, xmlNode *request, xmlNode *input,
-                        xmlNode **result_cib)
+                        xmlNode **cib)
 {
     int rc = pcmk_rc_ok;
     xmlNode *obj_root = NULL;
@@ -889,7 +885,7 @@ process_replace_section(const char *section, xmlNode *request, xmlNode *input,
     }
 
     if (pcmk__xe_is(input, PCMK_XE_CIB)) {
-        return replace_cib(request, input, result_cib);
+        return replace_cib(request, input, cib);
     }
 
     if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)
@@ -898,7 +894,7 @@ process_replace_section(const char *section, xmlNode *request, xmlNode *input,
         section = NULL;
     }
 
-    obj_root = pcmk_find_cib_element(*result_cib, section);
+    obj_root = pcmk_find_cib_element(*cib, section);
 
     rc = pcmk__xe_replace_match(obj_root, input);
     if (rc != pcmk_rc_ok) {
@@ -910,35 +906,35 @@ process_replace_section(const char *section, xmlNode *request, xmlNode *input,
 
 int
 cib__process_replace(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                     xmlNode **result_cib, xmlNode **answer)
+                     xmlNode *req, xmlNode *input, xmlNode **cib,
+                     xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_replace_xpath(op, options, section, input, *result_cib);
+        return process_replace_xpath(op, options, section, input, *cib);
     }
 
-    return process_replace_section(section, req, input, result_cib);
+    return process_replace_section(section, req, input, cib);
 }
 
 int
 cib__process_upgrade(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                     xmlNode **result_cib, xmlNode **answer)
+                     xmlNode *req, xmlNode *input, xmlNode **cib,
+                     xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
     const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
     const char *original_schema = NULL;
     const char *new_schema = NULL;
 
-    original_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
-    rc = pcmk__update_schema(result_cib, max_schema, true,
+    original_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
+    rc = pcmk__update_schema(cib, max_schema, true,
                              !pcmk__is_set(options, cib_verbose));
-    new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
+    new_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
-        update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
-        update_counter(*result_cib, PCMK_XA_EPOCH, true);
-        update_counter(*result_cib, PCMK_XA_NUM_UPDATES, true);
+        update_counter(*cib, PCMK_XA_ADMIN_EPOCH, false);
+        update_counter(*cib, PCMK_XA_EPOCH, true);
+        update_counter(*cib, PCMK_XA_NUM_UPDATES, true);
         return pcmk_rc_ok;
     }
 
