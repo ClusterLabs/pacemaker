@@ -220,8 +220,7 @@ pcmk_resource_t *
 pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     bool removed = false;
-    char *inc_num = NULL;
-    char *inc_max = NULL;
+    char *max_instances = NULL;
     pcmk_resource_t *child_rsc = NULL;
     xmlNode *child_copy = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -237,13 +236,11 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         removed = true;
     }
 
+    max_instances = pcmk__itoa(clone_data->clone_max);
+
     // Allocate instance numbers in numerical order (starting at 0)
-    inc_num = pcmk__itoa(clone_data->total_clones);
-    inc_max = pcmk__itoa(clone_data->clone_max);
-
     child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
-
-    pcmk__xe_set(child_copy, PCMK__META_CLONE, inc_num);
+    pcmk__xe_set_int(child_copy, PCMK__META_CLONE, clone_data->total_clones);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             scheduler) != pcmk_rc_ok) {
@@ -260,13 +257,11 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         pe__set_resource_flags_recursive(child_rsc, pcmk__rsc_removed);
     }
 
-    pcmk__insert_meta(child_rsc->priv, PCMK_META_CLONE_MAX, inc_max);
+    pcmk__insert_meta(child_rsc->priv, PCMK_META_CLONE_MAX, max_instances);
     pcmk__rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
-  bail:
-    free(inc_num);
-    free(inc_max);
-
+bail:
+    free(max_instances);
     return child_rsc;
 }
 
