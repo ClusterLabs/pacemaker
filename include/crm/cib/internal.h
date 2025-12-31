@@ -184,11 +184,11 @@ int cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
                        const char *section, xmlNode *req, xmlNode *input,
                        xmlNode **current_cib, xmlNode **output);
 
-int cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
-                   cib__op_fn_t fn, const char *section, xmlNode *req,
-                   xmlNode *input, bool manage_counters, bool *config_changed,
-                   xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
-                   xmlNode **output);
+int cib_perform_op(enum cib_variant variant, const char *op,
+                   uint32_t call_options, cib__op_fn_t fn, const char *section,
+                   xmlNode *req, xmlNode *input, bool manage_counters,
+                   bool *config_changed, xmlNode **current_cib,
+                   xmlNode **result_cib, xmlNode **diff, xmlNode **output);
 
 int cib__create_op(cib_t *cib, const char *op, const char *host,
                    const char *section, xmlNode *data, int call_options,
