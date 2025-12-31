@@ -804,11 +804,8 @@ replace_cib_digest_matches(xmlNode *request, xmlNode *input)
 }
 
 static int
-replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
-            xmlNode **result_cib)
+replace_cib(xmlNode *request, xmlNode *input, xmlNode **result_cib)
 {
-    int rc = pcmk_rc_ok;
-
     int updates = 0;
     int epoch = 0;
     int admin_epoch = 0;
@@ -821,14 +818,14 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
     const char *peer = pcmk__xe_get(request, PCMK__XA_SRC);
 
     cib_version_details(*result_cib, &admin_epoch, &epoch, &updates);
-    cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
+    cib_version_details(input, &replace_admin_epoch, &replace_epoch,
+                        &replace_updates);
 
     if (!replace_cib_digest_matches(request, input)) {
         pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
                    "digest mismatch", replace_admin_epoch, replace_epoch,
                    replace_updates, peer, admin_epoch, epoch, updates);
-        rc = pcmk_rc_digest_mismatch;
-        goto done;
+        return pcmk_rc_digest_mismatch;
     }
 
     if (replace_admin_epoch < admin_epoch) {
@@ -852,26 +849,22 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode *existing_cib,
                    "current %s is greater than the replacement",
                    replace_admin_epoch, replace_epoch, replace_updates, peer,
                    admin_epoch, epoch, updates, reason);
-        rc = pcmk_rc_old_data;
-        goto done;
+        return pcmk_rc_old_data;
     }
 
     pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s", admin_epoch, epoch,
                updates, replace_admin_epoch, replace_epoch, replace_updates,
                peer);
 
-done:
-    if (*result_cib != existing_cib) {
-        pcmk__xml_free(*result_cib);
-    }
-
+    pcmk__xml_free(*result_cib);
     *result_cib = pcmk__xml_copy(NULL, input);
-    return rc;
+
+    return pcmk_rc_ok;
 }
 
 static int
 process_replace_section(const char *section, xmlNode *request, xmlNode *input,
-                        xmlNode *existing_cib, xmlNode **result_cib)
+                        xmlNode **result_cib)
 {
     int rc = pcmk_rc_ok;
     xmlNode *obj_root = NULL;
@@ -882,7 +875,7 @@ process_replace_section(const char *section, xmlNode *request, xmlNode *input,
     }
 
     if (pcmk__xe_is(input, PCMK_XE_CIB)) {
-        return replace_cib(request, input, existing_cib, result_cib);
+        return replace_cib(request, input, result_cib);
     }
 
     if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)
@@ -910,8 +903,7 @@ cib__process_replace(const char *op, int options, const char *section,
         return process_replace_xpath(op, options, section, input, *result_cib);
     }
 
-    return process_replace_section(section, req, input, existing_cib,
-                                   result_cib);
+    return process_replace_section(section, req, input, result_cib);
 }
 
 int
