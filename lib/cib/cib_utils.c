@@ -520,9 +520,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
      * supported.  All we care about in that case is the schema version, which
      * is checked elsewhere.
      */
-    if ((working_cib != NULL)
-        && ((cib == NULL) || (cib->variant != cib_file))) {
-
+    if ((cib == NULL) || (cib->variant != cib_file)) {
         const char *new_version = pcmk__xe_get(working_cib,
                                                PCMK_XA_CRM_FEATURE_SET);
 
