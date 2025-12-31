@@ -322,8 +322,8 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 
 static int
 process_commit_transact(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer)
+                        xmlNode *req, xmlNode *input, xmlNode **cib_xml,
+                        xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
     const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
@@ -334,7 +334,7 @@ process_commit_transact(const char *op, int options, const char *section,
     cib = get_client(client_id);
     CRM_CHECK(cib != NULL, return -EINVAL);
 
-    rc = commit_transaction(cib, input, result_cib);
+    rc = commit_transaction(cib, input, cib_xml);
     if (rc != pcmk_rc_ok) {
         file_opaque_t *private = cib->variant_opaque;
 

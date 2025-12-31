@@ -177,7 +177,7 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
     int rc = pcmk_rc_ok;
     const char *user = NULL;
 
-    xmlNode *cib_ro = NULL;
+    xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
 
     pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
@@ -185,7 +185,7 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
                  && (output != NULL) && (*output == NULL));
 
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
-    cib_ro = *current_cib;
+    cib = *current_cib;
 
     if (cib_acl_enabled(*current_cib, user)
         && xml_acl_filtered_copy(user, *current_cib, *current_cib,
@@ -195,15 +195,15 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
             pcmk__debug("Pre-filtered the entire cib");
             return EACCES;
         }
-        cib_ro = cib_filtered;
-        pcmk__log_xml_trace(cib_ro, "filtered");
+        cib = cib_filtered;
+        pcmk__log_xml_trace(cib, "filtered");
     }
 
     pcmk__trace("Processing %s for section '%s', user '%s'", op,
                 pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
     pcmk__log_xml_trace(req, "request");
 
-    rc = fn(op, call_options, section, req, input, cib_ro, &cib_ro, output);
+    rc = fn(op, call_options, section, req, input, &cib, output);
 
     if (*output == NULL) {
         // Do nothing
@@ -226,7 +226,6 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
     }
 
     pcmk__xml_free(cib_filtered);
-
     return rc;
 }
 
@@ -310,32 +309,32 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     if (!make_copy) {
         /* Conditional on v2 patch style */
 
-        scratch = *current_cib;
-
         // Make a copy of the top-level element to store version details
-        top = pcmk__xe_create(NULL, (const char *) scratch->name);
-        pcmk__xe_copy_attrs(top, scratch, pcmk__xaf_none);
+        top = pcmk__xe_create(NULL, (const char *) (*current_cib)->name);
+        pcmk__xe_copy_attrs(top, *current_cib, pcmk__xaf_none);
         patchset_cib = top;
 
-        pcmk__xml_commit_changes(scratch->doc);
-        pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
+        pcmk__xml_commit_changes((*current_cib)->doc);
+        pcmk__xml_doc_set_flags((*current_cib)->doc, pcmk__xf_tracking);
         if (enable_acl) {
-            pcmk__enable_acls((*current_cib)->doc, scratch->doc, user);
+            pcmk__enable_acls((*current_cib)->doc, (*current_cib)->doc, user);
         }
 
         pcmk__trace("Processing %s for section '%s', user '%s'", op,
                     pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
         pcmk__log_xml_trace(req, "request");
 
-        rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
+        rc = (*fn) (op, call_options, section, req, input, current_cib, output);
 
-        /* If scratch points to a new object now (for example, after an erase
-         * operation), then *current_cib should point to the same object.
-         *
-         * @TODO Enable tracking and ACLs and calculate changes? Change tracking
-         * and unpacked ACLs didn't carry over to new object.
+        /* Set scratch to *current_cib after fn(), in case *current_cib points
+         * somewhere else now (for example, erase or full-CIB replace op).
          */
-        *current_cib = scratch;
+        scratch = *current_cib;
+
+        /* @TODO Enable tracking and ACLs and calculate changes? If
+         * scratch and *current_cib point to a new object, then change tracking
+         * and unpacked ACLs didn't carry over to it.
+         */
 
     } else {
         scratch = pcmk__xml_copy(NULL, *current_cib);
@@ -350,8 +349,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                     pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
         pcmk__log_xml_trace(req, "request");
 
-        rc = (*fn) (op, call_options, section, req, input, *current_cib,
-                    &scratch, output);
+        rc = (*fn) (op, call_options, section, req, input, &scratch, output);
 
         /* @TODO This appears to be a hack to determine whether scratch points
          * to a new object now, without saving the old pointer (which may be
@@ -823,8 +821,8 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         *output = pcmk__xml_copy(NULL, input);
     }
 
-    rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
-                                  output, NULL);
+    rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, output,
+                                  NULL);
     rc = pcmk_rc2legacy(rc);
     if (rc == pcmk_ok) {
         return pcmk_ok;
