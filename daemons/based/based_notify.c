@@ -206,7 +206,7 @@ cib_notify_send(const xmlNode *xml)
 void
 based_diff_notify(const char *op, int result, const char *call_id,
                   const char *client_id, const char *client_name,
-                  const char *origin, xmlNode *update, xmlNode *diff)
+                  const char *origin, xmlNode *diff)
 {
     int source[] = { 0, 0, 0 };
     int target[] = { 0, 0, 0 };
