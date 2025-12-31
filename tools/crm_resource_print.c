@@ -162,11 +162,10 @@ attribute_changed_xml(pcmk__output_t *out, va_list args)
     xml = pcmk__output_xml_create_parent(out, ud->attr_set_type);
     pcmk__xe_set(xml, PCMK_XA_ID, ud->attr_set_id);
 
-    pcmk__output_create_xml_node(out, PCMK_XE_NVPAIR,
-                                 PCMK_XA_ID, ud->found_attr_id,
-                                 PCMK_XA_VALUE, ud->attr_value,
-                                 PCMK_XA_NAME, ud->attr_name,
-                                 NULL);
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_NVPAIR);
+    pcmk__xe_set(xml, PCMK_XA_ID, ud->found_attr_id);
+    pcmk__xe_set(xml, PCMK_XA_VALUE, ud->attr_value);
+    pcmk__xe_set(xml, PCMK_XA_NAME, ud->attr_name);
 
     pcmk__output_xml_pop_parent(out);
     pcmk__output_xml_pop_parent(out);
@@ -290,21 +289,13 @@ agent_status_xml(pcmk__output_t *out, va_list args) {
     crm_exit_t rc = va_arg(args, crm_exit_t);
     const char *exit_reason = va_arg(args, const char *);
 
-    char *exit_s = pcmk__itoa(rc);
-    const char *message = crm_exit_str(rc);
-    char *status_s = pcmk__itoa(status);
-    const char *execution_message = pcmk_exec_status_str(status);
+    xmlNode *xml = pcmk__output_create_xml_node(out, PCMK_XE_AGENT_STATUS);
 
-    pcmk__output_create_xml_node(out, PCMK_XE_AGENT_STATUS,
-                                 PCMK_XA_CODE, exit_s,
-                                 PCMK_XA_MESSAGE, message,
-                                 PCMK_XA_EXECUTION_CODE, status_s,
-                                 PCMK_XA_EXECUTION_MESSAGE, execution_message,
-                                 PCMK_XA_REASON, exit_reason,
-                                 NULL);
-
-    free(exit_s);
-    free(status_s);
+    pcmk__xe_set_int(xml, PCMK_XA_CODE, rc);
+    pcmk__xe_set(xml, PCMK_XA_MESSAGE, crm_exit_str(rc));
+    pcmk__xe_set_int(xml, PCMK_XA_EXECUTION_CODE, status);
+    pcmk__xe_set(xml, PCMK_XA_EXECUTION_MESSAGE, pcmk_exec_status_str(status));
+    pcmk__xe_set(xml, PCMK_XA_REASON, exit_reason);
 
     return pcmk_rc_ok;
 }
@@ -350,14 +341,11 @@ override_xml(pcmk__output_t *out, va_list args) {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_OVERRIDE,
-                                                   PCMK_XA_NAME, name,
-                                                   PCMK_XA_VALUE, value,
-                                                   NULL);
+    xmlNode *xml = pcmk__output_create_xml_node(out, PCMK_XE_OVERRIDE);
 
-    if (rsc_name != NULL) {
-        pcmk__xe_set(node, PCMK_XA_RSC, rsc_name);
-    }
+    pcmk__xe_set(xml, PCMK_XA_NAME, name);
+    pcmk__xe_set(xml, PCMK_XA_VALUE, value);
+    pcmk__xe_set(xml, PCMK_XA_RSC, rsc_name);
 
     return pcmk_rc_ok;
 }
@@ -540,30 +528,30 @@ static int
 resource_check_list_xml(pcmk__output_t *out, va_list args) {
     resource_checks_t *checks = va_arg(args, resource_checks_t *);
 
+    xmlNode *xml = NULL;
     const pcmk_resource_t *parent = pe__const_top_resource(checks->rsc, false);
 
-    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_CHECK,
-                                                   PCMK_XA_ID, parent->id,
-                                                   NULL);
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_CHECK);
+    pcmk__xe_set(xml, PCMK_XA_ID, parent->id);
 
     if (pcmk__is_set(checks->flags, rsc_remain_stopped)) {
-        pcmk__xe_set_bool(node, PCMK_XA_REMAIN_STOPPED, true);
+        pcmk__xe_set_bool(xml, PCMK_XA_REMAIN_STOPPED, true);
     }
 
     if (pcmk__is_set(checks->flags, rsc_unpromotable)) {
-        pcmk__xe_set_bool(node, PCMK_XA_PROMOTABLE, false);
+        pcmk__xe_set_bool(xml, PCMK_XA_PROMOTABLE, false);
     }
 
     if (pcmk__is_set(checks->flags, rsc_unmanaged)) {
-        pcmk__xe_set_bool(node, PCMK_XA_UNMANAGED, true);
+        pcmk__xe_set_bool(xml, PCMK_XA_UNMANAGED, true);
     }
 
     if (pcmk__is_set(checks->flags, rsc_locked)) {
-        pcmk__xe_set(node, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
+        pcmk__xe_set(xml, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
     }
 
     if (pcmk__is_set(checks->flags, rsc_node_health)) {
-        pcmk__xe_set_bool(node, PCMK_XA_UNHEALTHY, true);
+        pcmk__xe_set_bool(xml, PCMK_XA_UNHEALTHY, true);
     }
 
     return pcmk_rc_ok;
