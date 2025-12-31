@@ -808,7 +808,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                                    NULL);
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    if (rc < pcmk_ok || diff == NULL) {
+    if ((rc < pcmk_ok) || (diff == NULL)) {
         return rc;
     }
 
@@ -816,26 +816,29 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         pcmk__log_xml_patchset(level, diff);
     }
 
-    if (input != NULL) {
-        rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
-                                      output, NULL);
-        rc = pcmk_rc2legacy(rc);
-
-        if (rc != pcmk_ok) {
-            pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc),
-                        rc, *output);
-
-            if (rc == -pcmk_err_old_data) {
-                pcmk__trace("Masking error, we already have the supplied "
-                            "update");
-                return pcmk_ok;
-            }
-            pcmk__xml_free(*output);
-            *output = NULL;
-            return rc;
-        }
+    if (input == NULL) {
+        return rc;
     }
-    return rc;
+
+    rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
+                                  output, NULL);
+    rc = pcmk_rc2legacy(rc);
+
+    if (rc != pcmk_ok) {
+        pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc), rc,
+                    *output);
+
+        if (rc == -pcmk_err_old_data) {
+            pcmk__trace("Masking error, we already have the supplied "
+                        "update");
+            return pcmk_ok;
+        }
+
+        g_clear_pointer(output, pcmk__xml_free);
+        return rc;
+    }
+
+    return pcmk_ok;
 }
 
 #define log_signon_query_err(out, fmt, args...) do {    \
