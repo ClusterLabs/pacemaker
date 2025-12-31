@@ -50,9 +50,10 @@ xml_show_patchset_header(pcmk__output_t *out, const xmlNode *patchset)
         const char *fmt = pcmk__xe_get(patchset, PCMK_XA_FORMAT);
         const char *digest = pcmk__xe_get(patchset, PCMK_XA_DIGEST);
 
-        out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2], fmt);
+        out->info(out, "Diff: --- %d.%d.%d %s", del[0], del[1], del[2],
+                  pcmk__s(fmt, "(no format)"));
         rc = out->info(out, "Diff: +++ %d.%d.%d %s",
-                       add[0], add[1], add[2], digest);
+                       add[0], add[1], add[2], pcmk__s(digest, "(no digest)"));
 
     } else if ((add[0] != 0) || (add[1] != 0) || (add[2] != 0)) {
         rc = out->info(out, "Local-only Change: %d.%d.%d",
