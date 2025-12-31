@@ -414,7 +414,7 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 }
 
 int
-cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
+cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
                cib__op_fn_t fn, const char *section, xmlNode *req,
                xmlNode *input, bool manage_counters, bool *config_changed,
                xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
@@ -520,7 +520,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
      * supported.  All we care about in that case is the schema version, which
      * is checked elsewhere.
      */
-    if ((cib == NULL) || (cib->variant != cib_file)) {
+    if (variant != cib_file) {
         const char *new_version = pcmk__xe_get(working_cib,
                                                PCMK_XA_CRM_FEATURE_SET);
 
