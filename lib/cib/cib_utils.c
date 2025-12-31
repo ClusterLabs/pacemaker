@@ -446,9 +446,15 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
                xmlNode **output)
 {
     int rc = pcmk_rc_ok;
+
+    /* PCMK_XE_CIB element containing version numbers from before the operation.
+     * This may or may not point to a full CIB XML tree. Do not free, as this
+     * will be used as an alias for another pointer.
+     */
+    xmlNode *old_versions = NULL;
+
     xmlNode *top = NULL;
     xmlNode *working_cib = NULL;
-    xmlNode *patchset_cib = NULL;
     xmlNode *local_diff = NULL;
 
     const char *user = NULL;
@@ -467,7 +473,7 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
         // Make a copy of the top-level element to store version details
         top = pcmk__xe_create(NULL, (const char *) (*current_cib)->name);
         pcmk__xe_copy_attrs(top, *current_cib, pcmk__xaf_none);
-        patchset_cib = top;
+        old_versions = top;
 
         pcmk__xml_commit_changes((*current_cib)->doc);
         pcmk__xml_doc_set_flags((*current_cib)->doc, pcmk__xf_tracking);
@@ -494,7 +500,7 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
 
     } else {
         working_cib = pcmk__xml_copy(NULL, *current_cib);
-        patchset_cib = *current_cib;
+        old_versions = *current_cib;
 
         pcmk__xml_doc_set_flags(working_cib->doc, pcmk__xf_tracking);
         if (enable_acl) {
@@ -552,11 +558,14 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
         }
     }
 
-    rc = check_cib_versions(patchset_cib, working_cib, req, input);
+    rc = check_cib_versions(old_versions, working_cib, req, input);
 
     pcmk__strip_xml_text(working_cib);
 
-    local_diff = xml_create_patchset(0, patchset_cib, working_cib,
+    /* If we didn't make a copy, the diff will only be accurate for the
+     * top-level PCMK_XE_CIB element
+     */
+    local_diff = xml_create_patchset(0, old_versions, working_cib,
                                      config_changed, manage_counters);
 
     pcmk__log_xml_changes(LOG_TRACE, working_cib);
@@ -592,8 +601,8 @@ done:
     /* @TODO This may not work correctly when !should_copy_cib(), since we don't
      * keep the original CIB.
      */
-    if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)
-        && xml_acl_filtered_copy(user, patchset_cib, working_cib, result_cib)) {
+    if ((rc != pcmk_rc_ok) && cib_acl_enabled(old_versions, user)
+        && xml_acl_filtered_copy(user, old_versions, working_cib, result_cib)) {
 
         if (*result_cib == NULL) {
             pcmk__debug("Pre-filtered the entire cib result");
