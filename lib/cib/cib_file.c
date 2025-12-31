@@ -139,7 +139,7 @@ get_client(const char *client_id)
 static int
 process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
@@ -212,7 +212,7 @@ done:
         pcmk__xml_free(result_cib);
     }
     pcmk__xml_free(cib_diff);
-    return pcmk_rc2legacy(rc);
+    return rc;
 }
 
 /*!
@@ -242,7 +242,6 @@ process_transaction_requests(cib_t *cib, xmlNode *transaction)
 
         int rc = process_request(cib, request, &output);
 
-        rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
             pcmk__err("Aborting transaction for CIB file client (%s) on file "
                       "'%s' due to failed %s request: %s",
@@ -466,6 +465,7 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     }
 
     rc = process_request(cib, request, &output);
+    rc = pcmk_rc2legacy(rc);
 
     if ((output_data != NULL) && (output != NULL)) {
         if (output->doc == private->cib_xml->doc) {
