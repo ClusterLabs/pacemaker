@@ -298,9 +298,9 @@ add_possible_values_xml(pcmk__output_t *out,
     values = g_strsplit(option->values, ", ", 0);
 
     for (gchar **value = values; *value != NULL; value++) {
-        pcmk__output_create_xml_node(out, PCMK_XE_OPTION,
-                                     PCMK_XA_VALUE, *value,
-                                     NULL);
+        xmlNode *xml = pcmk__output_create_xml_node(out, PCMK_XE_OPTION);
+
+        pcmk__xe_set(xml, PCMK_XA_VALUE, *value);
     }
 
     g_strfreev(values);
@@ -437,9 +437,8 @@ add_option_metadata_xml(pcmk__output_t *out,
         pcmk__output_xml_create_parent(out, PCMK_XE_DEPRECATED);
 
         if (replaced_with != NULL) {
-            pcmk__output_create_xml_node(out, PCMK_XE_REPLACED_WITH,
-                                         PCMK_XA_NAME, replaced_with,
-                                         NULL);
+            xml = pcmk__output_create_xml_node(out, PCMK_XE_REPLACED_WITH);
+            pcmk__xe_set(xml, PCMK_XA_NAME, replaced_with);
         }
         pcmk__output_xml_pop_parent(out);
     }
