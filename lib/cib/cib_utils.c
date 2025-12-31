@@ -567,7 +567,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
                const char *user_name, const char *client_name,
                xmlNode **op_msg)
 {
-    CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
+    CRM_CHECK((cib != NULL) && (op_msg != NULL), return EPROTO);
 
     *op_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
 
@@ -594,7 +594,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
         pcmk__xml_copy(wrapper, data);
     }
 
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 /*!
