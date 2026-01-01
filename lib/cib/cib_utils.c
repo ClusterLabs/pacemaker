@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2025 the Pacemaker project contributors
+ * Later changes copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -568,13 +568,20 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
     *diff = xml_create_patchset(0, old_versions, working_cib, config_changed,
                                 manage_counters);
 
+    if (*diff == NULL) {
+        // pcmk__xml_commit_changes() resets document private data
+        pcmk__xml_commit_changes(working_cib->doc);
+
+        // If nothing changed, nothing else to do
+        goto done;
+    }
+
+    // Committing changes removes attrs marked as deleted, so log first
     pcmk__log_xml_changes(LOG_TRACE, working_cib);
     pcmk__xml_commit_changes(working_cib->doc);
 
-    if (*diff != NULL) {
-        pcmk__log_xml_patchset(LOG_INFO, *diff);
-        pcmk__log_xml_trace(*diff, "raw patch");
-    }
+    pcmk__log_xml_patchset(LOG_INFO, *diff);
+    pcmk__log_xml_trace(*diff, "raw patch");
 
     /* working_cib must not be modified after this point, except for the
      * attributes for which pcmk__xa_filterable() returns true
