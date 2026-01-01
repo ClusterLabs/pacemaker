@@ -198,8 +198,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__validate_xml(result_cib, NULL, NULL, NULL);
 
     } else if ((rc == pcmk_rc_ok) && !read_only) {
-        pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
-
         if (result_cib != private->cib_xml) {
             pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
