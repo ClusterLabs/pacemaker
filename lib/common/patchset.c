@@ -182,6 +182,7 @@ is_config_change(xmlNode *xml)
     return FALSE;
 }
 
+// Guaranteed to return non-NULL
 static xmlNode *
 xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
 {
@@ -194,11 +195,6 @@ xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
     xmlNode *patchset = NULL;
 
     pcmk__assert(target != NULL);
-
-    if (!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
-        return NULL;
-    }
-
     pcmk__assert(target->doc != NULL);
     docpriv = target->doc->_private;
 
@@ -242,6 +238,7 @@ xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
     return patchset;
 }
 
+// *config_changed is unchanged if the return value is NULL
 xmlNode *
 xml_create_patchset(int format, const xmlNode *source, xmlNode *target,
                     bool *config_changed, bool manage_version)
