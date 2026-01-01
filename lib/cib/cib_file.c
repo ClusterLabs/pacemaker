@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2025 the Pacemaker project contributors
+ * Later changes copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -197,8 +197,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__validate_xml(result_cib, NULL, NULL, NULL);
 
     } else if ((rc == pcmk_rc_ok) && !read_only) {
-        pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
-
         if (result_cib != private->cib_xml) {
             pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
