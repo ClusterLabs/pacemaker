@@ -576,12 +576,8 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
         goto done;
     }
 
-    // Committing changes removes attrs marked as deleted, so log first
-    pcmk__log_xml_changes(LOG_TRACE, working_cib);
     pcmk__xml_commit_changes(working_cib->doc);
-
     pcmk__log_xml_patchset(LOG_INFO, *diff);
-    pcmk__log_xml_trace(*diff, "raw patch");
 
     /* working_cib must not be modified after this point, except for the
      * attributes for which pcmk__xa_filterable() returns true
