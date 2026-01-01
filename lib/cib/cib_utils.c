@@ -568,15 +568,15 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
     *diff = xml_create_patchset(0, old_versions, working_cib, config_changed,
                                 manage_counters);
 
-    if (*diff == NULL) {
-        // pcmk__xml_commit_changes() resets document private data
-        pcmk__xml_commit_changes(working_cib->doc);
+    /* pcmk__xml_commit_changes() resets document private data, so call it even
+     * if there were no changes.
+     */
+    pcmk__xml_commit_changes(working_cib->doc);
 
-        // If nothing changed, nothing else to do
+    if (*diff == NULL) {
         goto done;
     }
 
-    pcmk__xml_commit_changes(working_cib->doc);
     pcmk__log_xml_patchset(LOG_INFO, *diff);
 
     /* working_cib must not be modified after this point, except for the
