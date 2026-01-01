@@ -699,8 +699,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                           client_name, originator, cib_diff);
     }
 
-    pcmk__log_xml_patchset(LOG_TRACE, cib_diff);
-
   done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
         *reply = create_cib_reply(op, call_id, client_id, call_options,
