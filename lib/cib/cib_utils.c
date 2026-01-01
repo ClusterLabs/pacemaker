@@ -455,7 +455,6 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
 
     xmlNode *top = NULL;
     xmlNode *working_cib = NULL;
-    xmlNode *local_diff = NULL;
 
     const char *user = NULL;
     bool enable_acl = false;
@@ -464,6 +463,7 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
                  && (config_changed != NULL) && (!*config_changed)
                  && (current_cib != NULL) && (*current_cib != NULL)
                  && (result_cib != NULL) && (*result_cib == NULL)
+                 && (diff != NULL) && (*diff == NULL)
                  && (output != NULL) && (*output == NULL));
 
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
@@ -565,15 +565,15 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
     /* If we didn't make a copy, the diff will only be accurate for the
      * top-level PCMK_XE_CIB element
      */
-    local_diff = xml_create_patchset(0, old_versions, working_cib,
-                                     config_changed, manage_counters);
+    *diff = xml_create_patchset(0, old_versions, working_cib, config_changed,
+                                manage_counters);
 
     pcmk__log_xml_changes(LOG_TRACE, working_cib);
     pcmk__xml_commit_changes(working_cib->doc);
 
-    if (local_diff != NULL) {
-        pcmk__log_xml_patchset(LOG_INFO, local_diff);
-        pcmk__log_xml_trace(local_diff, "raw patch");
+    if (*diff != NULL) {
+        pcmk__log_xml_patchset(LOG_INFO, *diff);
+        pcmk__log_xml_trace(*diff, "raw patch");
     }
 
     /* working_cib must not be modified after this point, except for the
@@ -608,12 +608,6 @@ done:
             pcmk__debug("Pre-filtered the entire cib result");
         }
         pcmk__xml_free(working_cib);
-    }
-
-    if(diff) {
-        *diff = local_diff;
-    } else {
-        pcmk__xml_free(local_diff);
     }
 
     pcmk__xml_free(top);
