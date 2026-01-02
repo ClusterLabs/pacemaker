@@ -568,8 +568,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      * It's not important whether the client variant is cib_native or
      * cib_remote.
      */
+    result_cib = the_cib;
     rc = cib_perform_op(cib_undefined, op_function, request, &config_changed,
-                        &the_cib, &result_cib, &cib_diff, &output);
+                        &result_cib, &cib_diff, &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
