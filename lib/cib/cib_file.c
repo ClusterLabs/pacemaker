@@ -142,10 +142,8 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
-    int call_id = 0;
     uint32_t call_options = cib_none;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
 
     bool changed = false;
     bool read_only = false;
@@ -158,7 +156,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__get_operation(op, &operation);
     op_function = get_op_function(operation);
 
-    pcmk__xe_get_int(request, PCMK__XA_CIB_CALLID, &call_id);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
@@ -168,10 +165,10 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
 
     if (read_only) {
-        rc = cib__perform_query(op_function, section, request,
-                                &private->cib_xml, output);
+        rc = cib__perform_query(op_function, request, &private->cib_xml,
+                                output);
     } else {
-        rc = cib_perform_op(cib_file, op_function, section, request, &changed,
+        rc = cib_perform_op(cib_file, op_function, request, &changed,
                             &private->cib_xml, &result_cib, &cib_diff, output);
     }
 
