@@ -178,14 +178,6 @@ based_process_primary(const char *op, int options, const char *section,
 }
 
 int
-based_process_replace(const char *op, int options, const char *section,
-                      xmlNode *req, xmlNode *input, xmlNode **cib,
-                      xmlNode **answer)
-{
-    return cib__process_replace(op, options, section, req, input, cib, answer);
-}
-
-int
 based_process_schemas(const char *op, int options, const char *section,
                       xmlNode *req, xmlNode *input, xmlNode **cib,
                       xmlNode **answer)
