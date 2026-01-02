@@ -36,8 +36,7 @@ GList *pcmk__get_schema(const char *name);
 const char *pcmk__highest_schema_name(void);
 int pcmk__cmp_schemas_by_name(const char *schema1_name,
                               const char *schema2_name);
-bool pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
-                        xmlRelaxNGValidityErrorFunc error_handler,
+bool pcmk__validate_xml(xmlNode *xml, xmlRelaxNGValidityErrorFunc error_handler,
                         void *error_handler_context);
 bool pcmk__configured_schema_validates(xmlNode *xml);
 int pcmk__update_schema(xmlNode **xml, const char *max_schema_name,
