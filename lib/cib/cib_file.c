@@ -146,9 +146,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     uint32_t call_options = cib_none;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
-                                            NULL, NULL);
-    xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     bool changed = false;
     bool read_only = false;
@@ -170,19 +167,12 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
 
-    // Mirror the logic in prepare_input() in the CIB manager
-    if ((section != NULL) && pcmk__xe_is(data, PCMK_XE_CIB)) {
-
-        data = pcmk_find_cib_element(data, section);
-    }
-
     if (read_only) {
-        rc = cib__perform_query(op_function, section, request, data,
+        rc = cib__perform_query(op_function, section, request,
                                 &private->cib_xml, output);
     } else {
-        rc = cib_perform_op(cib_file, op_function, section, request, data,
-                            &changed, &private->cib_xml, &result_cib, &cib_diff,
-                            output);
+        rc = cib_perform_op(cib_file, op_function, section, request, &changed,
+                            &private->cib_xml, &result_cib, &cib_diff, output);
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
