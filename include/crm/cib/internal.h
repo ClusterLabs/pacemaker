@@ -93,8 +93,19 @@ enum cib__op_type {
     cib__op_upgrade,
 };
 
-typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
-                            xmlNode *, xmlNode **, xmlNode **);
+/* A cib__op_fn_t must not alter the document private data except for adding to
+ * the deleted_objs list, and (*cib)->doc must point to the same value before
+ * and after the function call. This allows us to make the useful assumptions
+ * that change tracking and ACLs remain enabled if they were enabled initially,
+ * and that any ACLs are still unpacked in the xml_doc_private_t:acls list.
+ *
+ * *cib should be the root element of its document. A cib__op_fn_t may free and
+ * replace *cib, but the replacement must become the root of the original
+ * document.
+ */
+typedef int (*cib__op_fn_t)(const char *op, int options, const char *section,
+                            xmlNode *request, xmlNode *input, xmlNode **cib,
+                            xmlNode **output);
 
 typedef struct {
     const char *name;
