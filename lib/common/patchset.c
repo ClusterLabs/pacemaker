@@ -464,7 +464,7 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
                         vfields[i], current[0], current[1], current[2],
                         source[0], source[1], source[2],
                         target[0], target[1], target[2]);
-            return pcmk_rc_diff_resync;
+            return pcmk_rc_diff_failed;
         }
         if (current[i] > source[i]) {
             pcmk__info("Current %s is too high "
