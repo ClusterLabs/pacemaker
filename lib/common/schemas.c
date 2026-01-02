@@ -786,11 +786,13 @@ validate_with(xmlDoc *doc, pcmk__schema_t *schema,
 }
 
 static bool
-validate_with_silent(xmlNode *xml, pcmk__schema_t *schema)
+validate_with_silent(xmlDoc *doc, pcmk__schema_t *schema)
 {
-    bool rc, sl_backup = silent_logging;
+    bool rc = false;
+    bool sl_backup = silent_logging;
+
     silent_logging = TRUE;
-    rc = validate_with(xml->doc, schema, (xmlRelaxNGValidityErrorFunc) xml_log,
+    rc = validate_with(doc, schema, (xmlRelaxNGValidityErrorFunc) xml_log,
                        GUINT_TO_POINTER(LOG_ERR));
     silent_logging = sl_backup;
     return rc;
@@ -1185,7 +1187,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
         // coverity[null_field] The index check ensures entry->next is not NULL
         if (!transform || (current_schema->transforms == NULL)
-            || validate_with_silent(*xml, entry->next->data)) {
+            || validate_with_silent((*xml)->doc, entry->next->data)) {
             /* The next schema either doesn't require a transform or validates
              * successfully even without the transform. Skip the transform and
              * try the next schema with the same XML.
