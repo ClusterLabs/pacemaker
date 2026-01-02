@@ -62,10 +62,6 @@ int based_process_sync_to_all(const char *op, int options, const char *section,
                               xmlNode *req, xmlNode *input, xmlNode **cib,
                               xmlNode **answer);
 
-int based_process_sync_to_one(const char *op, int options, const char *section,
-                              xmlNode *req, xmlNode *input, xmlNode **cib,
-                              xmlNode **answer);
-
 int based_process_upgrade(const char *op, int options, const char *section,
                           xmlNode *req, xmlNode *input, xmlNode **cib,
                           xmlNode **answer);
