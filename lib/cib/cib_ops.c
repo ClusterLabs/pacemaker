@@ -827,11 +827,11 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode **cib)
 
 static int
 process_replace_xpath(const char *op, int options, const char *xpath,
-                      xmlNode *input, xmlNode *cib)
+                      xmlNode *request, xmlNode *input, xmlNode **cib)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search((*cib)->doc, xpath);
 
     num_results = pcmk__xpath_num_results(xpath_obj);
     if (num_results == 0) {
@@ -853,6 +853,11 @@ process_replace_xpath(const char *op, int options, const char *xpath,
         path = xmlGetNodePath(match);
         pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
         free(path);
+
+        if (match == *cib) {
+            rc = replace_cib(request, input, cib);
+            break;
+        }
 
         parent = match->parent;
 
@@ -911,7 +916,7 @@ cib__process_replace(const char *op, int options, const char *section,
                      xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_replace_xpath(op, options, section, input, *cib);
+        return process_replace_xpath(op, options, section, req, input, cib);
     }
 
     return process_replace_section(section, req, input, cib);
