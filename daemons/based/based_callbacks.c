@@ -603,13 +603,10 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    /* @COMPAT: Handle a valid write action (legacy)
-     *
-     * @TODO: Re-evaluate whether this is truly legacy. PCMK__XA_CIB_UPDATE may
-     * be set by a sync operation even in non-legacy mode, and manage_counters
-     * tells xml_create_patchset() whether to update version/epoch info.
-     */
     if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
+        /* This is a replace operation as a reply to a sync request. Keep
+         * whatever versions are in the received CIB.
+         */
         manage_counters = false;
         CRM_LOG_ASSERT(pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
                                     pcmk__str_none));
