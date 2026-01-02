@@ -143,11 +143,6 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         case -EPERM:
             break;
 
-            /* This is an internal value that clients do not and should not care about */
-        case -pcmk_err_diff_resync:
-            rc = pcmk_ok;
-            break;
-
             /* These indicate internal problems */
         case -EPROTO:
         case -ENOMSG:
