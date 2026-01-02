@@ -118,8 +118,7 @@ static const cib__operation_t cib_ops[] = {
         PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_privileged
     },
     {
-        PCMK__CIB_REQUEST_SYNC_TO_ALL, cib__op_sync_to_all,
-        cib__op_attr_privileged
+        PCMK__CIB_REQUEST_SYNC, cib__op_sync, cib__op_attr_privileged
     },
     {
         PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
