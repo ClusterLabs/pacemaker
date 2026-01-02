@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,7 +74,6 @@ int based_process_upgrade(const char *op, int options, const char *section,
                           xmlNode *req, xmlNode *input, xmlNode **cib,
                           xmlNode **answer);
 
-void send_sync_request(void);
 int sync_our_cib(xmlNode *request, bool all);
 
 #endif // BASED_MESSAGES__H
