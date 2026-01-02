@@ -172,13 +172,13 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 }
 
 int
-cib__perform_query(uint32_t call_options, cib__op_fn_t fn, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode **current_cib,
-                   xmlNode **output)
+cib__perform_query(cib__op_fn_t fn, const char *section, xmlNode *req,
+                   xmlNode *input, xmlNode **current_cib, xmlNode **output)
 {
     int rc = pcmk_rc_ok;
     const char *op = NULL;
     const char *user = NULL;
+    uint32_t call_options = cib_none;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
@@ -189,6 +189,7 @@ cib__perform_query(uint32_t call_options, cib__op_fn_t fn, const char *section,
 
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+    pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
     cib = *current_cib;
 
     if (cib_acl_enabled(*current_cib, user)
@@ -443,10 +444,10 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 }
 
 int
-cib_perform_op(enum cib_variant variant, uint32_t call_options, cib__op_fn_t fn,
-               const char *section, xmlNode *req, xmlNode *input,
-               bool *config_changed, xmlNode **current_cib,
-               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
+cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, const char *section,
+               xmlNode *req, xmlNode *input, bool *config_changed,
+               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
+               xmlNode **output)
 {
     int rc = pcmk_rc_ok;
 
@@ -461,6 +462,7 @@ cib_perform_op(enum cib_variant variant, uint32_t call_options, cib__op_fn_t fn,
 
     const char *op = NULL;
     const char *user = NULL;
+    uint32_t call_options = cib_none;
     bool enable_acl = false;
     bool manage_version = true;
 
@@ -473,6 +475,8 @@ cib_perform_op(enum cib_variant variant, uint32_t call_options, cib__op_fn_t fn,
 
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+    pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
+
     enable_acl = cib_acl_enabled(*current_cib, user);
 
     if (!should_copy_cib(op, section, call_options)) {
