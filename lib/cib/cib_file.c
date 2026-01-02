@@ -181,7 +181,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     if (rc == pcmk_rc_schema_validation) {
         // Show validation errors to stderr
-        pcmk__validate_xml(result_cib, NULL, NULL, NULL);
+        pcmk__validate_xml(result_cib, NULL, NULL);
 
     } else if ((rc == pcmk_rc_ok) && !read_only) {
         if (result_cib != private->cib_xml) {
