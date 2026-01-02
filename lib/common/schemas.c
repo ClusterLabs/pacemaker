@@ -749,7 +749,7 @@ pcmk__cmp_schemas_by_name(const char *schema1_name, const char *schema2_name)
 }
 
 static bool
-validate_with(xmlNode *xml, pcmk__schema_t *schema,
+validate_with(xmlDoc *doc, pcmk__schema_t *schema,
               xmlRelaxNGValidityErrorFunc error_handler,
               void *error_handler_context)
 {
@@ -773,7 +773,8 @@ validate_with(xmlNode *xml, pcmk__schema_t *schema,
     switch (schema->validator) {
         case pcmk__schema_validator_rng:
             cache = (relaxng_ctx_cache_t **) &(schema->cache);
-            valid = validate_with_relaxng(xml->doc, error_handler, error_handler_context, file, cache);
+            valid = validate_with_relaxng(doc, error_handler,
+                                          error_handler_context, file, cache);
             break;
         default:
             pcmk__err("Unknown validator type: %d", schema->validator);
@@ -789,7 +790,8 @@ validate_with_silent(xmlNode *xml, pcmk__schema_t *schema)
 {
     bool rc, sl_backup = silent_logging;
     silent_logging = TRUE;
-    rc = validate_with(xml, schema, (xmlRelaxNGValidityErrorFunc) xml_log, GUINT_TO_POINTER(LOG_ERR));
+    rc = validate_with(xml->doc, schema, (xmlRelaxNGValidityErrorFunc) xml_log,
+                       GUINT_TO_POINTER(LOG_ERR));
     silent_logging = sl_backup;
     return rc;
 }
@@ -818,7 +820,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
 
     schema = entry->data;
-    return validate_with(xml_blob, schema, error_handler,
+    return validate_with(xml_blob->doc, schema, error_handler,
                          error_handler_context);
 }
 
@@ -1036,7 +1038,6 @@ apply_upgrade(xmlDoc *input_doc, int schema_index, bool to_logs)
 
     xmlDoc *old_doc = NULL;
     xmlDoc *new_doc = NULL;
-    xmlNode *new_xml = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
     pcmk__assert((schema != NULL) && (upgraded_schema != NULL));
@@ -1067,16 +1068,15 @@ apply_upgrade(xmlDoc *input_doc, int schema_index, bool to_logs)
     // Final result document from upgrade pipeline needs private data
     pcmk__xml_new_private_data((xmlNode *) new_doc);
 
-    new_xml = xmlDocGetRootElement(new_doc);
-
     // Ensure result validates with its new schema
-    if (!validate_with(new_xml, upgraded_schema, error_handler,
+    if (!validate_with(new_doc, upgraded_schema, error_handler,
                        GUINT_TO_POINTER(LOG_ERR))) {
         pcmk__err("Schema upgrade from %s to %s failed: XSL transform pipeline "
                   "produced an invalid configuration",
                   schema->name, upgraded_schema->name);
-        pcmk__log_xml_debug(new_xml, "bad-transform-result");
-        pcmk__xml_free(new_xml);
+        pcmk__log_xml_debug(xmlDocGetRootElement(new_doc),
+                            "bad-transform-result");
+        pcmk__xml_free_doc(new_doc);
         return NULL;
     }
 
@@ -1165,7 +1165,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             break;
         }
 
-        if (!validate_with(*xml, current_schema, error_handler,
+        if (!validate_with((*xml)->doc, current_schema, error_handler,
                            GUINT_TO_POINTER(LOG_ERR))) {
             pcmk__debug("Schema %s does not validate", current_schema->name);
             if (best_schema != NULL) {
