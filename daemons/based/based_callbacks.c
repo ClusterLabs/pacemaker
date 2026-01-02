@@ -517,7 +517,6 @@ forward_request(xmlNode *request)
  * \brief Get a CIB operation's input from the request XML
  *
  * \param[in]  request  CIB request XML
- * \param[in]  type     CIB operation type
  * \param[out] section  Where to store CIB section name
  *
  * \return Input XML for CIB operation
@@ -526,18 +525,13 @@ forward_request(xmlNode *request)
  *       \p request. The caller should not free it directly.
  */
 static xmlNode *
-prepare_input(const xmlNode *request, enum cib__op_type type,
-              const char **section)
+prepare_input(const xmlNode *request, const char **section)
 {
     xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
                                             NULL, NULL);
     xmlNode *input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    if (type == cib__op_apply_patch) {
-        *section = NULL;
-    } else {
-        *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-    }
+    *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
 
     // Grab the specified section
     if ((*section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
@@ -594,7 +588,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    input = prepare_input(request, operation->type, &section);
+    input = prepare_input(request, &section);
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         rc = cib__perform_query(op_function, section, request, input, &the_cib,
