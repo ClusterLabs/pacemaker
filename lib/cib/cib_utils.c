@@ -171,23 +171,17 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
 /*!
  * \internal
- * \brief Get input data from a CIB request, based on section and call data
+ * \brief Get input data from a CIB request
  *
  * \param[in] request  CIB request XML
  */
 static xmlNode *
 get_op_input(const xmlNode *request)
 {
-    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
     xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
                                             NULL, NULL);
-    xmlNode *input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    if ((section == NULL) || !pcmk__xe_is(input, PCMK_XE_CIB)) {
-        return input;
-    }
-
-    return pcmk_find_cib_element(input, section);
+    return pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 }
 
 int
