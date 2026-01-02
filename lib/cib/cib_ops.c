@@ -299,25 +299,19 @@ cib__process_create(const char *op, int options, const char *section,
     int rc = pcmk_rc_ok;
     xmlNode *update_section = NULL;
 
-    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__str_eq(section, PCMK_XE_CIB, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__xe_is(input, PCMK_XE_CIB)) {
-        section = NULL;
+    if ((section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        input = pcmk_find_cib_element(input, section);
     }
-
-    CRM_CHECK(strcmp(op, PCMK__CIB_REQUEST_CREATE) == 0, return -EINVAL);
 
     if (input == NULL) {
         pcmk__err("Cannot perform modification with no data");
         return EINVAL;
     }
 
-    if (section == NULL) {
-        return cib__process_modify(op, options, section, req, input, cib,
+    if (pcmk__strcase_any_of(section, PCMK__XE_ALL, PCMK_XE_CIB, NULL)
+        || pcmk__xe_is(input, PCMK_XE_CIB)) {
+
+        return cib__process_modify(op, options, NULL, req, input, cib,
                                    answer);
     }
 
@@ -445,6 +439,10 @@ process_delete_section(const char *section, xmlNode *input, xmlNode *cib)
 {
     xmlNode *obj_root = NULL;
 
+    if ((section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        input = pcmk_find_cib_element(input, section);
+    }
+
     if (input == NULL) {
         pcmk__err("Cannot find matching section to delete with no input data");
         return EINVAL;
@@ -554,6 +552,10 @@ process_modify_section(int options, const char *section, xmlNode *input,
     const bool score = pcmk__is_set(options, cib_score_update);
     const uint32_t flags = (score? pcmk__xaf_score_update : pcmk__xaf_none);
     xmlNode *obj_root = NULL;
+
+    if ((section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        input = pcmk_find_cib_element(input, section);
+    }
 
     if (input == NULL) {
         pcmk__err("Cannot complete CIB modify request with no input data");
@@ -873,6 +875,10 @@ process_replace_section(const char *section, xmlNode *request, xmlNode *input,
 {
     int rc = pcmk_rc_ok;
     xmlNode *obj_root = NULL;
+
+    if ((section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        input = pcmk_find_cib_element(input, section);
+    }
 
     if (input == NULL) {
         pcmk__err("Cannot find matching section to replace with no input data");
