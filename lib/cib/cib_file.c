@@ -181,7 +181,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
                                 data, &private->cib_xml, output);
     } else {
         rc = cib_perform_op(cib_file, op, call_options, op_function, section,
-                            request, data, true, &changed, &private->cib_xml,
+                            request, data, &changed, &private->cib_xml,
                             &result_cib, &cib_diff, output);
     }
 

@@ -568,7 +568,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     int rc = pcmk_rc_ok;
 
     bool config_changed = false;
-    bool manage_counters = true;
 
     static mainloop_timer_t *digest_timer = NULL;
 
@@ -603,15 +602,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        /* This is a replace operation as a reply to a sync request. Keep
-         * whatever versions are in the received CIB.
-         */
-        manage_counters = false;
-        CRM_LOG_ASSERT(pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
-                                    pcmk__str_none));
-    }
-
     ping_modified_since = true;
 
     /* result_cib must not be modified after cib_perform_op() returns.
@@ -620,8 +610,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      * cib_remote.
      */
     rc = cib_perform_op(cib_undefined, op, call_options, op_function, section,
-                        request, input, manage_counters, &config_changed,
-                        &the_cib, &result_cib, &cib_diff, &output);
+                        request, input, &config_changed, &the_cib, &result_cib,
+                        &cib_diff, &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
