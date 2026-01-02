@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,6 +76,7 @@ extern "C" {
 #define pcmk_err_diff_failed          206
 
 // NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
 #define pcmk_err_diff_resync          207
 
 #define pcmk_err_cib_modified         208
@@ -142,7 +143,10 @@ enum pcmk_rc_e {
     pcmk_rc_transform_failed    = -1014,
     pcmk_rc_old_data            = -1013,
     pcmk_rc_diff_failed         = -1012,
+
+    //! \deprecated Do not use
     pcmk_rc_diff_resync         = -1011,
+
     pcmk_rc_cib_modified        = -1010,
     pcmk_rc_cib_backup          = -1009,
     pcmk_rc_cib_save            = -1008,
