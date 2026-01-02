@@ -500,6 +500,10 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     input = get_op_input(req);
     enable_acl = cib_acl_enabled(*current_cib, user);
 
+    pcmk__trace("Processing %s for section '%s', user '%s'", op,
+                pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
+    pcmk__log_xml_trace(req, "request");
+
     if (!should_copy_cib(op, section, call_options)) {
         // Make a copy of the top-level element to store version details
         top = pcmk__xe_create(NULL, (const char *) (*current_cib)->name);
@@ -511,10 +515,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         if (enable_acl) {
             pcmk__enable_acls((*current_cib)->doc, (*current_cib)->doc, user);
         }
-
-        pcmk__trace("Processing %s for section '%s', user '%s'", op,
-                    pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
-        pcmk__log_xml_trace(req, "request");
 
         rc = fn(op, call_options, section, req, input, current_cib, output);
 
@@ -532,10 +532,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         if (enable_acl) {
             pcmk__enable_acls((*current_cib)->doc, working_cib->doc, user);
         }
-
-        pcmk__trace("Processing %s for section '%s', user '%s'", op,
-                    pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
-        pcmk__log_xml_trace(req, "request");
 
         rc = fn(op, call_options, section, req, input, &working_cib, output);
     }
