@@ -23,7 +23,7 @@ extern "C" {
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
 #define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
-#define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
+#define PCMK__CIB_REQUEST_SYNC          "cib_sync"
 #define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
 #define PCMK__CIB_REQUEST_BUMP          "cib_bump"
 #define PCMK__CIB_REQUEST_QUERY         "cib_query"
@@ -89,7 +89,7 @@ enum cib__op_type {
     cib__op_schemas,
     cib__op_secondary,
     cib__op_shutdown,
-    cib__op_sync_to_all,
+    cib__op_sync,
     cib__op_upgrade,
 };
 
