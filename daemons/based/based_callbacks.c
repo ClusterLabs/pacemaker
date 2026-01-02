@@ -416,11 +416,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             return false;
         }
 
-    } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        pcmk__info("Detected legacy %s global update from %s", op, originator);
-        send_sync_request();
-        return false;
-
     } else if (is_reply
                && pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
 
@@ -615,15 +610,14 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     /* @COMPAT: Handle a valid write action (legacy)
      *
-     * @TODO: Re-evaluate whether this is all truly legacy. PCMK__XA_CIB_UPDATE
-     * may be set by a sync operation even in non-legacy mode, and
-     * manage_counters tells xml_create_patchset() whether to update
-     * version/epoch info.
+     * @TODO: Re-evaluate whether this is truly legacy. PCMK__XA_CIB_UPDATE may
+     * be set by a sync operation even in non-legacy mode, and manage_counters
+     * tells xml_create_patchset() whether to update version/epoch info.
      */
     if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         manage_counters = false;
-        CRM_LOG_ASSERT(pcmk__str_any_of(op, PCMK__CIB_REQUEST_APPLY_PATCH,
-                                        PCMK__CIB_REQUEST_REPLACE, NULL));
+        CRM_LOG_ASSERT(pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
+                                    pcmk__str_none));
     }
 
     ping_modified_since = true;
