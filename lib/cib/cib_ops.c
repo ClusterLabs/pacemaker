@@ -931,12 +931,16 @@ cib__process_upgrade(const char *op, int options, const char *section,
     const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
     char *original_schema = NULL;
     const char *new_schema = NULL;
+    xmlNode *updated = pcmk__xml_copy(NULL, *cib);
 
     // pcmk__update_schema() may free the original validate-with string
     original_schema = pcmk__xe_get_copy(*cib, PCMK_XA_VALIDATE_WITH);
 
-    rc = pcmk__update_schema(cib, max_schema, true,
+    rc = pcmk__update_schema(&updated, max_schema, true,
                              !pcmk__is_set(options, cib_verbose));
+    *cib = pcmk__xml_replace_with_copy(*cib, updated);
+    pcmk__xml_free(updated);
+
     new_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
