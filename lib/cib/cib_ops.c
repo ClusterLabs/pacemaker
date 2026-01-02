@@ -868,13 +868,11 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode **result_cib)
         return pcmk_rc_old_data;
     }
 
+    *result_cib = pcmk__xml_replace_with_copy(*result_cib, input);
+
     pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s", admin_epoch, epoch,
                updates, replace_admin_epoch, replace_epoch, replace_updates,
                peer);
-
-    pcmk__xml_free(*result_cib);
-    *result_cib = pcmk__xml_copy(NULL, input);
-
     return pcmk_rc_ok;
 }
 
