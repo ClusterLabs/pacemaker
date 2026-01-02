@@ -177,12 +177,12 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     }
 
     if (read_only) {
-        rc = cib__perform_query(call_options, op_function, section, request,
-                                data, &private->cib_xml, output);
+        rc = cib__perform_query(op_function, section, request, data,
+                                &private->cib_xml, output);
     } else {
-        rc = cib_perform_op(cib_file, call_options, op_function, section,
-                            request, data, &changed, &private->cib_xml,
-                            &result_cib, &cib_diff, output);
+        rc = cib_perform_op(cib_file, op_function, section, request, data,
+                            &changed, &private->cib_xml, &result_cib, &cib_diff,
+                            output);
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
