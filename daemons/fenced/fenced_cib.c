@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -516,7 +516,6 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
                  * old diff.
                  */
                 break;
-            case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 pcmk__notice("[%s] Patch aborted: %s (%d)", event,
                              pcmk_strerror(rc), rc);
