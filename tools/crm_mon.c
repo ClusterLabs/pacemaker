@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1948,7 +1948,6 @@ crm_diff_update(const char *event, xmlNode * msg)
         rc = xml_apply_patchset(current_cib, diff, TRUE);
 
         switch (rc) {
-            case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 pcmk__notice("[%s] Patch aborted: %s (%d)", event,
                              pcmk_strerror(rc), rc);
@@ -1961,6 +1960,7 @@ crm_diff_update(const char *event, xmlNode * msg)
                 pcmk__notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
                              rc);
                 pcmk__xml_free(current_cib); current_cib = NULL;
+                break;
         }
     }
 
