@@ -506,10 +506,22 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__xe_copy_attrs(top, *current_cib, pcmk__xaf_none);
         old_versions = top;
 
-        pcmk__xml_commit_changes((*current_cib)->doc);
-        pcmk__xml_doc_set_flags((*current_cib)->doc, pcmk__xf_tracking);
-        if (enable_acl) {
-            pcmk__enable_acls((*current_cib)->doc, (*current_cib)->doc, user);
+        if (pcmk__is_set(call_options, cib_transaction)) {
+            /* This is a request within a transaction, so don't commit changes
+             * yet. On success, we'll commit when we finish performing the whole
+             * commit-transaction operation. The tracking flag is already set,
+             * and ACLs have already been unpacked and applied.
+             */
+            pcmk__assert(pcmk__xml_doc_all_flags_set((*current_cib)->doc,
+                                                     pcmk__xf_tracking));
+
+        } else {
+            pcmk__xml_commit_changes((*current_cib)->doc);
+            pcmk__xml_doc_set_flags((*current_cib)->doc, pcmk__xf_tracking);
+            if (enable_acl) {
+                pcmk__enable_acls((*current_cib)->doc, (*current_cib)->doc,
+                                  user);
+            }
         }
 
         pcmk__trace("Processing %s for section '%s', user '%s'", op,
@@ -523,11 +535,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
          * replace op).
          */
         working_cib = *current_cib;
-
-        /* @TODO Enable tracking and ACLs and calculate changes? If working_cib
-         * and *current_cib point to a new object, then change tracking and
-         * unpacked ACLs didn't carry over to it.
-         */
 
     } else {
         working_cib = pcmk__xml_copy(NULL, *current_cib);
@@ -543,21 +550,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__log_xml_trace(req, "request");
 
         rc = fn(op, call_options, section, req, input, &working_cib, output);
-
-        /* @TODO This appears to be a hack to determine whether working_cib
-         * points to a new object now, without saving the old pointer (which may
-         * be invalid now) for comparison. Confirm this, and check more clearly.
-         */
-        if (!pcmk__xml_doc_all_flags_set(working_cib->doc, pcmk__xf_tracking)) {
-            pcmk__trace("Inferring changes after %s op", op);
-            pcmk__xml_commit_changes(working_cib->doc);
-            if (enable_acl) {
-                pcmk__enable_acls((*current_cib)->doc, working_cib->doc, user);
-            }
-            pcmk__xml_mark_changes(*current_cib, working_cib);
-        }
-
-        pcmk__assert(*current_cib != working_cib);
     }
 
     if (rc != pcmk_rc_ok) {
@@ -568,6 +560,10 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         rc = EINVAL;
         goto done;
     }
+
+    // Tracking flag should still be set after operation
+    pcmk__assert(pcmk__xml_doc_all_flags_set(working_cib->doc,
+                                             pcmk__xf_tracking));
 
     // Allow ourselves to make any additional necessary changes
     xml_acl_disable(working_cib);
@@ -607,14 +603,20 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
                                 manage_version);
 
     /* pcmk__xml_commit_changes() resets document private data, so call it even
-     * if there were no changes.
+     * if there were no changes. If this request is part of a transaction, we'll
+     * commit changes later, as part of the commit-transaction operation.
      */
-    pcmk__xml_commit_changes(working_cib->doc);
+    if (!pcmk__is_set(call_options, cib_transaction)) {
+        pcmk__xml_commit_changes(working_cib->doc);
+    }
 
     if (*diff == NULL) {
         goto done;
     }
 
+    /* If this request is within a transaction, *diff is the cumulative set of
+     * changes so far, since we don't commit changes between requests.
+     */
     pcmk__log_xml_patchset(LOG_INFO, *diff);
 
     /* working_cib must not be modified after this point, except for the
