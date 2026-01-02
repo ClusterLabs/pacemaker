@@ -597,8 +597,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     input = prepare_input(request, operation->type, &section);
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_query(call_options, op_function, section, request,
-                                input, &the_cib, &output);
+        rc = cib__perform_query(op_function, section, request, input, &the_cib,
+                                &output);
         goto done;
     }
 
@@ -609,9 +609,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      * It's not important whether the client variant is cib_native or
      * cib_remote.
      */
-    rc = cib_perform_op(cib_undefined, call_options, op_function, section,
-                        request, input, &config_changed, &the_cib, &result_cib,
-                        &cib_diff, &output);
+    rc = cib_perform_op(cib_undefined, op_function, section, request, input,
+                        &config_changed, &the_cib, &result_cib, &cib_diff,
+                        &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
