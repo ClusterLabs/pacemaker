@@ -168,8 +168,9 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         rc = cib__perform_query(op_function, request, &private->cib_xml,
                                 output);
     } else {
+        result_cib = private->cib_xml;
         rc = cib_perform_op(cib_file, op_function, request, &changed,
-                            &private->cib_xml, &result_cib, &cib_diff, output);
+                            &result_cib, &cib_diff, output);
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {

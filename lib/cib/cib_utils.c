@@ -463,8 +463,8 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 
 int
 cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
-               bool *config_changed, xmlNode **current_cib,
-               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
+               bool *config_changed, xmlNode **cib, xmlNode **diff,
+               xmlNode **output)
 {
     int rc = pcmk_rc_ok;
 
@@ -487,8 +487,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
 
     pcmk__assert((fn != NULL) && (req != NULL)
                  && (config_changed != NULL) && (!*config_changed)
-                 && (current_cib != NULL) && (*current_cib != NULL)
-                 && (result_cib != NULL) && (*result_cib == NULL)
+                 && (cib != NULL) && (*cib != NULL)
                  && (diff != NULL) && (*diff == NULL)
                  && (output != NULL) && (*output == NULL));
 
@@ -498,7 +497,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
     input = get_op_input(req);
-    enable_acl = cib_acl_enabled(*current_cib, user);
+    enable_acl = cib_acl_enabled(*cib, user);
 
     pcmk__trace("Processing %s for section '%s', user '%s'", op,
                 pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
@@ -506,31 +505,30 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
 
     if (!should_copy_cib(op, section, call_options)) {
         // Make a copy of the top-level element to store version details
-        top = pcmk__xe_create(NULL, (const char *) (*current_cib)->name);
-        pcmk__xe_copy_attrs(top, *current_cib, pcmk__xaf_none);
+        top = pcmk__xe_create(NULL, (const char *) (*cib)->name);
+        pcmk__xe_copy_attrs(top, *cib, pcmk__xaf_none);
         old_versions = top;
 
-        pcmk__xml_commit_changes((*current_cib)->doc);
-        pcmk__xml_doc_set_flags((*current_cib)->doc, pcmk__xf_tracking);
+        pcmk__xml_commit_changes((*cib)->doc);
+        pcmk__xml_doc_set_flags((*cib)->doc, pcmk__xf_tracking);
         if (enable_acl) {
-            pcmk__enable_acls((*current_cib)->doc, (*current_cib)->doc, user);
+            pcmk__enable_acls((*cib)->doc, (*cib)->doc, user);
         }
 
-        rc = fn(op, call_options, section, req, input, current_cib, output);
+        rc = fn(op, call_options, section, req, input, cib, output);
 
-        /* Set working_cib to *current_cib after fn(), in case *current_cib
-         * points somewhere else now (for example, after a erase or full-CIB
-         * replace op).
+        /* Set working_cib to *cib after fn(), in case *cib points somewhere
+         * else now (for example, after a erase or full-CIB replace op).
          */
-        working_cib = *current_cib;
+        working_cib = *cib;
 
     } else {
-        working_cib = pcmk__xml_copy(NULL, *current_cib);
-        old_versions = *current_cib;
+        working_cib = pcmk__xml_copy(NULL, *cib);
+        old_versions = *cib;
 
         pcmk__xml_doc_set_flags(working_cib->doc, pcmk__xf_tracking);
         if (enable_acl) {
-            pcmk__enable_acls((*current_cib)->doc, working_cib->doc, user);
+            pcmk__enable_acls((*cib)->doc, working_cib->doc, user);
         }
 
         rc = fn(op, call_options, section, req, input, &working_cib, output);
@@ -613,15 +611,15 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     }
 
 done:
-    *result_cib = working_cib;
+    *cib = working_cib;
 
     /* @TODO This may not work correctly when !should_copy_cib(), since we don't
      * keep the original CIB.
      */
     if ((rc != pcmk_rc_ok) && cib_acl_enabled(old_versions, user)
-        && xml_acl_filtered_copy(user, old_versions, working_cib, result_cib)) {
+        && xml_acl_filtered_copy(user, old_versions, working_cib, cib)) {
 
-        if (*result_cib == NULL) {
+        if (*cib == NULL) {
             pcmk__debug("Pre-filtered the entire cib result");
         }
         pcmk__xml_free(working_cib);
