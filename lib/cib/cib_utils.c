@@ -752,11 +752,6 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
         pcmk__debug("No cib object supplied");
     }
 
-    if (rc == -pcmk_err_diff_resync) {
-        /* This is an internal value that clients do not and should not care about */
-        rc = pcmk_ok;
-    }
-
     if (blob && blob->callback && (rc == pcmk_ok || blob->only_success == FALSE)) {
         pcmk__trace("Invoking callback %s for call %d",
                     pcmk__s(blob->id, "without ID"), call_id);
