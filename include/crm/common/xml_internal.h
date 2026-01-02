@@ -326,6 +326,7 @@ pcmk__xml_next(const xmlNode *child)
 void pcmk__xml_free(xmlNode *xml);
 void pcmk__xml_free_doc(xmlDoc *doc);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+xmlNode *pcmk__xml_replace_with_copy(xmlNode *old, xmlNode *new);
 
 /*!
  * \internal
