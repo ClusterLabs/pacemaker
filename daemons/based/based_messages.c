@@ -125,21 +125,10 @@ based_process_ping(const char *op, int options, const char *section,
     wrapper = pcmk__xe_create(*answer, PCMK__XE_CIB_CALLDATA);
 
     if (the_cib != NULL) {
-        pcmk__if_tracing(
-            {
-                /* Append additional detail so the receiver can log the
-                 * differences
-                 */
-                pcmk__xml_copy(wrapper, the_cib);
-            },
-            {
-                // Always include at least the version details
-                const char *name = (const char *) the_cib->name;
-                xmlNode *shallow = pcmk__xe_create(wrapper, name);
+        xmlNode *shallow = pcmk__xe_create(wrapper,
+                                           (const char *) the_cib->name);
 
-                pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
-            }
-        );
+        pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
     }
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
