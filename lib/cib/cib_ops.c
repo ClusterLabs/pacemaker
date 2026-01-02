@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -119,10 +119,6 @@ static const cib__operation_t cib_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_SYNC_TO_ALL, cib__op_sync_to_all,
-        cib__op_attr_privileged
-    },
-    {
-        PCMK__CIB_REQUEST_SYNC_TO_ONE, cib__op_sync_to_one,
         cib__op_attr_privileged
     },
     {
