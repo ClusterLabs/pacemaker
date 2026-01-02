@@ -29,7 +29,6 @@
 #include <crm/cib/internal.h>       // cib__*
 #include <crm/cluster.h>            // pcmk_cluster_disconnect
 #include <crm/cluster/internal.h>   // pcmk__cluster_send_message
-#include <crm/common/cib.h>         // pcmk_find_cib_element
 #include <crm/common/internal.h>    // pcmk__s, pcmk__str_eq
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
@@ -512,48 +511,18 @@ forward_request(xmlNode *request)
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
 }
 
-/*!
- * \internal
- * \brief Get a CIB operation's input from the request XML
- *
- * \param[in]  request  CIB request XML
- * \param[out] section  Where to store CIB section name
- *
- * \return Input XML for CIB operation
- *
- * \note If not \c NULL, the return value is a non-const pointer to part of
- *       \p request. The caller should not free it directly.
- */
-static xmlNode *
-prepare_input(const xmlNode *request, const char **section)
-{
-    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
-                                            NULL, NULL);
-    xmlNode *input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-    *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-
-    // Grab the specified section
-    if ((*section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        input = pcmk_find_cib_element(input, *section);
-    }
-
-    return input;
-}
-
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **reply, bool privileged)
 {
     xmlNode *cib_diff = NULL;
-    xmlNode *input = NULL;
     xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
 
     uint32_t call_options = cib_none;
 
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *section = NULL;
+    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
     const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
@@ -588,10 +557,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    input = prepare_input(request, &section);
-
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_query(op_function, section, request, input, &the_cib,
+        rc = cib__perform_query(op_function, section, request, &the_cib,
                                 &output);
         goto done;
     }
@@ -603,7 +570,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      * It's not important whether the client variant is cib_native or
      * cib_remote.
      */
-    rc = cib_perform_op(cib_undefined, op_function, section, request, input,
+    rc = cib_perform_op(cib_undefined, op_function, section, request,
                         &config_changed, &the_cib, &result_cib, &cib_diff,
                         &output);
 
