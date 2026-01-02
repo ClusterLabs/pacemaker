@@ -29,17 +29,9 @@
 
 #include "pacemaker-based.h"
 
-/* Maximum number of diffs to ignore while waiting for a resync */
-#define MAX_DIFF_RETRY 5
-
 bool based_is_primary = false;
 
 xmlNode *the_cib = NULL;
-
-/* Set to 1 when a sync is requested, incremented when a diff is ignored,
- * reset to 0 when a sync is received
- */
-static int sync_in_progress = 0;
 
 /*!
  * \internal
@@ -66,51 +58,6 @@ based_process_abs_delete(const char *op, int options, const char *section,
      * external clients with Pacemaker versions < 3.0.0 can send it.
      */
     return EINVAL;
-}
-
-int
-based_process_apply_patch(const char *op, int options, const char *section,
-                          xmlNode *req, xmlNode *input, xmlNode **cib,
-                          xmlNode **answer)
-{
-    int rc = pcmk_rc_ok;
-
-    if (sync_in_progress > MAX_DIFF_RETRY) {
-        /* Don't ignore diffs forever; the last request may have been lost.
-         * If the diff fails, we'll ask for another full resync.
-         */
-        sync_in_progress = 0;
-    }
-
-    // The primary instance should never ignore a diff
-    if (sync_in_progress && !based_is_primary) {
-        int source[] = { 0, 0, 0 };
-        int target[] = { 0, 0, 0 };
-
-        pcmk__xml_patchset_versions(input, source, target);
-
-        sync_in_progress++;
-        pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
-                     "progress)",
-                     source[0], source[1], source[2],
-                     target[0], target[1], target[2]);
-        return pcmk_rc_diff_resync;
-    }
-
-    rc = cib__process_apply_patch(op, options, section, req, input, cib,
-                                  answer);
-    pcmk__trace("result: %s (%d), %s", pcmk_rc_str(rc), rc,
-                (based_is_primary? "primary": "secondary"));
-
-    if ((rc == pcmk_rc_diff_resync) && !based_is_primary) {
-        g_clear_pointer(cib, pcmk__xml_free);
-        send_sync_request();
-
-    } else if (rc == pcmk_rc_diff_resync) {
-        rc = pcmk_rc_diff_failed;
-    }
-
-    return rc;
 }
 
 int
@@ -235,13 +182,7 @@ based_process_replace(const char *op, int options, const char *section,
                       xmlNode *req, xmlNode *input, xmlNode **cib,
                       xmlNode **answer)
 {
-    int rc = cib__process_replace(op, options, section, req, input, cib,
-                                  answer);
-
-    if ((rc == pcmk_rc_ok) && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        sync_in_progress = 0;
-    }
-    return rc;
+    return cib__process_replace(op, options, section, req, input, cib, answer);
 }
 
 int
@@ -438,23 +379,6 @@ based_process_upgrade(const char *op, int options, const char *section,
         pcmk__xml_free(scratch);
     }
     return rc;
-}
-
-void
-send_sync_request(void)
-{
-    xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
-    pcmk__node_status_t *peer = NULL;
-
-    pcmk__info("Requesting re-sync from all peers");
-    sync_in_progress = 1;
-
-    pcmk__xe_set(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    pcmk__xe_set(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
-
-    pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
-    pcmk__xml_free(sync_me);
 }
 
 static xmlNode *
