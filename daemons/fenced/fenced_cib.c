@@ -516,7 +516,6 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
                  * old diff.
                  */
                 break;
-            case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
                 pcmk__notice("[%s] Patch aborted: %s (%d)", event,
                              pcmk_strerror(rc), rc);
