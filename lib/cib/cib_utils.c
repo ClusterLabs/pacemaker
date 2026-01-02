@@ -169,14 +169,36 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Get input data from a CIB request, based on section and call data
+ *
+ * \param[in] request  CIB request XML
+ */
+static xmlNode *
+get_op_input(const xmlNode *request)
+{
+    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
+    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
+                                            NULL, NULL);
+    xmlNode *input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
+    if ((section == NULL) || !pcmk__xe_is(input, PCMK_XE_CIB)) {
+        return input;
+    }
+
+    return pcmk_find_cib_element(input, section);
+}
+
 int
 cib__perform_query(cib__op_fn_t fn, const char *section, xmlNode *req,
-                   xmlNode *input, xmlNode **current_cib, xmlNode **output)
+                   xmlNode **current_cib, xmlNode **output)
 {
     int rc = pcmk_rc_ok;
     const char *op = NULL;
     const char *user = NULL;
     uint32_t call_options = cib_none;
+    xmlNode *input = NULL;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
@@ -188,6 +210,8 @@ cib__perform_query(cib__op_fn_t fn, const char *section, xmlNode *req,
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
+
+    input = get_op_input(req);
     cib = *current_cib;
 
     if (cib_acl_enabled(*current_cib, user)
@@ -443,11 +467,17 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 
 int
 cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, const char *section,
-               xmlNode *req, xmlNode *input, bool *config_changed,
-               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
-               xmlNode **output)
+               xmlNode *req, bool *config_changed, xmlNode **current_cib,
+               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     int rc = pcmk_rc_ok;
+
+    const char *op = NULL;
+    const char *user = NULL;
+    uint32_t call_options = cib_none;
+    xmlNode *input = NULL;
+    bool enable_acl = false;
+    bool manage_version = true;
 
     /* PCMK_XE_CIB element containing version numbers from before the operation.
      * This may or may not point to a full CIB XML tree. Do not free, as this
@@ -457,12 +487,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, const char *section,
 
     xmlNode *top = NULL;
     xmlNode *working_cib = NULL;
-
-    const char *op = NULL;
-    const char *user = NULL;
-    uint32_t call_options = cib_none;
-    bool enable_acl = false;
-    bool manage_version = true;
 
     pcmk__assert((fn != NULL) && (req != NULL)
                  && (config_changed != NULL) && (!*config_changed)
@@ -475,6 +499,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, const char *section,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
+    input = get_op_input(req);
     enable_acl = cib_acl_enabled(*current_cib, user);
 
     if (!should_copy_cib(op, section, call_options)) {
