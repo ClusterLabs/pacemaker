@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2025 the Pacemaker project contributors
+ * Later changes copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -141,11 +141,6 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     switch (rc) {
         case pcmk_ok:
         case -EPERM:
-            break;
-
-            /* This is an internal value that clients do not and should not care about */
-        case -pcmk_err_diff_resync:
-            rc = pcmk_ok;
             break;
 
             /* These indicate internal problems */
