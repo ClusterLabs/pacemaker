@@ -441,9 +441,8 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 int
 cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
                cib__op_fn_t fn, const char *section, xmlNode *req,
-               xmlNode *input, bool manage_counters, bool *config_changed,
-               xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
-               xmlNode **output)
+               xmlNode *input, bool *config_changed, xmlNode **current_cib,
+               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     int rc = pcmk_rc_ok;
 
@@ -458,6 +457,7 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
 
     const char *user = NULL;
     bool enable_acl = false;
+    bool manage_version = true;
 
     pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
                  && (config_changed != NULL) && (!*config_changed)
@@ -562,11 +562,18 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
 
     pcmk__strip_xml_text(working_cib);
 
+    if (pcmk__xe_attr_is_true(req, PCMK__XA_CIB_UPDATE)) {
+        /* This is a replace operation as a reply to a sync request. Keep
+         * whatever versions are in the received CIB.
+         */
+        manage_version = false;
+    }
+
     /* If we didn't make a copy, the diff will only be accurate for the
      * top-level PCMK_XE_CIB element
      */
     *diff = xml_create_patchset(0, old_versions, working_cib, config_changed,
-                                manage_counters);
+                                manage_version);
 
     /* pcmk__xml_commit_changes() resets document private data, so call it even
      * if there were no changes.
