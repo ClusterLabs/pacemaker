@@ -35,7 +35,6 @@ static const cib__op_fn_t op_functions[] = {
     [cib__op_secondary]        = based_process_secondary,
     [cib__op_shutdown]         = based_process_shutdown,
     [cib__op_sync_to_all]      = based_process_sync_to_all,
-    [cib__op_sync_to_one]      = based_process_sync_to_one,
     [cib__op_upgrade]          = based_process_upgrade,
 };
 
