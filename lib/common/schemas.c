@@ -1019,7 +1019,7 @@ apply_transformation(xmlDoc *doc, const char *transform, bool to_logs)
  * \internal
  * \brief Perform all transformations needed to upgrade XML to next schema
  *
- * \param[in] input_xml     XML to transform
+ * \param[in] input_doc     XML document to transform
  * \param[in] schema_index  Index of schema that successfully validates
  *                          \p original_xml
  * \param[in] to_logs       If false, certain validation errors will be sent to
@@ -1027,14 +1027,14 @@ apply_transformation(xmlDoc *doc, const char *transform, bool to_logs)
  *
  * \return XML result of schema transforms if successful, otherwise NULL
  */
-static xmlNode *
-apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
+static xmlDoc *
+apply_upgrade(xmlDoc *input_doc, int schema_index, bool to_logs)
 {
     pcmk__schema_t *schema = g_list_nth_data(known_schemas, schema_index);
     pcmk__schema_t *upgraded_schema = g_list_nth_data(known_schemas,
                                                       schema_index + 1);
 
-    xmlNode *old_xml = NULL;
+    xmlDoc *old_doc = NULL;
     xmlDoc *new_doc = NULL;
     xmlNode *new_xml = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = NULL;
@@ -1052,21 +1052,22 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
         pcmk__debug("Upgrading schema from %s to %s: applying XSL transform %s",
                     schema->name, upgraded_schema->name, transform);
 
-        new_doc = apply_transformation(input_xml->doc, transform, to_logs);
-        pcmk__xml_free(old_xml);
+        new_doc = apply_transformation(input_doc, transform, to_logs);
+        pcmk__xml_free_doc(old_doc);
 
         if (new_doc == NULL) {
             pcmk__err("XSL transform %s failed, aborting upgrade", transform);
             return NULL;
         }
 
-        new_xml = xmlDocGetRootElement(new_doc);
-        input_xml = new_xml;
-        old_xml = new_xml;
+        input_doc = new_doc;
+        old_doc = new_doc;
     }
 
     // Final result document from upgrade pipeline needs private data
-    pcmk__xml_new_private_data((xmlNode *) new_xml->doc);
+    pcmk__xml_new_private_data((xmlNode *) new_doc);
+
+    new_xml = xmlDocGetRootElement(new_doc);
 
     // Ensure result validates with its new schema
     if (!validate_with(new_xml, upgraded_schema, error_handler,
@@ -1081,7 +1082,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
 
     pcmk__info("Schema upgrade from %s to %s succeeded", schema->name,
                upgraded_schema->name);
-    return new_xml;
+    return new_doc;
 }
 
 /*!
@@ -1125,11 +1126,14 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
     GList *entry = NULL;
     pcmk__schema_t *best_schema = NULL;
     pcmk__schema_t *original_schema = NULL;
-    xmlRelaxNGValidityErrorFunc error_handler = 
-        to_logs ? (xmlRelaxNGValidityErrorFunc) xml_log : NULL;
+    xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
     CRM_CHECK((xml != NULL) && (*xml != NULL) && ((*xml)->doc != NULL),
               return EINVAL);
+
+    if (to_logs) {
+        error_handler = (xmlRelaxNGValidityErrorFunc) xml_log;
+    }
 
     if (max_schema_name != NULL) {
         GList *max_entry = pcmk__get_schema(max_schema_name);
@@ -1155,7 +1159,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
     for (; entry != NULL; entry = entry->next) {
         pcmk__schema_t *current_schema = entry->data;
-        xmlNode *upgrade = NULL;
+        xmlDoc *upgrade = NULL;
 
         if (current_schema->schema_index > max_schema_index) {
             break;
@@ -1189,17 +1193,19 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             continue;
         }
 
-        upgrade = apply_upgrade(*xml, current_schema->schema_index, to_logs);
+        upgrade = apply_upgrade((*xml)->doc, current_schema->schema_index,
+                                to_logs);
         if (upgrade == NULL) {
             /* The transform failed, so this schema can't be used. Later
              * schemas are unlikely to validate, but try anyway until we
              * run out of options.
              */
             rc = pcmk_rc_transform_failed;
+
         } else {
             best_schema = current_schema;
             pcmk__xml_free(*xml);
-            *xml = upgrade;
+            *xml = xmlDocGetRootElement(upgrade);
         }
     }
 
