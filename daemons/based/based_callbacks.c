@@ -371,9 +371,9 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             delegated = reply_to;
         }
         goto skip_is_reply;
+    }
 
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC_TO_ALL,
-                            pcmk__str_none)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
         // Nothing to do
 
     } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
