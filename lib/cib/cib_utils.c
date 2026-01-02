@@ -170,20 +170,22 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 }
 
 int
-cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
-                   const char *section, xmlNode *req, xmlNode *input,
-                   xmlNode **current_cib, xmlNode **output)
+cib__perform_query(uint32_t call_options, cib__op_fn_t fn, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode **current_cib,
+                   xmlNode **output)
 {
     int rc = pcmk_rc_ok;
+    const char *op = NULL;
     const char *user = NULL;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
 
-    pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
+    pcmk__assert((fn != NULL) && (req != NULL)
                  && (current_cib != NULL) && (*current_cib != NULL)
                  && (output != NULL) && (*output == NULL));
 
+    op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     cib = *current_cib;
 
@@ -439,9 +441,9 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 }
 
 int
-cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
-               cib__op_fn_t fn, const char *section, xmlNode *req,
-               xmlNode *input, bool *config_changed, xmlNode **current_cib,
+cib_perform_op(enum cib_variant variant, uint32_t call_options, cib__op_fn_t fn,
+               const char *section, xmlNode *req, xmlNode *input,
+               bool *config_changed, xmlNode **current_cib,
                xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     int rc = pcmk_rc_ok;
@@ -455,17 +457,19 @@ cib_perform_op(enum cib_variant variant, const char *op, uint32_t call_options,
     xmlNode *top = NULL;
     xmlNode *working_cib = NULL;
 
+    const char *op = NULL;
     const char *user = NULL;
     bool enable_acl = false;
     bool manage_version = true;
 
-    pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
+    pcmk__assert((fn != NULL) && (req != NULL)
                  && (config_changed != NULL) && (!*config_changed)
                  && (current_cib != NULL) && (*current_cib != NULL)
                  && (result_cib != NULL) && (*result_cib == NULL)
                  && (diff != NULL) && (*diff == NULL)
                  && (output != NULL) && (*output == NULL));
 
+    op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     enable_acl = cib_acl_enabled(*current_cib, user);
 
