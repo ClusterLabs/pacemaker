@@ -178,13 +178,12 @@ cib__client_triggers_refresh(const char *name)
 
 int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
 
-int cib__perform_query(cib__op_fn_t fn, const char *section, xmlNode *req,
-                       xmlNode **current_cib, xmlNode **output);
+int cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
+                       xmlNode **output);
 
-int cib_perform_op(enum cib_variant variant, cib__op_fn_t fn,
-                   const char *section, xmlNode *req, bool *config_changed,
-                   xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
-                   xmlNode **output);
+int cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
+                   bool *config_changed, xmlNode **current_cib,
+                   xmlNode **result_cib, xmlNode **diff, xmlNode **output);
 
 int cib__create_op(cib_t *cib, const char *op, const char *host,
                    const char *section, xmlNode *data, int call_options,
