@@ -133,21 +133,10 @@ based_process_ping(const char *op, int options, const char *section,
 
     if (*cib != NULL) {
         // Use *cib so that ACL filtering is applied to the answer
-        pcmk__if_tracing(
-            {
-                /* Append additional detail so the receiver can log the
-                 * differences
-                 */
-                pcmk__xml_copy(wrapper, *cib);
-            },
-            {
-                // Always include at least the version details
-                const char *name = (const char *) (*cib)->name;
-                xmlNode *shallow = pcmk__xe_create(wrapper, name);
+        xmlNode *shallow = pcmk__xe_create(wrapper,
+                                           (const char *) (*cib)->name);
 
-                pcmk__xe_copy_attrs(shallow, *cib, pcmk__xaf_none);
-            }
-        );
+        pcmk__xe_copy_attrs(shallow, *cib, pcmk__xaf_none);
     }
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
