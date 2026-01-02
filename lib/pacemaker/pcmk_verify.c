@@ -83,8 +83,8 @@ pcmk__verify(pcmk_scheduler_t *scheduler, pcmk__output_t *out,
         pcmk__xe_create(*cib_object, PCMK_XE_STATUS);
     }
 
-    if (!pcmk__validate_xml(*cib_object, NULL,
-                            (xmlRelaxNGValidityErrorFunc) out->err, out)) {
+    if (!pcmk__validate_xml(*cib_object, (xmlRelaxNGValidityErrorFunc) out->err,
+                            out)) {
         pcmk__config_has_error = true;
         rc = pcmk_rc_schema_validation;
         goto verify_done;

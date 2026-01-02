@@ -404,7 +404,7 @@ profile_file(const char *xml_file, unsigned int repeat,
         goto done;
     }
 
-    if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
+    if (!pcmk__validate_xml(cib_object, NULL, NULL)) {
         goto done;
     }
 
