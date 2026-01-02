@@ -100,9 +100,9 @@ createEmptyCib(int cib_epoch)
     pcmk__xe_set(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     pcmk__xe_set(cib_root, PCMK_XA_VALIDATE_WITH, pcmk__highest_schema_name());
 
+    pcmk__xe_set_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
     pcmk__xe_set_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
     pcmk__xe_set_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
-    pcmk__xe_set_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
     config = pcmk__xe_create(cib_root, PCMK_XE_CONFIGURATION);
     pcmk__xe_create(cib_root, PCMK_XE_STATUS);
