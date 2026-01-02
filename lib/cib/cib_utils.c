@@ -185,11 +185,12 @@ get_op_input(const xmlNode *request)
 }
 
 int
-cib__perform_query(cib__op_fn_t fn, const char *section, xmlNode *req,
-                   xmlNode **current_cib, xmlNode **output)
+cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
+                   xmlNode **output)
 {
     int rc = pcmk_rc_ok;
     const char *op = NULL;
+    const char *section = NULL;
     const char *user = NULL;
     uint32_t call_options = cib_none;
     xmlNode *input = NULL;
@@ -202,6 +203,7 @@ cib__perform_query(cib__op_fn_t fn, const char *section, xmlNode *req,
                  && (output != NULL) && (*output == NULL));
 
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+    section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
@@ -460,13 +462,14 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 }
 
 int
-cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, const char *section,
-               xmlNode *req, bool *config_changed, xmlNode **current_cib,
+cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
+               bool *config_changed, xmlNode **current_cib,
                xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     int rc = pcmk_rc_ok;
 
     const char *op = NULL;
+    const char *section = NULL;
     const char *user = NULL;
     uint32_t call_options = cib_none;
     xmlNode *input = NULL;
@@ -490,6 +493,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, const char *section,
                  && (output != NULL) && (*output == NULL));
 
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+    section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
