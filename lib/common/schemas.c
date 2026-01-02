@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -968,23 +968,21 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
 
 /*!
  * \internal
- * \brief Apply a single XSL transformation to given XML
+ * \brief Apply a single XSL transformation to the given XML document
  *
- * \param[in] xml        XML to transform
+ * \param[in] doc        XML document
  * \param[in] transform  XSL name
  * \param[in] to_logs    If false, certain validation errors will be sent to
  *                       stderr rather than logged
  *
  * \return Transformed XML on success, otherwise NULL
  */
-static xmlNode *
-apply_transformation(const xmlNode *xml, const char *transform,
-                     gboolean to_logs)
+static xmlDoc *
+apply_transformation(xmlDoc *doc, const char *transform, bool to_logs)
 {
     char *xform = NULL;
-    xmlNode *out = NULL;
-    xmlDocPtr res = NULL;
     xsltStylesheet *xslt = NULL;
+    xmlDoc *result_doc = NULL;
 
     xform = pcmk__xml_artefact_path(pcmk__xml_artefact_ns_legacy_xslt,
                                     transform);
@@ -1002,12 +1000,10 @@ apply_transformation(const xmlNode *xml, const char *transform,
     /* Caller allocates private data for final result document. Intermediate
      * result documents are temporary and don't need private data.
      */
-    res = xsltApplyStylesheet(xslt, xml->doc, NULL);
-    CRM_CHECK(res != NULL, goto cleanup);
+    result_doc = xsltApplyStylesheet(xslt, doc, NULL);
+    CRM_CHECK(result_doc != NULL, goto cleanup);
 
     xsltSetGenericErrorFunc(NULL, NULL);  /* restore default one */
-
-    out = xmlDocGetRootElement(res);
 
   cleanup:
     if (xslt) {
@@ -1016,7 +1012,7 @@ apply_transformation(const xmlNode *xml, const char *transform,
 
     free(xform);
 
-    return out;
+    return result_doc;
 }
 
 /*!
@@ -1039,6 +1035,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
                                                       schema_index + 1);
 
     xmlNode *old_xml = NULL;
+    xmlDoc *new_doc = NULL;
     xmlNode *new_xml = NULL;
     xmlRelaxNGValidityErrorFunc error_handler = NULL;
 
@@ -1055,13 +1052,15 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
         pcmk__debug("Upgrading schema from %s to %s: applying XSL transform %s",
                     schema->name, upgraded_schema->name, transform);
 
-        new_xml = apply_transformation(input_xml, transform, to_logs);
+        new_doc = apply_transformation(input_xml->doc, transform, to_logs);
         pcmk__xml_free(old_xml);
 
-        if (new_xml == NULL) {
+        if (new_doc == NULL) {
             pcmk__err("XSL transform %s failed, aborting upgrade", transform);
             return NULL;
         }
+
+        new_xml = xmlDocGetRootElement(new_doc);
         input_xml = new_xml;
         old_xml = new_xml;
     }
