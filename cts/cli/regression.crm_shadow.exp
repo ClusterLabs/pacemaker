@@ -1322,7 +1322,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create empty shadow instance (file already exists) (force) (XML) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance (file already exists) (force) (XML)
 =#=#=#= Begin test: Get active shadow instance's contents (empty CIB) =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -1336,7 +1336,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= Begin test: Get active shadow instance's contents (empty CIB) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_shadow --output-as=xml --display">
   <shadow instance="cts-cli">
-    <content><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+    <content><![CDATA[<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -1374,7 +1374,7 @@ Diff: +++ 0.1.0 (null)
 -- /cib/status/node_state[@id='1']
 -- /cib/status/node_state[@id='httpd-bundle-0']
 -- /cib/status/node_state[@id='httpd-bundle-1']
-+  /cib:  @validate-with=pacemaker-X, @num_updates=0, @admin_epoch=0
++  /cib:  @validate-with=pacemaker-X, @admin_epoch=0, @epoch=1, @num_updates=0
 -- /cib:  @cib-last-written, @update-origin, @update-client, @update-user, @have-quorum, @dc-uuid
 =#=#=#= End test: Get active shadow instance's diff (empty CIB) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (empty CIB)
@@ -1410,8 +1410,9 @@ Diff: +++ 0.1.0 (null)
     <change-list>
       <change-attr name="crm_feature_set" operation="set" value=""/>
       <change-attr name="validate-with" operation="set" value="pacemaker-X"/>
-      <change-attr name="num_updates" operation="set" value="0"/>
       <change-attr name="admin_epoch" operation="set" value="0"/>
+      <change-attr name="epoch" operation="set" value="1"/>
+      <change-attr name="num_updates" operation="set" value="0"/>
       <change-attr name="cib-last-written" operation="unset"/>
       <change-attr name="update-origin" operation="unset"/>
       <change-attr name="update-client" operation="unset"/>
@@ -1420,7 +1421,7 @@ Diff: +++ 0.1.0 (null)
       <change-attr name="dc-uuid" operation="unset"/>
     </change-list>
     <change-result>
-      <cib epoch="1" num_updates="0" admin_epoch="0"/>
+      <cib admin_epoch="0" epoch="1" num_updates="0"/>
     </change-result>
   </change>
 </diff>
