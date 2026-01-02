@@ -740,50 +740,6 @@ cib__process_query(const char *op, int options, const char *section,
     return process_query_section(options, section, *cib, answer);
 }
 
-static int
-process_replace_xpath(const char *op, int options, const char *xpath,
-                      xmlNode *input, xmlNode *cib)
-{
-    int num_results = 0;
-    int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
-
-    num_results = pcmk__xpath_num_results(xpath_obj);
-    if (num_results == 0) {
-        pcmk__debug("%s: %s does not exist", op, xpath);
-        rc = ENXIO;
-        goto done;
-    }
-
-    for (int i = 0; i < num_results; i++) {
-        xmlNode *match = NULL;
-        xmlNode *parent = NULL;
-        xmlChar *path = NULL;
-
-        match = pcmk__xpath_result(xpath_obj, i);
-        if (match == NULL) {
-            continue;
-        }
-
-        path = xmlGetNodePath(match);
-        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
-        free(path);
-
-        parent = match->parent;
-
-        pcmk__xml_free(match);
-        pcmk__xml_copy(parent, input);
-
-        if (!pcmk__is_set(options, cib_multiple)) {
-            break;
-        }
-    }
-
-done:
-    xmlXPathFreeObject(xpath_obj);
-    return rc;
-}
-
 static bool
 replace_cib_digest_matches(xmlNode *request, xmlNode *input)
 {
@@ -867,6 +823,50 @@ replace_cib(xmlNode *request, xmlNode *input, xmlNode **cib)
                updates, replace_admin_epoch, replace_epoch, replace_updates,
                peer);
     return pcmk_rc_ok;
+}
+
+static int
+process_replace_xpath(const char *op, int options, const char *xpath,
+                      xmlNode *input, xmlNode *cib)
+{
+    int num_results = 0;
+    int rc = pcmk_rc_ok;
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
+
+    num_results = pcmk__xpath_num_results(xpath_obj);
+    if (num_results == 0) {
+        pcmk__debug("%s: %s does not exist", op, xpath);
+        rc = ENXIO;
+        goto done;
+    }
+
+    for (int i = 0; i < num_results; i++) {
+        xmlNode *match = NULL;
+        xmlNode *parent = NULL;
+        xmlChar *path = NULL;
+
+        match = pcmk__xpath_result(xpath_obj, i);
+        if (match == NULL) {
+            continue;
+        }
+
+        path = xmlGetNodePath(match);
+        pcmk__debug("Processing %s op for %s with %s", op, xpath, path);
+        free(path);
+
+        parent = match->parent;
+
+        pcmk__xml_free(match);
+        pcmk__xml_copy(parent, input);
+
+        if (!pcmk__is_set(options, cib_multiple)) {
+            break;
+        }
+    }
+
+done:
+    xmlXPathFreeObject(xpath_obj);
+    return rc;
 }
 
 static int
