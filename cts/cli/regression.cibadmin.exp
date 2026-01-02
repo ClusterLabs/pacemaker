@@ -1,5 +1,5 @@
 =#=#=#= Begin test: Validate CIB =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -17,7 +17,7 @@
   <status/>
 </cib>
 =#=#=#= Current cib after: Validate CIB =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -38,7 +38,7 @@
 * Passed: cibadmin              - Validate CIB
 =#=#=#= Begin test: Validate CIB (XML) =#=#=#=
 <pacemaker-result api-version="X" request="cibadmin --output-as=xml -Q">
-  <output><![CDATA[<cib epoch="4" num_updates="0" admin_epoch="0">
+  <output><![CDATA[<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -59,7 +59,7 @@
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Validate CIB (XML) =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -79,12 +79,12 @@
 =#=#=#= End test: Validate CIB (XML) - OK (0) =#=#=#=
 * Passed: cibadmin              - Validate CIB (XML)
 =#=#=#= Begin test: Digest calculation =#=#=#=
-9130d6f39c2b83bd032a00e76621508c
+1f3492630cde57d6b7ee45de4d390469
 =#=#=#= End test: Digest calculation - OK (0) =#=#=#=
 * Passed: cibadmin              - Digest calculation
 =#=#=#= Begin test: Digest calculation (XML) =#=#=#=
 <pacemaker-result api-version="X" request="cibadmin --output-as=xml -5 -p">
-  <md5-sum digest="9130d6f39c2b83bd032a00e76621508c"/>
+  <md5-sum digest="1f3492630cde57d6b7ee45de4d390469"/>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Digest calculation (XML) - OK (0) =#=#=#=
@@ -92,7 +92,7 @@
 =#=#=#= Begin test: Require --force for CIB erasure =#=#=#=
 cibadmin: The supplied command is considered dangerous. To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
 =#=#=#= Current cib after: Require --force for CIB erasure =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -120,7 +120,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
   </status>
 </pacemaker-result>
 =#=#=#= Current cib after: Require --force for CIB erasure (XML) =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -149,7 +149,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
 =#=#=#= End test: Allow CIB erasure with --force (XML) - OK (0) =#=#=#=
 * Passed: cibadmin              - Allow CIB erasure with --force (XML)
 =#=#=#= Begin test: Query CIB =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -159,7 +159,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
   <status/>
 </cib>
 =#=#=#= Current cib after: Query CIB =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -172,7 +172,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
 * Passed: cibadmin              - Query CIB
 =#=#=#= Begin test: Query CIB (XML) =#=#=#=
 <pacemaker-result api-version="X" request="cibadmin --output-as=xml -Q">
-  <output><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+  <output><![CDATA[<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -185,7 +185,7 @@ cibadmin: The supplied command is considered dangerous. To prevent accidental de
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Query CIB (XML) =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
