@@ -743,7 +743,6 @@ log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
                 break;
 
             case pcmk_rc_old_data:
-            case pcmk_rc_diff_resync:
             case pcmk_rc_diff_failed:
                 level = LOG_TRACE;
                 break;
