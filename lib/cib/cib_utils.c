@@ -524,11 +524,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
          */
         working_cib = *current_cib;
 
-        /* @TODO Enable tracking and ACLs and calculate changes? If working_cib
-         * and *current_cib point to a new object, then change tracking and
-         * unpacked ACLs didn't carry over to it.
-         */
-
     } else {
         working_cib = pcmk__xml_copy(NULL, *current_cib);
         old_versions = *current_cib;
@@ -543,21 +538,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__log_xml_trace(req, "request");
 
         rc = fn(op, call_options, section, req, input, &working_cib, output);
-
-        /* @TODO This appears to be a hack to determine whether working_cib
-         * points to a new object now, without saving the old pointer (which may
-         * be invalid now) for comparison. Confirm this, and check more clearly.
-         */
-        if (!pcmk__xml_doc_all_flags_set(working_cib->doc, pcmk__xf_tracking)) {
-            pcmk__trace("Inferring changes after %s op", op);
-            pcmk__xml_commit_changes(working_cib->doc);
-            if (enable_acl) {
-                pcmk__enable_acls((*current_cib)->doc, working_cib->doc, user);
-            }
-            pcmk__xml_mark_changes(*current_cib, working_cib);
-        }
-
-        pcmk__assert(*current_cib != working_cib);
     }
 
     // Allow ourselves to make any additional necessary changes
