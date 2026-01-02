@@ -798,18 +798,16 @@ validate_with_silent(xmlDoc *doc, pcmk__schema_t *schema)
 }
 
 bool
-pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
-                   xmlRelaxNGValidityErrorFunc error_handler,
+pcmk__validate_xml(xmlNode *xml, xmlRelaxNGValidityErrorFunc error_handler,
                    void *error_handler_context)
 {
+    const char *validation = NULL;
     GList *entry = NULL;
     pcmk__schema_t *schema = NULL;
 
-    CRM_CHECK((xml_blob != NULL) && (xml_blob->doc != NULL), return false);
+    CRM_CHECK((xml != NULL) && (xml->doc != NULL), return false);
 
-    if (validation == NULL) {
-        validation = pcmk__xe_get(xml_blob, PCMK_XA_VALIDATE_WITH);
-    }
+    validation = pcmk__xe_get(xml, PCMK_XA_VALIDATE_WITH);
     pcmk__warn_if_schema_deprecated(validation);
 
     entry = pcmk__get_schema(validation);
@@ -821,7 +819,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
     }
 
     schema = entry->data;
-    return validate_with(xml_blob->doc, schema, error_handler,
+    return validate_with(xml->doc, schema, error_handler,
                          error_handler_context);
 }
 
@@ -836,8 +834,7 @@ pcmk__validate_xml(xmlNode *xml_blob, const char *validation,
 bool
 pcmk__configured_schema_validates(xmlNode *xml)
 {
-    return pcmk__validate_xml(xml, NULL,
-                              (xmlRelaxNGValidityErrorFunc) xml_log,
+    return pcmk__validate_xml(xml, (xmlRelaxNGValidityErrorFunc) xml_log,
                               GUINT_TO_POINTER(LOG_ERR));
 }
 
