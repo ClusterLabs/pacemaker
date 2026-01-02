@@ -485,20 +485,29 @@ cib__process_erase(const char *op, int options, const char *section,
                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                    xmlNode **result_cib, xmlNode **answer)
 {
-    xmlNode *tmp = pcmk__xe_create(NULL, (const char *) (*result_cib)->name);
+    xmlNode *empty = createEmptyCib(0);
+    xmlNode *empty_config = pcmk__xe_first_child(empty, PCMK_XE_CONFIGURATION,
+                                                 NULL, NULL);
+    xmlNode *empty_status = pcmk__xe_first_child(empty, PCMK_XE_STATUS, NULL,
+                                                 NULL);
 
-    // Save version details
-    pcmk__xe_copy_attrs(tmp, *result_cib, pcmk__xaf_none);
+    // Free all existing children, regardless of node type
+    while ((*result_cib)->children != NULL) {
+        pcmk__xml_free((*result_cib)->children);
+    }
 
-    // Replace with an empty CIB
-    pcmk__xml_free(*result_cib);
-    *result_cib = createEmptyCib(0);
+    /* Copying is wasteful here, but calling pcmk__xml_copy() adds the copy as a
+     * child of the existing *result_cib within the same document. This reduces
+     * the number of opportunities to make mistakes related to XML documents,
+     * change tracking, etc., compared to calling xmlUnlinkChild(),
+     * xmlAddChild(), etc.
+     */
+    pcmk__xml_copy(*result_cib, empty_config);
+    pcmk__xml_copy(*result_cib, empty_status);
 
-    // Restore version details and bump PCMK_XA_ADMIN_EPOCH
-    pcmk__xe_copy_attrs(*result_cib, tmp, pcmk__xaf_none);
     update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
 
-    pcmk__xml_free(tmp);
+    pcmk__xml_free(empty);
     return pcmk_rc_ok;
 }
 
