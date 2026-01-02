@@ -163,11 +163,6 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         rc = -EPROTO;
     }
 
-    if (rc == -pcmk_err_diff_resync) {
-        /* This is an internal value that clients do not and should not care about */
-        rc = pcmk_ok;
-    }
-
     if (rc == pcmk_ok || rc == -EPERM) {
         pcmk__log_xml_debug(op_reply, "passed");
 
