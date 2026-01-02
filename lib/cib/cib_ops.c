@@ -122,10 +122,6 @@ static const cib__operation_t cib_ops[] = {
         cib__op_attr_privileged
     },
     {
-        PCMK__CIB_REQUEST_SYNC_TO_ONE, cib__op_sync_to_one,
-        cib__op_attr_privileged
-    },
-    {
         PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
         cib__op_attr_modifies
         |cib__op_attr_privileged
