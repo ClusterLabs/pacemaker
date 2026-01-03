@@ -200,10 +200,7 @@ process_ping_reply(xmlNode *reply)
     uint64_t seq = 0;
     const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
 
-    xmlNode *wrapper = pcmk__xe_first_child(reply, PCMK__XE_CIB_CALLDATA, NULL,
-                                            NULL);
-    xmlNode *pong = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
+    xmlNode *pong = cib__get_calldata(reply);
     const char *seq_s = pcmk__xe_get(pong, PCMK__XA_CIB_PING_ID);
     const char *digest = pcmk__xe_get(pong, PCMK_XA_DIGEST);
 
@@ -245,10 +242,7 @@ process_ping_reply(xmlNode *reply)
         pcmk__trace("Processing ping reply %s from %s (%s)", seq_s, host,
                     digest);
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-            xmlNode *wrapper = pcmk__xe_first_child(pong, PCMK__XE_CIB_CALLDATA,
-                                                    NULL, NULL);
-            xmlNode *remote_versions = pcmk__xe_first_child(wrapper, NULL, NULL,
-                                                            NULL);
+            xmlNode *remote_versions = cib__get_calldata(pong);
 
             const char *admin_epoch_s = NULL;
             const char *epoch_s = NULL;
