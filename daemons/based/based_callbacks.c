@@ -531,11 +531,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     *reply = NULL;
 
     /* Start processing the request... */
-    rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
-                            cib_none);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
-    }
+    pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
     if (!privileged
         && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
