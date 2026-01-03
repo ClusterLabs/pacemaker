@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // EACCES, ECONNREFUSED
-#include <inttypes.h>               // PRIu64
 #include <stdbool.h>
 #include <stddef.h>                 // NULL, size_t
 #include <stdint.h>                 // uint32_t, uint64_t
@@ -41,7 +40,7 @@
 
 #define EXIT_ESCALATION_MS 10000
 
-static uint64_t ping_seq = 0;
+static long long ping_seq = 0;
 static char *ping_digest = NULL;
 static bool ping_modified_since = false;
 
@@ -148,42 +147,53 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
  * \internal
  * \brief Request CIB digests from all peer nodes
  *
- * This is used as a callback that runs 5 seconds after we modify the CIB. It
- * sends a ping request to all cluster nodes. They will respond by sending their
- * current digests and version info, which we will validate in
- * process_ping_reply(). This serves as a check of consistency across the
- * cluster after a CIB update.
+ * This is used as a callback that runs 5 seconds after we modify the CIB on the
+ * DC. It sends a ping request to all cluster nodes. They will respond by
+ * sending their current digests and version info, which we will validate in
+ * process_ping_reply(). If their digest doesn't match, we'll sync our own CIB
+ * to them. This helps ensure consistency across the cluster after a CIB update.
  *
  * \param[in] data  Ignored
  *
  * \return \c G_SOURCE_REMOVE (to destroy the timeout)
+ *
+ * \note It's not clear why we wait 5 seconds rather than sending the ping
+ *       request immediately after a performing a modifying op. Perhaps it's to
+ *       avoid overwhelming other nodes with ping requests when there are a lot
+ *       of modifying requests in a short period. The timer restarts after
+ *       every successful modifying op, so we send ping requests **at most**
+ *       every 5 seconds. Or perhaps it's a remnant of legacy mode (pre-1.1.12).
+ *       In any case, the other nodes shouldn't need time to process the
+ *       modifying op before responding to the ping request. The ping request is
+ *       sent after the op is sent, so it should also be received after the op
+ *       is received.
  */
 static gboolean
 digest_timer_cb(gpointer data)
 {
-    char *buf = NULL;
     xmlNode *ping = NULL;
 
     if (!based_is_primary) {
+        // Only the DC sends a ping
         return G_SOURCE_REMOVE;
     }
 
-    ping_seq++;
+    if (++ping_seq < 0) {
+        ping_seq = 0;
+    }
+
     g_clear_pointer(&ping_digest, free);
     ping_modified_since = false;
-
-    buf = pcmk__assert_asprintf("%" PRIu64, ping_seq);
 
     ping = pcmk__xe_create(NULL, PCMK__XE_PING);
     pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
     pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
-    pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buf);
+    pcmk__xe_set_ll(ping, PCMK__XA_CIB_PING_ID, ping_seq);
     pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
 
-    pcmk__trace("Requesting peer digests (%s)", buf);
+    pcmk__trace("Requesting peer digests (%lld)", ping_seq);
     pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
 
-    free(buf);
     pcmk__xml_free(ping);
     return G_SOURCE_REMOVE;
 }
@@ -191,49 +201,38 @@ digest_timer_cb(gpointer data)
 static void
 process_ping_reply(xmlNode *reply)
 {
-    uint64_t seq = 0;
-    const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
-
     xmlNode *pong = cib__get_calldata(reply);
-    const char *seq_s = pcmk__xe_get(pong, PCMK__XA_CIB_PING_ID);
+    long long seq = 0;
+    const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
     const char *digest = pcmk__xe_get(pong, PCMK_XA_DIGEST);
-    long long seq_ll = 0;
-    int rc = pcmk_rc_ok;
 
     xmlNode *remote_versions = cib__get_calldata(pong);
     const char *admin_epoch_s = NULL;
     const char *epoch_s = NULL;
     const char *num_updates_s = NULL;
 
-    if (seq_s == NULL) {
-        pcmk__debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
-        return;
-    }
+    int rc = pcmk__xe_get_ll(pong, PCMK__XA_CIB_PING_ID, &seq);
 
-    rc = pcmk__scan_ll(seq_s, &seq_ll, 0);
     if (rc != pcmk_rc_ok) {
-        pcmk__debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID " "
-                    "'%s': %s", seq_s, pcmk_rc_str(rc));
+        pcmk__debug("Ignoring ping reply with unset or invalid "
+                    PCMK__XA_CIB_PING_ID ": %s", pcmk_rc_str(rc));
         return;
     }
-
-    // @TODO Check for overflow?
-    seq = (uint64_t) seq_ll;
 
     if (digest == NULL) {
-        pcmk__trace("Ignoring ping reply %s from %s with no digest", seq_s,
+        pcmk__trace("Ignoring ping reply %lld from %s with no digest", seq,
                     host);
         return;
     }
 
     if (seq != ping_seq) {
-        pcmk__trace("Ignoring out of sequence ping reply %s from %s", seq_s,
+        pcmk__trace("Ignoring out-of-sequence ping reply %lld from %s", seq,
                     host);
         return;
     }
 
     if (ping_modified_since) {
-        pcmk__trace("Ignoring ping reply %s from %s: cib updated since", seq_s,
+        pcmk__trace("Ignoring ping reply %lld from %s: CIB updated since", seq,
                     host);
         return;
     }
@@ -243,7 +242,7 @@ process_ping_reply(xmlNode *reply)
         ping_digest = pcmk__digest_xml(the_cib, true);
     }
 
-    pcmk__trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
+    pcmk__trace("Processing ping reply %lld from %s (%s)", seq, host, digest);
 
     if (pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
         return;
