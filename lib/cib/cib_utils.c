@@ -889,8 +889,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         *output = pcmk__xml_copy(NULL, input);
     }
 
-    rc = cib__process_apply_patch(event, diff, output, NULL);
-    rc = pcmk_rc2legacy(rc);
+    rc = xml_apply_patchset(*output, diff, true);
     if (rc == pcmk_ok) {
         return pcmk_ok;
     }
