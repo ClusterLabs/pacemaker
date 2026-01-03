@@ -73,13 +73,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client_id);
     pcmk__xe_set_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
     pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, rc);
-
-    if (call_data != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CIB_CALLDATA);
-
-        pcmk__trace("Attaching reply output");
-        pcmk__xml_copy(wrapper, call_data);
-    }
+    cib__set_calldata(reply, call_data);
 
     crm_log_xml_explicit(reply, "cib:reply");
     return reply;
