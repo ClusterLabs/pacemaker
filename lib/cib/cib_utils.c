@@ -218,7 +218,6 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     const char *section = NULL;
     const char *user = NULL;
     uint32_t call_options = cib_none;
-    xmlNode *input = NULL;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
@@ -232,7 +231,6 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
-    input = cib__get_calldata(req);
     cib = *current_cib;
 
     if (cib_acl_enabled(*current_cib, user)
@@ -251,7 +249,7 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                 pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
     pcmk__log_xml_trace(req, "request");
 
-    rc = fn(req, input, &cib, output);
+    rc = fn(req, &cib, output);
 
     if (*output == NULL) {
         // Do nothing
@@ -544,7 +542,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__enable_acl(*cib, *cib, user);
     }
 
-    rc = fn(req, input, cib, output);
+    rc = fn(req, cib, output);
 
     // Allow ourselves to make any additional necessary changes
     xml_acl_disable(*cib);
