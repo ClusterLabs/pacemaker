@@ -508,37 +508,29 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__xe_copy_attrs(top, *cib, pcmk__xaf_none);
         old_versions = top;
 
-        if (pcmk__is_set(call_options, cib_transaction)) {
-            /* This is a request within a transaction, so don't commit changes
-             * yet. On success, we'll commit when we finish performing the whole
-             * commit-transaction operation. The tracking flag is already set,
-             * and ACLs have already been unpacked and applied.
-             */
-            pcmk__assert(pcmk__xml_doc_all_flags_set((*cib)->doc,
-                                                     pcmk__xf_tracking));
-
-        } else {
-            pcmk__xml_commit_changes((*cib)->doc);
-            pcmk__xml_doc_set_flags((*cib)->doc, pcmk__xf_tracking);
-            if (enable_acl) {
-                pcmk__enable_acls((*cib)->doc, (*cib)->doc, user);
-            }
-        }
-
-        rc = fn(op, call_options, section, req, input, cib, output);
-
     } else {
         old_versions = *cib;
         *cib = pcmk__xml_copy(NULL, *cib);
+    }
 
+    if (pcmk__is_set(call_options, cib_transaction)) {
+        /* This is a request within a transaction, so don't commit changes yet.
+         * On success, we'll commit when we finish performing the whole commit-
+         * transaction operation. The tracking flag is already set, and ACLs
+         * have already been unpacked and applied.
+         */
+        pcmk__assert(pcmk__xml_doc_all_flags_set((*cib)->doc,
+                                                 pcmk__xf_tracking));
+
+    } else {
+        pcmk__xml_commit_changes((*cib)->doc);
         pcmk__xml_doc_set_flags((*cib)->doc, pcmk__xf_tracking);
         if (enable_acl) {
             pcmk__enable_acls((*cib)->doc, (*cib)->doc, user);
         }
-
-        rc = fn(op, call_options, section, req, input, cib, output);
     }
 
+    rc = fn(op, call_options, section, req, input, cib, output);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
