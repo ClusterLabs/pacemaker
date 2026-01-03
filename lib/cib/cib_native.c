@@ -103,9 +103,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     rc = pcmk_ok;
     pcmk__xe_get_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
     if (reply_id == cib->call_id) {
-        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
-                                                NULL, NULL);
-        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        xmlNode *tmp = cib__get_calldata(op_reply);
 
         pcmk__trace("Synchronous reply %d received", reply_id);
         if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
