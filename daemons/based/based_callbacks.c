@@ -189,7 +189,7 @@ digest_timer_cb(gpointer data)
 }
 
 static void
-process_ping_reply(xmlNode *reply) 
+process_ping_reply(xmlNode *reply)
 {
     uint64_t seq = 0;
     const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
@@ -197,72 +197,72 @@ process_ping_reply(xmlNode *reply)
     xmlNode *pong = cib__get_calldata(reply);
     const char *seq_s = pcmk__xe_get(pong, PCMK__XA_CIB_PING_ID);
     const char *digest = pcmk__xe_get(pong, PCMK_XA_DIGEST);
+    long long seq_ll = 0;
+    int rc = pcmk_rc_ok;
 
     if (seq_s == NULL) {
         pcmk__debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
         return;
-
-    } else {
-        long long seq_ll;
-        int rc = pcmk__scan_ll(seq_s, &seq_ll, 0LL);
-
-        if (rc != pcmk_rc_ok) {
-            pcmk__debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID
-                        " '%s': %s",
-                        seq_s, pcmk_rc_str(rc));
-            return;
-        }
-        seq = (uint64_t) seq_ll;
     }
 
-    if(digest == NULL) {
+    rc = pcmk__scan_ll(seq_s, &seq_ll, 0);
+    if (rc != pcmk_rc_ok) {
+        pcmk__debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID " "
+                    "'%s': %s", seq_s, pcmk_rc_str(rc));
+        return;
+    }
+
+    // @TODO Check for overflow?
+    seq = (uint64_t) seq_ll;
+
+    if (digest == NULL) {
         pcmk__trace("Ignoring ping reply %s from %s with no digest", seq_s,
                     host);
+        return;
+    }
 
-    } else if(seq != ping_seq) {
+    if (seq != ping_seq) {
         pcmk__trace("Ignoring out of sequence ping reply %s from %s", seq_s,
                     host);
+        return;
+    }
 
-    } else if(ping_modified_since) {
+    if (ping_modified_since) {
         pcmk__trace("Ignoring ping reply %s from %s: cib updated since", seq_s,
                     host);
+        return;
+    }
 
-    } else {
-        if(ping_digest == NULL) {
-            pcmk__trace("Calculating new digest");
-            ping_digest = pcmk__digest_xml(the_cib, true);
+    if (ping_digest == NULL) {
+        pcmk__trace("Calculating new digest");
+        ping_digest = pcmk__digest_xml(the_cib, true);
+    }
+
+    pcmk__trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
+    if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
+        xmlNode *remote_versions = cib__get_calldata(pong);
+
+        const char *admin_epoch_s = NULL;
+        const char *epoch_s = NULL;
+        const char *num_updates_s = NULL;
+
+        if (remote_versions != NULL) {
+            admin_epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH);
+            epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_EPOCH);
+            num_updates_s = pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES);
         }
 
-        pcmk__trace("Processing ping reply %s from %s (%s)", seq_s, host,
-                    digest);
-        if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-            xmlNode *remote_versions = cib__get_calldata(pong);
+        pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
+                     pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
+                     pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
+                     pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
+                     ping_digest, host,
+                     pcmk__s(admin_epoch_s, "_"),
+                     pcmk__s(epoch_s, "_"),
+                     pcmk__s(num_updates_s, "_"), digest);
 
-            const char *admin_epoch_s = NULL;
-            const char *epoch_s = NULL;
-            const char *num_updates_s = NULL;
-
-            if (remote_versions != NULL) {
-                admin_epoch_s = pcmk__xe_get(remote_versions,
-                                             PCMK_XA_ADMIN_EPOCH);
-                epoch_s = pcmk__xe_get(remote_versions,
-                                       PCMK_XA_EPOCH);
-                num_updates_s = pcmk__xe_get(remote_versions,
-                                             PCMK_XA_NUM_UPDATES);
-            }
-
-            pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
-                         pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
-                         pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-                         pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                         ping_digest, host,
-                         pcmk__s(admin_epoch_s, "_"),
-                         pcmk__s(epoch_s, "_"),
-                         pcmk__s(num_updates_s, "_"), digest);
-
-            pcmk__xml_free(remote_versions);
-            sync_our_cib(reply, false);
-        }
+        pcmk__xml_free(remote_versions);
+        sync_our_cib(reply, false);
     }
 }
 
