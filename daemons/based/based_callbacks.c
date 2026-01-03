@@ -569,10 +569,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         && !pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
 
         if (result_cib != the_cib) {
-            if (pcmk__is_set(operation->flags, cib__op_attr_writes_through)) {
-                config_changed = true;
-            }
-
             rc = based_activate_cib(result_cib, config_changed, op);
         }
 
