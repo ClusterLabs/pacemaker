@@ -304,9 +304,8 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 }
 
 static int
-process_commit_transact(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode **cib_xml,
-                        xmlNode **answer)
+process_commit_transact(int options, const char *section, xmlNode *req,
+                        xmlNode *input, xmlNode **cib_xml, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
     const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
