@@ -359,7 +359,6 @@ check_new_feature_set(const xmlNode *new_cib)
  * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
  * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
  * \param[in] request  CIB request
- * \param[in] input    Input data for CIB request
  *
  * \return Standard Pacemaker return code
  *
@@ -368,8 +367,7 @@ check_new_feature_set(const xmlNode *new_cib)
  */
 static int
 check_cib_version_attr(const char *attr, const xmlNode *old_cib,
-                       const xmlNode *new_cib, const xmlNode *request,
-                       const xmlNode *input)
+                       const xmlNode *new_cib, const xmlNode *request)
 {
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     int old_version = 0;
@@ -389,7 +387,6 @@ check_cib_version_attr(const char *attr, const xmlNode *old_cib,
     pcmk__err("%s went backwards in %s request: %d -> %d", attr, op,
               old_version, new_version);
     pcmk__log_xml_warn(request, "bad-request");
-    pcmk__log_xml_warn(input, "bad-input");
 
     return pcmk_rc_old_data;
 }
@@ -406,7 +403,6 @@ check_cib_version_attr(const char *attr, const xmlNode *old_cib,
  * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
  * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
  * \param[in] request  CIB request
- * \param[in] input    Input data for CIB request
  *
  * \return Standard Pacemaker return code
  *
@@ -415,18 +411,17 @@ check_cib_version_attr(const char *attr, const xmlNode *old_cib,
  */
 static int
 check_cib_versions(const xmlNode *old_cib, const xmlNode *new_cib,
-                   const xmlNode *request, const xmlNode *input)
+                   const xmlNode *request)
 {
     int rc = check_cib_version_attr(PCMK_XA_ADMIN_EPOCH, old_cib, new_cib,
-                                    request, input);
+                                    request);
 
     if (rc != pcmk_rc_undetermined) {
         return rc;
     }
 
     // @TODO Why aren't we checking PCMK_XA_NUM_UPDATES if epochs are equal?
-    rc = check_cib_version_attr(PCMK_XA_EPOCH, old_cib, new_cib, request,
-                                input);
+    rc = check_cib_version_attr(PCMK_XA_EPOCH, old_cib, new_cib, request);
     if (rc == pcmk_rc_undetermined) {
         rc = pcmk_rc_ok;
     }
@@ -495,7 +490,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     const char *section = NULL;
     const char *user = NULL;
     uint32_t call_options = cib_none;
-    xmlNode *input = NULL;
     bool enable_acl = false;
     bool manage_version = true;
 
@@ -518,7 +512,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
-    input = cib__get_calldata(req);
     enable_acl = cib_acl_enabled(*cib, user);
 
     pcmk__trace("Processing %s for section '%s', user '%s'", op,
@@ -573,7 +566,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         }
     }
 
-    rc = check_cib_versions(old_versions, *cib, req, input);
+    rc = check_cib_versions(old_versions, *cib, req);
 
     pcmk__strip_xml_text(*cib);
 
