@@ -37,7 +37,6 @@ xmlNode *the_cib = NULL;
  * \internal
  * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
  *
- * \param[in] options  Ignored
  * \param[in] section  Ignored
  * \param[in] req      Ignored
  * \param[in] input    Ignored
@@ -49,8 +48,8 @@ xmlNode *the_cib = NULL;
  * \note This is unimplemented and simply returns an error.
  */
 int
-based_process_abs_delete(int options, const char *section, xmlNode *req,
-                         xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_abs_delete(const char *section, xmlNode *req, xmlNode *input,
+                         xmlNode **cib, xmlNode **answer)
 {
     /* @COMPAT Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed. Note that
      * external clients with Pacemaker versions < 3.0.0 can send it.
@@ -59,8 +58,8 @@ based_process_abs_delete(int options, const char *section, xmlNode *req,
 }
 
 int
-based_process_commit_transact(int options, const char *section, xmlNode *req,
-                              xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_commit_transact(const char *section, xmlNode *req, xmlNode *input,
+                              xmlNode **cib, xmlNode **answer)
 {
     /* On success, our caller will activate *cib locally, trigger a replace
      * notification if appropriate, and sync *cib to all nodes. On failure, our
@@ -84,8 +83,8 @@ based_process_commit_transact(int options, const char *section, xmlNode *req,
 }
 
 int
-based_process_is_primary(int options, const char *section, xmlNode *req,
-                         xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_is_primary(const char *section, xmlNode *req, xmlNode *input,
+                         xmlNode **cib, xmlNode **answer)
 {
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
     return (based_is_primary? pcmk_rc_ok : EPERM);
@@ -93,16 +92,16 @@ based_process_is_primary(int options, const char *section, xmlNode *req,
 
 // @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
 int
-based_process_noop(int options, const char *section, xmlNode *req,
-                   xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_noop(const char *section, xmlNode *req, xmlNode *input,
+                   xmlNode **cib, xmlNode **answer)
 {
     *answer = NULL;
     return pcmk_rc_ok;
 }
 
 int
-based_process_ping(int options, const char *section, xmlNode *req,
-                   xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_ping(const char *section, xmlNode *req, xmlNode *input,
+                   xmlNode **cib, xmlNode **answer)
 {
     /* existing_cib and *cib should be identical. In the absence of ACL
      * filtering, they should also match the_cib. However, they may be copies
@@ -145,8 +144,8 @@ based_process_ping(int options, const char *section, xmlNode *req,
 }
 
 int
-based_process_primary(int options, const char *section, xmlNode *req,
-                      xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_primary(const char *section, xmlNode *req, xmlNode *input,
+                      xmlNode **cib, xmlNode **answer)
 {
     if (!based_is_primary) {
         pcmk__info("We are now in R/W mode");
@@ -160,8 +159,8 @@ based_process_primary(int options, const char *section, xmlNode *req,
 }
 
 int
-based_process_schemas(int options, const char *section, xmlNode *req,
-                      xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_schemas(const char *section, xmlNode *req, xmlNode *input,
+                      xmlNode **cib, xmlNode **answer)
 {
     xmlNode *wrapper = NULL;
     xmlNode *data = NULL;
@@ -205,8 +204,8 @@ based_process_schemas(int options, const char *section, xmlNode *req,
 }
 
 int
-based_process_secondary(int options, const char *section, xmlNode *req,
-                        xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_secondary(const char *section, xmlNode *req, xmlNode *input,
+                        xmlNode **cib, xmlNode **answer)
 {
     if (based_is_primary) {
         pcmk__info("We are now in R/O mode");
@@ -220,8 +219,8 @@ based_process_secondary(int options, const char *section, xmlNode *req,
 }
 
 int
-based_process_shutdown(int options, const char *section, xmlNode *req,
-                       xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_shutdown(const char *section, xmlNode *req, xmlNode *input,
+                       xmlNode **cib, xmlNode **answer)
 {
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
 
@@ -243,15 +242,15 @@ based_process_shutdown(int options, const char *section, xmlNode *req,
 }
 
 int
-based_process_sync(int options, const char *section, xmlNode *req,
-                   xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_sync(const char *section, xmlNode *req, xmlNode *input,
+                   xmlNode **cib, xmlNode **answer)
 {
     return sync_our_cib(req, true);
 }
 
 int
-based_process_upgrade(int options, const char *section, xmlNode *req,
-                      xmlNode *input, xmlNode **cib, xmlNode **answer)
+based_process_upgrade(const char *section, xmlNode *req, xmlNode *input,
+                      xmlNode **cib, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
 
@@ -263,7 +262,7 @@ based_process_upgrade(int options, const char *section, xmlNode *req,
          * re-broadcasts the request with PCMK__XA_CIB_SCHEMA_MAX, and each node
          * performs the upgrade (and notifies its local clients) here.
          */
-        return cib__process_upgrade(options, section, req, input, cib, answer);
+        return cib__process_upgrade(section, req, input, cib, answer);
 
     } else {
         xmlNode *scratch = pcmk__xml_copy(NULL, *cib);
