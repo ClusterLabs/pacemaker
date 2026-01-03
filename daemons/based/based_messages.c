@@ -113,22 +113,19 @@ based_process_ping(xmlNode *req, xmlNode *input, xmlNode **cib,
     const char *seq = pcmk__xe_get(req, PCMK__XA_CIB_PING_ID);
     char *digest = pcmk__digest_xml(the_cib, true);
 
-    xmlNode *wrapper = NULL;
-
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
     pcmk__xe_set(*answer, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     pcmk__xe_set(*answer, PCMK_XA_DIGEST, digest);
     pcmk__xe_set(*answer, PCMK__XA_CIB_PING_ID, seq);
 
-    wrapper = pcmk__xe_create(*answer, PCMK__XE_CIB_CALLDATA);
-
     if (*cib != NULL) {
         // Use *cib so that ACL filtering is applied to the answer
-        xmlNode *shallow = pcmk__xe_create(wrapper,
-                                           (const char *) (*cib)->name);
+        xmlNode *shallow = pcmk__xe_create(NULL, (const char *) (*cib)->name);
 
         pcmk__xe_copy_attrs(shallow, *cib, pcmk__xaf_none);
+        cib__set_calldata(*answer, shallow);
+        pcmk__xml_free(shallow);
     }
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
@@ -379,7 +376,6 @@ sync_our_cib(xmlNode *request, bool all)
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     pcmk__node_status_t *peer = NULL;
     xmlNode *replace_request = NULL;
-    xmlNode *wrapper = NULL;
 
     CRM_CHECK(the_cib != NULL, return EINVAL);
     CRM_CHECK(all || (host != NULL), return EINVAL);
@@ -406,8 +402,7 @@ sync_our_cib(xmlNode *request, bool all)
     digest = pcmk__digest_xml(the_cib, true);
     pcmk__xe_set(replace_request, PCMK_XA_DIGEST, digest);
 
-    wrapper = pcmk__xe_create(replace_request, PCMK__XE_CIB_CALLDATA);
-    pcmk__xml_copy(wrapper, the_cib);
+    cib__set_calldata(replace_request, the_cib);
 
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
