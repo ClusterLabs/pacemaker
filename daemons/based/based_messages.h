@@ -17,42 +17,41 @@
 extern bool based_is_primary;
 extern xmlNode *the_cib;
 
-int based_process_abs_delete(const char *section, xmlNode *req, xmlNode *input,
-                             xmlNode **cib, xmlNode **answer);
+int based_process_abs_delete(xmlNode *req, xmlNode *input, xmlNode **cib,
+                             xmlNode **answer);
 
-int based_process_apply_patch(const char *section, xmlNode *req, xmlNode *input,
-                              xmlNode **cib, xmlNode **answer);
+int based_process_apply_patch(xmlNode *req, xmlNode *input, xmlNode **cib,
+                              xmlNode **answer);
 
-int based_process_commit_transact(const char *section, xmlNode *req,
-                                  xmlNode *input, xmlNode **cib,
+int based_process_commit_transact(xmlNode *req, xmlNode *input, xmlNode **cib,
                                   xmlNode **answer);
 
-int based_process_is_primary(const char *section, xmlNode *req, xmlNode *input,
-                             xmlNode **cib, xmlNode **answer);
+int based_process_is_primary(xmlNode *req, xmlNode *input, xmlNode **cib,
+                             xmlNode **answer);
 
-int based_process_noop(const char *section, xmlNode *req, xmlNode *input,
-                       xmlNode **cib, xmlNode **answer);
+int based_process_noop(xmlNode *req, xmlNode *input, xmlNode **cib,
+                       xmlNode **answer);
 
-int based_process_ping(const char *section, xmlNode *req, xmlNode *input,
-                       xmlNode **cib, xmlNode **answer);
+int based_process_ping(xmlNode *req, xmlNode *input, xmlNode **cib,
+                       xmlNode **answer);
 
-int based_process_primary(const char *section, xmlNode *req, xmlNode *input,
-                          xmlNode **cib, xmlNode **answer);
+int based_process_primary(xmlNode *req, xmlNode *input, xmlNode **cib,
+                          xmlNode **answer);
 
-int based_process_schemas(const char *section, xmlNode *req, xmlNode *input,
-                          xmlNode **cib, xmlNode **answer);
+int based_process_schemas(xmlNode *req, xmlNode *input, xmlNode **cib,
+                          xmlNode **answer);
 
-int based_process_secondary(const char *section, xmlNode *req, xmlNode *input,
-                            xmlNode **cib, xmlNode **answer);
+int based_process_secondary(xmlNode *req, xmlNode *input, xmlNode **cib,
+                            xmlNode **answer);
 
-int based_process_shutdown(const char *section, xmlNode *req, xmlNode *input,
-                           xmlNode **cib, xmlNode **answer);
+int based_process_shutdown(xmlNode *req, xmlNode *input, xmlNode **cib,
+                           xmlNode **answer);
 
-int based_process_sync(const char *section, xmlNode *req, xmlNode *input,
-                       xmlNode **cib, xmlNode **answer);
+int based_process_sync(xmlNode *req, xmlNode *input, xmlNode **cib,
+                       xmlNode **answer);
 
-int based_process_upgrade(const char *section, xmlNode *req, xmlNode *input,
-                          xmlNode **cib, xmlNode **answer);
+int based_process_upgrade(xmlNode *req, xmlNode *input, xmlNode **cib,
+                          xmlNode **answer);
 
 int sync_our_cib(xmlNode *request, bool all);
 

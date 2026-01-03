@@ -226,7 +226,7 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                 pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
     pcmk__log_xml_trace(req, "request");
 
-    rc = fn(section, req, input, &cib, output);
+    rc = fn(req, input, &cib, output);
 
     if (*output == NULL) {
         // Do nothing
@@ -519,7 +519,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__enable_acls((*cib)->doc, (*cib)->doc, user);
     }
 
-    rc = fn(section, req, input, cib, output);
+    rc = fn(req, input, cib, output);
 
     // Allow ourselves to make any additional necessary changes
     xml_acl_disable(*cib);
@@ -872,7 +872,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         *output = pcmk__xml_copy(NULL, input);
     }
 
-    rc = cib__process_apply_patch(NULL, event, diff, output, NULL);
+    rc = cib__process_apply_patch(event, diff, output, NULL);
     rc = pcmk_rc2legacy(rc);
     if (rc == pcmk_ok) {
         return pcmk_ok;
