@@ -175,9 +175,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         /* do nothing more */
 
     } else if (!(call_options & cib_discard_reply)) {
-        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
-                                                NULL, NULL);
-        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        xmlNode *tmp = cib__get_calldata(op_reply);
 
         if (tmp == NULL) {
             pcmk__trace("No output in reply to \"%s\" command %d", op,
