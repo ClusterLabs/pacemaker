@@ -508,25 +508,18 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__xe_copy_attrs(top, *cib, pcmk__xaf_none);
         old_versions = top;
 
-        pcmk__xml_commit_changes((*cib)->doc);
-        pcmk__xml_doc_set_flags((*cib)->doc, pcmk__xf_tracking);
-        if (enable_acl) {
-            pcmk__enable_acls((*cib)->doc, (*cib)->doc, user);
-        }
-
-        rc = fn(op, call_options, section, req, input, cib, output);
-
     } else {
         old_versions = *cib;
         *cib = pcmk__xml_copy(NULL, *cib);
-
-        pcmk__xml_doc_set_flags((*cib)->doc, pcmk__xf_tracking);
-        if (enable_acl) {
-            pcmk__enable_acls((*cib)->doc, (*cib)->doc, user);
-        }
-
-        rc = fn(op, call_options, section, req, input, cib, output);
     }
+
+    pcmk__xml_commit_changes((*cib)->doc);
+    pcmk__xml_doc_set_flags((*cib)->doc, pcmk__xf_tracking);
+    if (enable_acl) {
+        pcmk__enable_acls((*cib)->doc, (*cib)->doc, user);
+    }
+
+    rc = fn(op, call_options, section, req, input, cib, output);
 
     // Allow ourselves to make any additional necessary changes
     xml_acl_disable(*cib);
