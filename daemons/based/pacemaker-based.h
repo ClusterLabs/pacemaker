@@ -30,6 +30,9 @@
 #include <crm/common/mainloop.h>
 #include <crm/cib/internal.h>
 
+#include "based_io.h"
+#include "based_operation.h"
+#include "based_notify.h"
 #include "based_transaction.h"
 
 #include <gnutls/gnutls.h>
@@ -48,8 +51,6 @@ enum cib_client_flags {
 extern bool based_is_primary;
 extern GHashTable *config_hash;
 extern xmlNode *the_cib;
-extern crm_trigger_t *cib_writer;
-extern gboolean cib_writes_enabled;
 
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
@@ -74,10 +75,6 @@ int cib_process_request(xmlNode *request, bool privileged,
                         const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
 void terminate_cib(int exit_status);
-
-void uninitializeCib(void);
-xmlNode *readCibXmlFile(const char *dir, const char *file, bool discard_status);
-int activateCibXml(xmlNode *doc, bool to_disk, const char *op);
 
 int cib_process_shutdown_req(const char *op, int options, const char *section,
                              xmlNode *req, xmlNode *input,
@@ -122,11 +119,6 @@ int cib_process_schemas(const char *op, int options, const char *section,
 
 void send_sync_request(const char *host);
 int sync_our_cib(xmlNode *request, bool all);
-
-cib__op_fn_t based_get_op_function(const cib__operation_t *operation);
-void cib_diff_notify(const char *op, int result, const char *call_id,
-                     const char *client_id, const char *client_name,
-                     const char *origin, xmlNode *update, xmlNode *diff);
 
 static inline const char *
 cib_config_lookup(const char *opt)

@@ -171,14 +171,16 @@ void mainloop_child_add(pid_t pid,
                         int timeout,
                         const char *desc,
                         void *userdata,
-                        void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode));
+                        void (*callback)(mainloop_child_t *p, int core,
+                                         int signo, int exitcode));
 
 void mainloop_child_add_with_flags(pid_t pid,
                         int timeout,
                         const char *desc,
                         void *userdata,
                         enum mainloop_child_flags,
-                        void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode));
+                        void (*callback)(mainloop_child_t *p, int core,
+                                         int signo, int exitcode));
 
 void *mainloop_child_userdata(mainloop_child_t * child);
 int mainloop_child_timeout(mainloop_child_t * child);

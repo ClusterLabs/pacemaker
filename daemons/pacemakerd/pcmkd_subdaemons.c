@@ -104,7 +104,8 @@ static bool fatal_error = false;
 static int child_liveness(pcmkd_child_t *child);
 static gboolean escalate_shutdown(gpointer data);
 static int start_child(pcmkd_child_t *child);
-static void pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode);
+static void pcmk_child_exit(mainloop_child_t *p, int core, int signo,
+                            int exitcode);
 static void pcmk_process_exit(pcmkd_child_t *child);
 static gboolean pcmk_shutdown_worker(gpointer user_data);
 static void stop_child(pcmkd_child_t *child, int signal);
@@ -253,7 +254,7 @@ escalate_shutdown(gpointer data)
 }
 
 static void
-pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)
+pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
 {
     pcmkd_child_t *child = mainloop_child_userdata(p);
     const char *name = mainloop_child_name(p);
@@ -262,7 +263,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
         // cts-lab looks for this message
         do_crm_log(((signo == SIGKILL)? LOG_WARNING : LOG_ERR),
                    "%s[%d] terminated with signal %d (%s)%s",
-                   name, pid, signo, strsignal(signo),
+                   name, p->pid, signo, strsignal(signo),
                    (core? " and dumped core" : ""));
         pcmk_process_exit(child);
         return;
@@ -270,13 +271,13 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 
     switch(exitcode) {
         case CRM_EX_OK:
-            pcmk__info("%s[%d] exited with status %d (%s)", name, pid, exitcode,
-                       crm_exit_str(exitcode));
+            pcmk__info("%s[%d] exited with status %d (%s)", name, p->pid,
+                       exitcode, crm_exit_str(exitcode));
             break;
 
         case CRM_EX_FATAL:
             pcmk__warn("Shutting cluster down because %s[%d] had fatal failure",
-                       name, pid);
+                       name, p->pid);
             child->flags &= ~child_respawn;
             fatal_error = true;
             pcmk_shutdown(SIGTERM);
@@ -289,7 +290,7 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 child->flags &= ~child_respawn;
                 fatal_error = true;
                 msg = pcmk__assert_asprintf("Subdaemon %s[%d] requested panic",
-                                            name, pid);
+                                            name, p->pid);
                 pcmk__panic(msg);
 
                 // Should never get here
@@ -300,8 +301,8 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
 
         default:
             // cts-lab looks for this message
-            pcmk__err("%s[%d] exited with status %d (%s)", name, pid, exitcode,
-                      crm_exit_str(exitcode));
+            pcmk__err("%s[%d] exited with status %d (%s)", name, p->pid,
+                      exitcode, crm_exit_str(exitcode));
             break;
     }
 

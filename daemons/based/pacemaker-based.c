@@ -39,9 +39,7 @@ pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
-static bool preserve_status = false;
 
-gboolean cib_writes_enabled = TRUE;
 gboolean stand_alone = FALSE;
 
 int remote_fd = 0;
@@ -51,17 +49,9 @@ GHashTable *config_hash = NULL;
 
 static void cib_init(void);
 void cib_shutdown(int nsig);
-static bool startCib(const char *filename);
-extern int write_cib_contents(gpointer p);
+static bool startCib(void);
 
 static crm_exit_t exit_code = CRM_EX_OK;
-
-static void
-cib_enable_writes(int nsig)
-{
-    pcmk__info("(Re)enabling disk writes");
-    cib_writes_enabled = TRUE;
-}
 
 /*!
  * \internal
@@ -77,9 +67,6 @@ setup_stand_alone(GError **error)
     uid_t uid = 0;
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
-
-    preserve_status = true;
-    cib_writes_enabled = FALSE;
 
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
@@ -137,12 +124,20 @@ based_metadata(pcmk__output_t *out)
                                  pcmk__opt_based);
 }
 
+static gboolean
+disk_writes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+               GError **error)
+{
+    based_enable_writes(0);
+    return TRUE;
+}
+
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
 
-    { "disk-writes", 'w', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &cib_writes_enabled,
+    { "disk-writes", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      disk_writes_cb,
       "(Advanced use only) Enable disk writes (enabled by default unless in "
       "stand-alone mode)", NULL },
 
@@ -208,9 +203,8 @@ main(int argc, char **argv)
     }
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
-    mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
-    cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
+    based_io_init();
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
@@ -386,7 +380,7 @@ cib_init(void)
 
     config_hash = pcmk__strkey_table(free, free);
 
-    if (!startCib("cib.xml")) {
+    if (!startCib()) {
         pcmk__crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
@@ -409,12 +403,12 @@ cib_init(void)
 }
 
 static bool
-startCib(const char *filename)
+startCib(void)
 {
-    xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
+    xmlNode *cib = based_read_cib();
     int port = 0;
 
-    if (activateCibXml(cib, true, "start") != 0) {
+    if (based_activate_cib(cib, true, "start") != pcmk_rc_ok) {
         return false;
     }
 

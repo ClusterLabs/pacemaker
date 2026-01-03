@@ -1128,8 +1128,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                         pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES),
                         (config_changed? " changed" : ""));
 
-            rc = activateCibXml(result_cib, config_changed, op);
-            rc = pcmk_legacy2rc(rc);
+            rc = based_activate_cib(result_cib, config_changed, op);
             if (rc != pcmk_rc_ok) {
                 pcmk__err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
             }
@@ -1184,8 +1183,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                              cib_dryrun|cib_inhibit_notify|cib_transaction)) {
         pcmk__trace("Sending notifications %d",
                     pcmk__is_set(call_options, cib_dryrun));
-        cib_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id, client_name,
-                        originator, input, cib_diff);
+        based_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id,
+                          client_name, originator, input, cib_diff);
     }
 
     pcmk__log_xml_patchset(LOG_TRACE, cib_diff);
@@ -1364,7 +1363,7 @@ terminate_cib(int exit_status)
         remote_tls_fd = 0;
     }
 
-    uninitializeCib();
+    g_clear_pointer(&the_cib, pcmk__xml_free);
 
     // Exit immediately on error
     if (exit_status > CRM_EX_OK) {
