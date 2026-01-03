@@ -219,6 +219,12 @@ process_ping_reply(xmlNode *reply)
         return;
     }
 
+    if (!based_is_primary) {
+        pcmk__trace("Ignoring ping reply %lld from %s because we are no longer "
+                    "DC", seq, host);
+        return;
+    }
+
     if (digest == NULL) {
         pcmk__trace("Ignoring ping reply %lld from %s with no digest", seq,
                     host);
