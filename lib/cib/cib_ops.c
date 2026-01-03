@@ -165,9 +165,9 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
 }
 
 int
-cib__process_apply_patch(xmlNode *req, xmlNode *input, xmlNode **cib,
-                         xmlNode **answer)
+cib__process_apply_patch(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
+    const xmlNode *input = cib__get_calldata(req);
     int rc = xml_apply_patchset(*cib, input, true);
 
     return pcmk_legacy2rc(rc);
@@ -191,7 +191,7 @@ update_counter(xmlNode *xml, const char *field, bool reset)
 }
 
 int
-cib__process_bump(xmlNode *req, xmlNode *input, xmlNode **cib, xmlNode **answer)
+cib__process_bump(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     update_counter(*cib, PCMK_XA_EPOCH, false);
     return pcmk_rc_ok;
@@ -291,11 +291,11 @@ done:
 }
 
 int
-cib__process_create(xmlNode *req, xmlNode *input, xmlNode **cib,
-                    xmlNode **answer)
+cib__process_create(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     const char *op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     const char *section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
+    xmlNode *input = cib__get_calldata(req);
     xmlNode *failed = NULL;
     int rc = pcmk_rc_ok;
     xmlNode *update_section = NULL;
@@ -312,7 +312,7 @@ cib__process_create(xmlNode *req, xmlNode *input, xmlNode **cib,
     if (pcmk__strcase_any_of(section, PCMK__XE_ALL, PCMK_XE_CIB, NULL)
         || pcmk__xe_is(input, PCMK_XE_CIB)) {
 
-        return cib__process_modify(req, input, cib, answer);
+        return cib__process_modify(req, cib, answer);
     }
 
     // @COMPAT Deprecated since 2.1.8
@@ -461,10 +461,10 @@ process_delete_section(const char *section, xmlNode *input, xmlNode *cib)
 }
 
 int
-cib__process_delete(xmlNode *req, xmlNode *input, xmlNode **cib,
-                    xmlNode **answer)
+cib__process_delete(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     const char *section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
+    xmlNode *input = cib__get_calldata(req);
     uint32_t options = cib_none;
 
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &options, cib_none);
@@ -479,8 +479,7 @@ cib__process_delete(xmlNode *req, xmlNode *input, xmlNode **cib,
 }
 
 int
-cib__process_erase(xmlNode *req, xmlNode *input, xmlNode **cib,
-                   xmlNode **answer)
+cib__process_erase(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     xmlNode *empty = createEmptyCib(0);
     xmlNode *empty_config = pcmk__xe_first_child(empty, PCMK_XE_CONFIGURATION,
@@ -607,10 +606,10 @@ process_modify_section(int options, const char *section, xmlNode *input,
 }
 
 int
-cib__process_modify(xmlNode *req, xmlNode *input, xmlNode **cib,
-                    xmlNode **answer)
+cib__process_modify(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     const char *section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
+    xmlNode *input = cib__get_calldata(req);
     uint32_t options = cib_none;
 
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &options, cib_none);
@@ -747,8 +746,7 @@ process_query_section(int options, const char *section, xmlNode *cib,
 }
 
 int
-cib__process_query(xmlNode *req, xmlNode *input, xmlNode **cib,
-                   xmlNode **answer)
+cib__process_query(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     const char *section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
     uint32_t options = cib_none;
@@ -935,10 +933,10 @@ process_replace_section(const char *section, xmlNode *request, xmlNode *input,
 }
 
 int
-cib__process_replace(xmlNode *req, xmlNode *input, xmlNode **cib,
-                     xmlNode **answer)
+cib__process_replace(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     const char *section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
+    xmlNode *input = cib__get_calldata(req);
     uint32_t options = cib_none;
 
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &options, cib_none);
@@ -953,8 +951,7 @@ cib__process_replace(xmlNode *req, xmlNode *input, xmlNode **cib,
 }
 
 int
-cib__process_upgrade(xmlNode *req, xmlNode *input, xmlNode **cib,
-                     xmlNode **answer)
+cib__process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
     uint32_t options = cib_none;
