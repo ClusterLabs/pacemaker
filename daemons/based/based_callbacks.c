@@ -200,6 +200,11 @@ process_ping_reply(xmlNode *reply)
     long long seq_ll = 0;
     int rc = pcmk_rc_ok;
 
+    xmlNode *remote_versions = cib__get_calldata(pong);
+    const char *admin_epoch_s = NULL;
+    const char *epoch_s = NULL;
+    const char *num_updates_s = NULL;
+
     if (seq_s == NULL) {
         pcmk__debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
         return;
@@ -239,31 +244,28 @@ process_ping_reply(xmlNode *reply)
     }
 
     pcmk__trace("Processing ping reply %s from %s (%s)", seq_s, host, digest);
-    if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-        xmlNode *remote_versions = cib__get_calldata(pong);
 
-        const char *admin_epoch_s = NULL;
-        const char *epoch_s = NULL;
-        const char *num_updates_s = NULL;
-
-        if (remote_versions != NULL) {
-            admin_epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH);
-            epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_EPOCH);
-            num_updates_s = pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES);
-        }
-
-        pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
-                     pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
-                     pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-                     pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                     ping_digest, host,
-                     pcmk__s(admin_epoch_s, "_"),
-                     pcmk__s(epoch_s, "_"),
-                     pcmk__s(num_updates_s, "_"), digest);
-
-        pcmk__xml_free(remote_versions);
-        sync_our_cib(reply, false);
+    if (pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
+        return;
     }
+
+    if (remote_versions != NULL) {
+        admin_epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH);
+        epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_EPOCH);
+        num_updates_s = pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES);
+    }
+
+    pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
+                 pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
+                 pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
+                 pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
+                 ping_digest, host,
+                 pcmk__s(admin_epoch_s, "_"),
+                 pcmk__s(epoch_s, "_"),
+                 pcmk__s(num_updates_s, "_"), digest);
+
+    pcmk__xml_free(remote_versions);
+    sync_our_cib(reply, false);
 }
 
 static void
