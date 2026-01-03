@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,33 +9,30 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
+#include <stddef.h>             // NULL
 
-#include <crm/crm.h>
-#include <crm/cib.h>
 #include <pacemaker-based.h>
 
-static const cib__op_fn_t cib_op_functions[] = {
-    [cib__op_abs_delete]       = cib_process_delete_absolute,
-    [cib__op_apply_patch]      = cib_server_process_diff,
-    [cib__op_bump]             = cib_process_bump,
-    [cib__op_commit_transact]  = cib_process_commit_transaction,
-    [cib__op_create]           = cib_process_create,
-    [cib__op_delete]           = cib_process_delete,
-    [cib__op_erase]            = cib_process_erase,
-    [cib__op_is_primary]       = cib_process_readwrite,
-    [cib__op_modify]           = cib_process_modify,
-    [cib__op_noop]             = cib_process_noop,
-    [cib__op_ping]             = cib_process_ping,
-    [cib__op_primary]          = cib_process_readwrite,
-    [cib__op_query]            = cib_process_query,
-    [cib__op_replace]          = cib_process_replace_svr,
-    [cib__op_secondary]        = cib_process_readwrite,
-    [cib__op_shutdown]         = cib_process_shutdown_req,
-    [cib__op_sync_all]         = cib_process_sync,
-    [cib__op_sync_one]         = cib_process_sync_one,
-    [cib__op_upgrade]          = cib_process_upgrade_server,
-    [cib__op_schemas]          = cib_process_schemas,
+static const cib__op_fn_t op_functions[] = {
+    [cib__op_abs_delete]       = based_process_abs_delete,
+    [cib__op_apply_patch]      = cib__process_apply_patch,
+    [cib__op_bump]             = cib__process_bump,
+    [cib__op_commit_transact]  = based_process_commit_transact,
+    [cib__op_create]           = cib__process_create,
+    [cib__op_delete]           = cib__process_delete,
+    [cib__op_erase]            = cib__process_erase,
+    [cib__op_is_primary]       = based_process_is_primary,
+    [cib__op_modify]           = cib__process_modify,
+    [cib__op_noop]             = based_process_noop,
+    [cib__op_ping]             = based_process_ping,
+    [cib__op_primary]          = based_process_primary,
+    [cib__op_query]            = cib__process_query,
+    [cib__op_replace]          = cib__process_replace,
+    [cib__op_schemas]          = based_process_schemas,
+    [cib__op_secondary]        = based_process_secondary,
+    [cib__op_shutdown]         = based_process_shutdown,
+    [cib__op_sync]             = based_process_sync,
+    [cib__op_upgrade]          = based_process_upgrade,
 };
 
 /*!
@@ -53,8 +50,8 @@ based_get_op_function(const cib__operation_t *operation)
 
     pcmk__assert(type >= 0);
 
-    if (type >= PCMK__NELEM(cib_op_functions)) {
+    if (type >= PCMK__NELEM(op_functions)) {
         return NULL;
     }
-    return cib_op_functions[type];
+    return op_functions[type];
 }

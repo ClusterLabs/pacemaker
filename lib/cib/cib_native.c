@@ -68,12 +68,14 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &op_msg);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         return rc;
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
+        rc = pcmk_rc2legacy(rc);
         goto done;
     }
 
@@ -101,9 +103,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     rc = pcmk_ok;
     pcmk__xe_get_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
     if (reply_id == cib->call_id) {
-        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
-                                                NULL, NULL);
-        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        xmlNode *tmp = cib__get_calldata(op_reply);
 
         pcmk__trace("Synchronous reply %d received", reply_id);
         if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
@@ -139,11 +139,6 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     switch (rc) {
         case pcmk_ok:
         case -EPERM:
-            break;
-
-            /* This is an internal value that clients do not and should not care about */
-        case -pcmk_err_diff_resync:
-            rc = pcmk_ok;
             break;
 
             /* These indicate internal problems */
@@ -311,6 +306,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     if (rc == pcmk_ok) {
         rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
                             cib_sync_call, NULL, name, &hello);
+        rc = pcmk_rc2legacy(rc);
     }
 
     if (rc == pcmk_ok) {

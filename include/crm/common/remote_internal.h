@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,13 +10,15 @@
 #ifndef PCMK__CRM_COMMON_REMOTE_INTERNAL__H
 #define PCMK__CRM_COMMON_REMOTE_INTERNAL__H
 
-#include <stdio.h>          // NULL
-#include <stdbool.h>        // bool
-#include <libxml/tree.h>    // xmlNode
+#include <stdbool.h>                        // bool
+#include <stddef.h>                         // NULL
+#include <libxml/tree.h>                    // xmlNode
 
-#include <crm/common/ipc_internal.h>        // pcmk__client_t
+#include <gnutls/gnutls.h>                  // gnutls_session_t
+
+#include <crm/common/mainloop.h>            // mainloop_io_t
 #include <crm/common/nodes_internal.h>      // pcmk__node_variant_remote, etc.
-#include <crm/common/resources_internal.h>  // struct pcmk__remote_private
+#include <crm/common/resources_internal.h>  // launcher
 #include <crm/common/scheduler_types.h>     // pcmk_node_t
 
 #ifdef __cplusplus
@@ -25,7 +27,25 @@ extern "C" {
 
 // internal functions from remote.c
 
-typedef struct pcmk__remote_s pcmk__remote_t;
+typedef struct {
+    // Shared
+    char *buffer;
+    size_t buffer_size;
+    size_t buffer_offset;
+    int auth_timeout;
+    int tcp_socket;
+    mainloop_io_t *source;
+    time_t uptime;
+    char *start_state;
+
+    // CIB-only
+    char *token;
+
+    // TLS-only
+
+    // Must be created by pcmk__new_tls_session()
+    gnutls_session_t tls_session;
+} pcmk__remote_t;
 
 int pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg);
 int pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms);

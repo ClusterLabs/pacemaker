@@ -1,6 +1,0 @@
-# login: auth account password session
-# may require permission to read /etc/shadow 
-auth     include        common-auth
-account  include        common-account
-password include        common-password
-session  include        common-session

@@ -39,29 +39,12 @@ pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
-static bool preserve_status = false;
 
-gboolean cib_writes_enabled = TRUE;
 gboolean stand_alone = FALSE;
 
-int remote_fd = 0;
-int remote_tls_fd = 0;
-
-GHashTable *config_hash = NULL;
-
 static void cib_init(void);
-void cib_shutdown(int nsig);
-static bool startCib(const char *filename);
-extern int write_cib_contents(gpointer p);
 
 static crm_exit_t exit_code = CRM_EX_OK;
-
-static void
-cib_enable_writes(int nsig)
-{
-    pcmk__info("(Re)enabling disk writes");
-    cib_writes_enabled = TRUE;
-}
 
 /*!
  * \internal
@@ -77,9 +60,6 @@ setup_stand_alone(GError **error)
     uid_t uid = 0;
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
-
-    preserve_status = true;
-    cib_writes_enabled = FALSE;
 
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
@@ -137,12 +117,20 @@ based_metadata(pcmk__output_t *out)
                                  pcmk__opt_based);
 }
 
+static gboolean
+disk_writes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+               GError **error)
+{
+    based_enable_writes(0);
+    return TRUE;
+}
+
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
 
-    { "disk-writes", 'w', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &cib_writes_enabled,
+    { "disk-writes", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      disk_writes_cb,
       "(Advanced use only) Enable disk writes (enabled by default unless in "
       "stand-alone mode)", NULL },
 
@@ -207,10 +195,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    mainloop_add_signal(SIGTERM, cib_shutdown);
-    mainloop_add_signal(SIGPIPE, cib_enable_writes);
+    mainloop_add_signal(SIGTERM, based_shutdown);
 
-    cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
+    based_io_init();
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
@@ -283,7 +270,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
-     * terminate_cib(-1) was called.
+     * based_terminate(-1) was called.
      */
     pcmk_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
@@ -293,10 +280,6 @@ done:
     pcmk__free_arg_context(context);
 
     pcmk__cluster_destroy_node_caches();
-
-    if (config_hash != NULL) {
-        g_hash_table_destroy(config_hash);
-    }
     pcmk__client_cleanup();
     pcmk_cluster_free(crm_cluster);
     g_free(cib_root);
@@ -332,7 +315,7 @@ cib_cs_dispatch(cpg_handle_t handle,
         return;
     }
     pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    cib_peer_callback(xml, NULL);
+    based_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
     free(data);
@@ -346,7 +329,7 @@ cib_cs_destroy(gpointer user_data)
     } else {
         pcmk__crit("Exiting immediately after losing connection to cluster "
                    "layer");
-        terminate_cib(CRM_EX_DISCONNECT);
+        based_terminate(CRM_EX_DISCONNECT);
     }
 }
 #endif
@@ -362,7 +345,7 @@ cib_peer_update_callback(enum pcmk__node_update type,
                 && (pcmk__ipc_client_count() == 0)) {
 
                 pcmk__info("Exiting after no more peers or clients remain");
-                terminate_cib(-1);
+                based_terminate(-1);
             }
             break;
 
@@ -374,6 +357,14 @@ cib_peer_update_callback(enum pcmk__node_update type,
 static void
 cib_init(void)
 {
+    // based_read_cib() returns new, non-NULL XML, so this should always succeed
+    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
+        pcmk__crit("Bug: failed to activate CIB. Terminating %s.",
+                   pcmk__server_log_name(pcmk_ipc_based));
+        crm_exit(CRM_EX_SOFTWARE);
+    }
+
+    based_remote_init();
     crm_cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
@@ -383,13 +374,6 @@ cib_init(void)
         pcmk_cpg_set_confchg_fn(crm_cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
-
-    config_hash = pcmk__strkey_table(free, free);
-
-    if (!startCib("cib.xml")) {
-        pcmk__crit("Cannot start CIB... terminating");
-        crm_exit(CRM_EX_NOINPUT);
-    }
 
     if (!stand_alone) {
         pcmk__cluster_set_status_callback(&cib_peer_update_callback);
@@ -406,29 +390,4 @@ cib_init(void)
     if (stand_alone) {
         based_is_primary = true;
     }
-}
-
-static bool
-startCib(const char *filename)
-{
-    xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
-    int port = 0;
-
-    if (activateCibXml(cib, true, "start") != 0) {
-        return false;
-    }
-
-    cib_read_config(config_hash, cib);
-
-    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
-    if (port >= 0) {
-        remote_tls_fd = init_remote_listener(port, true);
-    }
-
-    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
-    if (port >= 0) {
-        remote_fd = init_remote_listener(port, false);
-    }
-
-    return true;
 }

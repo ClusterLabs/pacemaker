@@ -1067,7 +1067,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: crm_attribute         - Query the value of an attribute that does not exist
 =#=#=#= Begin test: Configure something before erasing =#=#=#=
 =#=#=#= Current cib after: Configure something before erasing =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="2" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1084,7 +1084,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: crm_attribute         - Configure something before erasing
 =#=#=#= Begin test: Test '++' XML attribute update syntax =#=#=#=
 =#=#=#= Current cib after: Test '++' XML attribute update syntax =#=#=#=
-<cib epoch="2" num_updates="1" admin_epoch="1">
+<cib admin_epoch="1" epoch="2" num_updates="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1101,7 +1101,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: cibadmin              - Test '++' XML attribute update syntax
 =#=#=#= Begin test: Test '+=' XML attribute update syntax =#=#=#=
 =#=#=#= Current cib after: Test '+=' XML attribute update syntax =#=#=#=
-<cib epoch="2" num_updates="2" admin_epoch="3">
+<cib admin_epoch="3" epoch="2" num_updates="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1118,7 +1118,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: cibadmin              - Test '+=' XML attribute update syntax
 =#=#=#= Begin test: Test '++' nvpair value update syntax =#=#=#=
 =#=#=#= Current cib after: Test '++' nvpair value update syntax =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="3">
+<cib admin_epoch="3" epoch="3" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1138,7 +1138,7 @@ crm_attribute: Error performing operation: No such device or address
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '++' nvpair value update syntax (XML) =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="3">
+<cib admin_epoch="3" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1155,7 +1155,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: crm_attribute         - Test '++' nvpair value update syntax (XML)
 =#=#=#= Begin test: Test '+=' nvpair value update syntax =#=#=#=
 =#=#=#= Current cib after: Test '+=' nvpair value update syntax =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="3">
+<cib admin_epoch="3" epoch="5" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1175,7 +1175,7 @@ crm_attribute: Error performing operation: No such device or address
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '+=' nvpair value update syntax (XML) =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="3">
+<cib admin_epoch="3" epoch="6" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1192,7 +1192,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: crm_attribute         - Test '+=' nvpair value update syntax (XML)
 =#=#=#= Begin test: Test '++' XML attribute update syntax (--score not set) =#=#=#=
 =#=#=#= Current cib after: Test '++' XML attribute update syntax (--score not set) =#=#=#=
-<cib epoch="6" num_updates="1" admin_epoch="4">
+<cib admin_epoch="4" epoch="6" num_updates="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1209,7 +1209,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: cibadmin              - Test '++' XML attribute update syntax (--score not set)
 =#=#=#= Begin test: Test '+=' XML attribute update syntax (--score not set) =#=#=#=
 =#=#=#= Current cib after: Test '+=' XML attribute update syntax (--score not set) =#=#=#=
-<cib epoch="6" num_updates="2" admin_epoch="6">
+<cib admin_epoch="6" epoch="6" num_updates="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1226,7 +1226,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: cibadmin              - Test '+=' XML attribute update syntax (--score not set)
 =#=#=#= Begin test: Test '++' nvpair value update syntax (--score not set) =#=#=#=
 =#=#=#= Current cib after: Test '++' nvpair value update syntax (--score not set) =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="6">
+<cib admin_epoch="6" epoch="7" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1246,7 +1246,7 @@ crm_attribute: Error performing operation: No such device or address
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '++' nvpair value update syntax (--score not set) (XML) =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="6">
+<cib admin_epoch="6" epoch="8" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1263,7 +1263,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: crm_attribute         - Test '++' nvpair value update syntax (--score not set) (XML)
 =#=#=#= Begin test: Test '+=' nvpair value update syntax (--score not set) =#=#=#=
 =#=#=#= Current cib after: Test '+=' nvpair value update syntax (--score not set) =#=#=#=
-<cib epoch="9" num_updates="0" admin_epoch="6">
+<cib admin_epoch="6" epoch="9" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1283,7 +1283,7 @@ crm_attribute: Error performing operation: No such device or address
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Test '+=' nvpair value update syntax (--score not set) (XML) =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="6">
+<cib admin_epoch="6" epoch="10" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1300,7 +1300,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: crm_attribute         - Test '+=' nvpair value update syntax (--score not set) (XML)
 =#=#=#= Begin test: Set cluster option =#=#=#=
 =#=#=#= Current cib after: Set cluster option =#=#=#=
-<cib epoch="2" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="2" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1321,7 +1321,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: cibadmin              - Query new cluster option
 =#=#=#= Begin test: Set no-quorum policy =#=#=#=
 =#=#=#= Current cib after: Set no-quorum policy =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1339,7 +1339,7 @@ crm_attribute: Error performing operation: No such device or address
 * Passed: crm_attribute         - Set no-quorum policy
 =#=#=#= Begin test: Delete nvpair =#=#=#=
 =#=#=#= Current cib after: Delete nvpair =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1364,7 +1364,7 @@ cibadmin: CIB API call failed: File exists
   </failed_update>
 </failed>
 =#=#=#= Current cib after: Create operation should fail =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1381,7 +1381,7 @@ cibadmin: CIB API call failed: File exists
 * Passed: cibadmin              - Create operation should fail
 =#=#=#= Begin test: Modify cluster options section =#=#=#=
 =#=#=#= Current cib after: Modify cluster options section =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="5" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1400,7 +1400,7 @@ cibadmin: CIB API call failed: File exists
 =#=#=#= Begin test: Query updated cluster option =#=#=#=
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
 =#=#=#= Current cib after: Query updated cluster option =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="5" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1418,7 +1418,7 @@ cibadmin: CIB API call failed: File exists
 * Passed: cibadmin              - Query updated cluster option
 =#=#=#= Begin test: Set duplicate cluster option =#=#=#=
 =#=#=#= Current cib after: Set duplicate cluster option =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="6" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1443,7 +1443,7 @@ Multiple attributes match name=cluster-delay
   Value: 60s 	(id=cib-bootstrap-options-cluster-delay)
   Value: 40s 	(id=duplicate-cluster-delay)
 =#=#=#= Current cib after: Setting multiply defined cluster option should fail =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="6" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1464,7 +1464,7 @@ Multiple attributes match name=cluster-delay
 * Passed: crm_attribute         - Setting multiply defined cluster option should fail
 =#=#=#= Begin test: Set cluster option with -s =#=#=#=
 =#=#=#= Current cib after: Set cluster option with -s =#=#=#=
-<cib epoch="7" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="7" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1486,7 +1486,7 @@ Multiple attributes match name=cluster-delay
 =#=#=#= Begin test: Delete cluster option with -i =#=#=#=
 Deleted crm_config option: id=(null) name=cluster-delay
 =#=#=#= Current cib after: Delete cluster option with -i =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="8" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1526,7 +1526,7 @@ Revised Cluster Status:
   * Full List of Resources:
     * No resources
 =#=#=#= Current cib after: Create node1 and bring it online =#=#=#=
-<cib epoch="9" num_updates="2" admin_epoch="0">
+<cib admin_epoch="0" epoch="9" num_updates="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1550,7 +1550,7 @@ Revised Cluster Status:
 * Passed: crm_simulate          - Create node1 and bring it online
 =#=#=#= Begin test: Create node attribute =#=#=#=
 =#=#=#= Current cib after: Create node attribute =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="10" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1579,7 +1579,7 @@ Revised Cluster Status:
 =#=#=#= Begin test: Query new node attribute =#=#=#=
       <nvpair id="nodes-node1-ram" name="ram" value="1024M"/>
 =#=#=#= Current cib after: Query new node attribute =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="10" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1607,7 +1607,7 @@ Revised Cluster Status:
 * Passed: cibadmin              - Query new node attribute
 =#=#=#= Begin test: Create second node attribute =#=#=#=
 =#=#=#= Current cib after: Create second node attribute =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="11" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1641,7 +1641,7 @@ scope=nodes name=rattr value=XYZ
 * Passed: crm_attribute         - Query node attributes by pattern
 =#=#=#= Begin test: Update node attributes by pattern =#=#=#=
 =#=#=#= Current cib after: Update node attributes by pattern =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="12" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1671,7 +1671,7 @@ scope=nodes name=rattr value=XYZ
 =#=#=#= Begin test: Delete node attributes by pattern =#=#=#=
 Deleted nodes attribute: id=nodes-node1-rattr name=rattr
 =#=#=#= Current cib after: Delete node attributes by pattern =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="13" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1699,7 +1699,7 @@ Deleted nodes attribute: id=nodes-node1-rattr name=rattr
 * Passed: crm_attribute         - Delete node attributes by pattern
 =#=#=#= Begin test: Set a transient (fail-count) node attribute =#=#=#=
 =#=#=#= Current cib after: Set a transient (fail-count) node attribute =#=#=#=
-<cib epoch="13" num_updates="1" admin_epoch="0">
+<cib admin_epoch="0" epoch="13" num_updates="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1734,7 +1734,7 @@ Deleted nodes attribute: id=nodes-node1-rattr name=rattr
 =#=#=#= Begin test: Query a fail count =#=#=#=
 scope=status  name=fail-count-foo value=3
 =#=#=#= Current cib after: Query a fail count =#=#=#=
-<cib epoch="13" num_updates="1" admin_epoch="0">
+<cib admin_epoch="0" epoch="13" num_updates="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1782,7 +1782,7 @@ Current cluster status:
 * Passed: crm_simulate          - Show node attributes with crm_simulate
 =#=#=#= Begin test: Set a second transient node attribute =#=#=#=
 =#=#=#= Current cib after: Set a second transient node attribute =#=#=#=
-<cib epoch="13" num_updates="2" admin_epoch="0">
+<cib admin_epoch="0" epoch="13" num_updates="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1822,7 +1822,7 @@ scope=status name=fail-count-bar value=5
 * Passed: crm_attribute         - Query transient node attributes by pattern
 =#=#=#= Begin test: Update transient node attributes by pattern =#=#=#=
 =#=#=#= Current cib after: Update transient node attributes by pattern =#=#=#=
-<cib epoch="13" num_updates="4" admin_epoch="0">
+<cib admin_epoch="0" epoch="13" num_updates="4">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1859,7 +1859,7 @@ scope=status name=fail-count-bar value=5
 Deleted status attribute: id=status-node1-fail-count-foo name=fail-count-foo
 Deleted status attribute: id=status-node1-fail-count-bar name=fail-count-bar
 =#=#=#= Current cib after: Delete transient node attributes by pattern =#=#=#=
-<cib epoch="13" num_updates="6" admin_epoch="0">
+<cib admin_epoch="0" epoch="13" num_updates="6">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1895,7 +1895,7 @@ crm_attribute: Error: must specify attribute name or pattern to delete
 * Passed: crm_attribute         - crm_attribute given invalid delete usage
 =#=#=#= Begin test: Set a utilization node attribute =#=#=#=
 =#=#=#= Current cib after: Set a utilization node attribute =#=#=#=
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="14" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

@@ -705,19 +705,17 @@ parse_exit_reason_from_stderr(svc_action_t *op)
  * \brief Process the completion of an asynchronous child process
  *
  * \param[in,out] p         Child process that completed
- * \param[in]     pid       Process ID of child
  * \param[in]     core      (Unused)
  * \param[in]     signo     Signal that interrupted child, if any
  * \param[in]     exitcode  Exit status of child process
  */
 static void
-async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
-                      int exitcode)
+async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
 {
     svc_action_t *op = mainloop_child_userdata(p);
 
     mainloop_clear_child_userdata(p);
-    CRM_CHECK(op->pid == pid,
+    CRM_CHECK(op->pid == p->pid,
               services__set_result(op, services__generic_error(op),
                                    PCMK_EXEC_ERROR, "Bug in mainloop handling");
               return);
