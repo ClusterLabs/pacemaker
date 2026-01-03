@@ -171,12 +171,14 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
 /*!
  * \internal
- * \brief Get input data from a CIB request
+ * \brief Get call data from a CIB request
  *
  * \param[in] request  CIB request XML
+ *
+ * \return Call data, or \c NULL if none is found
  */
-static xmlNode *
-get_op_input(const xmlNode *request)
+xmlNode *
+cib__get_calldata(const xmlNode *request)
 {
     xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
                                             NULL, NULL);
@@ -207,7 +209,7 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
-    input = get_op_input(req);
+    input = cib__get_calldata(req);
     cib = *current_cib;
 
     if (cib_acl_enabled(*current_cib, user)
@@ -495,7 +497,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
-    input = get_op_input(req);
+    input = cib__get_calldata(req);
     enable_acl = cib_acl_enabled(*cib, user);
 
     pcmk__trace("Processing %s for section '%s', user '%s'", op,
@@ -733,12 +735,9 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     cib_callback_client_t *blob = NULL;
 
     if (msg != NULL) {
-        xmlNode *wrapper = NULL;
-
         pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
         pcmk__xe_get_int(msg, PCMK__XA_CIB_CALLID, &call_id);
-        wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_CALLDATA, NULL, NULL);
-        output = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        output = cib__get_calldata(msg);
     }
 
     blob = cib__lookup_id(call_id);

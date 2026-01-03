@@ -161,7 +161,6 @@ int
 based_process_schemas(xmlNode *req, xmlNode *input, xmlNode **cib,
                       xmlNode **answer)
 {
-    xmlNode *wrapper = NULL;
     xmlNode *data = NULL;
 
     const char *after_ver = NULL;
@@ -170,8 +169,7 @@ based_process_schemas(xmlNode *req, xmlNode *input, xmlNode **cib,
 
     *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
-    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
-    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    data = cib__get_calldata(req);
     if (data == NULL) {
         pcmk__warn("No data specified in request");
         return EPROTO;
