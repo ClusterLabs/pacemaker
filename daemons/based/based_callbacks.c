@@ -606,15 +606,15 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         pcmk__xml_free(result_cib);
     }
 
-    if (!pcmk__any_flags_set(call_options,
-                             cib_dryrun|cib_inhibit_notify|cib_transaction)) {
-        pcmk__trace("Sending notifications %d",
-                    pcmk__is_set(call_options, cib_dryrun));
-        based_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id,
-                          client_name, originator, cib_diff);
+    if (pcmk__any_flags_set(call_options,
+                            cib_dryrun|cib_inhibit_notify|cib_transaction)) {
+        goto done;
     }
 
-  done:
+    based_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id, client_name,
+                      originator, cib_diff);
+
+done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
         *reply = create_cib_reply(op, call_id, client_id, call_options,
                                   pcmk_rc2legacy(rc), output);
