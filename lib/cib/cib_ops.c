@@ -163,9 +163,8 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
 }
 
 int
-cib__process_apply_patch(const char *op, int options, const char *section,
-                         xmlNode *req, xmlNode *input, xmlNode **cib,
-                         xmlNode **answer)
+cib__process_apply_patch(int options, const char *section, xmlNode *req,
+                         xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     int rc = xml_apply_patchset(*cib, input, true);
 
@@ -190,8 +189,8 @@ update_counter(xmlNode *xml, const char *field, bool reset)
 }
 
 int
-cib__process_bump(const char *op, int options, const char *section,
-                  xmlNode *req, xmlNode *input, xmlNode **cib, xmlNode **answer)
+cib__process_bump(int options, const char *section, xmlNode *req,
+                  xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     update_counter(*cib, PCMK_XA_EPOCH, false);
     return pcmk_rc_ok;
@@ -291,10 +290,10 @@ done:
 }
 
 int
-cib__process_create(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode **cib,
-                    xmlNode **answer)
+cib__process_create(int options, const char *section, xmlNode *req,
+                    xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
+    const char *op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     xmlNode *failed = NULL;
     int rc = pcmk_rc_ok;
     xmlNode *update_section = NULL;
@@ -311,8 +310,7 @@ cib__process_create(const char *op, int options, const char *section,
     if (pcmk__strcase_any_of(section, PCMK__XE_ALL, PCMK_XE_CIB, NULL)
         || pcmk__xe_is(input, PCMK_XE_CIB)) {
 
-        return cib__process_modify(op, options, NULL, req, input, cib,
-                                   answer);
+        return cib__process_modify(options, NULL, req, input, cib, answer);
     }
 
     // @COMPAT Deprecated since 2.1.8
@@ -461,11 +459,12 @@ process_delete_section(const char *section, xmlNode *input, xmlNode *cib)
 }
 
 int
-cib__process_delete(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode **cib,
-                    xmlNode **answer)
+cib__process_delete(int options, const char *section, xmlNode *req,
+                    xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
+        const char *op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+
         return process_delete_xpath(op, options, section, *cib);
     }
 
@@ -473,9 +472,8 @@ cib__process_delete(const char *op, int options, const char *section,
 }
 
 int
-cib__process_erase(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode **cib,
-                   xmlNode **answer)
+cib__process_erase(int options, const char *section, xmlNode *req,
+                   xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     xmlNode *empty = createEmptyCib(0);
     xmlNode *empty_config = pcmk__xe_first_child(empty, PCMK_XE_CONFIGURATION,
@@ -596,11 +594,12 @@ process_modify_section(int options, const char *section, xmlNode *input,
 }
 
 int
-cib__process_modify(const char *op, int options, const char *section,
-                    xmlNode *req, xmlNode *input, xmlNode **cib,
-                    xmlNode **answer)
+cib__process_modify(int options, const char *section, xmlNode *req,
+                    xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
+        const char *op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+
         return process_modify_xpath(op, options, section, input, *cib);
     }
 
@@ -730,10 +729,12 @@ process_query_section(int options, const char *section, xmlNode *cib,
 }
 
 int
-cib__process_query(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode **cib, xmlNode **answer)
+cib__process_query(int options, const char *section, xmlNode *req,
+                   xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
+        const char *op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+
         return process_query_xpath(op, options, section, *cib, answer);
     }
 
@@ -911,11 +912,12 @@ process_replace_section(const char *section, xmlNode *request, xmlNode *input,
 }
 
 int
-cib__process_replace(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode **cib,
-                     xmlNode **answer)
+cib__process_replace(int options, const char *section, xmlNode *req,
+                     xmlNode *input, xmlNode **cib, xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
+        const char *op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+
         return process_replace_xpath(op, options, section, req, input, cib);
     }
 
@@ -923,7 +925,7 @@ cib__process_replace(const char *op, int options, const char *section,
 }
 
 int
-cib__process_upgrade(const char *op, int options, const char *section,
+cib__process_upgrade(int options, const char *section,
                      xmlNode *req, xmlNode *input, xmlNode **cib,
                      xmlNode **answer)
 {
