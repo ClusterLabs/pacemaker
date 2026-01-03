@@ -24,6 +24,7 @@
 #include <crm/common/mainloop.h> // mainloop_io_t, struct ipc_client_callbacks
 #include <crm/common/acl_internal.h>
 #include <crm/common/actions_internal.h>
+#include <crm/common/cib_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/health_internal.h>
 #include <crm/common/ipc_internal.h>
