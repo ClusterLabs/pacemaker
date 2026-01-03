@@ -188,6 +188,7 @@ cib__client_triggers_refresh(const char *name)
 
 int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
 xmlNode *cib__get_calldata(const xmlNode *request);
+void cib__set_calldata(xmlNode *request, xmlNode *data);
 
 int cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                        xmlNode **output);

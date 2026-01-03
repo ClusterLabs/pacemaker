@@ -175,7 +175,8 @@ cib_acl_enabled(xmlNode *xml, const char *user)
  *
  * \param[in] request  CIB request XML
  *
- * \return Call data, or \c NULL if none is found
+ * \return Call data added by \c cib__set_calldata(), or \c NULL if none is
+ *         found
  */
 xmlNode *
 cib__get_calldata(const xmlNode *request)
@@ -184,6 +185,28 @@ cib__get_calldata(const xmlNode *request)
                                             NULL, NULL);
 
     return pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Add call data to a CIB request
+ *
+ * Add a copy of \p data to a new \c PCMK__XE_CIB_CALLDATA child of \p request.
+ *
+ * \param[in,out] request  CIB request XML
+ * \param[in]     data     Call data to add a copy of (if \c NULL, do nothing)
+ */
+void
+cib__set_calldata(xmlNode *request, xmlNode *data)
+{
+    xmlNode *wrapper = NULL;
+
+    if (data == NULL) {
+        return;
+    }
+
+    wrapper = pcmk__xe_create(request, PCMK__XE_CIB_CALLDATA);
+    pcmk__xml_copy(wrapper, data);
 }
 
 int
@@ -645,12 +668,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     pcmk__trace("Sending call options: %.8lx, %d", (long) call_options,
                 call_options);
     pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
-
-    if (data != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(*op_msg, PCMK__XE_CIB_CALLDATA);
-
-        pcmk__xml_copy(wrapper, data);
-    }
+    cib__set_calldata(*op_msg, data);
 
     return pcmk_rc_ok;
 }
