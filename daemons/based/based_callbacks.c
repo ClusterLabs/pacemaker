@@ -853,11 +853,13 @@ based_process_request(xmlNode *request, bool privileged,
         send_peer_reply(reply, originator);
     }
 
-    if (local_notify && (client_id != NULL)) {
-        do_local_notify((process? reply : request), client_id,
-                        pcmk__is_set(call_options, cib_sync_call),
-                        (client == NULL));
+    if (!local_notify || (client_id == NULL)) {
+        goto done;
     }
+
+    do_local_notify((process? reply : request), client_id,
+                    pcmk__is_set(call_options, cib_sync_call),
+                    (client == NULL));
 
 done:
     pcmk__xml_free(reply);
