@@ -99,6 +99,7 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
     const char *seq = pcmk__xe_get(req, PCMK__XA_CIB_PING_ID);
     char *digest = pcmk__digest_xml(the_cib, true);
+    xmlNode *shallow = NULL;
 
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
 
@@ -106,13 +107,10 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
     pcmk__xe_set(*answer, PCMK_XA_DIGEST, digest);
     pcmk__xe_set(*answer, PCMK__XA_CIB_PING_ID, seq);
 
-    if (the_cib != NULL) {
-        xmlNode *shallow = pcmk__xe_create(NULL, (const char *) the_cib->name);
-
-        pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
-        cib__set_calldata(*answer, shallow);
-        pcmk__xml_free(shallow);
-    }
+    shallow = pcmk__xe_create(NULL, (const char *) the_cib->name);
+    pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
+    cib__set_calldata(*answer, shallow);
+    pcmk__xml_free(shallow);
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
                host, digest, pcmk__xe_get(*cib, PCMK_XA_ADMIN_EPOCH),
@@ -352,7 +350,6 @@ sync_our_cib(xmlNode *request, bool all)
     pcmk__node_status_t *peer = NULL;
     xmlNode *replace_request = NULL;
 
-    CRM_CHECK(the_cib != NULL, return EINVAL);
     CRM_CHECK(all || (host != NULL), return EINVAL);
 
     pcmk__debug("Syncing CIB to %s", (all? "all peers" : host));
