@@ -827,7 +827,10 @@ based_process_request(xmlNode *request, bool privileged,
         rc = cib_status;
         pcmk__err("Ignoring request because cluster configuration is invalid "
                   "(please repair and restart): %s", pcmk_rc_str(rc));
-        reply = create_cib_reply(request, rc, the_cib);
+
+        if (!pcmk__is_set(call_options, cib_discard_reply)) {
+            reply = create_cib_reply(request, rc, the_cib);
+        }
 
     } else if (process) {
         time_t start_time = time(NULL);
