@@ -251,26 +251,34 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
 
     rc = fn(req, &cib, output);
 
-    if (*output == NULL) {
-        // Do nothing
-
-    } else if (cib_filtered == *output) {
-        // Let them have this copy
-        cib_filtered = NULL;
-
-    } else if (*output == *current_cib) {
-        // They already know not to free it
-
-    } else if ((cib_filtered != NULL)
-               && ((*output)->doc == cib_filtered->doc)) {
-        // We're about to free the document of which *output is a part
-        *output = pcmk__xml_copy(NULL, *output);
-
-    } else if ((*output)->doc == (*current_cib)->doc) {
-        // Give them a copy they can free
-        *output = pcmk__xml_copy(NULL, *output);
+    if (cib_filtered == *output) {
+        // Let the caller have this copy
+        return rc;
     }
 
+    if (*output == NULL) {
+        goto done;
+    }
+
+    if (*output == *current_cib) {
+        // Trust the caller to check this and not free *output
+        goto done;
+    }
+
+    if ((*output)->doc == (*current_cib)->doc) {
+        // Give the caller a copy that it can free
+        *output = pcmk__xml_copy(NULL, *output);
+        goto done;
+    }
+
+    if ((cib_filtered == NULL) || ((*output)->doc != cib_filtered->doc)) {
+        goto done;
+    }
+
+    // We're about to free the document of which *output is a part
+    *output = pcmk__xml_copy(NULL, *output);
+
+done:
     pcmk__xml_free(cib_filtered);
     return rc;
 }
