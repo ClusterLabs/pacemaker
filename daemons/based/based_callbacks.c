@@ -201,15 +201,13 @@ digest_timer_cb(gpointer data)
 static void
 process_ping_reply(xmlNode *reply)
 {
+    const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
+
     xmlNode *pong = cib__get_calldata(reply);
     long long seq = 0;
-    const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
     const char *digest = pcmk__xe_get(pong, PCMK_XA_DIGEST);
 
     xmlNode *remote_versions = cib__get_calldata(pong);
-    const char *admin_epoch_s = NULL;
-    const char *epoch_s = NULL;
-    const char *num_updates_s = NULL;
 
     int rc = pcmk__xe_get_ll(pong, PCMK__XA_CIB_PING_ID, &seq);
 
@@ -254,20 +252,13 @@ process_ping_reply(xmlNode *reply)
         return;
     }
 
-    if (remote_versions != NULL) {
-        admin_epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH);
-        epoch_s = pcmk__xe_get(remote_versions, PCMK_XA_EPOCH);
-        num_updates_s = pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES);
-    }
-
     pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
                  pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
                  pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-                 pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                 ping_digest, host,
-                 pcmk__s(admin_epoch_s, "_"),
-                 pcmk__s(epoch_s, "_"),
-                 pcmk__s(num_updates_s, "_"), digest);
+                 pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES), ping_digest, host,
+                 pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH),
+                 pcmk__xe_get(remote_versions, PCMK_XA_EPOCH),
+                 pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES), digest);
 
     sync_our_cib(reply, false);
 }
