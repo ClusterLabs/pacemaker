@@ -1029,6 +1029,7 @@ based_terminate(int exit_status)
         remote_tls_fd = 0;
     }
 
+    g_clear_pointer(&ping_digest, free);
     g_clear_pointer(&the_cib, pcmk__xml_free);
 
     // Exit immediately on error
