@@ -269,7 +269,6 @@ process_ping_reply(xmlNode *reply)
                  pcmk__s(epoch_s, "_"),
                  pcmk__s(num_updates_s, "_"), digest);
 
-    pcmk__xml_free(remote_versions);
     sync_our_cib(reply, false);
 }
 
