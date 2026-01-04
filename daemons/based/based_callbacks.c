@@ -524,7 +524,7 @@ forward_request(xmlNode *request)
 
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
-                    cib__op_fn_t op_function, xmlNode **reply, bool privileged)
+                    cib__op_fn_t op_function, xmlNode **reply)
 {
     static mainloop_timer_t *digest_timer = NULL;
 
@@ -546,13 +546,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     /* Start processing the request... */
     pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
-
-    if (!privileged
-        && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
-
-        rc = EACCES;
-        goto done;
-    }
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
@@ -835,8 +828,18 @@ based_process_request(xmlNode *request, bool privileged,
     } else if (process) {
         time_t start_time = time(NULL);
 
-        rc = cib_process_command(request, operation, op_function, &reply,
-                                 privileged);
+        if (!privileged
+            && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
+
+            rc = EACCES;
+            if (!pcmk__is_set(call_options, cib_discard_reply)) {
+                reply = create_cib_reply(request, rc, NULL);
+            }
+
+        } else {
+            rc = cib_process_command(request, operation, op_function, &reply);
+        }
+
         log_op_result(request, operation, rc, difftime(time(NULL), start_time));
 
         if ((reply == NULL) && (needs_reply || local_notify)) {
