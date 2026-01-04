@@ -929,53 +929,24 @@ void
 based_shutdown(int nsig)
 {
     if (!cib_shutdown_flag) {
-        int disconnects = 0;
-        qb_ipcs_connection_t *c = NULL;
-
         cib_shutdown_flag = true;
 
-        c = qb_ipcs_connection_first_get(ipcs_rw);
-        while (c != NULL) {
-            qb_ipcs_connection_t *last = c;
-
-            c = qb_ipcs_connection_next_get(ipcs_rw, last);
-
-            pcmk__debug("Disconnecting r/w client %p...", last);
-            qb_ipcs_disconnect(last);
-            qb_ipcs_connection_unref(last);
-            disconnects++;
+        if (ipcs_ro != NULL) {
+            pcmk__drop_all_clients(ipcs_ro);
+            g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
         }
 
-        c = qb_ipcs_connection_first_get(ipcs_ro);
-        while (c != NULL) {
-            qb_ipcs_connection_t *last = c;
-
-            c = qb_ipcs_connection_next_get(ipcs_ro, last);
-
-            pcmk__debug("Disconnecting r/o client %p...", last);
-            qb_ipcs_disconnect(last);
-            qb_ipcs_connection_unref(last);
-            disconnects++;
+        if (ipcs_rw != NULL) {
+            pcmk__drop_all_clients(ipcs_rw);
+            g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
         }
 
-        c = qb_ipcs_connection_first_get(ipcs_shm);
-        while (c != NULL) {
-            qb_ipcs_connection_t *last = c;
-
-            c = qb_ipcs_connection_next_get(ipcs_shm, last);
-
-            pcmk__debug("Disconnecting non-blocking r/w client %p...", last);
-            qb_ipcs_disconnect(last);
-            qb_ipcs_connection_unref(last);
-            disconnects++;
+        if (ipcs_shm != NULL) {
+            pcmk__drop_all_clients(ipcs_shm);
+            g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
         }
 
-        disconnects += pcmk__ipc_client_count();
-
-        pcmk__debug("Disconnecting %d remote clients",
-                    pcmk__ipc_client_count());
         based_drop_remote_clients();
-        pcmk__info("Disconnected %d clients", disconnects);
     }
 
     if (pcmk__ipc_client_count() == 0) {
