@@ -165,7 +165,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
 
     if (read_only) {
-        rc = cib__perform_query(op_function, request, &private->cib_xml,
+        rc = cib__perform_op_ro(op_function, request, &private->cib_xml,
                                 output);
     } else {
         result_cib = private->cib_xml;
