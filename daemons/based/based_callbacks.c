@@ -47,12 +47,10 @@ static bool ping_modified_since = false;
  * \internal
  * \brief Create reply XML for a CIB request
  *
- * \param[in] op            CIB operation type
- * \param[in] call_id       CIB call ID
- * \param[in] client_id     CIB client ID
- * \param[in] call_options  Group of <tt>enum cib_call_options</tt> flags
- * \param[in] rc            Request return code (standard Pacemaker return code)
- * \param[in] call_data     Request output data
+ * \param[in] request    CIB request
+ * \param[in] rc         Request return code (standard Pacemaker return code)
+ * \param[in] call_data  Request output data (may be entire live CIB or result
+ *                       CIB in case of error)
  *
  * \return Reply XML (guaranteed not to be \c NULL)
  *
@@ -60,16 +58,28 @@ static bool ping_modified_since = false;
  *       \p pcmk__xml_free().
  */
 static xmlNode *
-create_cib_reply(const char *op, const char *call_id, const char *client_id,
-                 uint32_t call_options, int rc, xmlNode *call_data)
+create_cib_reply(const xmlNode *request, int rc, xmlNode *call_data)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_CIB_REPLY);
 
     pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(reply, PCMK__XA_CIB_OP, op);
-    pcmk__xe_set(reply, PCMK__XA_CIB_CALLID, call_id);
-    pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client_id);
-    pcmk__xe_set_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
+
+    /* We could simplify by copying all attributes from request. We would just
+     * have to ensure that there are never "private" attributes that we want to
+     * hide from external clients with notify callbacks.
+     */
+    pcmk__xe_set(reply, PCMK__XA_CIB_OP,
+                 pcmk__xe_get(request, PCMK__XA_CIB_OP));
+
+    pcmk__xe_set(reply, PCMK__XA_CIB_CALLID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CALLID));
+
+    pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID));
+
+    pcmk__xe_set(reply, PCMK__XA_CIB_CALLOPT,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CALLOPT));
+
     pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, pcmk_rc2legacy(rc));
     cib__set_calldata(reply, call_data);
 
@@ -523,8 +533,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     xmlNode *result_cib = NULL;
 
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
-    const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
     uint32_t call_options = cib_none;
 
@@ -622,8 +630,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
 done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
-        *reply = create_cib_reply(op, call_id, client_id, call_options, rc,
-                                  output);
+        *reply = create_cib_reply(request, rc, output);
     }
 
     if (output != the_cib) {
@@ -824,8 +831,7 @@ based_process_request(xmlNode *request, bool privileged,
         rc = cib_status;
         pcmk__err("Ignoring request because cluster configuration is invalid "
                   "(please repair and restart): %s", pcmk_rc_str(rc));
-        reply = create_cib_reply(op, call_id, client_id, call_options, rc,
-                                 the_cib);
+        reply = create_cib_reply(request, rc, the_cib);
 
     } else if (process) {
         time_t start_time = time(NULL);
