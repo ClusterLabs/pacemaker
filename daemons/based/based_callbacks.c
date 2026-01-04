@@ -198,6 +198,24 @@ digest_timer_cb(gpointer data)
     return G_SOURCE_REMOVE;
 }
 
+/*!
+ * \internal
+ * \brief Process a reply to a \c CRM_OP_PING request
+ *
+ * See \c digest_timer_cb() for details on how the ping process works, and see
+ * \c based_process_ping() for the construction of the ping reply.
+ *
+ * We ignore the reply if we are no longer the DC, if the reply is malformed or
+ * received out of sequence, or if we may have modified the CIB since the last
+ * time we sent a ping request.
+ *
+ * Otherwise, we compare the CIB digest received in the reply against the digest
+ * of the local CIB. If the digests don't match, we sync our CIB to the node
+ * that sent the reply. This helps to ensure that all other nodes' views of the
+ * CIB eventually match the DC's view of the CIB.
+ *
+ * \param[in] reply  Ping reply
+ */
 static void
 process_ping_reply(xmlNode *reply)
 {
@@ -242,7 +260,6 @@ process_ping_reply(xmlNode *reply)
     }
 
     if (ping_digest == NULL) {
-        pcmk__trace("Calculating new digest");
         ping_digest = pcmk__digest_xml(the_cib, true);
     }
 
