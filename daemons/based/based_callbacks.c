@@ -51,7 +51,7 @@ static bool ping_modified_since = false;
  * \param[in] call_id       CIB call ID
  * \param[in] client_id     CIB client ID
  * \param[in] call_options  Group of <tt>enum cib_call_options</tt> flags
- * \param[in] rc            Request return code
+ * \param[in] rc            Request return code (standard Pacemaker return code)
  * \param[in] call_data     Request output data
  *
  * \return Reply XML (guaranteed not to be \c NULL)
@@ -70,7 +70,7 @@ create_cib_reply(const char *op, const char *call_id, const char *client_id,
     pcmk__xe_set(reply, PCMK__XA_CIB_CALLID, call_id);
     pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client_id);
     pcmk__xe_set_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
-    pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, rc);
+    pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, pcmk_rc2legacy(rc));
     cib__set_calldata(reply, call_data);
 
     crm_log_xml_explicit(reply, "cib:reply");
@@ -619,13 +619,13 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    based_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id, client_name,
-                      originator, cib_diff);
+    based_diff_notify(op, rc, call_id, client_id, client_name, originator,
+                      cib_diff);
 
 done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
-        *reply = create_cib_reply(op, call_id, client_id, call_options,
-                                  pcmk_rc2legacy(rc), output);
+        *reply = create_cib_reply(op, call_id, client_id, call_options, rc,
+                                  output);
     }
 
     if (output != the_cib) {
@@ -826,8 +826,8 @@ based_process_request(xmlNode *request, bool privileged,
         rc = cib_status;
         pcmk__err("Ignoring request because cluster configuration is invalid "
                   "(please repair and restart): %s", pcmk_rc_str(rc));
-        reply = create_cib_reply(op, call_id, client_id, call_options,
-                                 pcmk_rc2legacy(rc), the_cib);
+        reply = create_cib_reply(op, call_id, client_id, call_options, rc,
+                                 the_cib);
 
     } else if (process) {
         time_t start_time = time(NULL);
