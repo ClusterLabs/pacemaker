@@ -210,7 +210,7 @@ cib__set_calldata(xmlNode *request, xmlNode *data)
 }
 
 int
-cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
+cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                    xmlNode **output)
 {
     int rc = pcmk_rc_ok;
