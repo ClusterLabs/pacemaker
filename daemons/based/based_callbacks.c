@@ -217,7 +217,7 @@ digest_timer_cb(gpointer data)
  * \param[in] reply  Ping reply
  */
 static void
-process_ping_reply(xmlNode *reply)
+process_ping_reply(const xmlNode *reply)
 {
     const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
 
