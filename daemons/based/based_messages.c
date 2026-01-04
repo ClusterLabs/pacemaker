@@ -90,7 +90,6 @@ based_process_is_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_noop(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    *answer = NULL;
     return pcmk_rc_ok;
 }
 
@@ -209,8 +208,6 @@ based_process_shutdown(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
 
-    *answer = NULL;
-
     if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
         pcmk__info("Peer %s is requesting to shut down", host);
         return pcmk_rc_ok;
@@ -245,8 +242,6 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
     const char *original_schema = NULL;
     const char *new_schema = NULL;
     pcmk__node_status_t *origin = NULL;
-
-    *answer = NULL;
 
     if (pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX) != NULL) {
         /* The originator of an upgrade request sends it to the DC, without
