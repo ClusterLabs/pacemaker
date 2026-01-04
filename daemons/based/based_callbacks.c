@@ -841,12 +841,6 @@ based_process_request(xmlNode *request, bool privileged,
         }
 
         log_op_result(request, operation, rc, difftime(time(NULL), start_time));
-
-        if ((reply == NULL) && (needs_reply || local_notify)) {
-            pcmk__err("Unexpected NULL reply to message");
-            pcmk__log_xml_err(request, "null reply");
-            goto done;
-        }
     }
 
     if (pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
