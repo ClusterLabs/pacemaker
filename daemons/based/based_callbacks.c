@@ -848,8 +848,7 @@ based_process_request(xmlNode *request, bool privileged,
                     pcmk__s(originator, "local"), client_name, call_id,
                     (local_notify? " with local notification" : ""));
 
-    } else if (needs_reply && !stand_alone && (client == NULL)
-               && !pcmk__is_set(call_options, cib_discard_reply)) {
+    } else if (needs_reply && !stand_alone && (client == NULL)) {
         send_peer_reply(reply, originator);
     }
 
