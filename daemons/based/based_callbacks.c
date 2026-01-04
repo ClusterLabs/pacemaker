@@ -813,10 +813,6 @@ based_process_request(xmlNode *request, bool privileged,
     }
 
     if (pcmk__is_set(call_options, cib_discard_reply)) {
-        /* If the request will modify the CIB, and we are in legacy mode, we
-         * need to build a reply so we can broadcast a diff, even if the
-         * requester doesn't want one.
-         */
         needs_reply = false;
         local_notify = false;
         pcmk__trace("Client is not interested in the reply");
