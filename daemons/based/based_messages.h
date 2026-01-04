@@ -31,6 +31,6 @@ int based_process_shutdown(xmlNode *req, xmlNode **cib, xmlNode **answer);
 int based_process_sync(xmlNode *req, xmlNode **cib, xmlNode **answer);
 int based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer);
 
-int sync_our_cib(xmlNode *request, bool all);
+int sync_our_cib(const xmlNode *request, bool all);
 
 #endif // BASED_MESSAGES__H

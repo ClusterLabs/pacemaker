@@ -308,7 +308,7 @@ done:
 }
 
 static xmlNode *
-cib_msg_copy(xmlNode *msg)
+cib_msg_copy(const xmlNode *msg)
 {
     static const char *field_list[] = {
         PCMK__XA_T,
@@ -341,7 +341,7 @@ cib_msg_copy(xmlNode *msg)
 }
 
 int
-sync_our_cib(xmlNode *request, bool all)
+sync_our_cib(const xmlNode *request, bool all)
 {
     int rc = pcmk_rc_ok;
     char *digest = NULL;
