@@ -480,9 +480,9 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 }
 
 int
-cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
-               bool *config_changed, xmlNode **cib, xmlNode **diff,
-               xmlNode **output)
+cib__perform_op_rw(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
+                   bool *config_changed, xmlNode **cib, xmlNode **diff,
+                   xmlNode **output)
 {
     int rc = pcmk_rc_ok;
 

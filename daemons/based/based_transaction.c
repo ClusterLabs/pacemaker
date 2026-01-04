@@ -118,7 +118,7 @@ process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
  * \note This function is expected to be called only by
  *       \p based_process_commit_transact().
  * \note \p result_cib is expected to be a copy of the current CIB as created by
- *       \p cib_perform_op().
+ *       \p cib__perform_op_rw().
  * \note The caller is responsible for activating and syncing \p result_cib on
  *       success, and for freeing it on failure.
  */
@@ -135,10 +135,10 @@ based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
     CRM_CHECK(pcmk__xe_is(transaction, PCMK__XE_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
 
-    /* *result_cib should be a copy of the_cib (created by cib_perform_op()). If
-     * not, make a copy now. Change tracking isn't strictly required here
-     * because each request in the transaction will have changes tracked and
-     * ACLs checked if appropriate.
+    /* *result_cib should be a copy of the_cib (created by
+     * cib__perform_op_rw()). If not, make a copy now. Change tracking isn't
+     * strictly required here because each request in the transaction will have
+     * changes tracked and ACLs checked if appropriate.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != the_cib),
               *result_cib = pcmk__xml_copy(NULL, the_cib));

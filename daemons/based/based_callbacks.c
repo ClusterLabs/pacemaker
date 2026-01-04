@@ -554,14 +554,14 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     ping_modified_since = true;
 
-    /* result_cib must not be modified after cib_perform_op() returns.
+    /* result_cib must not be modified after cib__perform_op_rw() returns.
      *
      * It's not important whether the client variant is cib_native or
      * cib_remote.
      */
     result_cib = the_cib;
-    rc = cib_perform_op(cib_undefined, op_function, request, &config_changed,
-                        &result_cib, &cib_diff, &output);
+    rc = cib__perform_op_rw(cib_undefined, op_function, request,
+                            &config_changed, &result_cib, &cib_diff, &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
