@@ -548,7 +548,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     }
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_query(op_function, request, &the_cib, &output);
+        rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
         goto done;
     }
 
