@@ -237,6 +237,14 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
 
+    xmlNode *scratch = NULL;
+    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
+    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
+    const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
+    const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
+    const char *original_schema = NULL;
+    const char *new_schema = NULL;
+
     *answer = NULL;
 
     if (pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX) != NULL) {
@@ -246,80 +254,72 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
          * performs the upgrade (and notifies its local clients) here.
          */
         return cib__process_upgrade(req, cib, answer);
+    }
 
-    } else {
-        xmlNode *scratch = pcmk__xml_copy(NULL, *cib);
-        const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
-        const char *original_schema = NULL;
-        const char *new_schema = NULL;
-        const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
-        const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
-        const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
+    scratch = pcmk__xml_copy(NULL, *cib);
 
-        original_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
-        if (original_schema == NULL) {
-            pcmk__info("Rejecting upgrade request from %s: No "
-                       PCMK_XA_VALIDATE_WITH,
-                       host);
-            return pcmk_rc_cib_corrupt;
-        }
+    original_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
+    if (original_schema == NULL) {
+        pcmk__info("Rejecting upgrade request from %s: No "
+                   PCMK_XA_VALIDATE_WITH, host);
+        return pcmk_rc_cib_corrupt;
+    }
 
-        rc = pcmk__update_schema(&scratch, NULL, true, true);
-        new_schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
+    rc = pcmk__update_schema(&scratch, NULL, true, true);
+    new_schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
-        if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
+    if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
+        xmlNode *up = pcmk__xe_create(NULL, __func__);
+
+        rc = pcmk_rc_ok;
+        pcmk__notice("Upgrade request from %s verified", host);
+
+        pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
+        pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
+        pcmk__xe_set(up, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
+        pcmk__xe_set(up, PCMK__XA_CIB_DELEGATED_FROM, host);
+        pcmk__xe_set(up, PCMK__XA_CIB_CLIENTID, client_id);
+        pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
+        pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
+
+        pcmk__cluster_send_message(NULL, pcmk_ipc_based, up);
+
+        pcmk__xml_free(up);
+
+    } else if (rc == pcmk_rc_ok) {
+        rc = pcmk_rc_schema_unchanged;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        // Notify originating peer so it can notify its local clients
+        pcmk__node_status_t *origin = NULL;
+
+        origin = pcmk__search_node_caches(0, host, NULL,
+                                          pcmk__node_search_cluster_member);
+
+        pcmk__info("Rejecting upgrade request from %s: %s "
+                   QB_XS " rc=%d peer=%s", host, pcmk_rc_str(rc), rc,
+                   ((origin != NULL)? origin->name : "lost"));
+
+        if (origin != NULL) {
             xmlNode *up = pcmk__xe_create(NULL, __func__);
-
-            rc = pcmk_rc_ok;
-            pcmk__notice("Upgrade request from %s verified", host);
 
             pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
             pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-            pcmk__xe_set(up, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
             pcmk__xe_set(up, PCMK__XA_CIB_DELEGATED_FROM, host);
+            pcmk__xe_set(up, PCMK__XA_CIB_ISREPLYTO, host);
             pcmk__xe_set(up, PCMK__XA_CIB_CLIENTID, client_id);
             pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
             pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
-
-            pcmk__cluster_send_message(NULL, pcmk_ipc_based, up);
-
-            pcmk__xml_free(up);
-
-        } else if (rc == pcmk_rc_ok) {
-            rc = pcmk_rc_schema_unchanged;
-        }
-
-        if (rc != pcmk_rc_ok) {
-            // Notify originating peer so it can notify its local clients
-            pcmk__node_status_t *origin = NULL;
-
-            origin = pcmk__search_node_caches(0, host, NULL,
-                                              pcmk__node_search_cluster_member);
-
-            pcmk__info("Rejecting upgrade request from %s: %s "
-                       QB_XS " rc=%d peer=%s", host, pcmk_rc_str(rc), rc,
-                       ((origin != NULL)? origin->name : "lost"));
-
-            if (origin) {
-                xmlNode *up = pcmk__xe_create(NULL, __func__);
-
-                pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
-                pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-                pcmk__xe_set(up, PCMK__XA_CIB_DELEGATED_FROM, host);
-                pcmk__xe_set(up, PCMK__XA_CIB_ISREPLYTO, host);
-                pcmk__xe_set(up, PCMK__XA_CIB_CLIENTID, client_id);
-                pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
-                pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
-                pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC,
-                                 pcmk_rc2legacy(rc));
-                if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
-                    pcmk__warn("Could not send CIB upgrade result to %s", host);
-                }
-                pcmk__xml_free(up);
+            pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC, pcmk_rc2legacy(rc));
+            if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
+                pcmk__warn("Could not send CIB upgrade result to %s", host);
             }
+            pcmk__xml_free(up);
         }
-        pcmk__xml_free(scratch);
     }
+
+    pcmk__xml_free(scratch);
     return rc;
 }
 
