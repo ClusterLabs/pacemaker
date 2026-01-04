@@ -542,6 +542,13 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
+    /* @TODO The cib__op_attr_modifies flag means the request *may* modify
+     * *something*. A successful request with this flag set may not have
+     * modified anything (for example, a delete request when there is no match
+     * to delete), or it may have modified something other than the CIB (for
+     * example, the CIB manager's primary/secondary status). Thus we may be
+     * setting the ping_modified_since flag when the CIB has not been modified.
+     */
     ping_modified_since = true;
 
     /* result_cib must not be modified after cib__perform_op_rw() returns.

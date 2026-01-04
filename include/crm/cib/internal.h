@@ -48,7 +48,7 @@ enum cib__op_attr {
     //! No special attributes
     cib__op_attr_none           = 0,
 
-    //! Modifies CIB
+    //! May modify state (of the CIB itself or of the CIB manager)
     cib__op_attr_modifies       = (UINT32_C(1) << 1),
 
     //! Requires privileges
