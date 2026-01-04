@@ -525,7 +525,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
-    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
     uint32_t call_options = cib_none;
 
@@ -619,8 +618,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    based_diff_notify(op, rc, call_id, client_id, client_name, originator,
-                      cib_diff);
+    based_diff_notify(request, rc, cib_diff);
 
 done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
