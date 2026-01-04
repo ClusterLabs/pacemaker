@@ -517,32 +517,26 @@ static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **reply, bool privileged)
 {
+    static mainloop_timer_t *digest_timer = NULL;
+
     xmlNode *cib_diff = NULL;
     xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
-
-    uint32_t call_options = cib_none;
 
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
-
-    int rc = pcmk_rc_ok;
+    uint32_t call_options = cib_none;
 
     bool config_changed = false;
-
-    static mainloop_timer_t *digest_timer = NULL;
-
-    pcmk__assert(cib_status == pcmk_rc_ok);
+    int rc = pcmk_rc_ok;
 
     if (digest_timer == NULL) {
         digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
                                           digest_timer_cb, NULL);
     }
-
-    *reply = NULL;
 
     /* Start processing the request... */
     pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
@@ -568,20 +562,21 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     rc = cib__perform_op_rw(cib_undefined, op_function, request,
                             &config_changed, &result_cib, &cib_diff, &output);
 
-    /* Always write to disk for successful ops with the flag set. This also
-     * negates the need to detect ordering changes.
-     */
-    if ((rc == pcmk_rc_ok)
-        && pcmk__is_set(operation->flags, cib__op_attr_writes_through)) {
-
-        config_changed = true;
-    }
-
     if ((rc == pcmk_rc_ok)
         && !pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
 
+        /* Always write to disk for successful ops with the writes-through flag
+         * set. This also avoids the need to detect ordering changes.
+         */
+        const bool to_disk = config_changed
+                             || pcmk__is_set(operation->flags,
+                                             cib__op_attr_writes_through);
+
+        const char *feature_set = pcmk__xe_get(the_cib,
+                                               PCMK_XA_CRM_FEATURE_SET);
+
         if (result_cib != the_cib) {
-            rc = based_activate_cib(result_cib, config_changed, op);
+            rc = based_activate_cib(result_cib, to_disk, op);
         }
 
         /* @COMPAT Nodes older than feature set 3.19.0 don't support
@@ -595,9 +590,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
          */
         if ((operation->type == cib__op_commit_transact)
             && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
-            && (pcmk__compare_versions(pcmk__xe_get(the_cib,
-                                                    PCMK_XA_CRM_FEATURE_SET),
-                                       "3.19.0") < 0)) {
+            && (pcmk__compare_versions(feature_set, "3.19.0") < 0)) {
 
             sync_our_cib(request, true);
         }
@@ -640,7 +633,6 @@ done:
         pcmk__xml_free(output);
     }
 
-    pcmk__trace("done");
     pcmk__xml_free(cib_diff);
     return rc;
 }
