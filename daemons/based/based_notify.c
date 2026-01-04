@@ -199,7 +199,7 @@ cib_notify_send(const xmlNode *xml)
 }
 
 void
-based_diff_notify(const char *op, int result, const char *call_id,
+based_diff_notify(const char *op, int rc, const char *call_id,
                   const char *client_id, const char *client_name,
                   const char *origin, xmlNode *diff)
 {
@@ -219,7 +219,7 @@ based_diff_notify(const char *op, int result, const char *call_id,
     pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
     pcmk__xe_set(update_msg, PCMK__XA_CIB_CALLID, call_id);
     pcmk__xe_set(update_msg, PCMK__XA_SRC, origin);
-    pcmk__xe_set_int(update_msg, PCMK__XA_CIB_RC, result);
+    pcmk__xe_set_int(update_msg, PCMK__XA_CIB_RC, pcmk_rc2legacy(rc));
 
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);
