@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -154,46 +154,11 @@ based_diff_notify(const char *op, int result, const char *call_id,
                   const char *client_id, const char *client_name,
                   const char *origin, xmlNode *update, xmlNode *diff)
 {
-    int source[] = { 0, 0, 0 };
-    int target[] = { 0, 0, 0 };
-
-    uint8_t log_level = LOG_TRACE;
-
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
 
     if (diff == NULL) {
         return;
-    }
-
-    if (result != pcmk_ok) {
-        log_level = LOG_WARNING;
-    }
-
-    /* @TODO Check return code? How should we handle an error? Are these log
-     * messages even useful?
-     */
-    pcmk__xml_patchset_versions(diff, source, target);
-
-    if ((source[0] != target[0])
-        || (source[1] != target[1])
-        || (source[2] != target[2])) {
-
-        do_crm_log(log_level,
-                   "Updated CIB generation %d.%d.%d to %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   source[0], source[1], source[2],
-                   target[0], target[1], target[2], client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-
-    } else if ((target[0] != 0) || (target[1] != 0) || (target[2] != 0)) {
-        do_crm_log(log_level,
-                   "Local-only change to CIB generation %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   target[0], target[1], target[2], client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }
 
     update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
