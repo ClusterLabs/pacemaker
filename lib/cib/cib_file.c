@@ -168,8 +168,8 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
                                 output);
     } else {
         result_cib = private->cib_xml;
-        rc = cib_perform_op(cib_file, op_function, request, &changed,
-                            &result_cib, &cib_diff, output);
+        rc = cib__perform_op_rw(cib_file, op_function, request, &changed,
+                                &result_cib, &cib_diff, output);
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
@@ -265,7 +265,7 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
     xmlNode *saved_cib = private->cib_xml;
 
     /* *result_cib should be a copy of private->cib_xml (created by
-     * cib_perform_op())
+     * cib__perform_op_rw())
      */
     pcmk__assert((result_cib != NULL) && (*result_cib != NULL)
                  && (*result_cib != private->cib_xml));
