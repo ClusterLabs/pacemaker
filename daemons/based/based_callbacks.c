@@ -366,28 +366,22 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         return true;
     }
 
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+    if (is_reply && pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
+        pcmk__trace("Will notify local clients for %s reply from %s", op,
+                    originator);
+        *process = false;
+        *needs_reply = false;
+        *local_notify = true;
+        return true;
+    }
+
+    if ((reply_to != NULL)
+        && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+
         // sync_our_cib() sets PCMK__XA_CIB_ISREPLYTO
-        if (reply_to) {
-            delegated = reply_to;
-        }
-        goto skip_is_reply;
-    }
+        delegated = reply_to;
 
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
-        if (is_reply) {
-            pcmk__trace("Will notify local clients for %s reply from %s", op,
-                        originator);
-            *process = false;
-            *needs_reply = false;
-            *local_notify = true;
-            return true;
-        }
-
-        goto skip_is_reply;
-    }
-
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
          * this operation if PCMK__XA_CIB_SCHEMA_MAX is unset.
          *
@@ -425,7 +419,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         }
     }
 
-skip_is_reply:
     *process = true;
     *needs_reply = false;
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
