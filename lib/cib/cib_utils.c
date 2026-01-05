@@ -260,14 +260,8 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
         goto done;
     }
 
-    if (*output == *current_cib) {
-        // Trust the caller to check this and not free *output
-        goto done;
-    }
-
     if ((*output)->doc == (*current_cib)->doc) {
-        // Give the caller a copy that it can free
-        *output = pcmk__xml_copy(NULL, *output);
+        // Trust the caller to check this and not free *output
         goto done;
     }
 
@@ -823,8 +817,10 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                 const char *section, xmlNode * data,
                 xmlNode ** output_data, int call_options, const char *user_name)
 {
-    /* Note: *output_data gets set only for create and query requests. There are
-     * a lot of opportunities to clean up, clarify, check/enforce things, etc.
+    /* @COMPAT *output_data gets set only for create and query requests. Setting
+     * it for create requests is deprecated since 2.1.8. When that behavior is
+     * removed, we can restrict freeing it to read-only operations
+     * (cib__perform_op_ro()).
      */
     int (*delegate)(cib_t *cib, const char *op, const char *host,
                     const char *section, xmlNode *data, xmlNode **output_data,

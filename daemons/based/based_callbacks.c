@@ -631,7 +631,7 @@ done:
         *reply = create_cib_reply(request, rc, output);
     }
 
-    if (output != the_cib) {
+    if ((output != NULL) && (output->doc != the_cib->doc)) {
         pcmk__xml_free(output);
     }
 
