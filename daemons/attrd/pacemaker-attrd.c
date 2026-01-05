@@ -21,15 +21,11 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 
-#include <crm/common/attrs_internal.h>
 #include "pacemaker-attrd.h"
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"

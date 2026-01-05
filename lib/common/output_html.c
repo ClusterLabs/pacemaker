@@ -19,7 +19,6 @@
 #include <libxml/tree.h>                    // xmlNode
 #include <libxml/xmlstring.h>               // xmlChar
 
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =

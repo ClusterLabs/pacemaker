@@ -28,7 +28,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 

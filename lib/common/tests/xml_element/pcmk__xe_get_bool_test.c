@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 
 static void
 empty_input(void **state)

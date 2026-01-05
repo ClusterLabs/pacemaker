@@ -18,9 +18,6 @@
 
 #include <pacemaker-internal.h>
 
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
-
 #define SUMMARY "query and manage the Pacemaker controller"
 
 static enum {

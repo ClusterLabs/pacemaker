@@ -30,11 +30,7 @@
 
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
-#include <crm/common/attrs_internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/ipc_attrd_internal.h>
 #include <crm/common/ipc_controld.h>
-#include <crm/common/output_internal.h>
 #include <sys/utsname.h>
 
 #include <pacemaker-internal.h>

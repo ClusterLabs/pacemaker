@@ -20,9 +20,6 @@
 
 #include <pacemaker-controld.h>
 
-#include <crm/common/attrs_internal.h>
-#include <crm/common/ipc_attrd_internal.h>
-
 /*!
  * \internal
  * \brief Action numbers of outside events processed in current update diff

@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/output_internal.h>
 
 static pcmk__output_t *
 null_create_fn(char **argv) {

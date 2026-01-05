@@ -1,11 +1,15 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <logging_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_LOGGING_INTERNAL__H
 #define PCMK__CRM_COMMON_LOGGING_INTERNAL__H
@@ -16,7 +20,7 @@
 #include <glib.h>
 #include <qb/qblog.h>                   // LOG_TRACE, qb_*
 
-#include <crm/common/internal.h>        // pcmk__is_set()
+#include <crm/common/flags_internal.h>  // pcmk__is_set()
 #include <crm/common/logging.h>
 #include <crm/common/output_internal.h>
 
@@ -239,6 +243,15 @@ extern void *pcmk__config_warning_context;
 
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context);
 void pcmk__set_config_warning_handler(pcmk__config_warning_func warning_handler, void *warning_context);
+
+/* This says whether the current application is a Pacemaker daemon or not,
+ * and is used to change default logging settings such as whether to log to
+ * stderr, etc., as well as a few other details such as whether blackbox signal
+ * handling is enabled.
+ *
+ * It is set when logging is initialized, and does not need to be set directly.
+ */
+extern bool pcmk__is_daemon;
 
 /* Pacemaker library functions set this when a configuration error is found,
  * which turns on extra messages at the end of processing.

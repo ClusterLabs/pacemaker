@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/output_internal.h>
 
 static int
 null_message_fn(pcmk__output_t *out, va_list args) {

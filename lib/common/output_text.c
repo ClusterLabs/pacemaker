@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/cmdline_internal.h>
 
 #include <stdarg.h>
 #include <stdbool.h>

@@ -15,8 +15,6 @@
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
-#include <crm/common/scheduler_internal.h>
 
 #include <glib.h>
 

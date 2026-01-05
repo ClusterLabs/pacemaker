@@ -14,7 +14,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/scheduler.h>
-#include <crm/common/scheduler_internal.h>
 
 #define OCF_RESKEY_PREFIX "OCF_RESKEY_"
 #define LRM_TARGET_ENV OCF_RESKEY_PREFIX CRM_META "_" PCMK__META_ON_NODE

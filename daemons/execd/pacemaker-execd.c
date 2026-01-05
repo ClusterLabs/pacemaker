@@ -17,12 +17,8 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/services.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/remote_internal.h>
 #include <crm/fencing/internal.h>           // stonith__api_new()
 #include <crm/lrmd_internal.h>
 

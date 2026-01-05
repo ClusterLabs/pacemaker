@@ -20,7 +20,6 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/ipc_internal.h>
 
 #include <qb/qbarray.h>
 

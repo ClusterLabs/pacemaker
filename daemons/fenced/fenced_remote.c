@@ -28,13 +28,11 @@
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
 #include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 #include <crm/common/util.h>
 #include <pacemaker-fenced.h>

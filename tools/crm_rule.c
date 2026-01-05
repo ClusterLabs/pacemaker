@@ -11,8 +11,6 @@
 
 #include <stdbool.h>
 
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/status.h>

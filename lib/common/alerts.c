@@ -14,9 +14,6 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>
 #include <crm/common/xml.h>
-#include <crm/common/alerts_internal.h>
-#include <crm/common/cib_internal.h>
-#include <crm/common/xml_internal.h>
 
 const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX] = {
     [PCMK__alert_key_recipient] = "CRM_alert_recipient",

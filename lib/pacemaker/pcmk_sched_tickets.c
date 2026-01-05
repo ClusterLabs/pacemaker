@@ -14,7 +14,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/scheduler.h>
-#include <crm/common/scheduler_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 

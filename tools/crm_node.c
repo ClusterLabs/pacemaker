@@ -17,14 +17,11 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/common/ipc_controld.h>
-#include <crm/common/attrs_internal.h>
 
 #include <pacemaker-internal.h>
 

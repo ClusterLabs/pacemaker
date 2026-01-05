@@ -1,11 +1,15 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <clone_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_CLONE_INTERNAL__H
 #define PCMK__CRM_COMMON_CLONE_INTERNAL__H
@@ -14,7 +18,7 @@
 #include <stdbool.h>                        // bool
 #include <stdint.h>                         // UINT32_C
 
-#include <crm/common/internal.h>            // pcmk__is_set()
+#include <crm/common/flags_internal.h>      // pcmk__is_set()
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t
 #include <crm/common/resources.h>           // pcmk_rsc_unique,
 #include <crm/common/resources_internal.h>  // pcmk__rsc_variant_clone etc.

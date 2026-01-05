@@ -13,7 +13,6 @@
 #include <stdint.h>
 
 #include <crm_resource.h>
-#include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
 

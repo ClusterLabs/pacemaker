@@ -31,9 +31,6 @@
 #include <crm/services.h>
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/remote_internal.h>
-#include <crm/common/tls_internal.h>
 #include <crm/common/xml.h>
 
 #include <crm/stonith-ng.h>

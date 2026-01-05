@@ -28,7 +28,6 @@
 #include <crm/cib/internal.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 // @TODO: Free this via crm_exit() when libcib gets merged with libcrmcommon
 static GHashTable *operation_table = NULL;

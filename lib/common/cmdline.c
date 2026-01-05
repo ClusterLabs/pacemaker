@@ -15,8 +15,6 @@
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/strings_internal.h>
 #include <crm/common/util.h>
 
 static gboolean

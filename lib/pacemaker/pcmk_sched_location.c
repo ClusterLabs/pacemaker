@@ -13,7 +13,6 @@
 #include <glib.h>
 
 #include <crm/crm.h>
-#include <crm/common/rules_internal.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 

@@ -24,7 +24,6 @@
 #include <crm/crm.h>   /* indirectly: pcmk_err_generic */
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
 
 static int is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,

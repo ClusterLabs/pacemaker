@@ -26,7 +26,6 @@
 #include <crm/cib/internal.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
-#include <crm/common/xml_internal.h>
 #include <crm/lrmd_events.h>            // lrmd_event_data_t, etc.
 #include <crm/lrmd_internal.h>
 #include <crm/pengine/status.h>

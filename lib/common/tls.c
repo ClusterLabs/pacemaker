@@ -16,8 +16,6 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
 
-#include <crm/common/tls_internal.h>
-
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
 {

@@ -24,8 +24,6 @@
 #include <libgen.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/cib/internal.h>
 
 static pcmk__output_t *

@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/common/xml.h>
-#include <crm/common/attrs_internal.h>
 
 #include "pacemaker-attrd.h"
 

@@ -20,10 +20,6 @@
 
 #include <crm/common/scheduler.h>
 
-#include <crm/common/iso8601_internal.h>
-#include <crm/common/nvpair_internal.h>
-#include <crm/common/rules_internal.h>
-#include <crm/common/scheduler_internal.h>
 #include "crmcommon_private.h"
 
 /*!

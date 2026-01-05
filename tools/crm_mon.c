@@ -31,15 +31,12 @@
 
 #include <crm/services.h>
 #include <crm/lrmd.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/output.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/results.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>

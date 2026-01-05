@@ -16,7 +16,6 @@
 
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
-#include <crm/common/nvpair_internal.h>
 
 #define DEFAULT_VALUE 0xfff
 

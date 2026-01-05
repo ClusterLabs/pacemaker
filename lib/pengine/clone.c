@@ -17,8 +17,6 @@
 #include <pe_status_private.h>
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
-#include <crm/common/xml_internal.h>
-#include <crm/common/scheduler_internal.h>
 
 typedef struct clone_variant_data_s {
     int clone_max;

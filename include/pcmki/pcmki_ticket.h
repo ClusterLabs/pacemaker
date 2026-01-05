@@ -1,21 +1,23 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+#ifndef PCMK__INCLUDED_PACEMAKER_INTERNAL_H
+#error "Include <pacemaker-internal.h> instead of <pcmki/pcmki_ticket.h> directly"
+#endif
 
 #ifndef PCMK__PCMKI_PCMKI_TICKET__H
 #define PCMK__PCMKI_PCMKI_TICKET__H
 
 #include <stdbool.h>                        // bool
 
-#include <crm/common/output_internal.h>     // pcmk__output_t
-#include <crm/common/scheduler_types.h>     // pcmk_scheduler_t
-
 #include <crm/cib/cib_types.h>
+#include <crm/common/internal.h>            // pcmk__output_t
+#include <crm/common/scheduler_types.h>     // pcmk_scheduler_t
 
 #ifdef __cplusplus
 extern "C" {

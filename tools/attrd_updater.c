@@ -20,14 +20,8 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/ipc_attrd_internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/xml_internal.h>
 
-#include <crm/common/attrs_internal.h>
-
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #define SUMMARY "query and update Pacemaker node attributes"
 

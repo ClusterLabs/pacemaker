@@ -14,13 +14,11 @@
 
 #include <crm/crm.h>
 #include <crm/common/scheduler.h>
-#include <crm/common/scheduler_internal.h>
+#include <crm/common/util.h>
+#include <crm/common/xml.h>
 #include <crm/pengine/status.h>
 #include <pacemaker-internal.h>
 
-#include "crm/common/util.h"
-#include "crm/common/xml_internal.h"
-#include "crm/common/xml.h"
 #include "libpacemaker_private.h"
 
 // Used to temporarily mark a node as unusable

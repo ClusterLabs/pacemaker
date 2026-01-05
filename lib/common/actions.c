@@ -19,7 +19,6 @@
 #include <crm/crm.h>
 #include <crm/lrmd.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/util.h>
 #include <crm/common/scheduler.h>
 
