@@ -524,12 +524,11 @@ forward_request(xmlNode *request)
 
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
-                    cib__op_fn_t op_function, xmlNode **reply)
+                    cib__op_fn_t op_function, xmlNode **output)
 {
     static mainloop_timer_t *digest_timer = NULL;
 
     xmlNode *cib_diff = NULL;
-    xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
 
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
@@ -548,7 +547,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
+        rc = cib__perform_op_ro(op_function, request, &the_cib, output);
         goto done;
     }
 
@@ -559,7 +558,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      */
     result_cib = the_cib;
     rc = cib__perform_op_rw(cib_undefined, op_function, request,
-                            &config_changed, &result_cib, &cib_diff, &output);
+                            &config_changed, &result_cib, &cib_diff, output);
 
     if ((rc == pcmk_rc_ok)
         && !pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
@@ -603,12 +602,12 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     } else if (rc == pcmk_rc_schema_validation) {
         pcmk__assert(result_cib != the_cib);
 
-        if (output != NULL) {
-            pcmk__log_xml_info(output, "cib:output");
-            pcmk__xml_free(output);
+        if (*output != NULL) {
+            pcmk__log_xml_info(*output, "cib:output");
+            pcmk__xml_free(*output);
         }
 
-        output = result_cib;
+        *output = result_cib;
 
     } else if (result_cib != the_cib) {
         pcmk__xml_free(result_cib);
@@ -622,14 +621,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     based_diff_notify(request, rc, cib_diff);
 
 done:
-    if (!pcmk__is_set(call_options, cib_discard_reply)) {
-        *reply = create_cib_reply(request, rc, output);
-    }
-
-    if ((output != NULL) && (output->doc != the_cib->doc)) {
-        pcmk__xml_free(output);
-    }
-
     pcmk__xml_free(cib_diff);
     return rc;
 }
@@ -826,21 +817,27 @@ based_process_request(xmlNode *request, bool privileged,
         }
 
     } else if (process) {
+        xmlNode *output = NULL;
         time_t start_time = time(NULL);
 
         if (!privileged
             && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
 
             rc = EACCES;
-            if (!pcmk__is_set(call_options, cib_discard_reply)) {
-                reply = create_cib_reply(request, rc, NULL);
-            }
 
         } else {
-            rc = cib_process_command(request, operation, op_function, &reply);
+            rc = cib_process_command(request, operation, op_function, &output);
         }
 
         log_op_result(request, operation, rc, difftime(time(NULL), start_time));
+
+        if (!pcmk__is_set(call_options, cib_discard_reply)) {
+            reply = create_cib_reply(request, rc, output);
+        }
+
+        if ((output != NULL) && (output->doc != the_cib->doc)) {
+            pcmk__xml_free(output);
+        }
     }
 
     if (pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
