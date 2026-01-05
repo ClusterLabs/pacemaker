@@ -281,6 +281,7 @@ cib_client_upgrade(cib_t * cib, int call_options)
                            NULL, call_options, cib->user);
 }
 
+// @COMPAT cib_api_operations_t:sync is deprecated since 3.1.0
 static int
 cib_client_sync(cib_t * cib, const char *section, int call_options)
 {
