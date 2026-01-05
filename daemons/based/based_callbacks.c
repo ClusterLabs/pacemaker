@@ -336,7 +336,7 @@ static bool
 parse_peer_options(const cib__operation_t *operation, xmlNode *request,
                    bool *local_notify, bool *needs_reply, bool *process)
 {
-    const char *host = NULL;
+    const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     const char *delegated = pcmk__xe_get(request, PCMK__XA_CIB_DELEGATED_FROM);
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
@@ -359,7 +359,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
         // Nothing to do
 
-    } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
+    } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
         process_ping_reply(request);
         return false;
 
@@ -426,24 +426,24 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         return true;
     }
 
-  skip_is_reply:
+skip_is_reply:
     *process = true;
     *needs_reply = false;
-
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
-    host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         pcmk__trace("Processing %s request sent to us from %s", op, originator);
         *needs_reply = true;
         return true;
+    }
 
-    } else if (host != NULL) {
+    if (host != NULL) {
         pcmk__trace("Ignoring %s request intended for CIB manager on %s", op,
                     host);
         return false;
+    }
 
-    } else if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
+    if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
         *needs_reply = true;
     }
 
