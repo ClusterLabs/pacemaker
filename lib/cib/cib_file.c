@@ -149,8 +149,13 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     bool read_only = false;
     xmlNode *result_cib = NULL;
     xmlNode *cib_diff = NULL;
+    xmlNode *local_output = NULL;
 
     file_opaque_t *private = cib->variant_opaque;
+
+    if (output != NULL) {
+        *output = NULL;
+    }
 
     // We error checked these in callers
     cib__get_operation(op, &operation);
@@ -166,11 +171,11 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     if (read_only) {
         rc = cib__perform_op_ro(op_function, request, &private->cib_xml,
-                                output);
+                                &local_output);
     } else {
         result_cib = private->cib_xml;
         rc = cib__perform_op_rw(cib_file, op_function, request, &changed,
-                                &result_cib, &cib_diff, output);
+                                &result_cib, &cib_diff, &local_output);
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
@@ -192,12 +197,22 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         set_file_flags(private, file_flag_dirty);
     }
 
-    if (*output == NULL) {
+    if (local_output == NULL) {
         goto done;
     }
 
-    if ((*output)->doc == private->cib_xml->doc) {
-        *output = pcmk__xml_copy(NULL, *output);
+    if ((output != NULL) && (local_output->doc != private->cib_xml->doc)) {
+        *output = local_output;
+        goto done;
+    }
+
+    if (output != NULL) {
+        *output = pcmk__xml_copy(NULL, local_output);
+        goto done;
+    }
+
+    if (local_output->doc != private->cib_xml->doc) {
+        pcmk__xml_free(local_output);
     }
 
 done:
@@ -411,7 +426,6 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 {
     int rc = pcmk_ok;
     xmlNode *request = NULL;
-    xmlNode *output = NULL;
     file_opaque_t *private = cib->variant_opaque;
 
     const cib__operation_t *operation = NULL;
@@ -455,18 +469,10 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         goto done;
     }
 
-    rc = process_request(cib, request, &output);
+    rc = process_request(cib, request, output_data);
 
 done:
     pcmk__xml_free(request);
-
-    if (output_data != NULL) {
-        *output_data = output;
-
-    } else {
-        pcmk__xml_free(output);
-    }
-
     return pcmk_rc2legacy(rc);
 }
 
