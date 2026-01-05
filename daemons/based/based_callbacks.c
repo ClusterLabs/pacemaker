@@ -375,9 +375,19 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     }
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
-        // Nothing to do
+        if (is_reply) {
+            pcmk__trace("Will notify local clients for %s reply from %s", op,
+                        originator);
+            *process = false;
+            *needs_reply = false;
+            *local_notify = true;
+            return true;
+        }
 
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
+        goto skip_is_reply;
+    }
+
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
          * this operation if PCMK__XA_CIB_SCHEMA_MAX is unset.
          *
@@ -400,27 +410,30 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             // Our upgrade request was rejected by DC, notify clients of result
             pcmk__xe_set(request, PCMK__XA_CIB_RC, upgrade_rc);
 
-        } else if ((max == NULL) && based_is_primary) {
+            if (is_reply) {
+                pcmk__trace("Will notify local clients for %s reply from %s",
+                            op, originator);
+                *process = false;
+                *needs_reply = false;
+                *local_notify = true;
+                return true;
+            }
+
+            goto skip_is_reply;
+        }
+
+        if ((max == NULL) && based_is_primary) {
             /* We are the DC, check if this upgrade is allowed */
             goto skip_is_reply;
+        }
 
-        } else if(max) {
+        if (max != NULL) {
             /* Ok, go ahead and upgrade to 'max' */
             goto skip_is_reply;
-
-        } else {
-            // Ignore broadcast client requests when we're not primary
-            return false;
         }
-    }
 
-    if (is_reply) {
-        pcmk__trace("Will notify local clients for %s reply from %s", op,
-                    originator);
-        *process = false;
-        *needs_reply = false;
-        *local_notify = true;
-        return true;
+        // Ignore broadcast client requests when we're not primary
+        return false;
     }
 
 skip_is_reply:
