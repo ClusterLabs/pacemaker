@@ -291,33 +291,25 @@ process_ping_reply(const xmlNode *reply)
 }
 
 static void
-parse_local_options(const pcmk__client_t *client,
-                    const cib__operation_t *operation,
-                    const char *host, const char *op, bool *local_notify,
-                    bool *needs_reply, bool *process)
+log_local_options(const pcmk__client_t *client,
+                  const cib__operation_t *operation, const char *host,
+                  const char *op)
 {
-    // Process locally and notify local client
-    *process = true;
-    *needs_reply = false;
-    *local_notify = true;
-
     if (pcmk__is_set(operation->flags, cib__op_attr_local)) {
-        /* Always process locally if cib__op_attr_local is set.
-         *
-         * @COMPAT: Currently host is ignored. At a compatibility break, throw
-         * an error (from based_process_request() or earlier) if host is not
-         * NULL or OUR_NODENAME.
+        /* @COMPAT Currently host is ignored. At a compatibility break, throw an
+         * error (from based_process_request() or earlier) if host is not NULL
+         * or OUR_NODENAME.
          */
         pcmk__trace("Processing always-local %s op from client %s", op,
                     pcmk__client_name(client));
 
-        if (!pcmk__str_eq(host, OUR_NODENAME,
-                          pcmk__str_casei|pcmk__str_null_matches)) {
-
-            pcmk__warn("Operation '%s' is always local but its target host is "
-                       "set to '%s'",
-                       op, host);
+        if (pcmk__str_eq(host, OUR_NODENAME,
+                         pcmk__str_casei|pcmk__str_null_matches)) {
+            return;
         }
+
+        pcmk__warn("Operation '%s' is always local but its target host is set "
+                   "to '%s'", op, host);
         return;
     }
 
@@ -741,8 +733,11 @@ based_process_request(xmlNode *request, bool privileged,
             return pcmk_rc_ok;
         }
 
-        parse_local_options(client, operation, host, op, &local_notify,
-                            &needs_reply, &process);
+        // Process locally and notify local client; no peer to reply to
+        needs_reply = false;
+        local_notify = true;
+
+        log_local_options(client, operation, host, op);
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
