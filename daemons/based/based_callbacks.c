@@ -39,6 +39,7 @@
 
 #define EXIT_ESCALATION_MS 10000
 
+static mainloop_timer_t *digest_timer = NULL;
 static long long ping_seq = 0;
 static char *ping_digest = NULL;
 static bool ping_modified_since = false;
@@ -526,8 +527,6 @@ static int
 based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **output)
 {
-    static mainloop_timer_t *digest_timer = NULL;
-
     xmlNode *result_cib = the_cib;
     xmlNode *cib_diff = NULL;
 
@@ -962,6 +961,7 @@ based_terminate(int exit_status)
         remote_tls_fd = 0;
     }
 
+    g_clear_pointer(&digest_timer, mainloop_timer_del);
     g_clear_pointer(&ping_digest, free);
     g_clear_pointer(&the_cib, pcmk__xml_free);
 
