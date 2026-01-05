@@ -590,8 +590,10 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         }
 
         mainloop_timer_start(digest_timer);
+        goto done;
+    }
 
-    } else if (rc == pcmk_rc_schema_validation) {
+    if (rc == pcmk_rc_schema_validation) {
         pcmk__assert(result_cib != the_cib);
 
         if (*output != NULL) {
@@ -600,19 +602,20 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         }
 
         *output = result_cib;
-
-    } else if (result_cib != the_cib) {
-        pcmk__xml_free(result_cib);
-    }
-
-    if (pcmk__any_flags_set(call_options,
-                            cib_dryrun|cib_inhibit_notify|cib_transaction)) {
         goto done;
     }
 
-    based_diff_notify(request, rc, cib_diff);
+    if (result_cib != the_cib) {
+        pcmk__xml_free(result_cib);
+    }
 
 done:
+    if (!pcmk__any_flags_set(call_options,
+                             cib_dryrun|cib_inhibit_notify|cib_transaction)) {
+
+        based_diff_notify(request, rc, cib_diff);
+    }
+
     pcmk__xml_free(cib_diff);
     return rc;
 }
