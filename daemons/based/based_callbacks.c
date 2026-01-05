@@ -348,6 +348,24 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         originator = "peer";
     }
 
+    if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
+        process_ping_reply(request);
+        return false;
+    }
+
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
+        *local_notify = false;
+
+        if (reply_to == NULL) {
+            return true;
+        }
+
+        // @TODO Is this possible?
+        pcmk__debug("Ignoring shutdown request from %s because reply_to=%s",
+                    originator, reply_to);
+        return true;
+    }
+
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
         // sync_our_cib() sets PCMK__XA_CIB_ISREPLYTO
         if (reply_to) {
@@ -358,10 +376,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
         // Nothing to do
-
-    } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
-        process_ping_reply(request);
-        return false;
 
     } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
@@ -405,16 +419,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         pcmk__trace("Ignoring legacy %s reply sent from %s to local clients",
                     op, originator);
         return false;
-
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        *local_notify = false;
-        if (reply_to == NULL) {
-            *process = true;
-        } else { // Not possible?
-            pcmk__debug("Ignoring shutdown request from %s because reply_to=%s",
-                        originator, reply_to);
-        }
-        return *process;
     }
 
     if (is_reply) {
