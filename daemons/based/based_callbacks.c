@@ -294,13 +294,12 @@ static void
 parse_local_options(const pcmk__client_t *client,
                     const cib__operation_t *operation,
                     const char *host, const char *op, bool *local_notify,
-                    bool *needs_reply, bool *process, bool *needs_forward)
+                    bool *needs_reply, bool *process)
 {
     // Process locally and notify local client
     *process = true;
     *needs_reply = false;
     *local_notify = true;
-    *needs_forward = false;
 
     if (pcmk__is_set(operation->flags, cib__op_attr_local)) {
         /* Always process locally if cib__op_attr_local is set.
@@ -319,21 +318,6 @@ parse_local_options(const pcmk__client_t *client,
                        "set to '%s'",
                        op, host);
         }
-        return;
-    }
-
-    if (pcmk__is_set(operation->flags, cib__op_attr_modifies)
-        || !pcmk__str_eq(host, OUR_NODENAME,
-                         pcmk__str_casei|pcmk__str_null_matches)) {
-
-        // Forward modifying and non-local requests via cluster
-        *process = false;
-        *needs_reply = false;
-        *local_notify = false;
-        *needs_forward = true;
-
-        pcmk__trace("%s op from %s needs to be forwarded to %s", op,
-                    pcmk__client_name(client), pcmk__s(host, "all nodes"));
         return;
     }
 
@@ -717,7 +701,6 @@ based_process_request(xmlNode *request, bool privileged,
     bool process = true;        // Whether to process request locally now
     bool needs_reply = true;    // Whether to build a reply
     bool local_notify = false;  // Whether to notify (local) requester
-    bool needs_forward = false; // Whether to forward request somewhere else
 
     xmlNode *reply = NULL;
 
@@ -778,15 +761,24 @@ based_process_request(xmlNode *request, bool privileged,
         process = true;
         needs_reply = false;
         local_notify = false;
-        needs_forward = false;
 
         pcmk__trace("Processing %s op from %s/%s on %s locally because it's "
                     "part of a transaction", op, client_name, call_id,
                     pcmk__xe_get(request, PCMK__XA_SRC));
 
     } else if (client != NULL) {
+        // Forward modifying and non-local requests via cluster
+        if (!pcmk__is_set(operation->flags, cib__op_attr_local)
+            && (pcmk__is_set(operation->flags, cib__op_attr_modifies)
+                || !pcmk__str_eq(host, OUR_NODENAME,
+                                 pcmk__str_casei|pcmk__str_null_matches))) {
+
+            forward_request(request);
+            return pcmk_rc_ok;
+        }
+
         parse_local_options(client, operation, host, op, &local_notify,
-                            &needs_reply, &process, &needs_forward);
+                            &needs_reply, &process);
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
@@ -797,11 +789,6 @@ based_process_request(xmlNode *request, bool privileged,
         needs_reply = false;
         local_notify = false;
         pcmk__trace("Client is not interested in the reply");
-    }
-
-    if (needs_forward) {
-        forward_request(request);
-        return pcmk_rc_ok;
     }
 
     if (cib_status != pcmk_rc_ok) {
