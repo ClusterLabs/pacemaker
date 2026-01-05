@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+// Number of elements in a statically defined array
+#define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
+
 int pcmk__compare_versions(const char *version1, const char *version2);
 int pcmk__daemon_user(uid_t *uid, gid_t *gid);
 char *pcmk__generate_uuid(void);

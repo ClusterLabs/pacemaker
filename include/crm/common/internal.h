@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,9 +73,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Number of elements in a statically defined array
-#define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 
 #ifdef __cplusplus
 }
