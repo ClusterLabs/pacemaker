@@ -549,14 +549,11 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
     rc = cib__perform_op_rw(cib_undefined, op_function, request,
                             &config_changed, &result_cib, &cib_diff, output);
 
+    /* On validation error, include the schema-violating result CIB in any reply
+     * or notification that we will send.
+     */
     if (rc == pcmk_rc_schema_validation) {
-        pcmk__assert(result_cib != the_cib);
-
-        if (*output != NULL) {
-            pcmk__log_xml_info(*output, "cib:output");
-            pcmk__xml_free(*output);
-        }
-
+        pcmk__assert((result_cib != the_cib) && (*output == NULL));
         *output = result_cib;
         goto done;
     }
