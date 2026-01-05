@@ -17,7 +17,7 @@
 #include <stdint.h>
 
 #include <crm/crm.h>
-#include <crm/common/output_internal.h>
+#include <crm/common/internal.h>
 #include <crm/common/ipc_controld.h>
 #include <crm/common/ipc_pacemakerd.h>
 

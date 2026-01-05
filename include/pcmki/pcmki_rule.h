@@ -13,9 +13,9 @@
 #ifndef PCMK__PCMKI_PCMKI_RULE__H
 #define PCMK__PCMKI_PCMKI_RULE__H
 
-#include <crm/crm.h>
+#include <crm/common/internal.h>
 #include <crm/common/iso8601.h>
-#include <crm/common/output_internal.h>
+#include <crm/crm.h>
 
 #ifdef __cplusplus
 extern "C" {

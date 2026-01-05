@@ -15,7 +15,7 @@
 
 #include <stdbool.h>
 
-#include <crm/common/output_internal.h>
+#include <crm/common/internal.h>
 
 #ifdef __cplusplus
 extern "C" {

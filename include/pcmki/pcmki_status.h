@@ -17,9 +17,9 @@
 #include <stdint.h>
 
 #include <crm/cib/cib_types.h>
-#include <crm/common/scheduler.h>
+#include <crm/common/internal.h>
 #include <crm/common/ipc_pacemakerd.h>
-#include <crm/common/output_internal.h>
+#include <crm/common/scheduler.h>
 #include <pcmki/pcmki_fence.h>
 
 #ifdef __cplusplus

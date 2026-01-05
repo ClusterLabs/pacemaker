@@ -16,8 +16,8 @@
 #include <glib.h>
 
 #include <crm/cib/cib_types.h>
+#include <crm/common/internal.h>
 #include <crm/common/scheduler.h>
-#include <crm/common/output_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

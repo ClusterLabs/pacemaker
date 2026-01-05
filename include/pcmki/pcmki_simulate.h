@@ -13,13 +13,14 @@
 #ifndef PCMK__PCMKI_PCMKI_SIMULATE__H
 #define PCMK__PCMKI_PCMKI_SIMULATE__H
 
-#include <crm/common/output_internal.h>
-#include <crm/common/scheduler.h>
-#include <pcmki/pcmki_transition.h>
-#include <crm/cib.h>                    // cib_t
-#include <pacemaker.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <crm/cib.h>                    // cib_t
+#include <crm/common/internal.h>
+#include <crm/common/scheduler.h>
+#include <pacemaker.h>
+#include <pcmki/pcmki_transition.h>
 
 #ifdef __cplusplus
 extern "C" {

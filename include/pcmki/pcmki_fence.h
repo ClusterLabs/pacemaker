@@ -15,8 +15,8 @@
 
 #include <stdbool.h>
 
+#include <crm/common/internal.h>
 #include <crm/stonith-ng.h>
-#include <crm/common/output_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

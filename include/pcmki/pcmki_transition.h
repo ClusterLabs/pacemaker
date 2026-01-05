@@ -16,6 +16,7 @@
 #include <stdbool.h>                    // bool
 #include <stdint.h>                     // uint32_t
 #include <sys/types.h>                  // time_t
+
 #include <glib.h>                       // guint, GList, GHashTable
 #include <libxml/tree.h>                // xmlNode
 

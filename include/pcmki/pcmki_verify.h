@@ -13,9 +13,10 @@
 #ifndef PCMK__PCMKI_PCMKI_VERIFY__H
 #define PCMK__PCMKI_PCMKI_VERIFY__H
 
-#include <crm/common/output_internal.h>
-#include <crm/common/scheduler.h>
 #include <libxml/tree.h>
+
+#include <crm/common/internal.h>
+#include <crm/common/scheduler.h>
 
 #ifdef __cplusplus
 extern "C" {

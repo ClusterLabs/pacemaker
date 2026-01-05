@@ -13,8 +13,9 @@
 #ifndef PCMK__PCMKI_PCMKI_SCHEDULER__H
 #define PCMK__PCMKI_PCMKI_SCHEDULER__H
 
-#include <glib.h>               // GList
 #include <stdbool.h>            // bool
+
+#include <glib.h>               // GList
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/lrmd_events.h>    // lrmd_event_data_t

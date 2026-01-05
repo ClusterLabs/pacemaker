@@ -13,7 +13,7 @@
 #ifndef PCMK__PCMKI_PCMKI_AGENTS__H
 #define PCMK__PCMKI_PCMKI_AGENTS__H
 
-#include <crm/common/output_internal.h>
+#include <crm/common/internal.h>
 
 #ifdef __cplusplus
 extern "C" {

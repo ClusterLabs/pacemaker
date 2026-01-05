@@ -15,8 +15,8 @@
 
 #include <stdint.h>
 
+#include <crm/common/internal.h>
 #include <crm/crm.h>
-#include <crm/common/output_internal.h>
 
 #ifdef __cplusplus
 extern "C" {

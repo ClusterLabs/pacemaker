@@ -15,10 +15,9 @@
 
 #include <stdbool.h>                        // bool
 
-#include <crm/common/output_internal.h>     // pcmk__output_t
-#include <crm/common/scheduler_types.h>     // pcmk_scheduler_t
-
 #include <crm/cib/cib_types.h>
+#include <crm/common/internal.h>            // pcmk__output_t
+#include <crm/common/scheduler_types.h>     // pcmk_scheduler_t
 
 #ifdef __cplusplus
 extern "C" {
