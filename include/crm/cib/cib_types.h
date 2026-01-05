@@ -166,7 +166,9 @@ typedef struct cib_api_operations_s {
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 
+    //! \deprecated Do not use
     int (*sync) (cib_t *cib, const char *section, int call_options);
+
     int (*sync_from) (cib_t *cib, const char *host, const char *section,
                       int call_options);
     int (*upgrade) (cib_t *cib, int call_options);
