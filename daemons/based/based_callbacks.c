@@ -837,12 +837,9 @@ based_process_request(xmlNode *request, bool privileged,
         }
     }
 
-    if (pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        pcmk__trace("Completed pre-sync update from %s/%s/%s%s",
-                    pcmk__s(originator, "local"), client_name, call_id,
-                    (local_notify? " with local notification" : ""));
+    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
+        && needs_reply && !stand_alone && (client == NULL)) {
 
-    } else if (needs_reply && !stand_alone && (client == NULL)) {
         send_peer_reply(reply, originator);
     }
 
