@@ -734,6 +734,9 @@ based_process_request(xmlNode *request, bool privileged,
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
+    xmlNode *output = NULL;
+    time_t start_time = 0;
+
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
@@ -810,48 +813,50 @@ based_process_request(xmlNode *request, bool privileged,
             reply = create_cib_reply(request, rc, the_cib);
         }
 
-    } else if (process) {
-        xmlNode *output = NULL;
-        time_t start_time = time(NULL);
-
-        if (!privileged
-            && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
-
-            rc = EACCES;
-
-        } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-            rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
-
-        } else {
-            rc = based_perform_op_rw(request, operation, op_function, &output);
-        }
-
-        log_op_result(request, operation, rc, difftime(time(NULL), start_time));
-
-        if (!pcmk__is_set(call_options, cib_discard_reply)) {
-            reply = create_cib_reply(request, rc, output);
-        }
-
-        if ((output != NULL) && (output->doc != the_cib->doc)) {
-            pcmk__xml_free(output);
-        }
+        goto done;
     }
 
+    if (!process) {
+        goto done;
+    }
+
+    start_time = time(NULL);
+
+    if (!privileged
+        && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
+
+        rc = EACCES;
+
+    } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+        rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
+
+    } else {
+        rc = based_perform_op_rw(request, operation, op_function, &output);
+    }
+
+    log_op_result(request, operation, rc, difftime(time(NULL), start_time));
+
+    if (!pcmk__is_set(call_options, cib_discard_reply)) {
+        reply = create_cib_reply(request, rc, output);
+    }
+
+    if ((output != NULL) && (output->doc != the_cib->doc)) {
+        pcmk__xml_free(output);
+    }
+
+done:
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
         && needs_reply && !stand_alone && (client == NULL)) {
 
         send_peer_reply(reply, originator);
     }
 
-    if (!local_notify || (client_id == NULL)) {
-        goto done;
+    if (local_notify && (client_id != NULL)) {
+        do_local_notify((process? reply : request), client_id,
+                        pcmk__is_set(call_options, cib_sync_call),
+                        (client == NULL));
     }
 
-    do_local_notify((process? reply : request), client_id,
-                    pcmk__is_set(call_options, cib_sync_call),
-                    (client == NULL));
-
-done:
     pcmk__xml_free(reply);
     return rc;
 }
