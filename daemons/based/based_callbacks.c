@@ -523,13 +523,13 @@ forward_request(xmlNode *request)
 }
 
 static int
-cib_process_command(xmlNode *request, const cib__operation_t *operation,
+based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **output)
 {
     static mainloop_timer_t *digest_timer = NULL;
 
+    xmlNode *result_cib = the_cib;
     xmlNode *cib_diff = NULL;
-    xmlNode *result_cib = NULL;
 
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
@@ -538,25 +538,13 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     bool config_changed = false;
     int rc = pcmk_rc_ok;
 
-    if (digest_timer == NULL) {
-        digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
-                                          digest_timer_cb, NULL);
-    }
-
-    /* Start processing the request... */
     pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
-
-    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_op_ro(op_function, request, &the_cib, output);
-        goto done;
-    }
 
     /* result_cib must not be modified after cib__perform_op_rw() returns.
      *
      * It's not important whether the client variant is cib_native or
      * cib_remote.
      */
-    result_cib = the_cib;
     rc = cib__perform_op_rw(cib_undefined, op_function, request,
                             &config_changed, &result_cib, &cib_diff, output);
 
@@ -595,6 +583,11 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
         if (cib_diff != NULL) {
             ping_modified_since = true;
+        }
+
+        if (digest_timer == NULL) {
+            digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
+                                              digest_timer_cb, NULL);
         }
 
         mainloop_timer_start(digest_timer);
@@ -825,8 +818,11 @@ based_process_request(xmlNode *request, bool privileged,
 
             rc = EACCES;
 
+        } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+            rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
+
         } else {
-            rc = cib_process_command(request, operation, op_function, &output);
+            rc = based_perform_op_rw(request, operation, op_function, &output);
         }
 
         log_op_result(request, operation, rc, difftime(time(NULL), start_time));
