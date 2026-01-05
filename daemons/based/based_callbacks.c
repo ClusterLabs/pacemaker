@@ -558,10 +558,8 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    // Discard result for failure, dry run, or within-transaction request
-    if ((rc != pcmk_rc_ok)
-        || pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
-
+    // Discard result for failure or dry run
+    if ((rc != pcmk_rc_ok) || pcmk__any_flags_set(call_options, cib_dryrun)) {
         if (result_cib != the_cib) {
             pcmk__xml_free(result_cib);
         }
@@ -572,10 +570,14 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
     if (result_cib != the_cib) {
         /* Always write to disk for successful ops with the writes-through flag
          * set. This also avoids the need to detect ordering changes.
+         *
+         * An exception is a request within a transaction. Since a transaction
+         * is atomic, intermediate results must not be written to disk.
          */
-        const bool to_disk = config_changed
-                             || pcmk__is_set(operation->flags,
-                                             cib__op_attr_writes_through);
+        const bool to_disk = !pcmk__is_set(call_options, cib_transaction)
+                             && (config_changed
+                                 || pcmk__is_set(operation->flags,
+                                                 cib__op_attr_writes_through));
 
         rc = based_activate_cib(result_cib, to_disk, op);
     }
