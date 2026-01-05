@@ -419,18 +419,10 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             return true;
         }
 
-        if ((max == NULL) && based_is_primary) {
-            /* We are the DC, check if this upgrade is allowed */
-            goto skip_is_reply;
+        if ((max == NULL) && !based_is_primary) {
+            // Ignore broadcast client requests when we're not the DC
+            return false;
         }
-
-        if (max != NULL) {
-            /* Ok, go ahead and upgrade to 'max' */
-            goto skip_is_reply;
-        }
-
-        // Ignore broadcast client requests when we're not primary
-        return false;
     }
 
 skip_is_reply:
