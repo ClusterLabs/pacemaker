@@ -770,27 +770,27 @@ based_process_request(xmlNode *request, bool privileged,
         return EOPNOTSUPP;
     }
 
-    if (client != NULL) {
+    if (pcmk__is_set(call_options, cib_transaction)) {
+        /* All requests in a transaction are processed locally against a working
+         * CIB copy, and we don't notify for individual requests because the
+         * entire transaction is atomic.
+         */
+        process = true;
+        needs_reply = false;
+        local_notify = false;
+        needs_forward = false;
+
+        pcmk__trace("Processing %s op from %s/%s on %s locally because it's "
+                    "part of a transaction", op, client_name, call_id,
+                    pcmk__xe_get(request, PCMK__XA_SRC));
+
+    } else if (client != NULL) {
         parse_local_options(client, operation, host, op, &local_notify,
                             &needs_reply, &process, &needs_forward);
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
         return pcmk_rc_ok;
-    }
-
-    if (pcmk__is_set(call_options, cib_transaction)) {
-        /* All requests in a transaction are processed locally against a working
-         * CIB copy, and we don't notify for individual requests because the
-         * entire transaction is atomic.
-         *
-         * We still call the option parser functions above, for the sake of log
-         * messages and checking whether we're the target for peer requests.
-         */
-        process = true;
-        needs_reply = false;
-        local_notify = false;
-        needs_forward = false;
     }
 
     if (pcmk__is_set(call_options, cib_discard_reply)) {
