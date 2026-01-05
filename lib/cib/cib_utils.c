@@ -217,7 +217,6 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     const char *op = NULL;
     const char *section = NULL;
     const char *user = NULL;
-    uint32_t call_options = cib_none;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
@@ -229,13 +228,11 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
-    pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
     cib = *current_cib;
 
-    if (cib_acl_enabled(*current_cib, user)
-        && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                 &cib_filtered)) {
+    if (cib_acl_enabled(cib, user)
+        && xml_acl_filtered_copy(user, cib, cib, &cib_filtered)) {
 
         if (cib_filtered == NULL) {
             pcmk__debug("Pre-filtered the entire cib");
@@ -631,7 +628,6 @@ done:
     }
 
     pcmk__xml_free(top);
-    pcmk__trace("Done");
     return rc;
 }
 
