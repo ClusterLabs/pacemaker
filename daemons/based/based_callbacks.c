@@ -527,6 +527,8 @@ static int
 based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **output)
 {
+    const char *feature_set = pcmk__xe_get(the_cib,
+                                           PCMK_XA_CRM_FEATURE_SET);
     xmlNode *result_cib = the_cib;
     xmlNode *cib_diff = NULL;
 
@@ -547,52 +549,6 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
     rc = cib__perform_op_rw(cib_undefined, op_function, request,
                             &config_changed, &result_cib, &cib_diff, output);
 
-    if ((rc == pcmk_rc_ok)
-        && !pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
-
-        /* Always write to disk for successful ops with the writes-through flag
-         * set. This also avoids the need to detect ordering changes.
-         */
-        const bool to_disk = config_changed
-                             || pcmk__is_set(operation->flags,
-                                             cib__op_attr_writes_through);
-
-        const char *feature_set = pcmk__xe_get(the_cib,
-                                               PCMK_XA_CRM_FEATURE_SET);
-
-        if (result_cib != the_cib) {
-            rc = based_activate_cib(result_cib, to_disk, op);
-        }
-
-        /* @COMPAT Nodes older than feature set 3.19.0 don't support
-         * transactions. In a mixed-version cluster with nodes <3.19.0, we must
-         * sync the updated CIB, so that the older nodes receive the changes.
-         * Any node that has already applied the transaction will ignore the
-         * synced CIB.
-         *
-         * To ensure the updated CIB is synced from only one node, we sync it
-         * from the originator.
-         */
-        if ((operation->type == cib__op_commit_transact)
-            && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
-            && (pcmk__compare_versions(feature_set, "3.19.0") < 0)) {
-
-            sync_our_cib(request, true);
-        }
-
-        if (cib_diff != NULL) {
-            ping_modified_since = true;
-        }
-
-        if (digest_timer == NULL) {
-            digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
-                                              digest_timer_cb, NULL);
-        }
-
-        mainloop_timer_start(digest_timer);
-        goto done;
-    }
-
     if (rc == pcmk_rc_schema_validation) {
         pcmk__assert(result_cib != the_cib);
 
@@ -605,9 +561,53 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    if (result_cib != the_cib) {
-        pcmk__xml_free(result_cib);
+    // Discard result for failure, dry run, or within-transaction request
+    if ((rc != pcmk_rc_ok)
+        || pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
+
+        if (result_cib != the_cib) {
+            pcmk__xml_free(result_cib);
+        }
+
+        goto done;
     }
+
+    if (result_cib != the_cib) {
+        /* Always write to disk for successful ops with the writes-through flag
+         * set. This also avoids the need to detect ordering changes.
+         */
+        const bool to_disk = config_changed
+                             || pcmk__is_set(operation->flags,
+                                             cib__op_attr_writes_through);
+
+        rc = based_activate_cib(result_cib, to_disk, op);
+    }
+
+    /* @COMPAT Nodes older than feature set 3.19.0 don't support transactions.
+     * In a mixed-version cluster with nodes <3.19.0, we must sync the updated
+     * CIB, so that the older nodes receive the changes. Any node that has
+     * already applied the transaction will ignore the synced CIB.
+     *
+     * To ensure the updated CIB is synced from only one node, we sync it from
+     * the originator.
+     */
+    if ((operation->type == cib__op_commit_transact)
+        && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
+        && (pcmk__compare_versions(feature_set, "3.19.0") < 0)) {
+
+        sync_our_cib(request, true);
+    }
+
+    if (cib_diff != NULL) {
+        ping_modified_since = true;
+    }
+
+    if (digest_timer == NULL) {
+        digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
+                                          digest_timer_cb, NULL);
+    }
+
+    mainloop_timer_start(digest_timer);
 
 done:
     if (!pcmk__any_flags_set(call_options,
