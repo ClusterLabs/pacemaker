@@ -408,18 +408,15 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
+            pcmk__assert(is_reply);
             pcmk__xe_set(request, PCMK__XA_CIB_RC, upgrade_rc);
 
-            if (is_reply) {
-                pcmk__trace("Will notify local clients for %s reply from %s",
-                            op, originator);
-                *process = false;
-                *needs_reply = false;
-                *local_notify = true;
-                return true;
-            }
-
-            goto skip_is_reply;
+            pcmk__trace("Will notify local clients for %s reply from %s", op,
+                        originator);
+            *process = false;
+            *needs_reply = false;
+            *local_notify = true;
+            return true;
         }
 
         if ((max == NULL) && based_is_primary) {
