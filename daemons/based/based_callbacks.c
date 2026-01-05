@@ -353,8 +353,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     }
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        *local_notify = false;
-
         if (reply_to == NULL) {
             return true;
         }
@@ -418,13 +416,10 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         }
     }
 
-    *process = true;
-    *needs_reply = false;
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         pcmk__trace("Processing %s request sent to us from %s", op, originator);
-        *needs_reply = true;
         return true;
     }
 
@@ -435,9 +430,10 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     }
 
     if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
-        *needs_reply = true;
+        return true;
     }
 
+    *needs_reply = false;
     pcmk__trace("Processing %s request broadcast by %s call %s on %s "
                 "(local clients will%s be notified)", op,
                 pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME),
@@ -742,10 +738,7 @@ based_process_request(xmlNode *request, bool privileged,
          * CIB copy, and we don't notify for individual requests because the
          * entire transaction is atomic.
          */
-        process = true;
         needs_reply = false;
-        local_notify = false;
-
         pcmk__trace("Processing %s op from client %s locally because it's part "
                     "of a transaction", op, pcmk__client_name(client));
 
