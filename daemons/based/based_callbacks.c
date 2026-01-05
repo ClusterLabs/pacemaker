@@ -412,13 +412,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             // Ignore broadcast client requests when we're not primary
             return false;
         }
-
-    } else if (is_reply
-               && pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-
-        pcmk__trace("Ignoring legacy %s reply sent from %s to local clients",
-                    op, originator);
-        return false;
     }
 
     if (is_reply) {
