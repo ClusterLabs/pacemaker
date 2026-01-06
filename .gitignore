@@ -246,7 +246,6 @@ pacemaker_*.info
 /rpm/mock
 
 # Project maintainer artifacts
-/maint/gnulib
 /maint/mocked/based
 /maint/testcc_helper.cc
 /maint/testcc_*_h
@@ -333,6 +332,7 @@ pacemaker_*.info
 /lib/pengine/tests/rules/
 /lrmd
 /ltmain.sh
+/maint/gnulib
 /mcp
 /missing
 /mock
