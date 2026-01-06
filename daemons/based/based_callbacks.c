@@ -20,7 +20,6 @@
 
 #include <glib.h>                   // gboolean, gpointer, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbdefs.h>              // QB_FALSE
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t
 #include <qb/qblog.h>               // LOG_TRACE
 
@@ -938,8 +937,6 @@ initiate_exit(void)
 void
 based_shutdown(int nsig)
 {
-    struct qb_ipcs_stats srv_stats;
-
     if (!cib_shutdown_flag) {
         int disconnects = 0;
         qb_ipcs_connection_t *c = NULL;
@@ -990,15 +987,13 @@ based_shutdown(int nsig)
         pcmk__info("Disconnected %d clients", disconnects);
     }
 
-    qb_ipcs_stats_get(ipcs_rw, &srv_stats, QB_FALSE);
-
     if (pcmk__ipc_client_count() == 0) {
-        pcmk__info("All clients disconnected (%d)", srv_stats.active_connections);
+        pcmk__info("All clients disconnected");
         initiate_exit();
 
     } else {
-        pcmk__info("Waiting on %d clients to disconnect (%d)",
-                   pcmk__ipc_client_count(), srv_stats.active_connections);
+        pcmk__info("Waiting on %d clients to disconnect",
+                   pcmk__ipc_client_count());
     }
 }
 
