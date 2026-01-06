@@ -24,10 +24,10 @@
 #include "based_remote.h"
 #include "based_transaction.h"
 
-#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
+#define OUR_NODENAME (stand_alone? "localhost" : based_cluster->priv->node_name)
 
 extern GMainLoop *mainloop;
-extern pcmk_cluster_t *crm_cluster;
+extern pcmk_cluster_t *based_cluster;
 extern gboolean stand_alone;
 extern bool cib_shutdown_flag;
 extern gchar *cib_root;
