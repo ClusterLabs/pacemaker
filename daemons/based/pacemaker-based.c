@@ -275,7 +275,10 @@ main(int argc, char **argv)
     /* If main loop returned, clean up and exit. We disconnect in case
      * based_terminate(-1) was called.
      */
-    pcmk_cluster_disconnect(based_cluster);
+    if (based_cluster != NULL) {
+        pcmk_cluster_disconnect(based_cluster);
+    }
+
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
 
 done:
@@ -368,17 +371,18 @@ cib_init(void)
     }
 
     based_remote_init();
-    based_cluster = pcmk_cluster_new();
-
-#if SUPPORT_COROSYNC
-    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        pcmk_cluster_set_destroy_fn(based_cluster, cib_cs_destroy);
-        pcmk_cpg_set_deliver_fn(based_cluster, cib_cs_dispatch);
-        pcmk_cpg_set_confchg_fn(based_cluster, pcmk__cpg_confchg_cb);
-    }
-#endif // SUPPORT_COROSYNC
 
     if (!stand_alone) {
+        based_cluster = pcmk_cluster_new();
+
+#if SUPPORT_COROSYNC
+        if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+            pcmk_cluster_set_destroy_fn(based_cluster, cib_cs_destroy);
+            pcmk_cpg_set_deliver_fn(based_cluster, cib_cs_dispatch);
+            pcmk_cpg_set_confchg_fn(based_cluster, pcmk__cpg_confchg_cb);
+        }
+#endif // SUPPORT_COROSYNC
+
         pcmk__cluster_set_status_callback(&cib_peer_update_callback);
 
         if (pcmk_cluster_connect(based_cluster) != pcmk_rc_ok) {
