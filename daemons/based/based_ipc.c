@@ -307,3 +307,38 @@ based_ipc_init(void)
     pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
                           &ipc_rw_callbacks);
 }
+
+/*!
+ * \internal
+ * \brief Clean up \c based IPC communication
+ */
+void
+based_ipc_cleanup(void)
+{
+    if (ipcs_ro != NULL) {
+        pcmk__drop_all_clients(ipcs_ro);
+        g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
+    }
+
+    if (ipcs_rw != NULL) {
+        pcmk__drop_all_clients(ipcs_rw);
+        g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
+    }
+
+    if (ipcs_shm != NULL) {
+        pcmk__drop_all_clients(ipcs_shm);
+        g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
+    }
+
+    /* Drop remote clients here because they're part of the IPC client table and
+     * must be dropped before \c pcmk__client_cleanup()
+     */
+    based_drop_remote_clients();
+
+    /* @TODO This is where we would call a based_unregister_handlers() to align
+     * with other daemons' IPC cleanup functions. Such a function does not yet
+     * exist; based doesn't use pcmk__request_t yet.
+     */
+
+    pcmk__client_cleanup();
+}
