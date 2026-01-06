@@ -900,15 +900,6 @@ cib_force_exit(gpointer data)
 }
 
 static void
-disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
-{
-    pcmk__client_t *a_client = value;
-
-    pcmk__err("Can't disconnect client %s: Not implemented",
-              pcmk__client_name(a_client));
-}
-
-static void
 initiate_exit(void)
 {
     int active = 0;
@@ -983,7 +974,7 @@ based_shutdown(int nsig)
 
         pcmk__debug("Disconnecting %d remote clients",
                     pcmk__ipc_client_count());
-        pcmk__foreach_ipc_client(disconnect_remote_client, NULL);
+        based_drop_remote_clients();
         pcmk__info("Disconnected %d clients", disconnects);
     }
 
