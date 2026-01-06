@@ -10,12 +10,6 @@
 #ifndef BASED_IPC__H
 #define BASED_IPC__H
 
-#include <qb/qbipcs.h>                  // qb_*
-
-extern qb_ipcs_service_t *ipcs_ro;
-extern qb_ipcs_service_t *ipcs_rw;
-extern qb_ipcs_service_t *ipcs_shm;
-
 void based_ipc_init(void);
 void based_ipc_cleanup(void);
 

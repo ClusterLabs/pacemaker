@@ -28,9 +28,9 @@
 
 #include "pacemaker-based.h"
 
-qb_ipcs_service_t *ipcs_ro = NULL;
-qb_ipcs_service_t *ipcs_rw = NULL;
-qb_ipcs_service_t *ipcs_shm = NULL;
+static qb_ipcs_service_t *ipcs_ro = NULL;
+static qb_ipcs_service_t *ipcs_rw = NULL;
+static qb_ipcs_service_t *ipcs_shm = NULL;
 
 /*!
  * \internal

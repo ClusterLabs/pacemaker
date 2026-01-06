@@ -281,8 +281,6 @@ main(int argc, char **argv)
         pcmk_cluster_disconnect(based_cluster);
     }
 
-    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
