@@ -16,7 +16,6 @@
 #include <stdlib.h>                 // free
 #include <syslog.h>                 // LOG_INFO, LOG_DEBUG
 #include <time.h>                   // time_t
-#include <unistd.h>                 // close
 
 #include <glib.h>                   // gboolean, gpointer, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
@@ -877,16 +876,8 @@ based_shutdown(int nsig)
 void
 based_terminate(int exit_status)
 {
-    if (remote_fd > 0) {
-        close(remote_fd);
-        remote_fd = 0;
-    }
-    if (remote_tls_fd > 0) {
-        close(remote_tls_fd);
-        remote_tls_fd = 0;
-    }
-
     based_ipc_cleanup();
+    based_remote_cleanup();
 
     g_clear_pointer(&digest_timer, mainloop_timer_del);
     g_clear_pointer(&ping_digest, free);
