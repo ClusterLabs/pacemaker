@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,12 @@
 
 #include <crm_internal.h>
 
-#include <stddef.h>             // NULL
+#include <stddef.h>                 // NULL
 
-#include <pacemaker-based.h>
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__assert, PCMK__NELEM
+
+#include "pacemaker-based.h"
 
 static const cib__op_fn_t op_functions[] = {
     [cib__op_abs_delete]       = cib_process_delete_absolute,
