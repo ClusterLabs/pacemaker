@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,42 +8,41 @@
  */
 
 #include <crm_internal.h>
-#include <crm/crm.h>
 
-#include <sys/param.h>
+#include <arpa/inet.h>              // htons
+#include <errno.h>                  // errno, EAGAIN
+#include <grp.h>                    // getgrgid, getgrnam, group
+#include <inttypes.h>               // PRIx64
+#include <netinet/in.h>             // sockaddr_in, INADDR_ANY
 #include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <inttypes.h>           // PRIx64
-#include <sys/socket.h>
-#include <arpa/inet.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free, getenv
+#include <string.h>                 // memset
+#include <sys/socket.h>             // sockaddr{,_storage}, AF_INET, etc.
+#include <sys/types.h>              // gid_t
+#include <unistd.h>                 // close
 
-#include <netinet/ip.h>
+#include <glib.h>                   // gboolean, gpointer, g_source_remove, etc.
+#include <gnutls/gnutls.h>          // gnutls_bye, gnutls_deinit
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <stdlib.h>
-#include <errno.h>
-
-#include <glib.h>
-#include <libxml/tree.h>
-
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
-#include <crm/cib/internal.h>
+#include <crm_config.h>             // CRM_DAEMON_GROUP
+#include <crm/common/internal.h>    // pcmk__client_t, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_*
+#include <crm/common/xml.h>         // PCMK_XA_*
+#include <crm/crm.h>                // CRM_OP_REGISTER
 
 #include "pacemaker-based.h"
 
-#include <gnutls/gnutls.h>
-
-#include <pwd.h>
-#include <grp.h>
 #if HAVE_SECURITY_PAM_APPL_H
-#  include <security/pam_appl.h>
-#  define HAVE_PAM 1
+#include <security/pam_appl.h>      // pam_*, PAM_*
+#define HAVE_PAM 1
 #elif HAVE_PAM_PAM_APPL_H
-#  include <pam/pam_appl.h>
-#  define HAVE_PAM 1
+#include <pam/pam_appl.h>           // pam_*, PAM_*
+#define HAVE_PAM 1
 #endif
 
 static pcmk__tls_t *tls = NULL;
