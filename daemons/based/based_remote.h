@@ -14,5 +14,6 @@ extern int remote_fd;
 extern int remote_tls_fd;
 
 void based_remote_init(void);
+void based_drop_remote_clients(void);
 
 #endif // BASED_REMOTE__H
