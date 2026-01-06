@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,29 +9,39 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
+#include <errno.h>                  // EACCES, ECONNREFUSED
+#include <inttypes.h>               // PRIu64
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>     // uint32_t, uint64_t, UINT64_C()
-#include <errno.h>
-#include <fcntl.h>
-#include <inttypes.h>   // PRIu64
+#include <stddef.h>                 // NULL, size_t
+#include <stdint.h>                 // u?int*_t, UINT64_C
+#include <stdio.h>                  // snprintf
+#include <stdlib.h>                 // free
+#include <sys/types.h>              // gid_t, uid_t
+#include <syslog.h>                 // LOG_INFO, LOG_DEBUG
+#include <time.h>                   // time_t
+#include <unistd.h>                 // close
 
-#include <glib.h>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>               // xmlXPathObject, etc.
+#include <glib.h>                   // gboolean, gpointer, g_*, etc.
+#include <libxml/tree.h>            // xmlNode
+#include <libxml/xpath.h>           // xmlXPath*
+#include <qb/qbdefs.h>              // QB_FALSE
+#include <qb/qbipcs.h>              // qb_ipcs_connection_t
+#include <qb/qblog.h>               // LOG_TRACE
 
-#include <crm/crm.h>
-#include <crm/cib.h>
-#include <crm/cluster/internal.h>
+#include <crm/cib.h>                // cib_call_options values
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/cluster.h>            // pcmk_cluster_disconnect
+#include <crm/cluster/internal.h>   // pcmk__cluster_send_message
+#include <crm/common/cib.h>         // pcmk_find_cib_element
+#include <crm/common/internal.h>    // pcmk__s, pcmk__str_eq
+#include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
+#include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_*
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
+#include <crm/crm.h>                // CRM_OP_*
 
-#include <crm/common/xml.h>
-
-#include <pacemaker-based.h>
+#include "pacemaker-based.h"
 
 #define EXIT_ESCALATION_MS 10000
 
