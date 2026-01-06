@@ -281,7 +281,7 @@ based_ipc_destroy(qb_ipcs_connection_t *c)
     based_ipc_closed(c);
 }
 
-struct qb_ipcs_service_handlers ipc_ro_callbacks = {
+static struct qb_ipcs_service_handlers ipc_ro_callbacks = {
     .connection_accept = based_ipc_accept,
     .connection_created = NULL,
     .msg_process = based_ipc_dispatch_ro,
@@ -289,10 +289,21 @@ struct qb_ipcs_service_handlers ipc_ro_callbacks = {
     .connection_destroyed = based_ipc_destroy,
 };
 
-struct qb_ipcs_service_handlers ipc_rw_callbacks = {
+static struct qb_ipcs_service_handlers ipc_rw_callbacks = {
     .connection_accept = based_ipc_accept,
     .connection_created = NULL,
     .msg_process = based_ipc_dispatch_rw,
     .connection_closed = based_ipc_closed,
     .connection_destroyed = based_ipc_destroy,
 };
+
+/*!
+ * \internal
+ * \brief Set up \c based IPC communication
+ */
+void
+based_ipc_init(void)
+{
+    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
+                          &ipc_rw_callbacks);
+}
