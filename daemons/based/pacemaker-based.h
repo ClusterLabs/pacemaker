@@ -11,31 +11,19 @@
 #  define PACEMAKER_BASED__H
 
 #include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <glib.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <stdint.h>                 // uint32_t, UINT64_C
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <glib.h>                   // GHashTable, g_hash_table_lookup
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qbipcs.h>              // qb_ipcs_service_t
 
-#include <crm/crm.h>
-#include <crm/cib.h>
-#include <crm/common/xml.h>
-#include <crm/cluster.h>
-#include <crm/common/internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/cib/internal.h>
+#include <crm/cluster.h>            // pcmk_cluster_t
+#include <crm/common/internal.h>    // pcmk__client_t
 
 #include "based_io.h"
 #include "based_operation.h"
 #include "based_notify.h"
 #include "based_transaction.h"
-
-#include <gnutls/gnutls.h>
 
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
 

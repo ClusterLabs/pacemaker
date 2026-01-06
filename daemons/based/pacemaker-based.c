@@ -9,24 +9,31 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                  // errno
+#include <grp.h>                    // initgroups
+#include <signal.h>                 // SIGTERM
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pwd.h>
-#include <grp.h>
-#include <bzlib.h>
-#include <sys/types.h>
+#include <stddef.h>                 // NULL, size_t
+#include <stdlib.h>                 // free
+#include <syslog.h>                 // LOG_INFO
+#include <sys/types.h>              // gid_t, uid_t
+#include <unistd.h>                 // setgid, setuid
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <corosync/cpg.h>           // cpg_*
+#include <glib.h>                   // g_*, G_*, etc.
+#include <libxml/tree.h>            // xmlNode
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
+#include <crm/cib/internal.h>       // cib_read_config
+#include <crm/cluster.h>            // pcmk_cluster_*
+#include <crm/cluster/internal.h>   // pcmk__node_update, etc.
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // crm_log_*
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
+#include <crm/common/xml.h>         // PCMK_XA_REMOTE_*_PORT
 
-#include <pacemaker-based.h>
+#include "pacemaker-based.h"
 
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
