@@ -9,18 +9,24 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <sys/types.h>
+#include <errno.h>                  // ENOTCONN
+#include <signal.h>                 // SIGTERM
+#include <stdbool.h>                // true
+#include <stdlib.h>                 // unsetenv
+#include <syslog.h>                 // LOG_INFO
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/services.h>
-#include <crm/common/ipc.h>
-#include <crm/common/mainloop.h>
-#include <crm/fencing/internal.h>           // stonith__api_new()
-#include <crm/lrmd_internal.h>
+#include <glib.h>                   // G_OPTION_*
+#include <qb/qblog.h>               // QB_XS
+
+#include <crm/common/ipc.h>         // crm_ipc_flags
+#include <crm/common/logging.h>     // crm_log_init, crm_log_preinit
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/options.h>     // PCMK_VALUE_NONE
+#include <crm/common/results.h>     // pcmk_rc_str, pcmk_rc_*, crm_exit
+#include <crm/crm.h>                // crm_system_name
+#include <crm/fencing/internal.h>   // stonith__api_free, stonith__api_connect_retry
+#include <crm/lrmd_internal.h>      // lrmd__remote_send_xml
+#include <crm/stonith-ng.h>         // stonith_s, stonith_t, stonith_state
 
 #include "pacemaker-execd.h"
 

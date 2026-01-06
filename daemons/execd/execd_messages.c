@@ -9,24 +9,22 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>                          // ENOMEM
+#include <errno.h>                          // EINPROGRESS, ENODEV
 #include <stdbool.h>                        // bool
-#include <stddef.h>                         // NULL, size_t
-#include <stdint.h>                         // int32_t, uint32_t
+#include <stddef.h>                         // NULL
 #include <stdlib.h>                         // free
-#include <sys/types.h>                      // gid_t, uid_t
 
-#include <glib.h>                           // g_byte_array_free, FALSE
+#include <glib.h>                           // g_hash_table_destroy
 #include <libxml/parser.h>                  // xmlNode
-#include <qb/qbipcs.h>                      // qb_ipcs_connection_t, qb_ipcs_service_handlers
 #include <qb/qblog.h>                       // QB_XS
 
-#include <crm/crm.h>                        // CRM_SYSTEM_LRMD
+#include <crm/crm.h>                        // CRM_OP_*, CRM_SYSTEM_LRMD
 #include <crm/common/internal.h>            // pcmk__process_request, pcmk__xml_free
-#include <crm/common/ipc.h>                 // crm_ipc_flags
-#include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
+#include <crm/common/results.h>             // pcmk_exec_status, pcmk_rc_*, pcmk_rc_str
+#include <crm/lrmd.h>                       // LRMD_OP_*
 
-#include "pacemaker-execd.h"                // client_disconnect_cleanup
+#include "pacemaker-execd.h"                // execd_*
+
 
 static GHashTable *execd_handlers = NULL;
 static int lrmd_call_id = 0;
