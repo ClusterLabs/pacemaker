@@ -279,15 +279,6 @@ based_ipc_destroy(qb_ipcs_connection_t *c)
 {
     pcmk__trace("Destroying client connection %p", c);
     based_ipc_closed(c);
-
-    /* Shut down if this was the last client to leave.
-     *
-     * @TODO Is it correct to do this for destroy but not for closed? Other
-     * daemons handle closed and destroyed connections in the same way.
-     */
-    if (cib_shutdown_flag) {
-        based_shutdown(0);
-    }
 }
 
 struct qb_ipcs_service_handlers ipc_ro_callbacks = {

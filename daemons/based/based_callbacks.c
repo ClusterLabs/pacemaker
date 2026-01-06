@@ -928,35 +928,31 @@ initiate_exit(void)
 void
 based_shutdown(int nsig)
 {
-    if (!cib_shutdown_flag) {
-        cib_shutdown_flag = true;
-
-        if (ipcs_ro != NULL) {
-            pcmk__drop_all_clients(ipcs_ro);
-            g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
-        }
-
-        if (ipcs_rw != NULL) {
-            pcmk__drop_all_clients(ipcs_rw);
-            g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
-        }
-
-        if (ipcs_shm != NULL) {
-            pcmk__drop_all_clients(ipcs_shm);
-            g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
-        }
-
-        based_drop_remote_clients();
+    if (cib_shutdown_flag) {
+        // Already shutting down
+        return;
     }
 
-    if (pcmk__ipc_client_count() == 0) {
-        pcmk__info("All clients disconnected");
-        initiate_exit();
+    cib_shutdown_flag = true;
 
-    } else {
-        pcmk__info("Waiting on %d clients to disconnect",
-                   pcmk__ipc_client_count());
+    if (ipcs_ro != NULL) {
+        pcmk__drop_all_clients(ipcs_ro);
+        g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
     }
+
+    if (ipcs_rw != NULL) {
+        pcmk__drop_all_clients(ipcs_rw);
+        g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
+    }
+
+    if (ipcs_shm != NULL) {
+        pcmk__drop_all_clients(ipcs_shm);
+        g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
+    }
+
+    based_drop_remote_clients();
+
+    initiate_exit();
 }
 
 /*!
