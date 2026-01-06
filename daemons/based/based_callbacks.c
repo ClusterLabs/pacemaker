@@ -899,35 +899,12 @@ cib_force_exit(gpointer data)
     return FALSE;
 }
 
-static void
-initiate_exit(void)
-{
-    int active = 0;
-    xmlNode *leaving = NULL;
-
-    active = pcmk__cluster_num_active_nodes();
-    if (active < 2) { // This is the last active node
-        pcmk__info("Exiting without sending shutdown request (no active "
-                   "peers)");
-        based_terminate(CRM_EX_OK);
-        return;
-    }
-
-    pcmk__info("Sending shutdown request to %d peers", active);
-
-    leaving = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
-    pcmk__xe_set(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
-
-    pcmk__cluster_send_message(NULL, pcmk_ipc_based, leaving);
-    pcmk__xml_free(leaving);
-
-    pcmk__create_timer(EXIT_ESCALATION_MS, cib_force_exit, NULL);
-}
-
 void
 based_shutdown(int nsig)
 {
+    int active = 0;
+    xmlNode *notification = NULL;
+
     if (cib_shutdown_flag) {
         // Already shutting down
         return;
@@ -952,7 +929,24 @@ based_shutdown(int nsig)
 
     based_drop_remote_clients();
 
-    initiate_exit();
+    active = pcmk__cluster_num_active_nodes();
+    if (active < 2) {
+        pcmk__info("Exiting without sending shutdown request (no active "
+                   "peers)");
+        based_terminate(CRM_EX_OK);
+        return;
+    }
+
+    pcmk__info("Sending shutdown request to %d peers", active);
+
+    notification = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
+    pcmk__xe_set(notification, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(notification, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
+
+    pcmk__cluster_send_message(NULL, pcmk_ipc_based, notification);
+    pcmk__xml_free(notification);
+
+    pcmk__create_timer(EXIT_ESCALATION_MS, cib_force_exit, NULL);
 }
 
 /*!
