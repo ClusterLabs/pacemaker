@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,27 +9,25 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                  // EINVAL, ENOTCONN, EPROTO
 #include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <time.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // free
 
-#include <sys/param.h>
-#include <sys/types.h>
+#include <glib.h>                   // g_list_free_full, GList
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <crm/cib/internal.h>       // PCMK__CIB_REQUEST_UPGRADE
+#include <crm/cluster/internal.h>   // pcmk__cluster_send_message
+#include <crm/common/internal.h>    // pcmk__info, pcmk__xml_free, etc.
+#include <crm/common/ipc.h>         // pcmk_ipc_server
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_err, pcmk_ok, pcmk_rc*
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
+#include <crm/crm.h>                // CRM_FEATURE_SET
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/xml.h>
-#include <crm/cluster/internal.h>
-
-#include <pacemaker-based.h>
+#include "pacemaker-based.h"
 
 /* Maximum number of diffs to ignore while waiting for a resync */
 #define MAX_DIFF_RETRY 5
