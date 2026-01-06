@@ -20,7 +20,6 @@
 
 #include <glib.h>                   // gboolean, gpointer, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbipcs.h>              // qb_ipcs_connection_t
 #include <qb/qblog.h>               // LOG_TRACE
 
 #include <crm/cib.h>                // cib_call_options values
@@ -847,23 +846,7 @@ based_shutdown(int nsig)
     }
 
     cib_shutdown_flag = true;
-
-    if (ipcs_ro != NULL) {
-        pcmk__drop_all_clients(ipcs_ro);
-        g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
-    }
-
-    if (ipcs_rw != NULL) {
-        pcmk__drop_all_clients(ipcs_rw);
-        g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
-    }
-
-    if (ipcs_shm != NULL) {
-        pcmk__drop_all_clients(ipcs_shm);
-        g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
-    }
-
-    based_drop_remote_clients();
+    based_ipc_cleanup();
 
     active = pcmk__cluster_num_active_nodes();
     if (active < 2) {

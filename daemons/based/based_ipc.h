@@ -17,5 +17,6 @@ extern qb_ipcs_service_t *ipcs_rw;
 extern qb_ipcs_service_t *ipcs_shm;
 
 void based_ipc_init(void);
+void based_ipc_cleanup(void);
 
 #endif // BASED_IPC__H
