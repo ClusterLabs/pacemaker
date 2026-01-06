@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -956,11 +956,8 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
     mainloop_io_t *client = NULL;
 
     if (fd >= 0) {
-        client = calloc(1, sizeof(mainloop_io_t));
-        if (client == NULL) {
-            return NULL;
-        }
-        client->name = strdup(name);
+        client = pcmk__assert_alloc(1, sizeof(mainloop_io_t));
+        client->name = pcmk__str_copy(name);
         client->userdata = userdata;
 
         if (callbacks) {
