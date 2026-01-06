@@ -921,7 +921,7 @@ based_terminate(int exit_status)
          * main loop returns (this allows the peer status callback to avoid
          * messing with the peer caches).
          */
-        if (exit_status == CRM_EX_OK) {
+        if ((exit_status == CRM_EX_OK) && (based_cluster != NULL)) {
             pcmk_cluster_disconnect(based_cluster);
         }
         g_main_loop_quit(mainloop);
@@ -931,7 +931,10 @@ based_terminate(int exit_status)
     /* Exit cleanly. Even the peer status callback can disconnect here, because
      * we're not returning control to the caller.
      */
-    pcmk_cluster_disconnect(based_cluster);
+    if (based_cluster != NULL) {
+        pcmk_cluster_disconnect(based_cluster);
+    }
+
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
     crm_exit(CRM_EX_OK);
 }
