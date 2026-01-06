@@ -1158,8 +1158,8 @@ child_waitpid(mainloop_child_t *child, int flags)
         callback_needed = false;
     }
 
-    if (callback_needed && child->callback) {
-        child->callback(child, core, signo, exitcode);
+    if (callback_needed && child->exit_fn) {
+        child->exit_fn(child, core, signo, exitcode);
     }
     return callback_needed;
 }
@@ -1251,9 +1251,10 @@ mainloop_child_kill(pid_t pid)
  *       completed process.
  */
 void
-mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *privatedata, enum mainloop_child_flags flags, 
-                              void (*callback)(mainloop_child_t *p, int core,
-                                               int signo, int exitcode))
+mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
+                              void *privatedata,
+                              enum mainloop_child_flags flags,
+                              pcmk__mainloop_child_exit_fn_t exit_fn)
 {
     static bool need_init = TRUE;
     mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
@@ -1262,7 +1263,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
     child->timerid = 0;
     child->timeout = FALSE;
     child->privatedata = privatedata;
-    child->callback = callback;
+    child->exit_fn = exit_fn;
     child->flags = flags;
     child->desc = pcmk__str_copy(desc);
 
@@ -1284,10 +1285,9 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc, void *pr
 
 void
 mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
-                   void (*callback)(mainloop_child_t *p, int core, int signo,
-                                    int exitcode))
+                   pcmk__mainloop_child_exit_fn_t exit_fn)
 {
-    mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, callback);
+    mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, exit_fn);
 }
 
 static gboolean

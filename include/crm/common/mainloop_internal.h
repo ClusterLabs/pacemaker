@@ -35,7 +35,7 @@ struct mainloop_child_s {
     enum mainloop_child_flags flags;
 
     /* Called when a process dies */
-    void (*callback)(mainloop_child_t *p, int core, int signo, int exitcode);
+    pcmk__mainloop_child_exit_fn_t exit_fn;
 };
 
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
