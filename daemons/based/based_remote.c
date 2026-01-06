@@ -700,3 +700,38 @@ based_remote_init(void)
         remote_fd = init_remote_listener(port);
     }
 }
+
+/*!
+ * \internal
+ * \brief Disconnect and free a CIB manager client if it is a remote client
+ *
+ * If \p value is a remote client, drop it by removing its source from the
+ * mainloop. It will be freed by \c based_remote_client_destroy() via
+ * \c remote_client_fd_callbacks.
+ *
+ * \param[in]     key        Ignored
+ * \param[in,out] value      CIB manager client (<tt>pcmk__client_t *</tt>)
+ * \param[in]     user_data  Ignored
+ */
+static void
+drop_client_if_remote(gpointer key, gpointer value, gpointer user_data)
+{
+    pcmk__client_t *client = value;
+
+    if (client->remote != NULL) {
+        return;
+    }
+
+    pcmk__notice("Disconnecting remote client %s", pcmk__client_name(client));
+    mainloop_del_fd(client->remote->source);
+}
+
+/*!
+ * \internal
+ * \brief Disconnect and free all remote CIB manager clients
+ */
+void
+based_drop_remote_clients(void)
+{
+    pcmk__foreach_ipc_client(drop_client_if_remote, NULL);
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 the Pacemaker project contributors
+ * Copyright 2025-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,5 +16,6 @@ extern int remote_fd;
 extern int remote_tls_fd;
 
 void based_remote_init(void);
+void based_drop_remote_clients(void);
 
 #endif // BASED_REMOTE__H
