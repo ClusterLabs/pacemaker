@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2025 the Pacemaker project contributors
+ * Copyright 2023-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,17 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                  // EOPNOTSUPP
 #include <stdbool.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // free
 
 #include <libxml/tree.h>            // xmlNode
+
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__client_t, pcmk__s, pcmk__xe_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*
 
 #include "pacemaker-based.h"
 
