@@ -128,8 +128,14 @@ execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     pcmk__client_t *client = pcmk__find_client(c);
     xmlNode *msg = NULL;
 
+    // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
     CRM_CHECK(client->id != NULL, return 0);
+
+    if (data == NULL) {
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
+        return 0;
+    }
 
     rc = pcmk__ipc_msg_append(&client->buffer, data);
 
@@ -161,9 +167,8 @@ execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     CRM_CHECK(pcmk__is_set(flags, crm_ipc_client_response), return 0);
 
-    if (msg == NULL) {
-        return 0;
-    } else if (execd_invalid_msg(msg)) {
+    if ((msg == NULL) || execd_invalid_msg(msg)) {
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
     } else {
         pcmk__request_t request = {
