@@ -18,6 +18,7 @@
 
 #include "based_callbacks.h"
 #include "based_io.h"
+#include "based_ipc.h"
 #include "based_messages.h"
 #include "based_operation.h"
 #include "based_notify.h"

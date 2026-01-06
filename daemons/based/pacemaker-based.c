@@ -266,6 +266,8 @@ main(int argc, char **argv)
     // Read initial CIB, connect to cluster, and start IPC servers
     cib_init();
 
+    based_ipc_init();
+
     // Run the main loop
     mainloop = g_main_loop_new(NULL, FALSE);
     pcmk__notice("Pacemaker CIB manager successfully started and accepting "
@@ -390,9 +392,6 @@ cib_init(void)
             crm_exit(CRM_EX_FATAL);
         }
     }
-
-    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
-                          &ipc_rw_callbacks);
 
     if (stand_alone) {
         based_is_primary = true;
