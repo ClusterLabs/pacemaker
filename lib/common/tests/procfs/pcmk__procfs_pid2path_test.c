@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,6 @@ no_exe_file(void **state)
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_value(__wrap_readlink, buf, path);
     expect_value(__wrap_readlink, bufsize, len - 1);
     will_return(__wrap_readlink, ENOENT);
     will_return(__wrap_readlink, NULL);
@@ -49,7 +48,6 @@ contents_too_long(void **state)
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_value(__wrap_readlink, buf, path);
     expect_value(__wrap_readlink, bufsize, len - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/more/than/10/characters");
@@ -72,7 +70,6 @@ contents_ok(void **state)
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, "/proc/1000/exe");
-    expect_value(__wrap_readlink, buf, path);
     expect_value(__wrap_readlink, bufsize, len - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/ok");

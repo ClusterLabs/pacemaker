@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,6 @@ has_pids(void **state)
     pcmk__mock_readlink = true;
 
     expect_string(__wrap_readlink, path, path);
-    expect_any(__wrap_readlink, buf);
     expect_value(__wrap_readlink, bufsize, PATH_MAX - 1);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/ok");
