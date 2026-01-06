@@ -9,32 +9,34 @@
 
 #include <crm_internal.h>
 
+#include <dirent.h>                 // dirent, scandir
+#include <errno.h>                  // errno, EACCES, ENODATA
+#include <signal.h>                 // SIGPIPE
 #include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <dirent.h>
+#include <stddef.h>                 // NULL
+#include <stdio.h>                  // rename
+#include <stdlib.h>                 // free, mkdtemp
+#include <string.h>                 // strerror, strrchr, etc.
+#include <sys/stat.h>               // stat, umask, etc.
+#include <sys/types.h>              // pid_t
+#include <time.h>                   // time_t
+#include <unistd.h>                 // _exit, fork
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
+#include <glib.h>                   // g_*, G_*
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qbdefs.h>              // QB_FALSE, QB_TRUE
+#include <qb/qblog.h>               // qb_log_*
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <crm/cib/internal.h>       // cib_file_*
+#include <crm/cib/util.h>           // createEmptyCib
+#include <crm/common/internal.h>    // pcmk__assert_asprintf, PCMK__XE_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/results.h>     // pcmk_legacy2rc, pcmk_rc_*
+#include <crm/common/util.h>        // pcmk_common_cleanup
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
 
-#include <crm/crm.h>
-
-#include <crm/cib.h>
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
-#include <crm/cib/internal.h>
-#include <crm/cluster.h>
-
-#include <pacemaker-based.h>
+#include "pacemaker-based.h"
 
 static bool writes_enabled = true;
 static crm_trigger_t *write_trigger = NULL;
