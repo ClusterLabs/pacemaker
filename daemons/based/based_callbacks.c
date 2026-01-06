@@ -846,7 +846,6 @@ based_shutdown(int nsig)
     }
 
     cib_shutdown_flag = true;
-    based_ipc_cleanup();
 
     active = pcmk__cluster_num_active_nodes();
     if (active < 2) {
@@ -887,13 +886,14 @@ based_terminate(int exit_status)
         remote_tls_fd = 0;
     }
 
+    based_ipc_cleanup();
+
     g_clear_pointer(&digest_timer, mainloop_timer_del);
     g_clear_pointer(&ping_digest, free);
     g_clear_pointer(&the_cib, pcmk__xml_free);
 
     // Exit immediately on error
     if (exit_status > CRM_EX_OK) {
-        pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
         crm_exit(exit_status);
         return;
     }
@@ -918,6 +918,5 @@ based_terminate(int exit_status)
         pcmk_cluster_disconnect(based_cluster);
     }
 
-    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
     crm_exit(CRM_EX_OK);
 }
