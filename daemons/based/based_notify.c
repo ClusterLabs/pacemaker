@@ -9,27 +9,23 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
+#include <errno.h>                  // EAGAIN
+#include <inttypes.h>               // PRIx64
 #include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <inttypes.h>           // PRIx64
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // int32_t, uint16_t
+#include <sys/types.h>              // ssize_t
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <glib.h>                   // gpointer, g_string_free
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <time.h>
+#include <crm/common/internal.h>    // pcmk__client_t, etc.
+#include <crm/common/ipc.h>         // pcmk_free_ipc_event
+#include <crm/common/logging.h>     // CRM_LOG_ASSERT
+#include <crm/common/results.h>     // pcmk_rc_*
 
-#include <glib.h>
-#include <libxml/tree.h>
-
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/xml.h>
-#include <pacemaker-based.h>
+#include "pacemaker-based.h"
 
 struct cib_notification_s {
     const xmlNode *msg;
