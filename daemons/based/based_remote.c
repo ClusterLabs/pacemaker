@@ -573,9 +573,13 @@ cib_remote_listen(gpointer data)
         /* create gnutls session for the server socket */
         new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
         if (new_client->remote->tls_session == NULL) {
+            pcmk__err("Dropping remote connection from %s because we failed to "
+                      "create a TLS session for it", ipstr);
+            pcmk__free_client(new_client);
             close(csock);
             return 0;
         }
+
     } else {
         pcmk__set_client_flags(new_client, pcmk__client_tcp);
         new_client->remote->tcp_socket = csock;
