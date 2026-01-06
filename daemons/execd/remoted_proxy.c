@@ -9,17 +9,24 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <unistd.h>
+#include <errno.h>                      // EREMOTEIO, ENOMEM
+#include <stdint.h>                     // int32_t, uint32_t
+#include <stdlib.h>                     // NULL, free, size_t
+#include <sys/types.h>                  // gid_t, uid_t
 
-#include "pacemaker-execd.h"
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/services.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/ipc.h>
-#include <crm/cib/internal.h>
-#include <crm/fencing/internal.h>
+#include <glib.h>                       // g_byte_array_free, g_list_*
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qbipcs.h>                  // qb_ipcs_connection_t
+#include <qb/qblog.h>                   // QB_XS
+
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>             // crm_ipc_flags
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc_str
+#include <crm/crm.h>                    // CRM_SYSTEM_CRMD
+#include <crm/lrmd.h>                   // LRMD_IPC_OP_DESTROY
+
+#include "pacemaker-execd.h"            // lrmd_server_send_notify
 
 static qb_ipcs_service_t *cib_ro = NULL;
 static qb_ipcs_service_t *cib_rw = NULL;

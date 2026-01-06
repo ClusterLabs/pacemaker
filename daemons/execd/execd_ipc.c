@@ -14,11 +14,13 @@
 #include <stdint.h>                         // int32_t, uint32_t
 #include <sys/types.h>                      // gid_t, uid_t
 
-#include <glib.h>                           // g_byte_array_free, FALSE, TRUE
+#include <glib.h>                           // g_byte_array_free, TRUE
 #include <libxml/tree.h>                    // xmlNode
 #include <qb/qbipcs.h>                      // qb_ipcs_connection_t
 
+#include <crm/common/internal.h>            // pcmk__client_t, pcmk__find_client
 #include <crm/common/ipc.h>                 // crm_ipc_client_response
+#include <crm/common/logging.h>             // CRM_CHECK
 #include <crm/common/results.h>             // pcmk_rc_*, pcmk_rc_str
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,14 +8,18 @@
  */
 
 #ifndef PACEMAKER_EXECD__H
-#  define PACEMAKER_EXECD__H
+#define PACEMAKER_EXECD__H
 
-#  include <glib.h>
-#  include <crm/common/internal.h>
-#  include <crm/lrmd.h>
-#  include <crm/stonith-ng.h>
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // uint32_t
+#include <time.h>                   // time_t
 
-#  include <gnutls/gnutls.h>
+#include <glib.h>                   // GList, GHashTable, GMainLoop, gpointer
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/common/internal.h>    // pcmk__client_t, pcmk__action_result_t
+#include <crm/common/mainloop.h>    // crm_trigger_t
+#include <crm/stonith-ng.h>         // stonith_t
 
 extern GHashTable *rsc_list;
 extern time_t start_time;
