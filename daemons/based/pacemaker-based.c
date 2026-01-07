@@ -37,9 +37,8 @@ int cib_status = pcmk_rc_ok;
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
 
-gboolean stand_alone = FALSE;
-
 static bool shutting_down = false;
+static gboolean stand_alone = FALSE;
 static crm_exit_t exit_code = CRM_EX_OK;
 
 /*!
@@ -53,6 +52,19 @@ bool
 based_shutting_down(void)
 {
     return shutting_down;
+}
+
+/*!
+ * \internal
+ * \brief Check whether local CIB manager is running in stand-alone mode
+ *
+ * \return \c true if local CIB manager is in stand-alone mode, or \c false
+ *         otherwise
+ */
+bool
+based_stand_alone(void)
+{
+    return stand_alone;
 }
 
 /*!
@@ -257,7 +269,7 @@ main(int argc, char **argv)
     // Not up or not authentic; we'll proceed either way
     g_clear_pointer(&old_instance, crm_ipc_destroy);
 
-    if (stand_alone) {
+    if (based_stand_alone()) {
         rc = setup_stand_alone(&error);
         if (rc != pcmk_rc_ok) {
             goto done;
@@ -295,7 +307,7 @@ main(int argc, char **argv)
     based_ipc_init();
     based_remote_init();
 
-    if (!stand_alone) {
+    if (!based_stand_alone()) {
         if (based_cluster_connect() != pcmk_rc_ok) {
             exit_code = CRM_EX_FATAL;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
