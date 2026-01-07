@@ -124,6 +124,10 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
      */
     pcmk__cluster_destroy_node_caches();
 
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+
     pcmk__info("Disconnecting from %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
