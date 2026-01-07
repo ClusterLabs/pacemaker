@@ -45,8 +45,6 @@ gchar *cib_root = NULL;
 
 gboolean stand_alone = FALSE;
 
-static void cib_init(void);
-
 static crm_exit_t exit_code = CRM_EX_OK;
 
 /*!
@@ -294,10 +292,33 @@ main(int argc, char **argv)
 
     pcmk__cluster_init_node_caches();
 
-    // Read initial CIB, connect to cluster, and start IPC servers
-    cib_init();
+    /* Read initial CIB. based_read_cib() returns new, non-NULL XML, so this
+     * should always succeed.
+     */
+    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
+        exit_code = CRM_EX_SOFTWARE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bug: failed to activate CIB. Terminating %s.",
+                    pcmk__server_log_name(pcmk_ipc_based));
+        goto done;
+    }
 
     based_ipc_init();
+    based_remote_init();
+
+    if (stand_alone) {
+        based_is_primary = true;
+
+    } else {
+        if (based_cluster_connect() != pcmk_rc_ok) {
+            exit_code = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not connect to the cluster");
+            goto done;
+        }
+
+        pcmk__info("Cluster connection active");
+    }
 
     // Run the main loop
     mainloop = g_main_loop_new(NULL, FALSE);
@@ -388,28 +409,5 @@ cib_peer_update_callback(enum pcmk__node_update type,
 
         default:
             break;
-    }
-}
-
-static void
-cib_init(void)
-{
-    // based_read_cib() returns new, non-NULL XML, so this should always succeed
-    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
-        pcmk__crit("Bug: failed to activate CIB. Terminating %s.",
-                   pcmk__server_log_name(pcmk_ipc_based));
-        crm_exit(CRM_EX_SOFTWARE);
-    }
-
-    based_remote_init();
-
-    if (stand_alone) {
-        based_is_primary = true;
-        return;
-    }
-
-    if (based_cluster_connect() != pcmk_rc_ok) {
-        pcmk__crit("Could not connect to the cluster");
-        crm_exit(CRM_EX_FATAL);
     }
 }
