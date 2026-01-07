@@ -137,3 +137,16 @@ based_cluster_disconnect(void)
     pcmk_cluster_disconnect(based_cluster);
     g_clear_pointer(&based_cluster, pcmk_cluster_free);
 }
+
+/*!
+ * \internal
+ * \brief Get the local node name at the cluster layer
+ *
+ * \return Local cluster-layer node name, or \c NULL if there is no active
+ *         cluster connection
+ */
+const char *
+based_cluster_node_name(void)
+{
+    return (based_cluster != NULL)? based_cluster->priv->node_name : NULL;
+}
