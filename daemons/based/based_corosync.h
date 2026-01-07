@@ -16,5 +16,6 @@ extern pcmk_cluster_t *based_cluster;
 
 int based_cluster_connect(void);
 void based_cluster_disconnect(void);
+const char *based_cluster_node_name(void);
 
 #endif // BASED_COROSYNC__H

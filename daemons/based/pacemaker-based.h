@@ -26,7 +26,7 @@
 #include "based_remote.h"
 #include "based_transaction.h"
 
-#define OUR_NODENAME (stand_alone? "localhost" : based_cluster->priv->node_name)
+#define OUR_NODENAME (stand_alone? "localhost" : based_cluster_node_name())
 
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *based_cluster;
