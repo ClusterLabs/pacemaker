@@ -22,7 +22,6 @@
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
-#include <crm/cluster.h>            // pcmk_cluster_*
 #include <crm/cluster/internal.h>   // pcmk__node_update, etc.
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // crm_log_*
@@ -289,20 +288,12 @@ main(int argc, char **argv)
                  "connections");
     g_main_loop_run(mainloop);
 
-    /* If main loop returned, clean up and exit. We disconnect in case
-     * based_terminate(-1) was called.
-     */
-    if (based_cluster != NULL) {
-        pcmk_cluster_disconnect(based_cluster);
-    }
-
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__cluster_destroy_node_caches();
     pcmk__client_cleanup();
-    pcmk_cluster_free(based_cluster);
+    based_cluster_disconnect();
     g_free(cib_root);
 
     pcmk__output_and_clear_error(&error, out);

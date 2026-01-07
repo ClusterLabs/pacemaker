@@ -144,3 +144,18 @@ based_cluster_connect(void)
 
     return rc;
 }
+
+/*!
+ * \internal
+ * \brief Disconnect from the cluster layer and free \c based_cluster
+ */
+void
+based_cluster_disconnect(void)
+{
+    if (based_cluster == NULL) {
+        return;
+    }
+
+    pcmk_cluster_disconnect(based_cluster);
+    g_clear_pointer(&based_cluster, pcmk_cluster_free);
+}
