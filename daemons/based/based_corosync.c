@@ -83,13 +83,13 @@ based_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
 static void
 based_cpg_destroy(void *user_data)
 {
-    if (cib_shutdown_flag) {
+    if (based_shutting_down()) {
         pcmk__info("Corosync disconnection complete");
-    } else {
-        pcmk__crit("Exiting immediately after losing connection to cluster "
-                   "layer");
-        based_terminate(CRM_EX_DISCONNECT);
+        return;
     }
+
+    pcmk__crit("Exiting immediately after losing connection to cluster layer");
+    based_terminate(CRM_EX_DISCONNECT);
 }
 #endif
 
