@@ -153,7 +153,6 @@ bool pcmk__valid_fencing_watchdog_timeout(const char *value);
 #define PCMK__ENV_DEBUG                     "debug"
 #define PCMK__ENV_DH_MAX_BITS               "dh_max_bits"
 #define PCMK__ENV_FAIL_FAST                 "fail_fast"
-#define PCMK__ENV_IPC_TYPE                  "ipc_type"
 #define PCMK__ENV_KEY_FILE                  "key_file"
 #define PCMK__ENV_LOGFACILITY               "logfacility"
 #define PCMK__ENV_LOGFILE                   "logfile"
