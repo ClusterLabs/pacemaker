@@ -32,7 +32,6 @@
 
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
-bool cib_shutdown_flag = false;
 int cib_status = pcmk_rc_ok;
 
 GMainLoop *mainloop = NULL;
@@ -40,7 +39,21 @@ gchar *cib_root = NULL;
 
 gboolean stand_alone = FALSE;
 
+static bool shutting_down = false;
 static crm_exit_t exit_code = CRM_EX_OK;
+
+/*!
+ * \internal
+ * \brief Check whether local CIB manager is shutting down
+ *
+ * \return \c true if local CIB manager has begun shutting down, or \c false
+ *         otherwise
+ */
+bool
+based_shutting_down(void)
+{
+    return shutting_down;
+}
 
 /*!
  * \internal
@@ -159,12 +172,12 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 static void
 based_shutdown(int nsig)
 {
-    if (cib_shutdown_flag) {
+    if (based_shutting_down()) {
         // Already shutting down
         return;
     }
 
-    cib_shutdown_flag = true;
+    shutting_down = true;
     based_terminate(CRM_EX_OK);
 }
 

@@ -28,8 +28,9 @@
 
 extern GMainLoop *mainloop;
 extern gboolean stand_alone;
-extern bool cib_shutdown_flag;
 extern gchar *cib_root;
 extern int cib_status;
+
+bool based_shutting_down(void);
 
 #endif // PACEMAKER_BASED__H
