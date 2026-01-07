@@ -794,18 +794,6 @@ done:
     return rc;
 }
 
-void
-based_shutdown(int nsig)
-{
-    if (cib_shutdown_flag) {
-        // Already shutting down
-        return;
-    }
-
-    cib_shutdown_flag = true;
-    based_terminate(CRM_EX_OK);
-}
-
 /*!
  * \internal
  * \brief Close remote sockets, free the global CIB and quit
