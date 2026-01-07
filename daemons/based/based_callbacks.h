@@ -19,7 +19,6 @@
 
 int based_process_request(xmlNode *request, bool privileged,
                           const pcmk__client_t *client);
-void based_shutdown(int nsig);
 void based_terminate(crm_exit_t exit_status);
 
 #endif // BASED_CALLBACKS__H
