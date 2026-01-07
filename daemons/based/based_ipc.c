@@ -45,7 +45,7 @@ static qb_ipcs_service_t *ipcs_shm = NULL;
 static int32_t
 based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    if (cib_shutdown_flag) {
+    if (based_shutting_down()) {
         pcmk__info("Ignoring new IPC client [%d] during shutdown",
                    pcmk__client_pid(c));
         return -ECONNREFUSED;
