@@ -229,8 +229,6 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, based_shutdown);
 
-    based_io_init();
-
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
 
@@ -291,6 +289,7 @@ main(int argc, char **argv)
     }
 
     pcmk__cluster_init_node_caches();
+    based_io_init();
 
     /* Read initial CIB. based_read_cib() returns new, non-NULL XML, so this
      * should always succeed.
