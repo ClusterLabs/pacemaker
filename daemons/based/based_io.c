@@ -181,7 +181,7 @@ based_enable_writes(int nsig)
 void
 based_io_init(void)
 {
-    writes_enabled = !stand_alone;
+    writes_enabled = !based_stand_alone();
     if (writes_enabled
         && pcmk__env_option_enabled(PCMK__SERVER_BASED,
                                     PCMK__ENV_VALGRIND_ENABLED)) {
@@ -501,7 +501,7 @@ set_empty_status(xmlNode *cib_xml)
 {
     xmlNode *status = pcmk__xe_first_child(cib_xml, PCMK_XE_STATUS, NULL, NULL);
 
-    if (!stand_alone) {
+    if (!based_stand_alone()) {
         g_clear_pointer(&status, pcmk__xml_free);
     }
 
@@ -584,7 +584,7 @@ based_read_cib(void)
     // The DC should set appropriate value for PCMK_XA_DC_UUID
     pcmk__xe_remove_attr(cib_xml, PCMK_XA_DC_UUID);
 
-    if (!stand_alone) {
+    if (!based_stand_alone()) {
         pcmk__log_xml_trace(cib_xml, "on-disk");
     }
 

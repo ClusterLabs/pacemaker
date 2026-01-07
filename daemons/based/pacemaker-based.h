@@ -12,7 +12,7 @@
 
 #include <stdbool.h>
 
-#include <glib.h>                   // gboolean, gchar, GMainLoop
+#include <glib.h>                   // gchar, GMainLoop
 
 #include "based_callbacks.h"
 #include "based_corosync.h"
@@ -24,13 +24,14 @@
 #include "based_remote.h"
 #include "based_transaction.h"
 
-#define OUR_NODENAME (stand_alone? "localhost" : based_cluster_node_name())
+#define OUR_NODENAME    \
+    (based_stand_alone()? "localhost" : based_cluster_node_name())
 
 extern GMainLoop *mainloop;
-extern gboolean stand_alone;
 extern gchar *cib_root;
 extern int cib_status;
 
 bool based_shutting_down(void);
+bool based_stand_alone(void);
 
 #endif // PACEMAKER_BASED__H
