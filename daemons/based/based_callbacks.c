@@ -308,7 +308,7 @@ log_local_options(const pcmk__client_t *client,
         return;
     }
 
-    if (stand_alone) {
+    if (based_stand_alone()) {
         pcmk__trace("Processing %s op from client %s (stand-alone)", op,
                     pcmk__client_name(client));
 
@@ -779,7 +779,7 @@ based_process_request(xmlNode *request, bool privileged,
 
 done:
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
-        && needs_reply && !stand_alone && (client == NULL)) {
+        && needs_reply && !based_stand_alone() && (client == NULL)) {
 
         send_peer_reply(reply, originator);
     }
