@@ -23,7 +23,6 @@
 
 #include <crm/cib.h>                // cib_call_options values
 #include <crm/cib/internal.h>       // cib__*
-#include <crm/cluster.h>            // pcmk_cluster_disconnect
 #include <crm/cluster/internal.h>   // pcmk__cluster_send_message
 #include <crm/common/internal.h>    // pcmk__s, pcmk__str_eq
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
@@ -869,8 +868,8 @@ based_terminate(int exit_status)
          * main loop returns (this allows the peer status callback to avoid
          * messing with the peer caches).
          */
-        if ((exit_status == CRM_EX_OK) && (based_cluster != NULL)) {
-            pcmk_cluster_disconnect(based_cluster);
+        if (exit_status == CRM_EX_OK) {
+            based_cluster_disconnect();
         }
         g_main_loop_quit(mainloop);
         return;
@@ -879,9 +878,6 @@ based_terminate(int exit_status)
     /* Exit cleanly. Even the peer status callback can disconnect here, because
      * we're not returning control to the caller.
      */
-    if (based_cluster != NULL) {
-        pcmk_cluster_disconnect(based_cluster);
-    }
-
+    based_cluster_disconnect();
     crm_exit(CRM_EX_OK);
 }
