@@ -10,10 +10,6 @@
 #ifndef BASED_COROSYNC__H
 #define BASED_COROSYNC__H
 
-#include <crm/cluster.h>            // pcmk_cluster_t
-
-extern pcmk_cluster_t *based_cluster;
-
 int based_cluster_connect(void);
 void based_cluster_disconnect(void);
 const char *based_cluster_node_name(void);

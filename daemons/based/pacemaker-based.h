@@ -14,8 +14,6 @@
 
 #include <glib.h>                   // gboolean, gchar, GMainLoop
 
-#include <crm/cluster.h>            // pcmk_cluster_t
-
 #include "based_callbacks.h"
 #include "based_corosync.h"
 #include "based_io.h"
@@ -29,7 +27,6 @@
 #define OUR_NODENAME (stand_alone? "localhost" : based_cluster_node_name())
 
 extern GMainLoop *mainloop;
-extern pcmk_cluster_t *based_cluster;
 extern gboolean stand_alone;
 extern bool cib_shutdown_flag;
 extern gchar *cib_root;
