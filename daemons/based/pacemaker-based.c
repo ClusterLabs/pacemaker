@@ -161,6 +161,37 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
+/*!
+ * \internal
+ * \brief Initialize \c based_cluster and connect to the cluster layer
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+based_cluster_connect(void)
+{
+    int rc = pcmk_rc_ok;
+
+    based_cluster = pcmk_cluster_new();
+
+#if SUPPORT_COROSYNC
+    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
+        pcmk_cluster_set_destroy_fn(based_cluster, cib_cs_destroy);
+        pcmk_cpg_set_deliver_fn(based_cluster, cib_cs_dispatch);
+        pcmk_cpg_set_confchg_fn(based_cluster, pcmk__cpg_confchg_cb);
+    }
+#endif // SUPPORT_COROSYNC
+
+    pcmk__cluster_set_status_callback(&cib_peer_update_callback);
+
+    rc = pcmk_cluster_connect(based_cluster);
+    if (rc != pcmk_rc_ok) {
+        pcmk__err("Cluster connection failed");
+    }
+
+    return rc;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -377,20 +408,8 @@ cib_init(void)
         return;
     }
 
-    based_cluster = pcmk_cluster_new();
-
-#if SUPPORT_COROSYNC
-    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        pcmk_cluster_set_destroy_fn(based_cluster, cib_cs_destroy);
-        pcmk_cpg_set_deliver_fn(based_cluster, cib_cs_dispatch);
-        pcmk_cpg_set_confchg_fn(based_cluster, pcmk__cpg_confchg_cb);
-    }
-#endif // SUPPORT_COROSYNC
-
-    pcmk__cluster_set_status_callback(&cib_peer_update_callback);
-
-    if (pcmk_cluster_connect(based_cluster) != pcmk_rc_ok) {
-        pcmk__crit("Cannot sign in to the cluster... terminating");
+    if (based_cluster_connect() != pcmk_rc_ok) {
+        pcmk__crit("Could not connect to the cluster");
         crm_exit(CRM_EX_FATAL);
     }
 }
