@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2025 the Pacemaker project contributors
+# Copyright 2012-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,8 +17,8 @@ libcrmservice_la_CFLAGS		=
 libcrmservice_la_CFLAGS		+= $(CFLAGS_HARDENED_LIB)
 libcrmservice_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-libcrmservice_la_LIBADD		= $(top_builddir)/lib/common/libcrmcommon.la \
-				  $(DBUS_LIBS)
+libcrmservice_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon.la
+libcrmservice_la_LIBADD += $(DBUS_LIBS)
 
 ## Library sources (*must* use += format for bumplibs)
 libcrmservice_la_SOURCES	= services.c

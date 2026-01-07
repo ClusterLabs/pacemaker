@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2025 the Pacemaker project contributors
+# Copyright 2020-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,8 +10,8 @@
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/release.mk
 
-EXTRA_DIST = README 	\
-	     gdbhelpers
+EXTRA_DIST = README
+EXTRA_DIST += gdbhelpers
 
 #
 # Static analysis

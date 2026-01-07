@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2025 the Pacemaker project contributors
+# Copyright 2020-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,9 +12,9 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__clear_flags_as_test	\
-		 pcmk__set_flags_as_test	\
-		 pcmk__all_flags_set_test	\
-		 pcmk__any_flags_set_test
+check_PROGRAMS = pcmk__clear_flags_as_test
+check_PROGRAMS += pcmk__set_flags_as_test
+check_PROGRAMS += pcmk__all_flags_set_test
+check_PROGRAMS += pcmk__any_flags_set_test
 
 TESTS = $(check_PROGRAMS)

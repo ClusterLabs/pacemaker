@@ -1,5 +1,5 @@
 #
-# Copyright 2001-2024 the Pacemaker project contributors
+# Copyright 2001-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,6 +10,6 @@
 include $(top_srcdir)/mk/common.mk
 
 benchdir	= $(datadir)/$(PACKAGE)/tests/cts/benchmark
-dist_bench_DATA	= README.benchmark \
-		  control
+dist_bench_DATA = README.benchmark
+dist_bench_DATA += control
 bench_SCRIPTS	= clubench

@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2025 the Pacemaker project contributors
+# Copyright 2004-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -27,8 +27,8 @@ CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 # changes the order so the subdirectories are processed afterwards.
 SUBDIRS = . tests
 
-noinst_HEADERS		= crmcommon_private.h \
-			  mock_private.h
+noinst_HEADERS = crmcommon_private.h
+noinst_HEADERS += mock_private.h
 
 libcrmcommon_la_LDFLAGS	= -version-info 69:0:1
 
@@ -45,8 +45,7 @@ libcrmcommon_la_LIBADD	= -lm
 endif
 
 ## Library sources (*must* use += format for bumplibs)
-libcrmcommon_la_SOURCES	=
-libcrmcommon_la_SOURCES	+= acl.c
+libcrmcommon_la_SOURCES	= acl.c
 libcrmcommon_la_SOURCES	+= action_relation.c
 libcrmcommon_la_SOURCES	+= actions.c
 libcrmcommon_la_SOURCES	+= agents.c
@@ -120,18 +119,21 @@ include $(top_srcdir)/mk/tap.mk
 libcrmcommon_test_la_SOURCES	= $(libcrmcommon_la_SOURCES)
 libcrmcommon_test_la_SOURCES	+= mock.c
 libcrmcommon_test_la_SOURCES	+= unittest.c
-libcrmcommon_test_la_LDFLAGS	= $(libcrmcommon_la_LDFLAGS) 	\
-				  -rpath $(libdir) 		\
-				  $(LDFLAGS_WRAP)
+
+libcrmcommon_test_la_LDFLAGS = $(libcrmcommon_la_LDFLAGS)
+libcrmcommon_test_la_LDFLAGS += -rpath $(libdir)
+libcrmcommon_test_la_LDFLAGS += $(LDFLAGS_WRAP)
+
 # If GCC emits a builtin function in place of something we've mocked up, that will
 # get used instead of the mocked version which leads to unexpected test results.  So
 # disable all builtins.  Older versions of GCC (at least, on RHEL7) will still emit
 # replacement code for strdup (and possibly other functions) unless -fno-inline is
 # also added.
-libcrmcommon_test_la_CFLAGS	= $(libcrmcommon_la_CFLAGS) 	\
-				  -DPCMK__UNIT_TESTING 		\
-				  -fno-builtin 			\
-				  -fno-inline
+libcrmcommon_test_la_CFLAGS = $(libcrmcommon_la_CFLAGS)
+libcrmcommon_test_la_CFLAGS += -DPCMK__UNIT_TESTING
+libcrmcommon_test_la_CFLAGS += -fno-builtin
+libcrmcommon_test_la_CFLAGS += -fno-inline
+
 # If -fno-builtin is used, -lm also needs to be added.  See the comment at
 # BUILD_PROFILING above.
 libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD)

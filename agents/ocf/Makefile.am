@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2024 the Pacemaker project contributors
+# Copyright 2008-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,26 +11,29 @@ include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/man.mk
 
 ocfdir			= @OCF_RA_INSTALL_DIR@/pacemaker
-dist_ocf_SCRIPTS	= attribute	\
-			  controld	\
-			  Dummy		\
-			  HealthCPU	\
-			  HealthIOWait	\
-			  ping		\
-			  remote	\
-			  Stateful
-ocf_SCRIPTS		= ClusterMon	\
-			  HealthSMART	\
-			  ifspeed	\
-			  SysInfo
+
+dist_ocf_SCRIPTS = attribute
+dist_ocf_SCRIPTS += controld
+dist_ocf_SCRIPTS += Dummy
+dist_ocf_SCRIPTS += HealthCPU
+dist_ocf_SCRIPTS += HealthIOWait
+dist_ocf_SCRIPTS += ping
+dist_ocf_SCRIPTS += remote
+dist_ocf_SCRIPTS += Stateful
+
+ocf_SCRIPTS = ClusterMon
+ocf_SCRIPTS += HealthSMART
+ocf_SCRIPTS += ifspeed
+ocf_SCRIPTS += SysInfo
 
 if BUILD_XML_HELP
 
-man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7) 		\
-	    $(dist_ocf_SCRIPTS:%=ocf_pacemaker_%.7)
-DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_ 	\
-	     --stringparam variable.prefix OCF_RESKEY_ 		\
-	     --param man.vol 7
+man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7)
+man7_MANS += $(dist_ocf_SCRIPTS:%=ocf_pacemaker_%.7)
+
+DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_
+DBOOK_OPTS += --stringparam variable.prefix OCF_RESKEY_
+DBOOK_OPTS += --param man.vol 7
 
 ocf_pacemaker_%.xml:  %
 	$(AM_V_GEN)OCF_FUNCTIONS=/dev/null OCF_ROOT=$(PCMK_OCF_ROOT) $(abs_builddir)/$< meta-data > $@
@@ -52,6 +55,6 @@ validate: all
 			| xmllint --noout --relaxng $(RNG) - || break;	\
 	done
 
-CLEANFILES = $(man7_MANS) 			\
-	     $(ocf_SCRIPTS:%=%.xml) 		\
-	     $(dist_ocf_SCRIPTS:%=%.xml)
+CLEANFILES = $(man7_MANS)
+CLEANFILES += $(ocf_SCRIPTS:%=%.xml)
+CLEANFILES += $(dist_ocf_SCRIPTS:%=%.xml)

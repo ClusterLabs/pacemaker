@@ -1,5 +1,5 @@
 #
-# Copyright 2001-2024 the Pacemaker project contributors
+# Copyright 2001-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,9 +17,9 @@ list:
 		echo $$(basename $$T .xml);             \
 	done
 
-SUBDIRS	= dot 		\
-	  exp 		\
-	  scores 	\
-	  stderr 	\
-	  summary 	\
-	  xml
+SUBDIRS = dot
+SUBDIRS += exp
+SUBDIRS += scores
+SUBDIRS += stderr
+SUBDIRS += summary
+SUBDIRS += xml

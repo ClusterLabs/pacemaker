@@ -1,5 +1,5 @@
 #
-# Copyright 2019-2025 the Pacemaker project contributors
+# Copyright 2019-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,11 +19,11 @@ EXTRA_DIST		= README
 #
 
 # Count changes in these directories
-CHANGELOG_DIRS = ../include 	\
-		 ../lib 	\
-		 ../daemons 	\
-		 ../tools 	\
-		 ../xml
+CHANGELOG_DIRS = ../include
+CHANGELOG_DIRS += ../lib
+CHANGELOG_DIRS += ../daemons
+CHANGELOG_DIRS += ../tools
+CHANGELOG_DIRS += ../xml
 
 .PHONY: require_last_release
 require_last_release:

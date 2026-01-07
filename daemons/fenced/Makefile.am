@@ -14,8 +14,8 @@ include $(top_srcdir)/mk/man.mk
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-halib_PROGRAMS	= pacemaker-fenced \
-		  cts-fence-helper
+halib_PROGRAMS = pacemaker-fenced
+halib_PROGRAMS += cts-fence-helper
 
 noinst_HEADERS	= pacemaker-fenced.h
 
@@ -39,13 +39,13 @@ pacemaker_fenced_LDADD += $(top_builddir)/lib/fencing/libstonithd.la
 pacemaker_fenced_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 pacemaker_fenced_LDADD += $(CLUSTERLIBS)
 
-pacemaker_fenced_SOURCES	= pacemaker-fenced.c	\
-				  fenced_cib.c		\
-				  fenced_commands.c	\
-				  fenced_corosync.c	\
-				  fenced_ipc.c		\
-				  fenced_remote.c	\
-				  fenced_scheduler.c	\
-				  fenced_history.c
+pacemaker_fenced_SOURCES = pacemaker-fenced.c
+pacemaker_fenced_SOURCES += fenced_cib.c
+pacemaker_fenced_SOURCES += fenced_commands.c
+pacemaker_fenced_SOURCES += fenced_corosync.c
+pacemaker_fenced_SOURCES += fenced_ipc.c
+pacemaker_fenced_SOURCES += fenced_remote.c
+pacemaker_fenced_SOURCES += fenced_scheduler.c
+pacemaker_fenced_SOURCES += fenced_history.c
 
 CLEANFILES = $(man7_MANS) $(man8_MANS)
