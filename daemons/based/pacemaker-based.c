@@ -156,6 +156,18 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
+static void
+based_shutdown(int nsig)
+{
+    if (cib_shutdown_flag) {
+        // Already shutting down
+        return;
+    }
+
+    cib_shutdown_flag = true;
+    based_terminate(CRM_EX_OK);
+}
+
 int
 main(int argc, char **argv)
 {
