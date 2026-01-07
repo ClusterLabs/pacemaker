@@ -26,7 +26,7 @@
 
 #include "pacemaker-based.h"
 
-pcmk_cluster_t *based_cluster = NULL;
+static pcmk_cluster_t *cluster = NULL;
 
 static void
 based_peer_callback(xmlNode *msg, void *private_data)
@@ -96,7 +96,7 @@ based_cpg_destroy(gpointer user_data)
 
 /*!
  * \internal
- * \brief Initialize \c based_cluster and connect to the cluster layer
+ * \brief Initialize the cluster object and connect to the cluster layer
  *
  * \return Standard Pacemaker return code
  */
@@ -105,17 +105,17 @@ based_cluster_connect(void)
 {
     int rc = pcmk_rc_ok;
 
-    based_cluster = pcmk_cluster_new();
+    cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
     if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        pcmk_cluster_set_destroy_fn(based_cluster, based_cpg_destroy);
-        pcmk_cpg_set_deliver_fn(based_cluster, based_cpg_dispatch);
-        pcmk_cpg_set_confchg_fn(based_cluster, pcmk__cpg_confchg_cb);
+        pcmk_cluster_set_destroy_fn(cluster, based_cpg_destroy);
+        pcmk_cpg_set_deliver_fn(cluster, based_cpg_dispatch);
+        pcmk_cpg_set_confchg_fn(cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
 
-    rc = pcmk_cluster_connect(based_cluster);
+    rc = pcmk_cluster_connect(cluster);
     if (rc != pcmk_rc_ok) {
         pcmk__err("Cluster connection failed");
     }
@@ -125,17 +125,17 @@ based_cluster_connect(void)
 
 /*!
  * \internal
- * \brief Disconnect from the cluster layer and free \c based_cluster
+ * \brief Disconnect from the cluster layer and free the cluster object
  */
 void
 based_cluster_disconnect(void)
 {
-    if (based_cluster == NULL) {
+    if (cluster == NULL) {
         return;
     }
 
-    pcmk_cluster_disconnect(based_cluster);
-    g_clear_pointer(&based_cluster, pcmk_cluster_free);
+    pcmk_cluster_disconnect(cluster);
+    g_clear_pointer(&cluster, pcmk_cluster_free);
 }
 
 /*!
@@ -148,5 +148,5 @@ based_cluster_disconnect(void)
 const char *
 based_cluster_node_name(void)
 {
-    return (based_cluster != NULL)? based_cluster->priv->node_name : NULL;
+    return (cluster != NULL)? cluster->priv->node_name : NULL;
 }
