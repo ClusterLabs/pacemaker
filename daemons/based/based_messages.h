@@ -14,7 +14,6 @@
 
 #include <libxml/tree.h>            // xmlNode *
 
-extern bool based_is_primary;
 extern xmlNode *the_cib;
 
 int based_process_abs_delete(xmlNode *req, xmlNode **cib, xmlNode **answer);

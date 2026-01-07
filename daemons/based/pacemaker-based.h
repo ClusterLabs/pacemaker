@@ -31,6 +31,9 @@ extern GMainLoop *mainloop;
 extern gchar *cib_root;
 extern int cib_status;
 
+bool based_get_local_node_dc(void);
+void based_set_local_node_dc(bool value);
+
 bool based_shutting_down(void);
 bool based_stand_alone(void);
 
