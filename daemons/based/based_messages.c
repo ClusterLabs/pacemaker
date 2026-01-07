@@ -29,8 +29,6 @@
 
 #include "pacemaker-based.h"
 
-xmlNode *the_cib = NULL;
-
 /*!
  * \internal
  * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
@@ -96,7 +94,7 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
     const char *seq = pcmk__xe_get(req, PCMK__XA_CIB_PING_ID);
-    char *digest = pcmk__digest_xml(the_cib, true);
+    char *digest = pcmk__digest_xml(based_cib, true);
     xmlNode *shallow = NULL;
 
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
@@ -105,8 +103,8 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
     pcmk__xe_set(*answer, PCMK_XA_DIGEST, digest);
     pcmk__xe_set(*answer, PCMK__XA_CIB_PING_ID, seq);
 
-    shallow = pcmk__xe_create(NULL, (const char *) the_cib->name);
-    pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
+    shallow = pcmk__xe_create(NULL, (const char *) based_cib->name);
+    pcmk__xe_copy_attrs(shallow, based_cib, pcmk__xaf_none);
     cib__set_calldata(*answer, shallow);
     pcmk__xml_free(shallow);
 
@@ -359,10 +357,10 @@ sync_our_cib(const xmlNode *request, bool all)
     pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_UPDATE, true);
 
     pcmk__xe_set(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    digest = pcmk__digest_xml(the_cib, true);
+    digest = pcmk__digest_xml(based_cib, true);
     pcmk__xe_set(replace_request, PCMK_XA_DIGEST, digest);
 
-    cib__set_calldata(replace_request, the_cib);
+    cib__set_calldata(replace_request, based_cib);
 
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
