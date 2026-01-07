@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -465,8 +465,6 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     pcmk__node_status_t *local_node = NULL;
     int rc = pcmk_rc_ok;
-
-    pcmk__cluster_init_node_caches();
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {
         pcmk__err("Invalid cluster layer: %s " QB_XS " cluster_layer=%d",
