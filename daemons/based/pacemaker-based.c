@@ -62,6 +62,8 @@ setup_stand_alone(GError **error)
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
 
+    based_is_primary = true;
+
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_FATAL;
@@ -305,10 +307,7 @@ main(int argc, char **argv)
     based_ipc_init();
     based_remote_init();
 
-    if (stand_alone) {
-        based_is_primary = true;
-
-    } else {
+    if (!stand_alone) {
         if (based_cluster_connect() != pcmk_rc_ok) {
             exit_code = CRM_EX_FATAL;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
