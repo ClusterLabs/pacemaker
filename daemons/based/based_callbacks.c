@@ -178,7 +178,7 @@ digest_timer_cb(gpointer data)
 {
     xmlNode *ping = NULL;
 
-    if (!based_is_primary) {
+    if (!based_get_local_node_dc()) {
         // Only the DC sends a ping
         return G_SOURCE_REMOVE;
     }
@@ -240,7 +240,7 @@ process_ping_reply(const xmlNode *reply)
         return;
     }
 
-    if (!based_is_primary) {
+    if (!based_get_local_node_dc()) {
         pcmk__trace("Ignoring ping reply %lld from %s because we are no longer "
                     "DC", seq, host);
         return;
@@ -381,7 +381,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
         pcmk__trace("Parsing upgrade %s for %s with max=%s and upgrade_rc=%s",
                     (is_reply? "reply" : "request"),
-                    (based_is_primary? "primary" : "secondary"),
+                    (based_get_local_node_dc()? "DC" : "non-DC node"),
                     pcmk__s(max, "none"), pcmk__s(upgrade_rc, "none"));
 
         if (upgrade_rc != NULL) {
@@ -397,7 +397,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             return true;
         }
 
-        if ((max == NULL) && !based_is_primary) {
+        if ((max == NULL) && !based_get_local_node_dc()) {
             // Ignore broadcast client requests when we're not the DC
             return false;
         }

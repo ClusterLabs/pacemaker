@@ -29,8 +29,6 @@
 
 #include "pacemaker-based.h"
 
-bool based_is_primary = false;
-
 xmlNode *the_cib = NULL;
 
 /*!
@@ -83,7 +81,7 @@ int
 based_process_is_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
-    return (based_is_primary? pcmk_rc_ok : EPERM);
+    return (based_get_local_node_dc()? pcmk_rc_ok : EPERM);
 }
 
 // @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
@@ -134,9 +132,9 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    if (!based_is_primary) {
+    if (!based_get_local_node_dc()) {
         pcmk__info("We are now in R/W mode");
-        based_is_primary = true;
+        based_set_local_node_dc(true);
 
     } else {
         pcmk__debug("We are still in R/W mode");
@@ -190,9 +188,9 @@ based_process_schemas(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_secondary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    if (based_is_primary) {
+    if (based_get_local_node_dc()) {
         pcmk__info("We are now in R/O mode");
-        based_is_primary = false;
+        based_set_local_node_dc(false);
 
     } else {
         pcmk__debug("We are still in R/O mode");

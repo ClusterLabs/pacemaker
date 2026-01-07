@@ -37,9 +37,34 @@ int cib_status = pcmk_rc_ok;
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
 
+static bool local_node_dc = false;
 static bool shutting_down = false;
 static gboolean stand_alone = FALSE;
 static crm_exit_t exit_code = CRM_EX_OK;
+
+/*!
+ * \internal
+ * \brief Check whether local node is DC
+ *
+ * \return \c true if local node is DC, or \c false otherwise
+ */
+bool
+based_get_local_node_dc(void)
+{
+    return local_node_dc;
+}
+
+/*!
+ * \internal
+ * \brief Record whether local node is DC
+ *
+ * \param[in] value  \c true if local node is DC, or \c false otherwise
+ */
+void
+based_set_local_node_dc(bool value)
+{
+    local_node_dc = value;
+}
 
 /*!
  * \internal
@@ -82,7 +107,7 @@ setup_stand_alone(GError **error)
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
 
-    based_is_primary = true;
+    based_set_local_node_dc(true);
 
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
