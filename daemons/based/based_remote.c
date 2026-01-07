@@ -697,7 +697,7 @@ based_remote_init(void)
     int rc = pcmk_rc_ok;
     bool have_psk = false;
 
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
+    port_s = pcmk__xe_get(based_cib, PCMK_XA_REMOTE_TLS_PORT);
 
     if ((pcmk__scan_port(port_s, &port) != pcmk_rc_ok) || (port <= 0)) {
         goto try_clear_port;
@@ -751,7 +751,7 @@ try_clear_port:
     /* Regardless of whether or not we successfully enabled remote-tls-port,
      * we also want to try to enable remote-clear-port as well.
      */
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
+    port_s = pcmk__xe_get(based_cib, PCMK_XA_REMOTE_CLEAR_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
         pcmk__warn("Starting clear-text listener on port %d. This is insecure "

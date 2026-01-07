@@ -265,7 +265,7 @@ process_ping_reply(const xmlNode *reply)
     }
 
     if (ping_digest == NULL) {
-        ping_digest = pcmk__digest_xml(the_cib, true);
+        ping_digest = pcmk__digest_xml(based_cib, true);
     }
 
     pcmk__trace("Processing ping reply %lld from %s (%s)", seq, host, digest);
@@ -275,9 +275,10 @@ process_ping_reply(const xmlNode *reply)
     }
 
     pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
-                 pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
-                 pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-                 pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES), ping_digest, host,
+                 pcmk__xe_get(based_cib, PCMK_XA_ADMIN_EPOCH),
+                 pcmk__xe_get(based_cib, PCMK_XA_EPOCH),
+                 pcmk__xe_get(based_cib, PCMK_XA_NUM_UPDATES),
+                 ping_digest, host,
                  pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH),
                  pcmk__xe_get(remote_versions, PCMK_XA_EPOCH),
                  pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES), digest);
@@ -457,7 +458,7 @@ static int
 based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **output)
 {
-    xmlNode *result_cib = the_cib;
+    xmlNode *result_cib = based_cib;
     xmlNode *cib_diff = NULL;
 
     const char *feature_set = NULL;
@@ -482,21 +483,21 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
      * or notification that we will send.
      */
     if (rc == pcmk_rc_schema_validation) {
-        pcmk__assert((result_cib != the_cib) && (*output == NULL));
+        pcmk__assert((result_cib != based_cib) && (*output == NULL));
         *output = result_cib;
         goto done;
     }
 
     // Discard result for failure or dry run
     if ((rc != pcmk_rc_ok) || pcmk__any_flags_set(call_options, cib_dryrun)) {
-        if (result_cib != the_cib) {
+        if (result_cib != based_cib) {
             pcmk__xml_free(result_cib);
         }
 
         goto done;
     }
 
-    if (result_cib != the_cib) {
+    if (result_cib != based_cib) {
         /* Always write to disk for successful ops with the writes-through flag
          * set. This also avoids the need to detect ordering changes.
          *
@@ -511,7 +512,7 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         rc = based_activate_cib(result_cib, to_disk, op);
     }
 
-    feature_set = pcmk__xe_get(the_cib, PCMK_XA_CRM_FEATURE_SET);
+    feature_set = pcmk__xe_get(based_cib, PCMK_XA_CRM_FEATURE_SET);
 
     /* @COMPAT Nodes older than feature set 3.19.0 don't support transactions.
      * In a mixed-version cluster with nodes <3.19.0, we must sync the updated
@@ -586,13 +587,13 @@ log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
     originator = pcmk__s(originator, "local");
     client_name = pcmk__s(client_name, "client");
 
-    /* @FIXME the_cib should always be non-NULL, but that's currently not the
+    /* @FIXME based_cib should always be non-NULL, but that's currently not the
      * case during shutdown
      */
-    if (the_cib != NULL) {
-        pcmk__xe_get_int(the_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
-        pcmk__xe_get_int(the_cib, PCMK_XA_EPOCH, &epoch);
-        pcmk__xe_get_int(the_cib, PCMK_XA_NUM_UPDATES, &num_updates);
+    if (based_cib != NULL) {
+        pcmk__xe_get_int(based_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
+        pcmk__xe_get_int(based_cib, PCMK_XA_EPOCH, &epoch);
+        pcmk__xe_get_int(based_cib, PCMK_XA_NUM_UPDATES, &num_updates);
     }
 
     do_crm_log(level,
@@ -745,7 +746,7 @@ based_process_request(xmlNode *request, bool privileged,
                   "(please repair and restart): %s", pcmk_rc_str(rc));
 
         if (!pcmk__is_set(call_options, cib_discard_reply)) {
-            reply = create_cib_reply(request, rc, the_cib);
+            reply = create_cib_reply(request, rc, based_cib);
         }
 
         goto done;
@@ -763,7 +764,7 @@ based_process_request(xmlNode *request, bool privileged,
         rc = EACCES;
 
     } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
+        rc = cib__perform_op_ro(op_function, request, &based_cib, &output);
 
     } else {
         rc = based_perform_op_rw(request, operation, op_function, &output);
@@ -775,7 +776,7 @@ based_process_request(xmlNode *request, bool privileged,
         reply = create_cib_reply(request, rc, output);
     }
 
-    if ((output != NULL) && (output->doc != the_cib->doc)) {
+    if ((output != NULL) && (output->doc != based_cib->doc)) {
         pcmk__xml_free(output);
     }
 
@@ -810,7 +811,7 @@ based_terminate(crm_exit_t exit_status)
 
     g_clear_pointer(&digest_timer, mainloop_timer_del);
     g_clear_pointer(&ping_digest, free);
-    g_clear_pointer(&the_cib, pcmk__xml_free);
+    g_clear_pointer(&based_cib, pcmk__xml_free);
 
     // Exit immediately on error
     if (exit_status != CRM_EX_OK) {
