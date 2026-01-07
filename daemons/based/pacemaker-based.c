@@ -14,12 +14,10 @@
 #include <signal.h>                 // SIGTERM
 #include <stdbool.h>
 #include <stddef.h>                 // NULL, size_t
-#include <stdlib.h>                 // free
 #include <syslog.h>                 // LOG_INFO
 #include <sys/types.h>              // gid_t, uid_t
 #include <unistd.h>                 // setgid, setuid
 
-#include <corosync/cpg.h>           // cpg_*
 #include <glib.h>                   // g_*, G_*, etc.
 #include <libxml/tree.h>            // xmlNode
 
@@ -37,8 +35,6 @@
 
 bool cib_shutdown_flag = false;
 int cib_status = pcmk_rc_ok;
-
-pcmk_cluster_t *based_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
@@ -159,37 +155,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
-}
-
-/*!
- * \internal
- * \brief Initialize \c based_cluster and connect to the cluster layer
- *
- * \return Standard Pacemaker return code
- */
-static int
-based_cluster_connect(void)
-{
-    int rc = pcmk_rc_ok;
-
-    based_cluster = pcmk_cluster_new();
-
-#if SUPPORT_COROSYNC
-    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        pcmk_cluster_set_destroy_fn(based_cluster, cib_cs_destroy);
-        pcmk_cpg_set_deliver_fn(based_cluster, cib_cs_dispatch);
-        pcmk_cpg_set_confchg_fn(based_cluster, pcmk__cpg_confchg_cb);
-    }
-#endif // SUPPORT_COROSYNC
-
-    pcmk__cluster_set_status_callback(&cib_peer_update_callback);
-
-    rc = pcmk_cluster_connect(based_cluster);
-    if (rc != pcmk_rc_ok) {
-        pcmk__err("Cluster connection failed");
-    }
-
-    return rc;
 }
 
 int
@@ -348,64 +313,4 @@ done:
     }
     pcmk__unregister_formats();
     crm_exit(exit_code);
-}
-
-#if SUPPORT_COROSYNC
-static void
-cib_cs_dispatch(cpg_handle_t handle,
-                 const struct cpg_name *groupName,
-                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
-{
-    xmlNode *xml = NULL;
-    const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
-
-    if(data == NULL) {
-        return;
-    }
-
-    xml = pcmk__xml_parse(data);
-    if (xml == NULL) {
-        pcmk__err("Invalid XML: '%.120s'", data);
-        free(data);
-        return;
-    }
-    pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    based_peer_callback(xml, NULL);
-
-    pcmk__xml_free(xml);
-    free(data);
-}
-
-static void
-cib_cs_destroy(gpointer user_data)
-{
-    if (cib_shutdown_flag) {
-        pcmk__info("Corosync disconnection complete");
-    } else {
-        pcmk__crit("Exiting immediately after losing connection to cluster "
-                   "layer");
-        based_terminate(CRM_EX_DISCONNECT);
-    }
-}
-#endif
-
-static void
-cib_peer_update_callback(enum pcmk__node_update type,
-                         pcmk__node_status_t *node, const void *data)
-{
-    switch (type) {
-        case pcmk__node_update_name:
-        case pcmk__node_update_state:
-            if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
-                && (pcmk__ipc_client_count() == 0)) {
-
-                pcmk__info("Exiting after no more peers or clients remain");
-                based_terminate(-1);
-            }
-            break;
-
-        default:
-            break;
-    }
 }
