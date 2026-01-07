@@ -27,6 +27,8 @@
 #define OUR_NODENAME    \
     (based_stand_alone()? "localhost" : based_cluster_node_name())
 
+extern xmlNode *based_cib;
+
 extern GMainLoop *mainloop;
 extern gchar *cib_root;
 extern int cib_status;

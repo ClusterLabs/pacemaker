@@ -32,6 +32,21 @@
 
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
+/*
+ * \internal
+ * \brief The CIB manager's global, in-memory copy of the current CIB
+ *
+ * This should reflect our most current, authoritative view of the cluster
+ * state. It may point to a tentative, "working" CIB copy while committing a
+ * transaction, but transactions are atomic. Either the transaction succeeds and
+ * we replace \c based_cib with the resulting CIB, or the transaction fails and
+ * we restore a saved version of the pre-transaction CIB.
+ *
+ * We write this in-memory CIB to disk during CIB manager startup and after a
+ * successful CIB operation that modifies the \c PCMK_XE_CONFIGURATION section.
+ */
+xmlNode *based_cib = NULL;
+
 int cib_status = pcmk_rc_ok;
 
 GMainLoop *mainloop = NULL;

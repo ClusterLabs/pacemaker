@@ -126,7 +126,7 @@ int
 based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
                          const char *origin, xmlNode **result_cib)
 {
-    xmlNode *saved_cib = the_cib;
+    xmlNode *saved_cib = based_cib;
     int rc = pcmk_rc_ok;
     char *source = NULL;
 
@@ -135,35 +135,35 @@ based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
     CRM_CHECK(pcmk__xe_is(transaction, PCMK__XE_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
 
-    /* *result_cib should be a copy of the_cib (created by
+    /* *result_cib should be a copy of based_cib (created by
      * cib__perform_op_rw()). If not, make a copy now. Change tracking isn't
      * strictly required here because each request in the transaction will have
      * changes tracked and ACLs checked if appropriate.
      */
-    CRM_CHECK((*result_cib != NULL) && (*result_cib != the_cib),
-              *result_cib = pcmk__xml_copy(NULL, the_cib));
+    CRM_CHECK((*result_cib != NULL) && (*result_cib != based_cib),
+              *result_cib = pcmk__xml_copy(NULL, based_cib));
 
     source = based_transaction_source_str(client, origin);
     pcmk__trace("Committing transaction for %s to working CIB", source);
 
     // Apply all changes to a working copy of the CIB
-    the_cib = *result_cib;
+    based_cib = *result_cib;
 
     rc = process_transaction_requests(transaction, client, origin);
 
     pcmk__trace("Transaction commit %s for %s",
                 ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
 
-    /* Some request types (for example, erase) may have freed the_cib (the
+    /* Some request types (for example, erase) may have freed based_cib (the
      * working copy) and pointed it at a new XML object. In that case, it
      * follows that *result_cib (the working copy) was freed.
      *
-     * Point *result_cib at the updated working copy stored in the_cib.
+     * Point *result_cib at the updated working copy stored in based_cib.
      */
-    *result_cib = the_cib;
+    *result_cib = based_cib;
 
-    // Point the_cib back to the unchanged original copy
-    the_cib = saved_cib;
+    // Point based_cib back to the unchanged original copy
+    based_cib = saved_cib;
 
     free(source);
     return rc;

@@ -671,7 +671,7 @@ based_remote_init(void)
     const char *port_s = NULL;
     int port = 0;
 
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
+    port_s = pcmk__xe_get(based_cib, PCMK_XA_REMOTE_TLS_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
         // @TODO Implement pre-shared key authentication (see T961)
@@ -688,7 +688,7 @@ based_remote_init(void)
         }
     }
 
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
+    port_s = pcmk__xe_get(based_cib, PCMK_XA_REMOTE_CLEAR_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
         pcmk__warn("Starting clear-text listener on port %d. This is insecure; "
