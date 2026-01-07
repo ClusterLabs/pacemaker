@@ -598,17 +598,7 @@ struct qb_ipcs_poll_handlers gio_poll_funcs = {
 static enum qb_ipc_type
 pick_ipc_type(enum qb_ipc_type requested)
 {
-    const char *env = pcmk__env_option(PCMK__ENV_IPC_TYPE);
-
-    if (env && strcmp("shared-mem", env) == 0) {
-        return QB_IPC_SHM;
-    } else if (env && strcmp("socket", env) == 0) {
-        return QB_IPC_SOCKET;
-    } else if (env && strcmp("posix", env) == 0) {
-        return QB_IPC_POSIX_MQ;
-    } else if (env && strcmp("sysv", env) == 0) {
-        return QB_IPC_SYSV_MQ;
-    } else if (requested == QB_IPC_NATIVE) {
+    if (requested == QB_IPC_NATIVE) {
         /* We prefer shared memory because the server never blocks on
          * send.  If part of a message fits into the socket, libqb
          * needs to block until the remainder can be sent also.
