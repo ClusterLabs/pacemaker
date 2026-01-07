@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -46,21 +46,24 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
     const char *name = NULL;
     char *value = NULL;
     int rc = pcmk_rc_ok;
+    char *target_copy = NULL;
 
     if (target == NULL) {
         // Not really possible, but makes static analysis happy
         return EINVAL;
     }
 
+    target_copy = pcmk__str_copy(target);
+
     /* Determine if targeting by attribute, node name pattern or node name */
-    value = strchr(target, '=');
+    value = strchr(target_copy, '=');
     if (value != NULL)  {
-        name = target;
+        name = target_copy;
         *value++ = '\0';
-    } else if (*target == '@') {
-        pattern = target + 1;
+    } else if (*target_copy == '@') {
+        pattern = target_copy + 1;
     } else {
-        node = target;
+        node = target_copy;
     }
 
     /* Register or unregister level as appropriate */
@@ -79,6 +82,7 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
                                          name, value, fence_level);
     }
 
+    free(target_copy);
     return pcmk_legacy2rc(rc);
 }
 

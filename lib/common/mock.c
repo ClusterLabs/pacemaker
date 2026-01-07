@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,13 +11,14 @@
 
 #include <errno.h>
 #include <pwd.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <setjmp.h>                         // Required by cmocka.h
+#include <stdarg.h>                         // Required by cmocka.h
+#include <stdbool.h>                        // Required by cmocka.h
+#include <stddef.h>                         // Required by cmocka.h
+#include <stdint.h>                         // Required by cmocka.h
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <setjmp.h>
 #include <sys/types.h>                      // pid_t, size_t
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -94,8 +95,8 @@ __wrap_calloc(size_t nmemb, size_t size)
     if (!pcmk__mock_calloc) {
         return __real_calloc(nmemb, size);
     }
-    check_expected(nmemb);
-    check_expected(size);
+    check_expected_uint(nmemb);
+    check_expected_uint(size);
     return NULL;
 }
 
@@ -144,7 +145,7 @@ __wrap_realloc(void *ptr, size_t size)
         return __real_realloc(ptr, size);
     }
     check_expected_ptr(ptr);
-    check_expected(size);
+    check_expected_uint(size);
     return NULL;
 }
 
@@ -173,7 +174,7 @@ __wrap_setenv(const char *name, const char *value, int overwrite)
     }
     check_expected_ptr(name);
     check_expected_ptr(value);
-    check_expected(overwrite);
+    check_expected_int(overwrite);
     errno = mock_type(int);
     return (errno == 0)? 0 : -1;
 }
@@ -384,7 +385,7 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
         check_expected_ptr(name);
         check_expected_ptr(pwd);
         check_expected_ptr(buf);
-        check_expected(buflen);
+        check_expected_uint(buflen);
         check_expected_ptr(result);
         *result = mock_ptr_type(struct passwd *);
         return retval;
@@ -399,7 +400,6 @@ __wrap_getpwnam_r(const char *name, struct passwd *pwd, char *buf,
  * preceded by:
  *
  *     expect_*(__wrap_readlink, path[, ...]);
- *     expect_*(__wrap_readlink, buf[, ...]);
  *     expect_*(__wrap_readlink, bufsize[, ...]);
  *     will_return(__wrap_readlink, errno_to_set);
  *     will_return(__wrap_readlink, link_contents);
@@ -419,8 +419,7 @@ __wrap_readlink(const char *restrict path, char *restrict buf,
         const char *contents = NULL;
 
         check_expected_ptr(path);
-        check_expected(buf);
-        check_expected(bufsize);
+        check_expected_uint(bufsize);
         errno = mock_type(int);
         contents = mock_ptr_type(const char *);
 

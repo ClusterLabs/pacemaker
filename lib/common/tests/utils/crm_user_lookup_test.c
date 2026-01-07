@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,8 +25,8 @@ calloc_fails(void **state)
 
     pcmk__mock_calloc = true;   // calloc() will return NULL
 
-    expect_value(__wrap_calloc, nmemb, 1);
-    expect_value(__wrap_calloc, size, PCMK__PW_BUFFER_LEN);
+    expect_uint_value(__wrap_calloc, nmemb, 1);
+    expect_uint_value(__wrap_calloc, size, PCMK__PW_BUFFER_LEN);
     assert_int_equal(crm_user_lookup("hauser", &uid, &gid), -ENOMEM);
 
     pcmk__mock_calloc = false;  // Use real calloc()
@@ -44,7 +44,7 @@ getpwnam_r_fails(void **state)
     expect_string(__wrap_getpwnam_r, name, "hauser");
     expect_any(__wrap_getpwnam_r, pwd);
     expect_any(__wrap_getpwnam_r, buf);
-    expect_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
+    expect_uint_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
     expect_any(__wrap_getpwnam_r, result);
     will_return(__wrap_getpwnam_r, EIO);
     will_return(__wrap_getpwnam_r, NULL);
@@ -66,7 +66,7 @@ no_matching_pwent(void **state)
     expect_string(__wrap_getpwnam_r, name, "hauser");
     expect_any(__wrap_getpwnam_r, pwd);
     expect_any(__wrap_getpwnam_r, buf);
-    expect_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
+    expect_uint_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
     expect_any(__wrap_getpwnam_r, result);
     will_return(__wrap_getpwnam_r, 0);
     will_return(__wrap_getpwnam_r, NULL);
@@ -95,7 +95,7 @@ entry_found(void **state)
     expect_string(__wrap_getpwnam_r, name, "hauser");
     expect_any(__wrap_getpwnam_r, pwd);
     expect_any(__wrap_getpwnam_r, buf);
-    expect_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
+    expect_uint_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
     expect_any(__wrap_getpwnam_r, result);
     will_return(__wrap_getpwnam_r, 0);
     will_return(__wrap_getpwnam_r, &returned_ent);
@@ -108,7 +108,7 @@ entry_found(void **state)
     expect_string(__wrap_getpwnam_r, name, "hauser");
     expect_any(__wrap_getpwnam_r, pwd);
     expect_any(__wrap_getpwnam_r, buf);
-    expect_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
+    expect_uint_value(__wrap_getpwnam_r, buflen, PCMK__PW_BUFFER_LEN);
     expect_any(__wrap_getpwnam_r, result);
     will_return(__wrap_getpwnam_r, 0);
     will_return(__wrap_getpwnam_r, &returned_ent);

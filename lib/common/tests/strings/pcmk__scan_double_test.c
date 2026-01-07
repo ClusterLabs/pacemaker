@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,14 +16,6 @@
 
 // Ensure plenty of characters for %f display
 #define LOCAL_BUF_SIZE 2 * DBL_MAX_10_EXP
-
-/*
- * assert_float_equal doesn't exist for older versions of cmocka installed on some
- * of our builders, so define it in terms of regular assert() here in that case.
- */
-#if HAVE_DECL_ASSERT_FLOAT_EQUAL == 0
-#define assert_float_equal(a, b, epsilon) assert_true(fabs((a) - (b)) < (epsilon))
-#endif
 
 static void
 empty_input_string(void **state)

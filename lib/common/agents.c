@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -116,7 +116,7 @@ int
 crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                      char **type)
 {
-    char *colon;
+    const char *colon = NULL;
 
     CRM_CHECK(spec && standard && provider && type, return -EINVAL);
     *standard = NULL;
