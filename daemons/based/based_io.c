@@ -125,10 +125,10 @@ write_cib_async(gpointer user_data)
         return -1;
     }
 
-    /* Write the CIB. Note that this modifies the_cib, but this child is about
-     * to exit. The parent's copy of the_cib won't be affected.
+    /* Write the CIB. Note that this modifies based_cib, but this child is about
+     * to exit. The parent's copy of based_cib won't be affected.
      */
-    rc = cib_file_write_with_digest(the_cib, cib_root, "cib.xml");
+    rc = cib_file_write_with_digest(based_cib, cib_root, "cib.xml");
     rc = pcmk_legacy2rc(rc);
 
     pcmk_common_cleanup();
@@ -599,10 +599,10 @@ based_read_cib(void)
  * \internal
  * \brief Activate new CIB XML
  *
- * This function frees the existing \c the_cib and points it to \p new_cib.
+ * This function frees the existing \c based_cib and points it to \p new_cib.
  *
  * \param[in] new_cib  CIB XML to activate (must not be \c NULL or equal to
- *                     \c the_cib)
+ *                     \c based_cib)
  * \param[in] to_disk  If \c true and if the CIB status is OK and writes are
  *                     enabled, trigger the new CIB to be written to disk
  * \param[in] op       Operation that triggered the activation (for logging
@@ -611,15 +611,15 @@ based_read_cib(void)
  * \return Standard Pacemaker return code
  *
  * \note This function takes ownership of \p new_cib by assigning it to
- *       \c the_cib. The caller should not free it.
+ *       \c based_cib. The caller should not free it.
  */
 int
 based_activate_cib(xmlNode *new_cib, bool to_disk, const char *op)
 {
-    CRM_CHECK((new_cib != NULL) && (new_cib != the_cib), return ENODATA);
+    CRM_CHECK((new_cib != NULL) && (new_cib != based_cib), return ENODATA);
 
-    pcmk__xml_free(the_cib);
-    the_cib = new_cib;
+    pcmk__xml_free(based_cib);
+    based_cib = new_cib;
 
     if (to_disk && writes_enabled && (cib_status == pcmk_rc_ok)) {
         pcmk__debug("Triggering CIB write for %s op", op);
