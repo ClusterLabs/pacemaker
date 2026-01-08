@@ -167,7 +167,7 @@ execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         return 0;
     }
 
-    CRM_CHECK(pcmk__is_set(flags, crm_ipc_client_response), return 0);
+    CRM_CHECK(pcmk__is_set(flags, crm_ipc_client_response), goto done);
 
     if ((msg == NULL) || execd_invalid_msg(msg)) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
@@ -184,11 +184,12 @@ execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         };
 
         request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
-        CRM_CHECK(request.op != NULL, return 0);
+        CRM_CHECK(request.op != NULL, goto done);
 
         execd_handle_request(&request);
     }
 
+done:
     pcmk__xml_free(msg);
     return 0;
 }

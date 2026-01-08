@@ -149,7 +149,7 @@ lrmd_remote_client_msg(gpointer data)
         };
 
         request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
-        CRM_CHECK(request.op != NULL, return 0);
+        CRM_CHECK(request.op != NULL, goto done);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID,
                          (int *) &request.ipc_id);
@@ -158,6 +158,7 @@ lrmd_remote_client_msg(gpointer data)
         execd_handle_request(&request);
     }
 
+done:
     pcmk__xml_free(msg);
     return 0;
 }

@@ -150,8 +150,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
         pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, msg);
-        pcmk__xml_free(msg);
-        return 0;
+        goto done;
     }
 
     if (client->name == NULL) {
@@ -199,7 +198,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         };
 
         request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_ST_OP);
-        CRM_CHECK(request.op != NULL, return 0);
+        CRM_CHECK(request.op != NULL, goto done);
 
         if (pcmk__is_set(request.call_options, st_opt_sync_call)) {
             pcmk__set_request_flags(&request, pcmk__request_sync);
@@ -208,6 +207,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         fenced_handle_request(&request);
     }
 
+done:
     pcmk__xml_free(msg);
     return 0;
 }

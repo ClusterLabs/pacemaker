@@ -165,11 +165,12 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         };
 
         request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CRM_TASK);
-        CRM_CHECK(request.op != NULL, return 0);
+        CRM_CHECK(request.op != NULL, goto done);
 
         pacemakerd_handle_request(&request);
     }
 
+done:
     pcmk__xml_free(msg);
     return 0;
 }
