@@ -31,7 +31,7 @@
 #include <crm/cib/util.h>           // createEmptyCib
 #include <crm/common/internal.h>    // pcmk__assert_asprintf, PCMK__XE_*, etc.
 #include <crm/common/logging.h>     // CRM_CHECK
-#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/results.h>     // pcmk_legacy2rc, pcmk_rc_*
 #include <crm/common/util.h>        // pcmk_common_cleanup
 #include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
@@ -176,7 +176,7 @@ based_enable_writes(int nsig)
 
 /*!
  * \internal
- * \brief Initialize data structures for \c pacemaker-based I/O
+ * \brief Initialize data structures used for CIB manager I/O
  */
 void
 based_io_init(void)
@@ -196,6 +196,16 @@ based_io_init(void)
     mainloop_add_signal(SIGPIPE, based_enable_writes);
 
     write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Free data structures used for CIB manager I/O
+ */
+void
+based_io_cleanup(void)
+{
+    g_clear_pointer(&write_trigger, mainloop_destroy_trigger);
 }
 
 /*!

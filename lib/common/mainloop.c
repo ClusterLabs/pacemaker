@@ -335,6 +335,8 @@ mainloop_destroy_signal_entry(int sig)
  * \note The true signal handler merely sets a mainloop trigger to call this
  *       dispatch function via the mainloop. Therefore, the dispatch function
  *       does not need to be async-safe.
+ * \note The added signal handler gets freed by \c mainloop_cleanup() if it is
+ *       not freed manually using \c mainloop_destroy_signal().
  */
 gboolean
 mainloop_add_signal(int sig, void (*dispatch) (int sig))
