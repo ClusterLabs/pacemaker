@@ -247,10 +247,17 @@ based_terminate(crm_exit_t exit_status)
 {
     based_cleanup();
 
-    // Exit immediately on error
     if (exit_status != CRM_EX_OK) {
+        /* After calling g_main_loop_quit(), sources that have already been
+         * dispatched are still executed. On error, skip that and exit
+         * immediately after cleaning up data structures.
+         *
+         * @TODO Is this necessary? It would be nice to do the cleanup at the
+         * end of main(). If so, then one (complicated) option would be to keep
+         * track of all main loop sources and destroy them so that
+         * g_main_dispatch() ignores them.
+         */
         crm_exit(exit_status);
-        return;
     }
 
     based_cluster_disconnect();
