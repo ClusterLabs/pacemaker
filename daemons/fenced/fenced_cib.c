@@ -344,7 +344,8 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 
         if (pcmk__str_eq(op, PCMK_VALUE_DELETE, pcmk__str_none)
             && (strstr(xpath, "/" PCMK_XE_PRIMITIVE) != NULL)) {
-            const char *rsc_id = NULL;
+
+            char *rsc_id = NULL;
             char *search = NULL;
             char *mutable = NULL;
 

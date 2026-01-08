@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2024 the Pacemaker project contributors
+dnl Copyright 2009-2026 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -1251,17 +1251,6 @@ dnl ========================================================================
 
 AC_CHECK_DECLS([CLOCK_MONOTONIC], [PCMK_FEATURES="$PCMK_FEATURES monotonic"], [], [[
     #include <time.h>
-]])
-
-dnl ========================================================================
-dnl Unit test declarations
-dnl ========================================================================
-
-AC_CHECK_DECLS([assert_float_equal], [], [], [[
-    #include <stdarg.h>
-    #include <stddef.h>
-    #include <setjmp.h>
-    #include <cmocka.h>
 ]])
 
 dnl ========================================================================
