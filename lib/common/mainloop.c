@@ -595,21 +595,6 @@ struct qb_ipcs_poll_handlers gio_poll_funcs = {
     .dispatch_del = gio_poll_dispatch_del,
 };
 
-static enum qb_ipc_type
-pick_ipc_type(enum qb_ipc_type requested)
-{
-    if (requested == QB_IPC_NATIVE) {
-        /* We prefer shared memory because the server never blocks on
-         * send.  If part of a message fits into the socket, libqb
-         * needs to block until the remainder can be sent also.
-         * Otherwise the client will wait forever for the remaining
-         * bytes.
-         */
-        return QB_IPC_SHM;
-    }
-    return requested;
-}
-
 qb_ipcs_service_t *
 mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
                         struct qb_ipcs_service_handlers *callbacks)
@@ -629,7 +614,7 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
         gio_map = qb_array_create_2(64, sizeof(struct gio_to_qb_poll), 1);
     }
 
-    server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
+    server = qb_ipcs_create(name, 0, QB_IPC_NATIVE, callbacks);
 
     if (server == NULL) {
         pcmk__err("Could not create %s IPC server: %s (%d)", name,
