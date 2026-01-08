@@ -245,6 +245,8 @@ based_cleanup(void)
 void
 based_terminate(crm_exit_t exit_status)
 {
+    shutting_down = true;
+
     if (exit_status != CRM_EX_OK) {
         /* After calling g_main_loop_quit(), sources that have already been
          * dispatched are still executed. On error, skip that and exit
