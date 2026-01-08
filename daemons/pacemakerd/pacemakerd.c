@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -476,6 +476,7 @@ main(int argc, char **argv)
                  "connections");
     g_main_loop_run(mainloop);
     pacemakerd_ipc_cleanup();
+    pacemakerd_unregister_handlers();
 
     g_main_loop_unref(mainloop);
 #if SUPPORT_COROSYNC
