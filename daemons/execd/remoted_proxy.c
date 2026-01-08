@@ -536,19 +536,16 @@ ipc_proxy_init(void)
 void
 ipc_proxy_cleanup(void)
 {
-    if (ipc_providers) {
-        g_list_free(ipc_providers);
-        ipc_providers = NULL;
-    }
-    if (ipc_clients) {
-        g_hash_table_destroy(ipc_clients);
-        ipc_clients = NULL;
-    }
+    g_clear_pointer(&ipc_providers, g_list_free);
+    g_clear_pointer(&ipc_clients, g_hash_table_destroy);
+
     pcmk__stop_based_ipc(cib_ro, cib_rw, cib_shm);
-    qb_ipcs_destroy(attrd_ipcs);
-    qb_ipcs_destroy(fencer_ipcs);
-    qb_ipcs_destroy(pacemakerd_ipcs);
-    qb_ipcs_destroy(crmd_ipcs);
+
+    g_clear_pointer(&attrd_ipcs, qb_ipcs_destroy);
+    g_clear_pointer(&fencer_ipcs, qb_ipcs_destroy);
+    g_clear_pointer(&pacemakerd_ipcs, qb_ipcs_destroy);
+    g_clear_pointer(&crmd_ipcs, qb_ipcs_destroy);
+
     cib_ro = NULL;
     cib_rw = NULL;
     cib_shm = NULL;
