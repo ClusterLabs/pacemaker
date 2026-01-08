@@ -222,12 +222,10 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 
 /*!
  * \internal
- * \brief Close remote sockets, free the global CIB and quit
- *
- * \param[in] exit_status  Exit code
+ * \brief Clean up CIB manager data structures
  */
-void
-based_terminate(crm_exit_t exit_status)
+static void
+based_cleanup(void)
 {
     based_callbacks_cleanup();
     based_io_cleanup();
@@ -235,6 +233,19 @@ based_terminate(crm_exit_t exit_status)
     based_remote_cleanup();
 
     g_clear_pointer(&based_cib, pcmk__xml_free);
+    g_clear_pointer(&cib_root, g_free);
+}
+
+/*!
+ * \internal
+ * \brief Clean up data structures and exit
+ *
+ * \param[in] exit_status  Exit code
+ */
+void
+based_terminate(crm_exit_t exit_status)
+{
+    based_cleanup();
 
     // Exit immediately on error
     if (exit_status != CRM_EX_OK) {
@@ -400,9 +411,8 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__client_cleanup();
     based_cluster_disconnect();
-    g_free(cib_root);
+    based_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
 
