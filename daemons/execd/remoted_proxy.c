@@ -318,11 +318,6 @@ ipc_proxy_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         return 0;
     }
 
-    CRM_CHECK(client != NULL, pcmk__err("Invalid client");
-              pcmk__xml_free(request); return FALSE);
-    CRM_CHECK(client->id != NULL, pcmk__err("Invalid client: %p", client);
-              pcmk__xml_free(request); return FALSE);
-
     /* This ensures that synced request/responses happen over the event channel
      * in the controller, allowing the controller to process the messages async.
      */
