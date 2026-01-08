@@ -201,8 +201,7 @@ schedulerd_ipc_cleanup(void)
 {
     if (ipcs != NULL) {
         pcmk__drop_all_clients(ipcs);
-        qb_ipcs_destroy(ipcs);
-        ipcs = NULL;
+        g_clear_pointer(&ipcs, qb_ipcs_destroy);
     }
 
     pcmk__client_cleanup();
