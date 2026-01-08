@@ -1026,7 +1026,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
  * \param[in]  ro_cb     IPC callbacks for read-only API
  * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
  *
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  * \note There is no actual difference between the three IPC endpoints other
  *       than their names.
  */
@@ -1046,9 +1046,8 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
                                         QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        pcmk__err("Failed to create the CIB manager: exiting and inhibiting "
-                  "respawn");
-        pcmk__warn("Verify pacemaker and pacemaker_remote are not both "
+        pcmk__crit("Failed to create CIB manager IPC server; shutting down");
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
         crm_exit(CRM_EX_FATAL);
     }
@@ -1105,9 +1104,10 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(PCMK__VALUE_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        pcmk__crit("Exiting fatally because unable to serve " PCMK__SERVER_ATTRD
-                   " IPC (verify pacemaker and pacemaker_remote are not both"
-                   " enabled)");
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_ipc_name(pcmk_ipc_attrd));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -1128,7 +1128,8 @@ pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(PCMK__VALUE_LRMD, QB_IPC_SHM, cb);
 
     if (*ipcs == NULL) {
-        pcmk__err("Failed to create IPC server: shutting down and inhibiting respawn");
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_ipc_name(pcmk_ipc_execd));
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -1150,8 +1151,9 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                                               QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
-        pcmk__err("Failed to create fencer: exiting and inhibiting respawn");
-        pcmk__warn("Verify pacemaker and pacemaker_remote are not both "
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_ipc_name(pcmk_ipc_fenced));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
         crm_exit(CRM_EX_FATAL);
     }
@@ -1173,8 +1175,9 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        pcmk__err("Couldn't start pacemakerd IPC server");
-        pcmk__warn("Verify pacemaker and pacemaker_remote are not both "
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_ipc_name(pcmk_ipc_pacemakerd));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
         /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
          * if we want to prevent pacemakerd from restarting them.
@@ -1202,8 +1205,8 @@ pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
     *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        pcmk__crit("Exiting fatally because unable to serve "
-                   PCMK__SERVER_SCHEDULERD " IPC");
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_ipc_name(pcmk_ipc_schedulerd));
         crm_exit(CRM_EX_FATAL);
     }
 }
