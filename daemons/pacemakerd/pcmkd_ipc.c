@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -192,7 +192,6 @@ pacemakerd_ipc_cleanup(void)
         ipcs = NULL;
     }
 
-    pacemakerd_unregister_handlers();
     pcmk__client_cleanup();
 }
 

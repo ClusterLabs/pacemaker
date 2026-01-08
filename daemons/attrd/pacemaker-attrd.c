@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -202,6 +202,7 @@ main(int argc, char **argv)
         attrd_free_removed_peers();
         attrd_free_waitlist();
         attrd_cluster_disconnect();
+        attrd_unregister_handlers();
         g_hash_table_destroy(attributes);
     }
 
