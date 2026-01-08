@@ -255,12 +255,11 @@ based_terminate(crm_exit_t exit_status)
 
     based_cluster_disconnect();
 
-    if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
-        g_main_loop_quit(mainloop);
-        return;
-    }
+    // There should be no way to get here without the main loop running
+    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop),
+              crm_exit(exit_status));
 
-    crm_exit(CRM_EX_OK);
+    g_main_loop_quit(mainloop);
 }
 
 static void
