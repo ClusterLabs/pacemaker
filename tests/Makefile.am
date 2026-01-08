@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2024 the Pacemaker project contributors
+# Copyright 2020-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,9 +10,9 @@
 include $(top_srcdir)/mk/common.mk
 
 # tap-test is copied from /usr/share/automake-*/tap-driver.sh.
-EXTRA_DIST = tap-driver.sh 	\
-	     tap-test 		\
-	     test-headers.sh
+EXTRA_DIST = tap-driver.sh
+EXTRA_DIST += tap-test
+EXTRA_DIST += test-headers.sh
 
 .PHONY: check
 check: check-headers

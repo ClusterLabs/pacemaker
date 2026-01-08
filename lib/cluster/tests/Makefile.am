@@ -9,6 +9,5 @@
 
 include $(top_srcdir)/mk/common.mk
 
-SUBDIRS = \
-	cluster		\
-	cpg
+SUBDIRS = cluster
+SUBDIRS += cpg

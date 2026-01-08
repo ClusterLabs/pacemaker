@@ -16,13 +16,13 @@ LDADD += $(top_builddir)/lib/cib/libcib.la
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 
-check_PROGRAMS = pcmk__get_ticket_state_test \
-		 pcmk_ticket_constraints_test \
-		 pcmk_ticket_delete_test \
-		 pcmk_ticket_get_attr_test \
-		 pcmk_ticket_info_test \
-		 pcmk_ticket_remove_attr_test \
-		 pcmk_ticket_set_attr_test \
-		 pcmk_ticket_state_test
+check_PROGRAMS = pcmk__get_ticket_state_test
+check_PROGRAMS += pcmk_ticket_constraints_test
+check_PROGRAMS += pcmk_ticket_delete_test
+check_PROGRAMS += pcmk_ticket_get_attr_test
+check_PROGRAMS += pcmk_ticket_info_test
+check_PROGRAMS += pcmk_ticket_remove_attr_test
+check_PROGRAMS += pcmk_ticket_set_attr_test
+check_PROGRAMS += pcmk_ticket_state_test
 
 TESTS = $(check_PROGRAMS)

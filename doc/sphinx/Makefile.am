@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2024 the Pacemaker project contributors
+# Copyright 2003-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -66,13 +66,13 @@ PNGS_Pacemaker_Explained	= $(wildcard Pacemaker_Explained/images/*.png)
 
 STATIC_FILES	= $(wildcard _static/*.css)
 
-EXTRA_DIST	= $(wildcard */*.rst) 					\
-		  $(PNGS_shared)					\
-		  $(PNGS_Clusters_from_Scratch)				\
-		  $(PNGS_Pacemaker_Explained)				\
-		  $(wildcard Pacemaker_Python_API/_templates/*rst) 	\
-		  $(STATIC_FILES)					\
-		  conf.py.in
+EXTRA_DIST = $(wildcard */*.rst)
+EXTRA_DIST += $(PNGS_shared)
+EXTRA_DIST += $(PNGS_Clusters_from_Scratch)
+EXTRA_DIST += $(PNGS_Pacemaker_Explained)
+EXTRA_DIST += $(wildcard Pacemaker_Python_API/_templates/*rst)
+EXTRA_DIST += $(STATIC_FILES)
+EXTRA_DIST += conf.py.in
 
 PACKAGE_SERIES=$(shell echo "$(VERSION)" | awk -F. '{ print $$1"."$$2 }')
 
@@ -80,15 +80,15 @@ BOOK_RSYNC_DEST	= $(RSYNC_PACKAGE_DEST)/doc/$(PACKAGE_SERIES)
 
 BOOK		= none
 
-DEPS_intro			= shared/pacemaker-intro.rst	\
-				  $(PNGS_shared)
+DEPS_intro = shared/pacemaker-intro.rst
+DEPS_intro += $(PNGS_shared)
 
-DEPS_Clusters_from_Scratch	= $(DEPS_intro) 		\
-				  $(PNGS_Clusters_from_Scratch)
+DEPS_Clusters_from_Scratch = $(DEPS_intro)
+DEPS_Clusters_from_Scratch += $(PNGS_Clusters_from_Scratch)
 DEPS_Pacemaker_Administration	= $(DEPS_intro)
 DEPS_Pacemaker_Development	=
-DEPS_Pacemaker_Explained	= $(DEPS_intro) 		\
-				  $(PNGS_Pacemaker_Explained)
+DEPS_Pacemaker_Explained = $(DEPS_intro)
+DEPS_Pacemaker_Explained += $(PNGS_Pacemaker_Explained)
 DEPS_Pacemaker_Python_API 	= ../../python
 
 if BUILD_SPHINX_DOCS

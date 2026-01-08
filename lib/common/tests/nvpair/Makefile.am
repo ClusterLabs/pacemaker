@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2025 the Pacemaker project contributors
+# Copyright 2021-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,11 +12,11 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = crm_meta_name_test		\
-		 crm_meta_value_test		\
-		 pcmk__cmp_nvpair_blocks_test	\
-		 pcmk__scan_nvpair_test		\
-		 pcmk__unpack_nvpair_block_test	\
-		 pcmk_unpack_nvpair_blocks_test
+check_PROGRAMS = crm_meta_name_test
+check_PROGRAMS += crm_meta_value_test
+check_PROGRAMS += pcmk__cmp_nvpair_blocks_test
+check_PROGRAMS += pcmk__scan_nvpair_test
+check_PROGRAMS += pcmk__unpack_nvpair_block_test
+check_PROGRAMS += pcmk_unpack_nvpair_blocks_test
 
 TESTS = $(check_PROGRAMS)

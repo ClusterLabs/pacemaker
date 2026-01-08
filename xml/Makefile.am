@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2025 the Pacemaker project contributors
+# Copyright 2004-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -53,78 +53,78 @@ version_pairs_last = $(wordlist \
 # problems.
 
 # Names of API schemas that form the choices for pacemaker-result content
-API_request_base	= cibadmin		\
-			  cibsecret		\
-			  command-output 	\
-			  crm_attribute 	\
-			  crm_diff 		\
-			  crm_error 		\
-			  crm_mon 		\
-			  crm_node 		\
-			  crm_resource		\
-			  crm_rule 		\
-			  crm_shadow		\
-			  crm_simulate		\
-			  crm_ticket 		\
-			  crmadmin		\
-			  digests		\
-			  iso8601		\
-			  pacemakerd 		\
-			  stonith_admin		\
-			  version
+API_request_base = cibadmin
+API_request_base += cibsecret
+API_request_base += command-output
+API_request_base += crm_attribute
+API_request_base += crm_diff
+API_request_base += crm_error
+API_request_base += crm_mon
+API_request_base += crm_node
+API_request_base += crm_resource
+API_request_base += crm_rule
+API_request_base += crm_shadow
+API_request_base += crm_simulate
+API_request_base += crm_ticket
+API_request_base += crmadmin
+API_request_base += digests
+API_request_base += iso8601
+API_request_base += pacemakerd
+API_request_base += stonith_admin
+API_request_base += version
 
 # Names of CIB schemas that form the choices for cib/configuration content
-CIB_cfg_base		= options 	\
-			  nodes 	\
-			  resources 	\
-			  constraints 	\
-			  fencing 	\
-			  acls 		\
-			  tags 		\
-			  alerts
+CIB_cfg_base = options
+CIB_cfg_base += nodes
+CIB_cfg_base += resources
+CIB_cfg_base += constraints
+CIB_cfg_base += fencing
+CIB_cfg_base += acls
+CIB_cfg_base += tags
+CIB_cfg_base += alerts
 
 # Names of all schemas (including top level and those included by others)
-API_base		= $(API_request_base)	\
-			  any-element		\
-			  failure		\
-			  fence-event 		\
-			  generic-list		\
-			  instruction		\
-			  item			\
-			  node-attrs		\
-			  node-history		\
-			  nodes			\
-			  ocf-ra		\
-			  options		\
-			  patchset		\
-			  resources		\
-			  status		\
-			  subprocess-output 	\
-			  ticket
+API_base = $(API_request_base)
+API_base += any-element
+API_base += failure
+API_base += fence-event
+API_base += generic-list
+API_base += instruction
+API_base += item
+API_base += node-attrs
+API_base += node-history
+API_base += nodes
+API_base += ocf-ra
+API_base += options
+API_base += patchset
+API_base += resources
+API_base += status
+API_base += subprocess-output
+API_base += ticket
 
-CIB_base		= cib 			\
-			  $(CIB_cfg_base) 	\
-			  status 		\
-			  score 		\
-			  rule 			\
-			  nvset
+CIB_base = cib
+CIB_base += $(CIB_cfg_base)
+CIB_base += status
+CIB_base += score
+CIB_base += rule
+CIB_base += nvset
 
 # Static schema files and transforms (only CIB has transforms)
-# 
+#
 # This is more complicated than it should be due to the need to support
 # VPATH builds and "make distcheck". We need the absolute paths for reliable
 # substitution back and forth, and relative paths for distributed files.
 API_abs_files		= $(foreach base,$(API_base),$(wildcard $(abs_srcdir)/api/$(base)-*.rng))
 CIB_abs_files		= $(foreach base,$(CIB_base),$(wildcard $(abs_srcdir)/$(base).rng $(abs_srcdir)/$(base)-*.rng))
-CIB_abs_xsl		= $(abs_srcdir)/upgrade-1.3-0.xsl		\
-			  $(wildcard $(abs_srcdir)/upgrade-2.10-[0-2].xsl)	\
-			  $(wildcard $(abs_srcdir)/upgrade-3.10-*.xsl)
+CIB_abs_xsl = $(abs_srcdir)/upgrade-1.3-0.xsl
+CIB_abs_xsl += $(wildcard $(abs_srcdir)/upgrade-2.10-[0-2].xsl)
+CIB_abs_xsl += $(wildcard $(abs_srcdir)/upgrade-3.10-*.xsl)
 MON_abs_files 		= $(abs_srcdir)/crm_mon.rng
 API_files		= $(foreach base,$(API_base),$(wildcard $(srcdir)/api/$(base)-*.rng))
 CIB_files		= $(foreach base,$(CIB_base),$(wildcard $(srcdir)/$(base).rng $(srcdir)/$(base)-*.rng))
-CIB_xsl			= $(srcdir)/upgrade-1.3-0.xsl			\
-			  $(wildcard $(srcdir)/upgrade-2.10-[0-2].xsl)	\
-			  $(wildcard $(srcdir)/upgrade-3.10-*.xsl)
+CIB_xsl = $(srcdir)/upgrade-1.3-0.xsl
+CIB_xsl += $(wildcard $(srcdir)/upgrade-2.10-[0-2].xsl)
+CIB_xsl += $(wildcard $(srcdir)/upgrade-3.10-*.xsl)
 MON_files 		= $(srcdir)/crm_mon.rng
 
 # Sorted lists of all schema versions
@@ -144,9 +144,9 @@ MON_build_copies 	= $(foreach f,$(MON_abs_files),$(subst $(abs_srcdir),$(abs_bui
 
 # Dynamically generated schema files
 API_generated		= api/api-result.rng $(foreach base,$(API_versions),api/api-result-$(base).rng)
-CIB_generated		= pacemaker.rng 					\
-			  $(foreach base,$(CIB_versions),pacemaker-$(base).rng) \
-			  versions.rng
+CIB_generated = pacemaker.rng
+CIB_generated += $(foreach base,$(CIB_versions),pacemaker-$(base).rng)
+CIB_generated += versions.rng
 MON_generated 		= crm_mon.rng
 
 CIB_version_pairs	= $(call version_pairs,${CIB_versions})
@@ -154,20 +154,20 @@ CIB_version_pairs_cnt	= $(words ${CIB_version_pairs})
 CIB_version_pairs_last  = $(call version_pairs_last,${CIB_version_pairs_cnt},${CIB_version_pairs})
 
 dist_API_DATA		= $(API_files)
-dist_CIB_DATA		= $(CIB_files) \
-			  $(CIB_xsl)
+dist_CIB_DATA = $(CIB_files)
+dist_CIB_DATA += $(CIB_xsl)
 
 nodist_API_DATA		= $(API_generated)
 nodist_CIB_DATA		= $(CIB_generated)
 nodist_MON_DATA		= $(MON_generated)
 
-EXTRA_DIST		= README.md			\
-			  cibtr-2.rng			\
-			  context-of.xsl		\
-			  rng-helper			\
-			  ocf-meta2man.xsl		\
-			  upgrade-detail.xsl		\
-			  xslt_cibtr-2.rng
+EXTRA_DIST = README.md
+EXTRA_DIST += cibtr-2.rng
+EXTRA_DIST += context-of.xsl
+EXTRA_DIST += rng-helper
+EXTRA_DIST += ocf-meta2man.xsl
+EXTRA_DIST += upgrade-detail.xsl
+EXTRA_DIST += xslt_cibtr-2.rng
 
 .PHONY: cib-versions
 cib-versions:
@@ -265,9 +265,9 @@ fulldiff: rng-helper
 	@echo "#  Comparing all changes across all the subsequent increments"
 	@$(builddir)/rng-helper diff ${CIB_version_pairs}
 
-CLEANFILES = $(API_generated) \
-	     $(CIB_generated) \
-	     $(MON_generated)
+CLEANFILES = $(API_generated)
+CLEANFILES += $(CIB_generated)
+CLEANFILES += $(MON_generated)
 
 # Remove pacemaker schema files generated by *any* source version. This allows
 # "make -C xml clean" to have the desired effect when checking out an earlier
