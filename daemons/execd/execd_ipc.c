@@ -132,7 +132,6 @@ execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
-    CRM_CHECK(client->id != NULL, return 0);
 
     if (data == NULL) {
         pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
