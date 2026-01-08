@@ -245,6 +245,7 @@ based_cleanup(void)
 void
 based_terminate(crm_exit_t exit_status)
 {
+    shutting_down = true;
     based_cleanup();
 
     if (exit_status != CRM_EX_OK) {
