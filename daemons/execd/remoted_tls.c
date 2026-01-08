@@ -141,7 +141,7 @@ lrmd_remote_client_msg(gpointer data)
         pcmk__request_t request = {
             .ipc_client     = client,
             .ipc_id         = 0,
-            .ipc_flags      = client->flags,
+            .ipc_flags      = crm_ipc_flags_none,
             .peer           = NULL,
             .xml            = msg,
             .call_options   = 0,
