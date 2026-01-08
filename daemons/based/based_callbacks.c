@@ -28,7 +28,7 @@
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
 #include <crm/common/mainloop.h>    // mainloop_*
-#include <crm/common/results.h>     // CRM_EX_OK, crm_exit_t, pcmk_rc_*
+#include <crm/common/results.h>     // pcmk_rc_*
 #include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
 #include <crm/crm.h>                // CRM_OP_*
 
@@ -812,36 +812,4 @@ done:
 
     pcmk__xml_free(reply);
     return rc;
-}
-
-/*!
- * \internal
- * \brief Close remote sockets, free the global CIB and quit
- *
- * \param[in] exit_status  Exit code
- */
-void
-based_terminate(crm_exit_t exit_status)
-{
-    based_callbacks_cleanup();
-    based_io_cleanup();
-    based_ipc_cleanup();
-    based_remote_cleanup();
-
-    g_clear_pointer(&based_cib, pcmk__xml_free);
-
-    // Exit immediately on error
-    if (exit_status != CRM_EX_OK) {
-        crm_exit(exit_status);
-        return;
-    }
-
-    based_cluster_disconnect();
-
-    if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
-        g_main_loop_quit(mainloop);
-        return;
-    }
-
-    crm_exit(CRM_EX_OK);
 }

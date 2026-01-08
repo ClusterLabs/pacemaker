@@ -26,7 +26,7 @@
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // crm_log_*
 #include <crm/common/mainloop.h>    // mainloop_add_signal
-#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
+#include <crm/common/results.h>     // CRM_EX_*, crm_exit_t, pcmk_rc_*
 
 #include "pacemaker-based.h"
 
@@ -48,14 +48,13 @@
 xmlNode *based_cib = NULL;
 
 int cib_status = pcmk_rc_ok;
-
-GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
 
 static bool local_node_dc = false;
 static bool shutting_down = false;
 static gboolean stand_alone = FALSE;
 static crm_exit_t exit_code = CRM_EX_OK;
+static GMainLoop *mainloop = NULL;
 
 /*!
  * \internal
@@ -219,6 +218,38 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, entries);
     return context;
+}
+
+/*!
+ * \internal
+ * \brief Close remote sockets, free the global CIB and quit
+ *
+ * \param[in] exit_status  Exit code
+ */
+void
+based_terminate(crm_exit_t exit_status)
+{
+    based_callbacks_cleanup();
+    based_io_cleanup();
+    based_ipc_cleanup();
+    based_remote_cleanup();
+
+    g_clear_pointer(&based_cib, pcmk__xml_free);
+
+    // Exit immediately on error
+    if (exit_status != CRM_EX_OK) {
+        crm_exit(exit_status);
+        return;
+    }
+
+    based_cluster_disconnect();
+
+    if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
+        g_main_loop_quit(mainloop);
+        return;
+    }
+
+    crm_exit(CRM_EX_OK);
 }
 
 static void
