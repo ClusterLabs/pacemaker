@@ -1033,14 +1033,14 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
                            struct qb_ipcs_service_handlers *ro_cb,
                            struct qb_ipcs_service_handlers *rw_cb)
 {
-    *ipcs_ro = mainloop_add_ipc_server(PCMK__SERVER_BASED_RO,
-                                       QB_IPC_NATIVE, ro_cb);
+    *ipcs_ro = mainloop_add_ipc_server(PCMK__SERVER_BASED_RO, QB_IPC_SHM,
+                                       ro_cb);
 
-    *ipcs_rw = mainloop_add_ipc_server(PCMK__SERVER_BASED_RW,
-                                       QB_IPC_NATIVE, rw_cb);
+    *ipcs_rw = mainloop_add_ipc_server(PCMK__SERVER_BASED_RW, QB_IPC_SHM,
+                                       rw_cb);
 
-    *ipcs_shm = mainloop_add_ipc_server(PCMK__SERVER_BASED_SHM,
-                                        QB_IPC_SHM, rw_cb);
+    *ipcs_shm = mainloop_add_ipc_server(PCMK__SERVER_BASED_SHM, QB_IPC_SHM,
+                                        rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1083,7 +1083,7 @@ pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
 qb_ipcs_service_t *
 pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
 {
-    return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_NATIVE, cb);
+    return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_SHM, cb);
 }
 
 /*!
@@ -1100,7 +1100,7 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_attrd),
-                                    QB_IPC_NATIVE, cb);
+                                    QB_IPC_SHM, cb);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1148,7 +1148,7 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
     *ipcs = mainloop_add_ipc_server_with_prio(pcmk__server_ipc_name(pcmk_ipc_fenced),
-                                              QB_IPC_NATIVE, cb, QB_LOOP_HIGH);
+                                              QB_IPC_SHM, cb, QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1173,7 +1173,7 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_pacemakerd),
-                                    QB_IPC_NATIVE, cb);
+                                    QB_IPC_SHM, cb);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1204,7 +1204,7 @@ pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
                            struct qb_ipcs_service_handlers *cb)
 {
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_schedulerd),
-                                    QB_IPC_NATIVE, cb);
+                                    QB_IPC_SHM, cb);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
