@@ -1001,7 +1001,12 @@ mainloop_del_fd(mainloop_io_t *client)
 
     pcmk__trace("Removing client %s[%p]", client->name, client);
 
-    // mainloop_gio_destroy() gets called during source removal
+    /* g_source_remove() marks the source as destroyed, unsets the source
+     * callback (mainloop_gio_callback()), and destroys the callback data (the
+     * client) via the notify function (mainloop_gio_destroy()). We can rely on
+     * mainloop_gio_callback() not getting called again for this source, and on
+     * the client being destroyed.
+     */
     g_source_remove(client->source);
 }
 
