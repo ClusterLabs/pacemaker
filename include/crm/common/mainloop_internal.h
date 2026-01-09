@@ -38,6 +38,21 @@ struct mainloop_child_s {
     pcmk__mainloop_child_exit_fn_t exit_fn;
 };
 
+struct mainloop_io_s {
+    char *name;
+    void *userdata;
+
+    int fd;
+    guint source;
+    crm_ipc_t *ipc;
+    GIOChannel *channel;
+
+    int (*dispatch_fn_ipc)(const char *buffer, ssize_t length,
+                           gpointer user_data);
+    int (*dispatch_fn_io)(gpointer user_data);
+    void (*destroy_fn)(gpointer user_data);
+};
+
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
