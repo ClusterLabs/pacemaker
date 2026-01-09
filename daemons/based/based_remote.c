@@ -523,13 +523,13 @@ based_remote_client_destroy(gpointer user_data)
 }
 
 static int
-cib_remote_listen(gpointer data)
+cib_remote_listen(gpointer user_data)
 {
+    int ssock = GPOINTER_TO_INT(user_data);
     int csock = -1;
     unsigned laddr;
     struct sockaddr_storage addr;
     char ipstr[INET6_ADDRSTRLEN];
-    int ssock = *(int *)data;
     int rc;
 
     pcmk__client_t *new_client = NULL;
@@ -606,7 +606,7 @@ static int
 init_remote_listener(int port)
 {
     int rc;
-    int *ssock = NULL;
+    int ssock = -1;
     struct sockaddr_in saddr;
     int optval;
 
@@ -621,17 +621,15 @@ init_remote_listener(int port)
 #endif
 
     /* create server socket */
-    ssock = pcmk__assert_alloc(1, sizeof(int));
-    *ssock = socket(AF_INET, SOCK_STREAM, 0);
-    if (*ssock == -1) {
+    ssock = socket(AF_INET, SOCK_STREAM, 0);
+    if (ssock == -1) {
         pcmk__err("Listener socket creation failed: %s", pcmk_rc_str(errno));
-        free(ssock);
         return -1;
     }
 
     /* reuse address */
     optval = 1;
-    rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    rc = setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
         pcmk__err("Local address reuse not allowed on listener socket: %s",
                   pcmk_rc_str(errno));
@@ -642,23 +640,22 @@ init_remote_listener(int port)
     saddr.sin_family = AF_INET;
     saddr.sin_addr.s_addr = INADDR_ANY;
     saddr.sin_port = htons(port);
-    if (bind(*ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
+    if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
         pcmk__err("Cannot bind to listener socket: %s", pcmk_rc_str(errno));
-        close(*ssock);
-        free(ssock);
+        close(ssock);
         return -2;
     }
-    if (listen(*ssock, 10) == -1) {
+    if (listen(ssock, 10) == -1) {
         pcmk__err("Cannot listen on socket: %s", pcmk_rc_str(errno));
-        close(*ssock);
-        free(ssock);
+        close(ssock);
         return -3;
     }
 
-    mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, *ssock, ssock, &remote_listen_fd_callbacks);
+    mainloop_add_fd("based-remote-listener", G_PRIORITY_DEFAULT, ssock,
+                    GINT_TO_POINTER(ssock), &remote_listen_fd_callbacks);
     pcmk__debug("Started listener on port %d", port);
 
-    return *ssock;
+    return ssock;
 }
 
 /*!
