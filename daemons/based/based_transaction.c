@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2025 the Pacemaker project contributors
+ * Copyright 2023-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,10 +9,17 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                  // EOPNOTSUPP
 #include <stdbool.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // free
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__client_t, pcmk__s, pcmk__xe_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*
 
 #include "pacemaker-based.h"
 
@@ -54,8 +61,8 @@ based_transaction_source_str(const pcmk__client_t *client, const char *origin)
  * \return Standard Pacemaker return code
  */
 static int
-process_transaction_requests(xmlNodePtr transaction,
-                             const pcmk__client_t *client, const char *source)
+process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
+                             const char *source)
 {
     for (xmlNode *request = pcmk__xe_first_child(transaction,
                                                  PCMK__XE_CIB_COMMAND, NULL,
@@ -116,10 +123,10 @@ process_transaction_requests(xmlNodePtr transaction,
  *       success, and for freeing it on failure.
  */
 int
-based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
-                         const char *origin, xmlNodePtr *result_cib)
+based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
+                         const char *origin, xmlNode **result_cib)
 {
-    xmlNodePtr saved_cib = the_cib;
+    xmlNode *saved_cib = the_cib;
     int rc = pcmk_rc_ok;
     char *source = NULL;
 

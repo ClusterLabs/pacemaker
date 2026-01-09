@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 the Pacemaker project contributors
+ * Copyright 2023-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,15 +10,14 @@
 #ifndef BASED_TRANSACTION__H
 #define BASED_TRANSACTION__H
 
-#include <crm_internal.h>
+#include <libxml/tree.h>            // xmlNode
 
-#include <libxml/tree.h>
+#include <crm/common/internal.h>    // pcmk__client_t
 
 char *based_transaction_source_str(const pcmk__client_t *client,
                                    const char *origin);
 
-int based_commit_transaction(xmlNodePtr transaction,
-                             const pcmk__client_t *client,
-                             const char *origin, xmlNodePtr *result_cib);
+int based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
+                             const char *origin, xmlNode **result_cib);
 
 #endif // BASED_TRANSACTION__H

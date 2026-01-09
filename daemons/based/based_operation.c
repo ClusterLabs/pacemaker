@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,13 +9,14 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
+#include <stddef.h>                 // NULL
 
-#include <crm/crm.h>
-#include <crm/cib.h>
-#include <pacemaker-based.h>
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__assert, PCMK__NELEM
 
-static const cib__op_fn_t cib_op_functions[] = {
+#include "pacemaker-based.h"
+
+static const cib__op_fn_t op_functions[] = {
     [cib__op_abs_delete]       = cib_process_delete_absolute,
     [cib__op_apply_patch]      = cib_server_process_diff,
     [cib__op_bump]             = cib_process_bump,
@@ -53,8 +54,8 @@ based_get_op_function(const cib__operation_t *operation)
 
     pcmk__assert(type >= 0);
 
-    if (type >= PCMK__NELEM(cib_op_functions)) {
+    if (type >= PCMK__NELEM(op_functions)) {
         return NULL;
     }
-    return cib_op_functions[type];
+    return op_functions[type];
 }

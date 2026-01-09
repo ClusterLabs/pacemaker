@@ -201,7 +201,8 @@ get_schema_files(void)
  * saving them to disk.
  */
 static void
-get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, int exitcode)
+get_schema_files_complete(mainloop_child_t *p, int core, int signo,
+                          int exitcode)
 {
     const char *errmsg = "Could not load additional schema files";
 
@@ -217,12 +218,12 @@ get_schema_files_complete(mainloop_child_t *p, pid_t pid, int core, int signo, i
 
     } else {
         if (signo == 0) {
-            pcmk__err("%s: process %lld exited %d", errmsg, (long long) pid,
+            pcmk__err("%s: process %lld exited %d", errmsg, (long long) p->pid,
                       exitcode);
 
         } else {
             pcmk__err("%s: process %lld terminated with signal %d (%s)%s",
-                      errmsg, (long long) pid, signo, strsignal(signo),
+                      errmsg, (long long) p->pid, signo, strsignal(signo),
                       ((core != 0)? " and dumped core" : ""));
         }
 

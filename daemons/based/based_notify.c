@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,27 +9,23 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
+#include <errno.h>                  // EAGAIN
+#include <inttypes.h>               // PRIx64
 #include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <inttypes.h>           // PRIx64
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // int32_t, uint16_t
+#include <sys/types.h>              // ssize_t
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <glib.h>                   // gpointer, g_string_free
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <time.h>
+#include <crm/common/internal.h>    // pcmk__client_t, etc.
+#include <crm/common/ipc.h>         // pcmk_free_ipc_event
+#include <crm/common/logging.h>     // CRM_LOG_ASSERT
+#include <crm/common/results.h>     // pcmk_rc_*
 
-#include <glib.h>
-#include <libxml/tree.h>
-
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/xml.h>
-#include <pacemaker-based.h>
+#include "pacemaker-based.h"
 
 struct cib_notification_s {
     const xmlNode *msg;
@@ -150,58 +146,15 @@ cib_notify_send(const xmlNode *xml)
 }
 
 void
-cib_diff_notify(const char *op, int result, const char *call_id,
-                const char *client_id, const char *client_name,
-                const char *origin, xmlNode *update, xmlNode *diff)
+based_diff_notify(const char *op, int result, const char *call_id,
+                  const char *client_id, const char *client_name,
+                  const char *origin, xmlNode *update, xmlNode *diff)
 {
-    int add_updates = 0;
-    int add_epoch = 0;
-    int add_admin_epoch = 0;
-
-    int del_updates = 0;
-    int del_epoch = 0;
-    int del_admin_epoch = 0;
-
-    uint8_t log_level = LOG_TRACE;
-
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
 
     if (diff == NULL) {
         return;
-    }
-
-    if (result != pcmk_ok) {
-        log_level = LOG_WARNING;
-    }
-
-    cib_diff_version_details(diff, &add_admin_epoch, &add_epoch, &add_updates,
-                             &del_admin_epoch, &del_epoch, &del_updates);
-
-    if ((add_admin_epoch != del_admin_epoch)
-        || (add_epoch != del_epoch)
-        || (add_updates != del_updates)) {
-
-        do_crm_log(log_level,
-                   "Updated CIB generation %d.%d.%d to %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   del_admin_epoch, del_epoch, del_updates,
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
-
-    } else if ((add_admin_epoch != 0)
-               || (add_epoch != 0)
-               || (add_updates != 0)) {
-
-        do_crm_log(log_level,
-                   "Local-only change to CIB generation %d.%d.%d from client "
-                   "%s%s%s (%s) (%s)",
-                   add_admin_epoch, add_epoch, add_updates,
-                   client_name,
-                   ((call_id != NULL)? " call " : ""), pcmk__s(call_id, ""),
-                   pcmk__s(origin, "unspecified peer"), pcmk_strerror(result));
     }
 
     update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);

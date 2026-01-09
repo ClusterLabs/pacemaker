@@ -12,8 +12,8 @@
 
 #define PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
 
-#include <crm/common/action_relation_internal.h>
 #include <crm/common/acl_internal.h>
+#include <crm/common/action_relation_internal.h>
 #include <crm/common/actions_internal.h>
 #include <crm/common/agents_internal.h>
 #include <crm/common/alerts_internal.h>

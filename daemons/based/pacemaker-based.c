@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,24 +9,31 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                  // errno
+#include <grp.h>                    // initgroups
+#include <signal.h>                 // SIGTERM
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pwd.h>
-#include <grp.h>
-#include <bzlib.h>
-#include <sys/types.h>
+#include <stddef.h>                 // NULL, size_t
+#include <stdlib.h>                 // free
+#include <syslog.h>                 // LOG_INFO
+#include <sys/types.h>              // gid_t, uid_t
+#include <unistd.h>                 // setgid, setuid
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <corosync/cpg.h>           // cpg_*
+#include <glib.h>                   // g_*, G_*, etc.
+#include <libxml/tree.h>            // xmlNode
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
+#include <crm/cib/internal.h>       // cib_read_config
+#include <crm/cluster.h>            // pcmk_cluster_*
+#include <crm/cluster/internal.h>   // pcmk__node_update, etc.
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // crm_log_*
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
+#include <crm/common/xml.h>         // PCMK_XA_REMOTE_*_PORT
 
-#include <pacemaker-based.h>
+#include "pacemaker-based.h"
 
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
@@ -37,9 +44,7 @@ pcmk_cluster_t *crm_cluster = NULL;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
-static bool preserve_status = false;
 
-gboolean cib_writes_enabled = TRUE;
 gboolean stand_alone = FALSE;
 
 int remote_fd = 0;
@@ -49,17 +54,9 @@ GHashTable *config_hash = NULL;
 
 static void cib_init(void);
 void cib_shutdown(int nsig);
-static bool startCib(const char *filename);
-extern int write_cib_contents(gpointer p);
+static bool startCib(void);
 
 static crm_exit_t exit_code = CRM_EX_OK;
-
-static void
-cib_enable_writes(int nsig)
-{
-    pcmk__info("(Re)enabling disk writes");
-    cib_writes_enabled = TRUE;
-}
 
 /*!
  * \internal
@@ -75,9 +72,6 @@ setup_stand_alone(GError **error)
     uid_t uid = 0;
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
-
-    preserve_status = true;
-    cib_writes_enabled = FALSE;
 
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
@@ -135,12 +129,20 @@ based_metadata(pcmk__output_t *out)
                                  pcmk__opt_based);
 }
 
+static gboolean
+disk_writes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+               GError **error)
+{
+    based_enable_writes(0);
+    return TRUE;
+}
+
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
 
-    { "disk-writes", 'w', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &cib_writes_enabled,
+    { "disk-writes", 'w', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+      disk_writes_cb,
       "(Advanced use only) Enable disk writes (enabled by default unless in "
       "stand-alone mode)", NULL },
 
@@ -206,9 +208,8 @@ main(int argc, char **argv)
     }
 
     mainloop_add_signal(SIGTERM, cib_shutdown);
-    mainloop_add_signal(SIGPIPE, cib_enable_writes);
 
-    cib_writer = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_contents, NULL);
+    based_io_init();
 
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
@@ -384,7 +385,7 @@ cib_init(void)
 
     config_hash = pcmk__strkey_table(free, free);
 
-    if (!startCib("cib.xml")) {
+    if (!startCib()) {
         pcmk__crit("Cannot start CIB... terminating");
         crm_exit(CRM_EX_NOINPUT);
     }
@@ -407,12 +408,12 @@ cib_init(void)
 }
 
 static bool
-startCib(const char *filename)
+startCib(void)
 {
-    xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
+    xmlNode *cib = based_read_cib();
     int port = 0;
 
-    if (activateCibXml(cib, true, "start") != 0) {
+    if (based_activate_cib(cib, true, "start") != pcmk_rc_ok) {
         return false;
     }
 

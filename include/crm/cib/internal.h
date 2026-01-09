@@ -95,9 +95,6 @@ enum cib__op_type {
     cib__op_schemas,
 };
 
-gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
-                                  int *_admin_epoch, int *_epoch, int *_updates);
-
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
 
 typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,

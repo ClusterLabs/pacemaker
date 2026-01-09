@@ -39,26 +39,6 @@ cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
     return TRUE;
 }
 
-gboolean
-cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
-                         int *_admin_epoch, int *_epoch, int *_updates)
-{
-    int add[] = { 0, 0, 0 };
-    int del[] = { 0, 0, 0 };
-
-    pcmk__xml_patchset_versions(diff, del, add);
-
-    *admin_epoch = add[0];
-    *epoch = add[1];
-    *updates = add[2];
-
-    *_admin_epoch = del[0];
-    *_epoch = del[1];
-    *_updates = del[2];
-
-    return TRUE;
-}
-
 /*!
  * \internal
  * \brief Get the XML patchset from a CIB diff notification

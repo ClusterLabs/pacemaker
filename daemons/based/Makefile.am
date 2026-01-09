@@ -10,13 +10,14 @@
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/man.mk
 
-EXTRA_DIST	= cib.pam
-
 halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-based
 
-noinst_HEADERS = based_transaction.h
+noinst_HEADERS = based_io.h
+noinst_HEADERS += based_notify.h
+noinst_HEADERS += based_operation.h
+noinst_HEADERS += based_transaction.h
 noinst_HEADERS += pacemaker-based.h
 
 pacemaker_based_CFLAGS	= $(CFLAGS_HARDENED_EXE)
