@@ -46,8 +46,8 @@
 
 static pcmk__tls_t *tls = NULL;
 
-static int remote_fd = -1;
-static int remote_tls_fd = -1;
+static mainloop_io_t *tcp_listener = NULL;
+static mainloop_io_t *tls_listener = NULL;
 
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
@@ -526,6 +526,8 @@ static int
 cib_remote_listen(gpointer user_data)
 {
     int ssock = GPOINTER_TO_INT(user_data);
+    const bool is_tls = (tls_listener != NULL) && (ssock == tls_listener->fd);
+
     int csock = -1;
     unsigned laddr;
     struct sockaddr_storage addr;
@@ -563,7 +565,7 @@ cib_remote_listen(gpointer user_data)
     new_client = pcmk__new_unauth_client(NULL);
     new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
-    if (ssock == remote_tls_fd) {
+    if (is_tls) {
         pcmk__set_client_flags(new_client, pcmk__client_tls);
 
         /* create gnutls session for the server socket */
@@ -586,8 +588,7 @@ cib_remote_listen(gpointer user_data)
                                                           remote_auth_timeout_cb,
                                                           new_client);
     pcmk__info("%s connection from %s pending authentication for client %s",
-               ((ssock == remote_tls_fd)? "Encrypted" : "Clear-text"), ipstr,
-               new_client->id);
+               (is_tls? "Encrypted" : "Clear-text"), ipstr, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
@@ -602,13 +603,14 @@ based_remote_listener_destroy(gpointer user_data)
     pcmk__info("No longer listening for remote connections");
 }
 
-static int
+static mainloop_io_t *
 init_remote_listener(int port)
 {
     int rc;
     int ssock = -1;
     struct sockaddr_in saddr;
     int optval;
+    mainloop_io_t *listener = NULL;
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = cib_remote_listen,
@@ -623,8 +625,8 @@ init_remote_listener(int port)
     /* create server socket */
     ssock = socket(AF_INET, SOCK_STREAM, 0);
     if (ssock == -1) {
-        pcmk__err("Listener socket creation failed: %s", pcmk_rc_str(errno));
-        return -1;
+        pcmk__err("Listener socket creation failed: %s", strerror(errno));
+        return NULL;
     }
 
     /* reuse address */
@@ -632,7 +634,7 @@ init_remote_listener(int port)
     rc = setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
         pcmk__err("Local address reuse not allowed on listener socket: %s",
-                  pcmk_rc_str(errno));
+                  strerror(errno));
     }
 
     /* bind server socket */
@@ -641,21 +643,27 @@ init_remote_listener(int port)
     saddr.sin_addr.s_addr = INADDR_ANY;
     saddr.sin_port = htons(port);
     if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-        pcmk__err("Cannot bind to listener socket: %s", pcmk_rc_str(errno));
+        pcmk__err("Cannot bind to listener socket: %s", strerror(errno));
         close(ssock);
-        return -2;
+        return NULL;
     }
     if (listen(ssock, 10) == -1) {
-        pcmk__err("Cannot listen on socket: %s", pcmk_rc_str(errno));
+        pcmk__err("Cannot listen on socket: %s", strerror(errno));
         close(ssock);
-        return -3;
+        return NULL;
     }
 
-    mainloop_add_fd("based-remote-listener", G_PRIORITY_DEFAULT, ssock,
-                    GINT_TO_POINTER(ssock), &remote_listen_fd_callbacks);
-    pcmk__debug("Started listener on port %d", port);
+    listener = mainloop_add_fd("based-remote-listener", G_PRIORITY_DEFAULT,
+                               ssock, GINT_TO_POINTER(ssock),
+                               &remote_listen_fd_callbacks);
+    if (listener == NULL) {
+        pcmk__err("Cannot add pacemaker-based remote listener (port %d) to "
+                  "mainloop: %s", port, strerror(errno));
+        return NULL;
+    }
 
-    return ssock;
+    pcmk__debug("Started pacemaker-based remote listener on port %d", port);
+    return listener;
 }
 
 /*!
@@ -677,11 +685,10 @@ based_remote_init(void)
         if (rc != pcmk_rc_ok) {
             pcmk__err("Failed to initialize TLS: %s. Not starting TLS listener ",
                       "on port %d", pcmk_rc_str(rc), port);
-            remote_tls_fd = -1;
 
         } else {
             pcmk__notice("Starting TLS listener on port %d", port);
-            remote_tls_fd = init_remote_listener(port);
+            tls_listener = init_remote_listener(port);
         }
     }
 
@@ -690,7 +697,7 @@ based_remote_init(void)
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
         pcmk__warn("Starting clear-text listener on port %d. This is insecure; "
                    PCMK_XA_REMOTE_TLS_PORT " is recommended instead.", port);
-        remote_fd = init_remote_listener(port);
+        tcp_listener = init_remote_listener(port);
     }
 }
 
@@ -705,15 +712,8 @@ based_remote_init(void)
 void
 based_remote_cleanup(void)
 {
-    if (remote_fd >= 0) {
-        close(remote_fd);
-        remote_fd = -1;
-    }
-
-    if (remote_tls_fd >= 0) {
-        close(remote_tls_fd);
-        remote_tls_fd = -1;
-    }
+    g_clear_pointer(&tcp_listener, mainloop_del_fd);
+    g_clear_pointer(&tls_listener, mainloop_del_fd);
 }
 
 /*!
