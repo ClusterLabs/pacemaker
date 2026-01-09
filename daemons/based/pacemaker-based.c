@@ -25,7 +25,7 @@
 #include <crm/cluster/internal.h>   // pcmk__node_update, etc.
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // crm_log_*
-#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/results.h>     // CRM_EX_*, crm_exit_t, pcmk_rc_*
 
 #include "pacemaker-based.h"
@@ -231,6 +231,8 @@ based_cleanup(void)
     based_io_cleanup();
     based_ipc_cleanup();
     based_remote_cleanup();
+
+    mainloop_destroy_signal(SIGTERM);
 
     g_clear_pointer(&based_cib, pcmk__xml_free);
     g_clear_pointer(&cib_root, g_free);
