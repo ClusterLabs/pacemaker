@@ -200,10 +200,7 @@ based_io_init(void)
 void
 based_io_cleanup(void)
 {
-    if (write_trigger != NULL) {
-        g_clear_pointer(&write_trigger, mainloop_destroy_trigger);
-    }
-
+    g_clear_pointer(&write_trigger, mainloop_destroy_trigger);
     mainloop_destroy_signal(SIGPIPE);
 }
 
