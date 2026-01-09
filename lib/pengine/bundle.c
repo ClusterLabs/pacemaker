@@ -1432,6 +1432,7 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
         pcmk_resource_t *remote = replica->remote;
         char *id = NULL;
         gboolean print_ip, print_child, print_ctnr, print_remote;
+        xmlNode *xml = NULL;
 
         pcmk__assert(replica != NULL);
 
@@ -1468,25 +1469,25 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
             desc = pe__resource_description(rsc, show_opts);
 
-            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_BUNDLE,
-                                          PCMK_XA_ID, rsc->id,
-                                          PCMK_XA_TYPE, type,
-                                          PCMK_XA_IMAGE, bundle_data->image,
-                                          PCMK_XA_UNIQUE, unique,
-                                          PCMK_XA_MAINTENANCE, maintenance,
-                                          PCMK_XA_MANAGED, managed,
-                                          PCMK_XA_FAILED, failed,
-                                          PCMK_XA_DESCRIPTION, desc,
-                                          NULL);
-            pcmk__assert(rc == pcmk_rc_ok);
+            xml = pcmk__output_xml_create_parent(out, PCMK_XE_BUNDLE);
+            pcmk__xe_set(xml, PCMK_XA_ID, rsc->id);
+            pcmk__xe_set(xml, PCMK_XA_TYPE, type);
+            pcmk__xe_set(xml, PCMK_XA_IMAGE, bundle_data->image);
+            pcmk__xe_set(xml, PCMK_XA_UNIQUE, unique);
+            pcmk__xe_set(xml, PCMK_XA_MAINTENANCE, maintenance);
+            pcmk__xe_set(xml, PCMK_XA_MANAGED, managed);
+            pcmk__xe_set(xml, PCMK_XA_FAILED, failed);
+            pcmk__xe_set(xml, PCMK_XA_DESCRIPTION, desc);
         }
 
         id = pcmk__itoa(replica->offset);
-        rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_REPLICA,
-                                      PCMK_XA_ID, id,
-                                      NULL);
+
+        xml = pcmk__output_xml_create_parent(out, PCMK_XE_REPLICA);
+        pcmk__xe_set(xml, PCMK_XA_ID, id);
+
         free(id);
-        pcmk__assert(rc == pcmk_rc_ok);
+
+        rc = pcmk_rc_ok;
 
         if (print_ip) {
             out->message(out, (const char *) ip->priv->xml->name, show_opts,

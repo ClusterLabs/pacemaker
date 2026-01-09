@@ -13,8 +13,6 @@ include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 
-check_PROGRAMS = pcmk__is_user_in_group_test
-check_PROGRAMS += pcmk_acl_required_test
-check_PROGRAMS += xml_acl_denied_test
+check_PROGRAMS = pcmk__acl_required_test
 
 TESTS = $(check_PROGRAMS)

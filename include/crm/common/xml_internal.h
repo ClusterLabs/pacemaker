@@ -28,11 +28,13 @@
 #include <crm/common/xml_names.h>             // PCMK_XA_ID, PCMK_XE_CLONE
 
 // This file is a wrapper for other {xml_*,xpath}_internal.h headers
+#include <crm/common/xml_attr_internal.h>
 #include <crm/common/xml_comment_internal.h>
 #include <crm/common/xml_element_internal.h>
 #include <crm/common/xml_idref_internal.h>
 #include <crm/common/xml_io_internal.h>
 #include <crm/common/xml_names_internal.h>
+#include <crm/common/xml_tracking_internal.h>
 #include <crm/common/xpath_internal.h>
 
 #include <libxml/relaxng.h>
@@ -259,7 +261,6 @@ enum pcmk__xml_escape_type {
     pcmk__xml_escape_attr_pretty,
 };
 
-bool pcmk__xml_needs_escape(const char *text, enum pcmk__xml_escape_type type);
 char *pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type);
 
 /*!
@@ -425,17 +426,28 @@ enum pcmk__xml_flags {
 void pcmk__xml_doc_set_flags(xmlDoc *doc, uint32_t flags);
 bool pcmk__xml_doc_all_flags_set(const xmlDoc *xml, uint32_t flags);
 
-void pcmk__xml_commit_changes(xmlDoc *doc);
-void pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml);
-
+bool pcmk__xml_foreach_child(xmlNode *xml, bool (*fn)(xmlNode *, void *),
+                             void *user_data);
 bool pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
                             void *user_data);
 
+/*!
+ * \internal
+ * \brief Get an XML attribute's value
+ *
+ * \param[in] attr  XML attribute
+ *
+ * \return Value of \p attr, or \c NULL if \p attr is \c NULL or its value is
+ *         unset
+ */
 static inline const char *
 pcmk__xml_attr_value(const xmlAttr *attr)
 {
-    return ((attr == NULL) || (attr->children == NULL))? NULL
-           : (const char *) attr->children->content;
+    if ((attr == NULL) || (attr->children == NULL)) {
+        return NULL;
+    }
+
+    return (const char *) attr->children->content;
 }
 
 void pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target);

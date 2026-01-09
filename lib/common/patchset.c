@@ -31,17 +31,256 @@ static const char *const vfields[] = {
     PCMK_XA_NUM_UPDATES,
 };
 
+/*!
+ * \internal
+ * \brief Set patchset version fields for source or target XML
+ *
+ * Create a child of \p version with name \p name and add version numbers from
+ * \p from.
+ *
+ * \param[in,out] version  \c PCMK_XE_VERSION child of patchset
+ * \param[in]     from     XML to get version numbers from
+ * \param[in]     name     Name for new child of \p version to add fields to
+ */
+static void
+set_version_fields(xmlNode *version, xmlNode *from, const char *name)
+{
+    xmlNode *child = pcmk__xe_create(version, name);
+
+    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        const char *value = pcmk__xe_get(from, vfields[i]);
+
+        if (value == NULL) {
+            value = "1";
+        }
+        pcmk__xe_set(child, vfields[i], value);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a \c PCMK_VALUE_DELETE change to a patchset
+ *
+ * \param[in]     data       Deleted object
+ *                           (<tt>const pcmk__deleted_xml_t *</tt>)
+ * \param[in,out] user_data  XML patchset (<tt>xmlNode *</tt>)
+ *
+ * \note This is a \c GFunc compatible with \c g_list_foreach().
+ */
+static void
+add_delete_change(gpointer data, gpointer user_data)
+{
+    const pcmk__deleted_xml_t *deleted_obj = data;
+    xmlNode *patchset = user_data;
+
+    xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
+    pcmk__xe_set(change, PCMK_XA_PATH, deleted_obj->path);
+
+    if (deleted_obj->position >= 0) {
+        pcmk__xe_set_int(change, PCMK_XE_POSITION, deleted_obj->position);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a \c PCMK_VALUE_CREATE change to a patchset
+ *
+ * Given \p xml with the \c pcmk__xf_created flag set, create a
+ * \c PCMK_XE_CHANGE child of \p patchset, with \c PCMK_XA_OPERATION set to
+ * \c PCMK_VALUE_CREATE and with a child copy of the created node.
+ *
+ * \param[in]     xml       Newly created XML to add to \p patchset
+ * \param[in,out] patchset  XML patchset
+ */
+static void
+add_create_change(xmlNode *xml, xmlNode *patchset)
+{
+    xmlNode *change = NULL;
+    GString *xpath = pcmk__element_xpath(xml->parent);
+
+    if (xpath == NULL) {
+        // @TODO This can happen only if xml->parent == NULL. Is that possible?
+        return;
+    }
+
+    change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
+    pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+    pcmk__xe_set_int(change, PCMK_XE_POSITION,
+                     pcmk__xml_position(xml, pcmk__xf_deleted));
+    pcmk__xml_copy(change, xml);
+
+    g_string_free(xpath, TRUE);
+}
+
+/*!
+ * \internal
+ * \brief Append an attribute to a list if it has been deleted or modified
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  List of changed attributes (<tt>GSList **</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+append_attr_if_changed(const xmlAttr *attr, void *user_data)
+{
+    GSList **changed_attrs = user_data;
+    const xml_node_private_t *nodepriv = attr->_private;
+
+    if (pcmk__any_flags_set(nodepriv->flags, pcmk__xf_deleted|pcmk__xf_dirty)) {
+        *changed_attrs = g_slist_append(*changed_attrs, (gpointer) attr);
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Add a \c PCMK_XE_CHANGE_ATTR to a \c PCMK_XE_CHANGE_LIST
+ *
+ * Create a new \c PCMK_XE_CHANGE_ATTR child of a \c PCMK_XE_CHANGE_LIST and set
+ * its content based on a deleted or modified XML attribute.
+ *
+ * \param[in]  data       XML attribute
+ * \param[out] user_data  \c PCMK_XE_CHANGE_LIST element
+ *
+ * \note This is a \c GFunc compatible with \c g_slist_foreach().
+ */
+static void
+add_change_attr(gpointer data, gpointer user_data)
+{
+    const xmlAttr *attr = data;
+    xmlNode *change_list = user_data;
+
+    const xml_node_private_t *nodepriv = attr->_private;
+    xmlNode *change_attr = pcmk__xe_create(change_list, PCMK_XE_CHANGE_ATTR);
+
+    pcmk__xe_set(change_attr, PCMK_XA_NAME, (const char *) attr->name);
+
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+        pcmk__xe_set(change_attr, PCMK_XA_OPERATION, "unset");
+
+    } else {
+        // pcmk__xf_dirty is set
+        pcmk__xe_set(change_attr, PCMK_XA_OPERATION, "set");
+        pcmk__xe_set(change_attr, PCMK_XA_VALUE, pcmk__xml_attr_value(attr));
+    }
+}
+
+/*!
+ * \internal
+ * \brief Copy an attribute to a target element if the deleted flag is not set
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Target element
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+copy_attr_if_not_deleted(const xmlAttr *attr, void *user_data)
+{
+    xmlNode *target = user_data;
+    const xml_node_private_t *nodepriv = attr->_private;
+
+    if (!pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+        pcmk__xe_set(target, (const char *) attr->name,
+                     pcmk__xml_attr_value(attr));
+    }
+
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Add a \c PCMK_VALUE_MODIFY change to a patchset if appropriate
+ *
+ * If any attributes of \p xml were deleted or modified, create a
+ * \c PCMK_XE_CHANGE child of \p patchset, with \c PCMK_XA_OPERATION set to
+ * \c PCMK_VALUE_MODIFY and with the following children:
+ * - \c PCMK_XE_CHANGE_LIST, with a \c PCMK_XE_CHANGE_ATTR child for each
+ *   deleted or modified attribute
+ * - \c PCMK_XE_CHANGE_RESULT, with a child of the same type as \p xml whose
+ *   attributes are set to the post-change values. Deleted attributes are not
+ *   added.
+ *
+ * \param[in]     xml       XML whose changes to add to \p patchset
+ * \param[in,out] patchset  XML patchset
+ */
+static void
+add_modify_change(const xmlNode *xml, xmlNode *patchset)
+{
+    GSList *changed_attrs = NULL;
+    GString *xpath = NULL;
+    xmlNode *change = NULL;
+    xmlNode *change_list = NULL;
+    xmlNode *result = NULL;
+
+    // Check each of the XML node's attributes for changes
+    pcmk__xe_foreach_const_attr(xml, append_attr_if_changed, &changed_attrs);
+
+    if (changed_attrs == NULL) {
+        return;
+    }
+
+    xpath = pcmk__element_xpath(xml);
+
+    change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
+    pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+
+    change_list = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
+    g_slist_foreach(changed_attrs, add_change_attr, change_list);
+
+    result = pcmk__xe_create(change, PCMK_XE_CHANGE_RESULT);
+    result = pcmk__xe_create(result, (const char *) xml->name);
+    pcmk__xe_foreach_const_attr(xml, copy_attr_if_not_deleted, result);
+
+    g_string_free(xpath, TRUE);
+    g_slist_free(changed_attrs);
+}
+
+/*!
+ * \internal
+ * \brief Add a \c PCMK_VALUE_MOVE change to a patchset
+ *
+ * Given \p xml with the \c pcmk__xf_move flag set, create a \c PCMK_XE_CHANGE
+ * child of \p patchset, with \c PCMK_XA_OPERATION set to \c PCMK_VALUE_MOVE.
+ *
+ * \param[in]     xml       XML whose move to add to \p patchset
+ * \param[in,out] patchset  XML patchset
+ */
+static void
+add_move_change(const xmlNode *xml, xmlNode *patchset)
+{
+    xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
+    GString *xpath = pcmk__element_xpath(xml);
+
+    pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
+    pcmk__xe_set(change, PCMK_XA_PATH, xpath->str);
+    pcmk__xe_set_int(change, PCMK_XE_POSITION,
+                     pcmk__xml_position(xml, pcmk__xf_deleted));
+
+    pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
+                pcmk__xml_position(xml, pcmk__xf_skip));
+
+    g_string_free(xpath, TRUE);
+}
+
 /* Add changes for specified XML to patchset.
  * For patchset format, refer to diff schema.
  */
 static void
-add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
+add_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
 {
-    xmlNode *cIter = NULL;
-    xmlAttr *pIter = NULL;
-    xmlNode *change = NULL;
     xml_node_private_t *nodepriv = xml->_private;
-    const char *value = NULL;
 
     if (nodepriv == NULL) {
         /* Elements that shouldn't occur in a CIB don't have _private set. They
@@ -52,146 +291,91 @@ add_xml_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 
     // If this XML node is new, just report that
-    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-        GString *xpath = pcmk__element_xpath(xml->parent);
-
-        if (xpath != NULL) {
-            int position = pcmk__xml_position(xml, pcmk__xf_deleted);
-
-            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_CREATE);
-            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
-            pcmk__xe_set_int(change, PCMK_XE_POSITION, position);
-            pcmk__xml_copy(change, xml);
-            g_string_free(xpath, TRUE);
-        }
-
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+        add_create_change(xml, patchset);
         return;
     }
 
-    // Check each of the XML node's attributes for changes
-    for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
-         pIter = pIter->next) {
-        xmlNode *attr = NULL;
-
-        nodepriv = pIter->_private;
-        if (!pcmk__any_flags_set(nodepriv->flags,
-                                 pcmk__xf_deleted|pcmk__xf_dirty)) {
-            continue;
-        }
-
-        if (change == NULL) {
-            GString *xpath = pcmk__element_xpath(xml);
-
-            if (xpath != NULL) {
-                change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-                pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MODIFY);
-                pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
-
-                change = pcmk__xe_create(change, PCMK_XE_CHANGE_LIST);
-                g_string_free(xpath, TRUE);
-            }
-        }
-
-        attr = pcmk__xe_create(change, PCMK_XE_CHANGE_ATTR);
-
-        pcmk__xe_set(attr, PCMK_XA_NAME, (const char *) pIter->name);
-        if (nodepriv->flags & pcmk__xf_deleted) {
-            pcmk__xe_set(attr, PCMK_XA_OPERATION, "unset");
-
-        } else {
-            pcmk__xe_set(attr, PCMK_XA_OPERATION, "set");
-
-            value = pcmk__xml_attr_value(pIter);
-            pcmk__xe_set(attr, PCMK_XA_VALUE, value);
-        }
-    }
-
-    if (change) {
-        xmlNode *result = NULL;
-
-        change = pcmk__xe_create(change->parent, PCMK_XE_CHANGE_RESULT);
-        result = pcmk__xe_create(change, (const char *)xml->name);
-
-        for (pIter = pcmk__xe_first_attr(xml); pIter != NULL;
-             pIter = pIter->next) {
-            nodepriv = pIter->_private;
-            if (!pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
-                value = pcmk__xe_get(xml, (const char *) pIter->name);
-                pcmk__xe_set(result, (const char *)pIter->name, value);
-            }
-        }
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
+        add_modify_change(xml, patchset);
     }
 
     // Now recursively do the same for each child node of this node
-    for (cIter = pcmk__xml_first_child(xml); cIter != NULL;
-         cIter = pcmk__xml_next(cIter)) {
-        add_xml_changes_to_patchset(cIter, patchset);
+    for (xmlNode *child = pcmk__xml_first_child(xml); child != NULL;
+         child = pcmk__xml_next(child)) {
+
+        add_changes_to_patchset(child, patchset);
     }
 
-    nodepriv = xml->_private;
-    if ((patchset != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
-        GString *xpath = pcmk__element_xpath(xml);
-
-        pcmk__trace("%s.%s moved to position %d", xml->name, pcmk__xe_id(xml),
-                    pcmk__xml_position(xml, pcmk__xf_skip));
-
-        if (xpath != NULL) {
-            change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-            pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_MOVE);
-            pcmk__xe_set(change, PCMK_XA_PATH, (const char *) xpath->str);
-            pcmk__xe_set_int(change, PCMK_XE_POSITION,
-                             pcmk__xml_position(xml, pcmk__xf_deleted));
-            g_string_free(xpath, TRUE);
-        }
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
+        add_move_change(xml, patchset);
     }
 }
 
-static bool
-is_config_change(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Check whether a deleted object path contains the configuration element
+ *
+ * \param[in] data     Deleted object (<tt>const pcmk__deleted_xml_t *</tt>)
+ * \param[in] ignored  Ignored
+ *
+ * \retval 0 if \p data->path contains
+ *           <tt>"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION</tt>
+ * \retval 1 otherwise
+ *
+ * \note This is a \c GCompareFunc.
+ */
+static gint
+config_in_deleted_obj_path(gconstpointer data, gconstpointer ignored)
 {
-    GList *gIter = NULL;
+    const pcmk__deleted_xml_t *deleted_obj = data;
+
+    if (strstr(deleted_obj->path,
+               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
+
+        return 0;
+    }
+
+    return 1;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a CIB XML tree contains a configuration change
+ *
+ * \param[in] xml  XML tree
+ *
+ * \return \c true if \p xml contains a dirty or deleted configuration element,
+ *         or \c false otherwise
+ */
+static bool
+is_config_change(const xmlNode *xml)
+{
     xml_node_private_t *nodepriv = NULL;
-    xml_doc_private_t *docpriv;
+    xml_doc_private_t *docpriv = xml->doc->_private;
     xmlNode *config = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
                                            NULL);
 
-    if (config) {
+    if (config != NULL) {
         nodepriv = config->_private;
     }
+
+    // Arbitrary xml may come from the public API, so NULL-check nodepriv
     if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
-        return TRUE;
+        return true;
     }
 
-    if ((xml->doc != NULL) && (xml->doc->_private != NULL)) {
-        docpriv = xml->doc->_private;
-        for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-            pcmk__deleted_xml_t *deleted_obj = gIter->data;
-
-            if (strstr(deleted_obj->path,
-                       "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
-                return TRUE;
-            }
-        }
-    }
-    return FALSE;
+    return (g_list_find_custom(docpriv->deleted_objs, NULL,
+                               config_in_deleted_obj_path) != NULL);
 }
 
 static xmlNode *
 xml_create_patchset_v2(xmlNode *source, xmlNode *target)
 {
-    int lpc = 0;
-    GList *gIter = NULL;
-    xml_doc_private_t *docpriv;
+    xml_doc_private_t *docpriv = NULL;
 
-    xmlNode *v = NULL;
-    xmlNode *version = NULL;
     xmlNode *patchset = NULL;
-
-    pcmk__assert(target != NULL);
+    xmlNode *version = NULL;
 
     if (!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
         return NULL;
@@ -204,39 +388,16 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     pcmk__xe_set_int(patchset, PCMK_XA_FORMAT, 2);
 
     version = pcmk__xe_create(patchset, PCMK_XE_VERSION);
+    set_version_fields(version, source, PCMK_XE_SOURCE);
+    set_version_fields(version, target, PCMK_XE_TARGET);
 
-    v = pcmk__xe_create(version, PCMK_XE_SOURCE);
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = pcmk__xe_get(source, vfields[lpc]);
+    /* Call this outside of add_changes_to_patchset(). That function is
+     * recursive and all calls will use the same XML document. We don't want to
+     * add duplicate delete changes to the patchset.
+     */
+    g_list_foreach(docpriv->deleted_objs, add_delete_change, patchset);
 
-        if (value == NULL) {
-            value = "1";
-        }
-        pcmk__xe_set(v, vfields[lpc], value);
-    }
-
-    v = pcmk__xe_create(version, PCMK_XE_TARGET);
-    for (lpc = 0; lpc < PCMK__NELEM(vfields); lpc++) {
-        const char *value = pcmk__xe_get(target, vfields[lpc]);
-
-        if (value == NULL) {
-            value = "1";
-        }
-        pcmk__xe_set(v, vfields[lpc], value);
-    }
-
-    for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-        pcmk__deleted_xml_t *deleted_obj = gIter->data;
-        xmlNode *change = pcmk__xe_create(patchset, PCMK_XE_CHANGE);
-
-        pcmk__xe_set(change, PCMK_XA_OPERATION, PCMK_VALUE_DELETE);
-        pcmk__xe_set(change, PCMK_XA_PATH, deleted_obj->path);
-        if (deleted_obj->position >= 0) {
-            pcmk__xe_set_int(change, PCMK_XE_POSITION, deleted_obj->position);
-        }
-    }
-
-    add_xml_changes_to_patchset(target, patchset);
+    add_changes_to_patchset(target, patchset);
     return patchset;
 }
 
@@ -728,13 +889,8 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             // Remove all attributes
             pcmk__xe_remove_matching_attrs(match, false, NULL, NULL);
 
-            for (xmlAttrPtr pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
-                 pIter = pIter->next) {
-                const char *name = (const char *) pIter->name;
-                const char *value = pcmk__xml_attr_value(pIter);
-
-                pcmk__xe_set(match, name, value);
-            }
+            // Copy the ones from attrs
+            pcmk__xe_copy_attrs(match, attrs, pcmk__xaf_none);
 
         } else {
             pcmk__err("Unknown operation: %s", op);
