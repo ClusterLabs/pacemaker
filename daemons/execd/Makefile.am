@@ -27,6 +27,7 @@ pacemaker_execd_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 pacemaker_execd_SOURCES = pacemaker-execd.c
 pacemaker_execd_SOURCES += execd_commands.c
 pacemaker_execd_SOURCES += execd_alerts.c
+pacemaker_execd_SOURCES += execd_ipc.c
 pacemaker_execd_SOURCES += execd_messages.c
 
 sbin_PROGRAMS		= pacemaker-remoted

@@ -263,6 +263,8 @@ int pcmk__client_pid(qb_ipcs_connection_t *c);
 
 void pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                            struct qb_ipcs_service_handlers *cb);
+void pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
+                           struct qb_ipcs_service_handlers *cb);
 void pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                             struct qb_ipcs_service_handlers *cb);
 void pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
