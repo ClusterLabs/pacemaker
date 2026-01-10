@@ -94,26 +94,6 @@ based_cpg_destroy(gpointer user_data)
 }
 #endif
 
-static void
-based_peer_change_cb(enum pcmk__node_update type, pcmk__node_status_t *node,
-                     const void *data)
-{
-    switch (type) {
-        case pcmk__node_update_name:
-        case pcmk__node_update_state:
-            if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
-                && (pcmk__ipc_client_count() == 0)) {
-
-                pcmk__info("Exiting after no more peers or clients remain");
-                based_terminate(-1);
-            }
-            return;
-
-        default:
-            return;
-    }
-}
-
 /*!
  * \internal
  * \brief Initialize \c based_cluster and connect to the cluster layer
@@ -134,8 +114,6 @@ based_cluster_connect(void)
         pcmk_cpg_set_confchg_fn(based_cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
-
-    pcmk__cluster_set_status_callback(based_peer_change_cb);
 
     rc = pcmk_cluster_connect(based_cluster);
     if (rc != pcmk_rc_ok) {
