@@ -31,7 +31,7 @@
 #include <crm/cib/util.h>           // createEmptyCib
 #include <crm/common/internal.h>    // pcmk__assert_asprintf, PCMK__XE_*, etc.
 #include <crm/common/logging.h>     // CRM_CHECK
-#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/results.h>     // pcmk_legacy2rc, pcmk_rc_*
 #include <crm/common/util.h>        // pcmk_common_cleanup
 #include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
@@ -120,10 +120,10 @@ write_cib_async(gpointer user_data)
         return G_SOURCE_CONTINUE;
     }
 
-    /* Write the CIB. Note that this modifies the_cib, but this child is about
-     * to exit. The parent's copy of the_cib won't be affected.
+    /* Write the CIB. Note that this modifies based_cib, but this child is about
+     * to exit. The parent's copy of based_cib won't be affected.
      */
-    rc = cib_file_write_with_digest(the_cib, cib_root, "cib.xml");
+    rc = cib_file_write_with_digest(based_cib, cib_root, "cib.xml");
     rc = pcmk_legacy2rc(rc);
 
     pcmk_common_cleanup();
@@ -171,12 +171,12 @@ based_enable_writes(int nsig)
 
 /*!
  * \internal
- * \brief Initialize data structures for \c pacemaker-based I/O
+ * \brief Initialize data structures used for CIB manager I/O
  */
 void
 based_io_init(void)
 {
-    writes_enabled = !stand_alone;
+    writes_enabled = !based_stand_alone();
     if (writes_enabled
         && pcmk__env_option_enabled(PCMK__SERVER_BASED,
                                     PCMK__ENV_VALGRIND_ENABLED)) {
@@ -191,6 +191,17 @@ based_io_init(void)
     mainloop_add_signal(SIGPIPE, based_enable_writes);
 
     write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Free data structures used for CIB manager I/O
+ */
+void
+based_io_cleanup(void)
+{
+    g_clear_pointer(&write_trigger, mainloop_destroy_trigger);
+    mainloop_destroy_signal(SIGPIPE);
 }
 
 /*!
@@ -496,7 +507,7 @@ set_empty_status(xmlNode *cib_xml)
 {
     xmlNode *status = pcmk__xe_first_child(cib_xml, PCMK_XE_STATUS, NULL, NULL);
 
-    if (!stand_alone) {
+    if (!based_stand_alone()) {
         g_clear_pointer(&status, pcmk__xml_free);
     }
 
@@ -579,7 +590,7 @@ based_read_cib(void)
     // The DC should set appropriate value for PCMK_XA_DC_UUID
     pcmk__xe_remove_attr(cib_xml, PCMK_XA_DC_UUID);
 
-    if (!stand_alone) {
+    if (!based_stand_alone()) {
         pcmk__log_xml_trace(cib_xml, "on-disk");
     }
 
@@ -594,10 +605,10 @@ based_read_cib(void)
  * \internal
  * \brief Activate new CIB XML
  *
- * This function frees the existing \c the_cib and points it to \p new_cib.
+ * This function frees the existing \c based_cib and points it to \p new_cib.
  *
  * \param[in] new_cib  CIB XML to activate (must not be \c NULL or equal to
- *                     \c the_cib)
+ *                     \c based_cib)
  * \param[in] to_disk  If \c true and if the CIB status is OK and writes are
  *                     enabled, trigger the new CIB to be written to disk
  * \param[in] op       Operation that triggered the activation (for logging
@@ -606,15 +617,15 @@ based_read_cib(void)
  * \return Standard Pacemaker return code
  *
  * \note This function takes ownership of \p new_cib by assigning it to
- *       \c the_cib. The caller should not free it.
+ *       \c based_cib. The caller should not free it.
  */
 int
 based_activate_cib(xmlNode *new_cib, bool to_disk, const char *op)
 {
-    CRM_CHECK((new_cib != NULL) && (new_cib != the_cib), return ENODATA);
+    CRM_CHECK((new_cib != NULL) && (new_cib != based_cib), return ENODATA);
 
-    pcmk__xml_free(the_cib);
-    the_cib = new_cib;
+    pcmk__xml_free(based_cib);
+    based_cib = new_cib;
 
     if (to_disk && writes_enabled && (cib_status == pcmk_rc_ok)) {
         pcmk__debug("Triggering CIB write for %s op", op);

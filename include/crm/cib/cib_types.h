@@ -118,8 +118,14 @@ enum cib_call_options {
     cib_sync_call       = (UINT32_C(1) << 12),
 
     cib_no_mtime        = (UINT32_C(1) << 13),
+
+    //! \deprecated This value will be removed in a future release
     cib_inhibit_notify  = (UINT32_C(1) << 16),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
     cib_force_diff      = (UINT32_C(1) << 28),
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 };
 
 typedef struct cib_s cib_t;
@@ -160,7 +166,9 @@ typedef struct cib_api_operations_s {
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 
+    //! \deprecated Do not use
     int (*sync) (cib_t *cib, const char *section, int call_options);
+
     int (*sync_from) (cib_t *cib, const char *host, const char *section,
                       int call_options);
     int (*upgrade) (cib_t *cib, int call_options);

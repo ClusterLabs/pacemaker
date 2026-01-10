@@ -734,38 +734,6 @@ pcmk__xe_delete_match(xmlNode *xml, xmlNode *search)
 
 /*!
  * \internal
- * \brief Replace one XML node with a copy of another XML node
- *
- * This function handles change tracking and applies ACLs.
- *
- * \param[in,out] old  XML node to replace
- * \param[in]     new  XML node to copy as replacement for \p old
- *
- * \note This frees \p old.
- */
-static void
-replace_node(xmlNode *old, xmlNode *new)
-{
-    // Pass old for its doc; it won't remain the parent of new
-    new = pcmk__xml_copy(old, new);
-    old = xmlReplaceNode(old, new);
-
-    // old == NULL means memory allocation error
-    pcmk__assert(old != NULL);
-
-    // May be unnecessary but avoids slight changes to some test outputs
-    pcmk__xml_tree_foreach(new, pcmk__xml_reset_node_flags, NULL);
-
-    if (pcmk__xml_doc_all_flags_set(new->doc, pcmk__xf_tracking)) {
-        // Replaced sections may have included relevant ACLs
-        pcmk__apply_acl(new);
-    }
-    pcmk__xml_mark_changes(old, new);
-    pcmk__xml_free_node(old);
-}
-
-/*!
- * \internal
  * \brief Replace one XML subtree with a copy of another if the two match
  *
  * A match is defined as follows:
@@ -805,7 +773,7 @@ replace_xe_if_matching(xmlNode *xml, void *user_data)
 
     pcmk__log_xml_trace(xml, "replace-match");
     pcmk__log_xml_trace(replace, "replace-with");
-    replace_node(xml, replace);
+    pcmk__xml_replace_with_copy(xml, replace);
 
     // Found a match and replaced it; stop traversing tree
     return false;
@@ -833,8 +801,8 @@ pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace)
 {
     /* @COMPAT Some of this behavior (like not matching the tree root, which is
      * allowed by pcmk__xe_update_match()) is questionable for general use but
-     * required for backward compatibility by cib_process_replace() and
-     * cib_process_delete(). Behavior can change at a major version release if
+     * required for backward compatibility by cib__process_replace() and
+     * cib__process_delete(). Behavior can change at a major version release if
      * desired.
      */
     CRM_CHECK((xml != NULL) && (replace != NULL), return EINVAL);
@@ -1530,17 +1498,17 @@ pcmk__xe_set_bool(xmlNode *xml, const char *attr, bool value)
  * \param[in] node XML node to get attribute from
  * \param[in] name XML attribute to get
  *
- * \return True if the given \p name is an attribute on \p node and has
- *         the value \c PCMK_VALUE_TRUE, False in all other cases
+ * \return \c true if the given \p name is an attribute on \p node whose value
+ *         parses to \c true (see \c pcmk__parse_bool()), or \c false otherwise
  */
 bool
 pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 {
     bool value = false;
-    int rc;
 
-    rc = pcmk__xe_get_bool(node, name, &value);
-    return rc == pcmk_rc_ok && value == true;
+    // value remains false on error, so don't check return value
+    pcmk__xe_get_bool(node, name, &value);
+    return value;
 }
 
 // Deprecated functions kept only for backward API compatibility

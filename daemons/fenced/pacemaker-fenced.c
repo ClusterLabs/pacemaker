@@ -276,7 +276,6 @@ stonith_cleanup(void)
 {
     fenced_cib_cleanup();
     fenced_ipc_cleanup();
-    pcmk__cluster_destroy_node_caches();
     free_stonith_remote_op_list();
     free_topology_list();
     fenced_free_device_table();

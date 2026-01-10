@@ -174,6 +174,12 @@ fenced_cpg_destroy(gpointer unused)
 }
 #endif // SUPPORT_COROSYNC
 
+/*!
+ * \internal
+ * \brief Initialize \c fenced_cluster and connect to the cluster layer
+ *
+ * \return Standard Pacemaker return code
+ */
 int
 fenced_cluster_connect(void)
 {
@@ -199,9 +205,17 @@ fenced_cluster_connect(void)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Disconnect from the cluster layer and free \c fenced_cluster
+ */
 void
 fenced_cluster_disconnect(void)
 {
+    if (fenced_cluster == NULL) {
+        return;
+    }
+
     pcmk_cluster_disconnect(fenced_cluster);
-    pcmk_cluster_free(fenced_cluster);
+    g_clear_pointer(&fenced_cluster, pcmk_cluster_free);
 }

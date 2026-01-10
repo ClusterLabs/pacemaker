@@ -114,7 +114,7 @@ qb_ipcs_service_t *mainloop_add_ipc_server(const char *name, enum qb_ipc_type ty
  * \brief Start server-side API end-point, hooked into the internal event loop
  *
  * \param[in] name    name of the IPC end-point ("address" for the client)
- * \param[in] type    selects libqb's IPC back-end (or use #QB_IPC_NATIVE)
+ * \param[in] type       Ignored
  * \param[in] callbacks  defines libqb's IPC service-level handlers
  * \param[in] priority  priority relative to other events handled in the
  *                      abstract handling loop, use #QB_LOOP_MED when unsure

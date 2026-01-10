@@ -337,20 +337,6 @@
 # Default: PCMK_dh_max_bits="0" (no maximum)
 
 
-## Inter-process Communication
-
-# PCMK_ipc_type (Advanced Use Only)
-#
-# Force use of a particular IPC method. Allowed values:
-#
-#  shared-mem
-#  socket
-#  posix
-#  sysv
-#
-# Default: PCMK_ipc_type="shared-mem"
-
-
 ## Cluster type
 
 # PCMK_cluster_type (Advanced Use Only)

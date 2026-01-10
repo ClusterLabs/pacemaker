@@ -10,29 +10,20 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // EACCES, ECONNREFUSED
-#include <inttypes.h>               // PRIu64
 #include <stdbool.h>
 #include <stddef.h>                 // NULL, size_t
-#include <stdint.h>                 // u?int*_t, UINT64_C
-#include <stdio.h>                  // snprintf
+#include <stdint.h>                 // uint32_t, uint64_t
 #include <stdlib.h>                 // free
-#include <sys/types.h>              // gid_t, uid_t
 #include <syslog.h>                 // LOG_INFO, LOG_DEBUG
 #include <time.h>                   // time_t
-#include <unistd.h>                 // close
 
 #include <glib.h>                   // gboolean, gpointer, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
-#include <libxml/xpath.h>           // xmlXPath*
-#include <qb/qbdefs.h>              // QB_FALSE
-#include <qb/qbipcs.h>              // qb_ipcs_connection_t
 #include <qb/qblog.h>               // LOG_TRACE
 
 #include <crm/cib.h>                // cib_call_options values
 #include <crm/cib/internal.h>       // cib__*
-#include <crm/cluster.h>            // pcmk_cluster_disconnect
 #include <crm/cluster/internal.h>   // pcmk__cluster_send_message
-#include <crm/common/cib.h>         // pcmk_find_cib_element
 #include <crm/common/internal.h>    // pcmk__s, pcmk__str_eq
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
@@ -43,97 +34,98 @@
 
 #include "pacemaker-based.h"
 
-#define EXIT_ESCALATION_MS 10000
+static mainloop_timer_t *digest_timer = NULL;
+static long long ping_seq = 0;
+static char *ping_digest = NULL;
+static bool ping_modified_since = false;
 
-qb_ipcs_service_t *ipcs_ro = NULL;
-qb_ipcs_service_t *ipcs_rw = NULL;
-qb_ipcs_service_t *ipcs_shm = NULL;
-
-static int cib_process_command(xmlNode *request,
-                               const cib__operation_t *operation,
-                               cib__op_fn_t op_function, xmlNode **reply,
-                               bool privileged);
-
-static int32_t cib_common_callback(qb_ipcs_connection_t *c, void *data,
-                                   size_t size, bool privileged);
-
-static int32_t
-cib_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+/*!
+ * \internal
+ * \brief Request CIB digests from all peer nodes
+ *
+ * This is used as a callback that runs 5 seconds after we modify the CIB on the
+ * DC. It sends a ping request to all cluster nodes. They will respond by
+ * sending their current digests and version info, which we will validate in
+ * process_ping_reply(). If their digest doesn't match, we'll sync our own CIB
+ * to them. This helps ensure consistency across the cluster after a CIB update.
+ *
+ * \param[in] data  Ignored
+ *
+ * \return \c G_SOURCE_REMOVE (to destroy the timeout)
+ *
+ * \note It's not clear why we wait 5 seconds rather than sending the ping
+ *       request immediately after a performing a modifying op. Perhaps it's to
+ *       avoid overwhelming other nodes with ping requests when there are a lot
+ *       of modifying requests in a short period. The timer restarts after
+ *       every successful modifying op, so we send ping requests **at most**
+ *       every 5 seconds. Or perhaps it's a remnant of legacy mode (pre-1.1.12).
+ *       In any case, the other nodes shouldn't need time to process the
+ *       modifying op before responding to the ping request. The ping request is
+ *       sent after the op is sent, so it should also be received after the op
+ *       is received.
+ */
+static gboolean
+digest_timer_cb(gpointer data)
 {
-    if (cib_shutdown_flag) {
-        pcmk__info("Ignoring new IPC client [%d] during shutdown",
-                   pcmk__client_pid(c));
-        return -ECONNREFUSED;
+    xmlNode *ping = NULL;
+
+    if (!based_get_local_node_dc()) {
+        // Only the DC sends a ping
+        return G_SOURCE_REMOVE;
     }
 
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -ENOMEM;
+    if (++ping_seq < 0) {
+        ping_seq = 0;
     }
-    return 0;
+
+    g_clear_pointer(&ping_digest, free);
+    ping_modified_since = false;
+
+    ping = pcmk__xe_create(NULL, PCMK__XE_PING);
+    pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
+    pcmk__xe_set_ll(ping, PCMK__XA_CIB_PING_ID, ping_seq);
+    pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+
+    pcmk__trace("Requesting peer digests (%lld)", ping_seq);
+    pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
+
+    pcmk__xml_free(ping);
+    return G_SOURCE_REMOVE;
 }
 
-static int32_t
-cib_ipc_dispatch_rw(qb_ipcs_connection_t * c, void *data, size_t size)
+/*!
+ * \internal
+ * \brief Initialize data structures used for CIB manager callbacks
+ */
+void
+based_callbacks_init(void)
 {
-    return cib_common_callback(c, data, size, true);
-}
-
-static int32_t
-cib_ipc_dispatch_ro(qb_ipcs_connection_t * c, void *data, size_t size)
-{
-    return cib_common_callback(c, data, size, false);
-}
-
-/* Error code means? */
-static int32_t
-cib_ipc_closed(qb_ipcs_connection_t * c)
-{
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        return 0;
-    }
-    pcmk__trace("Connection %p", c);
-    pcmk__free_client(client);
-    return 0;
-}
-
-static void
-cib_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    pcmk__trace("Connection %p", c);
-    cib_ipc_closed(c);
-    if (cib_shutdown_flag) {
-        cib_shutdown(0);
+    if (digest_timer == NULL) {
+        digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
+                                          digest_timer_cb, NULL);
     }
 }
 
-struct qb_ipcs_service_handlers ipc_ro_callbacks = {
-    .connection_accept = cib_ipc_accept,
-    .connection_created = NULL,
-    .msg_process = cib_ipc_dispatch_ro,
-    .connection_closed = cib_ipc_closed,
-    .connection_destroyed = cib_ipc_destroy
-};
-
-struct qb_ipcs_service_handlers ipc_rw_callbacks = {
-    .connection_accept = cib_ipc_accept,
-    .connection_created = NULL,
-    .msg_process = cib_ipc_dispatch_rw,
-    .connection_closed = cib_ipc_closed,
-    .connection_destroyed = cib_ipc_destroy
-};
+/*!
+ * \internal
+ * \brief Free data structures used for CIB manager callbacks
+ */
+void
+based_callbacks_cleanup(void)
+{
+    g_clear_pointer(&digest_timer, mainloop_timer_del);
+    g_clear_pointer(&ping_digest, free);
+}
 
 /*!
  * \internal
  * \brief Create reply XML for a CIB request
  *
- * \param[in] op            CIB operation type
- * \param[in] call_id       CIB call ID
- * \param[in] client_id     CIB client ID
- * \param[in] call_options  Group of <tt>enum cib_call_options</tt> flags
- * \param[in] rc            Request return code
- * \param[in] call_data     Request output data
+ * \param[in] request    CIB request
+ * \param[in] rc         Request return code (standard Pacemaker return code)
+ * \param[in] call_data  Request output data (may be entire live CIB or result
+ *                       CIB in case of error)
  *
  * \return Reply XML (guaranteed not to be \c NULL)
  *
@@ -141,439 +133,214 @@ struct qb_ipcs_service_handlers ipc_rw_callbacks = {
  *       \p pcmk__xml_free().
  */
 static xmlNode *
-create_cib_reply(const char *op, const char *call_id, const char *client_id,
-                 uint32_t call_options, int rc, xmlNode *call_data)
+create_cib_reply(const xmlNode *request, int rc, xmlNode *call_data)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_CIB_REPLY);
 
     pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(reply, PCMK__XA_CIB_OP, op);
-    pcmk__xe_set(reply, PCMK__XA_CIB_CALLID, call_id);
-    pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client_id);
-    pcmk__xe_set_int(reply, PCMK__XA_CIB_CALLOPT, call_options);
-    pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, rc);
 
-    if (call_data != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(reply, PCMK__XE_CIB_CALLDATA);
+    /* We could simplify by copying all attributes from request. We would just
+     * have to ensure that there are never "private" attributes that we want to
+     * hide from external clients with notify callbacks.
+     */
+    pcmk__xe_set(reply, PCMK__XA_CIB_OP,
+                 pcmk__xe_get(request, PCMK__XA_CIB_OP));
 
-        pcmk__trace("Attaching reply output");
-        pcmk__xml_copy(wrapper, call_data);
-    }
+    pcmk__xe_set(reply, PCMK__XA_CIB_CALLID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CALLID));
+
+    pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID));
+
+    pcmk__xe_set(reply, PCMK__XA_CIB_CALLOPT,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CALLOPT));
+
+    pcmk__xe_set_int(reply, PCMK__XA_CIB_RC, pcmk_rc2legacy(rc));
+    cib__set_calldata(reply, call_data);
 
     crm_log_xml_explicit(reply, "cib:reply");
     return reply;
 }
 
 static void
-do_local_notify(const xmlNode *notify_src, const char *client_id,
-                bool sync_reply, bool from_peer)
+do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
+                bool from_peer)
 {
-    int msg_id = 0;
+    int call_id = 0;
     int rc = pcmk_rc_ok;
-    pcmk__client_t *client_obj = NULL;
+    pcmk__client_t *client = NULL;
     uint32_t flags = crm_ipc_server_event;
+    const char *client_type = NULL;
+    const char *client_name = NULL;
+    const char *client_desc = "";
+    const char *sync_s = (sync_reply? "synchronous" : "asynchronous");
 
-    CRM_CHECK((notify_src != NULL) && (client_id != NULL), return);
+    CRM_CHECK((xml != NULL) && (client_id != NULL), return);
 
-    pcmk__trace("Performing local %ssync notification for %s",
-                sync_reply ? "" : "a", client_id);
+    if (from_peer) {
+        client_desc = " (originator of delegated_request)";
+    }
 
-    pcmk__xe_get_int(notify_src, PCMK__XA_CIB_CALLID, &msg_id);
+    pcmk__trace("Performing local %s notification for %s", sync_s, client_id);
 
-    client_obj = pcmk__find_client_by_id(client_id);
-    if (client_obj == NULL) {
-        pcmk__debug("Could not notify client %s%s %s of call %d result: "
-                    "client no longer exists",
-                    client_id,
-                    (from_peer? " (originator of delegated request)" : ""),
-                    (sync_reply? "synchronously" : "asynchronously"), msg_id);
+    pcmk__xe_get_int(xml, PCMK__XA_CIB_CALLID, &call_id);
+
+    client = pcmk__find_client_by_id(client_id);
+    if (client == NULL) {
+        pcmk__debug("Could not notify client %s%s %sly of call %d result: "
+                    "client no longer exists", client_id, client_desc, sync_s,
+                    call_id);
         return;
     }
 
+    client_type = pcmk__client_type_str(PCMK__CLIENT_TYPE(client));
+    client_name = pcmk__client_name(client);
+
     if (sync_reply) {
         flags = crm_ipc_flags_none;
-        if (client_obj->ipcs != NULL) {
-            msg_id = client_obj->request_id;
-            client_obj->request_id = 0;
+        if (client->ipcs != NULL) {
+            call_id = client->request_id;
+            client->request_id = 0;
         }
     }
 
-    switch (PCMK__CLIENT_TYPE(client_obj)) {
+    switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
-            rc = pcmk__ipc_send_xml(client_obj, msg_id, notify_src, flags);
+            rc = pcmk__ipc_send_xml(client, call_id, xml, flags);
             break;
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            rc = pcmk__remote_send_xml(client_obj->remote, notify_src);
+            rc = pcmk__remote_send_xml(client->remote, xml);
             break;
         default:
             rc = EPROTONOSUPPORT;
             break;
     }
+
     if (rc == pcmk_rc_ok) {
-        pcmk__trace("Notified %s client %s%s %s of call %d result",
-                    pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
-                    pcmk__client_name(client_obj),
-                    (from_peer? " (originator of delegated request)" : ""),
-                    (sync_reply? "synchronously" : "asynchronously"), msg_id);
+        pcmk__trace("Notified %s client %s%s %sly of call %d result",
+                    client_type, client_name, client_desc, sync_s, call_id);
     } else {
-        pcmk__warn("Could not notify %s client %s%s %s of call %d result: %s",
-                   pcmk__client_type_str(PCMK__CLIENT_TYPE(client_obj)),
-                   pcmk__client_name(client_obj),
-                   (from_peer? " (originator of delegated request)" : ""),
-                   (sync_reply? "synchronously" : "asynchronously"), msg_id,
-                   pcmk_rc_str(rc));
+        pcmk__warn("Could not notify %s client %s%s %ssynchronously of call %d "
+                   "result: %s", client_type, client_name, client_desc, sync_s,
+                   call_id, pcmk_rc_str(rc));
     }
 }
 
-void
-cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
-                           pcmk__client_t *cib_client, bool privileged)
-{
-    const char *op = pcmk__xe_get(op_request, PCMK__XA_CIB_OP);
-    uint32_t call_options = cib_none;
-    int rc = pcmk_rc_ok;
-
-    rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
-                            cib_none);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
-    }
-
-    /* Requests with cib_transaction set should not be sent to based directly
-     * (outside of a commit-transaction request)
-     */
-    if (pcmk__is_set(call_options, cib_transaction)) {
-        return;
-    }
-
-    if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        if (flags & crm_ipc_client_response) {
-            xmlNode *ack = pcmk__xe_create(NULL, __func__);
-
-            pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-            pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, cib_client->id);
-            pcmk__ipc_send_xml(cib_client, id, ack, flags);
-            cib_client->request_id = 0;
-            pcmk__xml_free(ack);
-        }
-        return;
-
-    } else if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
-        /* Update the notify filters for this client */
-        int on_off = 0;
-        crm_exit_t status = CRM_EX_OK;
-        uint64_t bit = UINT64_C(0);
-        const char *type = pcmk__xe_get(op_request, PCMK__XA_CIB_NOTIFY_TYPE);
-
-        pcmk__xe_get_int(op_request, PCMK__XA_CIB_NOTIFY_ACTIVATE, &on_off);
-
-        pcmk__debug("Setting %s callbacks %s for client %s", type,
-                    (on_off? "on" : "off"), pcmk__client_name(cib_client));
-
-        if (pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY, pcmk__str_none)) {
-            bit = cib_notify_post;
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
-                                pcmk__str_none)) {
-            bit = cib_notify_pre;
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
-                                pcmk__str_none)) {
-            bit = cib_notify_confirm;
-
-        } else if (pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY,
-                                pcmk__str_none)) {
-            bit = cib_notify_diff;
-
-        } else {
-            status = CRM_EX_INVALID_PARAM;
-        }
-
-        if (bit != 0) {
-            if (on_off) {
-                pcmk__set_client_flags(cib_client, bit);
-            } else {
-                pcmk__clear_client_flags(cib_client, bit);
-            }
-        }
-
-        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_ACK, NULL, status);
-        return;
-    }
-
-    cib_process_request(op_request, privileged, cib_client);
-}
-
-static int32_t
-cib_common_callback(qb_ipcs_connection_t *c, void *data, size_t size, bool privileged)
-{
-    int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    uint32_t call_options = cib_none;
-    pcmk__client_t *cib_client = pcmk__find_client(c);
-    xmlNode *op_request = NULL;
-
-    // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(cib_client != NULL, return 0);
-    if (data == NULL) {
-        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-
-    pcmk__trace("Dispatching %sprivileged request from client %s",
-                (privileged? "" : "un"), cib_client->id);
-
-    rc = pcmk__ipc_msg_append(&cib_client->buffer, data);
-
-    if (rc == pcmk_rc_ipc_more) {
-        /* We haven't read the complete message yet, so just return. */
-        return 0;
-
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        op_request = pcmk__client_data2xml(cib_client, &id, &flags);
-        g_byte_array_free(cib_client->buffer, TRUE);
-        cib_client->buffer = NULL;
-
-    } else {
-        /* Some sort of error occurred reassembling the message.  All we can
-         * do is clean up, log an error and return.
-         */
-        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
-
-        if (cib_client->buffer != NULL) {
-            g_byte_array_free(cib_client->buffer, TRUE);
-            cib_client->buffer = NULL;
-        }
-
-        return 0;
-    }
-
-    if (op_request) {
-        int rc = pcmk_rc_ok;
-
-        rc = pcmk__xe_get_flags(op_request, PCMK__XA_CIB_CALLOPT, &call_options,
-                                cib_none);
-        if (rc != pcmk_rc_ok) {
-            pcmk__warn("Couldn't parse options from request: %s",
-                       pcmk_rc_str(rc));
-        }
-    }
-
-    if (op_request == NULL) {
-        pcmk__trace("Invalid message from %p", c);
-        pcmk__ipc_send_ack(cib_client, id, flags, PCMK__XE_NACK, NULL,
-                           CRM_EX_PROTOCOL);
-        return 0;
-    }
-
-    if (pcmk__is_set(call_options, cib_sync_call)) {
-        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
-        CRM_LOG_ASSERT(cib_client->request_id == 0);    /* This means the client has two synchronous events in-flight */
-        cib_client->request_id = id;    /* Reply only to the last one */
-    }
-
-    if (cib_client->name == NULL) {
-        const char *value = pcmk__xe_get(op_request, PCMK__XA_CIB_CLIENTNAME);
-
-        if (value == NULL) {
-            cib_client->name = pcmk__itoa(cib_client->pid);
-        } else {
-            cib_client->name = pcmk__str_copy(value);
-        }
-    }
-
-    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTID, cib_client->id);
-    pcmk__xe_set(op_request, PCMK__XA_CIB_CLIENTNAME, cib_client->name);
-
-    CRM_LOG_ASSERT(cib_client->user != NULL);
-    pcmk__update_acl_user(op_request, PCMK__XA_CIB_USER, cib_client->user);
-
-    cib_common_callback_worker(id, flags, op_request, cib_client, privileged);
-    pcmk__xml_free(op_request);
-
-    return 0;
-}
-
-static uint64_t ping_seq = 0;
-static char *ping_digest = NULL;
-static bool ping_modified_since = false;
-
-static gboolean
-cib_digester_cb(gpointer data)
-{
-    if (based_is_primary) {
-        char buffer[32];
-        xmlNode *ping = pcmk__xe_create(NULL, PCMK__XE_PING);
-
-        ping_seq++;
-        free(ping_digest);
-        ping_digest = NULL;
-        ping_modified_since = false;
-        pcmk__assert(snprintf(buffer, 32, "%" PRIu64, ping_seq) >= 0);
-
-        pcmk__trace("Requesting peer digests (%s)", buffer);
-
-        pcmk__xe_set(ping, PCMK__XA_T, PCMK__VALUE_CIB);
-        pcmk__xe_set(ping, PCMK__XA_CIB_OP, CRM_OP_PING);
-        pcmk__xe_set(ping, PCMK__XA_CIB_PING_ID, buffer);
-
-        pcmk__xe_set(ping, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-        pcmk__cluster_send_message(NULL, pcmk_ipc_based, ping);
-
-        pcmk__xml_free(ping);
-    }
-    return FALSE;
-}
-
+/*!
+ * \internal
+ * \brief Process a reply to a \c CRM_OP_PING request
+ *
+ * See \c digest_timer_cb() for details on how the ping process works, and see
+ * \c based_process_ping() for the construction of the ping reply.
+ *
+ * We ignore the reply if we are no longer the DC, if the reply is malformed or
+ * received out of sequence, or if we may have modified the CIB since the last
+ * time we sent a ping request.
+ *
+ * Otherwise, we compare the CIB digest received in the reply against the digest
+ * of the local CIB. If the digests don't match, we sync our CIB to the node
+ * that sent the reply. This helps to ensure that all other nodes' views of the
+ * CIB eventually match the DC's view of the CIB.
+ *
+ * \param[in] reply  Ping reply
+ */
 static void
-process_ping_reply(xmlNode *reply) 
+process_ping_reply(const xmlNode *reply)
 {
-    uint64_t seq = 0;
     const char *host = pcmk__xe_get(reply, PCMK__XA_SRC);
 
-    xmlNode *wrapper = pcmk__xe_first_child(reply, PCMK__XE_CIB_CALLDATA, NULL,
-                                            NULL);
-    xmlNode *pong = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-    const char *seq_s = pcmk__xe_get(pong, PCMK__XA_CIB_PING_ID);
+    xmlNode *pong = cib__get_calldata(reply);
+    long long seq = 0;
     const char *digest = pcmk__xe_get(pong, PCMK_XA_DIGEST);
 
-    if (seq_s == NULL) {
-        pcmk__debug("Ignoring ping reply with no " PCMK__XA_CIB_PING_ID);
+    xmlNode *remote_versions = cib__get_calldata(pong);
+
+    int rc = pcmk__xe_get_ll(pong, PCMK__XA_CIB_PING_ID, &seq);
+
+    if (rc != pcmk_rc_ok) {
+        pcmk__debug("Ignoring ping reply with unset or invalid "
+                    PCMK__XA_CIB_PING_ID ": %s", pcmk_rc_str(rc));
         return;
-
-    } else {
-        long long seq_ll;
-        int rc = pcmk__scan_ll(seq_s, &seq_ll, 0LL);
-
-        if (rc != pcmk_rc_ok) {
-            pcmk__debug("Ignoring ping reply with invalid " PCMK__XA_CIB_PING_ID
-                        " '%s': %s",
-                        seq_s, pcmk_rc_str(rc));
-            return;
-        }
-        seq = (uint64_t) seq_ll;
     }
 
-    if(digest == NULL) {
-        pcmk__trace("Ignoring ping reply %s from %s with no digest", seq_s,
-                    host);
-
-    } else if(seq != ping_seq) {
-        pcmk__trace("Ignoring out of sequence ping reply %s from %s", seq_s,
-                    host);
-
-    } else if(ping_modified_since) {
-        pcmk__trace("Ignoring ping reply %s from %s: cib updated since", seq_s,
-                    host);
-
-    } else {
-        if(ping_digest == NULL) {
-            pcmk__trace("Calculating new digest");
-            ping_digest = pcmk__digest_xml(the_cib, true);
-        }
-
-        pcmk__trace("Processing ping reply %s from %s (%s)", seq_s, host,
-                    digest);
-        if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
-            xmlNode *wrapper = pcmk__xe_first_child(pong, PCMK__XE_CIB_CALLDATA,
-                                                    NULL, NULL);
-            xmlNode *remote_cib = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-            const char *admin_epoch_s = NULL;
-            const char *epoch_s = NULL;
-            const char *num_updates_s = NULL;
-
-            if (remote_cib != NULL) {
-                admin_epoch_s = pcmk__xe_get(remote_cib, PCMK_XA_ADMIN_EPOCH);
-                epoch_s = pcmk__xe_get(remote_cib, PCMK_XA_EPOCH);
-                num_updates_s = pcmk__xe_get(remote_cib, PCMK_XA_NUM_UPDATES);
-            }
-
-            pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s "
-                         "%p",
-                         pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
-                         pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-                         pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                         ping_digest, host,
-                         pcmk__s(admin_epoch_s, "_"),
-                         pcmk__s(epoch_s, "_"),
-                         pcmk__s(num_updates_s, "_"),
-                         digest, remote_cib);
-
-            if(remote_cib && remote_cib->children) {
-                // Additional debug
-                pcmk__xml_mark_changes(the_cib, remote_cib);
-                pcmk__log_xml_changes(LOG_INFO, remote_cib);
-                pcmk__trace("End of differences");
-            }
-
-            pcmk__xml_free(remote_cib);
-            sync_our_cib(reply, false);
-        }
+    if (!based_get_local_node_dc()) {
+        pcmk__trace("Ignoring ping reply %lld from %s because we are no longer "
+                    "DC", seq, host);
+        return;
     }
+
+    if (digest == NULL) {
+        pcmk__trace("Ignoring ping reply %lld from %s with no digest", seq,
+                    host);
+        return;
+    }
+
+    if (seq != ping_seq) {
+        pcmk__trace("Ignoring out-of-sequence ping reply %lld from %s", seq,
+                    host);
+        return;
+    }
+
+    if (ping_modified_since) {
+        pcmk__trace("Ignoring ping reply %lld from %s: CIB updated since", seq,
+                    host);
+        return;
+    }
+
+    if (ping_digest == NULL) {
+        ping_digest = pcmk__digest_xml(based_cib, true);
+    }
+
+    pcmk__trace("Processing ping reply %lld from %s (%s)", seq, host, digest);
+
+    if (pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
+        return;
+    }
+
+    pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
+                 pcmk__xe_get(based_cib, PCMK_XA_ADMIN_EPOCH),
+                 pcmk__xe_get(based_cib, PCMK_XA_EPOCH),
+                 pcmk__xe_get(based_cib, PCMK_XA_NUM_UPDATES),
+                 ping_digest, host,
+                 pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH),
+                 pcmk__xe_get(remote_versions, PCMK_XA_EPOCH),
+                 pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES), digest);
+
+    sync_our_cib(reply, false);
 }
 
 static void
-parse_local_options(const pcmk__client_t *cib_client,
-                    const cib__operation_t *operation,
-                    const char *host, const char *op, bool *local_notify,
-                    bool *needs_reply, bool *process, bool *needs_forward)
+log_local_options(const pcmk__client_t *client,
+                  const cib__operation_t *operation, const char *host,
+                  const char *op)
 {
-    // Process locally and notify local client
-    *process = true;
-    *needs_reply = false;
-    *local_notify = true;
-    *needs_forward = false;
-
     if (pcmk__is_set(operation->flags, cib__op_attr_local)) {
-        /* Always process locally if cib__op_attr_local is set.
-         *
-         * @COMPAT: Currently host is ignored. At a compatibility break, throw
-         * an error (from cib_process_request() or earlier) if host is not NULL or
-         * OUR_NODENAME.
+        /* @COMPAT Currently host is ignored. At a compatibility break, throw an
+         * error (from based_process_request() or earlier) if host is not NULL
+         * or OUR_NODENAME.
          */
         pcmk__trace("Processing always-local %s op from client %s", op,
-                    pcmk__client_name(cib_client));
+                    pcmk__client_name(client));
 
-        if (!pcmk__str_eq(host, OUR_NODENAME,
-                          pcmk__str_casei|pcmk__str_null_matches)) {
-
-            pcmk__warn("Operation '%s' is always local but its target host is "
-                       "set to '%s'",
-                       op, host);
-        }
-        return;
-    }
-
-    if (pcmk__is_set(operation->flags, cib__op_attr_modifies)
-        || !pcmk__str_eq(host, OUR_NODENAME,
+        if (pcmk__str_eq(host, OUR_NODENAME,
                          pcmk__str_casei|pcmk__str_null_matches)) {
+            return;
+        }
 
-        // Forward modifying and non-local requests via cluster
-        *process = false;
-        *needs_reply = false;
-        *local_notify = false;
-        *needs_forward = true;
-
-        pcmk__trace("%s op from %s needs to be forwarded to %s", op,
-                    pcmk__client_name(cib_client), pcmk__s(host, "all nodes"));
+        pcmk__warn("Operation '%s' is always local but its target host is set "
+                   "to '%s'", op, host);
         return;
     }
 
-    if (stand_alone) {
+    if (based_stand_alone()) {
         pcmk__trace("Processing %s op from client %s (stand-alone)", op,
-                    pcmk__client_name(cib_client));
+                    pcmk__client_name(client));
 
     } else {
         pcmk__trace("Processing %saddressed %s op from client %s",
                     ((host != NULL)? "locally " : "un"), op,
-                    pcmk__client_name(cib_client));
+                    pcmk__client_name(client));
     }
 }
 
@@ -588,7 +355,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
      * (This may no longer be relevant since legacy mode was dropped; need to
      * trace code more closely to check.)
      */
-    const char *host = NULL;
+    const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     const char *delegated = pcmk__xe_get(request, PCMK__XA_CIB_DELEGATED_FROM);
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
@@ -600,20 +367,35 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         originator = "peer";
     }
 
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
-        // sync_our_cib() sets PCMK__XA_CIB_ISREPLYTO
-        if (reply_to) {
-            delegated = reply_to;
-        }
-        goto skip_is_reply;
-
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC_TO_ALL,
-                            pcmk__str_none)) {
-        // Nothing to do
-
-    } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
+    if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
         process_ping_reply(request);
         return false;
+    }
+
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
+        /* @COMPAT We stopped sending shutdown requests as of 3.0.2. During a
+         * rolling upgrade, the requesting node expects a reply. We might as
+         * well continue sending one until we no longer support rolling upgrades
+         * from versions earlier than 3.0.2. (If the requesting node doesn't
+         * receive a reply, it simply exits with CRM_EX_ERROR after 10 seconds.)
+         */
+        return true;
+    }
+
+    if (is_reply && pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
+        pcmk__trace("Will notify local clients for %s reply from %s", op,
+                    originator);
+        *process = false;
+        *needs_reply = false;
+        *local_notify = true;
+        return true;
+    }
+
+    if ((reply_to != NULL)
+        && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+
+        // sync_our_cib() sets PCMK__XA_CIB_ISREPLYTO
+        delegated = reply_to;
 
     } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
@@ -631,79 +413,46 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
         pcmk__trace("Parsing upgrade %s for %s with max=%s and upgrade_rc=%s",
                     (is_reply? "reply" : "request"),
-                    (based_is_primary? "primary" : "secondary"),
+                    (based_get_local_node_dc()? "DC" : "non-DC node"),
                     pcmk__s(max, "none"), pcmk__s(upgrade_rc, "none"));
 
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
+            pcmk__assert(is_reply);
             pcmk__xe_set(request, PCMK__XA_CIB_RC, upgrade_rc);
 
-        } else if ((max == NULL) && based_is_primary) {
-            /* We are the DC, check if this upgrade is allowed */
-            goto skip_is_reply;
+            pcmk__trace("Will notify local clients for %s reply from %s", op,
+                        originator);
+            *process = false;
+            *needs_reply = false;
+            *local_notify = true;
+            return true;
+        }
 
-        } else if(max) {
-            /* Ok, go ahead and upgrade to 'max' */
-            goto skip_is_reply;
-
-        } else {
-            // Ignore broadcast client requests when we're not primary
+        if ((max == NULL) && !based_get_local_node_dc()) {
+            // Ignore broadcast client requests when we're not the DC
             return false;
         }
-
-    } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        pcmk__info("Detected legacy %s global update from %s", op, originator);
-        send_sync_request(NULL);
-        return false;
-
-    } else if (is_reply
-               && pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-
-        pcmk__trace("Ignoring legacy %s reply sent from %s to local clients",
-                    op, originator);
-        return false;
-
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        *local_notify = false;
-        if (reply_to == NULL) {
-            *process = true;
-        } else { // Not possible?
-            pcmk__debug("Ignoring shutdown request from %s because reply_to=%s",
-                        originator, reply_to);
-        }
-        return *process;
     }
-
-    if (is_reply) {
-        pcmk__trace("Will notify local clients for %s reply from %s", op,
-                    originator);
-        *process = false;
-        *needs_reply = false;
-        *local_notify = true;
-        return true;
-    }
-
-  skip_is_reply:
-    *process = true;
-    *needs_reply = false;
 
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
-    host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         pcmk__trace("Processing %s request sent to us from %s", op, originator);
-        *needs_reply = true;
         return true;
+    }
 
-    } else if (host != NULL) {
+    if (host != NULL) {
         pcmk__trace("Ignoring %s request intended for CIB manager on %s", op,
                     host);
         return false;
-
-    } else if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
-        *needs_reply = true;
     }
 
+    if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
+        return true;
+    }
+
+    *needs_reply = false;
     pcmk__trace("Processing %s request broadcast by %s call %s on %s "
                 "(local clients will%s be notified)", op,
                 pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME),
@@ -757,6 +506,155 @@ forward_request(xmlNode *request)
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
 }
 
+static int
+based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
+                    cib__op_fn_t op_function, xmlNode **output)
+{
+    const char *feature_set = pcmk__xe_get(based_cib,
+                                           PCMK_XA_CRM_FEATURE_SET);
+    xmlNode *result_cib = based_cib;
+    xmlNode *cib_diff = NULL;
+
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
+    uint32_t call_options = cib_none;
+
+    bool config_changed = false;
+    int rc = pcmk_rc_ok;
+
+    pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
+
+    /* @TODO The cib__op_attr_modifies flag means the request *may* modify
+     * *something*. A successful request with this flag set may not have
+     * modified anything (for example, a delete request when there is no match
+     * to delete), or it may have modified something other than the CIB (for
+     * example, the CIB manager's primary/secondary status). Thus we may be
+     * setting the ping_modified_since flag when the CIB has not been modified.
+     */
+    ping_modified_since = true;
+
+    /* result_cib must not be modified after cib__perform_op_rw() returns.
+     *
+     * It's not important whether the client variant is cib_native or
+     * cib_remote.
+     */
+    rc = cib__perform_op_rw(cib_undefined, op_function, request,
+                            &config_changed, &result_cib, &cib_diff, output);
+
+    /* On validation error, include the schema-violating result CIB in any reply
+     * or notification that we will send.
+     */
+    if (rc == pcmk_rc_schema_validation) {
+        pcmk__assert((result_cib != based_cib) && (*output == NULL));
+        *output = result_cib;
+        goto done;
+    }
+
+    // Discard result for failure or dry run
+    if ((rc != pcmk_rc_ok) || pcmk__any_flags_set(call_options, cib_dryrun)) {
+        if (result_cib != based_cib) {
+            pcmk__xml_free(result_cib);
+        }
+
+        goto done;
+    }
+
+    if (result_cib != based_cib) {
+        /* Always write to disk for successful ops with the writes-through flag
+         * set. This also avoids the need to detect ordering changes.
+         *
+         * An exception is a request within a transaction. Since a transaction
+         * is atomic, intermediate results must not be written to disk.
+         */
+        const bool to_disk = !pcmk__is_set(call_options, cib_transaction)
+                             && (config_changed
+                                 || pcmk__is_set(operation->flags,
+                                                 cib__op_attr_writes_through));
+
+        rc = based_activate_cib(result_cib, to_disk, op);
+    }
+
+    /* @COMPAT Nodes older than feature set 3.19.0 don't support transactions.
+     * In a mixed-version cluster with nodes <3.19.0, we must sync the updated
+     * CIB, so that the older nodes receive the changes. Any node that has
+     * already applied the transaction will ignore the synced CIB.
+     *
+     * To ensure the updated CIB is synced from only one node, we sync it from
+     * the originator.
+     */
+    if ((operation->type == cib__op_commit_transact)
+        && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
+        && (pcmk__compare_versions(feature_set, "3.19.0") < 0)) {
+
+        sync_our_cib(request, true);
+    }
+
+    mainloop_timer_start(digest_timer);
+
+done:
+    if (!pcmk__any_flags_set(call_options,
+                             cib_dryrun|cib_inhibit_notify|cib_transaction)) {
+
+        based_diff_notify(request, rc, cib_diff);
+    }
+
+    pcmk__xml_free(cib_diff);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Log the result of processing a CIB request locally
+ *
+ * \param[in] request    Request XML
+ * \param[in] operation  Operation info
+ * \param[in] rc         Return code from processing the request
+ * \param[in] elapsed    How long processing took in seconds
+ */
+static void
+log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
+              long long elapsed)
+{
+    int level = LOG_INFO;
+
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
+    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
+
+    int admin_epoch = 0;
+    int epoch = 0;
+    int num_updates = 0;
+
+    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+        level = LOG_TRACE;
+
+    } else if (rc != pcmk_rc_ok) {
+        level = LOG_WARNING;
+    }
+
+    section = pcmk__s(section, "'all'");
+    originator = pcmk__s(originator, "local");
+    client_name = pcmk__s(client_name, "client");
+
+    pcmk__xe_get_int(based_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
+    pcmk__xe_get_int(based_cib, PCMK_XA_EPOCH, &epoch);
+    pcmk__xe_get_int(based_cib, PCMK_XA_NUM_UPDATES, &num_updates);
+
+    do_crm_log(level,
+               "Completed %s operation for section %s: %s (rc=%d, "
+               "origin=%s/%s/%s, version=%d.%d.%d)",
+               op, section, pcmk_rc_str(rc), rc,
+               originator, client_name, call_id,
+               admin_epoch, epoch, num_updates);
+
+    if (elapsed > 3) {
+        pcmk__trace("%s operation took %llds to complete", op, elapsed);
+        crm_write_blackbox(0, NULL);
+    }
+}
+
 static void
 send_peer_reply(xmlNode *msg, const char *originator)
 {
@@ -779,16 +677,17 @@ send_peer_reply(xmlNode *msg, const char *originator)
  * \internal
  * \brief Handle an IPC or CPG message containing a request
  *
- * \param[in,out] request        Request XML
- * \param[in] privileged         Whether privileged commands may be run
- *                               (see cib_server_ops[] definition)
- * \param[in] cib_client         IPC client that sent request (or NULL if CPG)
+ * \param[in,out] request     Request XML
+ * \param[in]     privileged  If \c true, operations with
+ *                            \c cib__op_attr_privileged can be run
+ * \param[in]     client      IPC client that sent request (\c NULL if request
+ *                            came from CPG)
  *
  * \return Standard Pacemaker return code
  */
 int
-cib_process_request(xmlNode *request, bool privileged,
-                    const pcmk__client_t *cib_client)
+based_process_request(xmlNode *request, bool privileged,
+                      const pcmk__client_t *client)
 {
     // @TODO: Break into multiple smaller functions
     uint32_t call_options = cib_none;
@@ -796,9 +695,8 @@ cib_process_request(xmlNode *request, bool privileged,
     bool process = true;        // Whether to process request locally now
     bool needs_reply = true;    // Whether to build a reply
     bool local_notify = false;  // Whether to notify (local) requester
-    bool needs_forward = false; // Whether to forward request somewhere else
 
-    xmlNode *op_reply = NULL;
+    xmlNode *reply = NULL;
 
     int rc = pcmk_rc_ok;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
@@ -813,17 +711,20 @@ cib_process_request(xmlNode *request, bool privileged,
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
+    xmlNode *output = NULL;
+    time_t start_time = 0;
+
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
         pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    if ((host != NULL) && (*host == '\0')) {
+    if (pcmk__str_empty(host)) {
         host = NULL;
     }
 
-    if (cib_client == NULL) {
+    if (client == NULL) {
         pcmk__trace("Processing peer %s operation from %s/%s on %s intended "
                     "for %s (reply=%s)", op, client_name, call_id, originator,
                     pcmk__s(host, "all"), reply_to);
@@ -846,558 +747,95 @@ cib_process_request(xmlNode *request, bool privileged,
         return EOPNOTSUPP;
     }
 
-    if (cib_client != NULL) {
-        parse_local_options(cib_client, operation, host, op,
-                            &local_notify, &needs_reply, &process,
-                            &needs_forward);
+    if (pcmk__is_set(call_options, cib_transaction)) {
+        /* All requests in a transaction are processed locally against a working
+         * CIB copy, and we don't notify for individual requests because the
+         * entire transaction is atomic.
+         */
+        needs_reply = false;
+        pcmk__trace("Processing %s op from client %s locally because it's part "
+                    "of a transaction", op, pcmk__client_name(client));
+
+    } else if (client != NULL) {
+        // Forward modifying and non-local requests via cluster
+        if (!pcmk__is_set(operation->flags, cib__op_attr_local)
+            && (pcmk__is_set(operation->flags, cib__op_attr_modifies)
+                || !pcmk__str_eq(host, OUR_NODENAME,
+                                 pcmk__str_casei|pcmk__str_null_matches))) {
+
+            forward_request(request);
+            return pcmk_rc_ok;
+        }
+
+        // Process locally and notify local client; no peer to reply to
+        needs_reply = false;
+        local_notify = true;
+
+        log_local_options(client, operation, host, op);
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
         return pcmk_rc_ok;
     }
 
-    if (pcmk__is_set(call_options, cib_transaction)) {
-        /* All requests in a transaction are processed locally against a working
-         * CIB copy, and we don't notify for individual requests because the
-         * entire transaction is atomic.
-         *
-         * We still call the option parser functions above, for the sake of log
-         * messages and checking whether we're the target for peer requests.
-         */
-        process = true;
-        needs_reply = false;
-        local_notify = false;
-        needs_forward = false;
-    }
-
     if (pcmk__is_set(call_options, cib_discard_reply)) {
-        /* If the request will modify the CIB, and we are in legacy mode, we
-         * need to build a reply so we can broadcast a diff, even if the
-         * requester doesn't want one.
-         */
         needs_reply = false;
         local_notify = false;
         pcmk__trace("Client is not interested in the reply");
-    }
-
-    if (needs_forward) {
-        forward_request(request);
-        return pcmk_rc_ok;
     }
 
     if (cib_status != pcmk_rc_ok) {
         rc = cib_status;
         pcmk__err("Ignoring request because cluster configuration is invalid "
                   "(please repair and restart): %s", pcmk_rc_str(rc));
-        op_reply = create_cib_reply(op, call_id, client_id, call_options,
-                                    pcmk_rc2legacy(rc), the_cib);
 
-    } else if (process) {
-        time_t finished = 0;
-        time_t now = time(NULL);
-        int level = LOG_INFO;
-        const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-        const char *admin_epoch_s = NULL;
-        const char *epoch_s = NULL;
-        const char *num_updates_s = NULL;
-
-        rc = cib_process_command(request, operation, op_function, &op_reply,
-                                 privileged);
-
-        if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-            level = LOG_TRACE;
-
-        } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-            switch (rc) {
-                case pcmk_rc_ok:
-                    level = LOG_INFO;
-                    break;
-                case pcmk_rc_old_data:
-                case pcmk_rc_diff_resync:
-                case pcmk_rc_diff_failed:
-                    level = LOG_TRACE;
-                    break;
-                default:
-                    level = LOG_ERR;
-            }
-
-        } else if (rc != pcmk_rc_ok) {
-            level = LOG_WARNING;
+        if (!pcmk__is_set(call_options, cib_discard_reply)) {
+            reply = create_cib_reply(request, rc, based_cib);
         }
 
-        if (the_cib != NULL) {
-            admin_epoch_s = pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH);
-            epoch_s = pcmk__xe_get(the_cib, PCMK_XA_EPOCH);
-            num_updates_s = pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES);
-        }
-
-        do_crm_log(level,
-                   "Completed %s operation for section %s: %s (rc=%d, origin=%s/%s/%s, version=%s.%s.%s)",
-                   op, pcmk__s(section, "'all'"), pcmk_rc_str(rc), rc,
-                   pcmk__s(originator, "local"), client_name, call_id,
-                   pcmk__s(admin_epoch_s, "0"), pcmk__s(epoch_s, "0"),
-                   pcmk__s(num_updates_s, "0"));
-
-        finished = time(NULL);
-        if ((finished - now) > 3) {
-            pcmk__trace("%s operation took %llds to complete", op,
-                        (long long) (finished - now));
-            crm_write_blackbox(0, NULL);
-        }
-
-        if (op_reply == NULL && (needs_reply || local_notify)) {
-            pcmk__err("Unexpected NULL reply to message");
-            pcmk__log_xml_err(request, "null reply");
-            goto done;
-        }
+        goto done;
     }
 
-    if (pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        pcmk__trace("Completed pre-sync update from %s/%s/%s%s",
-                    pcmk__s(originator, "local"), client_name, call_id,
-                    (local_notify? " with local notification" : ""));
-
-    } else if (needs_reply && !stand_alone && (cib_client == NULL)
-               && !pcmk__is_set(call_options, cib_discard_reply)) {
-        send_peer_reply(op_reply, originator);
+    if (!process) {
+        goto done;
     }
 
-    if (local_notify && client_id) {
-        do_local_notify(process ? op_reply : request, client_id,
-                        pcmk__is_set(call_options, cib_sync_call),
-                        (cib_client == NULL));
-    }
-
-done:
-    pcmk__xml_free(op_reply);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Get a CIB operation's input from the request XML
- *
- * \param[in]  request  CIB request XML
- * \param[in]  type     CIB operation type
- * \param[out] section  Where to store CIB section name
- *
- * \return Input XML for CIB operation
- *
- * \note If not \c NULL, the return value is a non-const pointer to part of
- *       \p request. The caller should not free it directly.
- */
-static xmlNode *
-prepare_input(const xmlNode *request, enum cib__op_type type,
-              const char **section)
-{
-    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
-                                            NULL, NULL);
-    xmlNode *input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-    if (type == cib__op_apply_patch) {
-        *section = NULL;
-    } else {
-        *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-    }
-
-    // Grab the specified section
-    if ((*section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        input = pcmk_find_cib_element(input, *section);
-    }
-
-    return input;
-}
-
-#define XPATH_CONFIG_CHANGE         \
-    "//" PCMK_XE_CHANGE             \
-    "[contains(@" PCMK_XA_PATH ",'/" PCMK_XE_CRM_CONFIG "/')]"
-
-static bool
-contains_config_change(xmlNode *diff)
-{
-    bool changed = false;
-
-    if (diff) {
-        xmlXPathObject *xpathObj = pcmk__xpath_search(diff->doc,
-                                                      XPATH_CONFIG_CHANGE);
-
-        if (pcmk__xpath_num_results(xpathObj) > 0) {
-            changed = true;
-        }
-        xmlXPathFreeObject(xpathObj);
-    }
-    return changed;
-}
-
-static int
-cib_process_command(xmlNode *request, const cib__operation_t *operation,
-                    cib__op_fn_t op_function, xmlNode **reply, bool privileged)
-{
-    xmlNode *cib_diff = NULL;
-    xmlNode *input = NULL;
-    xmlNode *output = NULL;
-    xmlNode *result_cib = NULL;
-
-    uint32_t call_options = cib_none;
-
-    const char *op = NULL;
-    const char *section = NULL;
-    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
-    const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
-    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
-    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
-
-    int rc = pcmk_rc_ok;
-
-    bool config_changed = false;
-    bool manage_counters = true;
-
-    static mainloop_timer_t *digest_timer = NULL;
-
-    pcmk__assert(cib_status == pcmk_rc_ok);
-
-    if(digest_timer == NULL) {
-        digest_timer = mainloop_timer_add("digester", 5000, FALSE, cib_digester_cb, NULL);
-    }
-
-    *reply = NULL;
-
-    /* Start processing the request... */
-    op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
-                            cib_none);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
-    }
+    start_time = time(NULL);
 
     if (!privileged
         && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
+
         rc = EACCES;
-        pcmk__trace("Failed due to lack of privileges: %s", pcmk_rc_str(rc));
-        goto done;
-    }
 
-    input = prepare_input(request, operation->type, &section);
-
-    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib_perform_op(NULL, op, call_options, op_function, true, section,
-                            request, input, false, &config_changed, &the_cib,
-                            &result_cib, NULL, &output);
-        rc = pcmk_legacy2rc(rc);
-
-        CRM_CHECK(result_cib == NULL, pcmk__xml_free(result_cib));
-        goto done;
-    }
-
-    /* @COMPAT: Handle a valid write action (legacy)
-     *
-     * @TODO: Re-evaluate whether this is all truly legacy. The cib_force_diff
-     * portion is. However, PCMK__XA_CIB_UPDATE may be set by a sync operation
-     * even in non-legacy mode, and manage_counters tells xml_create_patchset()
-     * whether to update version/epoch info.
-     */
-    if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        manage_counters = false;
-        cib__set_call_options(call_options, "call", cib_force_diff);
-        pcmk__trace("Global update detected");
-
-        CRM_LOG_ASSERT(pcmk__str_any_of(op,
-                                        PCMK__CIB_REQUEST_APPLY_PATCH,
-                                        PCMK__CIB_REQUEST_REPLACE,
-                                        NULL));
-    }
-
-    ping_modified_since = true;
-
-    // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(NULL, op, call_options, op_function, false, section,
-                        request, input, manage_counters, &config_changed,
-                        &the_cib, &result_cib, &cib_diff, &output);
-    rc = pcmk_legacy2rc(rc);
-
-    /* Always write to disk for successful ops with the flag set. This also
-     * negates the need to detect ordering changes.
-     */
-    if ((rc == pcmk_rc_ok)
-        && pcmk__is_set(operation->flags, cib__op_attr_writes_through)) {
-
-        config_changed = true;
-    }
-
-    if ((rc == pcmk_rc_ok)
-        && !pcmk__any_flags_set(call_options, cib_dryrun|cib_transaction)) {
-
-        if (result_cib != the_cib) {
-            if (pcmk__is_set(operation->flags, cib__op_attr_writes_through)) {
-                config_changed = true;
-            }
-
-            pcmk__trace("Activating %s->%s%s",
-                        pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                        pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES),
-                        (config_changed? " changed" : ""));
-
-            rc = based_activate_cib(result_cib, config_changed, op);
-            if (rc != pcmk_rc_ok) {
-                pcmk__err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
-            }
-        }
-
-        if ((rc == pcmk_rc_ok) && contains_config_change(cib_diff)) {
-            cib_read_config(config_hash, result_cib);
-        }
-
-        /* @COMPAT Nodes older than feature set 3.19.0 don't support
-         * transactions. In a mixed-version cluster with nodes <3.19.0, we must
-         * sync the updated CIB, so that the older nodes receive the changes.
-         * Any node that has already applied the transaction will ignore the
-         * synced CIB.
-         *
-         * To ensure the updated CIB is synced from only one node, we sync it
-         * from the originator.
-         */
-        if ((operation->type == cib__op_commit_transact)
-            && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
-            && (pcmk__compare_versions(pcmk__xe_get(the_cib,
-                                                    PCMK_XA_CRM_FEATURE_SET),
-                                       "3.19.0") < 0)) {
-
-            sync_our_cib(request, true);
-        }
-
-        mainloop_timer_stop(digest_timer);
-        mainloop_timer_start(digest_timer);
-
-    } else if (rc == pcmk_rc_schema_validation) {
-        pcmk__assert(result_cib != the_cib);
-
-        if (output != NULL) {
-            pcmk__log_xml_info(output, "cib:output");
-            pcmk__xml_free(output);
-        }
-
-        output = result_cib;
-
+    } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+        rc = cib__perform_op_ro(op_function, request, &based_cib, &output);
     } else {
-        pcmk__trace("Not activating %d %d %s", rc,
-                    pcmk__is_set(call_options, cib_dryrun),
-                    pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES));
-
-        if (result_cib != the_cib) {
-            pcmk__xml_free(result_cib);
-        }
+        rc = based_perform_op_rw(request, operation, op_function, &output);
     }
 
-    if (!pcmk__any_flags_set(call_options,
-                             cib_dryrun|cib_inhibit_notify|cib_transaction)) {
-        pcmk__trace("Sending notifications %d",
-                    pcmk__is_set(call_options, cib_dryrun));
-        based_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id,
-                          client_name, originator, input, cib_diff);
-    }
+    log_op_result(request, operation, rc, (time(NULL) - start_time));
 
-    pcmk__log_xml_patchset(LOG_TRACE, cib_diff);
-
-  done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
-        *reply = create_cib_reply(op, call_id, client_id, call_options,
-                                  pcmk_rc2legacy(rc), output);
+        reply = create_cib_reply(request, rc, output);
     }
 
-    if (output != the_cib) {
+    if ((output != NULL) && (output->doc != based_cib->doc)) {
         pcmk__xml_free(output);
     }
 
-    pcmk__trace("done");
-    pcmk__xml_free(cib_diff);
+done:
+    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
+        && needs_reply && !based_stand_alone() && (client == NULL)) {
+
+        send_peer_reply(reply, originator);
+    }
+
+    if (local_notify && (client_id != NULL)) {
+        do_local_notify((process? reply : request), client_id,
+                        pcmk__is_set(call_options, cib_sync_call),
+                        (client == NULL));
+    }
+
+    pcmk__xml_free(reply);
     return rc;
-}
-
-void
-cib_peer_callback(xmlNode * msg, void *private_data)
-{
-    const char *reason = NULL;
-    const char *originator = pcmk__xe_get(msg, PCMK__XA_SRC);
-
-    if (pcmk__peer_cache == NULL) {
-        reason = "membership not established";
-        goto bail;
-    }
-
-    if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
-        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
-    }
-
-    cib_process_request(msg, true, NULL);
-    return;
-
-  bail:
-    if (reason) {
-        const char *op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
-
-        pcmk__warn("Discarding %s message from %s: %s", op, originator, reason);
-    }
-}
-
-static gboolean
-cib_force_exit(gpointer data)
-{
-    pcmk__notice("Exiting immediately after %s without shutdown acknowledgment",
-                 pcmk__readable_interval(EXIT_ESCALATION_MS));
-    terminate_cib(CRM_EX_ERROR);
-    return FALSE;
-}
-
-static void
-disconnect_remote_client(gpointer key, gpointer value, gpointer user_data)
-{
-    pcmk__client_t *a_client = value;
-
-    pcmk__err("Can't disconnect client %s: Not implemented",
-              pcmk__client_name(a_client));
-}
-
-static void
-initiate_exit(void)
-{
-    int active = 0;
-    xmlNode *leaving = NULL;
-
-    active = pcmk__cluster_num_active_nodes();
-    if (active < 2) { // This is the last active node
-        pcmk__info("Exiting without sending shutdown request (no active "
-                   "peers)");
-        terminate_cib(CRM_EX_OK);
-        return;
-    }
-
-    pcmk__info("Sending shutdown request to %d peers", active);
-
-    leaving = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
-    pcmk__xe_set(leaving, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(leaving, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
-
-    pcmk__cluster_send_message(NULL, pcmk_ipc_based, leaving);
-    pcmk__xml_free(leaving);
-
-    pcmk__create_timer(EXIT_ESCALATION_MS, cib_force_exit, NULL);
-}
-
-void
-cib_shutdown(int nsig)
-{
-    struct qb_ipcs_stats srv_stats;
-
-    if (!cib_shutdown_flag) {
-        int disconnects = 0;
-        qb_ipcs_connection_t *c = NULL;
-
-        cib_shutdown_flag = true;
-
-        c = qb_ipcs_connection_first_get(ipcs_rw);
-        while (c != NULL) {
-            qb_ipcs_connection_t *last = c;
-
-            c = qb_ipcs_connection_next_get(ipcs_rw, last);
-
-            pcmk__debug("Disconnecting r/w client %p...", last);
-            qb_ipcs_disconnect(last);
-            qb_ipcs_connection_unref(last);
-            disconnects++;
-        }
-
-        c = qb_ipcs_connection_first_get(ipcs_ro);
-        while (c != NULL) {
-            qb_ipcs_connection_t *last = c;
-
-            c = qb_ipcs_connection_next_get(ipcs_ro, last);
-
-            pcmk__debug("Disconnecting r/o client %p...", last);
-            qb_ipcs_disconnect(last);
-            qb_ipcs_connection_unref(last);
-            disconnects++;
-        }
-
-        c = qb_ipcs_connection_first_get(ipcs_shm);
-        while (c != NULL) {
-            qb_ipcs_connection_t *last = c;
-
-            c = qb_ipcs_connection_next_get(ipcs_shm, last);
-
-            pcmk__debug("Disconnecting non-blocking r/w client %p...", last);
-            qb_ipcs_disconnect(last);
-            qb_ipcs_connection_unref(last);
-            disconnects++;
-        }
-
-        disconnects += pcmk__ipc_client_count();
-
-        pcmk__debug("Disconnecting %d remote clients",
-                    pcmk__ipc_client_count());
-        pcmk__foreach_ipc_client(disconnect_remote_client, NULL);
-        pcmk__info("Disconnected %d clients", disconnects);
-    }
-
-    qb_ipcs_stats_get(ipcs_rw, &srv_stats, QB_FALSE);
-
-    if (pcmk__ipc_client_count() == 0) {
-        pcmk__info("All clients disconnected (%d)", srv_stats.active_connections);
-        initiate_exit();
-
-    } else {
-        pcmk__info("Waiting on %d clients to disconnect (%d)",
-                   pcmk__ipc_client_count(), srv_stats.active_connections);
-    }
-}
-
-extern int remote_fd;
-extern int remote_tls_fd;
-
-/*!
- * \internal
- * \brief Close remote sockets, free the global CIB and quit
- *
- * \param[in] exit_status  What exit status to use (if -1, use CRM_EX_OK, but
- *                         skip disconnecting from the cluster layer)
- */
-void
-terminate_cib(int exit_status)
-{
-    if (remote_fd > 0) {
-        close(remote_fd);
-        remote_fd = 0;
-    }
-    if (remote_tls_fd > 0) {
-        close(remote_tls_fd);
-        remote_tls_fd = 0;
-    }
-
-    g_clear_pointer(&the_cib, pcmk__xml_free);
-
-    // Exit immediately on error
-    if (exit_status > CRM_EX_OK) {
-        pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-        crm_exit(exit_status);
-        return;
-    }
-
-    if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
-        /* Quit via returning from the main loop. If exit_status has the special
-         * value -1, we skip the disconnect here, and it will be done when the
-         * main loop returns (this allows the peer status callback to avoid
-         * messing with the peer caches).
-         */
-        if (exit_status == CRM_EX_OK) {
-            pcmk_cluster_disconnect(crm_cluster);
-        }
-        g_main_loop_quit(mainloop);
-        return;
-    }
-
-    /* Exit cleanly. Even the peer status callback can disconnect here, because
-     * we're not returning control to the caller.
-     */
-    pcmk_cluster_disconnect(crm_cluster);
-    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-    crm_exit(CRM_EX_OK);
 }

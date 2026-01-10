@@ -13,7 +13,7 @@
 #include <inttypes.h>               // PRIx64
 #include <stdbool.h>
 #include <stddef.h>                 // NULL
-#include <stdint.h>                 // int32_t, uint16_t
+#include <stdint.h>                 // int32_t, uint16_t, UINT64_C
 #include <sys/types.h>              // ssize_t
 
 #include <glib.h>                   // gpointer, g_string_free
@@ -33,11 +33,83 @@ struct cib_notification_s {
     int32_t iov_size;
 };
 
+/*!
+ * \internal
+ * \brief Flags for CIB manager client notification types
+ *
+ * These are used for setting the \c flags field of a \c pcmk__client_t.
+ */
+enum based_notify_flags {
+    //! This flag has no effect
+    based_nf_none = UINT64_C(0),
+
+    //! Notify when the CIB changes
+    based_nf_diff = (UINT64_C(1) << 0),
+};
+
+/*!
+ * \internal
+ * \brief Parse a CIB manager client notification type string to a flag
+ *
+ * \param[in] text  Notification type string
+ *
+ * \return Flag corresponding to \p text, or \c based_nf_none if none exists
+ */
+static enum based_notify_flags
+based_parse_notify_flag(const char *text)
+{
+    if (pcmk__str_eq(text, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
+        return based_nf_diff;
+    }
+
+    return based_nf_none;
+}
+
+/*!
+ * \internal
+ * \brief Set or clear a notify flag in a client based on request XML
+ *
+ * \param[in]     xml     Request XML
+ * \param[in,out] client  Client
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client)
+{
+    int rc = pcmk_rc_ok;
+    bool enable = false;
+    enum based_notify_flags notify_flag = based_nf_none;
+    const char *type = pcmk__xe_get(xml, PCMK__XA_CIB_NOTIFY_TYPE);
+
+    rc = pcmk__xe_get_bool(xml, PCMK__XA_CIB_NOTIFY_ACTIVATE, &enable);
+    if (rc != pcmk_rc_ok) {
+        return pcmk_rc_bad_input;
+    }
+
+    notify_flag = based_parse_notify_flag(type);
+    if (notify_flag == based_nf_none) {
+        return pcmk_rc_bad_input;
+    }
+
+    if (enable) {
+        pcmk__debug("Enabling %s callbacks for client %s", type,
+                    pcmk__client_name(client));
+        pcmk__set_client_flags(client, notify_flag);
+
+    } else {
+        pcmk__debug("Disabling %s callbacks for client %s", type,
+                    pcmk__client_name(client));
+        pcmk__clear_client_flags(client, notify_flag);
+    }
+
+    return pcmk_rc_ok;
+}
+
 static void
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
     const char *type = NULL;
-    bool do_send = false;
     int rc = pcmk_rc_ok;
 
     pcmk__client_t *client = value;
@@ -51,28 +123,9 @@ cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
     type = pcmk__xe_get(update->msg, PCMK__XA_SUBT);
     CRM_LOG_ASSERT(type != NULL);
 
-    if (pcmk__is_set(client->flags, cib_notify_diff)
-        && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
+    if (!pcmk__is_set(client->flags, based_nf_diff)
+        || !pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
 
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_confirm)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_UPDATE_CONFIRMATION,
-                               pcmk__str_none)) {
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_pre)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_PRE_NOTIFY,
-                               pcmk__str_none)) {
-        do_send = true;
-
-    } else if (pcmk__is_set(client->flags, cib_notify_post)
-               && pcmk__str_eq(type, PCMK__VALUE_CIB_POST_NOTIFY,
-                               pcmk__str_none)) {
-        do_send = true;
-    }
-
-    if (!do_send) {
         return;
     }
 
@@ -146,9 +199,7 @@ cib_notify_send(const xmlNode *xml)
 }
 
 void
-based_diff_notify(const char *op, int result, const char *call_id,
-                  const char *client_id, const char *client_name,
-                  const char *origin, xmlNode *update, xmlNode *diff)
+based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
 {
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
@@ -159,14 +210,27 @@ based_diff_notify(const char *op, int result, const char *call_id,
 
     update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
+    /* We could simplify by copying all attributes from request. We would just
+     * have to ensure that there are never "private" attributes that we want to
+     * hide from external clients with notify callbacks.
+     */
     pcmk__xe_set(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
     pcmk__xe_set(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_OP, op);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_CALLID, call_id);
-    pcmk__xe_set(update_msg, PCMK__XA_SRC, origin);
-    pcmk__xe_set_int(update_msg, PCMK__XA_CIB_RC, result);
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_OP,
+                 pcmk__xe_get(request, PCMK__XA_CIB_OP));
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID));
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTNAME,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME));
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CALLID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CALLID));
+
+    pcmk__xe_set(update_msg, PCMK__XA_SRC, pcmk__xe_get(request, PCMK__XA_SRC));
+    pcmk__xe_set_int(update_msg, PCMK__XA_CIB_RC, pcmk_rc2legacy(rc));
 
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);

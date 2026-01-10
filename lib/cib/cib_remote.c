@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,6 +78,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &op_msg);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         return rc;
     }
@@ -85,7 +86,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
         pcmk__xml_free(op_msg);
-        return rc;
+        return pcmk_rc2legacy(rc);
     }
 
     pcmk__trace("Sending %s message to the CIB manager", op);
@@ -162,11 +163,6 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         rc = -EPROTO;
     }
 
-    if (rc == -pcmk_err_diff_resync) {
-        /* This is an internal value that clients do not and should not care about */
-        rc = pcmk_ok;
-    }
-
     if (rc == pcmk_ok || rc == -EPERM) {
         pcmk__log_xml_debug(op_reply, "passed");
 
@@ -179,9 +175,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         /* do nothing more */
 
     } else if (!(call_options & cib_discard_reply)) {
-        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
-                                                NULL, NULL);
-        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        xmlNode *tmp = cib__get_calldata(op_reply);
 
         if (tmp == NULL) {
             pcmk__trace("No output in reply to \"%s\" command %d", op,
@@ -375,10 +369,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     if (private->encrypted) {
-        bool use_cert = pcmk__x509_enabled();
         int tls_rc = GNUTLS_E_SUCCESS;
 
-        rc = pcmk__init_tls(&tls, false, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_ANON);
+        // @TODO Implement pre-shared key authentication (see T961)
+        rc = pcmk__init_tls(&tls, false, false);
         if (rc != pcmk_rc_ok) {
             return -1;
         }

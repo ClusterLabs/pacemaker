@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,8 +23,7 @@ extern "C" {
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
 #define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
-#define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
-#define PCMK__CIB_REQUEST_SYNC_TO_ONE   "cib_sync_one"
+#define PCMK__CIB_REQUEST_SYNC          "cib_sync"
 #define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
 #define PCMK__CIB_REQUEST_BUMP          "cib_bump"
 #define PCMK__CIB_REQUEST_QUERY         "cib_query"
@@ -49,7 +48,7 @@ enum cib__op_attr {
     //! No special attributes
     cib__op_attr_none           = 0,
 
-    //! Modifies CIB
+    //! May modify state (of the CIB itself or of the CIB manager)
     cib__op_attr_modifies       = (UINT32_C(1) << 1),
 
     //! Requires privileges
@@ -87,18 +86,24 @@ enum cib__op_type {
     cib__op_primary,
     cib__op_query,
     cib__op_replace,
+    cib__op_schemas,
     cib__op_secondary,
     cib__op_shutdown,
-    cib__op_sync_all,
-    cib__op_sync_one,
+    cib__op_sync,
     cib__op_upgrade,
-    cib__op_schemas,
 };
 
-gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
-
-typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
-                            xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+/* A cib__op_fn_t must not alter the document private data except for adding to
+ * the deleted_objs list, and (*cib)->doc must point to the same value before
+ * and after the function call. This allows us to make the useful assumptions
+ * that change tracking and ACLs remain enabled if they were enabled initially,
+ * and that any ACLs are still unpacked in the xml_doc_private_t:acls list.
+ *
+ * *cib should be the root element of its document. A cib__op_fn_t may free and
+ * replace *cib, but the replacement must become the root of the original
+ * document.
+ */
+typedef int (*cib__op_fn_t)(xmlNode *request, xmlNode **cib, xmlNode **output);
 
 typedef struct cib__operation_s {
     const char *name;
@@ -181,12 +186,15 @@ cib__client_triggers_refresh(const char *name)
 }
 
 int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
+xmlNode *cib__get_calldata(const xmlNode *request);
+void cib__set_calldata(xmlNode *request, xmlNode *data);
 
-int cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
-                   cib__op_fn_t fn, bool is_query, const char *section,
-                   xmlNode *req, xmlNode *input, bool manage_counters,
-                   bool *config_changed, xmlNode **current_cib,
-                   xmlNode **result_cib, xmlNode **diff, xmlNode **output);
+int cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
+                       xmlNode **output);
+
+int cib__perform_op_rw(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
+                       bool *config_changed, xmlNode **cib, xmlNode **diff,
+                       xmlNode **output);
 
 int cib__create_op(cib_t *cib, const char *op, const char *host,
                    const char *section, xmlNode *data, int call_options,
@@ -200,67 +208,15 @@ void cib_native_notify(gpointer data, gpointer user_data);
 
 int cib__get_operation(const char *op, const cib__operation_t **operation);
 
-int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer);
-
-int cib_process_erase(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer);
-
-int cib_process_bump(const char *op, int options, const char *section, xmlNode * req,
-                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                     xmlNode ** answer);
-
-int cib_process_replace(const char *op, int options, const char *section, xmlNode * req,
-                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                        xmlNode ** answer);
-
-int cib_process_create(const char *op, int options, const char *section, xmlNode * req,
-                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                       xmlNode ** answer);
-
-int cib_process_modify(const char *op, int options, const char *section, xmlNode * req,
-                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                       xmlNode ** answer);
-
-int cib_process_delete(const char *op, int options, const char *section, xmlNode * req,
-                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                       xmlNode ** answer);
-
-int cib_process_diff(const char *op, int options, const char *section, xmlNode * req,
-                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                     xmlNode ** answer);
-
-int cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
-                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                        xmlNode ** answer);
-
-/*!
- * \internal
- * \brief Query or modify a CIB
- *
- * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
- * \param[in]     options       Flag set of \c cib_call_options
- * \param[in]     section       XPath to query or modify
- * \param[in]     req           unused
- * \param[in]     input         Portion of CIB to modify (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[in,out] existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
- * \param[in,out] result_cib    CIB copy to make changes in (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY,
- *                              PCMK__CIB_REQUEST_DELETE, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
- *
- * \return Legacy Pacemaker return code
- */
-int cib_process_xpath(const char *op, int options, const char *section,
-                      const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                      xmlNode **result_cib, xmlNode ** answer);
+int cib__process_apply_patch(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_bump(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_create(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_delete(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_erase(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_modify(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_query(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_replace(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,
