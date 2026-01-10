@@ -204,20 +204,10 @@ based_process_secondary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_shutdown(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
-
-    if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
-        pcmk__info("Peer %s is requesting to shut down", host);
-        return pcmk_rc_ok;
-    }
-
-    if (!cib_shutdown_flag) {
-        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
-        return EINVAL;
-    }
-
-    pcmk__info("Exiting after %s acknowledged our shutdown request", host);
-    based_terminate(CRM_EX_OK);
+    /* @COMPAT Remove when PCMK__CIB_REQUEST_SHUTDOWN is removed. Nodes with
+     * Pacemaker versions earlier than 3.0.2 send a shutdown request and expect
+     * a reply.
+     */
     return pcmk_rc_ok;
 }
 
