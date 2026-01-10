@@ -28,13 +28,11 @@
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
 #include <crm/common/mainloop.h>    // mainloop_*
-#include <crm/common/results.h>     // pcmk_rc_*
+#include <crm/common/results.h>     // CRM_EX_OK, crm_exit_t, pcmk_rc_*
 #include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
 #include <crm/crm.h>                // CRM_OP_*
 
 #include "pacemaker-based.h"
-
-#define EXIT_ESCALATION_MS 10000
 
 static mainloop_timer_t *digest_timer = NULL;
 static long long ping_seq = 0;
@@ -343,13 +341,12 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     }
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        if (reply_to == NULL) {
-            return true;
-        }
-
-        // @TODO Is this possible?
-        pcmk__debug("Ignoring shutdown request from %s because reply_to=%s",
-                    originator, reply_to);
+        /* @COMPAT We stopped sending shutdown requests as of 3.0.2. During a
+         * rolling upgrade, the requesting node expects a reply. We might as
+         * well continue sending one until we no longer support rolling upgrades
+         * from versions earlier than 3.0.2. (If the requesting node doesn't
+         * receive a reply, it simply exits with CRM_EX_ERROR after 10 seconds.)
+         */
         return true;
     }
 
@@ -797,57 +794,26 @@ done:
     return rc;
 }
 
-static gboolean
-cib_force_exit(gpointer data)
-{
-    pcmk__notice("Exiting immediately after %s without shutdown acknowledgment",
-                 pcmk__readable_interval(EXIT_ESCALATION_MS));
-    based_terminate(CRM_EX_ERROR);
-    return FALSE;
-}
-
 void
 based_shutdown(int nsig)
 {
-    int active = 0;
-    xmlNode *notification = NULL;
-
     if (cib_shutdown_flag) {
         // Already shutting down
         return;
     }
 
     cib_shutdown_flag = true;
-
-    active = pcmk__cluster_num_active_nodes();
-    if (active < 2) {
-        pcmk__info("Exiting without sending shutdown request (no active "
-                   "peers)");
-        based_terminate(CRM_EX_OK);
-        return;
-    }
-
-    pcmk__info("Sending shutdown request to %d peers", active);
-
-    notification = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
-    pcmk__xe_set(notification, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(notification, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
-
-    pcmk__cluster_send_message(NULL, pcmk_ipc_based, notification);
-    pcmk__xml_free(notification);
-
-    pcmk__create_timer(EXIT_ESCALATION_MS, cib_force_exit, NULL);
+    based_terminate(CRM_EX_OK);
 }
 
 /*!
  * \internal
  * \brief Close remote sockets, free the global CIB and quit
  *
- * \param[in] exit_status  What exit status to use (if -1, use CRM_EX_OK, but
- *                         skip disconnecting from the cluster layer)
+ * \param[in] exit_status  Exit code
  */
 void
-based_terminate(int exit_status)
+based_terminate(crm_exit_t exit_status)
 {
     based_ipc_cleanup();
     based_remote_cleanup();
@@ -857,27 +823,17 @@ based_terminate(int exit_status)
     g_clear_pointer(&the_cib, pcmk__xml_free);
 
     // Exit immediately on error
-    if (exit_status > CRM_EX_OK) {
+    if (exit_status != CRM_EX_OK) {
         crm_exit(exit_status);
         return;
     }
 
+    based_cluster_disconnect();
+
     if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
-        /* Quit via returning from the main loop. If exit_status has the special
-         * value -1, we skip the disconnect here, and it will be done when the
-         * main loop returns (this allows the peer status callback to avoid
-         * messing with the peer caches).
-         */
-        if (exit_status == CRM_EX_OK) {
-            based_cluster_disconnect();
-        }
         g_main_loop_quit(mainloop);
         return;
     }
 
-    /* Exit cleanly. Even the peer status callback can disconnect here, because
-     * we're not returning control to the caller.
-     */
-    based_cluster_disconnect();
     crm_exit(CRM_EX_OK);
 }

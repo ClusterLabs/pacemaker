@@ -15,10 +15,11 @@
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/internal.h>        // pcmk__client_t
+#include <crm/common/results.h>         // crm_exit_t
 
 int based_process_request(xmlNode *request, bool privileged,
                           const pcmk__client_t *client);
 void based_shutdown(int nsig);
-void based_terminate(int exit_status);
+void based_terminate(crm_exit_t exit_status);
 
 #endif // BASED_CALLBACKS__H
