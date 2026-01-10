@@ -40,7 +40,7 @@ struct mainloop_timer_s {
         void *userdata;
 };
 
-static GList *child_list = NULL;
+static GHashTable *mainloop_children = NULL;
 static qb_array_t *gio_map = NULL;
 
 static void
@@ -423,9 +423,7 @@ mainloop_destroy_signal(int sig)
 void
 mainloop_cleanup(void)
 {
-    g_list_free_full(child_list, (GDestroyNotify) child_free);
-    child_list = NULL;
-
+    g_clear_pointer(&mainloop_children, g_hash_table_destroy);
     g_clear_pointer(&gio_map, qb_array_free);
 
     for (int sig = 0; sig < NSIG; ++sig) {
@@ -1140,22 +1138,28 @@ child_waitpid(mainloop_child_t *child, int flags)
     return true;
 }
 
+static gboolean
+child_waitpid_no_hang(gpointer key, gpointer value, gpointer user_data)
+{
+    mainloop_child_t *child = value;
+
+    if (!child_waitpid(child, WNOHANG)) {
+        return FALSE;
+    }
+
+    pcmk__trace("Removing completed process %lld from child table",
+                (long long) child->pid);
+    return TRUE;
+}
+
 static void
 child_death_dispatch(int signal)
 {
-    for (GList *iter = child_list; iter; ) {
-        GList *saved = iter;
-        mainloop_child_t *child = iter->data;
-
-        iter = iter->next;
-        if (child_waitpid(child, WNOHANG)) {
-            pcmk__trace("Removing completed process %lld from child list",
-                        (long long) child->pid);
-            child_list = g_list_remove_link(child_list, saved);
-            g_list_free(saved);
-            child_free(child);
-        }
+    if (mainloop_children == NULL) {
+        return;
     }
+
+    g_hash_table_foreach_remove(mainloop_children, child_waitpid_no_hang, NULL);
 }
 
 static gboolean
@@ -1173,35 +1177,42 @@ child_signal_init(gpointer p)
 gboolean
 mainloop_child_kill(pid_t pid)
 {
-    GList *iter;
-    mainloop_child_t *child = NULL;
-    mainloop_child_t *match = NULL;
-    /* It is impossible to block SIGKILL, this allows us to
-     * call waitpid without WNOHANG flag.*/
+    /* It is impossible to block SIGKILL. This allows us to call waitpid()
+     * without the WNOHANG flag.
+     */
     int waitflags = 0;
     int rc = pcmk_rc_ok;
+    char *pid_s = NULL;
+    mainloop_child_t *child = NULL;
+    gboolean killed = FALSE;
 
-    for (iter = child_list; iter != NULL && match == NULL; iter = iter->next) {
-        child = iter->data;
-        if (pid == child->pid) {
-            match = child;
-        }
+    if (mainloop_children == NULL) {
+        // We're not tracking any children, so don't kill this PID
+        goto done;
     }
 
-    if (match == NULL) {
-        return FALSE;
+    pid_s = pcmk__assert_asprintf("%lld", (long long) pid);
+    child = g_hash_table_lookup(mainloop_children, pid_s);
+
+    if (child == NULL) {
+        // We're not tracking a child with this PID, so don't kill it
+        goto done;
     }
 
-    rc = child_kill_helper(match);
+    rc = child_kill_helper(child);
     if (rc == ESRCH) {
-        /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
-         * SIGCHLD and let handler clean it up as normal (so we get the correct
-         * return code/status). The blocking alternative would be to call
-         * child_waitpid(match, 0).
+        /* kill() didn't find the PID. Assume this means the process is in some
+         * intermediate stage of exiting. Wait until we get SIGCHLD and let
+         * the handler clean it up as normal, so that we get the correct return
+         * code/status. The blocking alternative would be to call
+         * child_waitpid(child, 0).
+         *
+         * Treat this as success in the meantime.
          */
         pcmk__trace("Waiting for signal that child process %lld completed",
-                    (long long) match->pid);
-        return TRUE;
+                    (long long) child->pid);
+        killed = TRUE;
+        goto done;
     }
 
     if (rc != pcmk_rc_ok) {
@@ -1211,18 +1222,33 @@ mainloop_child_kill(pid_t pid)
         waitflags = WNOHANG;
     }
 
-    if (!child_waitpid(match, waitflags)) {
-        /* not much we can do if this occurs */
-        return FALSE;
+    if (!child_waitpid(child, waitflags)) {
+        /* waitpid() didn't find the child. This shouldn't happen if kill()
+         * succeeded. In any case, there's no obviously good way to proceed.
+         * Treat this as a failure.
+         *
+         * @TODO Should we call the child's exit_fn with a failure here, and/or
+         * free the mainloop_child_t? We can hope that we successfully wait on
+         * it in response to a SIGCHLD that comes later. But we might just never
+         * do anything with this child again.
+         *
+         * @TODO Consider using GSubprocess for all subprocess tracking.
+         */
+        goto done;
     }
 
-    child_list = g_list_remove(child_list, match);
-    child_free(match);
-    return TRUE;
+    g_hash_table_remove(mainloop_children, pid_s);
+    killed = TRUE;
+
+done:
+    free(pid_s);
+    return killed;
 }
 
 /* Create/Log a new tracked process
  * To track a process group, use -pid
+ *
+ * Newly created child will be freed by mainloop_cleanup(), if not sooner.
  *
  * @TODO Using a non-positive pid (i.e. any child, or process group) would
  *       likely not be useful since we will free the child after the first
@@ -1235,6 +1261,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
                               pcmk__mainloop_child_exit_fn_t exit_fn)
 {
     static bool need_init = TRUE;
+    bool is_new = false;
     mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
 
     child->pid = pid;
@@ -1249,7 +1276,17 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
         child->timerid = pcmk__create_timer(timeout, child_timeout_callback, child);
     }
 
-    child_list = g_list_append(child_list, child);
+    if (mainloop_children == NULL) {
+        mainloop_children = pcmk__strkey_table(free,
+                                               (GDestroyNotify) child_free);
+    }
+
+    is_new = g_hash_table_insert(mainloop_children,
+                                 pcmk__assert_asprintf("%lld", (long long) pid),
+                                 child);
+
+    // It should be impossible to have this PID in mainloop_children already
+    CRM_LOG_ASSERT(is_new);
 
     if(need_init) {
         need_init = FALSE;
@@ -1261,6 +1298,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
     }
 }
 
+// Newly created child will be freed by mainloop_cleanup(), if not sooner
 void
 mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
                    pcmk__mainloop_child_exit_fn_t exit_fn)
