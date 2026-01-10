@@ -1021,33 +1021,40 @@ mainloop_clear_child_userdata(mainloop_child_t * child)
 }
 
 static int
-child_kill_helper(mainloop_child_t *child)
+child_kill_helper(const mainloop_child_t *child)
 {
-    int rc;
-    if (child->flags & mainloop_leave_pid_group) {
+    int rc = 0;
+
+    if (pcmk__is_set(child->flags, mainloop_leave_pid_group)) {
         pcmk__debug("Killing PID %lld only. Leaving its process group intact.",
                     (long long) child->pid);
         rc = kill(child->pid, SIGKILL);
+
     } else {
         pcmk__debug("Killing PID %lld's entire process group",
                     (long long) child->pid);
         rc = kill(-child->pid, SIGKILL);
     }
 
-    if (rc < 0) {
-        if (errno != ESRCH) {
-            pcmk__err("kill(%d, KILL) failed: %s", child->pid, strerror(errno));
-        }
-        return -errno;
+    if (rc == 0) {
+        return pcmk_rc_ok;
     }
-    return 0;
+
+    rc = errno;
+    if (rc == ESRCH) {
+        return rc;
+    }
+
+    pcmk__err("kill(%lld, KILL) failed: %s", (long long) child->pid,
+              strerror(rc));
+    return rc;
 }
 
 static gboolean
 child_timeout_callback(gpointer p)
 {
     mainloop_child_t *child = p;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     child->timerid = 0;
     if (child->timeout) {
@@ -1057,7 +1064,7 @@ child_timeout_callback(gpointer p)
     }
 
     rc = child_kill_helper(child);
-    if (rc == -ESRCH) {
+    if (rc == ESRCH) {
         /* Nothing left to do. pid doesn't exist */
         return FALSE;
     }
@@ -1171,7 +1178,8 @@ mainloop_child_kill(pid_t pid)
     mainloop_child_t *match = NULL;
     /* It is impossible to block SIGKILL, this allows us to
      * call waitpid without WNOHANG flag.*/
-    int waitflags = 0, rc = 0;
+    int waitflags = 0;
+    int rc = pcmk_rc_ok;
 
     for (iter = child_list; iter != NULL && match == NULL; iter = iter->next) {
         child = iter->data;
@@ -1185,7 +1193,7 @@ mainloop_child_kill(pid_t pid)
     }
 
     rc = child_kill_helper(match);
-    if(rc == -ESRCH) {
+    if (rc == ESRCH) {
         /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
          * SIGCHLD and let handler clean it up as normal (so we get the correct
          * return code/status). The blocking alternative would be to call
@@ -1194,10 +1202,11 @@ mainloop_child_kill(pid_t pid)
         pcmk__trace("Waiting for signal that child process %lld completed",
                     (long long) match->pid);
         return TRUE;
+    }
 
-    } else if(rc != 0) {
-        /* If KILL for some other reason set the WNOHANG flag since we
-         * can't be certain what happened.
+    if (rc != pcmk_rc_ok) {
+        /* If kill() failed for some other reason, set the WNOHANG flag, since
+         * we can't be certain what happened.
          */
         waitflags = WNOHANG;
     }
