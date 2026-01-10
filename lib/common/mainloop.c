@@ -29,7 +29,6 @@ struct trigger_s {
     gboolean trigger;
     void *user_data;
     guint id;
-
 };
 
 struct mainloop_timer_s {
@@ -40,6 +39,21 @@ struct mainloop_timer_s {
         GSourceFunc cb;
         void *userdata;
 };
+
+static GList *child_list = NULL;
+static qb_array_t *gio_map = NULL;
+
+static void
+child_free(mainloop_child_t *child)
+{
+    if (child->timerid != 0) {
+        pcmk__trace("Removing timer %d", child->timerid);
+        g_source_remove(child->timerid);
+        child->timerid = 0;
+    }
+    free(child->desc);
+    free(child);
+}
 
 static gboolean
 crm_trigger_prepare(GSource * source, gint * timeout)
@@ -400,15 +414,19 @@ mainloop_destroy_signal(int sig)
     return TRUE;
 }
 
-static qb_array_t *gio_map = NULL;
-
+/*!
+ * \internal
+ * \brief Free data structures used for the mainloop
+ *
+ * \todo This is incomplete. Free other data structures created in this file.
+ */
 void
-mainloop_cleanup(void) 
+mainloop_cleanup(void)
 {
-    if (gio_map != NULL) {
-        qb_array_free(gio_map);
-        gio_map = NULL;
-    }
+    g_list_free_full(child_list, (GDestroyNotify) child_free);
+    child_list = NULL;
+
+    g_clear_pointer(&gio_map, qb_array_free);
 
     for (int sig = 0; sig < NSIG; ++sig) {
         mainloop_destroy_signal_entry(sig);
@@ -972,8 +990,6 @@ mainloop_del_fd(mainloop_io_t *client)
     g_source_remove(client->source);
 }
 
-static GList *child_list = NULL;
-
 pid_t
 mainloop_child_pid(mainloop_child_t * child)
 {
@@ -1004,20 +1020,6 @@ mainloop_clear_child_userdata(mainloop_child_t * child)
     child->privatedata = NULL;
 }
 
-/* good function name */
-static void
-child_free(mainloop_child_t *child)
-{
-    if (child->timerid != 0) {
-        pcmk__trace("Removing timer %d", child->timerid);
-        g_source_remove(child->timerid);
-        child->timerid = 0;
-    }
-    free(child->desc);
-    free(child);
-}
-
-/* terrible function name */
 static int
 child_kill_helper(mainloop_child_t *child)
 {
