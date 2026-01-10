@@ -1078,15 +1078,16 @@ child_waitpid(mainloop_child_t *child, int flags)
     int signo = 0;
     int status = 0;
     int exitcode = 0;
-    bool callback_needed = true;
 
     rc = waitpid(child->pid, &status, flags);
+
     if (rc == 0) { // WNOHANG in flags, and child status is not available
         pcmk__trace("Child process %lld (%s) still active",
                     (long long) child->pid, child->desc);
-        callback_needed = false;
+        return false;
+    }
 
-    } else if (rc != child->pid) {
+    if (rc != child->pid) {
         /* According to POSIX, possible conditions:
          * - child->pid was non-positive (process group or any child),
          *   and rc is specific child
@@ -1098,8 +1099,8 @@ child_waitpid(mainloop_child_t *child, int flags)
          */
         signo = SIGCHLD;
         exitcode = 1;
-        pcmk__notice("Wait for child process %d (%s) interrupted: %s",
-                     child->pid, child->desc, pcmk_rc_str(errno));
+        pcmk__notice("Wait for child process %lld (%s) interrupted: %s",
+                     (long long) child->pid, child->desc, strerror(errno));
 
     } else if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
@@ -1115,19 +1116,21 @@ child_waitpid(mainloop_child_t *child, int flags)
 #ifdef WCOREDUMP // AIX, SunOS, maybe others
     } else if (WCOREDUMP(status)) {
         core = 1;
-        pcmk__err("Child process %d (%s) dumped core", child->pid, child->desc);
+        pcmk__err("Child process %lld (%s) dumped core", (long long) child->pid,
+                  child->desc);
 #endif
 
     } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this
         pcmk__trace("Child process %lld (%s) stopped or continued",
                     (long long) child->pid, child->desc);
-        callback_needed = false;
+        return false;
     }
 
-    if (callback_needed && child->exit_fn) {
+    if (child->exit_fn != NULL) {
         child->exit_fn(child, core, signo, exitcode);
     }
-    return callback_needed;
+
+    return true;
 }
 
 static void
